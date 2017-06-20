@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/autograde/aguis"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -40,19 +41,18 @@ func main() {
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
 	)
 
-	// TODO: Sessions struct.
-	var login bool
+	sessionStore := aguis.NewSessionStore(store, "authsession")
 
 	r := mux.NewRouter()
 	r.Handle("/", http.FileServer(http.Dir(*public)))
 
 	r.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
-		login = false
+		sessionStore.Logout(w, r)
 	})
 
 	auth := r.PathPrefix("/auth/").Subrouter()
-	auth.Handle("/{provider}", authHandler(&login))
-	auth.Handle("/{provider}/callback", authCallbackHandler(&login))
+	auth.Handle("/{provider}", authHandler(sessionStore))
+	auth.Handle("/{provider}/callback", authCallbackHandler(sessionStore))
 
 	api := r.PathPrefix("/api/v1/").Subrouter()
 	api.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
@@ -60,18 +60,18 @@ func main() {
 	})
 
 	srv := &http.Server{
-		Handler: handlers.LoggingHandler(os.Stdout, authenticatedHandler(r, &login)),
+		Handler: handlers.LoggingHandler(os.Stdout, authenticatedHandler(r, sessionStore)),
 		Addr:    *httpAddr,
 	}
 
 	log.Fatal(srv.ListenAndServe())
 }
 
-func authHandler(login *bool) http.Handler {
+func authHandler(s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Try to get the user without re-authenticating.
 		if user, err := gothic.CompleteUserAuth(w, r); err == nil {
-			*login = true
+			s.Login(w, r, user.AccessToken)
 			serveInfo(w, user)
 			return
 		}
@@ -80,21 +80,32 @@ func authHandler(login *bool) http.Handler {
 	})
 }
 
-func authCallbackHandler(login *bool) http.Handler {
+func authCallbackHandler(s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
 			fmt.Fprintln(w, err)
 			return
 		}
-		*login = true
+		s.Login(w, r, user.AccessToken)
 		serveInfo(w, user)
 	})
 }
 
-func authenticatedHandler(m *mux.Router, login *bool) http.Handler {
+func authenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.RequestURI, "/api") && !*login {
+		loggedIn, err := s.IsLogin(r)
+
+		if err != nil {
+			http.Error(
+				w,
+				http.StatusText(http.StatusInternalServerError),
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		if strings.HasPrefix(r.RequestURI, "/api") && !loggedIn {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
