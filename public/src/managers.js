@@ -1,6 +1,36 @@
-var DummyUserProvider = (function () {
-    function DummyUserProvider() {
-        this.localData = [
+var TempDataProvider = (function () {
+    function TempDataProvider() {
+        this.localCourses = [
+            {
+                id: 0,
+                name: "Object Oriented Programming",
+                tag: "DAT100"
+            },
+            {
+                id: 1,
+                name: "Algorithms and Datastructures",
+                tag: "DAT200"
+            }
+        ];
+        this.localAssignments = [
+            {
+                id: 0,
+                courceId: 0,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            },
+            {
+                id: 1,
+                courceId: 1,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            }
+        ];
+        this.localUsers = [
             {
                 id: 999,
                 firstName: "Test",
@@ -35,11 +65,24 @@ var DummyUserProvider = (function () {
             }
         ];
     }
-    DummyUserProvider.prototype.getAllUser = function () {
-        return this.localData;
+    TempDataProvider.prototype.getAllUser = function () {
+        return this.localUsers;
     };
-    DummyUserProvider.prototype.tryLogin = function (username, password) {
-        for (var _i = 0, _a = this.localData; _i < _a.length; _i++) {
+    TempDataProvider.prototype.getCourses = function () {
+        return this.localCourses;
+    };
+    TempDataProvider.prototype.getAssignments = function (courseId) {
+        var temp = [];
+        for (var _i = 0, _a = this.localAssignments; _i < _a.length; _i++) {
+            var a = _a[_i];
+            if (a.courceId === courseId) {
+                temp.push(a);
+            }
+        }
+        return temp;
+    };
+    TempDataProvider.prototype.tryLogin = function (username, password) {
+        for (var _i = 0, _a = this.localUsers; _i < _a.length; _i++) {
             var u = _a[_i];
             if (u.email.toLocaleLowerCase() === username.toLocaleLowerCase()) {
                 if (u.password === password) {
@@ -50,12 +93,27 @@ var DummyUserProvider = (function () {
         }
         return null;
     };
-    return DummyUserProvider;
+    return TempDataProvider;
 }());
-var AssignmentManager = (function () {
-    function AssignmentManager() {
+function isCourse(value) {
+    console.log(value);
+    return value && typeof value.id === "number" && value.name && value.tag;
+}
+var CourseManager = (function () {
+    function CourseManager(courseProvider) {
+        this.courseProvider = courseProvider;
     }
-    return AssignmentManager;
+    CourseManager.prototype.getCourses = function () {
+        return this.courseProvider.getCourses();
+    };
+    CourseManager.prototype.getAssignments = function (courseId) {
+        if (isCourse(courseId)) {
+            courseId = courseId.id;
+            console.log(courseId);
+        }
+        return this.courseProvider.getAssignments(courseId);
+    };
+    return CourseManager;
 }());
 var UserManager = (function () {
     function UserManager(userProvider) {

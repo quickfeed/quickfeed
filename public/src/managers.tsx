@@ -16,11 +16,46 @@ interface IUserProvider{
     getAllUser(): IUser[];
 }
 
-class DummyUserProvider implements IUserProvider{
-    private localData: IDummyUser[];
+class TempDataProvider implements IUserProvider, ICourseProvider{
+
+    private localUsers: IDummyUser[];
+    private localAssignments: IAssignment[];
+    private localCourses: ICourse[];
 
     constructor(){
-        this.localData = [
+        this.localCourses = [
+            {
+                id: 0,
+                name: "Object Oriented Programming",
+                tag: "DAT100"
+            },
+            {
+                id: 1,
+                name: "Algorithms and Datastructures",
+                tag: "DAT200"
+            }
+        ];
+
+        this.localAssignments = [
+            {
+                id: 0,
+                courceId: 0,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            },
+            {
+                id: 1,
+                courceId: 1,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            }
+        ];
+
+        this.localUsers = [
             {
                 id: 999,
                 firstName: "Test",
@@ -57,11 +92,25 @@ class DummyUserProvider implements IUserProvider{
     }
 
     getAllUser(): IUser[] {
-        return this.localData;
+        return this.localUsers;
+    }
+
+    getCourses(): ICourse[] {
+        return this.localCourses;
+    }
+    
+    getAssignments(courseId: number): IAssignment[] {
+        let temp: IAssignment[] = [];
+        for(let a of this.localAssignments){
+            if (a.courceId === courseId){
+                temp.push(a);
+            }
+        }
+        return temp;
     }
 
     tryLogin(username: string, password: string): IUser | null {
-        for(let u of this.localData){
+        for(let u of this.localUsers){
             if (u.email.toLocaleLowerCase() === username.toLocaleLowerCase()){
                 if (u.password === password){
                     return u;
@@ -74,12 +123,56 @@ class DummyUserProvider implements IUserProvider{
 
 }
 
-interface IAssignementProvider{
-
+function isCourse(value: any): value is ICourse{
+    console.log(value);
+    return value && typeof value.id === "number" && value.name && value.tag;
 }
 
-class AssignmentManager {
+interface ICourse{
+    id: number;
+    name: string;
+    tag: string;
+}
 
+interface IAssignment{
+    id: number;
+    courceId: number;
+    name: string;
+    start: Date;
+    deadline: Date;
+    end: Date;
+}
+
+interface ICourseStudent{
+    personId: number;
+    courseId: number;
+}
+
+interface ICourseProvider{
+    getCourses(): ICourse[];
+    getAssignments(courseId: number): IAssignment[];
+}
+
+class CourseManager {
+    courseProvider: ICourseProvider;
+    constructor(courseProvider: ICourseProvider){
+        this.courseProvider = courseProvider;
+    }
+
+    getCourses():ICourse[]{
+        return this.courseProvider.getCourses();
+    }
+
+    getAssignments(courseId: number): IAssignment[];
+    getAssignments(course: ICourse): IAssignment[];
+    getAssignments(courseId: number | ICourse): IAssignment[] {
+        if (isCourse(courseId)){
+            courseId = courseId.id;
+            console.log(courseId);
+        }
+        return this.courseProvider.getAssignments(courseId);
+    }
+    
 }
 
 class UserManager{

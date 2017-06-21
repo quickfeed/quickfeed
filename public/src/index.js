@@ -92,7 +92,9 @@ var AutoGrader = (function (_super) {
     };
     return AutoGrader;
 }(React.Component));
-var userMan = new UserManager(new DummyUserProvider());
+var tempData = new TempDataProvider();
+var userMan = new UserManager(tempData);
+var courseMan = new CourseManager(tempData);
 var navMan = new NavigationManager();
 function main() {
     var user = userMan.tryLogin("test@testersen.no", "1234");

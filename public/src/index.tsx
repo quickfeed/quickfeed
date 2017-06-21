@@ -120,7 +120,10 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
 }
 
 // Just to make them globaly available for easier debugging
-let userMan = new UserManager(new DummyUserProvider());
+let tempData = new TempDataProvider();
+
+let userMan = new UserManager(tempData);
+let courseMan = new CourseManager(tempData);
 let navMan = new NavigationManager();
 
 /**
