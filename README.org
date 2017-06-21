@@ -13,5 +13,5 @@
 ** Run
    #+BEGIN_SRC shell
    # Server listening on port 8080 serving static files from /public at https://example.com/.
-   aguis -service.url example.com -http.addr 8080 -http.public /public
+   aguis -service.url example.com -http.addr :8080 -http.public /public
    #+END_SRC
