@@ -125,3 +125,15 @@ var HomePage = (function (_super) {
     }
     return HomePage;
 }(ViewPage));
+var ErrorPage = (function (_super) {
+    __extends(ErrorPage, _super);
+    function ErrorPage() {
+        var _this = _super.call(this) || this;
+        _this.defaultPage = "404";
+        _this.pages["404"] = React.createElement("div", null,
+            React.createElement("h1", null, "404 Page not found"),
+            React.createElement("p", null, "The page you where looking for does not exist"));
+        return _this;
+    }
+    return ErrorPage;
+}(ViewPage));

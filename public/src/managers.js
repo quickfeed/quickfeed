@@ -81,6 +81,7 @@ var UserManager = (function () {
 var NavigationManager = (function () {
     function NavigationManager() {
         this.pages = {};
+        this.errorPages = [];
         this.onNavigate = newEvent("NavigationManager.onNavigate");
         this.currentPath = "";
     }
@@ -96,11 +97,46 @@ var NavigationManager = (function () {
         });
         return newArray;
     };
+    NavigationManager.prototype.getErrorPage = function (statusCode) {
+        if (this.errorPages[statusCode]) {
+            return this.errorPages[statusCode];
+        }
+        throw Error("Status page: " + statusCode + " is not defined");
+    };
     NavigationManager.prototype.setDefaultPath = function (path) {
         this.currentPath = path;
     };
+    NavigationManager.prototype.navigateTo = function (path) {
+        var parts = this.getParts(path);
+        var curPage = this.pages;
+        for (var i = 0; i < parts.length; i++) {
+            var a = parts[i];
+            if (isViewPage(curPage)) {
+                this.onNavigate({ target: this, page: curPage, uri: path, subPage: parts.slice(i, parts.length).join("/") });
+                return;
+            }
+            else {
+                var cur = curPage[a];
+                if (!cur) {
+                    this.onNavigate({ target: this, page: this.getErrorPage(404), subPage: "", uri: path });
+                    return;
+                }
+                curPage = cur;
+            }
+        }
+        if (isViewPage(curPage)) {
+            this.onNavigate({ target: this, page: curPage, uri: path, subPage: "" });
+            return;
+        }
+        else {
+            this.onNavigate({ target: this, page: this.getErrorPage(404), subPage: "", uri: path });
+        }
+    };
     NavigationManager.prototype.navigateToDefault = function () {
         this.navigateTo(this.currentPath);
+    };
+    NavigationManager.prototype.navigateToError = function (statusCode) {
+        this.onNavigate({ target: this, page: this.getErrorPage(statusCode), subPage: "", uri: statusCode.toString() });
     };
     NavigationManager.prototype.registerPage = function (path, page) {
         var parts = this.getParts(path);
@@ -128,30 +164,8 @@ var NavigationManager = (function () {
         }
         curObj[parts[parts.length - 1]] = page;
     };
-    NavigationManager.prototype.navigateTo = function (path) {
-        var parts = this.getParts(path);
-        var curPage = this.pages;
-        for (var i = 0; i < parts.length; i++) {
-            var a = parts[i];
-            if (isViewPage(curPage)) {
-                this.onNavigate({ target: this, page: curPage, uri: path, subPage: parts.slice(i, parts.length).join("/") });
-                return;
-            }
-            else {
-                var cur = curPage[a];
-                if (!cur) {
-                    throw Error("404 Page not found");
-                }
-                curPage = cur;
-            }
-        }
-        if (isViewPage(curPage)) {
-            this.onNavigate({ target: this, page: curPage, uri: path, subPage: "" });
-            return;
-        }
-        else {
-            throw Error("404 Page not found");
-        }
+    NavigationManager.prototype.registerErrorPage = function (statusCode, page) {
+        this.errorPages[statusCode] = page;
     };
     return NavigationManager;
 }());

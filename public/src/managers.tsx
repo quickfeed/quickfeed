@@ -122,15 +122,18 @@ interface INavEvent extends IEventData{
 }
 
 class NavigationManager{
-    pages: IPageContainer = { };
+    private pages: IPageContainer = { };
+    private errorPages: ViewPage[] = [];
     onNavigate = newEvent<INavEvent>("NavigationManager.onNavigate");
-    currentPath: string = "";
+    private currentPath: string = "";
 
-    getParts(path: string): string[]{
+    // TODO: Move out to utility
+    private getParts(path: string): string[]{
         return this.removeEmptyEntries(path.split("/"));
     }
 
-    removeEmptyEntries(array: string[]): string[]{
+    // TODO: Move out to utility
+    private removeEmptyEntries(array: string[]): string[]{
         let newArray: string[] = [];
         array.map((v) => {
             if (v.length > 0){
@@ -140,15 +143,55 @@ class NavigationManager{
         return newArray;
     }
 
-    setDefaultPath(path: string){
+    private getErrorPage(statusCode: number): ViewPage{
+        if (this.errorPages[statusCode]){
+            return this.errorPages[statusCode];
+        }
+        throw Error("Status page: " + statusCode + " is not defined");
+    }
+
+    public setDefaultPath(path: string){
         this.currentPath = path;
     }
 
-    navigateToDefault(): void{
+    public navigateTo(path: string){
+        let parts = this.getParts(path);
+        let curPage: IPageContainer | ViewPage = this.pages;
+        for(let i = 0; i < parts.length; i++){
+            let a = parts[i];
+            if (isViewPage(curPage)){
+                this.onNavigate({target: this, page: curPage, uri: path, subPage: parts.slice(i, parts.length).join("/")});
+                return;
+            }
+            else{
+                let cur: IPageContainer | ViewPage = curPage[a];
+                if (!cur){
+                    this.onNavigate({target: this, page: this.getErrorPage(404), subPage: "", uri: path });
+                    return;
+                    //throw Error("404 Page not found");
+                }
+                curPage = cur;
+            }
+        }
+        if (isViewPage(curPage)){
+            this.onNavigate({target: this, page: curPage, uri: path, subPage: ""});
+            return;
+        }
+        else{
+            this.onNavigate({target: this, page: this.getErrorPage(404), subPage: "", uri: path });
+            //throw Error("404 Page not found");
+        }
+    }
+
+    public navigateToDefault(): void{
         this.navigateTo(this.currentPath);
     }
 
-    registerPage(path: string, page: ViewPage){
+    public navigateToError(statusCode: number): void{
+        this.onNavigate({target: this, page: this.getErrorPage(statusCode), subPage: "", uri: statusCode.toString() });
+    }
+
+    public registerPage(path: string, page: ViewPage){
         let parts = this.getParts(path);
         if (parts.length === 0){
             throw Error("Can't add page to index element");
@@ -178,29 +221,7 @@ class NavigationManager{
         
     }
 
-    navigateTo(path: string){
-        let parts = this.getParts(path);
-        let curPage: IPageContainer | ViewPage = this.pages;
-        for(let i = 0; i < parts.length; i++){
-            let a = parts[i];
-            if (isViewPage(curPage)){
-                this.onNavigate({target: this, page: curPage, uri: path, subPage: parts.slice(i, parts.length).join("/")});
-                return;
-            }
-            else{
-                let cur: IPageContainer | ViewPage = curPage[a];
-                if (!cur){
-                    throw Error("404 Page not found");
-                }
-                curPage = cur;
-            }
-        }
-        if (isViewPage(curPage)){
-            this.onNavigate({target: this, page: curPage, uri: path, subPage: ""});
-            return;
-        }
-        else{
-            throw Error("404 Page not found");
-        }
+    public registerErrorPage(statusCode: number, page: ViewPage){
+        this.errorPages[statusCode] = page;
     }
 }

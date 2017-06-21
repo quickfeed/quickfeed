@@ -134,6 +134,8 @@ function main(){
     navMan.registerPage("app/home", new HomePage());
     navMan.registerPage("app/student", new StudentPage(userMan, navMan));
     navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan));
+
+    navMan.registerErrorPage(404, new ErrorPage());
     navMan.onNavigate.addEventListener((e) => {console.log(e)});
 
     ReactDOM.render(
