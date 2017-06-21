@@ -41,7 +41,7 @@ func (s *Session) Logout(w http.ResponseWriter, r *http.Request) error {
 	return ss.Save(r, w)
 }
 
-func (s *Session) IsLogin(w http.ResponseWriter, r *http.Request) (ok bool, err error) {
+func (s *Session) LoggedIn(w http.ResponseWriter, r *http.Request) (ok bool, err error) {
 	ss, err := s.store.Get(r, s.authSessionName)
 	if err != nil {
 		return false, ss.Save(r, w)
