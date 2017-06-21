@@ -97,7 +97,7 @@ func authCallbackHandler(s *aguis.Session) http.Handler {
 
 func authenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		loggedIn, err := s.IsLogin(r)
+		loggedIn, err := s.IsLogin(w, r)
 
 		if err != nil {
 			http.Error(

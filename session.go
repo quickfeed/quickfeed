@@ -25,35 +25,26 @@ func NewSessionStore(store sessions.Store, authSessionName string) *Session {
 
 func (s *Session) Login(w http.ResponseWriter, r *http.Request, accessToken string) error {
 	ss, err := s.store.Get(r, s.authSessionName)
-
 	if err != nil {
-		return err
+		return ss.Save(r, w)
 	}
-
 	ss.Values[accessTokenKey] = accessToken
-	ss.Save(r, w)
-
-	return nil
+	return ss.Save(r, w)
 }
 
 func (s *Session) Logout(w http.ResponseWriter, r *http.Request) error {
 	ss, err := s.store.Get(r, s.authSessionName)
-
 	if err != nil {
-		return err
+		return ss.Save(r, w)
 	}
-
 	delete(ss.Values, accessTokenKey)
-	ss.Save(r, w)
-
-	return nil
+	return ss.Save(r, w)
 }
 
-func (s *Session) IsLogin(r *http.Request) (bool, error) {
+func (s *Session) IsLogin(w http.ResponseWriter, r *http.Request) (ok bool, err error) {
 	ss, err := s.store.Get(r, s.authSessionName)
-
 	if err != nil {
-		return false, err
+		return false, ss.Save(r, w)
 	}
 
 	if _, ok := ss.Values[accessTokenKey]; !ok {
