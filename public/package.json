@@ -1,0 +1,17 @@
+{
+  "name": "reactcomponents",
+  "version": "0.1.0",
+  "description": "React Components for the AutoGrader Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/react": "^15.0.29",
+    "@types/react-dom": "^15.5.0",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1"
+  }
+}
