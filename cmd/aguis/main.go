@@ -1,12 +1,15 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/autograde/aguis"
@@ -45,6 +48,12 @@ func main() {
 
 	sessionStore := aguis.NewSessionStore(store, "authsession")
 
+	db, err := aguis.NewStructOnFileDB(tempFile("agdb.db"), false)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	r := mux.NewRouter()
 	r.Handle("/", http.FileServer(http.Dir(*public)))
 
@@ -53,8 +62,8 @@ func main() {
 	})
 
 	auth := r.PathPrefix("/auth/").Subrouter()
-	auth.Handle("/{provider}", authHandler(sessionStore))
-	auth.Handle("/{provider}/callback", authCallbackHandler(sessionStore))
+	auth.Handle("/{provider}", authHandler(db, sessionStore))
+	auth.Handle("/{provider}/callback", authCallbackHandler(db, sessionStore))
 
 	api := r.PathPrefix("/api/v1/").Subrouter()
 	api.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
@@ -72,31 +81,48 @@ func main() {
 	log.Fatal(srv.ListenAndServe())
 }
 
-func authHandler(s *aguis.Session) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Try to get the user without re-authenticating.
-		if user, err := gothic.CompleteUserAuth(w, r); err == nil {
-			s.Login(w, r, user.AccessToken)
-			serveInfo(w, user)
-			return
-		}
+// Try to get the user without re-authenticating.
+func tryAuthenticate(
+	w http.ResponseWriter, r *http.Request,
+	db aguis.UserDatabase, s *aguis.Session,
+) (*goth.User, error) {
+	user, err := gothic.CompleteUserAuth(w, r)
 
-		gothic.BeginAuthHandler(w, r)
+	if err != nil {
+		return nil, err
+	}
+
+	switch user.Provider {
+	case "github":
+		if err := loginGithub(db, user.UserID); err != nil {
+			return nil, err
+		}
+		if err := s.Login(w, r); err != nil {
+			return nil, err
+		}
+		return &user, nil
+	default:
+		return nil, errors.New(user.Provider + " provider not implemented")
+	}
+}
+
+func authHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, err := tryAuthenticate(w, r, db, s)
+		if err != nil {
+			gothic.BeginAuthHandler(w, r)
+		}
+		serveInfo(w, user)
 	})
 }
 
-func authCallbackHandler(s *aguis.Session) http.Handler {
+func authCallbackHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := gothic.CompleteUserAuth(w, r)
+		user, err := tryAuthenticate(w, r, db, s)
 		if err != nil {
-			http.Error(
-				w,
-				httpError(http.StatusInternalServerError, err),
-				http.StatusInternalServerError,
-			)
+			httpError(w, http.StatusInternalServerError, err)
 			return
 		}
-		s.Login(w, r, user.AccessToken)
 		serveInfo(w, user)
 	})
 }
@@ -106,34 +132,31 @@ func authenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 		loggedIn, err := s.LoggedIn(w, r)
 
 		if err != nil {
-			http.Error(
-				w,
-				httpError(http.StatusInternalServerError, err),
-				http.StatusInternalServerError,
-			)
+			httpError(w, http.StatusInternalServerError, err)
 			return
 		}
 
 		if strings.HasPrefix(r.RequestURI, "/api") && !loggedIn {
-			http.Error(
-				w,
-				http.StatusText(http.StatusForbidden),
-				http.StatusForbidden,
-			)
+			httpError(w, http.StatusForbidden, nil)
 			return
 		}
 		m.ServeHTTP(w, r)
 	})
 }
 
-func httpError(code int, err error) string {
-	if !debug {
-		return http.StatusText(code)
+func loginGithub(db aguis.UserDatabase, userID string) error {
+	githubID, err := strconv.Atoi(userID)
+	if err != nil {
+		return err
 	}
-	return fmt.Sprintf("%s: %s", http.StatusText(code), err.Error())
+	_, err = db.GetUserWithGithubID(githubID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func serveInfo(w http.ResponseWriter, user goth.User) {
+func serveInfo(w http.ResponseWriter, user *goth.User) {
 	t, _ := template.New("").Parse(`
 	<p><a href="/logout">logout</a></p>
 	<p>Name: {{.Name}}</p>
@@ -143,6 +166,14 @@ func serveInfo(w http.ResponseWriter, user goth.User) {
 	`)
 
 	t.Execute(w, user)
+}
+
+func httpError(w http.ResponseWriter, code int, err error) {
+	res := http.StatusText(code)
+	if err != nil && debug {
+		res = fmt.Sprintf("%s: %s", http.StatusText(code), err.Error())
+	}
+	http.Error(w, res, code)
 }
 
 func getCallbackURL(baseURL string, provider string) string {
@@ -155,4 +186,8 @@ func envString(env, fallback string) string {
 		return fallback
 	}
 	return e
+}
+
+func tempFile(name string) string {
+	return os.TempDir() + string(filepath.Separator) + name
 }

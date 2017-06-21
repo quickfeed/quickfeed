@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-const accessTokenKey = iota
+const loggedInKey = iota
 
 // Session holds a session store which stores user sessions.
 type Session struct {
@@ -24,14 +24,12 @@ func NewSessionStore(store sessions.Store, authSessionName string) *Session {
 }
 
 // Login logs a user in by storing the users access token in the session.
-func (s *Session) Login(w http.ResponseWriter, r *http.Request, accessToken string) error {
+func (s *Session) Login(w http.ResponseWriter, r *http.Request) error {
 	ss, err := s.store.Get(r, s.authSessionName)
 	if err != nil {
 		return ss.Save(r, w)
 	}
-	// TODO: Don't store their accessToken, generate some UUID connected to
-	// the user's account.
-	ss.Values[accessTokenKey] = accessToken
+	ss.Values[loggedInKey] = true
 	return ss.Save(r, w)
 }
 
@@ -41,7 +39,7 @@ func (s *Session) Logout(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return ss.Save(r, w)
 	}
-	delete(ss.Values, accessTokenKey)
+	delete(ss.Values, loggedInKey)
 	return ss.Save(r, w)
 }
 
@@ -51,10 +49,8 @@ func (s *Session) LoggedIn(w http.ResponseWriter, r *http.Request) (ok bool, err
 	if err != nil {
 		return false, ss.Save(r, w)
 	}
-
-	if _, ok := ss.Values[accessTokenKey]; !ok {
+	if _, ok := ss.Values[loggedInKey]; !ok {
 		return false, nil
 	}
-
 	return true, nil
 }
