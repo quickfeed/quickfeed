@@ -30,7 +30,10 @@ func main() {
 	)
 	flag.Parse()
 
-	store := sessions.NewCookieStore(securecookie.GenerateRandomKey(64), securecookie.GenerateRandomKey(32))
+	store := sessions.NewCookieStore(
+		securecookie.GenerateRandomKey(64),
+		securecookie.GenerateRandomKey(32),
+	)
 	gothic.Store = store
 
 	// TODO: Only register if env set.
@@ -59,8 +62,11 @@ func main() {
 	})
 
 	srv := &http.Server{
-		Handler: handlers.LoggingHandler(os.Stdout, authenticatedHandler(r, sessionStore)),
-		Addr:    *httpAddr,
+		Handler: handlers.LoggingHandler(
+			os.Stdout,
+			authenticatedHandler(r, sessionStore),
+		),
+		Addr: *httpAddr,
 	}
 
 	log.Fatal(srv.ListenAndServe())
@@ -109,7 +115,11 @@ func authenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 		}
 
 		if strings.HasPrefix(r.RequestURI, "/api") && !loggedIn {
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			http.Error(
+				w,
+				http.StatusText(http.StatusForbidden),
+				http.StatusForbidden,
+			)
 			return
 		}
 		m.ServeHTTP(w, r)
