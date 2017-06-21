@@ -84,7 +84,11 @@ func authCallbackHandler(s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
-			fmt.Fprintln(w, err)
+			http.Error(
+				w,
+				httpError(http.StatusInternalServerError, err),
+				http.StatusInternalServerError,
+			)
 			return
 		}
 		s.Login(w, r, user.AccessToken)
@@ -99,7 +103,7 @@ func authenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 		if err != nil {
 			http.Error(
 				w,
-				http.StatusText(http.StatusInternalServerError),
+				httpError(http.StatusInternalServerError, err),
 				http.StatusInternalServerError,
 			)
 			return
@@ -111,6 +115,13 @@ func authenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 		}
 		m.ServeHTTP(w, r)
 	})
+}
+
+func httpError(code int, err error) string {
+	if !debug {
+		return http.StatusText(code)
+	}
+	return fmt.Sprintf("%s: %s", http.StatusText(code), err.Error())
 }
 
 func serveInfo(w http.ResponseWriter, user goth.User) {
