@@ -1,0 +1,17 @@
+* aguis (name pending...)
+** Download
+   #+BEGIN_SRC shell
+   go get github.com/autograde/aguis
+   #+END_SRC
+** Install
+   #+BEGIN_SRC shell
+   # Debug build
+   go install -tags debug github.com/autograde/aguis
+   # Release build
+   go install github.com/autograde/aguis
+   #+END_SRC
+** Run
+   #+BEGIN_SRC shell
+   # Server listening on port 8080 serving static files from /public at https://example.com/.
+   aguis -service.url example.com -http.addr 8080 -http.public /public
+   #+END_SRC
