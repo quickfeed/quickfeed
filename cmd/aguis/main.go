@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"math"
 	"net/http"
 	"os"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/autograde/aguis"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
@@ -30,8 +30,7 @@ func main() {
 	)
 	flag.Parse()
 
-	store := sessions.NewFilesystemStore(os.TempDir(), []byte(envString("SESSION_SECRET", "secret")))
-	store.MaxLength(math.MaxInt64)
+	store := sessions.NewCookieStore(securecookie.GenerateRandomKey(64), securecookie.GenerateRandomKey(32))
 	gothic.Store = store
 
 	// TODO: Only register if env set.
