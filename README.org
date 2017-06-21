@@ -1,14 +1,14 @@
 * aguis (name pending...)
 ** Download
    #+BEGIN_SRC shell
-   go get github.com/autograde/aguis
+   go get -u github.com/autograde/aguis/...
    #+END_SRC
 ** Install
    #+BEGIN_SRC shell
    # Debug build
-   go install -tags debug github.com/autograde/aguis
+   go install -tags debug github.com/autograde/aguis/...
    # Release build
-   go install github.com/autograde/aguis
+   go install github.com/autograde/aguis/...
    #+END_SRC
 ** Run
    #+BEGIN_SRC shell
