@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -52,7 +51,7 @@ func main() {
 	db, err := aguis.NewStructOnFileDB(tempFile("agdb.db"), false)
 
 	if err != nil {
-		log.Fatal(err)
+		panic(fmt.Sprintf("could not connect to db: %s", err))
 	}
 
 	r := mux.NewRouter()
@@ -85,7 +84,9 @@ func main() {
 		Addr: *httpAddr,
 	}
 
-	log.Fatal(srv.ListenAndServe())
+	if err := srv.ListenAndServe(); err != nil {
+		panic(fmt.Sprintf("http server error: %s", err))
+	}
 }
 
 // Try to get the user without re-authenticating.
