@@ -22,7 +22,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Create new database.
-	db, err := aguis.NewStructOnFileDB(dbpath, false, log.NewNopLogger())
+	db, err := aguis.NewStructDB(dbpath, false, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}
@@ -37,7 +37,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Load previously created database.
-	db, err = aguis.NewStructOnFileDB(dbpath, false, log.NewNopLogger())
+	db, err = aguis.NewStructDB(dbpath, false, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}
@@ -51,7 +51,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Create new database truncating any existing database.
-	db, err = aguis.NewStructOnFileDB(dbpath, true, log.NewNopLogger())
+	db, err = aguis.NewStructDB(dbpath, true, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}

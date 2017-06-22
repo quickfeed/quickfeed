@@ -21,9 +21,17 @@ type UserDatabase interface {
 	GetUserWithGithubID(int) (*User, error)
 }
 
-// NewStructOnFileDB creates a new database which saves the whole database to a
-// file on every change.
-func NewStructOnFileDB(path string, truncate bool, logger log.Logger) (*StructOnFileDB, error) {
+// NewStructDB creates a new database which saves the whole database to a file
+// on every change. If no path is set, the database will operate in memory only.
+func NewStructDB(path string, truncate bool, logger log.Logger) (*StructDB, error) {
+	if path == "" {
+		return &StructDB{
+			// Leave path unset to indicate in memory DB.
+			Users:  make(map[int]*User),
+			logger: logger,
+		}, nil
+	}
+
 	newDB := truncate || !fileExists(path)
 
 	if !newDB {
@@ -33,7 +41,7 @@ func NewStructOnFileDB(path string, truncate bool, logger log.Logger) (*StructOn
 		}
 		defer f.Close()
 
-		var db StructOnFileDB
+		var db StructDB
 		dec := gob.NewDecoder(f)
 		if err := dec.Decode(&db); err != nil {
 			return nil, err
@@ -44,7 +52,7 @@ func NewStructOnFileDB(path string, truncate bool, logger log.Logger) (*StructOn
 		return &db, nil
 	}
 
-	db := &StructOnFileDB{
+	db := &StructDB{
 		path:   path,
 		Users:  make(map[int]*User),
 		logger: logger,
@@ -53,8 +61,8 @@ func NewStructOnFileDB(path string, truncate bool, logger log.Logger) (*StructOn
 	return db, db.save()
 }
 
-// StructOnFileDB implements UserDatabase.
-type StructOnFileDB struct {
+// StructDB implements UserDatabase.
+type StructDB struct {
 	mu    sync.Mutex
 	path  string
 	Users map[int]*User
@@ -66,7 +74,7 @@ type StructOnFileDB struct {
 var ErrUserNotExist = errors.New("user does not exist")
 
 // GetUsers returns all the user accounts in the database.
-func (db *StructOnFileDB) GetUsers() (map[int]*User, error) {
+func (db *StructDB) GetUsers() (map[int]*User, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -80,7 +88,7 @@ func (db *StructOnFileDB) GetUsers() (map[int]*User, error) {
 
 // GetUserWithGithubID tries to get the user associated with the given GitHub
 // account. If there is no such user, a new user account is created.
-func (db *StructOnFileDB) GetUserWithGithubID(githubID int) (*User, error) {
+func (db *StructDB) GetUserWithGithubID(githubID int) (*User, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -124,7 +132,12 @@ func (db *StructOnFileDB) GetUserWithGithubID(githubID int) (*User, error) {
 }
 
 // Caller must hold lock on db.
-func (db *StructOnFileDB) save() error {
+func (db *StructDB) save() error {
+	// Don't write to disk if in memory DB.
+	if db.path == "" {
+		return nil
+	}
+
 	oldPath := db.path + "_old"
 
 	// Move existing database and continue on error if file did not exist.

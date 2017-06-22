@@ -49,7 +49,7 @@ func main() {
 
 	sessionStore := aguis.NewSessionStore(store, "authsession")
 
-	db, err := aguis.NewStructOnFileDB(tempFile("agdb.db"), false, logger)
+	db, err := aguis.NewStructDB(tempFile("agdb.db"), false, logger)
 
 	if err != nil {
 		panic(fmt.Sprintf("could not connect to db: %s", err))
