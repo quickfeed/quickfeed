@@ -79,7 +79,9 @@ class StudentPage extends ViewPage {
     }
 
     handleClick(link: ILink){
-        this.navMan.navigateTo(link.uri);
+        if (link.uri){
+            this.navMan.navigateTo(link.uri);
+        }
     }
 }
 
@@ -99,7 +101,9 @@ class TeacherPage extends ViewPage {
     }
 
     handleClick(link: ILink){
-        this.navMan.navigateTo(link.uri);
+        if (link.uri){
+            this.navMan.navigateTo(link.uri);
+        }
     }
 
     renderMenu(menu: number): JSX.Element[]{

@@ -214,12 +214,23 @@ interface INavEvent extends IEventData{
     subPage: string;
 }
 
+
+
 class NavigationManager{
     private pages: IPageContainer = { };
     private errorPages: ViewPage[] = [];
     onNavigate = newEvent<INavEvent>("NavigationManager.onNavigate");
     private defaultPath: string = "";
     private currentPath: string = "";
+    private browserHistory: History;
+
+    constructor(history: History){
+        this.browserHistory = history;
+        window.addEventListener("popstate", (e: PopStateEvent) => {
+            this.navigateTo(location.pathname, true);
+        });
+        
+    }
 
     // TODO: Move out to utility
     private getParts(path: string): string[]{
@@ -248,10 +259,13 @@ class NavigationManager{
         this.defaultPath = path;
     }
 
-    public navigateTo(path: string){
+    public navigateTo(path: string, preventPush?: boolean){
         let parts = this.getParts(path);
         let curPage: IPageContainer | ViewPage = this.pages;
         this.currentPath = parts.join("/");
+        if (!preventPush){
+            this.browserHistory.pushState({}, "Autograder", "/" + this.currentPath);
+        }
         for(let i = 0; i < parts.length; i++){
             let a = parts[i];
             if (isViewPage(curPage)){

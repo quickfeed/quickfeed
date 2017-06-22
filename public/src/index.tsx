@@ -41,7 +41,13 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
     }
 
     componentDidMount() {
-        this.navMan.navigateToDefault();
+        let curUrl = location.pathname;
+        if (curUrl === "/"){
+            this.navMan.navigateToDefault();
+        }
+        else{
+            this.navMan.navigateTo(curUrl);
+        }
     }
 
     private handleClick(link: ILink){
@@ -126,7 +132,7 @@ let tempData = new TempDataProvider();
 
 let userMan = new UserManager(tempData);
 let courseMan = new CourseManager(tempData);
-let navMan = new NavigationManager();
+let navMan = new NavigationManager(history);
 
 /**
  * @description The main entry point for the application. No other code should be executet outside this function

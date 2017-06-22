@@ -27,7 +27,7 @@ var NavHeaderBar = (function (_super) {
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" })),
-            React.createElement("a", { className: "navbar-brand", href: "#" }, this.props.brandName));
+            React.createElement("a", { className: "navbar-brand", onClick: function (e) { e.preventDefault(); }, href: "#" }, this.props.brandName));
     };
     return NavHeaderBar;
 }(React.Component));
@@ -66,7 +66,7 @@ var NavBar = (function (_super) {
                 active = "active";
             }
             return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "#", onClick: function () { return _this.handleClick(v); } }, v.name));
+                React.createElement("a", { href: "#", onClick: function (e) { e.preventDefault(); _this.handleClick(v); } }, v.name));
         });
         return React.createElement("nav", { className: this.renderNavBarClass() },
             React.createElement("div", { className: this.renderIsFluid() },
@@ -89,7 +89,7 @@ var NavMenu = (function (_super) {
                 active = "active";
             }
             return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "#", onClick: function () { if (_this.props.onClick)
+                React.createElement("a", { href: "#", onClick: function (e) { e.preventDefault(); if (_this.props.onClick)
                         _this.props.onClick(v); } }, v.name));
         });
         return React.createElement("ul", { className: "nav nav-pills nav-stacked" }, items);

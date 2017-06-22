@@ -137,12 +137,17 @@ var UserManager = (function () {
     return UserManager;
 }());
 var NavigationManager = (function () {
-    function NavigationManager() {
+    function NavigationManager(history) {
+        var _this = this;
         this.pages = {};
         this.errorPages = [];
         this.onNavigate = newEvent("NavigationManager.onNavigate");
         this.defaultPath = "";
         this.currentPath = "";
+        this.browserHistory = history;
+        window.addEventListener("popstate", function (e) {
+            _this.navigateTo(location.pathname, true);
+        });
     }
     NavigationManager.prototype.getParts = function (path) {
         return this.removeEmptyEntries(path.split("/"));
@@ -165,10 +170,13 @@ var NavigationManager = (function () {
     NavigationManager.prototype.setDefaultPath = function (path) {
         this.defaultPath = path;
     };
-    NavigationManager.prototype.navigateTo = function (path) {
+    NavigationManager.prototype.navigateTo = function (path, preventPush) {
         var parts = this.getParts(path);
         var curPage = this.pages;
         this.currentPath = parts.join("/");
+        if (!preventPush) {
+            this.browserHistory.pushState({}, "Autograder", "/" + this.currentPath);
+        }
         for (var i = 0; i < parts.length; i++) {
             var a = parts[i];
             if (isViewPage(curPage)) {

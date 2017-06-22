@@ -87,7 +87,9 @@ var StudentPage = (function (_super) {
         return [];
     };
     StudentPage.prototype.handleClick = function (link) {
-        this.navMan.navigateTo(link.uri);
+        if (link.uri) {
+            this.navMan.navigateTo(link.uri);
+        }
     };
     return StudentPage;
 }(ViewPage));
@@ -106,7 +108,9 @@ var TeacherPage = (function (_super) {
         return _this;
     }
     TeacherPage.prototype.handleClick = function (link) {
-        this.navMan.navigateTo(link.uri);
+        if (link.uri) {
+            this.navMan.navigateTo(link.uri);
+        }
     };
     TeacherPage.prototype.renderMenu = function (menu) {
         var _this = this;

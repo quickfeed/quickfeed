@@ -33,7 +33,13 @@ var AutoGrader = (function (_super) {
         return _this;
     }
     AutoGrader.prototype.componentDidMount = function () {
-        this.navMan.navigateToDefault();
+        var curUrl = location.pathname;
+        if (curUrl === "/") {
+            this.navMan.navigateToDefault();
+        }
+        else {
+            this.navMan.navigateTo(curUrl);
+        }
     };
     AutoGrader.prototype.handleClick = function (link) {
         if (link.uri) {
@@ -97,7 +103,7 @@ var AutoGrader = (function (_super) {
 var tempData = new TempDataProvider();
 var userMan = new UserManager(tempData);
 var courseMan = new CourseManager(tempData);
-var navMan = new NavigationManager();
+var navMan = new NavigationManager(history);
 function main() {
     var user = userMan.tryLogin("test@testersen.no", "1234");
     navMan.setDefaultPath("app/home");

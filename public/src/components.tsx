@@ -36,7 +36,7 @@ class NavHeaderBar extends React.Component<NavHeaderBarProps, undefined>{
                 <span className="icon-bar"></span>
                 <span className="icon-bar"></span>
             </button>
-            <a className="navbar-brand" href="#">{this.props.brandName}</a>
+            <a className="navbar-brand" onClick={ (e) => { e.preventDefault(); }} href="#">{this.props.brandName}</a>
         </div>
     }
 }
@@ -75,7 +75,7 @@ class NavBar extends React.Component<INavBarProps, undefined> {
             if(v.active){
                 active = "active";
             }
-            return <li className={active} key={i}><a href="#"  onClick={() => this.handleClick(v)}>{v.name}</a></li>
+            return <li className={active} key={i}><a href="#"  onClick={(e) => { e.preventDefault(); this.handleClick(v); }}>{v.name}</a></li>
         });
 
         return <nav className={this.renderNavBarClass()}>
@@ -110,7 +110,7 @@ class NavMenu extends React.Component<INavMenuProps, undefined> {
             if (v.active){
                 active = "active";
             }
-            return <li className={active} key={i}><a href="#" onClick={() => { if (this.props.onClick) this.props.onClick(v); }}>{v.name}</a></li>
+            return <li className={active} key={i}><a href="#" onClick={(e) => { e.preventDefault(); if (this.props.onClick) this.props.onClick(v); }}>{v.name}</a></li>
         })
         return <ul className="nav nav-pills nav-stacked">
             {items}
