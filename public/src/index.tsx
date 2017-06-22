@@ -1,3 +1,17 @@
+import * as React from "react"
+import * as ReactDOM from "react-dom"
+
+import { NavBar, Row } from "./components"
+import { ILink, NavigationManager, INavEvent } from "./managers/NavigationManager";
+import { ViewPage } from "./pages/ViewPage";
+import { UserManager } from "./managers/UserManager";
+import { StudentPage } from "./pages/StudentPage";
+import { TempDataProvider } from "./managers/TempDataProvider";
+import { CourseManager } from "./managers/CourseManager";
+import { HomePage } from "./pages/HomePage";
+import { ErrorPage } from "./pages/ErrorPage";
+import { TeacherPage } from "./pages/TeacherPage";
+
 let topLinks: ILink[] = [
     { name: "Teacher", uri: "app/teacher/", active: false },
     { name: "Student", uri: "app/student/", active: false },
@@ -17,7 +31,6 @@ interface AutoGraderProps{
 class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
     private userManager: UserManager;
     private navMan: NavigationManager;
-    private studentPage: StudentPage;
     private subPage: string;
     
     constructor(props: any){
@@ -147,7 +160,7 @@ function main(){
     navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan));
 
     navMan.registerErrorPage(404, new ErrorPage());
-    navMan.onNavigate.addEventListener((e) => {console.log(e)});
+    navMan.onNavigate.addEventListener((e ) => {console.log(e)});
 
     ReactDOM.render(
         <AutoGrader userManager={userMan} navigationManager={navMan}>

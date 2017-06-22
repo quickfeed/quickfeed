@@ -28,3 +28,5 @@ function newEvent<T extends IEventData>(info: string): INewEvent<T> {
     }
     return handler;
 }
+
+export {IEventData, INewEvent, newEvent}
