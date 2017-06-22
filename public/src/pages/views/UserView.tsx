@@ -2,7 +2,11 @@ import * as React from "react";
 import { DynamicTable } from "../../components";
 import { IUser } from "../../models";
 
-class UserViewer extends React.Component<any, undefined> {
+interface IUserViewerProps{
+    users: IUser[];
+} 
+
+class UserViewer extends React.Component<IUserViewerProps, undefined> {
     render(){
         return <DynamicTable 
             header={["ID","First name", "Last name", "Email", "StudentID"]} 
