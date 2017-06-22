@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/autograde/aguis"
+	"github.com/go-kit/kit/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
@@ -32,6 +33,10 @@ func main() {
 		baseURL = flag.String("service.url", "localhost", "service base url")
 	)
 	flag.Parse()
+
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
+	tsLogger := log.With(logger, "ts", log.DefaultTimestampUTC)
+	logger = log.With(tsLogger, "src", log.DefaultCaller)
 
 	store := sessions.NewCookieStore(
 		securecookie.GenerateRandomKey(64),
@@ -78,7 +83,10 @@ func main() {
 
 	srv := &http.Server{
 		Handler: handlers.LoggingHandler(
-			os.Stdout,
+			loggingHandlerAdapter{
+				logger: tsLogger,
+				key:    "http",
+			},
 			authenticatedHandler(r, sessionStore),
 		),
 		Addr: *httpAddr,
@@ -198,4 +206,16 @@ func envString(env, fallback string) string {
 
 func tempFile(name string) string {
 	return os.TempDir() + string(filepath.Separator) + name
+}
+
+type loggingHandlerAdapter struct {
+	logger log.Logger
+	key    string
+}
+
+func (l loggingHandlerAdapter) Write(p []byte) (int, error) {
+	if err := l.logger.Log(l.key, string(p)); err != nil {
+		return 0, err
+	}
+	return len(p), nil
 }
