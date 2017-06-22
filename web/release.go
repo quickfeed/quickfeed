@@ -1,5 +1,5 @@
 // +build !debug
 
-package main
+package web
 
 const debug = false

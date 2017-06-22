@@ -1,19 +1,16 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 
 	"github.com/autograde/aguis"
+	"github.com/autograde/aguis/web/handlers"
 	"github.com/go-kit/kit/log"
-	"github.com/gorilla/handlers"
+	h "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -65,8 +62,8 @@ func main() {
 	})
 
 	auth := r.PathPrefix("/auth/").Subrouter()
-	auth.Handle("/{provider}", authHandler(db, sessionStore))
-	auth.Handle("/{provider}/callback", authCallbackHandler(db, sessionStore))
+	auth.Handle("/{provider}", handlers.AuthHandler(db, sessionStore))
+	auth.Handle("/{provider}/callback", handlers.AuthCallbackHandler(db, sessionStore))
 
 	api := r.PathPrefix("/api/v1/").Subrouter()
 	api.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
@@ -76,12 +73,12 @@ func main() {
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(*public)))
 
 	srv := &http.Server{
-		Handler: handlers.LoggingHandler(
+		Handler: h.LoggingHandler(
 			loggingHandlerAdapter{
 				logger: tsLogger,
 				key:    "http",
 			},
-			authenticatedHandler(r, sessionStore),
+			handlers.AuthenticatedHandler(r, sessionStore),
 		),
 		Addr: *httpAddr,
 	}
@@ -89,101 +86,6 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil {
 		panic(fmt.Sprintf("http server error: %s", err))
 	}
-}
-
-// Try to get the user without re-authenticating.
-func tryAuthenticate(
-	w http.ResponseWriter, r *http.Request,
-	db aguis.UserDatabase, s *aguis.Session,
-) (*goth.User, error) {
-	user, err := gothic.CompleteUserAuth(w, r)
-
-	if err != nil {
-		return nil, err
-	}
-
-	switch user.Provider {
-	case "github":
-		if err := loginGithub(db, user.UserID); err != nil {
-			return nil, err
-		}
-		if err := s.Login(w, r); err != nil {
-			return nil, err
-		}
-		return &user, nil
-	default:
-		return nil, errors.New(user.Provider + " provider not implemented")
-	}
-}
-
-func authHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := tryAuthenticate(w, r, db, s)
-		if err != nil {
-			gothic.BeginAuthHandler(w, r)
-		}
-		serveInfo(w, user)
-	})
-}
-
-func authCallbackHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := tryAuthenticate(w, r, db, s)
-		if err != nil {
-			httpError(w, http.StatusInternalServerError, err)
-			return
-		}
-		serveInfo(w, user)
-	})
-}
-
-func authenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		loggedIn, err := s.LoggedIn(w, r)
-
-		if err != nil {
-			httpError(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		if strings.HasPrefix(r.RequestURI, "/api") && !loggedIn {
-			httpError(w, http.StatusForbidden, nil)
-			return
-		}
-		m.ServeHTTP(w, r)
-	})
-}
-
-func loginGithub(db aguis.UserDatabase, userID string) error {
-	githubID, err := strconv.Atoi(userID)
-	if err != nil {
-		return err
-	}
-	_, err = db.GetUserWithGithubID(githubID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func serveInfo(w http.ResponseWriter, user *goth.User) {
-	t, _ := template.New("").Parse(`
-	<p><a href="/logout">logout</a></p>
-	<p>Name: {{.Name}}</p>
-	<p>NickName: {{.NickName}}</p>
-	<p>UserID: {{.UserID}}</p>
-	<p>AccessToken: {{.AccessToken}}</p>
-	`)
-
-	t.Execute(w, user)
-}
-
-func httpError(w http.ResponseWriter, code int, err error) {
-	res := http.StatusText(code)
-	if err != nil && debug {
-		res = fmt.Sprintf("%s: %s", http.StatusText(code), err.Error())
-	}
-	http.Error(w, res, code)
 }
 
 func getCallbackURL(baseURL string, provider string) string {
