@@ -75,7 +75,7 @@ class NavBar extends React.Component<INavBarProps, undefined> {
             if(v.active){
                 active = "active";
             }
-            return <li className={active} key={i}><a href="#"  onClick={(e) => { e.preventDefault(); this.handleClick(v); }}>{v.name}</a></li>
+            return <li className={active} key={i}><a href={"/" + v.uri}  onClick={(e) => { e.preventDefault(); this.handleClick(v); }}>{v.name}</a></li>
         });
 
         return <nav className={this.renderNavBarClass()}>
@@ -110,7 +110,7 @@ class NavMenu extends React.Component<INavMenuProps, undefined> {
             if (v.active){
                 active = "active";
             }
-            return <li className={active} key={i}><a href="#" onClick={(e) => { e.preventDefault(); if (this.props.onClick) this.props.onClick(v); }}>{v.name}</a></li>
+            return <li className={active} key={i}><a href={"/" + v.uri} onClick={(e) => { e.preventDefault(); if (this.props.onClick) this.props.onClick(v); }}>{v.name}</a></li>
         })
         return <ul className="nav nav-pills nav-stacked">
             {items}
