@@ -59,8 +59,6 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	root := r.NewRoute().Subrouter()
-	root.Handle("/", http.FileServer(http.Dir(*public)))
 
 	r.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		sessionStore.Logout(w, r)
@@ -74,6 +72,8 @@ func main() {
 	api.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("api call"))
 	})
+
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(*public)))
 
 	srv := &http.Server{
 		Handler: handlers.LoggingHandler(
