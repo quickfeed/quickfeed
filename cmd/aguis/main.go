@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -70,6 +71,12 @@ func main() {
 		w.Write([]byte("api call"))
 	})
 
+	r.PathPrefix("/app").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			r.URL, _ = url.Parse("/")
+			http.ServeFile(w, r, *public)
+		},
+	)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(*public)))
 
 	srv := &http.Server{
