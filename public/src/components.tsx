@@ -106,7 +106,11 @@ interface INavMenuFormatableProps<T>{
 class NavMenu extends React.Component<INavMenuProps, undefined> {
     render(){
         const items = this.props.links.map((v: ILink, i: number) => {
-            return <li key={i}><a href="#" onClick={() => { if (this.props.onClick) this.props.onClick(v); }}>{v.name}</a></li>
+            let active = "";
+            if (v.active){
+                active = "active";
+            }
+            return <li className={active} key={i}><a href="#" onClick={() => { if (this.props.onClick) this.props.onClick(v); }}>{v.name}</a></li>
         })
         return <ul className="nav nav-pills nav-stacked">
             {items}

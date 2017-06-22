@@ -84,7 +84,11 @@ var NavMenu = (function (_super) {
     NavMenu.prototype.render = function () {
         var _this = this;
         var items = this.props.links.map(function (v, i) {
-            return React.createElement("li", { key: i },
+            var active = "";
+            if (v.active) {
+                active = "active";
+            }
+            return React.createElement("li", { className: active, key: i },
                 React.createElement("a", { href: "#", onClick: function () { if (_this.props.onClick)
                         _this.props.onClick(v); } }, v.name));
         });

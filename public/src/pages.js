@@ -20,6 +20,9 @@ var ViewPage = (function () {
         this.template = null;
         this.defaultPage = "";
     }
+    ViewPage.prototype.setPath = function (path) {
+        this.pagePath = path;
+    };
     ViewPage.prototype.renderMenu = function (menu) {
         return [];
     };
@@ -49,7 +52,6 @@ var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan) {
         var _this = _super.call(this) || this;
-        _this.test = "Hello";
         _this.navMan = navMan;
         _this.defaultPage = "opsys/lab1";
         _this.pages["opsys/lab1"] = React.createElement("h1", null, "Lab1");
@@ -63,26 +65,29 @@ var StudentPage = (function (_super) {
     StudentPage.prototype.renderMenu = function (key) {
         var _this = this;
         if (key === 0) {
+            var labLinks = [
+                { name: "Lab 1", uri: this.pagePath + "/opsys/lab1" },
+                { name: "Lab 2", uri: this.pagePath + "/opsys/lab2" },
+                { name: "Lab 3", uri: this.pagePath + "/opsys/lab3" },
+                { name: "Lab 4", uri: this.pagePath + "/opsys/lab4" },
+            ];
+            var settings = [
+                { name: "Users", uri: this.pagePath + "/user" },
+                { name: "Hello world", uri: this.pagePath + "/hello" }
+            ];
+            this.navMan.checkLinks(labLinks);
+            this.navMan.checkLinks(settings);
             return [
                 React.createElement("h4", { key: 0 }, "Labs"),
-                React.createElement(NavMenu, { key: 1, links: [
-                        { name: this.test, uri: "opsys/lab1" },
-                        { name: "Lab 2", uri: "opsys/lab2" },
-                        { name: "Lab 3", uri: "opsys/lab3" },
-                        { name: "Lab 4", uri: "opsys/lab4" },
-                    ], onClick: function (link) { _this.handleClick(link); } }),
-                React.createElement("h4", { key: 4 }, "Settings"),
-                React.createElement(NavMenu, { key: 3, links: [
-                        { name: "Users", uri: "user" },
-                        { name: "Hello world", uri: "hello" }
-                    ], onClick: function (link) { _this.handleClick(link); } })
+                React.createElement(NavMenu, { key: 1, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),
+                React.createElement("h4", { key: 2 }, "Settings"),
+                React.createElement(NavMenu, { key: 3, links: settings, onClick: function (link) { return _this.handleClick(link); } })
             ];
         }
         return [];
     };
     StudentPage.prototype.handleClick = function (link) {
-        this.test = "something else";
-        this.navMan.navigateTo("app/student/" + link.uri);
+        this.navMan.navigateTo(link.uri);
     };
     return StudentPage;
 }(ViewPage));
@@ -101,21 +106,23 @@ var TeacherPage = (function (_super) {
         return _this;
     }
     TeacherPage.prototype.handleClick = function (link) {
-        this.navMan.navigateTo("app/teacher/" + link.uri);
+        this.navMan.navigateTo(link.uri);
     };
     TeacherPage.prototype.renderMenu = function (menu) {
         var _this = this;
         if (menu === 0) {
             var labLinks = [
-                { name: "Teacher Lab 1", uri: "opsys/lab1" },
-                { name: "Teacher Lab 2", uri: "opsys/lab2" },
-                { name: "Teacher Lab 3", uri: "opsys/lab3" },
-                { name: "Teacher Lab 4", uri: "opsys/lab4" },
+                { name: "Teacher Lab 1", uri: this.pagePath + "/opsys/lab1" },
+                { name: "Teacher Lab 2", uri: this.pagePath + "/opsys/lab2" },
+                { name: "Teacher Lab 3", uri: this.pagePath + "/opsys/lab3" },
+                { name: "Teacher Lab 4", uri: this.pagePath + "/opsys/lab4" },
             ];
             var settings = [
-                { name: "Users", uri: "user" },
-                { name: "Hello world", uri: "hello" }
+                { name: "Users", uri: this.pagePath + "/user" },
+                { name: "Hello world", uri: this.pagePath + "/hello" }
             ];
+            this.navMan.checkLinks(labLinks);
+            this.navMan.checkLinks(settings);
             return [
                 React.createElement("h4", { key: 0 }, "Labs"),
                 React.createElement(NavMenu, { key: 1, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),

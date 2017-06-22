@@ -291,6 +291,7 @@ class NavigationManager{
         if (parts.length === 0){
             throw Error("Can't add page to index element");
         }
+        page.setPath(parts.join("/"));
         let curObj = this.pages;
 
         

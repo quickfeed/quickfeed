@@ -203,6 +203,7 @@ var NavigationManager = (function () {
         if (parts.length === 0) {
             throw Error("Can't add page to index element");
         }
+        page.setPath(parts.join("/"));
         var curObj = this.pages;
         for (var i = 0; i < parts.length - 1; i++) {
             var a = parts[i];
