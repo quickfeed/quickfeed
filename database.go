@@ -5,6 +5,8 @@ import (
 	"errors"
 	"os"
 	"sync"
+
+	"github.com/go-kit/kit/log"
 )
 
 // User represents a user account.
@@ -21,7 +23,7 @@ type UserDatabase interface {
 
 // NewStructOnFileDB creates a new database which saves the whole database to a
 // file on every change.
-func NewStructOnFileDB(path string, truncate bool) (*StructOnFileDB, error) {
+func NewStructOnFileDB(path string, truncate bool, logger log.Logger) (*StructOnFileDB, error) {
 	newDB := truncate || !fileExists(path)
 
 	if !newDB {
@@ -37,13 +39,15 @@ func NewStructOnFileDB(path string, truncate bool) (*StructOnFileDB, error) {
 			return nil, err
 		}
 		db.path = path
+		db.logger = logger
 
 		return &db, nil
 	}
 
 	db := &StructOnFileDB{
-		path:  path,
-		Users: make(map[int]*User),
+		path:   path,
+		Users:  make(map[int]*User),
+		logger: logger,
 	}
 
 	return db, db.save()
@@ -54,6 +58,8 @@ type StructOnFileDB struct {
 	mu    sync.Mutex
 	path  string
 	Users map[int]*User
+
+	logger log.Logger
 }
 
 // ErrUserNotExist indicates that the user does not exist.
@@ -80,6 +86,12 @@ func (db *StructOnFileDB) GetUserWithGithubID(githubID int) (*User, error) {
 
 	for _, user := range db.Users {
 		if user.GithubID == githubID {
+			db.logger.Log(
+				"userid", user.ID,
+				"githubid", user.GithubID,
+				"msg", "user found",
+				"new", false,
+			)
 			return user, nil
 		}
 	}
@@ -92,8 +104,21 @@ func (db *StructOnFileDB) GetUserWithGithubID(githubID int) (*User, error) {
 	db.Users[user.ID] = user
 	if err := db.save(); err != nil {
 		delete(db.Users, user.ID)
+		db.logger.Log(
+			"userid", user.ID,
+			"githubid", user.GithubID,
+			"msg", "could not persist user to database",
+			"err", err.Error(),
+		)
 		return nil, err
 	}
+
+	db.logger.Log(
+		"userid", user.ID,
+		"githubid", user.GithubID,
+		"msg", "user found",
+		"new", true,
+	)
 
 	return user, nil
 }
