@@ -1,4 +1,4 @@
-* aguis (name pending...)
+* aguis (name pending...) [[https://travis-ci.org/autograde/aguis][https://travis-ci.org/autograde/aguis.svg?branch=master]] [[https://goreportcard.com/report/github.com/autograde/aguis][https://goreportcard.com/badge/github.com/autograde/aguis]]
 ** Download
    #+BEGIN_SRC shell
    go get -u github.com/autograde/aguis/...
