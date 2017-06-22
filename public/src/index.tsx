@@ -1,13 +1,12 @@
 let topLinks: ILink[] = [
-    { name: "Teacher", uri: "app/teacher/" },
-    { name: "Student", uri: "app/student/" },
-    { name: "Admin", uri: "app/admin" }
+    { name: "Teacher", uri: "app/teacher/", active: false },
+    { name: "Student", uri: "app/student/", active: false },
+    { name: "Admin",   uri: "app/admin",    active: false }
 ]
 
 interface AutoGraderState{
-    pages:(ILink[])[];
     activePage?: ViewPage;
-    currentPage: number;
+    topLink: ILink[];
 }
 
 interface AutoGraderProps{
@@ -29,14 +28,15 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
 
         this.state = {
             activePage: undefined,
-            pages: [ ],
-            currentPage: 0
+            topLink: topLinks
         }
         
         this.navMan.onNavigate.addEventListener((e: INavEvent) => {
             this.subPage = e.subPage;
             let old = this.state.activePage;
-            this.setState({activePage: e.page});            
+            let tempLink = this.state.topLink.slice();
+            this.checkLinks(tempLink);
+            this.setState({activePage: e.page, topLink: tempLink});
         });
     }
 
@@ -64,18 +64,23 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
     }
 
     private renderActivePage(page: string):JSX.Element{
-        if (this.state.activePage){
-            if(!this.state.activePage.pages[this.state.activePage.defaultPage]){
-                console.warn("Warning! Missing default page for " + (this.state.activePage as any).constructor.name, this.state.activePage);
+        let curPage = this.state.activePage;
+        if (curPage){
+            if(!curPage.pages[curPage.defaultPage]){
+                console.warn("Warning! Missing default page for " + (curPage as any).constructor.name, curPage);
             }
-            if (this.state.activePage.pages[page]){
-                return this.state.activePage.pages[page];
+            if (curPage.pages[page]){
+                return curPage.pages[page];
             }
-            else if (this.state.activePage.pages[this.state.activePage.defaultPage]){
-                return this.state.activePage.pages[this.state.activePage.defaultPage];
+            else if (curPage.pages[curPage.defaultPage]){
+                return curPage.pages[curPage.defaultPage];
             }
         }
         return <h1>404 Page not found</h1>
+    }
+
+    private checkLinks(links: ILink[]): void{
+        this.navMan.checkLinks(links);
     }
 
     private renderTemplate(name: string | null){

@@ -2,6 +2,7 @@ interface ILink{
     name: string;
     description?: string;
     uri?: string;
+    active?: boolean;
 }
 
 interface NavHeaderBarProps{
@@ -70,7 +71,11 @@ class NavBar extends React.Component<INavBarProps, undefined> {
 
     render(){
         let items = this.props.links.map((v, i) => {
-            return <li key={i}><a href="#" onClick={() => this.handleClick(v)}>{v.name}</a></li>
+            let active = "";
+            if(v.active){
+                active = "active";
+            }
+            return <li className={active} key={i}><a href="#"  onClick={() => this.handleClick(v)}>{v.name}</a></li>
         });
 
         return <nav className={this.renderNavBarClass()}>
@@ -100,7 +105,7 @@ interface INavMenuFormatableProps<T>{
 
 class NavMenu extends React.Component<INavMenuProps, undefined> {
     render(){
-        const items = this.props.links.map((v, i) => {
+        const items = this.props.links.map((v: ILink, i: number) => {
             return <li key={i}><a href="#" onClick={() => { if (this.props.onClick) this.props.onClick(v); }}>{v.name}</a></li>
         })
         return <ul className="nav nav-pills nav-stacked">

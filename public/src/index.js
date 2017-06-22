@@ -9,9 +9,9 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 var topLinks = [
-    { name: "Teacher", uri: "app/teacher/" },
-    { name: "Student", uri: "app/student/" },
-    { name: "Admin", uri: "app/admin" }
+    { name: "Teacher", uri: "app/teacher/", active: false },
+    { name: "Student", uri: "app/student/", active: false },
+    { name: "Admin", uri: "app/admin", active: false }
 ];
 var AutoGrader = (function (_super) {
     __extends(AutoGrader, _super);
@@ -21,13 +21,14 @@ var AutoGrader = (function (_super) {
         _this.navMan = props.navigationManager;
         _this.state = {
             activePage: undefined,
-            pages: [],
-            currentPage: 0
+            topLink: topLinks
         };
         _this.navMan.onNavigate.addEventListener(function (e) {
             _this.subPage = e.subPage;
             var old = _this.state.activePage;
-            _this.setState({ activePage: e.page });
+            var tempLink = _this.state.topLink.slice();
+            _this.checkLinks(tempLink);
+            _this.setState({ activePage: e.page, topLink: tempLink });
         });
         return _this;
     }
@@ -52,18 +53,22 @@ var AutoGrader = (function (_super) {
         return "";
     };
     AutoGrader.prototype.renderActivePage = function (page) {
-        if (this.state.activePage) {
-            if (!this.state.activePage.pages[this.state.activePage.defaultPage]) {
-                console.warn("Warning! Missing default page for " + this.state.activePage.constructor.name, this.state.activePage);
+        var curPage = this.state.activePage;
+        if (curPage) {
+            if (!curPage.pages[curPage.defaultPage]) {
+                console.warn("Warning! Missing default page for " + curPage.constructor.name, curPage);
             }
-            if (this.state.activePage.pages[page]) {
-                return this.state.activePage.pages[page];
+            if (curPage.pages[page]) {
+                return curPage.pages[page];
             }
-            else if (this.state.activePage.pages[this.state.activePage.defaultPage]) {
-                return this.state.activePage.pages[this.state.activePage.defaultPage];
+            else if (curPage.pages[curPage.defaultPage]) {
+                return curPage.pages[curPage.defaultPage];
             }
         }
         return React.createElement("h1", null, "404 Page not found");
+    };
+    AutoGrader.prototype.checkLinks = function (links) {
+        this.navMan.checkLinks(links);
     };
     AutoGrader.prototype.renderTemplate = function (name) {
         var _this = this;

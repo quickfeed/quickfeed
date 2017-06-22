@@ -218,6 +218,7 @@ class NavigationManager{
     private pages: IPageContainer = { };
     private errorPages: ViewPage[] = [];
     onNavigate = newEvent<INavEvent>("NavigationManager.onNavigate");
+    private defaultPath: string = "";
     private currentPath: string = "";
 
     // TODO: Move out to utility
@@ -244,12 +245,13 @@ class NavigationManager{
     }
 
     public setDefaultPath(path: string){
-        this.currentPath = path;
+        this.defaultPath = path;
     }
 
     public navigateTo(path: string){
         let parts = this.getParts(path);
         let curPage: IPageContainer | ViewPage = this.pages;
+        this.currentPath = parts.join("/");
         for(let i = 0; i < parts.length; i++){
             let a = parts[i];
             if (isViewPage(curPage)){
@@ -277,7 +279,7 @@ class NavigationManager{
     }
 
     public navigateToDefault(): void{
-        this.navigateTo(this.currentPath);
+        this.navigateTo(this.defaultPath);
     }
 
     public navigateToError(statusCode: number): void{
@@ -316,5 +318,15 @@ class NavigationManager{
 
     public registerErrorPage(statusCode: number, page: ViewPage){
         this.errorPages[statusCode] = page;
+    }
+
+    public checkLinks(links: ILink[]){
+        for(let l of links){
+            if (!l.uri){
+                continue;
+            }
+            let a = this.getParts(l.uri).join("/");
+            l.active = a === this.currentPath.substr(0, a.length)
+        }
     }
 }

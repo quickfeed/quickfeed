@@ -61,7 +61,11 @@ var NavBar = (function (_super) {
     NavBar.prototype.render = function () {
         var _this = this;
         var items = this.props.links.map(function (v, i) {
-            return React.createElement("li", { key: i },
+            var active = "";
+            if (v.active) {
+                active = "active";
+            }
+            return React.createElement("li", { className: active, key: i },
                 React.createElement("a", { href: "#", onClick: function () { return _this.handleClick(v); } }, v.name));
         });
         return React.createElement("nav", { className: this.renderNavBarClass() },

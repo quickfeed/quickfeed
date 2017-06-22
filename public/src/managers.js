@@ -141,6 +141,7 @@ var NavigationManager = (function () {
         this.pages = {};
         this.errorPages = [];
         this.onNavigate = newEvent("NavigationManager.onNavigate");
+        this.defaultPath = "";
         this.currentPath = "";
     }
     NavigationManager.prototype.getParts = function (path) {
@@ -162,11 +163,12 @@ var NavigationManager = (function () {
         throw Error("Status page: " + statusCode + " is not defined");
     };
     NavigationManager.prototype.setDefaultPath = function (path) {
-        this.currentPath = path;
+        this.defaultPath = path;
     };
     NavigationManager.prototype.navigateTo = function (path) {
         var parts = this.getParts(path);
         var curPage = this.pages;
+        this.currentPath = parts.join("/");
         for (var i = 0; i < parts.length; i++) {
             var a = parts[i];
             if (isViewPage(curPage)) {
@@ -191,7 +193,7 @@ var NavigationManager = (function () {
         }
     };
     NavigationManager.prototype.navigateToDefault = function () {
-        this.navigateTo(this.currentPath);
+        this.navigateTo(this.defaultPath);
     };
     NavigationManager.prototype.navigateToError = function (statusCode) {
         this.onNavigate({ target: this, page: this.getErrorPage(statusCode), subPage: "", uri: statusCode.toString() });
@@ -224,6 +226,16 @@ var NavigationManager = (function () {
     };
     NavigationManager.prototype.registerErrorPage = function (statusCode, page) {
         this.errorPages[statusCode] = page;
+    };
+    NavigationManager.prototype.checkLinks = function (links) {
+        for (var _i = 0, links_1 = links; _i < links_1.length; _i++) {
+            var l = links_1[_i];
+            if (!l.uri) {
+                continue;
+            }
+            var a = this.getParts(l.uri).join("/");
+            l.active = a === this.currentPath.substr(0, a.length);
+        }
     };
     return NavigationManager;
 }());
