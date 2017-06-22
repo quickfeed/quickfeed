@@ -6,7 +6,7 @@ interface IUserViewerProps{
     users: IUser[];
 } 
 
-class UserViewer extends React.Component<IUserViewerProps, undefined> {
+class UserView extends React.Component<IUserViewerProps, undefined> {
     render(){
         return <DynamicTable 
             header={["ID","First name", "Last name", "Email", "StudentID"]} 
@@ -17,4 +17,4 @@ class UserViewer extends React.Component<IUserViewerProps, undefined> {
     }
 }
 
-export {UserViewer}
+export {UserView}

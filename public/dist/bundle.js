@@ -85,7 +85,6 @@ function isViewPage(item) {
 exports.isViewPage = isViewPage;
 var ViewPage = (function () {
     function ViewPage() {
-        this.pages = {};
         this.template = null;
         this.defaultPage = "";
     }
@@ -149,13 +148,14 @@ var NavHeaderBar = (function (_super) {
         temp.setAttribute("aria-expanded", "false");
     };
     NavHeaderBar.prototype.render = function () {
+        var _this = this;
         return React.createElement("div", { className: "navbar-header" },
             React.createElement("button", { ref: "button", type: "button", className: "navbar-toggle collapsed" },
                 React.createElement("span", { className: "sr-only" }, "Toggle navigation"),
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" })),
-            React.createElement("a", { className: "navbar-brand", onClick: function (e) { e.preventDefault(); }, href: "#" }, this.props.brandName));
+            React.createElement("a", { className: "navbar-brand", onClick: function (e) { e.preventDefault(); _this.props.brandClick(); }, href: "/" }, this.props.brandName));
     };
     return NavHeaderBar;
 }(React.Component));
@@ -181,17 +181,17 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(2);
-var UserViewer = (function (_super) {
-    __extends(UserViewer, _super);
-    function UserViewer() {
+var UserView = (function (_super) {
+    __extends(UserView, _super);
+    function UserView() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    UserViewer.prototype.render = function () {
+    UserView.prototype.render = function () {
         return React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.props.users, selector: function (item) { return [item.id.toString(), item.firstName, item.lastName, item.email, item.personId.toString()]; } });
     };
-    return UserViewer;
+    return UserView;
 }(React.Component));
-exports.UserViewer = UserViewer;
+exports.UserView = UserView;
 
 
 /***/ }),
@@ -303,15 +303,7 @@ var AutoGrader = (function (_super) {
     AutoGrader.prototype.renderActivePage = function (page) {
         var curPage = this.state.activePage;
         if (curPage) {
-            if (!curPage.pages[curPage.defaultPage]) {
-                console.warn("Warning! Missing default page for " + curPage.constructor.name, curPage);
-            }
-            if (curPage.pages[page]) {
-                return curPage.pages[page];
-            }
-            else if (curPage.pages[curPage.defaultPage]) {
-                return curPage.pages[curPage.defaultPage];
-            }
+            return curPage.renderContent(page);
         }
         return React.createElement("h1", null, "404 Page not found");
     };
@@ -321,7 +313,6 @@ var AutoGrader = (function (_super) {
     AutoGrader.prototype.renderTemplate = function (name) {
         var _this = this;
         var body;
-        console.log("rendering template: " + name);
         switch (name) {
             case "frontpage":
                 body = (React.createElement(components_1.Row, { className: "container-fluid" },
@@ -332,7 +323,7 @@ var AutoGrader = (function (_super) {
                     React.createElement("div", { className: "col-md-10 col-sm-9 col-xs-12" }, this.renderActivePage(this.subPage))));
         }
         return (React.createElement("div", null,
-            React.createElement(components_1.NavBar, { id: "top-bar", isFluid: false, isInverse: true, links: topLinks, onClick: function (link) { return _this.handleClick(link); }, brandName: "Auto Grader" }),
+            React.createElement(components_1.NavBar, { id: "top-bar", isFluid: false, isInverse: true, links: topLinks, onClick: function (link) { return _this.handleClick(link); }, user: this.userManager.getCurrentUser(), brandName: "Auto Grader" }),
             body));
     };
     AutoGrader.prototype.render = function () {
@@ -345,15 +336,16 @@ var AutoGrader = (function (_super) {
     };
     return AutoGrader;
 }(React.Component));
-var tempData = new TempDataProvider_1.TempDataProvider();
-var userMan = new UserManager_1.UserManager(tempData);
-var courseMan = new CourseManager_1.CourseManager(tempData);
-var navMan = new NavigationManager_1.NavigationManager(history);
 function main() {
+    var tempData = new TempDataProvider_1.TempDataProvider();
+    var userMan = new UserManager_1.UserManager(tempData);
+    var courseMan = new CourseManager_1.CourseManager(tempData);
+    var navMan = new NavigationManager_1.NavigationManager(history);
+    window.debugData = { tempData: tempData, userMan: userMan, courseMan: courseMan, navMan: navMan };
     var user = userMan.tryLogin("test@testersen.no", "1234");
     navMan.setDefaultPath("app/home");
     navMan.registerPage("app/home", new HomePage_1.HomePage());
-    navMan.registerPage("app/student", new StudentPage_1.StudentPage(userMan, navMan));
+    navMan.registerPage("app/student", new StudentPage_1.StudentPage(userMan, navMan, courseMan));
     navMan.registerPage("app/teacher", new TeacherPage_1.TeacherPage(userMan, navMan));
     navMan.registerErrorPage(404, new ErrorPage_1.ErrorPage());
     navMan.onNavigate.addEventListener(function (e) { console.log(e); });
@@ -414,6 +406,12 @@ var NavBar = (function (_super) {
             this.props.onClick(link);
         }
     };
+    NavBar.prototype.renderUser = function (user) {
+        if (user) {
+            return "Hello " + user.firstName;
+        }
+        return "Not logged in";
+    };
     NavBar.prototype.render = function () {
         var _this = this;
         var items = this.props.links.map(function (v, i) {
@@ -426,9 +424,10 @@ var NavBar = (function (_super) {
         });
         return React.createElement("nav", { className: this.renderNavBarClass() },
             React.createElement("div", { className: this.renderIsFluid() },
-                React.createElement(NavHeaderBar_1.NavHeaderBar, { id: this.props.id, brandName: this.props.brandName }),
+                React.createElement(NavHeaderBar_1.NavHeaderBar, { id: this.props.id, brandName: this.props.brandName, brandClick: function () { return _this.handleClick({ name: "Home", uri: "/" }); } }),
                 React.createElement("div", { className: "collapse navbar-collapse", id: this.props.id },
-                    React.createElement("ul", { className: "nav navbar-nav" }, items))));
+                    React.createElement("ul", { className: "nav navbar-nav" }, items),
+                    React.createElement("p", { className: "navbar-text navbar-right" }, this.renderUser(this.props.user)))));
     };
     return NavBar;
 }(React.Component));
@@ -627,6 +626,10 @@ var NavigationManager = (function () {
         this.defaultPath = path;
     };
     NavigationManager.prototype.navigateTo = function (path, preventPush) {
+        if (path === "/") {
+            this.navigateToDefault();
+            return;
+        }
         var parts = this.getParts(path);
         var curPage = this.pages;
         this.currentPath = parts.join("/");
@@ -798,27 +801,41 @@ var components_1 = __webpack_require__(2);
 var ViewPage_1 = __webpack_require__(1);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
-    function StudentPage(users, navMan) {
+    function StudentPage(users, navMan, courseMan) {
         var _this = _super.call(this) || this;
+        _this.pages = {};
         _this.navMan = navMan;
+        _this.userMan = users;
+        _this.courseMan = courseMan;
         _this.defaultPage = "opsys/lab1";
         _this.pages["opsys/lab1"] = React.createElement("h1", null, "Lab1");
         _this.pages["opsys/lab2"] = React.createElement("h1", null, "Lab2");
         _this.pages["opsys/lab3"] = React.createElement("h1", null, "Lab3");
         _this.pages["opsys/lab4"] = React.createElement("h1", null, "Lab4");
-        _this.pages["user"] = React.createElement(UserView_1.UserViewer, { users: users.getAllUser() });
+        _this.pages["user"] = React.createElement(UserView_1.UserView, { users: users.getAllUser() });
         _this.pages["hello"] = React.createElement(HelloView_1.HelloView, null);
         return _this;
     }
+    StudentPage.prototype.getLabs = function () {
+        var curUsr = this.userMan.getCurrentUser();
+        if (curUsr) {
+            var courses = this.courseMan.getCoursesFor(curUsr);
+            var labs = this.courseMan.getAssignments(courses[0]);
+            return { course: courses[0], labs: labs };
+        }
+        return null;
+    };
     StudentPage.prototype.renderMenu = function (key) {
         var _this = this;
         if (key === 0) {
-            var labLinks = [
-                { name: "Lab 1", uri: this.pagePath + "/opsys/lab1" },
-                { name: "Lab 2", uri: this.pagePath + "/opsys/lab2" },
-                { name: "Lab 3", uri: this.pagePath + "/opsys/lab3" },
-                { name: "Lab 4", uri: this.pagePath + "/opsys/lab4" },
-            ];
+            var labs = this.getLabs();
+            var labLinks = [];
+            if (labs) {
+                for (var _i = 0, _a = labs.labs; _i < _a.length; _i++) {
+                    var l = _a[_i];
+                    labLinks.push({ name: l.name, uri: this.pagePath + "/course/" + labs.course.tag + "/lab/" + l.id });
+                }
+            }
             var settings = [
                 { name: "Users", uri: this.pagePath + "/user" },
                 { name: "Hello world", uri: this.pagePath + "/hello" }
@@ -833,6 +850,34 @@ var StudentPage = (function (_super) {
             ];
         }
         return [];
+    };
+    StudentPage.prototype.renderContent = function (page) {
+        if (page.length === 0) {
+            page = this.defaultPage;
+        }
+        if (this.pages[page]) {
+            return this.pages[page];
+        }
+        var parts = this.navMan.getParts(page);
+        if (parts.length > 1) {
+            if (parts[0] === "course") {
+                var course = parts[1];
+                if (parts.length > 3) {
+                    var labId = parseInt(parts[3]);
+                    if (labId !== undefined) {
+                        var lab = this.courseMan.getAssignment({ id: 0, name: "", tag: "" }, labId);
+                        console.log(lab);
+                        if (lab) {
+                            return React.createElement("h1", null,
+                                "This is: ",
+                                lab.name);
+                        }
+                        return React.createElement("h1", null, "Could not find that lab");
+                    }
+                }
+            }
+        }
+        return React.createElement("div", null);
     };
     StudentPage.prototype.handleClick = function (link) {
         if (link.uri) {
@@ -853,36 +898,12 @@ exports.StudentPage = StudentPage;
 Object.defineProperty(exports, "__esModule", { value: true });
 var TempDataProvider = (function () {
     function TempDataProvider() {
-        this.localCourses = [
-            {
-                id: 0,
-                name: "Object Oriented Programming",
-                tag: "DAT100"
-            },
-            {
-                id: 1,
-                name: "Algorithms and Datastructures",
-                tag: "DAT200"
-            }
-        ];
-        this.localAssignments = [
-            {
-                id: 0,
-                courceId: 0,
-                name: "Lab 1",
-                start: new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30)
-            },
-            {
-                id: 1,
-                courceId: 1,
-                name: "Lab 1",
-                start: new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30)
-            }
-        ];
+        this.addLocalAssignments();
+        this.addLocalCourses();
+        this.addLocalCourseStudent();
+        this.addLocalUsers();
+    }
+    TempDataProvider.prototype.addLocalUsers = function () {
         this.localUsers = [
             {
                 id: 999,
@@ -917,12 +938,78 @@ var TempDataProvider = (function () {
                 password: "1234"
             }
         ];
-    }
+    };
+    TempDataProvider.prototype.addLocalAssignments = function () {
+        this.localAssignments = [
+            {
+                id: 0,
+                courceId: 0,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            },
+            {
+                id: 1,
+                courceId: 0,
+                name: "Lab 2",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            },
+            {
+                id: 2,
+                courceId: 0,
+                name: "Lab 3",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            },
+            {
+                id: 3,
+                courceId: 0,
+                name: "Lab 4",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            },
+            {
+                id: 4,
+                courceId: 1,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30)
+            }
+        ];
+    };
+    TempDataProvider.prototype.addLocalCourses = function () {
+        this.localCourses = [
+            {
+                id: 0,
+                name: "Object Oriented Programming",
+                tag: "DAT100"
+            },
+            {
+                id: 1,
+                name: "Algorithms and Datastructures",
+                tag: "DAT200"
+            }
+        ];
+    };
+    TempDataProvider.prototype.addLocalCourseStudent = function () {
+        this.localCourseStudent = [
+            { courseId: 0, personId: 999 }
+        ];
+    };
     TempDataProvider.prototype.getAllUser = function () {
         return this.localUsers;
     };
     TempDataProvider.prototype.getCourses = function () {
         return this.localCourses;
+    };
+    TempDataProvider.prototype.getCoursesStudent = function () {
+        return this.localCourseStudent;
     };
     TempDataProvider.prototype.getAssignments = function (courseId) {
         var temp = [];
@@ -966,10 +1053,41 @@ var CourseManager = (function () {
     CourseManager.prototype.getCourses = function () {
         return this.courseProvider.getCourses();
     };
+    CourseManager.prototype.getCoursesFor = function (user) {
+        var cLinks = [];
+        for (var _i = 0, _a = this.courseProvider.getCoursesStudent(); _i < _a.length; _i++) {
+            var c = _a[_i];
+            if (user.id === c.personId) {
+                cLinks.push(c);
+            }
+        }
+        var courses = [];
+        for (var _b = 0, _c = this.getCourses(); _b < _c.length; _b++) {
+            var c = _c[_b];
+            for (var _d = 0, cLinks_1 = cLinks; _d < cLinks_1.length; _d++) {
+                var link = cLinks_1[_d];
+                if (c.id === link.courseId) {
+                    courses.push(c);
+                    break;
+                }
+            }
+        }
+        return courses;
+    };
+    CourseManager.prototype.getAssignment = function (course, assignmentId) {
+        var temp = this.getAssignments(course);
+        console.log(temp);
+        for (var _i = 0, temp_1 = temp; _i < temp_1.length; _i++) {
+            var a = temp_1[_i];
+            if (a.id === assignmentId) {
+                return a;
+            }
+        }
+        return null;
+    };
     CourseManager.prototype.getAssignments = function (courseId) {
         if (models_1.isCourse(courseId)) {
             courseId = courseId.id;
-            console.log(courseId);
         }
         return this.courseProvider.getAssignments(courseId);
     };
@@ -986,8 +1104,10 @@ exports.CourseManager = CourseManager;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 function isCourse(value) {
-    console.log(value);
-    return value && typeof value.id === "number" && value.name && value.tag;
+    return value
+        && typeof value.id === "number"
+        && typeof value.name === "string"
+        && typeof value.tag === "string";
 }
 exports.isCourse = isCourse;
 
@@ -1016,9 +1136,11 @@ var HomePage = (function (_super) {
     function HomePage() {
         var _this = _super.call(this) || this;
         _this.defaultPage = "index";
-        _this.pages["index"] = React.createElement("h1", null, "Welcome to autograder");
         return _this;
     }
+    HomePage.prototype.renderContent = function (page) {
+        return React.createElement("h1", null, "Welcome to autograder");
+    };
     return HomePage;
 }(ViewPage_1.ViewPage));
 exports.HomePage = HomePage;
@@ -1048,11 +1170,16 @@ var ErrorPage = (function (_super) {
     function ErrorPage() {
         var _this = _super.call(this) || this;
         _this.defaultPage = "404";
-        _this.pages["404"] = React.createElement("div", null,
-            React.createElement("h1", null, "404 Page not found"),
-            React.createElement("p", null, "The page you where looking for does not exist"));
         return _this;
     }
+    ErrorPage.prototype.renderContent = function (page) {
+        if (page.length === 0) {
+            page = this.defaultPage;
+        }
+        return React.createElement("div", null,
+            React.createElement("h1", null, "404 Page not found"),
+            React.createElement("p", null, "The page you where looking for does not exist"));
+    };
     return ErrorPage;
 }(ViewPage_1.ViewPage));
 exports.ErrorPage = ErrorPage;
@@ -1084,13 +1211,14 @@ var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
     function TeacherPage(users, navMan) {
         var _this = _super.call(this) || this;
+        _this.pages = {};
         _this.navMan = navMan;
         _this.defaultPage = "opsys/lab1";
         _this.pages["opsys/lab1"] = React.createElement("h1", null, "Teacher Lab1");
         _this.pages["opsys/lab2"] = React.createElement("h1", null, "Teacher Lab2");
         _this.pages["opsys/lab3"] = React.createElement("h1", null, "Teacher Lab3");
         _this.pages["opsys/lab4"] = React.createElement("h1", null, "Teacher Lab4");
-        _this.pages["user"] = React.createElement(UserView_1.UserViewer, { users: users.getAllUser() });
+        _this.pages["user"] = React.createElement(UserView_1.UserView, { users: users.getAllUser() });
         _this.pages["hello"] = React.createElement(HelloView_1.HelloView, null);
         return _this;
     }
@@ -1122,6 +1250,15 @@ var TeacherPage = (function (_super) {
             ];
         }
         return [];
+    };
+    TeacherPage.prototype.renderContent = function (page) {
+        if (page.length === 0) {
+            page = this.defaultPage;
+        }
+        if (this.pages[page]) {
+            return this.pages[page];
+        }
+        return React.createElement("h1", null, "404 page not found");
     };
     return TeacherPage;
 }(ViewPage_1.ViewPage));

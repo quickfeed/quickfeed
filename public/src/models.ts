@@ -7,8 +7,10 @@ interface IUser {
 }
 
 function isCourse(value: any): value is ICourse{
-    console.log(value);
-    return value && typeof value.id === "number" && value.name && value.tag;
+    return value 
+        && typeof value.id === "number" 
+        && typeof value.name === "string" 
+        && typeof value.tag === "string";
 }
 
 interface ICourse{

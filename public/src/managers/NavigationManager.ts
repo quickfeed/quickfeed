@@ -35,12 +35,12 @@ class NavigationManager{
     }
 
     // TODO: Move out to utility
-    private getParts(path: string): string[]{
+    getParts(path: string): string[]{
         return this.removeEmptyEntries(path.split("/"));
     }
 
     // TODO: Move out to utility
-    private removeEmptyEntries(array: string[]): string[]{
+    removeEmptyEntries(array: string[]): string[]{
         let newArray: string[] = [];
         array.map((v) => {
             if (v.length > 0){
@@ -62,6 +62,10 @@ class NavigationManager{
     }
 
     public navigateTo(path: string, preventPush?: boolean){
+        if (path === "/"){
+            this.navigateToDefault();
+            return;
+        }
         let parts = this.getParts(path);
         let curPage: IPageContainer | ViewPage = this.pages;
         this.currentPath = parts.join("/");

@@ -2,6 +2,7 @@ import * as React from "react";
 
 import {NavHeaderBar} from "./NavHeaderBar"
 import { ILink } from "../../managers/NavigationManager";
+import { IUser } from "../../models";
 
 interface INavBarProps{
     id: string;
@@ -10,6 +11,7 @@ interface INavBarProps{
     isInverse: boolean;
     brandName: string;
     onClick?: (link:ILink) => void;
+    user: IUser | null;
 }
 
 class NavBar extends React.Component<INavBarProps, undefined> {
@@ -40,6 +42,13 @@ class NavBar extends React.Component<INavBarProps, undefined> {
         }
     }
 
+    renderUser(user: IUser | null): string{
+        if (user){
+            return "Hello " + user.firstName;
+        }
+        return "Not logged in";
+    }
+
     render(){
         let items = this.props.links.map((v, i) => {
             let active = "";
@@ -51,12 +60,15 @@ class NavBar extends React.Component<INavBarProps, undefined> {
 
         return <nav className={this.renderNavBarClass()}>
             <div className={this.renderIsFluid()}>
-                <NavHeaderBar id={this.props.id} brandName={this.props.brandName}></NavHeaderBar>
+                <NavHeaderBar id={this.props.id} brandName={this.props.brandName} brandClick={() => this.handleClick({name:"Home", uri: "/"})}></NavHeaderBar>
 
                 <div className="collapse navbar-collapse" id={this.props.id}>
                     <ul className="nav navbar-nav">
                         {items}
                     </ul>
+                    <p className="navbar-text navbar-right">
+                        { this.renderUser(this.props.user) }
+                    </p>
                 </div>
             </div>
         </nav>

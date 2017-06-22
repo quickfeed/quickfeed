@@ -3,6 +3,7 @@ import * as React from "react";
 interface NavHeaderBarProps{
     brandName: string;
     id: string;
+    brandClick: () => void;
 }
 
 class NavHeaderBar extends React.Component<NavHeaderBarProps, undefined>{
@@ -22,7 +23,7 @@ class NavHeaderBar extends React.Component<NavHeaderBarProps, undefined>{
                 <span className="icon-bar"></span>
                 <span className="icon-bar"></span>
             </button>
-            <a className="navbar-brand" onClick={ (e) => { e.preventDefault(); }} href="#">{this.props.brandName}</a>
+            <a className="navbar-brand" onClick={ (e) => { e.preventDefault(); this.props.brandClick() }} href="/">{this.props.brandName}</a>
         </div>
     }
 }

@@ -5,7 +5,11 @@ class HomePage extends ViewPage{
     constructor(){
         super();
         this.defaultPage = "index";
-        this.pages["index"] = <h1>Welcome to autograder</h1>;
+        //this.pages["index"] = <h1>Welcome to autograder</h1>;
+    }
+
+    renderContent(page: string): JSX.Element{
+        return <h1>Welcome to autograder</h1>;
     }
 }
 

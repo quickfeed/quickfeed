@@ -6,7 +6,6 @@ function isViewPage(item: any): item is ViewPage {
 }
 
 abstract class ViewPage{
-    pages: any = {};
     template: string | null = null;
     defaultPage: string = "";
     pagePath: string;
@@ -18,6 +17,8 @@ abstract class ViewPage{
     renderMenu(menu:number): JSX.Element[] {
         return [];
     }
+
+    abstract renderContent(page: string): JSX.Element;
 }
 
 export {isViewPage, ViewPage}

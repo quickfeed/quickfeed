@@ -1,13 +1,14 @@
 import * as React from "react"
 import { NavigationManager, ILink } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
-import { UserViewer } from "./views/UserView";
+import { UserView } from "./views/UserView";
 import { HelloView } from "./views/HelloView";
 import { NavMenu } from "../components";
 import { ViewPage } from "./ViewPage";
 
 class TeacherPage extends ViewPage {
     navMan: NavigationManager;
+    private pages: {[name: string]: JSX.Element} = {}
     constructor(users: UserManager, navMan: NavigationManager){
         super();
 
@@ -17,7 +18,7 @@ class TeacherPage extends ViewPage {
         this.pages["opsys/lab2"] = <h1>Teacher Lab2</h1>;
         this.pages["opsys/lab3"] = <h1>Teacher Lab3</h1>;
         this.pages["opsys/lab4"] = <h1>Teacher Lab4</h1>;
-        this.pages["user"] = <UserViewer users={users.getAllUser()}></UserViewer>;
+        this.pages["user"] = <UserView users={users.getAllUser()}></UserView>;
         this.pages["hello"] = <HelloView></HelloView>;
     }
 
@@ -52,6 +53,16 @@ class TeacherPage extends ViewPage {
             ];
         }
         return [];
+    }
+
+    renderContent(page: string): JSX.Element{
+        if (page.length === 0){
+            page = this.defaultPage;
+        }
+        if (this.pages[page]){
+            return this.pages[page];
+        }
+        return <h1>404 page not found</h1>
     }
 }
 

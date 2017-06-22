@@ -1,35 +1,57 @@
 import { NavigationManager, ILink } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 import * as React from "react";
-import { UserViewer } from "./views/UserView";
+import { UserView } from "./views/UserView";
 import { HelloView } from "./views/HelloView";
 import { NavMenu } from "../components";
 import { ViewPage } from "./ViewPage";
+import { CourseManager } from "../managers/CourseManager";
+import { IAssignment, ICourse } from "../models";
 
 
 class StudentPage extends ViewPage {
-    navMan: NavigationManager;
-    constructor(users: UserManager, navMan: NavigationManager){
+    private navMan: NavigationManager;
+    private userMan: UserManager;
+    private courseMan: CourseManager;
+
+    private pages: { [key: string]: JSX.Element} = {};
+
+    constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager){
         super();
 
         this.navMan = navMan;
+        this.userMan = users;
+        this.courseMan = courseMan;
         this.defaultPage = "opsys/lab1";
         this.pages["opsys/lab1"] = <h1>Lab1</h1>;
         this.pages["opsys/lab2"] = <h1>Lab2</h1>;
         this.pages["opsys/lab3"] = <h1>Lab3</h1>;
         this.pages["opsys/lab4"] = <h1>Lab4</h1>;
-        this.pages["user"] = <UserViewer users={users.getAllUser()}></UserViewer>;
+        this.pages["user"] = <UserView users={users.getAllUser()}></UserView>;
         this.pages["hello"] = <HelloView></HelloView>;
+    }
+
+    getLabs(): {course: ICourse, labs: IAssignment[]} | null {
+        let curUsr = this.userMan.getCurrentUser();
+        if (curUsr){
+            let courses = this.courseMan.getCoursesFor(curUsr);
+            let labs = this.courseMan.getAssignments(courses[0]);
+            return { course: courses[0], labs: labs };
+        }
+        return null;
     }
 
     renderMenu(key: number): JSX.Element[]{
         if (key === 0){
-            let labLinks = [
-                {name: "Lab 1", uri: this.pagePath + "/opsys/lab1"},
-                {name: "Lab 2", uri: this.pagePath + "/opsys/lab2"}, 
-                {name: "Lab 3", uri: this.pagePath + "/opsys/lab3"},
-                {name: "Lab 4", uri: this.pagePath + "/opsys/lab4"},
-            ];
+            let labs = this.getLabs();
+            let labLinks: ILink[] = []
+            if (labs){
+                for(let l of labs.labs){
+                    labLinks.push({name: l.name, uri: this.pagePath + "/course/" + labs.course.tag + "/lab/" + l.id});
+                }
+            }
+
+
             let settings = [
                 {name: "Users", uri: this.pagePath + "/user"},
                 {name: "Hello world", uri: this.pagePath + "/hello"}
@@ -46,6 +68,35 @@ class StudentPage extends ViewPage {
             ];
         }
         return [];
+    }
+
+    renderContent(page: string): JSX.Element{
+        if (page.length === 0){
+            page = this.defaultPage;
+        }
+        if (this.pages[page]){
+            return this.pages[page];
+        }
+        let parts = this.navMan.getParts(page);
+        if (parts.length > 1){
+            if (parts[0] === "course"){
+                let course = parts[1];
+                if (parts.length > 3){
+                    let labId = parseInt(parts[3]);
+                    if (labId !== undefined){
+                        // TODO: Be carefull not to return anything that sould not be able to be returned
+                        let lab = this.courseMan.getAssignment({id:0, name: "", tag: ""}, labId);
+                        console.log(lab);
+                        if (lab){
+                            return <h1>This is: {lab.name}</h1>
+                        }
+                        return <h1>Could not find that lab</h1>
+                    }
+                }
+            }
+        }
+
+        return <div></div>
     }
 
     handleClick(link: ILink){

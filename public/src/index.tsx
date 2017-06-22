@@ -81,16 +81,17 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
 
     private renderActivePage(page: string):JSX.Element{
         let curPage = this.state.activePage;
-        if (curPage){
-            if(!curPage.pages[curPage.defaultPage]){
+        if (curPage) {
+            return curPage.renderContent(page);
+            /*if(!curPage.pages[curPage.defaultPage]){
                 console.warn("Warning! Missing default page for " + (curPage as any).constructor.name, curPage);
             }
             if (curPage.pages[page]){
                 return curPage.pages[page];
             }
-            else if (curPage.pages[curPage.defaultPage]){
+            else if (page.length === 0 && curPage.pages[curPage.defaultPage]){
                 return curPage.pages[curPage.defaultPage];
-            }
+            }*/
         }
         return <h1>404 Page not found</h1>
     }
@@ -101,7 +102,7 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
 
     private renderTemplate(name: string | null){
         let body: JSX.Element;
-        console.log("rendering template: " + name);
+        //console.log("rendering template: " + name);
         switch(name){
             case "frontpage":
                 body = (
@@ -125,7 +126,7 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
         }
         return (
         <div>
-            <NavBar id="top-bar" isFluid={false} isInverse={true} links={topLinks} onClick={(link) => this.handleClick(link)} brandName="Auto Grader"></NavBar>
+            <NavBar id="top-bar" isFluid={false} isInverse={true} links={topLinks} onClick={(link) => this.handleClick(link)} user={this.userManager.getCurrentUser()} brandName="Auto Grader"></NavBar>
             {body}
         </div>);
     }
@@ -140,23 +141,27 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
     }
 }
 
-// Just to make them globaly available for easier debugging
-let tempData = new TempDataProvider();
 
-let userMan = new UserManager(tempData);
-let courseMan = new CourseManager(tempData);
-let navMan = new NavigationManager(history);
+
 
 /**
  * @description The main entry point for the application. No other code should be executet outside this function
  */
 function main(){
     
+    let tempData = new TempDataProvider();
+
+    let userMan = new UserManager(tempData);
+    let courseMan = new CourseManager(tempData);
+    let navMan = new NavigationManager(history);
+
+    (window as any).debugData = {tempData: tempData, userMan: userMan, courseMan: courseMan, navMan: navMan};
+
     let user = userMan.tryLogin("test@testersen.no","1234");
 
     navMan.setDefaultPath("app/home");
     navMan.registerPage("app/home", new HomePage());
-    navMan.registerPage("app/student", new StudentPage(userMan, navMan));
+    navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan));
     navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan));
 
     navMan.registerErrorPage(404, new ErrorPage());
