@@ -18,7 +18,7 @@ func TestLogin(t *testing.T) {
 	w1 := httptest.NewRecorder()
 	r1 := httptest.NewRequest(http.MethodGet, "/auth/github", nil)
 
-	if err := s.Login(w1, r1); err != nil {
+	if err := s.Login(w1, r1, 0); err != nil {
 		t.Error(err)
 	}
 
@@ -36,11 +36,11 @@ func TestLogin(t *testing.T) {
 	r2 := httptest.NewRequest(http.MethodGet, "/api/v1/test", nil)
 	r2.AddCookie(cookie)
 
-	ok, err := s.LoggedIn(w2, r2)
+	id, err := s.Whois(w2, r2)
 	if err != nil {
 		t.Errorf("have '%s' want 'no error'", err)
 	}
-	if !ok {
+	if id > 0 {
 		t.Error("have 'user not logged in' want 'user logged in'")
 	}
 }
@@ -70,11 +70,11 @@ func TestLogout(t *testing.T) {
 	r2 := httptest.NewRequest(http.MethodGet, "/api/v1/test", nil)
 	r2.AddCookie(cookie)
 
-	ok, err := s.LoggedIn(w2, r2)
+	id, err := s.Whois(w2, r2)
 	if err != nil {
 		t.Errorf("have '%s' want 'no error'", err)
 	}
-	if ok {
+	if id > 0 {
 		t.Error("have 'user logged in' want 'user not logged in'")
 	}
 }
