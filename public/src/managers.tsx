@@ -321,13 +321,28 @@ class NavigationManager{
         this.errorPages[statusCode] = page;
     }
 
-    public checkLinks(links: ILink[]){
+    /**
+     * Checks to see if the link is part of the current path, and also mark them as active if they are.
+     * @param links The links to check
+     */
+    public checkLinks(links: ILink[]): void
+    /**
+     * Checks to see if the link is part of the current path, or the default page to the given ViewPage. Also mark them as active if they are.
+     * @param links The links to check
+     * @param viewPage ViewPage to get defaultPage information from
+     */
+    public checkLinks(links: ILink[], viewPage: ViewPage): void
+    public checkLinks(links: ILink[], viewPage?: ViewPage): void {
+        let checkUrl = this.currentPath;
+        if (viewPage && viewPage.pagePath === checkUrl){
+            checkUrl += "/" + viewPage.defaultPage;
+        }
         for(let l of links){
             if (!l.uri){
                 continue;
             }
             let a = this.getParts(l.uri).join("/");
-            l.active = a === this.currentPath.substr(0, a.length)
+            l.active = a === checkUrl.substr(0, a.length)
         }
     }
 

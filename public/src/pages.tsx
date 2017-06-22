@@ -65,8 +65,8 @@ class StudentPage extends ViewPage {
                 {name: "Hello world", uri: this.pagePath + "/hello"}
             ];
 
-            this.navMan.checkLinks(labLinks);
-            this.navMan.checkLinks(settings);
+            this.navMan.checkLinks(labLinks, this);
+            this.navMan.checkLinks(settings, this);
 
             return [
                 <h4 key={0}>Labs</h4>,
@@ -116,8 +116,8 @@ class TeacherPage extends ViewPage {
                 {name: "Hello world", uri: this.pagePath + "/hello"}
             ];
 
-            this.navMan.checkLinks(labLinks);
-            this.navMan.checkLinks(settings);
+            this.navMan.checkLinks(labLinks, this);
+            this.navMan.checkLinks(settings, this);
 
             return [
                 <h4 key={0}>Labs</h4>,

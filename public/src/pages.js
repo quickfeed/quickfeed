@@ -75,8 +75,8 @@ var StudentPage = (function (_super) {
                 { name: "Users", uri: this.pagePath + "/user" },
                 { name: "Hello world", uri: this.pagePath + "/hello" }
             ];
-            this.navMan.checkLinks(labLinks);
-            this.navMan.checkLinks(settings);
+            this.navMan.checkLinks(labLinks, this);
+            this.navMan.checkLinks(settings, this);
             return [
                 React.createElement("h4", { key: 0 }, "Labs"),
                 React.createElement(NavMenu, { key: 1, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),
@@ -121,8 +121,8 @@ var TeacherPage = (function (_super) {
                 { name: "Users", uri: this.pagePath + "/user" },
                 { name: "Hello world", uri: this.pagePath + "/hello" }
             ];
-            this.navMan.checkLinks(labLinks);
-            this.navMan.checkLinks(settings);
+            this.navMan.checkLinks(labLinks, this);
+            this.navMan.checkLinks(settings, this);
             return [
                 React.createElement("h4", { key: 0 }, "Labs"),
                 React.createElement(NavMenu, { key: 1, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),

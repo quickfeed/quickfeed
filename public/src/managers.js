@@ -228,14 +228,18 @@ var NavigationManager = (function () {
     NavigationManager.prototype.registerErrorPage = function (statusCode, page) {
         this.errorPages[statusCode] = page;
     };
-    NavigationManager.prototype.checkLinks = function (links) {
+    NavigationManager.prototype.checkLinks = function (links, viewPage) {
+        var checkUrl = this.currentPath;
+        if (viewPage && viewPage.pagePath === checkUrl) {
+            checkUrl += "/" + viewPage.defaultPage;
+        }
         for (var _i = 0, links_1 = links; _i < links_1.length; _i++) {
             var l = links_1[_i];
             if (!l.uri) {
                 continue;
             }
             var a = this.getParts(l.uri).join("/");
-            l.active = a === this.currentPath.substr(0, a.length);
+            l.active = a === checkUrl.substr(0, a.length);
         }
     };
     NavigationManager.prototype.refresh = function () {
