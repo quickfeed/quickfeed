@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,23 +16,40 @@ import (
 // AuthHandler tries to authenticate against a oauth2 provider.
 func AuthHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := tryAuthenticate(w, r, db, s)
+		if id, _ := s.Whois(w, r); id > 0 {
+			http.Redirect(w, r, "/", http.StatusFound)
+		}
+
+		externalUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
 			gothic.BeginAuthHandler(w, r)
+			return
 		}
-		serveInfo(w, user)
+		if err := login(w, r, db, s, &externalUser); err != nil {
+			web.HTTPError(w, http.StatusInternalServerError, err)
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusFound)
 	})
 }
 
 // AuthCallbackHandler handles the callback from a oauth2 provider.
 func AuthCallbackHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, err := tryAuthenticate(w, r, db, s)
+		if id, _ := s.Whois(w, r); id > 0 {
+			http.Redirect(w, r, "/", http.StatusFound)
+		}
+
+		externalUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			return
+		}
+		if err := login(w, r, db, s, &externalUser); err != nil {
 			web.HTTPError(w, http.StatusInternalServerError, err)
 			return
 		}
-		serveInfo(w, user)
+		http.Redirect(w, r, "/", http.StatusFound)
 	})
 }
 
@@ -41,14 +57,14 @@ func AuthCallbackHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 // pass through to the endpoints that require authentication.
 func AuthenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		loggedIn, err := s.LoggedIn(w, r)
+		id, err := s.Whois(w, r)
 
 		if err != nil {
 			web.HTTPError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		if strings.HasPrefix(r.RequestURI, "/api") && !loggedIn {
+		if strings.HasPrefix(r.RequestURI, "/api") && id == -1 {
 			web.HTTPError(w, http.StatusForbidden, nil)
 			return
 		}
@@ -56,51 +72,33 @@ func AuthenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 	})
 }
 
-// Try to get the user without re-authenticating.
-func tryAuthenticate(
-	w http.ResponseWriter, r *http.Request,
-	db aguis.UserDatabase, s *aguis.Session,
-) (*goth.User, error) {
-	user, err := gothic.CompleteUserAuth(w, r)
-
-	if err != nil {
-		return nil, err
-	}
-
+func getInteralUser(db aguis.UserDatabase, user *goth.User) (*aguis.User, error) {
 	switch user.Provider {
 	case "github":
-		if err := loginGithub(db, user.UserID); err != nil {
+		githubID, err := strconv.Atoi(user.UserID)
+		if err != nil {
 			return nil, err
 		}
-		if err := s.Login(w, r); err != nil {
+		user, err := db.GetUserWithGithubID(githubID)
+		if err != nil {
 			return nil, err
 		}
-		return &user, nil
+		return user, nil
 	default:
-		return nil, errors.New(user.Provider + " provider not implemented")
+		return nil, errors.New("provider not implemented")
 	}
 }
 
-func loginGithub(db aguis.UserDatabase, userID string) error {
-	githubID, err := strconv.Atoi(userID)
+func login(
+	w http.ResponseWriter, r *http.Request,
+	db aguis.UserDatabase, s *aguis.Session, externalUser *goth.User,
+) error {
+	user, err := getInteralUser(db, externalUser)
 	if err != nil {
 		return err
 	}
-	_, err = db.GetUserWithGithubID(githubID)
-	if err != nil {
+	if err := s.Login(w, r, user.ID); err != nil {
 		return err
 	}
 	return nil
-}
-
-func serveInfo(w http.ResponseWriter, user *goth.User) {
-	t, _ := template.New("").Parse(`
-	<p><a href="/logout">logout</a></p>
-	<p>Name: {{.Name}}</p>
-	<p>NickName: {{.NickName}}</p>
-	<p>UserID: {{.UserID}}</p>
-	<p>AccessToken: {{.AccessToken}}</p>
-	`)
-
-	t.Execute(w, user)
 }

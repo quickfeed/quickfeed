@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 
@@ -71,13 +70,14 @@ func main() {
 		w.Write([]byte("api call"))
 	})
 
+	fs := http.FileServer(http.Dir(*public))
 	r.PathPrefix("/app").HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			r.URL, _ = url.Parse("/")
-			http.ServeFile(w, r, *public)
+			r.URL.Path = "/"
+			fs.ServeHTTP(w, r)
 		},
 	)
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir(*public)))
+	r.PathPrefix("/").Handler(fs)
 
 	srv := &http.Server{
 		Handler: h.LoggingHandler(
