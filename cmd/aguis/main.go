@@ -55,11 +55,12 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.Handle("/", http.FileServer(http.Dir(*public)))
+	//r.Handle("/", http.FileServer(http.Dir(*public)))
 
 	r.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		sessionStore.Logout(w, r)
 	})
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(*public)))
 
 	auth := r.PathPrefix("/auth/").Subrouter()
 	auth.Handle("/{provider}", authHandler(db, sessionStore))
