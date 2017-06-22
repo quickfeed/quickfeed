@@ -329,4 +329,8 @@ class NavigationManager{
             l.active = a === this.currentPath.substr(0, a.length)
         }
     }
+
+    public refresh(){
+        this.navigateTo(this.currentPath);
+    }
 }

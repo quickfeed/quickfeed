@@ -55,10 +55,7 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
 
     private renderActiveMenu(menu: number): JSX.Element[] | string {
         if (this.state.activePage){
-            let temp = this.state.activePage.getMenu(menu);
-            if (temp){
-                return temp;
-            }
+            return this.state.activePage.renderMenu(menu);
         }
         return "";
     }

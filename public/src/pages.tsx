@@ -1,21 +1,18 @@
 function isViewPage(item: any): item is ViewPage {
-    if (item.getMenu){
+    if (item instanceof ViewPage){
         return true;
     }
     return false;
 }
 
-class ViewPage{
-    menus: (JSX.Element[])[] = [];
+abstract class ViewPage{
     pages: any = {};
     template: string | null = null;
     defaultPage: string = "";
 
-    getMenu(menu: number): JSX.Element[] | null{
-        if (this.menus.length > menu){
-            return this.menus[menu];
-        }
-        return null;
+    renderMenu(menu:number): JSX.Element[] {
+        
+        return [];
     }
 }
 
@@ -42,23 +39,6 @@ class StudentPage extends ViewPage {
         super();
 
         this.navMan = navMan;
-        this.menus[0] = [
-            <h4 key={0}>Labs</h4>,
-            <NavMenu key={1} links={[
-                    {name: "Lab 1", uri: "opsys/lab1"},
-                    {name: "Lab 2", uri: "opsys/lab2"}, 
-                    {name: "Lab 3", uri: "opsys/lab3"},
-                    {name: "Lab 4", uri: "opsys/lab4"},
-                    
-                ]} 
-                onClick={(link) => {this.handleClick(link)}}></NavMenu>,
-            <h4 key={4}>Settings</h4>,
-            <NavMenu key={3} links={[
-                    {name: "Users", uri: "user"},
-                    {name: "Hello world", uri: "hello"}
-                ]}
-                onClick={(link) => {this.handleClick(link)}}></NavMenu>
-        ];
         this.defaultPage = "opsys/lab1";
         this.pages["opsys/lab1"] = <h1>Lab1</h1>;
         this.pages["opsys/lab2"] = <h1>Lab2</h1>;
@@ -67,8 +47,33 @@ class StudentPage extends ViewPage {
         this.pages["user"] = <UserViewer users={users.getAllUser()}></UserViewer>;
         this.pages["hello"] = <HelloView></HelloView>;
     }
+    test: string = "Hello";
+
+    renderMenu(key: number): JSX.Element[]{
+        if (key === 0){
+            return [
+                <h4 key={0}>Labs</h4>,
+                <NavMenu key={1} links={[
+                        {name: this.test, uri: "opsys/lab1"},
+                        {name: "Lab 2", uri: "opsys/lab2"}, 
+                        {name: "Lab 3", uri: "opsys/lab3"},
+                        {name: "Lab 4", uri: "opsys/lab4"},
+                        
+                    ]} 
+                    onClick={(link) => {this.handleClick(link)}}></NavMenu>,
+                <h4 key={4}>Settings</h4>,
+                <NavMenu key={3} links={[
+                        {name: "Users", uri: "user"},
+                        {name: "Hello world", uri: "hello"}
+                    ]}
+                    onClick={(link) => {this.handleClick(link)}}></NavMenu>
+            ];
+        }
+        return [];
+    }
 
     handleClick(link: ILink){
+        this.test = "something else";
         this.navMan.navigateTo("app/student/" + link.uri);
     }
 }
@@ -79,23 +84,6 @@ class TeacherPage extends ViewPage {
         super();
 
         this.navMan = navMan;
-        this.menus[0] = [
-            <h4 key={0}>Labs</h4>,
-            <NavMenu key={1} links={[
-                    {name: "Teacher Lab 1", uri: "opsys/lab1"},
-                    {name: "Teacher Lab 2", uri: "opsys/lab2"}, 
-                    {name: "Teacher Lab 3", uri: "opsys/lab3"},
-                    {name: "Teacher Lab 4", uri: "opsys/lab4"},
-                    
-                ]} 
-                onClick={(link) => {this.handleClick(link)}}></NavMenu>,
-            <h4 key={4}>Settings</h4>,
-            <NavMenu key={3} links={[
-                    {name: "Users", uri: "user"},
-                    {name: "Hello world", uri: "hello"}
-                ]}
-                onClick={(link) => {this.handleClick(link)}}></NavMenu>
-        ];
         this.defaultPage = "opsys/lab1";
         this.pages["opsys/lab1"] = <h1>Teacher Lab1</h1>;
         this.pages["opsys/lab2"] = <h1>Teacher Lab2</h1>;
@@ -107,6 +95,30 @@ class TeacherPage extends ViewPage {
 
     handleClick(link: ILink){
         this.navMan.navigateTo("app/teacher/" + link.uri);
+    }
+
+    renderMenu(menu: number): JSX.Element[]{
+        if (menu === 0){
+            let labLinks = [
+                {name: "Teacher Lab 1", uri: "opsys/lab1"},
+                {name: "Teacher Lab 2", uri: "opsys/lab2"}, 
+                {name: "Teacher Lab 3", uri: "opsys/lab3"},
+                {name: "Teacher Lab 4", uri: "opsys/lab4"},
+            ];
+
+            let settings = [
+                {name: "Users", uri: "user"},
+                {name: "Hello world", uri: "hello"}
+            ];
+
+            return [
+                <h4 key={0}>Labs</h4>,
+                <NavMenu key={1} links={labLinks} onClick={link => this.handleClick(link)}></NavMenu>,
+                <h4 key={4}>Settings</h4>,
+                <NavMenu key={3} links={settings} onClick={link => this.handleClick(link)}></NavMenu>
+            ];
+        }
+        return [];
     }
 }
 

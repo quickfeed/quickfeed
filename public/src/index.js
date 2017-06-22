@@ -45,10 +45,7 @@ var AutoGrader = (function (_super) {
     };
     AutoGrader.prototype.renderActiveMenu = function (menu) {
         if (this.state.activePage) {
-            var temp = this.state.activePage.getMenu(menu);
-            if (temp) {
-                return temp;
-            }
+            return this.state.activePage.renderMenu(menu);
         }
         return "";
     };

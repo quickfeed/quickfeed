@@ -237,5 +237,8 @@ var NavigationManager = (function () {
             l.active = a === this.currentPath.substr(0, a.length);
         }
     };
+    NavigationManager.prototype.refresh = function () {
+        this.navigateTo(this.currentPath);
+    };
     return NavigationManager;
 }());
