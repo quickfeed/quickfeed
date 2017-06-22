@@ -8,8 +8,7 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": false,
-        "jsx": "react",
-        "watch": true
+        "jsx": "react"
     },
     "include": [
         "src/**/*"
