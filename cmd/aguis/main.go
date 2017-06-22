@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -60,13 +59,9 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	//r.Handle("/", http.FileServer(http.Dir(*public)))
-	r.PathPrefix("/app").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("Now rewriting %s", r.URL)
-		url, _ := url.Parse("/")
-		r.URL = url
-		http.ServeFile(w, r, *public)
-	})
+	root := r.NewRoute().Subrouter()
+	root.Handle("/", http.FileServer(http.Dir(*public)))
+
 	r.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		sessionStore.Logout(w, r)
 	})
