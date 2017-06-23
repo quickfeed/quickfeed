@@ -10,6 +10,7 @@ import { IAssignment, ICourse } from "../models";
 import { ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
 import { UserView } from "./views/UserView";
+import { NavDropdown } from "../components/bootstrap/Dropdown";
 
 class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -20,6 +21,8 @@ class StudentPage extends ViewPage {
 
     private selectedCourse: ICourse | null = null;
     private selectedAssignment: IAssignment | null = null;
+
+    private currentPage: string = "";
 
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
@@ -62,6 +65,12 @@ class StudentPage extends ViewPage {
 
     public renderMenu(key: number): JSX.Element[] {
         if (key === 0) {
+            const courses = this.getCourses();
+            console.log(courses);
+            const coursesLinks: ILink[] = [];
+            for (const a of courses) {
+                coursesLinks.push({ name: a.tag, uri: this.pagePath + "/course/" + a.id });
+            }
             const labs = this.getLabs();
             const labLinks: ILink[] = [];
             if (labs) {
@@ -79,10 +88,13 @@ class StudentPage extends ViewPage {
             this.navMan.checkLinks(settings, this);
 
             return [
-                <h4 key={0}>Labs</h4>,
-                <NavMenu key={1} links={labLinks} onClick={(link) => this.handleClick(link)}></NavMenu>,
-                <h4 key={2}>Settings</h4>,
-                <NavMenu key={3} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
+                <h4>Course</h4>,
+                <NavDropdown key={1} selectedIndex={0} itemClick={(e) => { console.log(e); }} items={coursesLinks}>
+                </NavDropdown>,
+                <h4 key={2}>Labs</h4>,
+                <NavMenu key={3} links={labLinks} onClick={(link) => this.handleClick(link)}></NavMenu>,
+                <h4 key={4}>Settings</h4>,
+                <NavMenu key={5} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
             ];
         }
         return [];
@@ -107,12 +119,24 @@ class StudentPage extends ViewPage {
         }
     }
 
-    private getLabs(): { course: ICourse, labs: IAssignment[] } | null {
+    private getCourses(): ICourse[] {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            const courses = this.courseMan.getCoursesFor(curUsr);
-            const labs = this.courseMan.getAssignments(courses[0]);
-            return { course: courses[0], labs };
+            return this.courseMan.getCoursesFor(curUsr);
+        }
+        return [];
+    }
+
+    private getLabs(): { course: ICourse, labs: IAssignment[] } | null {
+        const curUsr = this.userMan.getCurrentUser();
+        if (curUsr && !this.selectedCourse) {
+            this.selectedCourse = this.courseMan.getCoursesFor(curUsr)[0];
+        }
+
+        if (this.selectedCourse) {
+
+            const labs = this.courseMan.getAssignments(this.selectedCourse);
+            return { course: this.selectedCourse, labs };
         }
         return null;
     }
