@@ -34,7 +34,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     public getAssignments(courseId: number): IAssignment[] {
         const temp: IAssignment[] = [];
         for (const a of this.localAssignments) {
-            if (a.courceId === courseId) {
+            if (a.courseId === courseId) {
                 temp.push(a);
             }
         }
@@ -94,7 +94,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         this.localAssignments = [
             {
                 id: 0,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 1",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
@@ -102,7 +102,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 1,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 2",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
@@ -110,7 +110,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 2,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 3",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
@@ -118,7 +118,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 3,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 4",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
@@ -126,7 +126,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 4,
-                courceId: 1,
+                courseId: 1,
                 name: "Lab 1",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),

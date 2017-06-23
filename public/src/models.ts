@@ -21,7 +21,7 @@ interface ICourse {
 
 interface IAssignment {
     id: number;
-    courceId: number;
+    courseId: number;
     name: string;
     start: Date;
     deadline: Date;
