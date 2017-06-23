@@ -85,7 +85,7 @@ func main() {
 				logger: tsLogger,
 				key:    "http",
 			},
-			handlers.Authenticated(r, sessionStore),
+			handlers.Authenticated(r, db, sessionStore),
 		),
 		Addr: *httpAddr,
 	}

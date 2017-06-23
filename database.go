@@ -18,6 +18,7 @@ type User struct {
 
 // UserDatabase contains methods for manipulating a database user.
 type UserDatabase interface {
+	GetUser(int) (*User, error)
 	GetUsers() (map[int]*User, error)
 	GetUserWithGithubID(int, string) (*User, error)
 }
@@ -73,6 +74,18 @@ type StructDB struct {
 
 // ErrUserNotExist indicates that the user does not exist.
 var ErrUserNotExist = errors.New("user does not exist")
+
+// GetUser returns the user with the given id.
+func (db *StructDB) GetUser(id int) (*User, error) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	if user, ok := db.Users[id]; ok {
+		return user, nil
+	}
+
+	return nil, ErrUserNotExist
+}
 
 // GetUsers returns all the user accounts in the database.
 func (db *StructDB) GetUsers() (map[int]*User, error) {

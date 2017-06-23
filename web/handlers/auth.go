@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -12,6 +13,10 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 )
+
+type contextKey string
+
+const userContextKey contextKey = "user"
 
 // Auth tries to authenticate against an oauth2 provider.
 func Auth(db aguis.UserDatabase, s *aguis.Session) http.Handler {
@@ -55,21 +60,40 @@ func AuthCallback(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 
 // Authenticated ensures that only authenticated sessions are allowed to
 // pass through to the endpoints that require authentication.
-func Authenticated(m *mux.Router, s *aguis.Session) http.Handler {
+func Authenticated(m *mux.Router, db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id, err := s.Whois(w, r)
-
 		if err != nil {
 			web.HTTPError(w, http.StatusInternalServerError, err)
 			return
 		}
-
 		if strings.HasPrefix(r.URL.RequestURI(), "/api") && id == -1 {
 			web.HTTPError(w, http.StatusUnauthorized, nil)
 			return
 		}
+
+		if id >= 0 {
+			user, err := db.GetUser(id)
+			if err != nil {
+				web.HTTPError(w, http.StatusInternalServerError, err)
+				return
+			}
+
+			ctx := newUserContext(context.Background(), user)
+			r = r.WithContext(ctx)
+		}
+
 		m.ServeHTTP(w, r)
 	})
+}
+
+func newUserContext(ctx context.Context, u *aguis.User) context.Context {
+	return context.WithValue(ctx, userContextKey, u)
+}
+
+func userFromContext(ctx context.Context) (*aguis.User, bool) {
+	u, ok := ctx.Value(userContextKey).(*aguis.User)
+	return u, ok
 }
 
 func getInteralUser(db aguis.UserDatabase, externalUser *goth.User) (*aguis.User, error) {
