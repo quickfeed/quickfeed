@@ -51,6 +51,7 @@ class AutoGrader extends React.Component<AutoGraderProps, AutoGraderState>{
             let old = this.state.activePage;
             let tempLink = this.state.topLink.slice();
             this.checkLinks(tempLink);
+            e.page.pageNavigation(e.subPage);
             this.setState({activePage: e.page, topLink: tempLink});
         });
     }

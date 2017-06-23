@@ -12,6 +12,15 @@ class CourseManager {
         this.courseProvider = courseProvider;
     }
 
+    getCourse(id: number): ICourse | null{
+        for(let a of this.getCourses()){
+            if (a.id === id){
+                return a;
+            }
+        }
+        return null;
+    }
+
     getCourses():ICourse[]{
         return this.courseProvider.getCourses();
     }
@@ -37,7 +46,6 @@ class CourseManager {
 
     getAssignment(course: ICourse, assignmentId: number): IAssignment | null{
         let temp = this.getAssignments(course);
-        console.log(temp);
         for(let a of temp){
             if (a.id === assignmentId){
                 return a;

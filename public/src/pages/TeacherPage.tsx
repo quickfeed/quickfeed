@@ -7,6 +7,7 @@ import { NavMenu } from "../components";
 import { ViewPage } from "./ViewPage";
 
 class TeacherPage extends ViewPage {
+
     navMan: NavigationManager;
     private pages: {[name: string]: JSX.Element} = {}
     constructor(users: UserManager, navMan: NavigationManager){
@@ -26,6 +27,10 @@ class TeacherPage extends ViewPage {
         if (link.uri){
             this.navMan.navigateTo(link.uri);
         }
+    }
+
+    pageNavigation(page: string): void {
+        
     }
 
     renderMenu(menu: number): JSX.Element[]{

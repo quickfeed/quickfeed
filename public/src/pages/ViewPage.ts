@@ -18,6 +18,8 @@ abstract class ViewPage{
         return [];
     }
 
+
+    abstract pageNavigation(page: string): void;
     abstract renderContent(page: string): JSX.Element;
 }
 

@@ -2,10 +2,15 @@ import * as React from "react";
 import { ViewPage } from "./ViewPage";
 
 class HomePage extends ViewPage{
-    constructor(){
+
+    constructor() {
         super();
         this.defaultPage = "index";
         //this.pages["index"] = <h1>Welcome to autograder</h1>;
+    }
+
+    pageNavigation(page: string): void {
+        
     }
 
     renderContent(page: string): JSX.Element{

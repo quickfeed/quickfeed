@@ -4,6 +4,7 @@ import { NavigationManager, ILink } from "../managers/NavigationManager";
 import {HelpView} from "./views/HelpView";
 
 class HelpPage extends ViewPage {
+
     navMan: NavigationManager;
     private pages: {[name: string]: JSX.Element} = {};
 
@@ -14,6 +15,9 @@ class HelpPage extends ViewPage {
         this.pages["help"] = <HelpView></HelpView>;
     }
 
+    pageNavigation(page: string): void {
+        
+    }
 
     renderContent(page: string): JSX.Element{
         if (page.length === 0){
