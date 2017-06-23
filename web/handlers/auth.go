@@ -72,14 +72,14 @@ func AuthenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 	})
 }
 
-func getInteralUser(db aguis.UserDatabase, user *goth.User) (*aguis.User, error) {
-	switch user.Provider {
+func getInteralUser(db aguis.UserDatabase, externalUser *goth.User) (*aguis.User, error) {
+	switch externalUser.Provider {
 	case "github":
-		githubID, err := strconv.Atoi(user.UserID)
+		githubID, err := strconv.Atoi(externalUser.UserID)
 		if err != nil {
 			return nil, err
 		}
-		user, err := db.GetUserWithGithubID(githubID)
+		user, err := db.GetUserWithGithubID(githubID, externalUser.AccessToken)
 		if err != nil {
 			return nil, err
 		}

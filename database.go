@@ -11,14 +11,15 @@ import (
 
 // User represents a user account.
 type User struct {
-	ID       int
-	GithubID int
+	ID          int
+	GithubID    int
+	AccessToken string
 }
 
 // UserDatabase contains methods for manipulating a database user.
 type UserDatabase interface {
 	GetUsers() (map[int]*User, error)
-	GetUserWithGithubID(int) (*User, error)
+	GetUserWithGithubID(int, string) (*User, error)
 }
 
 // NewStructDB creates a new database which saves the whole database to a file
@@ -88,7 +89,7 @@ func (db *StructDB) GetUsers() (map[int]*User, error) {
 
 // GetUserWithGithubID tries to get the user associated with the given GitHub
 // account. If there is no such user, a new user account is created.
-func (db *StructDB) GetUserWithGithubID(githubID int) (*User, error) {
+func (db *StructDB) GetUserWithGithubID(githubID int, accessToken string) (*User, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
@@ -105,8 +106,9 @@ func (db *StructDB) GetUserWithGithubID(githubID int) (*User, error) {
 	}
 
 	user := &User{
-		ID:       0,
-		GithubID: githubID,
+		ID:          0,
+		GithubID:    githubID,
+		AccessToken: accessToken,
 	}
 
 	db.Users[user.ID] = user
