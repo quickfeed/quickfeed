@@ -1,4 +1,4 @@
-# aguis (name pending...) [![Build Status](https://travis-ci.org/autograde/aguis.svg?branch=master)](https://travis-ci.org/autograde/aguis) [![Go Report Card](https://goreportcard.com/badge/github.com/autograde/aguis)](https://goreportcard.com/report/github.com/autograde/aguis) [![Go Code Coverage](http://gocover.io/_badge/github.com/autograde/aguis)](http://gocover.io/github.com/autograde/aguis)
+# aguis (name pending...) [![Build Status](https://travis-ci.org/autograde/aguis.svg?branch=master)](https://travis-ci.org/autograde/aguis) [![Go Report Card](https://goreportcard.com/badge/github.com/autograde/aguis)](https://goreportcard.com/report/github.com/autograde/aguis) [![Coverage Status](https://coveralls.io/repos/github/autograde/aguis/badge.svg?branch=master)](https://coveralls.io/github/autograde/aguis?branch=master)
 ## Download
    ```sh
    go get -u github.com/autograde/aguis/...
