@@ -35,7 +35,7 @@ func TestAuthHandlerRedirect(t *testing.T) {
 	gothic.Store = store
 	s := aguis.NewSessionStore(store, loginSession)
 
-	authHandler := handlers.AuthHandler(newDB(t), s)
+	authHandler := handlers.Auth(newDB(t), s)
 	authHandler.ServeHTTP(w, newAuthRequest(t))
 	checkResponse(t, w.Code, http.StatusTemporaryRedirect, w.Body.String())
 }
@@ -47,17 +47,17 @@ func TestAuthCallbackHandlerUnauthorized(t *testing.T) {
 	gothic.Store = store
 	s := aguis.NewSessionStore(store, loginSession)
 
-	authHandler := handlers.AuthCallbackHandler(newDB(t), s)
+	authHandler := handlers.AuthCallback(newDB(t), s)
 	authHandler.ServeHTTP(w, newAuthRequest(t))
 	checkResponse(t, w.Code, http.StatusUnauthorized, w.Body.String())
 }
 
 func TestAuthHandlerLoggedIn(t *testing.T) {
-	testAuthHandlerLoggedIn(t, handlers.AuthHandler)
+	testAuthHandlerLoggedIn(t, handlers.Auth)
 }
 
 func TestAuthCallbackHandlerLoggedIn(t *testing.T) {
-	testAuthHandlerLoggedIn(t, handlers.AuthCallbackHandler)
+	testAuthHandlerLoggedIn(t, handlers.AuthCallback)
 }
 
 func testAuthHandlerLoggedIn(t *testing.T, newHandler func(db aguis.UserDatabase, s *aguis.Session) http.Handler) {
@@ -69,7 +69,7 @@ func testAuthHandlerLoggedIn(t *testing.T, newHandler func(db aguis.UserDatabase
 	s := aguis.NewSessionStore(store, loginSession)
 
 	if err := s.Login(w, r, 0); err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	authHandler := newHandler(newDB(t), s)
@@ -78,11 +78,11 @@ func testAuthHandlerLoggedIn(t *testing.T, newHandler func(db aguis.UserDatabase
 }
 
 func TestAuthHandlerAuthenticated(t *testing.T) {
-	testAuthHandlerAuthenticated(t, handlers.AuthHandler)
+	testAuthHandlerAuthenticated(t, handlers.Auth)
 }
 
 func TestAuthCallbackHandlerAuthenticated(t *testing.T) {
-	testAuthHandlerAuthenticated(t, handlers.AuthCallbackHandler)
+	testAuthHandlerAuthenticated(t, handlers.AuthCallback)
 }
 
 func testAuthHandlerAuthenticated(t *testing.T, newHandler func(db aguis.UserDatabase, s *aguis.Session) http.Handler) {
@@ -122,13 +122,23 @@ func TestAuthenticatedHandlerLoggedIn(t *testing.T) {
 }
 
 func testAuthenticatedHandler(t *testing.T, r *http.Request, allowed, loggedIn bool) {
+	const (
+		userID      = 0
+		accessToken = "secret"
+	)
+
 	w := httptest.NewRecorder()
 
 	store := newStore()
 	gothic.Store = store
 	s := aguis.NewSessionStore(store, loginSession)
 
+	db := newDB(t)
+
 	if loggedIn {
+		if _, err := db.GetUserWithGithubID(userID, accessToken); err != nil {
+			t.Fatal(err)
+		}
 		if err := s.Login(w, r, 0); err != nil {
 			t.Fatal(err)
 		}
@@ -137,7 +147,7 @@ func testAuthenticatedHandler(t *testing.T, r *http.Request, allowed, loggedIn b
 	m := mux.NewRouter()
 	m.PathPrefix("/").HandlerFunc(func(http.ResponseWriter, *http.Request) {})
 
-	authHandler := handlers.AuthenticatedHandler(m, s)
+	authHandler := handlers.Authenticated(m, db, s)
 	authHandler.ServeHTTP(w, r)
 
 	wantCode := http.StatusUnauthorized
@@ -176,7 +186,7 @@ func checkResponse(t *testing.T, haveCode, wantCode int, body string) {
 		t.Errorf("have status code %d want %d", haveCode, wantCode)
 	}
 
-	if wantCode == http.StatusOK {
+	if haveCode == wantCode && wantCode == http.StatusOK {
 		return
 	}
 

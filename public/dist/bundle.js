@@ -5489,8 +5489,6 @@ var StudentPage = (function (_super) {
     function StudentPage(users, navMan, courseMan) {
         var _this = _super.call(this) || this;
         _this.pages = {};
-        _this.selectedCourse = null;
-        _this.selectedAssignment = null;
         _this.navMan = navMan;
         _this.userMan = users;
         _this.courseMan = courseMan;
@@ -5523,7 +5521,7 @@ var StudentPage = (function (_super) {
                 if (parts.length > 3 && this.selectedCourse) {
                     var labId = parseInt(parts[3]);
                     if (!isNaN(labId)) {
-                        var lab = this.courseMan.getAssignment({ id: 0, name: "", tag: "" }, labId);
+                        var lab = this.courseMan.getAssignment(this.selectedCourse, labId);
                         if (lab) {
                             this.selectedAssignment = lab;
                         }
@@ -5737,18 +5735,13 @@ exports.TempDataProvider = TempDataProvider;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var models_1 = __webpack_require__(56);
+var helper_1 = __webpack_require__(62);
 var CourseManager = (function () {
     function CourseManager(courseProvider) {
         this.courseProvider = courseProvider;
     }
     CourseManager.prototype.getCourse = function (id) {
-        for (var _i = 0, _a = this.getCourses(); _i < _a.length; _i++) {
-            var a = _a[_i];
-            if (a.id === id) {
-                return a;
-            }
-        }
-        return null;
+        return helper_1.ArrayHelper.find(this.getCourses(), function (a) { return a.id === id; });
     };
     CourseManager.prototype.getCourses = function () {
         return this.courseProvider.getCourses();
@@ -6085,6 +6078,40 @@ var HelpView = (function (_super) {
     return HelpView;
 }(React.Component));
 exports.HelpView = HelpView;
+
+
+/***/ }),
+/* 62 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var ArrayHelper = (function () {
+    function ArrayHelper() {
+    }
+    ArrayHelper.find = function (array, predicate) {
+        if (array == null) {
+            throw new TypeError('"array" is null or not defined');
+        }
+        var o = Object(array);
+        var len = o.length >>> 0;
+        if (typeof predicate !== 'function') {
+            throw new TypeError("predicate must be a function");
+        }
+        var k = 0;
+        while (k < len) {
+            var kvalue = o[k];
+            if (predicate.call(array, kvalue, k, o)) {
+                return kvalue;
+            }
+            k++;
+        }
+        return null;
+    };
+    return ArrayHelper;
+}());
+exports.ArrayHelper = ArrayHelper;
 
 
 /***/ })

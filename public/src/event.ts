@@ -1,8 +1,8 @@
-interface IEventData{
+interface IEventData {
     target: any;
 }
 
-interface INewEvent<T extends IEventData>{
+interface INewEvent<T extends IEventData> {
     (event: T): void;
     info: string;
     addEventListener(listener: (event: T) => void): void;
@@ -10,23 +10,25 @@ interface INewEvent<T extends IEventData>{
 }
 
 function newEvent<T extends IEventData>(info: string): INewEvent<T> {
-    let callbacks: ((event: T) => void)[] = [];
-    let handler = function EventHandler(event: T){
-        callbacks.map(v => v(event));
+    const callbacks: Array<((event: T) => void)> = [];
+
+    const handler = function EventHandler(event: T) {
+        callbacks.map(((v) => v(event)));
     } as INewEvent<T>;
+
     handler.info = info;
     handler.addEventListener = (callback) => {
         callbacks.push(callback);
-    }
+    };
     handler.removeEventListener = (callback) => {
-        let index = callbacks.indexOf(callback);
-        if (index < 0){
+        const index = callbacks.indexOf(callback);
+        if (index < 0) {
             console.log(callback);
             throw Error("Event does noe exist");
         }
         callbacks.splice(index, 1);
-    }
+    };
     return handler;
 }
 
-export {IEventData, INewEvent, newEvent}
+export { IEventData, INewEvent, newEvent };
