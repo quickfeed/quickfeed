@@ -108,7 +108,7 @@ func envString(env, fallback string) string {
 }
 
 func tempFile(name string) string {
-	return os.TempDir() + string(filepath.Separator) + name
+	return filepath.Join(os.TempDir(), name)
 }
 
 type loggingHandlerAdapter struct {
