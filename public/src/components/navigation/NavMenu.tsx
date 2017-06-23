@@ -1,25 +1,35 @@
-import * as React from "react"
+import * as React from "react";
 import { ILink } from "../../managers/NavigationManager";
 
-
-interface INavMenuProps{
+interface INavMenuProps {
     links: ILink[];
     onClick?: (link: ILink) => void;
 }
 
 class NavMenu extends React.Component<INavMenuProps, undefined> {
-    render(){
+    public render() {
         const items = this.props.links.map((v: ILink, i: number) => {
             let active = "";
-            if (v.active){
+            if (v.active) {
                 active = "active";
             }
-            return <li className={active} key={i}><a href={"/" + v.uri} onClick={(e) => { e.preventDefault(); if (this.props.onClick) this.props.onClick(v); }}>{v.name}</a></li>
-        })
+            return <li className={active} key={i}>
+                <a href={"/" + v.uri} onClick={(e) => this.handleClick(e, v)}>
+                    {v.name}
+                </a>
+            </li>;
+        });
         return <ul className="nav nav-pills nav-stacked">
             {items}
-        </ul>
+        </ul>;
+    }
+
+    private handleClick(e: React.MouseEvent<HTMLAnchorElement>, v: ILink) {
+        e.preventDefault();
+        if (this.props.onClick) {
+            this.props.onClick(v);
+        }
     }
 }
 
-export {INavMenuProps, NavMenu};
+export { INavMenuProps, NavMenu };

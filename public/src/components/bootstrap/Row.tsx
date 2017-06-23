@@ -1,9 +1,9 @@
-import * as React from "react"
+import * as React from "react";
 
-function Row(props: {children: any, className?: string}){
+function Row(props: { children: any, className?: string }) {
     return <div className={"row " + props.className ? props.className : ""}>
         {props.children}
-    </div>
+    </div>;
 }
 
-export {Row}
+export { Row };

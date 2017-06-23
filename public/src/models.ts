@@ -1,15 +1,15 @@
 interface IUser {
     id: number;
     firstName: string;
-    lastName: string
+    lastName: string;
     email: string;
     personId: number;
 }
 
 function isCourse(value: any): value is ICourse{
-    return value 
-        && typeof value.id === "number" 
-        && typeof value.name === "string" 
+    return value
+        && typeof value.id === "number"
+        && typeof value.name === "string"
         && typeof value.tag === "string";
 }
 
