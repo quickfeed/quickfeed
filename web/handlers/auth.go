@@ -16,7 +16,7 @@ import (
 // AuthHandler tries to authenticate against an oauth2 provider.
 func AuthHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if id, _ := s.Whois(w, r); id > 0 {
+		if id, _ := s.Whois(w, r); id >= 0 {
 			http.Redirect(w, r, "/", http.StatusFound)
 		}
 
@@ -36,7 +36,7 @@ func AuthHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 // AuthCallbackHandler handles the callback from an oauth2 provider.
 func AuthCallbackHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if id, _ := s.Whois(w, r); id > 0 {
+		if id, _ := s.Whois(w, r); id >= 0 {
 			http.Redirect(w, r, "/", http.StatusFound)
 		}
 
