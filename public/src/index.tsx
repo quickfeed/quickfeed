@@ -11,11 +11,13 @@ import { CourseManager } from "./managers/CourseManager";
 import { HomePage } from "./pages/HomePage";
 import { ErrorPage } from "./pages/ErrorPage";
 import { TeacherPage } from "./pages/TeacherPage";
+import {HelpPage} from "./pages/HelpPage";
 
 let topLinks: ILink[] = [
     { name: "Teacher", uri: "app/teacher/", active: false },
     { name: "Student", uri: "app/student/", active: false },
-    { name: "Admin",   uri: "app/admin",    active: false }
+    { name: "Admin",   uri: "app/admin",    active: false },
+    { name: "Help",   uri: "app/help",    active: false }
 ]
 
 interface AutoGraderState{
@@ -163,6 +165,7 @@ function main(){
     navMan.registerPage("app/home", new HomePage());
     navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan));
     navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan));
+    navMan.registerPage("app/help", new HelpPage(navMan));
 
     navMan.registerErrorPage(404, new ErrorPage());
     navMan.onNavigate.addEventListener((e ) => {console.log(e)});

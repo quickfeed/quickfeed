@@ -253,10 +253,12 @@ var CourseManager_1 = __webpack_require__(18);
 var HomePage_1 = __webpack_require__(20);
 var ErrorPage_1 = __webpack_require__(21);
 var TeacherPage_1 = __webpack_require__(22);
+var HelpPage_1 = __webpack_require__(23);
 var topLinks = [
     { name: "Teacher", uri: "app/teacher/", active: false },
     { name: "Student", uri: "app/student/", active: false },
-    { name: "Admin", uri: "app/admin", active: false }
+    { name: "Admin", uri: "app/admin", active: false },
+    { name: "Help", uri: "app/help", active: false }
 ];
 var AutoGrader = (function (_super) {
     __extends(AutoGrader, _super);
@@ -347,6 +349,7 @@ function main() {
     navMan.registerPage("app/home", new HomePage_1.HomePage());
     navMan.registerPage("app/student", new StudentPage_1.StudentPage(userMan, navMan, courseMan));
     navMan.registerPage("app/teacher", new TeacherPage_1.TeacherPage(userMan, navMan));
+    navMan.registerPage("app/help", new HelpPage_1.HelpPage(navMan));
     navMan.registerErrorPage(404, new ErrorPage_1.ErrorPage());
     navMan.onNavigate.addEventListener(function (e) { console.log(e); });
     ReactDOM.render(React.createElement(AutoGrader, { userManager: userMan, navigationManager: navMan }), document.getElementById("root"));
@@ -1263,6 +1266,121 @@ var TeacherPage = (function (_super) {
     return TeacherPage;
 }(ViewPage_1.ViewPage));
 exports.TeacherPage = TeacherPage;
+
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var ViewPage_1 = __webpack_require__(1);
+var HelpView_1 = __webpack_require__(24);
+var HelpPage = (function (_super) {
+    __extends(HelpPage, _super);
+    function HelpPage(navMan) {
+        var _this = _super.call(this) || this;
+        _this.pages = {};
+        _this.navMan = navMan;
+        _this.defaultPage = "help";
+        _this.pages["help"] = React.createElement(HelpView_1.HelpView, null);
+        return _this;
+    }
+    HelpPage.prototype.renderContent = function (page) {
+        if (page.length === 0) {
+            page = this.defaultPage;
+        }
+        if (this.pages[page]) {
+            return this.pages[page];
+        }
+        return React.createElement("h1", null, "404 page not found");
+    };
+    return HelpPage;
+}(ViewPage_1.ViewPage));
+exports.HelpPage = HelpPage;
+
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(2);
+var HelpView = (function (_super) {
+    __extends(HelpView, _super);
+    function HelpView() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    HelpView.prototype.render = function () {
+        return (React.createElement(components_1.Row, { className: "container-fluid" },
+            React.createElement("div", { className: "col-md-2 col-sm-3 col-xs-12" },
+                React.createElement("div", { className: "list-group" },
+                    React.createElement("a", { href: "#", className: "list-group-item disabled" }, "Help"),
+                    React.createElement("a", { href: "#autograder", className: "list-group-item" }, "Autograder"),
+                    React.createElement("a", { href: "#reg", className: "list-group-item" }, "Registration"),
+                    React.createElement("a", { href: "#signup", className: "list-group-item" }, "Sign up for a course"))),
+            React.createElement("div", { className: "col-md-8 col-sm-9 col-xs-12" },
+                React.createElement("article", null,
+                    React.createElement("h1", { id: "autograder" }, "Autograder"),
+                    React.createElement("p", null, "Autograder is a new tool for students and teaching staff for submitting and validating lab assignments and is developed at the University of Stavanger. All lab submissions from students are handled using Git, a source code management system, and GitHub, a web-based hosting service for Git source repositories."),
+                    React.createElement("p", null, "Students push their updated lab submissions to GitHub. Every lab submission is then processed by a custom continuous integration tool. This tool will run several test cases on the submitted code. Autograder generates feedback that let the students verify if their submission implements the required functionality. This feedback is available through a web interface. The feedback from the Autograder system can be used by students to improve their submissions."),
+                    React.createElement("p", null, "Below is a step-by-step explanation of how to register and sign up for the lab project in Autograder."),
+                    React.createElement("h1", { id: "reg" }, "Registration"),
+                    React.createElement("ol", null,
+                        React.createElement("li", null,
+                            React.createElement("p", null,
+                                "Go to ",
+                                React.createElement("a", { href: "http://github.com" }, "GitHub"),
+                                " and register. A GitHub account is required to sign in to Autograder. You can skip this step if you already have an account.")),
+                        React.createElement("li", null,
+                            React.createElement("p", null, "Click the \"Sign in with GitHub\" button to register. You will then be taken to GitHub's website.")),
+                        React.createElement("li", null,
+                            React.createElement("p", null, "Approve that our Autograder application may have permission to access to the requested parts of your account. It is possible to make a separate GitHub account for system if you do not want Autograder to access your personal one with the requested permissions."))),
+                    React.createElement("h1", { id: "signup" }, "Signing up for a course"),
+                    React.createElement("ol", null,
+                        React.createElement("li", null,
+                            React.createElement("p", null, "Click the course menu item.")),
+                        React.createElement("li", null,
+                            React.createElement("p", null, "In the course menu click on \u201CNew Course\u201D. Available courses will be listed.")),
+                        React.createElement("li", null,
+                            React.createElement("p", null, "Find the course you are signing up for and click sign up.")),
+                        React.createElement("li", null,
+                            React.createElement("p", null, "Read through and accept the terms. You will then be invited to the course organization on GitHub.")),
+                        React.createElement("li", null,
+                            React.createElement("p", null, "An invitation will be sent to your email address registered with GitHub account. Accept the invitation using the received email.")),
+                        React.createElement("li", null,
+                            React.createElement("p", null, "Wait for the teaching staff to verify your Autograder-registration.")),
+                        React.createElement("li", null,
+                            React.createElement("p", null, "You will get your own repository in the organization \"uis-dat520\" on GitHub after your registration is verified. You will also have access to the feedback pages for this course on Autograder.")))))));
+    };
+    return HelpView;
+}(React.Component));
+exports.HelpView = HelpView;
 
 
 /***/ })
