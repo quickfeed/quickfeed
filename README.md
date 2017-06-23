@@ -15,3 +15,8 @@
    # Server listening on port 8080 serving static files from /public at https://example.com/.
    aguis -service.url example.com -http.addr :8080 -http.public /public
    ```
+## Install for React web development
+   ```sh
+   cd public
+   npm install
+   ```
