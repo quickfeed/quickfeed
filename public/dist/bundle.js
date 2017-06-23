@@ -5574,7 +5574,7 @@ var TempDataProvider = (function () {
         var temp = [];
         for (var _i = 0, _a = this.localAssignments; _i < _a.length; _i++) {
             var a = _a[_i];
-            if (a.courceId === courseId) {
+            if (a.courseId === courseId) {
                 temp.push(a);
             }
         }
@@ -5632,7 +5632,7 @@ var TempDataProvider = (function () {
         this.localAssignments = [
             {
                 id: 0,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 1",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
@@ -5640,7 +5640,7 @@ var TempDataProvider = (function () {
             },
             {
                 id: 1,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 2",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
@@ -5648,7 +5648,7 @@ var TempDataProvider = (function () {
             },
             {
                 id: 2,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 3",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
@@ -5656,7 +5656,7 @@ var TempDataProvider = (function () {
             },
             {
                 id: 3,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 4",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
@@ -5664,7 +5664,7 @@ var TempDataProvider = (function () {
             },
             {
                 id: 4,
-                courceId: 1,
+                courseId: 1,
                 name: "Lab 1",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
