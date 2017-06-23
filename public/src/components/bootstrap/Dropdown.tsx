@@ -63,7 +63,6 @@ class NavDropdown extends React.Component<INavDropdownProps, INavDropdownState> 
     }
 
     private renderActive(): string {
-        console.log(this.props);
         if (this.props.items.length === 0) {
             return "";
         }

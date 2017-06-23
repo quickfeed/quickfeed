@@ -832,6 +832,7 @@ __export(__webpack_require__(28));
 __export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
+__export(__webpack_require__(63));
 
 
 /***/ }),
@@ -5689,6 +5690,7 @@ var TempDataProvider = (function () {
     TempDataProvider.prototype.addLocalCourseStudent = function () {
         this.localCourseStudent = [
             { courseId: 0, personId: 999 },
+            { courseId: 1, personId: 999 },
         ];
     };
     return TempDataProvider;
@@ -5951,7 +5953,6 @@ var components_1 = __webpack_require__(7);
 var ViewPage_1 = __webpack_require__(6);
 var HelloView_1 = __webpack_require__(22);
 var UserView_1 = __webpack_require__(23);
-var Dropdown_1 = __webpack_require__(63);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -5973,6 +5974,7 @@ var StudentPage = (function (_super) {
         return _this;
     }
     StudentPage.prototype.pageNavigation = function (page) {
+        this.currentPage = page;
         var parts = this.navMan.getParts(page);
         if (parts.length > 1) {
             if (parts[0] === "course") {
@@ -5996,7 +5998,6 @@ var StudentPage = (function (_super) {
         var _this = this;
         if (key === 0) {
             var courses = this.getCourses();
-            console.log(courses);
             var coursesLinks = [];
             for (var _i = 0, courses_1 = courses; _i < courses_1.length; _i++) {
                 var a = courses_1[_i];
@@ -6018,7 +6019,7 @@ var StudentPage = (function (_super) {
             this.navMan.checkLinks(settings, this);
             return [
                 React.createElement("h4", null, "Course"),
-                React.createElement(Dropdown_1.NavDropdown, { key: 1, selectedIndex: 0, itemClick: function (e) { console.log(e); }, items: coursesLinks }),
+                React.createElement(components_1.NavDropdown, { key: 1, selectedIndex: 0, items: coursesLinks, itemClick: function (link) { _this.handleClick(link); } }),
                 React.createElement("h4", { key: 2 }, "Labs"),
                 React.createElement(components_1.NavMenu, { key: 3, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),
                 React.createElement("h4", { key: 4 }, "Settings"),
@@ -6206,7 +6207,6 @@ var NavDropdown = (function (_super) {
         this.setState({ isOpen: newState });
     };
     NavDropdown.prototype.renderActive = function () {
-        console.log(this.props);
         if (this.props.items.length === 0) {
             return "";
         }

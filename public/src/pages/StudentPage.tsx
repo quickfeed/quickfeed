@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavMenu, StudentLab } from "../components";
+import { NavDropdown, NavMenu, StudentLab } from "../components";
 
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
@@ -10,7 +10,6 @@ import { IAssignment, ICourse } from "../models";
 import { ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
 import { UserView } from "./views/UserView";
-import { NavDropdown } from "../components/bootstrap/Dropdown";
 
 class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -41,6 +40,7 @@ class StudentPage extends ViewPage {
     }
 
     public pageNavigation(page: string): void {
+        this.currentPage = page;
         const parts = this.navMan.getParts(page);
         if (parts.length > 1) {
             if (parts[0] === "course") {
@@ -66,7 +66,6 @@ class StudentPage extends ViewPage {
     public renderMenu(key: number): JSX.Element[] {
         if (key === 0) {
             const courses = this.getCourses();
-            console.log(courses);
             const coursesLinks: ILink[] = [];
             for (const a of courses) {
                 coursesLinks.push({ name: a.tag, uri: this.pagePath + "/course/" + a.id });
@@ -89,7 +88,11 @@ class StudentPage extends ViewPage {
 
             return [
                 <h4>Course</h4>,
-                <NavDropdown key={1} selectedIndex={0} itemClick={(e) => { console.log(e); }} items={coursesLinks}>
+                <NavDropdown
+                    key={1}
+                    selectedIndex={0}
+                    items={coursesLinks}
+                    itemClick={(link) => { this.handleClick(link); }}>
                 </NavDropdown>,
                 <h4 key={2}>Labs</h4>,
                 <NavMenu key={3} links={labLinks} onClick={(link) => this.handleClick(link)}></NavMenu>,

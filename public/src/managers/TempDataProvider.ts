@@ -153,6 +153,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     private addLocalCourseStudent() {
         this.localCourseStudent = [
             { courseId: 0, personId: 999 },
+            { courseId: 1, personId: 999 },
         ];
     }
 }
