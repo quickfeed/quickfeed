@@ -16,7 +16,7 @@ import (
 // AuthHandler tries to authenticate against an oauth2 provider.
 func AuthHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if id, _ := s.Whois(w, r); id > 0 {
+		if id, _ := s.Whois(w, r); id >= 0 {
 			http.Redirect(w, r, "/", http.StatusFound)
 		}
 
@@ -36,7 +36,7 @@ func AuthHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 // AuthCallbackHandler handles the callback from an oauth2 provider.
 func AuthCallbackHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if id, _ := s.Whois(w, r); id > 0 {
+		if id, _ := s.Whois(w, r); id >= 0 {
 			http.Redirect(w, r, "/", http.StatusFound)
 		}
 
@@ -64,8 +64,8 @@ func AuthenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 			return
 		}
 
-		if strings.HasPrefix(r.RequestURI, "/api") && id == -1 {
-			web.HTTPError(w, http.StatusForbidden, nil)
+		if strings.HasPrefix(r.URL.RequestURI(), "/api") && id == -1 {
+			web.HTTPError(w, http.StatusUnauthorized, nil)
 			return
 		}
 		m.ServeHTTP(w, r)
@@ -84,6 +84,8 @@ func getInteralUser(db aguis.UserDatabase, user *goth.User) (*aguis.User, error)
 			return nil, err
 		}
 		return user, nil
+	case "faux": // Provider is only registered and reachable from tests.
+		return &aguis.User{}, nil
 	default:
 		return nil, errors.New("provider not implemented")
 	}
