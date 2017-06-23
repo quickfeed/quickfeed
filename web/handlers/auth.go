@@ -84,6 +84,8 @@ func getInteralUser(db aguis.UserDatabase, user *goth.User) (*aguis.User, error)
 			return nil, err
 		}
 		return user, nil
+	case "faux": // Provider is only registered and reachable from tests.
+		return &aguis.User{}, nil
 	default:
 		return nil, errors.New("provider not implemented")
 	}
