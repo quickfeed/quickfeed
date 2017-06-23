@@ -13,8 +13,8 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
-// AuthHandler tries to authenticate against an oauth2 provider.
-func AuthHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
+// Auth tries to authenticate against an oauth2 provider.
+func Auth(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if id, _ := s.Whois(w, r); id >= 0 {
 			http.Redirect(w, r, "/", http.StatusFound)
@@ -33,8 +33,8 @@ func AuthHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	})
 }
 
-// AuthCallbackHandler handles the callback from an oauth2 provider.
-func AuthCallbackHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
+// AuthCallback handles the callback from an oauth2 provider.
+func AuthCallback(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if id, _ := s.Whois(w, r); id >= 0 {
 			http.Redirect(w, r, "/", http.StatusFound)
@@ -53,9 +53,9 @@ func AuthCallbackHandler(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 	})
 }
 
-// AuthenticatedHandler ensures that only authenticated sessions are allowed to
+// Authenticated ensures that only authenticated sessions are allowed to
 // pass through to the endpoints that require authentication.
-func AuthenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
+func Authenticated(m *mux.Router, s *aguis.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id, err := s.Whois(w, r)
 

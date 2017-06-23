@@ -62,8 +62,8 @@ func main() {
 	})
 
 	auth := r.PathPrefix("/auth/").Subrouter()
-	auth.Handle("/{provider}", handlers.AuthHandler(db, sessionStore))
-	auth.Handle("/{provider}/callback", handlers.AuthCallbackHandler(db, sessionStore))
+	auth.Handle("/{provider}", handlers.Auth(db, sessionStore))
+	auth.Handle("/{provider}/callback", handlers.AuthCallback(db, sessionStore))
 
 	api := r.PathPrefix("/api/v1/").Subrouter()
 	api.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +85,7 @@ func main() {
 				logger: tsLogger,
 				key:    "http",
 			},
-			handlers.AuthenticatedHandler(r, sessionStore),
+			handlers.Authenticated(r, sessionStore),
 		),
 		Addr: *httpAddr,
 	}
