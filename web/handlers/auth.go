@@ -64,8 +64,8 @@ func AuthenticatedHandler(m *mux.Router, s *aguis.Session) http.Handler {
 			return
 		}
 
-		if strings.HasPrefix(r.RequestURI, "/api") && id == -1 {
 			web.HTTPError(w, http.StatusForbidden, nil)
+		if strings.HasPrefix(r.URL.RequestURI(), "/api") && id == -1 {
 			return
 		}
 		m.ServeHTTP(w, r)
