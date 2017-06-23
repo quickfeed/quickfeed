@@ -18,6 +18,7 @@ $ go get github.com/markbates/goth
 
 * Amazon
 * Auth0
+* Battle.net
 * Bitbucket
 * Box
 * Cloud Foundry
@@ -51,6 +52,7 @@ $ go get github.com/markbates/goth
 * Twitter
 * Uber
 * Wepay
+* Xero
 * Yahoo
 * Yammer
 
@@ -77,11 +79,45 @@ $ ./examples
 
 Now open up your browser and go to [http://localhost:3000](http://localhost:3000) to see the example.
 
-To actually use the different providers, please make sure you configure them given the system environments as defined in the examples/main.go file
+To actually use the different providers, please make sure you set environment variables. Example given in the examples/main.go file
+
+## Security Notes
+
+By default, gothic uses a `CookieStore` from the `gorilla/sessions` package to store session data.
+
+As configured, this default store (`gothic.Store`) will generate cookies with `Options`:
+
+```go
+&Options{
+   Path:   "/",
+   Domain: "",
+   MaxAge: 86400 * 30,
+   HttpOnly: true,
+   Secure: false,
+ }
+```
+
+To tailor these fields for your application, you can override the `gothic.Store` variable at startup.
+
+The follow snippet show one way to do this:
+
+```go
+key := ""             // Replace with your SESSION_SECRET or similar
+maxAge := 86400 * 30  // 30 days
+isProd := false       // Set to true when serving over https
+
+store := sessions.NewCookieStore([]byte(key))
+store.MaxAge(maxAge)
+store.Options.Path = "/"
+store.Options.HttpOnly = true   // HttpOnly should always be enabled
+store.Options.Secure = isProd
+
+gothic.Store = store
+```
 
 ## Issues
 
-Issues always stand a significantly better chance of getting fixed if the are accompanied by a
+Issues always stand a significantly better chance of getting fixed if they are accompanied by a
 pull request.
 
 ## Contributing
@@ -141,3 +177,4 @@ Would I love to see more providers? Certainly! Would you love to contribute one?
 * Jonathan Hall
 * HaiMing.Yin
 * Sairam Kunala
+* Regan Ashworth

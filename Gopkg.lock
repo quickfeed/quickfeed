@@ -62,10 +62,10 @@
   revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/markbates/goth"
   packages = [".","gothic","providers/bitbucket","providers/faux","providers/github","providers/gitlab"]
-  revision = "488a04ae13f57b10e55e1a32c8cd62f9cc66c671"
-  version = "v1.38.0"
+  revision = "515b5a9a223203a3a50b682187c7d0a33888f484"
 
 [[projects]]
   branch = "master"
@@ -88,6 +88,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "71f9a436e2b93bfb4cad035a88ca67a7b21f06b5e59bc8bf2c70fcfa0f0d00ef"
+  inputs-digest = "c7ad303de10767f0e8acac93f691a38124f2bd2c388819027b2c20043db4108e"
   solver-name = "gps-cdcl"
   solver-version = 1

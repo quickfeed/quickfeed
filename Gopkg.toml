@@ -16,4 +16,4 @@
 
 [[constraint]]
   name = "github.com/markbates/goth"
-  version = "1.38.0"
+  branch = "master"
