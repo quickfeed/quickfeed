@@ -100,6 +100,7 @@ __export(__webpack_require__(21));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var NavigationHelper_1 = __webpack_require__(5);
 function isViewPage(item) {
     if (item instanceof ViewPage) {
         return true;
@@ -110,7 +111,7 @@ exports.isViewPage = isViewPage;
 var ViewPage = (function () {
     function ViewPage() {
         this.template = null;
-        this.defaultPage = "";
+        this.navHelper = new NavigationHelper_1.NavigationHelper(this);
     }
     ViewPage.prototype.setPath = function (path) {
         this.pagePath = path;
@@ -202,7 +203,7 @@ var event_1 = __webpack_require__(25);
 var NavigationHelper = (function () {
     function NavigationHelper(thisObject) {
         this.onPreNavigation = event_1.newEvent("NavigationHelper.onPreNavigation");
-        this.defaultPath = "";
+        this.DEFAULT_VALUE = "";
         this.navObj = "__navObj";
         this.path = {};
         this.thisObject = thisObject;
@@ -229,9 +230,16 @@ var NavigationHelper = (function () {
     NavigationHelper.isINavObject = function (obj) {
         return obj && obj.path;
     };
-    NavigationHelper.prototype.setDefaultPath = function (path) {
-        this.defaultPath = path;
-    };
+    Object.defineProperty(NavigationHelper.prototype, "defaultPage", {
+        get: function () {
+            return this.DEFAULT_VALUE;
+        },
+        set: function (value) {
+            this.DEFAULT_VALUE = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
     NavigationHelper.prototype.registerFunction = function (path, callback) {
         var pathParts = NavigationHelper.getParts(path);
         if (pathParts.length === 0) {
@@ -246,7 +254,7 @@ var NavigationHelper = (function () {
     };
     NavigationHelper.prototype.navigateTo = function (path) {
         if (path.length === 0) {
-            path = this.defaultPath;
+            path = this.DEFAULT_VALUE;
         }
         var pathParts = NavigationHelper.getParts(path);
         if (pathParts.length === 0) {
@@ -1284,7 +1292,7 @@ var NavigationManager = (function () {
     NavigationManager.prototype.checkLinks = function (links, viewPage) {
         var checkUrl = this.currentPath;
         if (viewPage && viewPage.pagePath === checkUrl) {
-            checkUrl += "/" + viewPage.defaultPage;
+            checkUrl += "/" + viewPage.navHelper.defaultPage;
         }
         for (var _i = 0, links_1 = links; _i < links_1.length; _i++) {
             var l = links_1[_i];
@@ -1553,22 +1561,23 @@ var ErrorPage = (function (_super) {
     function ErrorPage() {
         var _this = _super.call(this) || this;
         _this.pages = {};
-        _this.defaultPage = "404";
-        _this.pages["404"] = React.createElement("div", null,
-            React.createElement("h1", null, "404 Page not found"),
-            React.createElement("p", null, "The page you where looking for does not exist"));
+        _this.navHelper.defaultPage = "404";
+        _this.navHelper.registerFunction("404", function (navInfo) {
+            return React.createElement("div", null,
+                React.createElement("h1", null, "404 Page not found"),
+                React.createElement("p", null, "The page you where looking for does not exist"));
+        });
         return _this;
     }
-    ErrorPage.prototype.pageNavigation = function (page) {
-        "not implemented";
-    };
     ErrorPage.prototype.renderContent = function (page) {
-        if (page.length === 0) {
-            page = this.defaultPage;
+        var content = this.navHelper.navigateTo(page);
+        if (!content) {
+            content = this.navHelper.navigateTo("404");
         }
-        return React.createElement("div", null,
-            React.createElement("h1", null, "404 Page not found"),
-            React.createElement("p", null, "The page you where looking for does not exist"));
+        if (!content) {
+            throw new Error("There is a problem with the navigation");
+        }
+        return content;
     };
     return ErrorPage;
 }(ViewPage_1.ViewPage));
@@ -1601,19 +1610,17 @@ var HelpPage = (function (_super) {
         var _this = _super.call(this) || this;
         _this.pages = {};
         _this.navMan = navMan;
-        _this.defaultPage = "help";
-        _this.pages.help = React.createElement(HelpView_1.HelpView, null);
+        _this.navHelper.defaultPage = "help";
+        _this.navHelper.registerFunction("help", _this.help);
         return _this;
     }
-    HelpPage.prototype.pageNavigation = function (page) {
-        "Not used";
+    HelpPage.prototype.help = function (info) {
+        return React.createElement(HelpView_1.HelpView, null);
     };
     HelpPage.prototype.renderContent = function (page) {
-        if (page.length === 0) {
-            page = this.defaultPage;
-        }
-        if (this.pages[page]) {
-            return this.pages[page];
+        var temp = this.navHelper.navigateTo(page);
+        if (temp) {
+            return temp;
         }
         return React.createElement("h1", null, "404 page not found");
     };
@@ -1715,13 +1722,8 @@ var ViewPage_1 = __webpack_require__(2);
 var HomePage = (function (_super) {
     __extends(HomePage, _super);
     function HomePage() {
-        var _this = _super.call(this) || this;
-        _this.defaultPage = "index";
-        return _this;
+        return _super.call(this) || this;
     }
-    HomePage.prototype.pageNavigation = function (page) {
-        "Not used";
-    };
     HomePage.prototype.renderContent = function (page) {
         return React.createElement("h1", null, "Welcome to autograder");
     };
@@ -1753,7 +1755,6 @@ var ViewPage_1 = __webpack_require__(2);
 var HelloView_1 = __webpack_require__(6);
 var UserView_1 = __webpack_require__(7);
 var helper_1 = __webpack_require__(4);
-var NavigationHelper_1 = __webpack_require__(5);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -1766,9 +1767,7 @@ var StudentPage = (function (_super) {
         _this.navMan = navMan;
         _this.userMan = users;
         _this.courseMan = courseMan;
-        _this.defaultPage = "somethign else";
-        _this.navHelper = new NavigationHelper_1.NavigationHelper(_this);
-        _this.navHelper.setDefaultPath("index");
+        _this.navHelper.defaultPage = "index";
         _this.navHelper.onPreNavigation.addEventListener(function (e) { return _this.setupData(e); });
         _this.navHelper.registerFunction("index", _this.index);
         _this.navHelper.registerFunction("course/{courseid}", _this.course);
@@ -1921,17 +1920,20 @@ var TeacherPage = (function (_super) {
         var _this = _super.call(this) || this;
         _this.pages = {};
         _this.navMan = navMan;
-        _this.defaultPage = "opsys/lab1";
-        _this.pages["opsys/lab1"] = React.createElement("h1", null, "Teacher Lab1");
-        _this.pages["opsys/lab2"] = React.createElement("h1", null, "Teacher Lab2");
-        _this.pages["opsys/lab3"] = React.createElement("h1", null, "Teacher Lab3");
-        _this.pages["opsys/lab4"] = React.createElement("h1", null, "Teacher Lab4");
-        _this.pages.user = React.createElement(UserView_1.UserView, { users: users.getAllUser() });
-        _this.pages.hello = React.createElement(HelloView_1.HelloView, null);
+        _this.navHelper.defaultPage = "opsys/lab1";
+        _this.navHelper.registerFunction("opsys/{lab}", _this.course);
+        _this.navHelper.registerFunction("user", function (navInfo) {
+            return React.createElement(UserView_1.UserView, { users: users.getAllUser() });
+        });
+        _this.navHelper.registerFunction("user", function (navInfo) {
+            return React.createElement(HelloView_1.HelloView, null);
+        });
         return _this;
     }
-    TeacherPage.prototype.pageNavigation = function (page) {
-        "Not in use";
+    TeacherPage.prototype.course = function (info) {
+        return React.createElement("h1", null,
+            "Teacher ",
+            info.params.lab);
     };
     TeacherPage.prototype.renderMenu = function (menu) {
         var _this = this;
@@ -1958,11 +1960,9 @@ var TeacherPage = (function (_super) {
         return [];
     };
     TeacherPage.prototype.renderContent = function (page) {
-        if (page.length === 0) {
-            page = this.defaultPage;
-        }
-        if (this.pages[page]) {
-            return this.pages[page];
+        var temp = this.navHelper.navigateTo(page);
+        if (temp) {
+            return temp;
         }
         return React.createElement("h1", null, "404 page not found");
     };

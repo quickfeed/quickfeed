@@ -28,18 +28,14 @@ class StudentPage extends ViewPage {
 
     private foundId: number = -1;
 
-    private navHelper: NavigationHelper;
-
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
 
         this.navMan = navMan;
         this.userMan = users;
         this.courseMan = courseMan;
-        this.defaultPage = "somethign else";
 
-        this.navHelper = new NavigationHelper(this);
-        this.navHelper.setDefaultPath("index");
+        this.navHelper.defaultPage = "index";
         this.navHelper.onPreNavigation.addEventListener((e) => this.setupData(e));
 
         this.navHelper.registerFunction<any>("index", this.index);

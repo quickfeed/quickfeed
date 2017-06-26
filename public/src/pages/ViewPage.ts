@@ -1,3 +1,5 @@
+import { NavigationHelper } from "../NavigationHelper";
+
 function isViewPage(item: any): item is ViewPage {
     if (item instanceof ViewPage) {
         return true;
@@ -7,8 +9,8 @@ function isViewPage(item: any): item is ViewPage {
 
 abstract class ViewPage {
     public template: string | null = null;
-    public defaultPage: string = "";
     public pagePath: string;
+    public navHelper: NavigationHelper = new NavigationHelper(this);
 
     public setPath(path: string) {
         this.pagePath = path;

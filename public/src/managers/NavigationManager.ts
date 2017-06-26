@@ -131,7 +131,7 @@ class NavigationManager {
     public checkLinks(links: ILink[], viewPage?: ViewPage): void {
         let checkUrl = this.currentPath;
         if (viewPage && viewPage.pagePath === checkUrl) {
-            checkUrl += "/" + viewPage.defaultPage;
+            checkUrl += "/" + viewPage.navHelper.defaultPage;
         }
         for (const l of links) {
             if (!l.uri) {

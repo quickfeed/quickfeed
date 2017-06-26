@@ -5,11 +5,6 @@ class HomePage extends ViewPage {
 
     constructor() {
         super();
-        this.defaultPage = "index";
-    }
-
-    public pageNavigation(page: string): void {
-        "Not used";
     }
 
     public renderContent(page: string): JSX.Element {

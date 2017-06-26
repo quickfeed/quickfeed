@@ -1,11 +1,12 @@
 import * as React from "react";
 import { NavMenu } from "../components";
-import { ILink, NavigationManager } from "../managers/NavigationManager";
-import { UserManager } from "../managers/UserManager";
+import { ILink, NavigationManager, UserManager } from "../managers";
 
 import { ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
 import { UserView } from "./views/UserView";
+
+import { INavInfo, NavigationHelper } from "../NavigationHelper";
 
 class TeacherPage extends ViewPage {
 
@@ -15,17 +16,18 @@ class TeacherPage extends ViewPage {
         super();
 
         this.navMan = navMan;
-        this.defaultPage = "opsys/lab1";
-        this.pages["opsys/lab1"] = <h1>Teacher Lab1</h1>;
-        this.pages["opsys/lab2"] = <h1>Teacher Lab2</h1>;
-        this.pages["opsys/lab3"] = <h1>Teacher Lab3</h1>;
-        this.pages["opsys/lab4"] = <h1>Teacher Lab4</h1>;
-        this.pages.user = <UserView users={users.getAllUser()}></UserView>;
-        this.pages.hello = <HelloView></HelloView>;
+        this.navHelper.defaultPage = "opsys/lab1";
+        this.navHelper.registerFunction("opsys/{lab}", this.course);
+        this.navHelper.registerFunction("user", (navInfo) => {
+            return <UserView users={users.getAllUser()}></UserView>;
+        });
+        this.navHelper.registerFunction("user", (navInfo) => {
+            return <HelloView></HelloView>;
+        });
     }
 
-    public pageNavigation(page: string): void {
-        "Not in use";
+    public course(info: INavInfo<{ lab: string }>): JSX.Element {
+        return <h1>Teacher {info.params.lab}</h1>;
     }
 
     public renderMenu(menu: number): JSX.Element[] {
@@ -56,11 +58,9 @@ class TeacherPage extends ViewPage {
     }
 
     public renderContent(page: string): JSX.Element {
-        if (page.length === 0) {
-            page = this.defaultPage;
-        }
-        if (this.pages[page]) {
-            return this.pages[page];
+        const temp = this.navHelper.navigateTo(page);
+        if (temp) {
+            return temp;
         }
         return <h1>404 page not found</h1>;
     }

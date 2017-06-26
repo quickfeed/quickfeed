@@ -49,17 +49,21 @@ class NavigationHelper {
 
     public onPreNavigation = newEvent<INavInfoEvent>("NavigationHelper.onPreNavigation");
 
-    private defaultPath: string = "";
+    private DEFAULT_VALUE: string = "";
     private navObj = "__navObj";
     private path: INavPath = {};
     private thisObject: any;
 
-    constructor(thisObject: any) {
-        this.thisObject = thisObject;
+    get defaultPage(): string {
+        return this.DEFAULT_VALUE;
     }
 
-    public setDefaultPath(path: string) {
-        this.defaultPath = path;
+    set defaultPage(value: string) {
+        this.DEFAULT_VALUE = value;
+    }
+
+    constructor(thisObject: any) {
+        this.thisObject = thisObject;
     }
 
     public registerFunction<T>(path: string, callback: (navInfo: INavInfo<T>) => JSX.Element): void {
@@ -78,7 +82,7 @@ class NavigationHelper {
 
     public navigateTo(path: string): JSX.Element | null {
         if (path.length === 0) {
-            path = this.defaultPath;
+            path = this.DEFAULT_VALUE;
         }
         const pathParts = NavigationHelper.getParts(path);
         if (pathParts.length === 0) {
