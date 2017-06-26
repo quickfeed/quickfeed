@@ -42,6 +42,8 @@ func main() {
 		securecookie.GenerateRandomKey(64),
 		securecookie.GenerateRandomKey(32),
 	)
+	store.Options.HttpOnly = true
+	store.Options.Secure = true
 	gothic.Store = store
 
 	// TODO: Only register if env set.
