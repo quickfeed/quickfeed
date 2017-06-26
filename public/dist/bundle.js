@@ -1690,19 +1690,15 @@ var StudentPage = (function (_super) {
     StudentPage.prototype.renderMenu = function (key) {
         var _this = this;
         if (key === 0) {
-            var courses = this.courses;
-            var coursesLinks = [];
-            for (var _i = 0, courses_1 = courses; _i < courses_1.length; _i++) {
-                var a = courses_1[_i];
-                coursesLinks.push({ name: a.tag, uri: this.pagePath + "/course/" + a.id });
-            }
-            var labs = this.getLabs();
+            var coursesLinks = this.courses.map(function (e, i) {
+                return { name: e.tag, uri: _this.pagePath + "/course/" + e.id };
+            });
+            var labs_1 = this.getLabs();
             var labLinks = [];
-            if (labs) {
-                for (var _a = 0, _b = labs.labs; _a < _b.length; _a++) {
-                    var l = _b[_a];
-                    labLinks.push({ name: l.name, uri: this.pagePath + "/course/" + labs.course.id + "/lab/" + l.id });
-                }
+            if (labs_1) {
+                labLinks = labs_1.labs.map(function (l, i) {
+                    return { name: l.name, uri: _this.pagePath + "/course/" + labs_1.course.id + "/lab/" + l.id };
+                });
             }
             var settings = [
                 { name: "Users", uri: this.pagePath + "/user" },
