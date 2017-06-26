@@ -38,12 +38,6 @@
   version = "v1.1"
 
 [[projects]]
-  name = "github.com/gorilla/handlers"
-  packages = ["."]
-  revision = "a4043c62cc2329bacda331d33fc908ab11ef0ec3"
-  version = "v1.2.1"
-
-[[projects]]
   name = "github.com/gorilla/mux"
   packages = ["."]
   revision = "bcd8bc72b08df0f70df986b97f95590779502d31"
@@ -68,10 +62,16 @@
   revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/labstack/echo"
   packages = [".","middleware"]
-  revision = "935a60782cbbc55110e7bd4b33120e4567cbee43"
-  version = "v3.2.1"
+  revision = "83eadbad188df0d05305fce89bfb855a19ef5f21"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/labstack/echo-contrib"
+  packages = ["session"]
+  revision = "7099b8605f68216038f7c07d7bb83c5d1facc662"
 
 [[projects]]
   name = "github.com/labstack/gommon"
@@ -119,7 +119,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "057a25b06247e0c51ba15d8ae475feb2fcb72164"
+  revision = "5f8847ae0d0e90b6a9dc8148e7ad616874625171"
 
 [[projects]]
   branch = "master"
@@ -142,6 +142,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d79d6dabe97ee8038b146df328787742364dbc737523e5c8864665ef23e06f49"
+  inputs-digest = "f8b79d36cf13cbff8207039f076e2a1b607821f65993d076f5c56690bc424d3f"
   solver-name = "gps-cdcl"
   solver-version = 1
