@@ -111,6 +111,8 @@ func main() {
 	}
 }
 
+// makes the oauth2 provider available in the request query so that
+// markbates/goth/gothic.GetProviderName can find it.
 func withProvider(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		qv := c.Request().URL.Query()
