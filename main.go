@@ -1,20 +1,23 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"time"
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/session"
 	"github.com/autograde/aguis/web/handlers"
 	"github.com/go-kit/kit/log"
-	h "github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/bitbucket"
@@ -56,43 +59,61 @@ func main() {
 		panic(fmt.Sprintf("could not connect to db: %s", err))
 	}
 
-	r := mux.NewRouter()
+	e := echo.New()
+	e.HideBanner = true
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	r.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
-		sessionStore.Logout(w, r)
+	e.GET("/logout", func(c echo.Context) error {
+		return sessionStore.Logout(c.Response(), c.Request())
 	})
 
-	auth := r.PathPrefix("/auth/").Subrouter()
-	auth.Handle("/{provider}", handlers.Auth(db, sessionStore))
-	auth.Handle("/{provider}/callback", handlers.AuthCallback(db, sessionStore))
-
-	api := r.PathPrefix("/api/v1/").Subrouter()
-	api.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("api call"))
+	auth := e.Group("/auth/:provider", withProvider)
+	auth.GET("", func(c echo.Context) error {
+		handlers.Auth(db, sessionStore).ServeHTTP(c.Response(), c.Request())
+		return nil
+	})
+	auth.GET("/callback", func(c echo.Context) error {
+		handlers.AuthCallback(db, sessionStore).ServeHTTP(c.Response(), c.Request())
+		return nil
 	})
 
-	fs := http.FileServer(http.Dir(*public))
-	r.PathPrefix("/app").HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			r.URL.Path = "/"
-			fs.ServeHTTP(w, r)
-		},
-	)
-	r.PathPrefix("/").Handler(fs)
+	api := e.Group("/api/v1")
+	api.GET("/test", func(c echo.Context) error {
+		return c.String(http.StatusOK, "api call")
+	})
 
-	srv := &http.Server{
-		Handler: h.LoggingHandler(
-			loggingHandlerAdapter{
-				logger: tsLogger,
-				key:    "http",
-			},
-			handlers.Authenticated(r, db, sessionStore),
-		),
-		Addr: *httpAddr,
+	index := func(c echo.Context) error {
+		return c.File(filepath.Join(*public, "index.html"))
 	}
+	e.GET("/app", index)
+	e.GET("/app/*", index)
 
-	if err := srv.ListenAndServe(); err != nil {
-		panic(fmt.Sprintf("http server error: %s", err))
+	// TODO: Whitelisted files only.
+	e.Static("/", *public)
+
+	go func() {
+		if err := e.Start(*httpAddr); err != nil {
+			e.Logger.Info("shutting down the server")
+		}
+	}()
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
+}
+
+func withProvider(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		qv := c.Request().URL.Query()
+		qv.Set("provider", c.Param("provider"))
+		c.Request().URL.RawQuery = qv.Encode()
+		return next(c)
 	}
 }
 
@@ -110,16 +131,4 @@ func envString(env, fallback string) string {
 
 func tempFile(name string) string {
 	return filepath.Join(os.TempDir(), name)
-}
-
-type loggingHandlerAdapter struct {
-	logger log.Logger
-	key    string
-}
-
-func (l loggingHandlerAdapter) Write(p []byte) (int, error) {
-	if err := l.logger.Log(l.key, string(p)); err != nil {
-		return 0, err
-	}
-	return len(p), nil
 }

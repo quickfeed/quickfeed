@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "d2709f9f1f31ebcda9651b03077758c1f3a0018c"
+  version = "v3.0.0"
+
+[[projects]]
   name = "github.com/go-kit/kit"
   packages = ["log"]
   revision = "a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b"
@@ -62,10 +68,52 @@
   revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
+  name = "github.com/labstack/echo"
+  packages = [".","middleware"]
+  revision = "935a60782cbbc55110e7bd4b33120e4567cbee43"
+  version = "v3.2.1"
+
+[[projects]]
+  name = "github.com/labstack/gommon"
+  packages = ["bytes","color","log","random"]
+  revision = "1121fd3e243c202482226a7afe4dcd07ffc4139a"
+  version = "v0.2.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/markbates/goth"
   packages = [".","gothic","providers/bitbucket","providers/faux","providers/github","providers/gitlab"]
   revision = "515b5a9a223203a3a50b682187c7d0a33888f484"
+
+[[projects]]
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  revision = "941b50ebc6efddf4c41c8e4537a5f68a4e686b24"
+  version = "v0.0.8"
+
+[[projects]]
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  revision = "fc9e8d8ef48496124e79ae0df75490096eccf6fe"
+  version = "v0.0.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/valyala/bytebufferpool"
+  packages = ["."]
+  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/valyala/fasttemplate"
+  packages = ["."]
+  revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["acme","acme/autocert"]
+  revision = "adbae1b6b6fb4b02448a0fc0dbbc9ba2b95b294d"
 
 [[projects]]
   branch = "master"
@@ -80,6 +128,12 @@
   revision = "f047394b6d14284165300fd82dad67edb3a4d7f6"
 
 [[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix"]
+  revision = "c23410a886927bab8ca5e80b08af6a56faeb330d"
+
+[[projects]]
   name = "google.golang.org/appengine"
   packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
@@ -88,6 +142,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c7ad303de10767f0e8acac93f691a38124f2bd2c388819027b2c20043db4108e"
+  inputs-digest = "d79d6dabe97ee8038b146df328787742364dbc737523e5c8864665ef23e06f49"
   solver-name = "gps-cdcl"
   solver-version = 1
