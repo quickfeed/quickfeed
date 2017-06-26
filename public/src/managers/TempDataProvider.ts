@@ -1,27 +1,59 @@
-import { IUser, IAssignment, ICourse, ICourseStudent } from "../models";
-import { IUserProvider } from "./UserManager";
+import { IAssignment, ICourse, ICourseStudent, IUser } from "../models";
 import { ICourseProvider } from "./CourseManager";
+import { IUserProvider } from "./UserManager";
 
 interface IDummyUser extends IUser {
     password: string;
 }
 
-class TempDataProvider implements IUserProvider, ICourseProvider{
-    
-
+class TempDataProvider implements IUserProvider, ICourseProvider {
     private localUsers: IDummyUser[];
     private localAssignments: IAssignment[];
     private localCourses: ICourse[];
     private localCourseStudent: ICourseStudent[];
 
-    constructor(){
+    constructor() {
         this.addLocalAssignments();
         this.addLocalCourses();
         this.addLocalCourseStudent();
         this.addLocalUsers();
     }
 
-    private addLocalUsers(){
+    public getAllUser(): IUser[] {
+        return this.localUsers;
+    }
+
+    public getCourses(): ICourse[] {
+        return this.localCourses;
+    }
+
+    public getCoursesStudent(): ICourseStudent[] {
+        return this.localCourseStudent;
+    }
+
+    public getAssignments(courseId: number): IAssignment[] {
+        const temp: IAssignment[] = [];
+        for (const a of this.localAssignments) {
+            if (a.courseId === courseId) {
+                temp.push(a);
+            }
+        }
+        return temp;
+    }
+
+    public tryLogin(username: string, password: string): IUser | null {
+        for (const u of this.localUsers) {
+            if (u.email.toLocaleLowerCase() === username.toLocaleLowerCase()) {
+                if (u.password === password) {
+                    return u;
+                }
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private addLocalUsers() {
         this.localUsers = [
             {
                 id: 999,
@@ -29,7 +61,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider{
                 lastName: "Testersen",
                 email: "test@testersen.no",
                 personId: 9999,
-                password: "1234"
+                password: "1234",
             },
             {
                 id: 1,
@@ -37,7 +69,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider{
                 lastName: "Pettersen",
                 email: "per@pettersen.no",
                 personId: 1234,
-                password: "1234"
+                password: "1234",
             },
             {
                 id: 2,
@@ -45,7 +77,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider{
                 lastName: "Bobsen",
                 email: "bob@bobsen.no",
                 personId: 1234,
-                password: "1234"
+                password: "1234",
             },
             {
                 id: 3,
@@ -53,87 +85,76 @@ class TempDataProvider implements IUserProvider, ICourseProvider{
                 lastName: "Pan",
                 email: "petter@pan.no",
                 personId: 1234,
-                password: "1234"
-            }
+                password: "1234",
+            },
         ];
     }
 
-    private addLocalAssignments(){
+    private addLocalAssignments() {
         this.localAssignments = [
             {
                 id: 0,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 1",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30)
+                end: new Date(2017, 5, 30),
             },
             {
                 id: 1,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 2",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30)
+                end: new Date(2017, 5, 30),
             },
             {
                 id: 2,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 3",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30)
+                end: new Date(2017, 5, 30),
             },
             {
                 id: 3,
-                courceId: 0,
+                courseId: 0,
                 name: "Lab 4",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30)
+                end: new Date(2017, 5, 30),
             },
             {
                 id: 4,
-                courceId: 1,
+                courseId: 1,
                 name: "Lab 1",
                 start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30)
-            }
+                end: new Date(2017, 5, 30),
+            },
         ];
     }
 
-    private addLocalCourses(){
+    private addLocalCourses() {
         this.localCourses = [
             {
                 id: 0,
                 name: "Object Oriented Programming",
-                tag: "DAT100"
+                tag: "DAT100",
             },
             {
                 id: 1,
                 name: "Algorithms and Datastructures",
-                tag: "DAT200"
-            }
+                tag: "DAT200",
+            },
         ];
     }
 
-    private addLocalCourseStudent(){
+    private addLocalCourseStudent() {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999 }
+            { courseId: 0, personId: 999 },
+            { courseId: 1, personId: 999 },
         ];
-    }
-
-    getAllUser(): IUser[] {
-        return this.localUsers;
-    }
-
-    getCourses(): ICourse[] {
-        return this.localCourses;
-    }
-
-    getCoursesStudent(): ICourseStudent[] {
-        return this.localCourseStudent;
     }
 
     getCourseByTag(tag:string):ICourse | null {
@@ -144,29 +165,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider{
         }
         return null;
     }
-    
-    getAssignments(courseId: number): IAssignment[] {
-        let temp: IAssignment[] = [];
-        for(let a of this.localAssignments){
-            if (a.courceId === courseId){
-                temp.push(a);
-            }
-        }
-        return temp;
-    }
-
-    tryLogin(username: string, password: string): IUser | null {
-        for(let u of this.localUsers){
-            if (u.email.toLocaleLowerCase() === username.toLocaleLowerCase()){
-                if (u.password === password){
-                    return u;
-                }
-                return null;
-            }
-        }
-        return null;
-    }
 
 }
 
-export {TempDataProvider};
+export { TempDataProvider };

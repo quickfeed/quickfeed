@@ -15,34 +15,41 @@ func tempFile(name string) string {
 }
 
 func TestNewStructOnFileDB(t *testing.T) {
-	dbpath := tempFile("agdb_test.db")
+	const (
+		dbpath      = "agdb_test.db"
+		oldSuffix   = "_old"
+		userID      = 0
+		accessToken = "secret"
+	)
+
+	dbfile := tempFile(dbpath)
 	// Remove existing database and continue on error if file did not exist.
-	if err := os.Remove(dbpath); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(dbfile); err != nil && !os.IsNotExist(err) {
 		t.Error(err)
 	}
 
 	// Create new database.
-	db, err := aguis.NewStructDB(dbpath, false, log.NewNopLogger())
+	db, err := aguis.NewStructDB(dbfile, false, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}
 	// Verify that the database was created.
-	if !fileExists(dbpath) {
+	if !fileExists(dbfile) {
 		t.Error("database not created")
 	}
 
-	user, err := db.GetUserWithGithubID(123)
+	user, err := db.GetUserWithGithubID(userID, accessToken)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Load previously created database.
-	db, err = aguis.NewStructDB(dbpath, false, log.NewNopLogger())
+	db, err = aguis.NewStructDB(dbfile, false, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}
 
-	sameUser, err := db.GetUserWithGithubID(123)
+	sameUser, err := db.GetUserWithGithubID(userID, accessToken)
 	if err != nil {
 		t.Error(err)
 	}
@@ -51,7 +58,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Create new database truncating any existing database.
-	db, err = aguis.NewStructDB(dbpath, true, log.NewNopLogger())
+	db, err = aguis.NewStructDB(dbfile, true, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}
@@ -65,11 +72,11 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Remove current database and continue on error if file did not exist.
-	if err := os.Remove(dbpath); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(dbfile); err != nil && !os.IsNotExist(err) {
 		t.Error(err)
 	}
 	// Remove old database and continue on error if file did not exist.
-	if err := os.Remove(dbpath + "_old"); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(dbfile + oldSuffix); err != nil && !os.IsNotExist(err) {
 		t.Error(err)
 	}
 }

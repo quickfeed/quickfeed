@@ -5,33 +5,33 @@ interface IUserProvider {
     getAllUser(): IUser[];
 }
 
-class UserManager{
+class UserManager {
     private userProvider: IUserProvider;
     private currentUser: IUser | null;
 
-    constructor(userProvider: IUserProvider){
+    constructor(userProvider: IUserProvider) {
         this.userProvider = userProvider;
     }
 
-    getCurrentUser(): IUser | null{
+    public getCurrentUser(): IUser | null {
         return this.currentUser;
     }
 
-    tryLogin(username: string, password: string): IUser | null{
-        let result = this.userProvider.tryLogin(username, password);
-        if (result){
+    public tryLogin(username: string, password: string): IUser | null {
+        const result = this.userProvider.tryLogin(username, password);
+        if (result) {
             this.currentUser = result;
         }
         return result;
     }
 
-    getAllUser(): IUser[]{
+    public getAllUser(): IUser[] {
         return this.userProvider.getAllUser();
     }
 
-    getUser(id: number){
-        
+    public getUser(id: number): IUser {
+        throw new Error("Not implemented error");
     }
 }
 
-export {IUserProvider, UserManager};
+export { IUserProvider, UserManager };

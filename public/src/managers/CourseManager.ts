@@ -1,4 +1,5 @@
-import { ICourse, IAssignment, isCourse, IUser, ICourseStudent } from "../models";
+import { ArrayHelper } from "../helper";
+import { IAssignment, ICourse, ICourseStudent, isCourse, IUser } from "../models";
 
 interface ICourseProvider {
     getCourses(): ICourse[];
@@ -8,12 +9,16 @@ interface ICourseProvider {
 }
 
 class CourseManager {
-    courseProvider: ICourseProvider;
-    constructor(courseProvider: ICourseProvider){
+    private courseProvider: ICourseProvider;
+    constructor(courseProvider: ICourseProvider) {
         this.courseProvider = courseProvider;
     }
 
-    getCourses():ICourse[]{
+    public getCourse(id: number): ICourse | null {
+        return ArrayHelper.find(this.getCourses(), (a) => a.id === id);
+    }
+
+    public getCourses(): ICourse[] {
         return this.courseProvider.getCourses();
     }
 
@@ -22,45 +27,42 @@ class CourseManager {
         return this.courseProvider.getCourseByTag(tag);
     }
 
-    getCoursesFor(user: IUser): ICourse[] {
-        let cLinks: ICourseStudent[] = [];
-        for(let c of this.courseProvider.getCoursesStudent()){
-            if (user.id === c.personId){
+    public getCoursesFor(user: IUser): ICourse[] {
+        const cLinks: ICourseStudent[] = [];
+        for (const c of this.courseProvider.getCoursesStudent()) {
+            if (user.id === c.personId) {
                 cLinks.push(c);
             }
         }
-        let courses: ICourse[] = [];
-        for(let c of this.getCourses()){
-            for(let link of cLinks){
-                if (c.id === link.courseId){
+        const courses: ICourse[] = [];
+        for (const c of this.getCourses()) {
+            for (const link of cLinks) {
+                if (c.id === link.courseId) {
                     courses.push(c);
                     break;
                 }
-            }   
+            }
         }
         return courses;
     }
 
-    getAssignment(course: ICourse, assignmentId: number): IAssignment | null{
-        let temp = this.getAssignments(course);
-        console.log(temp);
-        for(let a of temp){
-            if (a.id === assignmentId){
+    public getAssignment(course: ICourse, assignmentId: number): IAssignment | null {
+        const temp = this.getAssignments(course);
+        for (const a of temp) {
+            if (a.id === assignmentId) {
                 return a;
             }
         }
         return null;
     }
 
-    getAssignments(courseId: number): IAssignment[];
-    getAssignments(course: ICourse): IAssignment[];
-    getAssignments(courseId: number | ICourse): IAssignment[] {
-        if (isCourse(courseId)){
+    public getAssignments(courseId: number | ICourse): IAssignment[] {
+        if (isCourse(courseId)) {
             courseId = courseId.id;
         }
         return this.courseProvider.getAssignments(courseId);
     }
-    
+
 }
 
-export {ICourseProvider, CourseManager}
+export { ICourseProvider, CourseManager };

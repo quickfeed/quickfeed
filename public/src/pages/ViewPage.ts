@@ -1,24 +1,25 @@
 function isViewPage(item: any): item is ViewPage {
-    if (item instanceof ViewPage){
+    if (item instanceof ViewPage) {
         return true;
     }
     return false;
 }
 
-abstract class ViewPage{
-    template: string | null = null;
-    defaultPage: string = "";
-    pagePath: string;
+abstract class ViewPage {
+    public template: string | null = null;
+    public defaultPage: string = "";
+    public pagePath: string;
 
-    setPath(path: string){
+    public setPath(path: string) {
         this.pagePath = path;
     }
 
-    renderMenu(menu:number): JSX.Element[] {
+    public renderMenu(menu: number): JSX.Element[] {
         return [];
     }
 
-    abstract renderContent(page: string): JSX.Element;
+    public abstract pageNavigation(page: string): void;
+    public abstract renderContent(page: string): JSX.Element;
 }
 
-export {isViewPage, ViewPage}
+export { isViewPage, ViewPage };
