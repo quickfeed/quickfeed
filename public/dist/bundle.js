@@ -75,6 +75,28 @@ module.exports = React;
 
 "use strict";
 
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+__export(__webpack_require__(8));
+__export(__webpack_require__(3));
+__export(__webpack_require__(9));
+__export(__webpack_require__(10));
+__export(__webpack_require__(11));
+__export(__webpack_require__(12));
+__export(__webpack_require__(13));
+__export(__webpack_require__(14));
+__export(__webpack_require__(15));
+__export(__webpack_require__(16));
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 Object.defineProperty(exports, "__esModule", { value: true });
 function isViewPage(item) {
     if (item instanceof ViewPage) {
@@ -97,24 +119,6 @@ var ViewPage = (function () {
     return ViewPage;
 }());
 exports.ViewPage = ViewPage;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(8));
-__export(__webpack_require__(3));
-__export(__webpack_require__(9));
-__export(__webpack_require__(10));
-__export(__webpack_require__(11));
-__export(__webpack_require__(12));
 
 
 /***/ }),
@@ -180,7 +184,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var components_1 = __webpack_require__(2);
+var components_1 = __webpack_require__(1);
 var UserView = (function (_super) {
     __extends(UserView, _super);
     function UserView() {
@@ -244,16 +248,16 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var ReactDOM = __webpack_require__(7);
-var components_1 = __webpack_require__(2);
-var NavigationManager_1 = __webpack_require__(13);
-var UserManager_1 = __webpack_require__(15);
-var StudentPage_1 = __webpack_require__(16);
-var TempDataProvider_1 = __webpack_require__(17);
-var CourseManager_1 = __webpack_require__(18);
-var HomePage_1 = __webpack_require__(20);
-var ErrorPage_1 = __webpack_require__(21);
-var TeacherPage_1 = __webpack_require__(22);
-var HelpPage_1 = __webpack_require__(23);
+var components_1 = __webpack_require__(1);
+var NavigationManager_1 = __webpack_require__(17);
+var UserManager_1 = __webpack_require__(19);
+var StudentPage_1 = __webpack_require__(20);
+var TempDataProvider_1 = __webpack_require__(22);
+var CourseManager_1 = __webpack_require__(23);
+var HomePage_1 = __webpack_require__(25);
+var ErrorPage_1 = __webpack_require__(26);
+var TeacherPage_1 = __webpack_require__(27);
+var HelpPage_1 = __webpack_require__(28);
 var topLinks = [
     { name: "Teacher", uri: "app/teacher/", active: false },
     { name: "Student", uri: "app/student/", active: false },
@@ -561,10 +565,18 @@ var DynamicTable = (function (_super) {
         var rows = this.props.data.map(function (v, i) {
             return _this.renderRow(v, i);
         });
-        return React.createElement("table", { className: "table" },
+        if (this.props.footer) {
+            return (React.createElement("table", { className: "table" },
+                React.createElement("thead", null,
+                    React.createElement("tr", null, this.renderCells(this.props.header))),
+                React.createElement("tbody", null, rows),
+                React.createElement("tfoot", null,
+                    React.createElement("tr", null, this.renderCells(this.props.footer)))));
+        }
+        return (React.createElement("table", { className: "table" },
             React.createElement("thead", null,
                 React.createElement("tr", null, this.renderCells(this.props.header))),
-            React.createElement("tbody", null, rows));
+            React.createElement("tbody", null, rows)));
     };
     return DynamicTable;
 }(React.Component));
@@ -591,9 +603,184 @@ exports.Row = Row;
 
 "use strict";
 
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(14);
-var ViewPage_1 = __webpack_require__(1);
+var React = __webpack_require__(0);
+var ProgressBar = (function (_super) {
+    __extends(ProgressBar, _super);
+    function ProgressBar() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    ProgressBar.prototype.render = function () {
+        var progressBarStyle = {
+            width: this.props.progress + "%"
+        };
+        return (React.createElement("div", { className: "progress" },
+            React.createElement("div", { className: "progress-bar", role: "progressbar", "aria-valuenow": this.props.progress, "aria-valuemin": "0", "aria-valuemax": "100", style: progressBarStyle },
+                this.props.progress,
+                "%")));
+    };
+    return ProgressBar;
+}(React.Component));
+exports.ProgressBar = ProgressBar;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var LabResult = (function (_super) {
+    __extends(LabResult, _super);
+    function LabResult() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LabResult.prototype.render = function () {
+        return (React.createElement(components_1.Row, null,
+            React.createElement("div", { className: "col-lg-12" },
+                React.createElement("h1", null, this.props.course_name),
+                React.createElement("p", { className: "lead" },
+                    "Your progress on ",
+                    React.createElement("strong", null,
+                        React.createElement("span", { id: "lab-headline" }, this.props.lab))),
+                React.createElement(components_1.ProgressBar, { progress: this.props.progress })),
+            React.createElement("div", { className: "col-lg-6" },
+                React.createElement("p", null,
+                    React.createElement("strong", { id: "status" }, "Status: Nothing built yet."))),
+            React.createElement("div", { className: "col-lg-6" },
+                React.createElement("p", null,
+                    React.createElement("strong", { id: "pushtime" }, "Code delievered: - ")))));
+    };
+    return LabResult;
+}(React.Component));
+exports.LabResult = LabResult;
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var LastBuild = (function (_super) {
+    __extends(LastBuild, _super);
+    function LastBuild() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LastBuild.prototype.render = function () {
+        return (React.createElement(components_1.Row, null,
+            React.createElement("div", { className: "col-lg-12" },
+                React.createElement(components_1.DynamicTable, { header: ["Test name", "Score", "Weight"], data: this.props.test_cases, selector: function (item) { return [item.name, item.score.toString() + "/" + item.points.toString() + " pts", item.weight.toString() + " pts"]; }, footer: ["Total score", this.props.score.toString() + "%", this.props.weight.toString() + "%"] }))));
+    };
+    return LastBuild;
+}(React.Component));
+exports.LastBuild = LastBuild;
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var LastBuildInfo = (function (_super) {
+    __extends(LastBuildInfo, _super);
+    function LastBuildInfo() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LastBuildInfo.prototype.handleClick = function () {
+        console.log("Rebuilding...");
+    };
+    LastBuildInfo.prototype.render = function () {
+        var _this = this;
+        return (React.createElement(components_1.Row, null,
+            React.createElement("div", { className: "col-lg-8" },
+                React.createElement("h2", null, "Latest build"),
+                React.createElement("p", { id: "passes" },
+                    "Number of passed tests:  ",
+                    this.props.pass_tests),
+                React.createElement("p", { id: "fails" },
+                    "Number of failed tests:  ",
+                    this.props.fail_tests),
+                React.createElement("p", { id: "buildtime" },
+                    "Execution time:  ",
+                    this.props.exec_time),
+                React.createElement("p", { id: "timedate" },
+                    "Build date:  ",
+                    this.props.build_time.toString()),
+                React.createElement("p", { id: "buildid" },
+                    "Build ID: ",
+                    this.props.build_id)),
+            React.createElement("div", { className: "col-lg-4 hidden-print" },
+                React.createElement("h2", null, "Actions"),
+                React.createElement(components_1.Row, null,
+                    React.createElement("div", { className: "col-lg-12" },
+                        React.createElement("p", null,
+                            React.createElement("button", { type: "button", id: "rebuild", className: "btn btn-primary", onClick: function () { return _this.handleClick(); } }, "Rebuild")))))));
+    };
+    return LastBuildInfo;
+}(React.Component));
+exports.LastBuildInfo = LastBuildInfo;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var event_1 = __webpack_require__(18);
+var ViewPage_1 = __webpack_require__(2);
 var NavigationManager = (function () {
     function NavigationManager(history) {
         var _this = this;
@@ -721,7 +908,7 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 14 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -750,7 +937,7 @@ exports.newEvent = newEvent;
 
 
 /***/ }),
-/* 15 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -781,7 +968,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 16 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -800,8 +987,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var UserView_1 = __webpack_require__(4);
 var HelloView_1 = __webpack_require__(5);
-var components_1 = __webpack_require__(2);
-var ViewPage_1 = __webpack_require__(1);
+var components_1 = __webpack_require__(1);
+var ViewPage_1 = __webpack_require__(2);
+var LabResultView_1 = __webpack_require__(21);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -864,16 +1052,34 @@ var StudentPage = (function (_super) {
         var parts = this.navMan.getParts(page);
         if (parts.length > 1) {
             if (parts[0] === "course") {
-                var course = parts[1];
+                var course_tag = parts[1];
+                var course = this.courseMan.getCourseByTag(course_tag);
                 if (parts.length > 3) {
                     var labId = parseInt(parts[3]);
-                    if (labId !== undefined) {
+                    if (course !== null && labId !== undefined) {
                         var lab = this.courseMan.getAssignment({ id: 0, name: "", tag: "" }, labId);
                         console.log(lab);
                         if (lab) {
-                            return React.createElement("h1", null,
-                                "This is: ",
-                                lab.name);
+                            var testCases = [
+                                { name: "Test Case 1", score: 60, points: 100, weight: 1 },
+                                { name: "Test Case 2", score: 50, points: 100, weight: 1 },
+                                { name: "Test Case 3", score: 40, points: 100, weight: 1 },
+                                { name: "Test Case 4", score: 30, points: 100, weight: 1 },
+                                { name: "Test Case 5", score: 20, points: 100, weight: 1 }
+                            ];
+                            var labInfo = {
+                                lab: lab.name,
+                                course: course.name,
+                                score: 50,
+                                weight: 100,
+                                test_cases: testCases,
+                                pass_tests: 10,
+                                fail_tests: 20,
+                                exec_time: 0.33,
+                                build_time: new Date(2017, 5, 25),
+                                build_id: 10
+                            };
+                            return React.createElement(LabResultView_1.LabResultView, { labInfo: labInfo });
                         }
                         return React.createElement("h1", null, "Could not find that lab");
                     }
@@ -893,7 +1099,48 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 17 */
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var LabResultView = (function (_super) {
+    __extends(LabResultView, _super);
+    function LabResultView() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LabResultView.prototype.render = function () {
+        return (React.createElement("div", { className: "col-md-9 col-sm-9 col-xs-12" },
+            React.createElement("div", { className: "result-content", id: "resultview" },
+                React.createElement("section", { id: "result" },
+                    React.createElement(components_1.LabResult, { course_name: this.props.labInfo.course, lab: this.props.labInfo.lab, progress: this.props.labInfo.score }),
+                    React.createElement(components_1.LastBuild, { test_cases: this.props.labInfo.test_cases, score: this.props.labInfo.score, weight: this.props.labInfo.weight }),
+                    React.createElement(components_1.LastBuildInfo, { pass_tests: this.props.labInfo.pass_tests, fail_tests: this.props.labInfo.fail_tests, exec_time: this.props.labInfo.exec_time, build_time: this.props.labInfo.build_time, build_id: this.props.labInfo.build_id }),
+                    React.createElement(components_1.Row, null,
+                        React.createElement("div", { className: "col-lg-12" },
+                            React.createElement("div", { className: "well" },
+                                React.createElement("code", { id: "logs" }, "# There is no build for this lab yet."))))))));
+    };
+    return LabResultView;
+}(React.Component));
+exports.LabResultView = LabResultView;
+
+
+/***/ }),
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1014,6 +1261,15 @@ var TempDataProvider = (function () {
     TempDataProvider.prototype.getCoursesStudent = function () {
         return this.localCourseStudent;
     };
+    TempDataProvider.prototype.getCourseByTag = function (tag) {
+        for (var _i = 0, _a = this.localCourses; _i < _a.length; _i++) {
+            var c = _a[_i];
+            if (c.tag === tag) {
+                return c;
+            }
+        }
+        return null;
+    };
     TempDataProvider.prototype.getAssignments = function (courseId) {
         var temp = [];
         for (var _i = 0, _a = this.localAssignments; _i < _a.length; _i++) {
@@ -1042,19 +1298,22 @@ exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 18 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var models_1 = __webpack_require__(19);
+var models_1 = __webpack_require__(24);
 var CourseManager = (function () {
     function CourseManager(courseProvider) {
         this.courseProvider = courseProvider;
     }
     CourseManager.prototype.getCourses = function () {
         return this.courseProvider.getCourses();
+    };
+    CourseManager.prototype.getCourseByTag = function (tag) {
+        return this.courseProvider.getCourseByTag(tag);
     };
     CourseManager.prototype.getCoursesFor = function (user) {
         var cLinks = [];
@@ -1100,7 +1359,7 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 19 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1116,7 +1375,7 @@ exports.isCourse = isCourse;
 
 
 /***/ }),
-/* 20 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1133,7 +1392,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(1);
+var ViewPage_1 = __webpack_require__(2);
 var HomePage = (function (_super) {
     __extends(HomePage, _super);
     function HomePage() {
@@ -1150,7 +1409,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 21 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1167,7 +1426,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(1);
+var ViewPage_1 = __webpack_require__(2);
 var ErrorPage = (function (_super) {
     __extends(ErrorPage, _super);
     function ErrorPage() {
@@ -1189,7 +1448,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 22 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1208,8 +1467,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var UserView_1 = __webpack_require__(4);
 var HelloView_1 = __webpack_require__(5);
-var components_1 = __webpack_require__(2);
-var ViewPage_1 = __webpack_require__(1);
+var components_1 = __webpack_require__(1);
+var ViewPage_1 = __webpack_require__(2);
 var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
     function TeacherPage(users, navMan) {
@@ -1269,7 +1528,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 23 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1286,8 +1545,8 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(1);
-var HelpView_1 = __webpack_require__(24);
+var ViewPage_1 = __webpack_require__(2);
+var HelpView_1 = __webpack_require__(29);
 var HelpPage = (function (_super) {
     __extends(HelpPage, _super);
     function HelpPage(navMan) {
@@ -1313,7 +1572,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 24 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1330,7 +1589,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var components_1 = __webpack_require__(2);
+var components_1 = __webpack_require__(1);
 var HelpView = (function (_super) {
     __extends(HelpView, _super);
     function HelpView() {

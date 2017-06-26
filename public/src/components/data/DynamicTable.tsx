@@ -4,6 +4,7 @@ interface IDynamicTableProps<T> {
     header: string[];
     data: T[];
     selector: (item: T) => string[];
+    footer?: string[];
 }
 
 class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined>{
@@ -22,15 +23,31 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined>{
         let rows = this.props.data.map((v, i) => {
             return this.renderRow(v, i);
         });
-
-        return <table className="table">
-            <thead>
-                <tr>{this.renderCells(this.props.header)}</tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
+        if(this.props.footer) {
+            return(
+                <table className="table">
+                    <thead>
+                        <tr>{this.renderCells(this.props.header)}</tr>
+                    </thead>
+                    <tbody>
+                        {rows}
+                    </tbody>
+                    <tfoot>
+                        <tr>{this.renderCells(this.props.footer)}</tr>
+                    </tfoot>
+                </table>
+            )
+        }
+        return(
+            <table className="table">
+                <thead>
+                    <tr>{this.renderCells(this.props.header)}</tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        )
     }
 }
 

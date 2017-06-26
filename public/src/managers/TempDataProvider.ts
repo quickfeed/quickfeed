@@ -135,6 +135,15 @@ class TempDataProvider implements IUserProvider, ICourseProvider{
     getCoursesStudent(): ICourseStudent[] {
         return this.localCourseStudent;
     }
+
+    getCourseByTag(tag:string):ICourse | null {
+        for (let c of this.localCourses){
+            if (c.tag === tag) {
+                return c;
+            }
+        }
+        return null;
+    }
     
     getAssignments(courseId: number): IAssignment[] {
         let temp: IAssignment[] = [];

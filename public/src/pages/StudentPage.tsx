@@ -6,7 +6,8 @@ import { HelloView } from "./views/HelloView";
 import { NavMenu } from "../components";
 import { ViewPage } from "./ViewPage";
 import { CourseManager } from "../managers/CourseManager";
-import { IAssignment, ICourse } from "../models";
+import { IAssignment, ICourse, ITestCases, ILabInfo } from "../models";
+import {LabResultView} from "./views/LabResultView";
 
 
 class StudentPage extends ViewPage {
@@ -80,15 +81,37 @@ class StudentPage extends ViewPage {
         let parts = this.navMan.getParts(page);
         if (parts.length > 1){
             if (parts[0] === "course"){
-                let course = parts[1];
+                let course_tag = parts[1];
+                let course = this.courseMan.getCourseByTag(course_tag);
                 if (parts.length > 3){
                     let labId = parseInt(parts[3]);
-                    if (labId !== undefined){
+                    if (course !== null && labId !== undefined){
                         // TODO: Be carefull not to return anything that sould not be able to be returned
                         let lab = this.courseMan.getAssignment({id:0, name: "", tag: ""}, labId);
                         console.log(lab);
                         if (lab){
-                            return <h1>This is: {lab.name}</h1>
+                            // TODO: fetch real data from backend database for corresponding course assignment
+                            let testCases: ITestCases[] = [
+                                {name: "Test Case 1", score: 60, points: 100, weight: 1},
+                                {name: "Test Case 2", score: 50, points: 100, weight: 1},
+                                {name: "Test Case 3", score: 40, points: 100, weight: 1},
+                                {name: "Test Case 4", score: 30, points: 100, weight: 1},
+                                {name: "Test Case 5", score: 20, points: 100, weight: 1}
+                            ];
+
+                            let labInfo: ILabInfo = {
+                                lab: lab.name,
+                                course: course.name,
+                                score: 50,
+                                weight: 100,
+                                test_cases: testCases,
+                                pass_tests: 10,
+                                fail_tests: 20,
+                                exec_time: 0.33,
+                                build_time: new Date(2017, 5, 25),
+                                build_id: 10
+                            };
+                            return <LabResultView labInfo={labInfo}></LabResultView>
                         }
                         return <h1>Could not find that lab</h1>
                     }

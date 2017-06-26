@@ -4,6 +4,7 @@ interface ICourseProvider {
     getCourses(): ICourse[];
     getAssignments(courseId: number): IAssignment[];
     getCoursesStudent(): ICourseStudent[];
+    getCourseByTag(tag: string): ICourse | null;
 }
 
 class CourseManager {
@@ -14,6 +15,11 @@ class CourseManager {
 
     getCourses():ICourse[]{
         return this.courseProvider.getCourses();
+    }
+
+    // get a course by a given course tag
+    getCourseByTag(tag: string): ICourse | null{
+        return this.courseProvider.getCourseByTag(tag);
     }
 
     getCoursesFor(user: IUser): ICourse[] {

@@ -33,4 +33,22 @@ interface ICourseStudent{
     courseId: number;
 }
 
-export {IUser, isCourse, ICourse, IAssignment, ICourseStudent};
+interface ITestCases{
+    name: string;
+    score: number;
+    points: number;
+    weight: number;
+}
+interface ILabInfo{
+    lab: string;
+    course: string;
+    score: number;
+    weight: number;
+    test_cases: ITestCases[];
+    pass_tests: number;
+    fail_tests: number;
+    exec_time: number;
+    build_time: Date;
+    build_id: number;
+}
+export {IUser, isCourse, ICourse, IAssignment, ICourseStudent, ITestCases, ILabInfo};
