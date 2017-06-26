@@ -1,4 +1,4 @@
-package aguis
+package database
 
 import (
 	"encoding/gob"

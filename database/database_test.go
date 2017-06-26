@@ -1,4 +1,4 @@
-package aguis_test
+package database_test
 
 import (
 	"os"

@@ -1,4 +1,4 @@
-package aguis
+package session
 
 import (
 	"net/http"

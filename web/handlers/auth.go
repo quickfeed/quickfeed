@@ -7,7 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/autograde/aguis"
+	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/session"
 	"github.com/autograde/aguis/web"
 	"github.com/gorilla/mux"
 	"github.com/markbates/goth"
@@ -19,7 +20,7 @@ type contextKey string
 const userContextKey contextKey = "user"
 
 // Auth tries to authenticate against an oauth2 provider.
-func Auth(db aguis.UserDatabase, s *aguis.Session) http.Handler {
+func Auth(db database.UserDatabase, s *session.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if id, _ := s.Whois(w, r); id >= 0 {
 			http.Redirect(w, r, "/", http.StatusFound)
@@ -39,7 +40,7 @@ func Auth(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 }
 
 // AuthCallback handles the callback from an oauth2 provider.
-func AuthCallback(db aguis.UserDatabase, s *aguis.Session) http.Handler {
+func AuthCallback(db database.UserDatabase, s *session.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if id, _ := s.Whois(w, r); id >= 0 {
 			http.Redirect(w, r, "/", http.StatusFound)
@@ -60,7 +61,7 @@ func AuthCallback(db aguis.UserDatabase, s *aguis.Session) http.Handler {
 
 // Authenticated ensures that only authenticated sessions are allowed to
 // pass through to the endpoints that require authentication.
-func Authenticated(m *mux.Router, db aguis.UserDatabase, s *aguis.Session) http.Handler {
+func Authenticated(m *mux.Router, db database.UserDatabase, s *session.Session) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id, err := s.Whois(w, r)
 		if err != nil {
@@ -87,16 +88,16 @@ func Authenticated(m *mux.Router, db aguis.UserDatabase, s *aguis.Session) http.
 	})
 }
 
-func newUserContext(ctx context.Context, u *aguis.User) context.Context {
+func newUserContext(ctx context.Context, u *database.User) context.Context {
 	return context.WithValue(ctx, userContextKey, u)
 }
 
-func userFromContext(ctx context.Context) (*aguis.User, bool) {
-	u, ok := ctx.Value(userContextKey).(*aguis.User)
+func userFromContext(ctx context.Context) (*database.User, bool) {
+	u, ok := ctx.Value(userContextKey).(*database.User)
 	return u, ok
 }
 
-func getInteralUser(db aguis.UserDatabase, externalUser *goth.User) (*aguis.User, error) {
+func getInteralUser(db database.UserDatabase, externalUser *goth.User) (*database.User, error) {
 	switch externalUser.Provider {
 	case "github":
 		githubID, err := strconv.Atoi(externalUser.UserID)
@@ -109,7 +110,7 @@ func getInteralUser(db aguis.UserDatabase, externalUser *goth.User) (*aguis.User
 		}
 		return user, nil
 	case "faux": // Provider is only registered and reachable from tests.
-		return &aguis.User{}, nil
+		return &database.User{}, nil
 	default:
 		return nil, errors.New("provider not implemented")
 	}
@@ -117,7 +118,7 @@ func getInteralUser(db aguis.UserDatabase, externalUser *goth.User) (*aguis.User
 
 func login(
 	w http.ResponseWriter, r *http.Request,
-	db aguis.UserDatabase, s *aguis.Session, externalUser *goth.User,
+	db database.UserDatabase, s *session.Session, externalUser *goth.User,
 ) error {
 	user, err := getInteralUser(db, externalUser)
 	if err != nil {

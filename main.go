@@ -7,7 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/autograde/aguis"
+	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/session"
 	"github.com/autograde/aguis/web/handlers"
 	"github.com/go-kit/kit/log"
 	h "github.com/gorilla/handlers"
@@ -47,9 +48,9 @@ func main() {
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
 	)
 
-	sessionStore := aguis.NewSessionStore(store, "authsession")
+	sessionStore := session.NewSessionStore(store, "authsession")
 
-	db, err := aguis.NewStructDB(tempFile("agdb.db"), false, logger)
+	db, err := database.NewStructDB(tempFile("agdb.db"), false, logger)
 
 	if err != nil {
 		panic(fmt.Sprintf("could not connect to db: %s", err))

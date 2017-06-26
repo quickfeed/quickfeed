@@ -1,4 +1,4 @@
-package aguis_test
+package session_test
 
 import (
 	"net/http"

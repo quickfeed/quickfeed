@@ -6,7 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/autograde/aguis"
+	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/session"
 	"github.com/autograde/aguis/web/handlers"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
@@ -33,7 +34,7 @@ func TestAuthHandlerRedirect(t *testing.T) {
 
 	store := newStore()
 	gothic.Store = store
-	s := aguis.NewSessionStore(store, loginSession)
+	s := session.NewSessionStore(store, loginSession)
 
 	authHandler := handlers.Auth(newDB(t), s)
 	authHandler.ServeHTTP(w, newAuthRequest(t))
@@ -45,7 +46,7 @@ func TestAuthCallbackHandlerUnauthorized(t *testing.T) {
 
 	store := newStore()
 	gothic.Store = store
-	s := aguis.NewSessionStore(store, loginSession)
+	s := session.NewSessionStore(store, loginSession)
 
 	authHandler := handlers.AuthCallback(newDB(t), s)
 	authHandler.ServeHTTP(w, newAuthRequest(t))
@@ -60,13 +61,13 @@ func TestAuthCallbackHandlerLoggedIn(t *testing.T) {
 	testAuthHandlerLoggedIn(t, handlers.AuthCallback)
 }
 
-func testAuthHandlerLoggedIn(t *testing.T, newHandler func(db aguis.UserDatabase, s *aguis.Session) http.Handler) {
+func testAuthHandlerLoggedIn(t *testing.T, newHandler func(db database.UserDatabase, s *session.Session) http.Handler) {
 	w := httptest.NewRecorder()
 	r := newAuthRequest(t)
 
 	store := newStore()
 	gothic.Store = store
-	s := aguis.NewSessionStore(store, loginSession)
+	s := session.NewSessionStore(store, loginSession)
 
 	if err := s.Login(w, r, 0); err != nil {
 		t.Fatal(err)
@@ -85,7 +86,7 @@ func TestAuthCallbackHandlerAuthenticated(t *testing.T) {
 	testAuthHandlerAuthenticated(t, handlers.AuthCallback)
 }
 
-func testAuthHandlerAuthenticated(t *testing.T, newHandler func(db aguis.UserDatabase, s *aguis.Session) http.Handler) {
+func testAuthHandlerAuthenticated(t *testing.T, newHandler func(db database.UserDatabase, s *session.Session) http.Handler) {
 	w := httptest.NewRecorder()
 	r := newAuthRequest(t)
 
@@ -99,7 +100,7 @@ func testAuthHandlerAuthenticated(t *testing.T, newHandler func(db aguis.UserDat
 		t.Error(err)
 	}
 
-	s := aguis.NewSessionStore(store, loginSession)
+	s := session.NewSessionStore(store, loginSession)
 
 	authHandler := newHandler(newDB(t), s)
 	authHandler.ServeHTTP(w, r)
@@ -131,7 +132,7 @@ func testAuthenticatedHandler(t *testing.T, r *http.Request, allowed, loggedIn b
 
 	store := newStore()
 	gothic.Store = store
-	s := aguis.NewSessionStore(store, loginSession)
+	s := session.NewSessionStore(store, loginSession)
 
 	db := newDB(t)
 
@@ -173,8 +174,8 @@ func newAPIRequest(t *testing.T) *http.Request {
 	return r
 }
 
-func newDB(t *testing.T) aguis.UserDatabase {
-	db, err := aguis.NewStructDB("", false, log.NewNopLogger())
+func newDB(t *testing.T) database.UserDatabase {
+	db, err := database.NewStructDB("", false, log.NewNopLogger())
 	if err != nil {
 		t.Fatal(err)
 	}
