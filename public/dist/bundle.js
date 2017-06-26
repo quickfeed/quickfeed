@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,18 +79,18 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(8));
-__export(__webpack_require__(3));
 __export(__webpack_require__(9));
+__export(__webpack_require__(3));
 __export(__webpack_require__(10));
 __export(__webpack_require__(11));
 __export(__webpack_require__(12));
 __export(__webpack_require__(13));
-__export(__webpack_require__(15));
+__export(__webpack_require__(14));
 __export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
 __export(__webpack_require__(19));
+__export(__webpack_require__(20));
 
 
 /***/ }),
@@ -173,6 +173,30 @@ exports.NavHeaderBar = NavHeaderBar;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+var ArrayHelper = (function () {
+    function ArrayHelper() {
+    }
+    ArrayHelper.find = function (array, predicate) {
+        for (var i = 0; i < array.length; i++) {
+            var cur = array[i];
+            if (predicate.call(array, cur, i, array)) {
+                return cur;
+            }
+        }
+        return null;
+    };
+    return ArrayHelper;
+}());
+exports.ArrayHelper = ArrayHelper;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -199,7 +223,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -237,7 +261,7 @@ exports.UserView = UserView;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -254,9 +278,9 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(7);
+var ReactDOM = __webpack_require__(8);
 var components_1 = __webpack_require__(1);
-var CourseManager_1 = __webpack_require__(20);
+var CourseManager_1 = __webpack_require__(21);
 var NavigationManager_1 = __webpack_require__(23);
 var TempDataProvider_1 = __webpack_require__(25);
 var UserManager_1 = __webpack_require__(26);
@@ -370,13 +394,13 @@ main();
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -450,7 +474,7 @@ exports.NavBar = NavBar;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -496,7 +520,7 @@ exports.NavMenu = NavMenu;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -543,7 +567,7 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -597,7 +621,7 @@ exports.DynamicTable = DynamicTable;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -611,7 +635,7 @@ exports.Row = Row;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -628,7 +652,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var LabResultView_1 = __webpack_require__(14);
+var LabResultView_1 = __webpack_require__(15);
 var StudentLab = (function (_super) {
     __extends(StudentLab, _super);
     function StudentLab() {
@@ -662,7 +686,7 @@ exports.StudentLab = StudentLab;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -703,7 +727,7 @@ exports.LabResultView = LabResultView;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -773,7 +797,7 @@ exports.NavDropdown = NavDropdown;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -810,7 +834,7 @@ exports.ProgressBar = ProgressBar;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -855,7 +879,7 @@ exports.LabResult = LabResult;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -889,7 +913,7 @@ exports.LastBuild = LastBuild;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -948,13 +972,13 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var helper_1 = __webpack_require__(21);
+var helper_1 = __webpack_require__(4);
 var models_1 = __webpack_require__(22);
 var CourseManager = (function () {
     function CourseManager(courseProvider) {
@@ -1009,30 +1033,6 @@ var CourseManager = (function () {
     return CourseManager;
 }());
 exports.CourseManager = CourseManager;
-
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var ArrayHelper = (function () {
-    function ArrayHelper() {
-    }
-    ArrayHelper.find = function (array, predicate) {
-        for (var i = 0; i < array.length; i++) {
-            var cur = array[i];
-            if (predicate.call(array, cur, i, array)) {
-                return cur;
-            }
-        }
-        return null;
-    };
-    return ArrayHelper;
-}());
-exports.ArrayHelper = ArrayHelper;
 
 
 /***/ }),
@@ -1632,9 +1632,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(2);
-var HelloView_1 = __webpack_require__(4);
-var UserView_1 = __webpack_require__(5);
-var helper_1 = __webpack_require__(21);
+var HelloView_1 = __webpack_require__(5);
+var UserView_1 = __webpack_require__(6);
+var helper_1 = __webpack_require__(4);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -1777,8 +1777,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(2);
-var HelloView_1 = __webpack_require__(4);
-var UserView_1 = __webpack_require__(5);
+var HelloView_1 = __webpack_require__(5);
+var UserView_1 = __webpack_require__(6);
 var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
     function TeacherPage(users, navMan) {
