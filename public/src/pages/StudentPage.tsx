@@ -110,8 +110,6 @@ class StudentPage extends ViewPage {
         }
 
         if (this.selectedAssignment && this.selectedCourse) {
-            console.log("selected course =", this.selectedCourse.name);
-            console.log("selected assignment =", this.selectedAssignment.name);
             return <StudentLab course={this.selectedCourse} assignment={this.selectedAssignment}></StudentLab>;
         }
         return <div>404 Not found</div>;

@@ -88,9 +88,9 @@ __export(__webpack_require__(12));
 __export(__webpack_require__(31));
 __export(__webpack_require__(32));
 __export(__webpack_require__(13));
-__export(__webpack_require__(14));
-__export(__webpack_require__(15));
-__export(__webpack_require__(16));
+__export(__webpack_require__(33));
+__export(__webpack_require__(34));
+__export(__webpack_require__(35));
 
 
 /***/ }),
@@ -648,144 +648,9 @@ exports.ProgressBar = ProgressBar;
 
 
 /***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var LabResult = (function (_super) {
-    __extends(LabResult, _super);
-    function LabResult() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    LabResult.prototype.render = function () {
-        return (React.createElement(components_1.Row, null,
-            React.createElement("div", { className: "col-lg-12" },
-                React.createElement("h1", null, this.props.course_name),
-                React.createElement("p", { className: "lead" },
-                    "Your progress on ",
-                    React.createElement("strong", null,
-                        React.createElement("span", { id: "lab-headline" }, this.props.lab))),
-                React.createElement(components_1.ProgressBar, { progress: this.props.progress })),
-            React.createElement("div", { className: "col-lg-6" },
-                React.createElement("p", null,
-                    React.createElement("strong", { id: "status" }, "Status: Nothing built yet."))),
-            React.createElement("div", { className: "col-lg-6" },
-                React.createElement("p", null,
-                    React.createElement("strong", { id: "pushtime" }, "Code delievered: - ")))));
-    };
-    return LabResult;
-}(React.Component));
-exports.LabResult = LabResult;
-
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var LastBuild = (function (_super) {
-    __extends(LastBuild, _super);
-    function LastBuild() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    LastBuild.prototype.render = function () {
-        return (React.createElement(components_1.Row, null,
-            React.createElement("div", { className: "col-lg-12" },
-                React.createElement(components_1.DynamicTable, { header: ["Test name", "Score", "Weight"], data: this.props.test_cases, selector: function (item) { return [item.name, item.score.toString() + "/" + item.points.toString() + " pts", item.weight.toString() + " pts"]; }, footer: ["Total score", this.props.score.toString() + "%", this.props.weight.toString() + "%"] }))));
-    };
-    return LastBuild;
-}(React.Component));
-exports.LastBuild = LastBuild;
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var LastBuildInfo = (function (_super) {
-    __extends(LastBuildInfo, _super);
-    function LastBuildInfo() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    LastBuildInfo.prototype.handleClick = function () {
-        console.log("Rebuilding...");
-    };
-    LastBuildInfo.prototype.render = function () {
-        var _this = this;
-        return (React.createElement(components_1.Row, null,
-            React.createElement("div", { className: "col-lg-8" },
-                React.createElement("h2", null, "Latest build"),
-                React.createElement("p", { id: "passes" },
-                    "Number of passed tests:  ",
-                    this.props.pass_tests),
-                React.createElement("p", { id: "fails" },
-                    "Number of failed tests:  ",
-                    this.props.fail_tests),
-                React.createElement("p", { id: "buildtime" },
-                    "Execution time:  ",
-                    this.props.exec_time),
-                React.createElement("p", { id: "timedate" },
-                    "Build date:  ",
-                    this.props.build_time.toString()),
-                React.createElement("p", { id: "buildid" },
-                    "Build ID: ",
-                    this.props.build_id)),
-            React.createElement("div", { className: "col-lg-4 hidden-print" },
-                React.createElement("h2", null, "Actions"),
-                React.createElement(components_1.Row, null,
-                    React.createElement("div", { className: "col-lg-12" },
-                        React.createElement("p", null,
-                            React.createElement("button", { type: "button", id: "rebuild", className: "btn btn-primary", onClick: function () { return _this.handleClick(); } }, "Rebuild")))))));
-    };
-    return LastBuildInfo;
-}(React.Component));
-exports.LastBuildInfo = LastBuildInfo;
-
-
-/***/ }),
+/* 14 */,
+/* 15 */,
+/* 16 */,
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1091,8 +956,6 @@ var StudentPage = (function (_super) {
             return this.pages[page];
         }
         if (this.selectedAssignment && this.selectedCourse) {
-            console.log("selected course =", this.selectedCourse.name);
-            console.log("selected assignment =", this.selectedAssignment.name);
             return React.createElement(components_1.StudentLab, { course: this.selectedCourse, assignment: this.selectedAssignment });
         }
         return React.createElement("div", null, "404 Not found");
@@ -1832,6 +1695,144 @@ var NavDropdown = (function (_super) {
     return NavDropdown;
 }(React.Component));
 exports.NavDropdown = NavDropdown;
+
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var LabResult = (function (_super) {
+    __extends(LabResult, _super);
+    function LabResult() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LabResult.prototype.render = function () {
+        return (React.createElement(components_1.Row, null,
+            React.createElement("div", { className: "col-lg-12" },
+                React.createElement("h1", null, this.props.course_name),
+                React.createElement("p", { className: "lead" },
+                    "Your progress on ",
+                    React.createElement("strong", null,
+                        React.createElement("span", { id: "lab-headline" }, this.props.lab))),
+                React.createElement(components_1.ProgressBar, { progress: this.props.progress })),
+            React.createElement("div", { className: "col-lg-6" },
+                React.createElement("p", null,
+                    React.createElement("strong", { id: "status" }, "Status: Nothing built yet."))),
+            React.createElement("div", { className: "col-lg-6" },
+                React.createElement("p", null,
+                    React.createElement("strong", { id: "pushtime" }, "Code delievered: - ")))));
+    };
+    return LabResult;
+}(React.Component));
+exports.LabResult = LabResult;
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var LastBuild = (function (_super) {
+    __extends(LastBuild, _super);
+    function LastBuild() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LastBuild.prototype.render = function () {
+        return (React.createElement(components_1.Row, null,
+            React.createElement("div", { className: "col-lg-12" },
+                React.createElement(components_1.DynamicTable, { header: ["Test name", "Score", "Weight"], data: this.props.test_cases, selector: function (item) { return [item.name, item.score.toString() + "/" + item.points.toString() + " pts", item.weight.toString() + " pts"]; }, footer: ["Total score", this.props.score.toString() + "%", this.props.weight.toString() + "%"] }))));
+    };
+    return LastBuild;
+}(React.Component));
+exports.LastBuild = LastBuild;
+
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var LastBuildInfo = (function (_super) {
+    __extends(LastBuildInfo, _super);
+    function LastBuildInfo() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    LastBuildInfo.prototype.handleClick = function () {
+        console.log("Rebuilding...");
+    };
+    LastBuildInfo.prototype.render = function () {
+        var _this = this;
+        return (React.createElement(components_1.Row, null,
+            React.createElement("div", { className: "col-lg-8" },
+                React.createElement("h2", null, "Latest build"),
+                React.createElement("p", { id: "passes" },
+                    "Number of passed tests:  ",
+                    this.props.pass_tests),
+                React.createElement("p", { id: "fails" },
+                    "Number of failed tests:  ",
+                    this.props.fail_tests),
+                React.createElement("p", { id: "buildtime" },
+                    "Execution time:  ",
+                    this.props.exec_time),
+                React.createElement("p", { id: "timedate" },
+                    "Build date:  ",
+                    this.props.build_time.toString()),
+                React.createElement("p", { id: "buildid" },
+                    "Build ID: ",
+                    this.props.build_id)),
+            React.createElement("div", { className: "col-lg-4 hidden-print" },
+                React.createElement("h2", null, "Actions"),
+                React.createElement(components_1.Row, null,
+                    React.createElement("div", { className: "col-lg-12" },
+                        React.createElement("p", null,
+                            React.createElement("button", { type: "button", id: "rebuild", className: "btn btn-primary", onClick: function () { return _this.handleClick(); } }, "Rebuild")))))));
+    };
+    return LastBuildInfo;
+}(React.Component));
+exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ })
