@@ -1,13 +1,17 @@
 import * as React from "react";
 import { NavDropdown, NavMenu, StudentLab } from "../components";
+
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
-import { IAssignment, ICourse} from "../models";
+
+import { IAssignment, ICourse } from "../models";
 
 import { ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
 import { UserView } from "./views/UserView";
+
+import { ArrayHelper } from "../helper";
 
 class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -20,6 +24,10 @@ class StudentPage extends ViewPage {
     private selectedAssignment: IAssignment | null = null;
 
     private currentPage: string = "";
+
+    private courses: ICourse[] = [];
+
+    private foundId: number = -1;
 
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
@@ -40,18 +48,31 @@ class StudentPage extends ViewPage {
     public pageNavigation(page: string): void {
         this.currentPage = page;
         const parts = this.navMan.getParts(page);
+        this.courses = this.getCourses();
+        this.foundId = -1;
         if (parts.length > 1) {
             if (parts[0] === "course") {
                 const course = parseInt(parts[1], 10);
-                if (!isNaN(course) && (!this.selectedCourse || this.selectedCourse.id !== course)) {
-                    this.selectedCourse = this.courseMan.getCourse(course);
+                if (!isNaN(course)) {
+
+                    this.selectedCourse = ArrayHelper.find(this.courses, (e, i) => {
+                        if (e.id === course) {
+                            this.foundId = i;
+                            return true;
+                        }
+                        return false;
+                    });
+
+                    console.log(this.foundId);
+                    // this.selectedCourse = this.courseMan.getCourse(course);
                 }
 
                 if (parts.length > 3 && this.selectedCourse) {
                     const labId = parseInt(parts[3], 10);
                     if (!isNaN(labId)) {
                         // TODO: Be carefull not to return anything that sould not be able to be returned
-                        const lab = this.courseMan.getAssignment({ id: 0, name: "", tag: "" }, labId);
+                        const lab = this.courseMan.getAssignment(this.selectedCourse, labId);
+
                         if (lab) {
                             this.selectedAssignment = lab;
                         }
@@ -63,7 +84,7 @@ class StudentPage extends ViewPage {
 
     public renderMenu(key: number): JSX.Element[] {
         if (key === 0) {
-            const courses = this.getCourses();
+            const courses = this.courses;
             const coursesLinks: ILink[] = [];
             for (const a of courses) {
                 coursesLinks.push({ name: a.tag, uri: this.pagePath + "/course/" + a.id });
@@ -84,11 +105,13 @@ class StudentPage extends ViewPage {
             this.navMan.checkLinks(labLinks, this);
             this.navMan.checkLinks(settings, this);
 
+
+
             return [
                 <h4>Course</h4>,
                 <NavDropdown
                     key={1}
-                    selectedIndex={0}
+                    selectedIndex={this.foundId}
                     items={coursesLinks}
                     itemClick={(link) => { this.handleClick(link); }}>
                 </NavDropdown>,
@@ -108,7 +131,6 @@ class StudentPage extends ViewPage {
         if (this.pages[page]) {
             return this.pages[page];
         }
-
         if (this.selectedAssignment && this.selectedCourse) {
             return <StudentLab course={this.selectedCourse} assignment={this.selectedAssignment}></StudentLab>;
         }

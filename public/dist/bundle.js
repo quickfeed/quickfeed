@@ -873,6 +873,7 @@ var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(2);
 var HelloView_1 = __webpack_require__(5);
 var UserView_1 = __webpack_require__(4);
+var helper_1 = __webpack_require__(30);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -881,6 +882,8 @@ var StudentPage = (function (_super) {
         _this.selectedCourse = null;
         _this.selectedAssignment = null;
         _this.currentPage = "";
+        _this.courses = [];
+        _this.foundId = -1;
         _this.navMan = navMan;
         _this.userMan = users;
         _this.courseMan = courseMan;
@@ -894,18 +897,28 @@ var StudentPage = (function (_super) {
         return _this;
     }
     StudentPage.prototype.pageNavigation = function (page) {
+        var _this = this;
         this.currentPage = page;
         var parts = this.navMan.getParts(page);
+        this.courses = this.getCourses();
+        this.foundId = -1;
         if (parts.length > 1) {
             if (parts[0] === "course") {
-                var course = parseInt(parts[1], 10);
-                if (!isNaN(course) && (!this.selectedCourse || this.selectedCourse.id !== course)) {
-                    this.selectedCourse = this.courseMan.getCourse(course);
+                var course_1 = parseInt(parts[1], 10);
+                if (!isNaN(course_1)) {
+                    this.selectedCourse = helper_1.ArrayHelper.find(this.courses, function (e, i) {
+                        if (e.id === course_1) {
+                            _this.foundId = i;
+                            return true;
+                        }
+                        return false;
+                    });
+                    console.log(this.foundId);
                 }
                 if (parts.length > 3 && this.selectedCourse) {
                     var labId = parseInt(parts[3], 10);
                     if (!isNaN(labId)) {
-                        var lab = this.courseMan.getAssignment({ id: 0, name: "", tag: "" }, labId);
+                        var lab = this.courseMan.getAssignment(this.selectedCourse, labId);
                         if (lab) {
                             this.selectedAssignment = lab;
                         }
@@ -917,7 +930,7 @@ var StudentPage = (function (_super) {
     StudentPage.prototype.renderMenu = function (key) {
         var _this = this;
         if (key === 0) {
-            var courses = this.getCourses();
+            var courses = this.courses;
             var coursesLinks = [];
             for (var _i = 0, courses_1 = courses; _i < courses_1.length; _i++) {
                 var a = courses_1[_i];
@@ -939,7 +952,7 @@ var StudentPage = (function (_super) {
             this.navMan.checkLinks(settings, this);
             return [
                 React.createElement("h4", null, "Course"),
-                React.createElement(components_1.NavDropdown, { key: 1, selectedIndex: 0, items: coursesLinks, itemClick: function (link) { _this.handleClick(link); } }),
+                React.createElement(components_1.NavDropdown, { key: 1, selectedIndex: this.foundId, items: coursesLinks, itemClick: function (link) { _this.handleClick(link); } }),
                 React.createElement("h4", { key: 2 }, "Labs"),
                 React.createElement(components_1.NavMenu, { key: 3, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),
                 React.createElement("h4", { key: 4 }, "Settings"),
@@ -1687,7 +1700,7 @@ var NavDropdown = (function (_super) {
             return "";
         }
         var curIndex = this.props.selectedIndex;
-        if (curIndex >= this.props.items.length) {
+        if (curIndex >= this.props.items.length || curIndex < 0) {
             curIndex = 0;
         }
         return this.props.items[curIndex].name;

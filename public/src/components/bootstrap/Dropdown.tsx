@@ -66,7 +66,7 @@ class NavDropdown extends React.Component<INavDropdownProps, INavDropdownState> 
             return "";
         }
         let curIndex = this.props.selectedIndex;
-        if (curIndex >= this.props.items.length) {
+        if (curIndex >= this.props.items.length || curIndex < 0) {
             curIndex = 0;
         }
         return this.props.items[curIndex].name;
