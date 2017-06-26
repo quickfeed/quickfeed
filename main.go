@@ -63,6 +63,7 @@ func main() {
 	e.HideBanner = true
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.Secure())
 
 	e.GET("/logout", func(c echo.Context) error {
 		return sessionStore.Logout(c.Response(), c.Request())
