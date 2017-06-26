@@ -62,9 +62,6 @@ class StudentPage extends ViewPage {
                         }
                         return false;
                     });
-
-                    console.log(this.foundId);
-                    // this.selectedCourse = this.courseMan.getCourse(course);
                 }
 
                 if (parts.length > 3 && this.selectedCourse) {
@@ -104,8 +101,6 @@ class StudentPage extends ViewPage {
 
             this.navMan.checkLinks(labLinks, this);
             this.navMan.checkLinks(settings, this);
-
-
 
             return [
                 <h4>Course</h4>,

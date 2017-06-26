@@ -913,7 +913,6 @@ var StudentPage = (function (_super) {
                         }
                         return false;
                     });
-                    console.log(this.foundId);
                 }
                 if (parts.length > 3 && this.selectedCourse) {
                     var labId = parseInt(parts[3], 10);
