@@ -2,10 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import { NavBar, Row } from "./components";
-import { CourseManager } from "./managers/CourseManager";
-import { ILink, INavEvent, NavigationManager } from "./managers/NavigationManager";
-import { TempDataProvider } from "./managers/TempDataProvider";
-import { UserManager } from "./managers/UserManager";
+import { CourseManager, ILink, INavEvent, NavigationManager, TempDataProvider, UserManager } from "./managers";
 
 import { ErrorPage } from "./pages/ErrorPage";
 import { HelpPage } from "./pages/HelpPage";
@@ -52,7 +49,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             const old = this.state.activePage;
             const tempLink = this.state.topLink.slice();
             this.checkLinks(tempLink);
-            e.page.pageNavigation(e.subPage);
             this.setState({ activePage: e.page, topLink: tempLink });
         });
     }
@@ -93,15 +89,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         const curPage = this.state.activePage;
         if (curPage) {
             return curPage.renderContent(page);
-            /*if(!curPage.pages[curPage.defaultPage]){
-                console.warn("Warning! Missing default page for " + (curPage as any).constructor.name, curPage);
-            }
-            if (curPage.pages[page]){
-                return curPage.pages[page];
-            }
-            else if (page.length === 0 && curPage.pages[curPage.defaultPage]){
-                return curPage.pages[curPage.defaultPage];
-            }*/
         }
         return <h1>404 Page not found</h1>;
     }
@@ -112,12 +99,13 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 
     private renderTemplate(name: string | null) {
         let body: JSX.Element;
+        const content = this.renderActivePage(this.subPage);
         switch (name) {
             case "frontpage":
                 body = (
                     <Row className="container-fluid">
                         <div className="col-xs-12">
-                            {this.renderActivePage(this.subPage)}
+                            {content}
                         </div>
                     </Row>
                 );
@@ -128,7 +116,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                             {this.renderActiveMenu(0)}
                         </div>
                         <div className="col-md-10 col-sm-9 col-xs-12">
-                            {this.renderActivePage(this.subPage)}
+                            {content}
                         </div>
                     </Row>
                 );

@@ -1,4 +1,5 @@
 import { IEventData, newEvent } from "../event";
+import { NavigationHelper } from "../NavigationHelper";
 import { isViewPage, ViewPage } from "../pages/ViewPage";
 
 interface IPageContainer {
@@ -35,22 +36,6 @@ class NavigationManager {
 
     }
 
-    // TODO: Move out to utility
-    public getParts(path: string): string[] {
-        return this.removeEmptyEntries(path.split("/"));
-    }
-
-    // TODO: Move out to utility
-    public removeEmptyEntries(array: string[]): string[] {
-        const newArray: string[] = [];
-        array.map((v) => {
-            if (v.length > 0) {
-                newArray.push(v);
-            }
-        });
-        return newArray;
-    }
-
     public setDefaultPath(path: string) {
         this.defaultPath = path;
     }
@@ -60,7 +45,7 @@ class NavigationManager {
             this.navigateToDefault();
             return;
         }
-        const parts = this.getParts(path);
+        const parts = NavigationHelper.getParts(path);
         let curPage: IPageContainer | ViewPage = this.pages;
         this.currentPath = parts.join("/");
         if (!preventPush) {
@@ -104,7 +89,7 @@ class NavigationManager {
     }
 
     public registerPage(path: string, page: ViewPage) {
-        const parts = this.getParts(path);
+        const parts = NavigationHelper.getParts(path);
         if (parts.length === 0) {
             throw Error("Can't add page to index element");
         }
@@ -152,7 +137,7 @@ class NavigationManager {
             if (!l.uri) {
                 continue;
             }
-            const a = this.getParts(l.uri).join("/");
+            const a = NavigationHelper.getParts(l.uri).join("/");
             l.active = a === checkUrl.substr(0, a.length);
         }
     }

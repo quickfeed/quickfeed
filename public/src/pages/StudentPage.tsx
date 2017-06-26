@@ -12,13 +12,12 @@ import { HelloView } from "./views/HelloView";
 import { UserView } from "./views/UserView";
 
 import { ArrayHelper } from "../helper";
+import { INavInfo, INavInfoEvent, NavigationHelper } from "../NavigationHelper";
 
 class StudentPage extends ViewPage {
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
-
-    private pages: { [key: string]: JSX.Element } = {};
 
     private selectedCourse: ICourse | null = null;
     private selectedAssignment: IAssignment | null = null;
@@ -29,54 +28,51 @@ class StudentPage extends ViewPage {
 
     private foundId: number = -1;
 
+    private navHelper: NavigationHelper;
+
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
 
         this.navMan = navMan;
         this.userMan = users;
         this.courseMan = courseMan;
-        this.defaultPage = "opsys/lab1";
+        this.defaultPage = "somethign else";
 
-        this.pages["opsys/lab1"] = <h1>Lab1</h1>;
-        this.pages["opsys/lab2"] = <h1>Lab2</h1>;
-        this.pages["opsys/lab3"] = <h1>Lab3</h1>;
-        this.pages["opsys/lab4"] = <h1>Lab4</h1>;
-        this.pages.user = <UserView users={users.getAllUser()}></UserView>;
-        this.pages.hello = <HelloView></HelloView>;
+        this.navHelper = new NavigationHelper(this);
+        this.navHelper.setDefaultPath("index");
+        this.navHelper.onPreNavigation.addEventListener((e) => this.setupData(e));
+
+        this.navHelper.registerFunction<any>("index", this.index);
+        this.navHelper.registerFunction<any>("course/{courseid}", this.course);
+        this.navHelper.registerFunction<any>("course/{courseid}/lab/{labid}", this.courseWithLab);
+
+        // Only for testing purposes
+        this.navHelper.registerFunction<any>("user", (navInfo) => <UserView users={users.getAllUser()}></UserView>);
+        this.navHelper.registerFunction<any>("hello", (INavInfo) => <HelloView></HelloView>);
     }
 
-    public pageNavigation(page: string): void {
-        this.currentPage = page;
-        const parts = this.navMan.getParts(page);
-        this.courses = this.getCourses();
-        this.foundId = -1;
-        if (parts.length > 1) {
-            if (parts[0] === "course") {
-                const course = parseInt(parts[1], 10);
-                if (!isNaN(course)) {
+    public index(navInfo: INavInfo<any>): JSX.Element {
+        console.log(this);
+        return <div>Default Page</div>;
+    }
 
-                    this.selectedCourse = ArrayHelper.find(this.courses, (e, i) => {
-                        if (e.id === course) {
-                            this.foundId = i;
-                            return true;
-                        }
-                        return false;
-                    });
-                }
+    public course(navInfo: INavInfo<{ courseid: string }>): JSX.Element {
+        this.selectCourse(navInfo.params.courseid);
+        if (this.selectedCourse) {
+            return <div>This is the CourseView for {this.selectedCourse.name}</div>;
+        }
+        return <div>404 not found</div>;
+    }
 
-                if (parts.length > 3 && this.selectedCourse) {
-                    const labId = parseInt(parts[3], 10);
-                    if (!isNaN(labId)) {
-                        // TODO: Be carefull not to return anything that sould not be able to be returned
-                        const lab = this.courseMan.getAssignment(this.selectedCourse, labId);
-
-                        if (lab) {
-                            this.selectedAssignment = lab;
-                        }
-                    }
-                }
+    public courseWithLab(navInfo: INavInfo<{ courseid: string, labid: string }>): JSX.Element {
+        this.selectCourse(navInfo.params.courseid);
+        if (this.selectedCourse) {
+            this.selectAssignment(navInfo.params.labid);
+            if (this.selectedAssignment) {
+                return <StudentLab course={this.selectedCourse} assignment={this.selectedAssignment}></StudentLab>;
             }
         }
+        return <div>404 not found</div>;
     }
 
     public renderMenu(key: number): JSX.Element[] {
@@ -118,16 +114,42 @@ class StudentPage extends ViewPage {
     }
 
     public renderContent(page: string): JSX.Element {
-        if (page.length === 0) {
-            page = this.defaultPage;
-        }
-        if (this.pages[page]) {
-            return this.pages[page];
-        }
-        if (this.selectedAssignment && this.selectedCourse) {
-            return <StudentLab course={this.selectedCourse} assignment={this.selectedAssignment}></StudentLab>;
+        const pageContent = this.navHelper.navigateTo(page);
+        this.currentPage = page;
+        if (pageContent) {
+            return pageContent;
         }
         return <div>404 Not found</div>;
+    }
+
+    private setupData(data: INavInfoEvent) {
+        this.courses = this.getCourses();
+    }
+
+    private selectCourse(courseId: string) {
+        this.selectedCourse = null;
+        const course = parseInt(courseId, 10);
+        if (!isNaN(course)) {
+            this.selectedCourse = ArrayHelper.find(this.courses, (e, i) => {
+                if (e.id === course) {
+                    this.foundId = i;
+                    return true;
+                }
+                return false;
+            });
+        }
+    }
+
+    private selectAssignment(labIdString: string) {
+        this.selectedAssignment = null;
+        const labId = parseInt(labIdString, 10);
+        if (this.selectedCourse && !isNaN(labId)) {
+            // TODO: Be carefull not to return anything that sould not be able to be returned
+            const lab = this.courseMan.getAssignment(this.selectedCourse, labId);
+            if (lab) {
+                this.selectedAssignment = lab;
+            }
+        }
     }
 
     private handleClick(link: ILink) {

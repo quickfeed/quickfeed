@@ -9,6 +9,13 @@ interface INewEvent<T extends IEventData> {
     removeEventListener(listener: (event: T) => void): void;
 }
 
+/**
+ * Creates a new event with a given name.
+ * The T argument in typescript should be an interface or class implementing
+ * the IEventData interface.
+ * @param info The name of the event that should fire.
+ * Usualy at the format {ClassName/sender}.{eventName}
+ */
 function newEvent<T extends IEventData>(info: string): INewEvent<T> {
     const callbacks: Array<((event: T) => void)> = [];
 
