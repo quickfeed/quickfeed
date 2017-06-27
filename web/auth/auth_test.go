@@ -18,12 +18,54 @@ import (
 
 const (
 	authURL         = "/auth?provider=faux"
+	logoutURL       = "/logout?provider=faux"
 	fauxSessionName = "faux" + gothic.SessionName
 	fauxSessionKey  = "faux"
 )
 
 func init() {
 	goth.UseProviders(&faux.Provider{})
+}
+
+func TestOAuth2Logout(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, logoutURL, nil)
+	w := httptest.NewRecorder()
+
+	store := newStore()
+	gothic.Store = store
+
+	e := echo.New()
+	c := e.NewContext(r, w)
+
+	fauxSession := faux.Session{}
+	s, _ := store.Get(r, fauxSessionName)
+	s.Values[fauxSessionKey] = fauxSession.Marshal()
+	if err := s.Save(r, w); err != nil {
+		t.Error(err)
+	}
+
+	if err := store.login(c); err != nil {
+		t.Error(err)
+	}
+
+	ns := len(store.store[r].Values)
+	// Want gothic session and user session.
+	if ns != 2 {
+		t.Errorf("have %d sessions want %d", ns, 2)
+	}
+
+	authHandler := auth.OAuth2Logout()
+	withSession := session.Middleware(store)(authHandler)
+
+	if err := withSession(c); err != nil {
+		t.Error(err)
+	}
+
+	ns = len(store.store[r].Values)
+	// Sessions should be cleared.
+	if ns != 0 {
+		t.Errorf("have %d sessions want %d", ns, 0)
+	}
 }
 
 func TestOAuth2LoginRedirect(t *testing.T) {
