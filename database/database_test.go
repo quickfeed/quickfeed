@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/autograde/aguis"
+	"github.com/autograde/aguis/database"
 	"github.com/go-kit/kit/log"
 )
 
@@ -29,7 +29,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Create new database.
-	db, err := aguis.NewStructDB(dbfile, false, log.NewNopLogger())
+	db, err := database.NewStructDB(dbfile, false, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}
@@ -44,7 +44,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Load previously created database.
-	db, err = aguis.NewStructDB(dbfile, false, log.NewNopLogger())
+	db, err = database.NewStructDB(dbfile, false, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,7 +58,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Create new database truncating any existing database.
-	db, err = aguis.NewStructDB(dbfile, true, log.NewNopLogger())
+	db, err = database.NewStructDB(dbfile, true, log.NewNopLogger())
 	if err != nil {
 		t.Error(err)
 	}
