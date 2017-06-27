@@ -1,11 +1,11 @@
 import * as React from "react";
-import { NavDropdown, NavMenu, StudentLab } from "../components";
+import { NavDropdown, NavMenu, StudentLab, CourseOverview } from "../components";
 
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { IAssignment, ICourse } from "../models";
+import { IAssignment, ICourse, ICoursesWithAssignments } from "../models";
 
 import { ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
@@ -48,8 +48,8 @@ class StudentPage extends ViewPage {
     }
 
     public index(navInfo: INavInfo<any>): JSX.Element {
-        console.log(this);
-        return <div>Default Page</div>;
+        const course_overview: ICoursesWithAssignments[] = this.getCoursesWithAssignments();
+        return(<CourseOverview course_overview={course_overview} navMan={this.navMan}/>);
     }
 
     public course(navInfo: INavInfo<{ courseid: string }>): JSX.Element {
@@ -174,6 +174,23 @@ class StudentPage extends ViewPage {
             return { course: this.selectedCourse, labs };
         }
         return null;
+    }
+
+    private getCoursesWithAssignments(): ICoursesWithAssignments[] {
+        const course_labs:ICoursesWithAssignments[] = [];
+        if (this.courses.length === 0){
+            this.courses = this.getCourses();
+        }
+
+        if (this.courses.length > 0 ) {
+            for (const course of this.courses){
+                const labs = this.courseMan.getAssignments(course);
+                const cl = { course: course, labs };
+                course_labs.push(cl)
+            }
+            return course_labs;
+        }
+        return [];
     }
 }
 

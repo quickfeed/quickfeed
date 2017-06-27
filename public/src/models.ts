@@ -33,13 +33,14 @@ interface ICourseStudent {
     courseId: number;
 }
 
-interface ITestCases{
+interface ITestCases {
     name: string;
     score: number;
     points: number;
     weight: number;
 }
-interface ILabInfo{
+
+interface ILabInfo {
     lab: string;
     course: string;
     score: number;
@@ -51,4 +52,9 @@ interface ILabInfo{
     build_time: Date;
     build_id: number;
 }
-export {IUser, isCourse, ICourse, IAssignment, ICourseStudent, ITestCases, ILabInfo};
+
+interface ICoursesWithAssignments {
+    course: ICourse;
+    labs: IAssignment[];
+}
+export {IUser, isCourse, ICourse, IAssignment, ICourseStudent, ITestCases, ILabInfo, ICoursesWithAssignments};
