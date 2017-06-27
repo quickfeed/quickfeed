@@ -15,7 +15,7 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
             return this.renderTopElement(i, e);
         });
 
-        return <ul className="nav nav-pills nav-stacked">
+        return <ul className="nav nav-list">
             {children}
         </ul>;
     }

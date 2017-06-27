@@ -3970,7 +3970,7 @@ var CollapsableNavMenu = (function (_super) {
         var children = this.props.links.map(function (e, i) {
             return _this.renderTopElement(i, e);
         });
-        return React.createElement("ul", { className: "nav nav-pills nav-stacked" }, children);
+        return React.createElement("ul", { className: "nav nav-list" }, children);
     };
     CollapsableNavMenu.prototype.toggle = function (index) {
         var _this = this;
