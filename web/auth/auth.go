@@ -135,7 +135,14 @@ func AccessControl() echo.MiddlewareFunc {
 }
 
 func getInteralUser(db database.UserDatabase, externalUser *goth.User) (*database.User, error) {
-	switch externalUser.Provider {
+	provider, err := goth.GetProvider(externalUser.Provider)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Extract each case into a function so that they can be tested.
+	switch provider.Name() {
 	case "github":
 		githubID, err := strconv.Atoi(externalUser.UserID)
 		if err != nil {
@@ -147,8 +154,12 @@ func getInteralUser(db database.UserDatabase, externalUser *goth.User) (*databas
 		}
 		return user, nil
 	case "faux": // Provider is only registered and reachable from tests.
-		return &database.User{}, nil
+		return &database.User{}, ErrFauxProvider
 	default:
 		return nil, errors.New("provider not implemented")
 	}
 }
+
+// ErrFauxProvider is returned if the provider is "faux". This could prevent
+// mistakenly authenticating a manipulated session in production.
+var ErrFauxProvider = errors.New("faux provider")
