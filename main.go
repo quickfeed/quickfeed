@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/session"
-	"github.com/autograde/aguis/web/handlers"
+	"github.com/autograde/aguis/web/auth"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
@@ -53,8 +53,6 @@ func main() {
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
 	)
 
-	sessionStore := session.NewSessionStore(store, "authsession")
-
 	db, err := database.NewStructDB(tempFile("agdb.db"), false, logger)
 
 	if err != nil {
@@ -66,22 +64,25 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.Secure())
+	e.Use(session.Middleware(store))
 
 	e.GET("/logout", func(c echo.Context) error {
-		return sessionStore.Logout(c.Response(), c.Request())
+		sess, err := session.Get("session", c)
+		if err != nil {
+			// Save fixes the session if it has been modified or it
+			// is no longer valid due to change of keys.
+			return sess.Save(c.Request(), c.Response())
+		}
+		delete(sess.Values, "userid")
+		return sess.Save(c.Request(), c.Response())
 	})
 
-	auth := e.Group("/auth/:provider", withProvider)
-	auth.GET("", func(c echo.Context) error {
-		handlers.Auth(db, sessionStore).ServeHTTP(c.Response(), c.Request())
-		return nil
-	})
-	auth.GET("/callback", func(c echo.Context) error {
-		handlers.AuthCallback(db, sessionStore).ServeHTTP(c.Response(), c.Request())
-		return nil
-	})
+	oauth2 := e.Group("/auth/:provider", withProvider)
+	oauth2.GET("", auth.OAuth2Login(db))
+	oauth2.GET("/callback", auth.OAuth2Callback(db))
 
 	api := e.Group("/api/v1")
+	api.Use(auth.AccessControl())
 	api.GET("/test", func(c echo.Context) error {
 		return c.String(http.StatusOK, "api call")
 	})
