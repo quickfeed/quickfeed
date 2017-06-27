@@ -12,6 +12,7 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
+// OAuth2Logout invalidates the session for the logged in user.
 func OAuth2Logout() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		r := c.Request()
