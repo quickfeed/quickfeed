@@ -12,6 +12,14 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
+type cookieKey int
+
+// User session keys.
+const (
+	UserSession           = "session"
+	UserID      cookieKey = iota
+)
+
 // OAuth2Logout invalidates the session for the logged in user.
 func OAuth2Logout() echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -19,7 +27,7 @@ func OAuth2Logout() echo.HandlerFunc {
 		w := c.Response()
 
 		// Invalidate our user session.
-		sess, _ := session.Get("session", c)
+		sess, _ := session.Get(UserSession, c)
 		sess.Options.MaxAge = -1
 		sess.Values = make(map[interface{}]interface{})
 		sess.Save(r, w)
@@ -40,11 +48,11 @@ func OAuth2Login(db database.UserDatabase) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
-		sess, err := session.Get("session", c)
+		sess, err := session.Get(UserSession, c)
 		if err != nil {
 			return sess.Save(r, w)
 		}
-		if _, ok := sess.Values["userid"]; ok {
+		if _, ok := sess.Values[UserID]; ok {
 			return c.Redirect(http.StatusFound, "/")
 		}
 
@@ -62,7 +70,7 @@ func OAuth2Login(db database.UserDatabase) echo.HandlerFunc {
 			return err
 		}
 
-		sess.Values["userid"] = user.ID
+		sess.Values[UserID] = user.ID
 		if err := sess.Save(r, w); err != nil {
 			return err
 		}
@@ -77,11 +85,11 @@ func OAuth2Callback(db database.UserDatabase) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
-		sess, err := session.Get("session", c)
+		sess, err := session.Get(UserSession, c)
 		if err != nil {
 			return sess.Save(r, w)
 		}
-		if _, ok := sess.Values["userid"]; ok {
+		if _, ok := sess.Values[UserID]; ok {
 			return c.Redirect(http.StatusFound, "/")
 		}
 
@@ -95,7 +103,7 @@ func OAuth2Callback(db database.UserDatabase) echo.HandlerFunc {
 			return err
 		}
 
-		sess.Values["userid"] = user.ID
+		sess.Values[UserID] = user.ID
 		if err := sess.Save(r, w); err != nil {
 			return err
 		}
@@ -110,14 +118,14 @@ func OAuth2Callback(db database.UserDatabase) echo.HandlerFunc {
 func AccessControl() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			sess, err := session.Get("session", c)
+			sess, err := session.Get(UserSession, c)
 			if err != nil {
 				// Save fixes the session if it has been modified
 				// or it is no longer valid due to change of keys.
 				sess.Save(c.Request(), c.Response())
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
-			if _, ok := sess.Values["userid"]; !ok {
+			if _, ok := sess.Values[UserID]; !ok {
 				return echo.ErrUnauthorized
 			}
 			// TODO: ACL. Set user in context.

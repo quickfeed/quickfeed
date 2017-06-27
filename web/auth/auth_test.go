@@ -180,7 +180,7 @@ func TestAccessControl(t *testing.T) {
 
 	m := auth.AccessControl()
 	protected := session.Middleware(store)(m(func(c echo.Context) error {
-		return c.String(http.StatusOK, "protected")
+		return c.NoContent(http.StatusOK)
 	}))
 
 	// User is not logged in.
@@ -223,11 +223,11 @@ func newStore() *testStore {
 }
 
 func (ts testStore) login(c echo.Context) error {
-	s, err := ts.Get(c.Request(), "session")
+	s, err := ts.Get(c.Request(), auth.UserSession)
 	if err != nil {
 		return err
 	}
-	s.Values["userid"] = 0
+	s.Values[auth.UserID] = 0
 	return s.Save(c.Request(), c.Response())
 }
 
