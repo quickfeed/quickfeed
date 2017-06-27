@@ -4,6 +4,8 @@ import { ILink } from "../../managers/NavigationManager";
 import { IUser } from "../../models";
 import { NavHeaderBar } from "./NavHeaderBar";
 
+import { NavigationHelper } from "../../NavigationHelper";
+
 interface INavBarProps {
     id: string;
     links: ILink[];
@@ -17,14 +19,18 @@ interface INavBarProps {
 class NavBar extends React.Component<INavBarProps, undefined> {
 
     public render() {
-        const items = this.props.links.map((v, i) => {
+        const items = this.props.links.map((link, i) => {
             let active = "";
-            if (v.active) {
+            if (link.active) {
                 active = "active";
             }
             return <li className={active} key={i}>
-                <a href={"/" + v.uri} onClick={(e) => { e.preventDefault(); this.handleClick(v); }}>
-                    {v.name}
+                <a href={"/" + link.uri} onClick={(e) => {
+                    NavigationHelper.handleClick(e, () => {
+                        this.handleClick(link);
+                    });
+                }}>
+                    {link.name}
                 </a>
             </li>;
         });

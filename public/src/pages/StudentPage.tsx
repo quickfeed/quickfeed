@@ -51,7 +51,6 @@ class StudentPage extends ViewPage {
     }
 
     public index(navInfo: INavInfo<any>): JSX.Element {
-        console.log(this);
         return <div>Default Page</div>;
     }
 

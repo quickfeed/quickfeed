@@ -1521,6 +1521,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(17);
 var NavHeaderBar = (function (_super) {
     __extends(NavHeaderBar, _super);
     function NavHeaderBar() {
@@ -1540,7 +1541,11 @@ var NavHeaderBar = (function (_super) {
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" })),
-            React.createElement("a", { className: "navbar-brand", onClick: function (e) { e.preventDefault(); _this.props.brandClick(); }, href: ";/" }, this.props.brandName));
+            React.createElement("a", { className: "navbar-brand", onClick: function (e) {
+                    NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+                        _this.props.brandClick();
+                    });
+                }, href: ";/" }, this.props.brandName));
     };
     return NavHeaderBar;
 }(React.Component));
@@ -1637,6 +1642,15 @@ var NavigationHelper = (function () {
     };
     NavigationHelper.isINavObject = function (obj) {
         return obj && obj.path;
+    };
+    NavigationHelper.handleClick = function (e, callback) {
+        if (e.shiftKey || e.ctrlKey || e.button === 1) {
+            return;
+        }
+        else {
+            e.preventDefault();
+            callback();
+        }
     };
     Object.defineProperty(NavigationHelper.prototype, "defaultPage", {
         get: function () {
@@ -2592,6 +2606,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var NavHeaderBar_1 = __webpack_require__(14);
+var NavigationHelper_1 = __webpack_require__(17);
 var NavBar = (function (_super) {
     __extends(NavBar, _super);
     function NavBar() {
@@ -2599,13 +2614,17 @@ var NavBar = (function (_super) {
     }
     NavBar.prototype.render = function () {
         var _this = this;
-        var items = this.props.links.map(function (v, i) {
+        var items = this.props.links.map(function (link, i) {
             var active = "";
-            if (v.active) {
+            if (link.active) {
                 active = "active";
             }
             return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "/" + v.uri, onClick: function (e) { e.preventDefault(); _this.handleClick(v); } }, v.name));
+                React.createElement("a", { href: "/" + link.uri, onClick: function (e) {
+                        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+                            _this.handleClick(link);
+                        });
+                    } }, link.name));
         });
         return React.createElement("nav", { className: this.renderNavBarClass() },
             React.createElement("div", { className: this.renderIsFluid() },
@@ -2665,6 +2684,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(17);
 var NavMenu = (function (_super) {
     __extends(NavMenu, _super);
     function NavMenu() {
@@ -2678,12 +2698,11 @@ var NavMenu = (function (_super) {
                 active = "active";
             }
             return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "/" + v.uri, onClick: function (e) { return _this.handleClick(e, v); } }, v.name));
+                React.createElement("a", { href: "/" + v.uri, onClick: function (e) { return NavigationHelper_1.NavigationHelper.handleClick(e, function () { _this.handleClick(v); }); } }, v.name));
         });
         return React.createElement("ul", { className: "nav nav-pills nav-stacked" }, items);
     };
-    NavMenu.prototype.handleClick = function (e, v) {
-        e.preventDefault();
+    NavMenu.prototype.handleClick = function (v) {
         if (this.props.onClick) {
             this.props.onClick(v);
         }
@@ -2918,6 +2937,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(17);
 var NavDropdown = (function (_super) {
     __extends(NavDropdown, _super);
     function NavDropdown() {
@@ -2932,9 +2952,10 @@ var NavDropdown = (function (_super) {
         var children = this.props.items.map(function (item, index) {
             return React.createElement("li", { key: index },
                 React.createElement("a", { href: "/" + item.uri, onClick: function (e) {
-                        e.preventDefault();
-                        _this.toggleOpen();
-                        _this.props.itemClick(item, index);
+                        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+                            _this.toggleOpen();
+                            _this.props.itemClick(item, index);
+                        });
                     } }, item.name));
         });
         return React.createElement("div", { className: this.getButtonClass() },
@@ -3826,7 +3847,6 @@ var StudentPage = (function (_super) {
         return _this;
     }
     StudentPage.prototype.index = function (navInfo) {
-        console.log(this);
         return React.createElement("div", null, "Default Page");
     };
     StudentPage.prototype.course = function (navInfo) {
@@ -3958,6 +3978,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(53);
+var NavigationHelper_1 = __webpack_require__(17);
 var CollapsableNavMenu = (function (_super) {
     __extends(CollapsableNavMenu, _super);
     function CollapsableNavMenu() {
@@ -4031,10 +4052,12 @@ var CollapsableNavMenu = (function (_super) {
         };
     };
     CollapsableNavMenu.prototype.handleClick = function (e, link) {
-        e.preventDefault();
-        if (this.props.onClick) {
-            this.props.onClick(link);
-        }
+        var _this = this;
+        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+            if (_this.props.onClick) {
+                _this.props.onClick(link);
+            }
+        });
     };
     CollapsableNavMenu.prototype.renderChilds = function (index, link) {
         var _this = this;

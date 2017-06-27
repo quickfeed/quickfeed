@@ -1,4 +1,5 @@
 import * as React from "react";
+import { NavigationHelper } from "../../NavigationHelper";
 
 interface INavHeaderBarProps {
     brandName: string;
@@ -22,7 +23,11 @@ class NavHeaderBar extends React.Component<INavHeaderBarProps, undefined> {
                 <span className="icon-bar"></span>
                 <span className="icon-bar"></span>
             </button>
-            <a className="navbar-brand" onClick={(e) => { e.preventDefault(); this.props.brandClick(); }} href=";/">
+            <a className="navbar-brand" onClick={(e) => {
+                NavigationHelper.handleClick(e, () => {
+                    this.props.brandClick();
+                });
+            }} href=";/">
                 {this.props.brandName}
             </a>
         </div>;

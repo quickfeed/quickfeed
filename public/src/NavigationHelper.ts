@@ -47,6 +47,15 @@ class NavigationHelper {
         return obj && obj.path;
     }
 
+    public static handleClick(e: React.MouseEvent<HTMLAnchorElement>, callback: () => void) {
+        if (e.shiftKey || e.ctrlKey || e.button === 1) {
+            return;
+        } else {
+            e.preventDefault();
+            callback();
+        }
+    }
+
     public onPreNavigation = newEvent<INavInfoEvent>("NavigationHelper.onPreNavigation");
 
     private DEFAULT_VALUE: string = "";

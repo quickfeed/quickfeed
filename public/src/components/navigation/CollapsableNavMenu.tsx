@@ -1,5 +1,6 @@
 import * as React from "React";
 import { ILink, ILinkCollection } from "../../managers";
+import { NavigationHelper } from "../../NavigationHelper";
 
 interface ICollapsableNavMenuProps {
     links: ILinkCollection[];
@@ -79,10 +80,11 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
     }
 
     private handleClick(e: React.MouseEvent<HTMLAnchorElement>, link: ILink) {
-        e.preventDefault();
-        if (this.props.onClick) {
-            this.props.onClick(link);
-        }
+        NavigationHelper.handleClick(e, () => {
+            if (this.props.onClick) {
+                this.props.onClick(link);
+            }
+        });
     }
 
     private renderChilds(index: number, link: ILink): JSX.Element {
