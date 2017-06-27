@@ -26,7 +26,7 @@ func init() {
 	goth.UseProviders(&faux.Provider{})
 }
 
-func TestAuthHandlerRedirect(t *testing.T) {
+func TestOAuth2LoginRedirect(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
@@ -45,7 +45,7 @@ func TestAuthHandlerRedirect(t *testing.T) {
 	assertCode(t, w.Code, http.StatusTemporaryRedirect)
 }
 
-func TestAuthCallbackHandlerUnauthorized(t *testing.T) {
+func TestOAuth2CallbackUnauthorized(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
@@ -62,15 +62,15 @@ func TestAuthCallbackHandlerUnauthorized(t *testing.T) {
 	}
 }
 
-func TestAuthHandlerLoggedIn(t *testing.T) {
-	testAuthHandlerLoggedIn(t, auth.OAuth2Login)
+func TestOAuth2LoginLoggedIn(t *testing.T) {
+	testOAuth2LoggedIn(t, auth.OAuth2Login)
 }
 
-func TestAuthCallbackHandlerLoggedIn(t *testing.T) {
-	testAuthHandlerLoggedIn(t, auth.OAuth2Callback)
+func TestOAuth2CallbackLoggedIn(t *testing.T) {
+	testOAuth2LoggedIn(t, auth.OAuth2Callback)
 }
 
-func testAuthHandlerLoggedIn(t *testing.T, newHandler func(db database.UserDatabase) echo.HandlerFunc) {
+func testOAuth2LoggedIn(t *testing.T, newHandler func(db database.UserDatabase) echo.HandlerFunc) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
@@ -94,15 +94,15 @@ func testAuthHandlerLoggedIn(t *testing.T, newHandler func(db database.UserDatab
 	assertCode(t, w.Code, http.StatusFound)
 }
 
-func TestAuthHandlerAuthenticated(t *testing.T) {
-	testAuthHandlerAuthenticated(t, auth.OAuth2Login)
+func TestOAuth2LoginAuthenticated(t *testing.T) {
+	testOAuth2Authenticated(t, auth.OAuth2Login)
 }
 
-func TestAuthCallbackHandlerAuthenticated(t *testing.T) {
-	testAuthHandlerAuthenticated(t, auth.OAuth2Callback)
+func TestOAuth2CallbackAuthenticated(t *testing.T) {
+	testOAuth2Authenticated(t, auth.OAuth2Callback)
 }
 
-func testAuthHandlerAuthenticated(t *testing.T, newHandler func(db database.UserDatabase) echo.HandlerFunc) {
+func testOAuth2Authenticated(t *testing.T, newHandler func(db database.UserDatabase) echo.HandlerFunc) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
@@ -127,7 +127,7 @@ func testAuthHandlerAuthenticated(t *testing.T, newHandler func(db database.User
 	}
 }
 
-func TestAuthMiddleware(t *testing.T) {
+func TestAccessControl(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
