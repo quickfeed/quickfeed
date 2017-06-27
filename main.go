@@ -66,20 +66,10 @@ func main() {
 	e.Use(middleware.Secure())
 	e.Use(session.Middleware(store))
 
-	e.GET("/logout", func(c echo.Context) error {
-		sess, err := session.Get("session", c)
-		if err != nil {
-			// Save fixes the session if it has been modified or it
-			// is no longer valid due to change of keys.
-			return sess.Save(c.Request(), c.Response())
-		}
-		delete(sess.Values, "userid")
-		return sess.Save(c.Request(), c.Response())
-	})
-
 	oauth2 := e.Group("/auth/:provider", withProvider)
 	oauth2.GET("", auth.OAuth2Login(db))
 	oauth2.GET("/callback", auth.OAuth2Callback(db))
+	oauth2.GET("/logout", auth.OAuth2Logout())
 
 	api := e.Group("/api/v1")
 	api.Use(auth.AccessControl())

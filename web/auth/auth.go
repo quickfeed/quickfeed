@@ -12,6 +12,27 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
+func OAuth2Logout() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		r := c.Request()
+		w := c.Response()
+
+		// Invalidate our user session.
+		sess, _ := session.Get("session", c)
+		sess.Options.MaxAge = -1
+		sess.Values = make(map[interface{}]interface{})
+		sess.Save(r, w)
+
+		// TODO: Get correct provider from user session and move
+		// /:proivder/logout to /logout.
+
+		// Invalidate gothic user session.
+		gothic.Logout(w, r)
+
+		return c.Redirect(http.StatusFound, "/")
+	}
+}
+
 // OAuth2Login tries to authenticate against an oauth2 provider.
 func OAuth2Login(db database.UserDatabase) echo.HandlerFunc {
 	return func(c echo.Context) error {
