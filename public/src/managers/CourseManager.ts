@@ -23,7 +23,7 @@ class CourseManager {
     }
 
     // get a course by a given course tag
-    getCourseByTag(tag: string): ICourse | null{
+    public getCourseByTag(tag: string): ICourse | null {
         return this.courseProvider.getCourseByTag(tag);
     }
 

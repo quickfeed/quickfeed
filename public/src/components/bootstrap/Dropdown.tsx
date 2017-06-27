@@ -1,6 +1,7 @@
 
 import * as React from "react";
 import { ILink } from "../../managers/NavigationManager";
+import { NavigationHelper } from "../../NavigationHelper";
 
 interface INavDropdownProps {
     items: ILink[];
@@ -23,11 +24,13 @@ class NavDropdown extends React.Component<INavDropdownProps, INavDropdownState> 
     public render() {
         const children = this.props.items.map((item, index) => {
             return <li key={index}>
-                <a href={"/" + item.uri} onClick={(e) => {
-                    e.preventDefault();
-                    this.toggleOpen();
-                    this.props.itemClick(item, index);
-                }}>
+                <a href={"/" + item.uri}
+                    onClick={(e) => {
+                        NavigationHelper.handleClick(e, () => {
+                            this.toggleOpen();
+                            this.props.itemClick(item, index);
+                        });
+                    }}>
                     {item.name}
                 </a>
             </li>;

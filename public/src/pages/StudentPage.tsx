@@ -1,18 +1,21 @@
 import * as React from "react";
-import { NavDropdown, NavMenu, StudentLab, CourseOverview } from "../components";
+import {CourseOverview, NavMenu, StudentLab} from "../components";
 
-import { CourseManager } from "../managers/CourseManager";
-import { ILink, NavigationManager } from "../managers/NavigationManager";
-import { UserManager } from "../managers/UserManager";
+import {CourseManager} from "../managers/CourseManager";
+import {ILink, NavigationManager} from "../managers/NavigationManager";
+import {UserManager} from "../managers/UserManager";
 
-import { IAssignment, ICourse, ICoursesWithAssignments } from "../models";
+import {IAssignment, ICourse, ICoursesWithAssignments} from "../models";
 
-import { ViewPage } from "./ViewPage";
-import { HelloView } from "./views/HelloView";
-import { UserView } from "./views/UserView";
+import {ViewPage} from "./ViewPage";
+import {HelloView} from "./views/HelloView";
+import {UserView} from "./views/UserView";
 
-import { ArrayHelper } from "../helper";
-import { INavInfo, INavInfoEvent, NavigationHelper } from "../NavigationHelper";
+import {ArrayHelper} from "../helper";
+import {INavInfo, INavInfoEvent} from "../NavigationHelper";
+
+import {CollapsableNavMenu} from "../components/navigation/CollapsableNavMenu";
+import {ILinkCollection} from "../managers";
 
 class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -48,8 +51,8 @@ class StudentPage extends ViewPage {
     }
 
     public index(navInfo: INavInfo<any>): JSX.Element {
-        const course_overview: ICoursesWithAssignments[] = this.getCoursesWithAssignments();
-        return(<CourseOverview course_overview={course_overview} navMan={this.navMan}/>);
+        const courseOverview: ICoursesWithAssignments[] = this.getCoursesWithAssignments();
+        return (<CourseOverview course_overview={courseOverview} navMan={this.navMan}/>);
     }
 
     public course(navInfo: INavInfo<{ courseid: string }>): JSX.Element {
@@ -73,35 +76,27 @@ class StudentPage extends ViewPage {
 
     public renderMenu(key: number): JSX.Element[] {
         if (key === 0) {
-            const coursesLinks: ILink[] = this.courses.map((e, i) => {
-                return { name: e.tag, uri: this.pagePath + "/course/" + e.id };
+            const coursesLinks: ILinkCollection[] = this.courses.map((course, i) => {
+                return {
+                    item: {name: course.tag, uri: this.pagePath + "/course/" + course.id},
+                    children: this.getLabsfor(course).map((lab, ind) => {
+                        return {name: lab.name, uri: this.pagePath + "/course/" + course.id + "/lab/" + lab.id};
+                    }),
+                };
             });
-            const labs = this.getLabs();
-            let labLinks: ILink[] = [];
-            if (labs) {
-                labLinks = labs.labs.map((l, i) => {
-                    return { name: l.name, uri: this.pagePath + "/course/" + labs.course.id + "/lab/" + l.id };
-                });
-            }
 
             const settings = [
-                { name: "Users", uri: this.pagePath + "/user" },
-                { name: "Hello world", uri: this.pagePath + "/hello" },
+                {name: "Users", uri: this.pagePath + "/user"},
+                {name: "Hello world", uri: this.pagePath + "/hello"},
             ];
 
-            this.navMan.checkLinks(labLinks, this);
+            this.navMan.checkLinkCollection(coursesLinks, this);
             this.navMan.checkLinks(settings, this);
 
             return [
-                <h4>Course</h4>,
-                <NavDropdown
-                    key={1}
-                    selectedIndex={this.foundId}
-                    items={coursesLinks}
-                    itemClick={(link) => { this.handleClick(link); }}>
-                </NavDropdown>,
-                <h4 key={2}>Labs</h4>,
-                <NavMenu key={3} links={labLinks} onClick={(link) => this.handleClick(link)}></NavMenu>,
+                <h4 key={6}>Courses</h4>,
+                <CollapsableNavMenu key={7} links={coursesLinks} onClick={(link) => this.handleClick(link)}>
+                </CollapsableNavMenu>,
                 <h4 key={4}>Settings</h4>,
                 <NavMenu key={5} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
             ];
@@ -162,6 +157,11 @@ class StudentPage extends ViewPage {
         return [];
     }
 
+    private getLabsfor(course: ICourse): IAssignment[] {
+        return this.courseMan.getAssignments(course);
+
+    }
+
     private getLabs(): { course: ICourse, labs: IAssignment[] } | null {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr && !this.selectedCourse) {
@@ -171,27 +171,27 @@ class StudentPage extends ViewPage {
         if (this.selectedCourse) {
 
             const labs = this.courseMan.getAssignments(this.selectedCourse);
-            return { course: this.selectedCourse, labs };
+            return {course: this.selectedCourse, labs};
         }
         return null;
     }
 
     private getCoursesWithAssignments(): ICoursesWithAssignments[] {
-        const course_labs:ICoursesWithAssignments[] = [];
-        if (this.courses.length === 0){
+        const courseLabs: ICoursesWithAssignments[] = [];
+        if (this.courses.length === 0) {
             this.courses = this.getCourses();
         }
 
-        if (this.courses.length > 0 ) {
-            for (const course of this.courses){
-                const labs = this.courseMan.getAssignments(course);
-                const cl = { course: course, labs };
-                course_labs.push(cl)
+        if (this.courses.length > 0) {
+            for (const crs of this.courses) {
+                const labs = this.courseMan.getAssignments(crs);
+                const cl = {course: crs, labs};
+                courseLabs.push(cl);
             }
-            return course_labs;
+            return courseLabs;
         }
         return [];
     }
 }
 
-export { StudentPage };
+export {StudentPage};

@@ -1,21 +1,17 @@
-import * as React from "react"
-import {Row} from "../../components";
+import * as React from "react";
+import { Row } from "../../components";
 
-interface  ILastBuildInfo {
+interface ILastBuildInfo {
     pass_tests: number;
     fail_tests: number;
     exec_time: number;
     build_time: Date;
     build_id: number;
 }
-class LastBuildInfo extends React.Component<ILastBuildInfo, any>{
+class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
 
-    handleClick(){
-        // TODO: implement rebuild functionality
-        console.log("Rebuilding...");
-    }
-    render(){
-        return(
+    public render() {
+        return (
             <Row>
                 <div className="col-lg-8">
                     <h2>Latest build</h2>
@@ -30,14 +26,20 @@ class LastBuildInfo extends React.Component<ILastBuildInfo, any>{
                     <Row>
                         <div className="col-lg-12">
                             <p>
-                                <button type="button" id="rebuild" className="btn btn-primary" onClick={()=> this.handleClick()}>Rebuild
+                                <button type="button" id="rebuild" className="btn btn-primary"
+                                    onClick={() => this.handleClick()}>Rebuild
                                 </button>
                             </p>
                         </div>
                     </Row>
                 </div>
             </Row>
-        )
+        );
+    }
+
+    private handleClick() {
+        // TODO: implement rebuild functionality
+        console.log("Rebuilding...");
     }
 }
-export {LastBuildInfo};
+export { LastBuildInfo };

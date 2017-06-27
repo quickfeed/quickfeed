@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ILink } from "../../managers/NavigationManager";
+import { NavigationHelper } from "../../NavigationHelper";
 
 interface INavMenuProps {
     links: ILink[];
@@ -14,7 +15,8 @@ class NavMenu extends React.Component<INavMenuProps, undefined> {
                 active = "active";
             }
             return <li className={active} key={i}>
-                <a href={"/" + v.uri} onClick={(e) => this.handleClick(e, v)}>
+                <a href={"/" + v.uri}
+                    onClick={(e) => NavigationHelper.handleClick(e, () => { this.handleClick(v); })}>
                     {v.name}
                 </a>
             </li>;
@@ -24,8 +26,7 @@ class NavMenu extends React.Component<INavMenuProps, undefined> {
         </ul>;
     }
 
-    private handleClick(e: React.MouseEvent<HTMLAnchorElement>, v: ILink) {
-        e.preventDefault();
+    private handleClick(v: ILink) {
         if (this.props.onClick) {
             this.props.onClick(v);
         }

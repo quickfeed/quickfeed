@@ -144,6 +144,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(6);
 var NavHeaderBar = (function (_super) {
     __extends(NavHeaderBar, _super);
     function NavHeaderBar() {
@@ -163,7 +164,11 @@ var NavHeaderBar = (function (_super) {
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" })),
-            React.createElement("a", { className: "navbar-brand", onClick: function (e) { e.preventDefault(); _this.props.brandClick(); }, href: ";/" }, this.props.brandName));
+            React.createElement("a", { className: "navbar-brand", onClick: function (e) {
+                    NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+                        _this.props.brandClick();
+                    });
+                }, href: ";/" }, this.props.brandName));
     };
     return NavHeaderBar;
 }(React.Component));
@@ -260,6 +265,15 @@ var NavigationHelper = (function () {
     };
     NavigationHelper.isINavObject = function (obj) {
         return obj && obj.path;
+    };
+    NavigationHelper.handleClick = function (e, callback) {
+        if (e.shiftKey || e.ctrlKey || e.button === 1) {
+            return;
+        }
+        else {
+            e.preventDefault();
+            callback();
+        }
     };
     Object.defineProperty(NavigationHelper.prototype, "defaultPage", {
         get: function () {
@@ -586,6 +600,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var NavHeaderBar_1 = __webpack_require__(3);
+var NavigationHelper_1 = __webpack_require__(6);
 var NavBar = (function (_super) {
     __extends(NavBar, _super);
     function NavBar() {
@@ -593,13 +608,17 @@ var NavBar = (function (_super) {
     }
     NavBar.prototype.render = function () {
         var _this = this;
-        var items = this.props.links.map(function (v, i) {
+        var items = this.props.links.map(function (link, i) {
             var active = "";
-            if (v.active) {
+            if (link.active) {
                 active = "active";
             }
             return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "/" + v.uri, onClick: function (e) { e.preventDefault(); _this.handleClick(v); } }, v.name));
+                React.createElement("a", { href: "/" + link.uri, onClick: function (e) {
+                        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+                            _this.handleClick(link);
+                        });
+                    } }, link.name));
         });
         return React.createElement("nav", { className: this.renderNavBarClass() },
             React.createElement("div", { className: this.renderIsFluid() },
@@ -659,6 +678,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(6);
 var NavMenu = (function (_super) {
     __extends(NavMenu, _super);
     function NavMenu() {
@@ -672,12 +692,11 @@ var NavMenu = (function (_super) {
                 active = "active";
             }
             return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "/" + v.uri, onClick: function (e) { return _this.handleClick(e, v); } }, v.name));
+                React.createElement("a", { href: "/" + v.uri, onClick: function (e) { return NavigationHelper_1.NavigationHelper.handleClick(e, function () { _this.handleClick(v); }); } }, v.name));
         });
         return React.createElement("ul", { className: "nav nav-pills nav-stacked" }, items);
     };
-    NavMenu.prototype.handleClick = function (e, v) {
-        e.preventDefault();
+    NavMenu.prototype.handleClick = function (v) {
         if (this.props.onClick) {
             this.props.onClick(v);
         }
@@ -850,7 +869,7 @@ var StudentLab = (function (_super) {
             { name: "Test Case 2", score: 50, points: 100, weight: 1 },
             { name: "Test Case 3", score: 40, points: 100, weight: 1 },
             { name: "Test Case 4", score: 30, points: 100, weight: 1 },
-            { name: "Test Case 5", score: 20, points: 100, weight: 1 }
+            { name: "Test Case 5", score: 20, points: 100, weight: 1 },
         ];
         var labInfo = {
             lab: this.props.assignment.name,
@@ -862,7 +881,7 @@ var StudentLab = (function (_super) {
             fail_tests: 20,
             exec_time: 0.33,
             build_time: new Date(2017, 5, 25),
-            build_id: 10
+            build_id: 10,
         };
         return React.createElement(LabResultView_1.LabResultView, { labInfo: labInfo });
     };
@@ -930,6 +949,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(6);
 var NavDropdown = (function (_super) {
     __extends(NavDropdown, _super);
     function NavDropdown() {
@@ -944,9 +964,10 @@ var NavDropdown = (function (_super) {
         var children = this.props.items.map(function (item, index) {
             return React.createElement("li", { key: index },
                 React.createElement("a", { href: "/" + item.uri, onClick: function (e) {
-                        e.preventDefault();
-                        _this.toggleOpen();
-                        _this.props.itemClick(item, index);
+                        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+                            _this.toggleOpen();
+                            _this.props.itemClick(item, index);
+                        });
                     } }, item.name));
         });
         return React.createElement("div", { className: this.getButtonClass() },
@@ -1007,7 +1028,7 @@ var ProgressBar = (function (_super) {
     }
     ProgressBar.prototype.render = function () {
         var progressBarStyle = {
-            width: this.props.progress + "%"
+            width: this.props.progress + "%",
         };
         return (React.createElement("div", { className: "progress" },
             React.createElement("div", { className: "progress-bar", role: "progressbar", "aria-valuenow": this.props.progress, "aria-valuemin": "0", "aria-valuemax": "100", style: progressBarStyle },
@@ -1091,7 +1112,8 @@ var LastBuild = (function (_super) {
     LastBuild.prototype.render = function () {
         return (React.createElement(components_1.Row, null,
             React.createElement("div", { className: "col-lg-12" },
-                React.createElement(components_1.DynamicTable, { header: ["Test name", "Score", "Weight"], data: this.props.test_cases, selector: function (item) { return [item.name, item.score.toString() + "/" + item.points.toString() + " pts", item.weight.toString() + " pts"]; }, footer: ["Total score", this.props.score.toString() + "%", this.props.weight.toString() + "%"] }))));
+                React.createElement(components_1.DynamicTable, { header: ["Test name", "Score", "Weight"], data: this.props.test_cases, selector: function (item) { return [item.name, item.score.toString() + "/"
+                            + item.points.toString() + " pts", item.weight.toString() + " pts"]; }, footer: ["Total score", this.props.score.toString() + "%", this.props.weight.toString() + "%"] }))));
     };
     return LastBuild;
 }(React.Component));
@@ -1122,9 +1144,6 @@ var LastBuildInfo = (function (_super) {
     function LastBuildInfo() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    LastBuildInfo.prototype.handleClick = function () {
-        console.log("Rebuilding...");
-    };
     LastBuildInfo.prototype.render = function () {
         var _this = this;
         return (React.createElement(components_1.Row, null,
@@ -1151,6 +1170,9 @@ var LastBuildInfo = (function (_super) {
                     React.createElement("div", { className: "col-lg-12" },
                         React.createElement("p", null,
                             React.createElement("button", { type: "button", id: "rebuild", className: "btn btn-primary", onClick: function () { return _this.handleClick(); } }, "Rebuild")))))));
+    };
+    LastBuildInfo.prototype.handleClick = function () {
+        console.log("Rebuilding...");
     };
     return LastBuildInfo;
 }(React.Component));
@@ -1263,6 +1285,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var event_1 = __webpack_require__(5);
 var NavigationHelper_1 = __webpack_require__(6);
 var ViewPage_1 = __webpack_require__(2);
+function isILinkCollection(item) {
+    if (item.item) {
+        return true;
+    }
+    return false;
+}
+exports.isILinkCollection = isILinkCollection;
 var NavigationManager = (function () {
     function NavigationManager(history) {
         var _this = this;
@@ -1368,6 +1397,23 @@ var NavigationManager = (function () {
             l.active = a === checkUrl.substr(0, a.length);
         }
     };
+    NavigationManager.prototype.checkLinkCollection = function (links, viewPage) {
+        var checkUrl = this.currentPath;
+        if (viewPage && viewPage.pagePath === checkUrl) {
+            checkUrl += "/" + viewPage.navHelper.defaultPage;
+        }
+        for (var _i = 0, links_2 = links; _i < links_2.length; _i++) {
+            var l = links_2[_i];
+            if (!l.item.uri) {
+                continue;
+            }
+            var a = NavigationHelper_1.NavigationHelper.getParts(l.item.uri).join("/");
+            l.item.active = a === checkUrl.substr(0, a.length);
+            if (l.children) {
+                this.checkLinks(l.children, viewPage);
+            }
+        }
+    };
     NavigationManager.prototype.refresh = function () {
         this.navigateTo(this.currentPath);
     };
@@ -1401,6 +1447,15 @@ var TempDataProvider = (function () {
     };
     TempDataProvider.prototype.getCourses = function () {
         return this.localCourses;
+    };
+    TempDataProvider.prototype.getCourseByTag = function (tag) {
+        for (var _i = 0, _a = this.localCourses; _i < _a.length; _i++) {
+            var c = _a[_i];
+            if (c.tag === tag) {
+                return c;
+            }
+        }
+        return null;
     };
     TempDataProvider.prototype.getCoursesStudent = function () {
         return this.localCourseStudent;
@@ -1526,15 +1581,6 @@ var TempDataProvider = (function () {
             { courseId: 0, personId: 999 },
             { courseId: 1, personId: 999 },
         ];
-    };
-    TempDataProvider.prototype.getCourseByTag = function (tag) {
-        for (var _i = 0, _a = this.localCourses; _i < _a.length; _i++) {
-            var c = _a[_i];
-            if (c.tag === tag) {
-                return c;
-            }
-        }
-        return null;
     };
     return TempDataProvider;
 }());
@@ -1791,6 +1837,7 @@ var ViewPage_1 = __webpack_require__(2);
 var HelloView_1 = __webpack_require__(7);
 var UserView_1 = __webpack_require__(8);
 var helper_1 = __webpack_require__(4);
+var CollapsableNavMenu_1 = __webpack_require__(38);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -1813,8 +1860,8 @@ var StudentPage = (function (_super) {
         return _this;
     }
     StudentPage.prototype.index = function (navInfo) {
-        var course_overview = this.getCoursesWithAssignments();
-        return (React.createElement(components_1.CourseOverview, { course_overview: course_overview, navMan: this.navMan }));
+        var courseOverview = this.getCoursesWithAssignments();
+        return (React.createElement(components_1.CourseOverview, { course_overview: courseOverview, navMan: this.navMan }));
     };
     StudentPage.prototype.course = function (navInfo) {
         this.selectCourse(navInfo.params.courseid);
@@ -1838,27 +1885,23 @@ var StudentPage = (function (_super) {
     StudentPage.prototype.renderMenu = function (key) {
         var _this = this;
         if (key === 0) {
-            var coursesLinks = this.courses.map(function (e, i) {
-                return { name: e.tag, uri: _this.pagePath + "/course/" + e.id };
+            var coursesLinks = this.courses.map(function (course, i) {
+                return {
+                    item: { name: course.tag, uri: _this.pagePath + "/course/" + course.id },
+                    children: _this.getLabsfor(course).map(function (lab, ind) {
+                        return { name: lab.name, uri: _this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
+                    }),
+                };
             });
-            var labs_1 = this.getLabs();
-            var labLinks = [];
-            if (labs_1) {
-                labLinks = labs_1.labs.map(function (l, i) {
-                    return { name: l.name, uri: _this.pagePath + "/course/" + labs_1.course.id + "/lab/" + l.id };
-                });
-            }
             var settings = [
                 { name: "Users", uri: this.pagePath + "/user" },
                 { name: "Hello world", uri: this.pagePath + "/hello" },
             ];
-            this.navMan.checkLinks(labLinks, this);
+            this.navMan.checkLinkCollection(coursesLinks, this);
             this.navMan.checkLinks(settings, this);
             return [
-                React.createElement("h4", null, "Course"),
-                React.createElement(components_1.NavDropdown, { key: 1, selectedIndex: this.foundId, items: coursesLinks, itemClick: function (link) { _this.handleClick(link); } }),
-                React.createElement("h4", { key: 2 }, "Labs"),
-                React.createElement(components_1.NavMenu, { key: 3, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),
+                React.createElement("h4", { key: 6 }, "Courses"),
+                React.createElement(CollapsableNavMenu_1.CollapsableNavMenu, { key: 7, links: coursesLinks, onClick: function (link) { return _this.handleClick(link); } }),
                 React.createElement("h4", { key: 4 }, "Settings"),
                 React.createElement(components_1.NavMenu, { key: 5, links: settings, onClick: function (link) { return _this.handleClick(link); } }),
             ];
@@ -1912,6 +1955,9 @@ var StudentPage = (function (_super) {
         }
         return [];
     };
+    StudentPage.prototype.getLabsfor = function (course) {
+        return this.courseMan.getAssignments(course);
+    };
     StudentPage.prototype.getLabs = function () {
         var curUsr = this.userMan.getCurrentUser();
         if (curUsr && !this.selectedCourse) {
@@ -1924,18 +1970,18 @@ var StudentPage = (function (_super) {
         return null;
     };
     StudentPage.prototype.getCoursesWithAssignments = function () {
-        var course_labs = [];
+        var courseLabs = [];
         if (this.courses.length === 0) {
             this.courses = this.getCourses();
         }
         if (this.courses.length > 0) {
             for (var _i = 0, _a = this.courses; _i < _a.length; _i++) {
-                var course = _a[_i];
-                var labs = this.courseMan.getAssignments(course);
-                var cl = { course: course, labs: labs };
-                course_labs.push(cl);
+                var crs = _a[_i];
+                var labs = this.courseMan.getAssignments(crs);
+                var cl = { course: crs, labs: labs };
+                courseLabs.push(cl);
             }
-            return course_labs;
+            return courseLabs;
         }
         return [];
     };
@@ -2125,6 +2171,139 @@ var CoursePanel = (function (_super) {
     return CoursePanel;
 }(React.Component));
 exports.CoursePanel = CoursePanel;
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(6);
+var CollapsableNavMenu = (function (_super) {
+    __extends(CollapsableNavMenu, _super);
+    function CollapsableNavMenu() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.topItems = [];
+        return _this;
+    }
+    CollapsableNavMenu.prototype.render = function () {
+        var _this = this;
+        var children = this.props.links.map(function (e, i) {
+            return _this.renderTopElement(i, e);
+        });
+        return React.createElement("ul", { className: "nav nav-list" }, children);
+    };
+    CollapsableNavMenu.prototype.toggle = function (index) {
+        var _this = this;
+        var animations = [];
+        this.topItems.forEach(function (temp, i) {
+            if (i === index) {
+                if (_this.collapseIsOpen(temp)) {
+                    animations.push(_this.closeCollapse(temp));
+                }
+                else {
+                    animations.push(_this.openCollapse(temp));
+                }
+            }
+            else {
+                animations.push(_this.closeIfOpen(temp));
+            }
+        });
+        setTimeout(function () {
+            animations.forEach(function (e) {
+                e();
+            });
+        }, 10);
+    };
+    CollapsableNavMenu.prototype.collapseIsOpen = function (ele) {
+        return ele.classList.contains("in");
+    };
+    CollapsableNavMenu.prototype.closeIfOpen = function (ele) {
+        if (this.collapseIsOpen(ele)) {
+            return this.closeCollapse(ele);
+        }
+        return function () {
+            "do nothing";
+        };
+    };
+    CollapsableNavMenu.prototype.openCollapse = function (ele) {
+        ele.classList.remove("collapse");
+        ele.classList.add("collapsing");
+        return function () {
+            ele.style.height = ele.scrollHeight + "px";
+            setTimeout(function () {
+                ele.classList.remove("collapsing");
+                ele.classList.add("collapse");
+                ele.classList.add("in");
+                ele.style.height = null;
+            }, 350);
+        };
+    };
+    CollapsableNavMenu.prototype.closeCollapse = function (ele) {
+        ele.style.height = ele.clientHeight + "px";
+        ele.classList.add("collapsing");
+        ele.classList.remove("collapse");
+        ele.classList.remove("in");
+        return function () {
+            ele.style.height = null;
+            setTimeout(function () {
+                ele.classList.remove("collapsing");
+                ele.classList.add("collapse");
+                ele.style.height = null;
+            }, 350);
+        };
+    };
+    CollapsableNavMenu.prototype.handleClick = function (e, link) {
+        var _this = this;
+        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+            if (_this.props.onClick) {
+                _this.props.onClick(link);
+            }
+        });
+    };
+    CollapsableNavMenu.prototype.renderChilds = function (index, link) {
+        var _this = this;
+        var isActive = link.active ? "active" : "";
+        return React.createElement("li", { key: index, className: isActive },
+            React.createElement("a", { onClick: function (e) { return _this.handleClick(e, link); }, href: "/" + link.uri }, link.name));
+    };
+    CollapsableNavMenu.prototype.renderTopElement = function (index, links) {
+        var _this = this;
+        var isActive = links.item.active ? "active" : "";
+        var subClass = "nav nav-sub collapse " + (links.item.active ? "in" : "");
+        var children = [];
+        if (links.children) {
+            children = links.children.map(function (e, i) {
+                return _this.renderChilds(i, e);
+            });
+        }
+        return React.createElement("li", { key: index, className: isActive },
+            React.createElement("a", { onClick: function (e) {
+                    _this.toggle(index);
+                    _this.handleClick(e, links.item);
+                }, href: "/" + links.item.uri }, links.item.name),
+            React.createElement("ul", { ref: function (ele) {
+                    if (ele) {
+                        _this.topItems[index] = ele;
+                    }
+                }, className: subClass }, children));
+    };
+    return CollapsableNavMenu;
+}(React.Component));
+exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
 /***/ })

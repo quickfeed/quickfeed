@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "d2709f9f1f31ebcda9651b03077758c1f3a0018c"
+  version = "v3.0.0"
+
+[[projects]]
   name = "github.com/go-kit/kit"
   packages = ["log"]
   revision = "a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b"
@@ -32,12 +38,6 @@
   version = "v1.1"
 
 [[projects]]
-  name = "github.com/gorilla/handlers"
-  packages = ["."]
-  revision = "a4043c62cc2329bacda331d33fc908ab11ef0ec3"
-  version = "v1.2.1"
-
-[[projects]]
   name = "github.com/gorilla/mux"
   packages = ["."]
   revision = "bcd8bc72b08df0f70df986b97f95590779502d31"
@@ -63,21 +63,75 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/labstack/echo"
+  packages = [".","middleware"]
+  revision = "83eadbad188df0d05305fce89bfb855a19ef5f21"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/labstack/echo-contrib"
+  packages = ["session"]
+  revision = "7099b8605f68216038f7c07d7bb83c5d1facc662"
+
+[[projects]]
+  name = "github.com/labstack/gommon"
+  packages = ["bytes","color","log","random"]
+  revision = "1121fd3e243c202482226a7afe4dcd07ffc4139a"
+  version = "v0.2.1"
+
+[[projects]]
+  branch = "master"
   name = "github.com/markbates/goth"
   packages = [".","gothic","providers/bitbucket","providers/faux","providers/github","providers/gitlab"]
   revision = "515b5a9a223203a3a50b682187c7d0a33888f484"
 
 [[projects]]
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  revision = "941b50ebc6efddf4c41c8e4537a5f68a4e686b24"
+  version = "v0.0.8"
+
+[[projects]]
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  revision = "fc9e8d8ef48496124e79ae0df75490096eccf6fe"
+  version = "v0.0.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/valyala/bytebufferpool"
+  packages = ["."]
+  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/valyala/fasttemplate"
+  packages = ["."]
+  revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["acme","acme/autocert"]
+  revision = "adbae1b6b6fb4b02448a0fc0dbbc9ba2b95b294d"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "057a25b06247e0c51ba15d8ae475feb2fcb72164"
+  revision = "5f8847ae0d0e90b6a9dc8148e7ad616874625171"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","internal"]
   revision = "f047394b6d14284165300fd82dad67edb3a4d7f6"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix"]
+  revision = "f7928cfef4d09d1b080aa2b6fd3ca9ba1567c733"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -88,6 +142,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c7ad303de10767f0e8acac93f691a38124f2bd2c388819027b2c20043db4108e"
+  inputs-digest = "4804822f6d3280ab7730c29ab7ca86b4a30553ce3b9f3171bed936da541fbc0c"
   solver-name = "gps-cdcl"
   solver-version = 1

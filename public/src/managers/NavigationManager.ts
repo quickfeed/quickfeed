@@ -2,24 +2,36 @@ import { IEventData, newEvent } from "../event";
 import { NavigationHelper } from "../NavigationHelper";
 import { isViewPage, ViewPage } from "../pages/ViewPage";
 
-interface IPageContainer {
+export interface IPageContainer {
     [name: string]: IPageContainer | ViewPage;
 }
 
-interface INavEvent extends IEventData {
+export interface INavEvent extends IEventData {
     uri: string;
     page: ViewPage;
     subPage: string;
 }
 
-interface ILink {
+export interface ILink {
     name: string;
     description?: string;
     uri?: string;
     active?: boolean;
 }
 
-class NavigationManager {
+export interface ILinkCollection {
+    item: ILink;
+    children?: ILink[];
+}
+
+export function isILinkCollection(item: any): item is ILinkCollection {
+    if (item.item) {
+        return true;
+    }
+    return false;
+}
+
+export class NavigationManager {
     public onNavigate = newEvent<INavEvent>("NavigationManager.onNavigate");
 
     private pages: IPageContainer = {};
@@ -142,6 +154,23 @@ class NavigationManager {
         }
     }
 
+    public checkLinkCollection(links: ILinkCollection[], viewPage?: ViewPage): void {
+        let checkUrl = this.currentPath;
+        if (viewPage && viewPage.pagePath === checkUrl) {
+            checkUrl += "/" + viewPage.navHelper.defaultPage;
+        }
+        for (const l of links) {
+            if (!l.item.uri) {
+                continue;
+            }
+            const a = NavigationHelper.getParts(l.item.uri).join("/");
+            l.item.active = a === checkUrl.substr(0, a.length);
+            if (l.children) {
+                this.checkLinks(l.children, viewPage);
+            }
+        }
+    }
+
     public refresh() {
         this.navigateTo(this.currentPath);
     }
@@ -153,5 +182,3 @@ class NavigationManager {
         throw Error("Status page: " + statusCode + " is not defined");
     }
 }
-
-export { IPageContainer, INavEvent, ILink, NavigationManager };
