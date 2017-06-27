@@ -27,6 +27,15 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourses;
     }
 
+    public getCourseByTag(tag: string): ICourse | null {
+        for (const c of this.localCourses) {
+            if (c.tag === tag) {
+                return c;
+            }
+        }
+        return null;
+    }
+
     public getCoursesStudent(): ICourseStudent[] {
         return this.localCourseStudent;
     }
@@ -155,15 +164,6 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
             { courseId: 0, personId: 999 },
             { courseId: 1, personId: 999 },
         ];
-    }
-
-    getCourseByTag(tag:string):ICourse | null {
-        for (let c of this.localCourses){
-            if (c.tag === tag) {
-                return c;
-            }
-        }
-        return null;
     }
 
 }

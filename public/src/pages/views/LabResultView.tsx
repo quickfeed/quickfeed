@@ -1,13 +1,13 @@
 import * as React from "react";
-import {LabResult, LastBuild, LastBuildInfo, Row} from "../../components";
-import {ILabInfo} from "../../models";
+import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
+import { ILabInfo } from "../../models";
 
-interface ILabInfoProps{
+interface ILabInfoProps {
     labInfo: ILabInfo;
 }
 class LabResultView extends React.Component<ILabInfoProps, undefined> {
 
-    render() {
+    public render() {
         return (
             <div className="col-md-9 col-sm-9 col-xs-12">
                 <div className="result-content" id="resultview">
@@ -37,7 +37,6 @@ class LabResultView extends React.Component<ILabInfoProps, undefined> {
                             </div>
                         </Row>
 
-
                     </section>
                 </div>
             </div>
@@ -45,4 +44,4 @@ class LabResultView extends React.Component<ILabInfoProps, undefined> {
     }
 }
 
-export {LabResultView}
+export { LabResultView };

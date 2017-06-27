@@ -1,15 +1,15 @@
 import * as React from "react";
-import {Row, ProgressBar} from "../../components";
+import { ProgressBar, Row } from "../../components";
 
 interface ILabResult {
     progress: number;
     lab: string;
     course_name: string;
 }
-class LabResult extends React.Component<ILabResult, any>{
+class LabResult extends React.Component<ILabResult, any> {
 
-    render(){
-        return(
+    public render() {
+        return (
             <Row>
                 <div className="col-lg-12">
                     <h1>{this.props.course_name}</h1>
@@ -29,4 +29,4 @@ class LabResult extends React.Component<ILabResult, any>{
     }
 }
 
-export {LabResult};
+export { LabResult };

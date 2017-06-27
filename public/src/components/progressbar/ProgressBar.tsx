@@ -1,23 +1,24 @@
 import * as React from "react";
 
 interface IProgressBarProps {
-    progress: number
+    progress: number;
 }
-class ProgressBar extends React.Component<IProgressBarProps, any>{
 
-    render(){
-        let progressBarStyle = {
-            width: this.props.progress+"%"
+class ProgressBar extends React.Component<IProgressBarProps, any> {
+
+    public render() {
+        const progressBarStyle = {
+            width: this.props.progress + "%",
         };
 
-        return(
+        return (
             <div className="progress">
                 <div className="progress-bar" role="progressbar" aria-valuenow={this.props.progress} aria-valuemin="0"
-                     aria-valuemax="100" style={progressBarStyle}>{this.props.progress}%
+                    aria-valuemax="100" style={progressBarStyle}>{this.props.progress}%
                 </div>
             </div>
         );
     }
 }
 
-export {ProgressBar};
+export { ProgressBar };

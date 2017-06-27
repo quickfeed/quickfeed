@@ -12,8 +12,8 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> 
         const rows = this.props.data.map((v, i) => {
             return this.renderRow(v, i);
         });
-        if(this.props.footer) {
-            return(
+        if (this.props.footer) {
+            return (
                 <table className="table">
                     <thead>
                         <tr>{this.renderCells(this.props.header)}</tr>
@@ -25,9 +25,9 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> 
                         <tr>{this.renderCells(this.props.footer)}</tr>
                     </tfoot>
                 </table>
-            )
+            );
         }
-        return(
+        return (
             <table className="table">
                 <thead>
                     <tr>{this.renderCells(this.props.header)}</tr>
@@ -36,7 +36,7 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> 
                     {rows}
                 </tbody>
             </table>
-        )
+        );
     }
 
     private renderCells(values: string[]): JSX.Element[] {

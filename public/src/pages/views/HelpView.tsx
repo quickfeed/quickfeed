@@ -4,7 +4,6 @@ import { Row } from "../../components";
 class HelpView extends React.Component<any, undefined> {
     public render() {
         return (
-
             <Row className="container-fluid">
                 <div className="col-md-2 col-sm-3 col-xs-12">
                     <div className="list-group">
