@@ -12,12 +12,10 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
-type cookieKey int
-
 // User session keys.
 const (
-	UserSession           = "session"
-	UserID      cookieKey = iota
+	UserSession = "session"
+	UserID      = "userid"
 )
 
 // OAuth2Logout invalidates the session for the logged in user.
