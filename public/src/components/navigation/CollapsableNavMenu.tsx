@@ -110,7 +110,7 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
                 href={"/" + links.item.uri}>
                 {links.item.name}
             </a>
-            <ul ref={(ele) => { this.topItems[index] = ele; }}
+            <ul ref={(ele) => { if (ele) { this.topItems[index] = ele; } }}
                 className={subClass}>
                 {children}
             </ul>

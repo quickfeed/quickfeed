@@ -4077,7 +4077,9 @@ var CollapsableNavMenu = (function (_super) {
         }
         return React.createElement("li", { key: index, className: isActive },
             React.createElement("a", { onClick: function (e) { _this.toggle(index); _this.handleClick(e, links.item); }, href: "/" + links.item.uri }, links.item.name),
-            React.createElement("ul", { ref: function (ele) { _this.topItems[index] = ele; }, className: subClass }, children));
+            React.createElement("ul", { ref: function (ele) { if (ele) {
+                    _this.topItems[index] = ele;
+                } }, className: subClass }, children));
     };
     return CollapsableNavMenu;
 }(React.Component));
