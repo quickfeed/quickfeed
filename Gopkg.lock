@@ -131,7 +131,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "c23410a886927bab8ca5e80b08af6a56faeb330d"
+  revision = "f7928cfef4d09d1b080aa2b6fd3ca9ba1567c733"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -142,6 +142,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f8b79d36cf13cbff8207039f076e2a1b607821f65993d076f5c56690bc424d3f"
+  inputs-digest = "4804822f6d3280ab7730c29ab7ca86b4a30553ce3b9f3171bed936da541fbc0c"
   solver-name = "gps-cdcl"
   solver-version = 1
