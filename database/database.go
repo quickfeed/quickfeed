@@ -17,7 +17,7 @@ type User struct {
 	AccessToken string
 }
 
-// UserDatabase contains methods for manipulating a database user.
+// UserDatabase contains methods for manipulating a user database.
 type UserDatabase interface {
 	GetUser(int) (*User, error)
 	GetUsers() (map[int]*User, error)
