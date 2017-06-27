@@ -1,16 +1,17 @@
 package auth_test
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web/auth"
-	"github.com/go-kit/kit/log"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/gommon/log"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/faux"
@@ -199,7 +200,10 @@ func TestAccessControl(t *testing.T) {
 }
 
 func newDB(t *testing.T) database.UserDatabase {
-	db, err := database.NewStructDB("", false, log.NewNopLogger())
+	logger := log.New("")
+	logger.SetOutput(ioutil.Discard)
+
+	db, err := database.NewStructDB("", false, logger)
 	if err != nil {
 		t.Fatal(err)
 	}

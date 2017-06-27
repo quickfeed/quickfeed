@@ -53,18 +53,20 @@ func main() {
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
 	)
 
-	db, err := database.NewStructDB(tempFile("agdb.db"), false, logger)
+	e := echo.New()
+	e.HideBanner = true
+	e.Use(
+		middleware.Logger(),
+		middleware.Recover(),
+		middleware.Secure(),
+		session.Middleware(store),
+	)
+
+	db, err := database.NewStructDB(tempFile("agdb.db"), false, e.Logger)
 
 	if err != nil {
 		panic(fmt.Sprintf("could not connect to db: %s", err))
 	}
-
-	e := echo.New()
-	e.HideBanner = true
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-	e.Use(middleware.Secure())
-	e.Use(session.Middleware(store))
 
 	oauth2 := e.Group("/auth/:provider", withProvider)
 	oauth2.GET("", auth.OAuth2Login(db))

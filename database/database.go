@@ -6,7 +6,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/go-kit/kit/log"
+	"github.com/labstack/echo"
+	"github.com/labstack/gommon/log"
 )
 
 // User represents a user account.
@@ -25,7 +26,7 @@ type UserDatabase interface {
 
 // NewStructDB creates a new database which saves the whole database to a file
 // on every change. If no path is set, the database will operate in memory only.
-func NewStructDB(path string, truncate bool, logger log.Logger) (*StructDB, error) {
+func NewStructDB(path string, truncate bool, logger echo.Logger) (*StructDB, error) {
 	if path == "" {
 		return &StructDB{
 			// Leave path unset to indicate in memory DB.
@@ -69,7 +70,7 @@ type StructDB struct {
 	path  string
 	Users map[int]*User
 
-	logger log.Logger
+	logger echo.Logger
 }
 
 // ErrUserNotExist indicates that the user does not exist.
@@ -108,12 +109,12 @@ func (db *StructDB) GetUserWithGithubID(githubID int, accessToken string) (*User
 
 	for _, user := range db.Users {
 		if user.GithubID == githubID {
-			db.logger.Log(
-				"userid", user.ID,
-				"githubid", user.GithubID,
-				"msg", "user found",
-				"new", false,
-			)
+			db.logger.Infoj(log.JSON{
+				"userid":   user.ID,
+				"githubid": user.GithubID,
+				"msg":      "user found",
+				"new":      false,
+			})
 			return user, nil
 		}
 	}
@@ -127,21 +128,21 @@ func (db *StructDB) GetUserWithGithubID(githubID int, accessToken string) (*User
 	db.Users[user.ID] = user
 	if err := db.save(); err != nil {
 		delete(db.Users, user.ID)
-		db.logger.Log(
-			"userid", user.ID,
-			"githubid", user.GithubID,
-			"msg", "could not persist user to database",
-			"err", err.Error(),
-		)
+		db.logger.Infoj(log.JSON{
+			"userid":   user.ID,
+			"githubid": user.GithubID,
+			"msg":      "could not persist user to database",
+			"err":      err.Error(),
+		})
 		return nil, err
 	}
 
-	db.logger.Log(
-		"userid", user.ID,
-		"githubid", user.GithubID,
-		"msg", "user found",
-		"new", true,
-	)
+	db.logger.Infoj(log.JSON{
+		"userid":   user.ID,
+		"githubid": user.GithubID,
+		"msg":      "user found",
+		"new":      true,
+	})
 
 	return user, nil
 }

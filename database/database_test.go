@@ -1,13 +1,14 @@
 package database_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/autograde/aguis/database"
-	"github.com/go-kit/kit/log"
+	"github.com/labstack/gommon/log"
 )
 
 func tempFile(name string) string {
@@ -22,6 +23,9 @@ func TestNewStructOnFileDB(t *testing.T) {
 		accessToken = "secret"
 	)
 
+	logger := log.New("")
+	logger.SetOutput(ioutil.Discard)
+
 	dbfile := tempFile(dbpath)
 	// Remove existing database and continue on error if file did not exist.
 	if err := os.Remove(dbfile); err != nil && !os.IsNotExist(err) {
@@ -29,7 +33,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Create new database.
-	db, err := database.NewStructDB(dbfile, false, log.NewNopLogger())
+	db, err := database.NewStructDB(dbfile, false, logger)
 	if err != nil {
 		t.Error(err)
 	}
@@ -44,7 +48,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Load previously created database.
-	db, err = database.NewStructDB(dbfile, false, log.NewNopLogger())
+	db, err = database.NewStructDB(dbfile, false, logger)
 	if err != nil {
 		t.Error(err)
 	}
@@ -58,7 +62,7 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 
 	// Create new database truncating any existing database.
-	db, err = database.NewStructDB(dbfile, true, log.NewNopLogger())
+	db, err = database.NewStructDB(dbfile, true, logger)
 	if err != nil {
 		t.Error(err)
 	}
