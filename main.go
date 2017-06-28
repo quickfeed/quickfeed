@@ -11,7 +11,6 @@ import (
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web/auth"
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
@@ -44,10 +43,7 @@ func main() {
 		})
 	}
 
-	store := sessions.NewCookieStore(
-		securecookie.GenerateRandomKey(64),
-		securecookie.GenerateRandomKey(32),
-	)
+	store := sessions.NewCookieStore([]byte("secret"))
 	store.Options.HttpOnly = true
 	store.Options.Secure = true
 	gothic.Store = store
