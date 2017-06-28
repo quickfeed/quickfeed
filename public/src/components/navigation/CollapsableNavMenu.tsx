@@ -1,6 +1,6 @@
 import * as React from "react";
-import {ILink, ILinkCollection} from "../../managers";
-import {NavigationHelper} from "../../NavigationHelper";
+import { ILink, ILinkCollection } from "../../managers";
+import { NavigationHelper } from "../../NavigationHelper";
 
 interface ICollapsableNavMenuProps {
     links: ILinkCollection[];
@@ -105,7 +105,7 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
         const isActive = link.active ? "active" : "";
         return <li key={index} className={isActive}>
             <a onClick={(e) => this.handleClick(e, link)}
-               href={"/" + link.uri}>{link.name}</a>
+                href={"/" + link.uri}>{link.name}</a>
         </li>;
     }
 
@@ -127,6 +127,9 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
                 href={"/" + links.item.uri}>
                 <span className="glyphicon glyphicon-plus-sign" id={"course-" + index}></span>
                 {links.item.name}
+                <span style={{ float: "right" }}>
+                    <span className="glyphicon glyphicon-menu-right"></span>
+                </span>
             </a>
             <ul ref={(ele) => {
                 if (ele) {
@@ -140,4 +143,4 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
     }
 }
 
-export {CollapsableNavMenu};
+export { CollapsableNavMenu };

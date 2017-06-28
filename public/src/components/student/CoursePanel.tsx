@@ -1,10 +1,10 @@
 import * as React from "react";
 
-import {DynamicTable} from "../../components";
+import { DynamicTable } from "../../components";
 
-import {IAssignment, ICourse} from "../../models";
+import { IAssignment, ICourse } from "../../models";
 
-import {NavigationManager} from "../../managers/NavigationManager";
+import { NavigationManager } from "../../managers/NavigationManager";
 
 interface IPanelProps {
     course: ICourse;
@@ -15,25 +15,18 @@ class CoursePanel extends React.Component<IPanelProps, any> {
 
     public render() {
         const pathPrefix: string = "app/student/course/" + this.props.course.id + "/lab/";
-        const rowLinks: { [lab: string]: string } = {};
-        for (const lab of this.props.labs) {
-            // lab.id will be used a key identifier for row_links map
-            rowLinks[lab.id] = pathPrefix + lab.id;
-        }
 
         return (
             <div className="col-lg-3 col-sm-6">
                 <div className="panel panel-primary">
                     <div className="panel-heading clickable"
-                         onClick={() => this.handleCourseClick()}>{this.props.course.name}</div>
+                        onClick={() => this.handleCourseClick()}>{this.props.course.name}</div>
                     <div className="panel-body">
                         <DynamicTable
                             header={["Labs", "Score", "Weight"]}
                             data={this.props.labs}
                             selector={(item: IAssignment) => [item.name, "50%", "100%"]}
-                            onRowClick={(row) => this.handleRowClick(row)}
-                            row_links={rowLinks}
-                            link_key_identifier="id"
+                            onRowClick={(lab: IAssignment) => this.handleRowClick(pathPrefix, lab)}
                         />
                     </div>
                 </div>
@@ -41,9 +34,9 @@ class CoursePanel extends React.Component<IPanelProps, any> {
         );
     }
 
-    private handleRowClick(path: string) {
-        if (path) {
-            this.props.navMan.navigateTo(path);
+    private handleRowClick(pathPrefix: string, lab: IAssignment) {
+        if (lab) {
+            this.props.navMan.navigateTo(pathPrefix + lab.id);
         }
     }
 
@@ -53,4 +46,4 @@ class CoursePanel extends React.Component<IPanelProps, any> {
     }
 }
 
-export {CoursePanel};
+export { CoursePanel };
