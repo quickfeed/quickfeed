@@ -2,19 +2,32 @@ import * as React from "react";
 
 interface IDynamicTableProps<T> {
     header: string[];
+    footer?: string[];
     data: T[];
     selector: (item: T) => Array<string | JSX.Element>;
-    footer?: string[];
     onRowClick?: (link: T) => void;
 }
 
 class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> {
 
     public render() {
+        const footer = this.props.footer;
         const rows = this.props.data.map((v, i) => {
             return this.renderRow(v, i);
         });
-        return this.renderTable(rows, this.props.footer);
+        const tableFooter = footer ? <tfoot><tr>{this.renderCells(footer)}</tr></tfoot> : null;
+
+        return (
+            <table className={this.props.onRowClick ? "table table-hover" : "table"}>
+                <thead>
+                    <tr>{this.renderCells(this.props.header, true)}</tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+                {tableFooter}
+            </table>
+        );
     }
 
     private renderCells(values: Array<string | JSX.Element>, th: boolean = false): JSX.Element[] {
@@ -32,23 +45,6 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> 
                 onClick={(e) => this.handleRowClick(item)}>
                 {this.renderCells(this.props.selector(item))}
             </tr>
-        );
-
-    }
-
-    private renderTable(rows: JSX.Element[], footer?: string[]): JSX.Element {
-        const tableFooter = footer ? <tfoot><tr>{this.renderCells(footer)}</tr></tfoot> : null;
-
-        return (
-            <table className={this.props.onRowClick ? "table table-hover" : "table"}>
-                <thead>
-                    <tr>{this.renderCells(this.props.header, true)}</tr>
-                </thead>
-                <tbody>
-                    {rows}
-                </tbody>
-                {tableFooter}
-            </table>
         );
     }
 

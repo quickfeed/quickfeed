@@ -816,10 +816,17 @@ var DynamicTable = (function (_super) {
     }
     DynamicTable.prototype.render = function () {
         var _this = this;
+        var footer = this.props.footer;
         var rows = this.props.data.map(function (v, i) {
             return _this.renderRow(v, i);
         });
-        return this.renderTable(rows, this.props.footer);
+        var tableFooter = footer ? React.createElement("tfoot", null,
+            React.createElement("tr", null, this.renderCells(footer))) : null;
+        return (React.createElement("table", { className: this.props.onRowClick ? "table table-hover" : "table" },
+            React.createElement("thead", null,
+                React.createElement("tr", null, this.renderCells(this.props.header, true))),
+            React.createElement("tbody", null, rows),
+            tableFooter));
     };
     DynamicTable.prototype.renderCells = function (values, th) {
         if (th === void 0) { th = false; }
@@ -833,15 +840,6 @@ var DynamicTable = (function (_super) {
     DynamicTable.prototype.renderRow = function (item, i) {
         var _this = this;
         return (React.createElement("tr", { key: i, onClick: function (e) { return _this.handleRowClick(item); } }, this.renderCells(this.props.selector(item))));
-    };
-    DynamicTable.prototype.renderTable = function (rows, footer) {
-        var tableFooter = footer ? React.createElement("tfoot", null,
-            React.createElement("tr", null, this.renderCells(footer))) : null;
-        return (React.createElement("table", { className: this.props.onRowClick ? "table table-hover" : "table" },
-            React.createElement("thead", null,
-                React.createElement("tr", null, this.renderCells(this.props.header, true))),
-            React.createElement("tbody", null, rows),
-            tableFooter));
     };
     DynamicTable.prototype.handleRowClick = function (item) {
         if (this.props.onRowClick) {
@@ -1332,6 +1330,9 @@ var CourseManager = (function () {
     function CourseManager(courseProvider) {
         this.courseProvider = courseProvider;
     }
+    CourseManager.prototype.addUserToCourse = function (user, course) {
+        this.courseProvider.addUserToCourse(user, course);
+    };
     CourseManager.prototype.getCourse = function (id) {
         return helper_1.ArrayHelper.find(this.getCourses(), function (a) { return a.id === id; });
     };
@@ -1606,6 +1607,9 @@ var TempDataProvider = (function () {
         }
         return null;
     };
+    TempDataProvider.prototype.addUserToCourse = function (user, course) {
+        this.localCourseStudent.push({ courseId: course.id, personId: user.id });
+    };
     TempDataProvider.prototype.addLocalUsers = function () {
         this.localUsers = [
             {
@@ -1684,6 +1688,54 @@ var TempDataProvider = (function () {
                 deadline: new Date(2017, 5, 25),
                 end: new Date(2017, 5, 30),
             },
+            {
+                id: 5,
+                courseId: 1,
+                name: "Lab 2",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 6,
+                courseId: 1,
+                name: "Lab 3",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 7,
+                courseId: 2,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 8,
+                courseId: 2,
+                name: "Lab 2",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 9,
+                courseId: 3,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 10,
+                courseId: 4,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
         ];
     };
     TempDataProvider.prototype.addLocalCourses = function () {
@@ -1697,6 +1749,21 @@ var TempDataProvider = (function () {
                 id: 1,
                 name: "Algorithms and Datastructures",
                 tag: "DAT200",
+            },
+            {
+                id: 2,
+                name: "Databases",
+                tag: "DAT220",
+            },
+            {
+                id: 3,
+                name: "Communication Technology",
+                tag: "DAT230",
+            },
+            {
+                id: 4,
+                name: "Operating Systems",
+                tag: "DAT320",
             },
         ];
     };
@@ -1979,6 +2046,7 @@ var StudentPage = (function (_super) {
         _this.navHelper.registerFunction("index", _this.index);
         _this.navHelper.registerFunction("course/{courseid}", _this.course);
         _this.navHelper.registerFunction("course/{courseid}/lab/{labid}", _this.courseWithLab);
+        _this.navHelper.registerFunction("enroll", _this.enrole);
         _this.navHelper.registerFunction("user", function (navInfo) { return React.createElement(UserView_1.UserView, { users: users.getAllUser() }); });
         _this.navHelper.registerFunction("hello", function (INavInfo) { return React.createElement(HelloView_1.HelloView, null); });
         return _this;
@@ -1986,6 +2054,29 @@ var StudentPage = (function (_super) {
     StudentPage.prototype.index = function (navInfo) {
         var courseOverview = this.getCoursesWithAssignments();
         return (React.createElement(components_1.CoursesOverview, { course_overview: courseOverview, navMan: this.navMan }));
+    };
+    StudentPage.prototype.enrole = function (navInfo) {
+        var _this = this;
+        var courses = this.courseMan.getCourses();
+        var studentCourses = this.getCourses();
+        return React.createElement("div", null,
+            React.createElement("h1", null, "Enrollment page"),
+            React.createElement(components_1.DynamicTable, { data: courses, header: ["Course tag", "Course Name", "Action"], selector: function (course) { return _this.createEnrollmentRow(studentCourses, course); } }));
+    };
+    StudentPage.prototype.createEnrollmentRow = function (studentCourses, course) {
+        var _this = this;
+        var base = [course.tag, course.name];
+        var curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
+            return base;
+        }
+        if (!helper_1.ArrayHelper.find(studentCourses, function (a) { return a.id === course.id; })) {
+            base.push(React.createElement("button", { onClick: function () { _this.courseMan.addUserToCourse(curUser, course); _this.navMan.refresh(); }, className: "btn btn-primary" }, "Enroll"));
+        }
+        else {
+            base.push("Enrolled");
+        }
+        return base;
     };
     StudentPage.prototype.course = function (navInfo) {
         this.selectCourse(navInfo.params.courseid);
@@ -2017,6 +2108,7 @@ var StudentPage = (function (_super) {
                 };
             });
             var settings = [
+                { name: "Join course", uri: this.pagePath + "/enroll" },
                 { name: "Users", uri: this.pagePath + "/user" },
                 { name: "Hello world", uri: this.pagePath + "/hello" },
             ];
