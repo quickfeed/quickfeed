@@ -171,6 +171,11 @@ func testOAuth2Authenticated(t *testing.T, newHandler func(db database.UserDatab
 }
 
 func TestAccessControl(t *testing.T) {
+	const (
+		userID = 0
+		secret = "secret"
+	)
+
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
@@ -179,7 +184,13 @@ func TestAccessControl(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	m := auth.AccessControl()
+	db := newDB(t)
+	// Create a new user.
+	if _, err := db.GetUserWithGithubID(userID, secret); err != nil {
+		t.Error(err)
+	}
+
+	m := auth.AccessControl(db)
 	protected := session.Middleware(store)(m(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}))

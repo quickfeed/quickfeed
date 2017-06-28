@@ -11,6 +11,7 @@ import (
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web/auth"
+	githubHandlers "github.com/autograde/aguis/web/github"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
@@ -78,10 +79,10 @@ func main() {
 	oauth2.GET("/logout", auth.OAuth2Logout())
 
 	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl())
-	api.GET("/test", func(c echo.Context) error {
-		return c.String(http.StatusOK, "api call")
-	})
+	api.Use(auth.AccessControl(db))
+
+	githubAPI := api.Group("/github")
+	githubAPI.GET("/organizations", githubHandlers.ListOrganizations())
 
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)
