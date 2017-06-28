@@ -17,6 +17,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/bitbucket"
@@ -33,7 +34,16 @@ func main() {
 	)
 	flag.Parse()
 
+	e := echo.New()
+	e.Logger.SetLevel(log.DEBUG)
+
 	entryPoint := filepath.Join(*public, "index.html")
+	if !fileExists(entryPoint) {
+		e.Logger.Warnj(log.JSON{
+			"path": entryPoint,
+			"err":  "could not find file",
+		})
+	}
 
 	store := sessions.NewCookieStore(
 		securecookie.GenerateRandomKey(64),
@@ -50,7 +60,6 @@ func main() {
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
 	)
 
-	e := echo.New()
 	e.HideBanner = true
 	e.Use(
 		middleware.Logger(),
@@ -126,4 +135,9 @@ func envString(env, fallback string) string {
 
 func tempFile(name string) string {
 	return filepath.Join(os.TempDir(), name)
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
