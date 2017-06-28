@@ -12,6 +12,7 @@ import { TeacherPage } from "./pages/TeacherPage";
 import { ViewPage } from "./pages/ViewPage";
 
 import { IUser } from "./models";
+import { AdminPage } from "./pages/AdminPage";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
@@ -179,12 +180,13 @@ function main() {
 
     (window as any).debugData = { tempData, userMan, courseMan, navMan };
 
-    // const user = userMan.tryLogin("test@testersen.no", "1234");
+    const user = userMan.tryLogin("test@testersen.no", "1234");
 
     navMan.setDefaultPath("app/home");
     navMan.registerPage("app/home", new HomePage());
     navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan));
     navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan, courseMan));
+    navMan.registerPage("app/admin", new AdminPage(navMan));
     navMan.registerPage("app/help", new HelpPage(navMan));
 
     navMan.registerErrorPage(404, new ErrorPage());
