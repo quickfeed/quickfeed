@@ -819,10 +819,7 @@ var DynamicTable = (function (_super) {
         var rows = this.props.data.map(function (v, i) {
             return _this.renderRow(v, i);
         });
-        if (this.props.footer) {
-            return this.tableWithFooter(rows, this.props.footer);
-        }
-        return this.tableWithNoFooter(rows);
+        return this.renderTable(rows, this.props.footer);
     };
     DynamicTable.prototype.renderCells = function (values, th) {
         if (th === void 0) { th = false; }
@@ -837,19 +834,14 @@ var DynamicTable = (function (_super) {
         var _this = this;
         return (React.createElement("tr", { key: i, onClick: function (e) { return _this.handleRowClick(item); } }, this.renderCells(this.props.selector(item))));
     };
-    DynamicTable.prototype.tableWithFooter = function (rows, footer) {
+    DynamicTable.prototype.renderTable = function (rows, footer) {
+        var tableFooter = footer ? React.createElement("tfoot", null,
+            React.createElement("tr", null, this.renderCells(footer))) : null;
         return (React.createElement("table", { className: this.props.onRowClick ? "table table-hover" : "table" },
             React.createElement("thead", null,
                 React.createElement("tr", null, this.renderCells(this.props.header, true))),
             React.createElement("tbody", null, rows),
-            React.createElement("tfoot", null,
-                React.createElement("tr", null, this.renderCells(footer)))));
-    };
-    DynamicTable.prototype.tableWithNoFooter = function (rows) {
-        return (React.createElement("table", { className: this.props.onRowClick ? "table table-hover" : "table" },
-            React.createElement("thead", null,
-                React.createElement("tr", null, this.renderCells(this.props.header, true))),
-            React.createElement("tbody", null, rows)));
+            tableFooter));
     };
     DynamicTable.prototype.handleRowClick = function (item) {
         if (this.props.onRowClick) {

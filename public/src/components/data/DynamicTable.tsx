@@ -14,10 +14,7 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> 
         const rows = this.props.data.map((v, i) => {
             return this.renderRow(v, i);
         });
-        if (this.props.footer) {
-            return this.tableWithFooter(rows, this.props.footer);
-        }
-        return this.tableWithNoFooter(rows);
+        return this.renderTable(rows, this.props.footer);
     }
 
     private renderCells(values: Array<string | JSX.Element>, th: boolean = false): JSX.Element[] {
@@ -39,23 +36,9 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> 
 
     }
 
-    private tableWithFooter(rows: JSX.Element[], footer: string[]): JSX.Element {
-        return (
-            <table className={this.props.onRowClick ? "table table-hover" : "table"}>
-                <thead>
-                    <tr>{this.renderCells(this.props.header, true)}</tr>
-                </thead>
-                <tbody>
-                    {rows}
-                </tbody>
-                <tfoot>
-                    <tr>{this.renderCells(footer)}</tr>
-                </tfoot>
-            </table>
-        );
-    }
+    private renderTable(rows: JSX.Element[], footer?: string[]): JSX.Element {
+        const tableFooter = footer ? <tfoot><tr>{this.renderCells(footer)}</tr></tfoot> : null;
 
-    private tableWithNoFooter(rows: JSX.Element[]) {
         return (
             <table className={this.props.onRowClick ? "table table-hover" : "table"}>
                 <thead>
@@ -64,6 +47,7 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> 
                 <tbody>
                     {rows}
                 </tbody>
+                {tableFooter}
             </table>
         );
     }
