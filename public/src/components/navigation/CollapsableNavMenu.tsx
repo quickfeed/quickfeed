@@ -25,20 +25,10 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
         const animations: Array<(() => void)> = [];
         this.topItems.forEach((temp, i) => {
             if (i === index) {
-                const el: HTMLElement | null = document.getElementById("course-" + index);
                 if (this.collapseIsOpen(temp)) {
                     animations.push(this.closeCollapse(temp));
-                    if (el) {
-                        el.classList.remove("glyphicon-minus-sign");
-                        el.classList.add("glyphicon-plus-sign");
-                    }
-
                 } else {
                     animations.push(this.openCollapse(temp));
-                    if (el) {
-                        el.classList.remove("glyphicon-plus-sign");
-                        el.classList.add("glyphicon-minus-sign");
-                    }
                 }
             } else {
                 animations.push(this.closeIfOpen(temp));
@@ -125,7 +115,6 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
                     this.handleClick(e, links.item);
                 }}
                 href={"/" + links.item.uri}>
-                <span className="glyphicon glyphicon-plus-sign" id={"course-" + index}></span>
                 {links.item.name}
                 <span style={{ float: "right" }}>
                     <span className="glyphicon glyphicon-menu-right"></span>
