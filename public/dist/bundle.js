@@ -470,7 +470,7 @@ var UserView = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     UserView.prototype.render = function () {
-        return React.createElement(components_1.DynamicTable, { header: ["ID", "F irst name", "Last name", "Email", "StudentID"], data: this.props.users, selector: function (item) { return [
+        return React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.props.users, selector: function (item) { return [
                 item.id.toString(),
                 item.firstName,
                 item.lastName,
@@ -835,7 +835,7 @@ var DynamicTable = (function (_super) {
     };
     DynamicTable.prototype.renderRow = function (item, i) {
         var _this = this;
-        return (React.createElement("tr", { key: i, onClick: function (e) { return _this.handleRowClick(e, item); } }, this.renderCells(this.props.selector(item))));
+        return (React.createElement("tr", { key: i, onClick: function (e) { return _this.handleRowClick(item); } }, this.renderCells(this.props.selector(item))));
     };
     DynamicTable.prototype.tableWithFooter = function (rows, footer) {
         return (React.createElement("table", { className: this.props.onRowClick ? "table table-hover" : "table" },
@@ -851,11 +851,9 @@ var DynamicTable = (function (_super) {
                 React.createElement("tr", null, this.renderCells(this.props.header, true))),
             React.createElement("tbody", null, rows)));
     };
-    DynamicTable.prototype.handleRowClick = function (e, item) {
-        e.preventDefault();
-        if (this.props.onRowClick && this.props.row_links && this.props.link_key_identifier) {
-            var identifier = this.props.link_key_identifier;
-            this.props.onRowClick(this.props.row_links[item[identifier]]);
+    DynamicTable.prototype.handleRowClick = function (item) {
+        if (this.props.onRowClick) {
+            this.props.onRowClick(item);
         }
     };
     return DynamicTable;
@@ -1253,20 +1251,15 @@ var CoursePanel = (function (_super) {
     CoursePanel.prototype.render = function () {
         var _this = this;
         var pathPrefix = "app/student/course/" + this.props.course.id + "/lab/";
-        var rowLinks = {};
-        for (var _i = 0, _a = this.props.labs; _i < _a.length; _i++) {
-            var lab = _a[_i];
-            rowLinks[lab.id] = pathPrefix + lab.id;
-        }
         return (React.createElement("div", { className: "col-lg-3 col-sm-6" },
             React.createElement("div", { className: "panel panel-primary" },
                 React.createElement("div", { className: "panel-heading clickable", onClick: function () { return _this.handleCourseClick(); } }, this.props.course.name),
                 React.createElement("div", { className: "panel-body" },
-                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: function (item) { return [item.name, "50%", "100%"]; }, onRowClick: function (row) { return _this.handleRowClick(row); }, row_links: rowLinks, link_key_identifier: "id" })))));
+                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: function (item) { return [item.name, "50%", "100%"]; }, onRowClick: function (lab) { return _this.handleRowClick(pathPrefix, lab); } })))));
     };
-    CoursePanel.prototype.handleRowClick = function (path) {
-        if (path) {
-            this.props.navMan.navigateTo(path);
+    CoursePanel.prototype.handleRowClick = function (pathPrefix, lab) {
+        if (lab) {
+            this.props.navMan.navigateTo(pathPrefix + lab.id);
         }
     };
     CoursePanel.prototype.handleCourseClick = function () {
