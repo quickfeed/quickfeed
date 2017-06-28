@@ -162,12 +162,8 @@ func getInteralUser(db database.UserDatabase, externalUser *goth.User) (*databas
 		}
 		return user, nil
 	case "faux": // Provider is only registered and reachable from tests.
-		return &database.User{}, ErrFauxProvider
+		return &database.User{}, nil
 	default:
 		return nil, errors.New("provider not implemented")
 	}
 }
-
-// ErrFauxProvider is returned if the provider is "faux". This could prevent
-// mistakenly authenticating a manipulated session in production.
-var ErrFauxProvider = errors.New("faux provider")

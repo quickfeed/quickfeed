@@ -165,9 +165,11 @@ func testOAuth2Authenticated(t *testing.T, newHandler func(db database.UserDatab
 	authHandler := newHandler(newDB(t))
 	withSession := session.Middleware(store)(authHandler)
 
-	if err := withSession(c); err != nil && err != auth.ErrFauxProvider {
+	if err := withSession(c); err != nil {
 		t.Error(err)
 	}
+
+	assertCode(t, w.Code, http.StatusFound)
 }
 
 func TestAccessControl(t *testing.T) {
