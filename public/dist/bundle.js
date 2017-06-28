@@ -2029,6 +2029,7 @@ var HelloView_1 = __webpack_require__(8);
 var UserView_1 = __webpack_require__(9);
 var helper_1 = __webpack_require__(7);
 var CollapsableNavMenu_1 = __webpack_require__(37);
+var EnrollmentView_1 = __webpack_require__(39);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -2057,26 +2058,12 @@ var StudentPage = (function (_super) {
     };
     StudentPage.prototype.enrole = function (navInfo) {
         var _this = this;
-        var courses = this.courseMan.getCourses();
-        var studentCourses = this.getCourses();
         return React.createElement("div", null,
             React.createElement("h1", null, "Enrollment page"),
-            React.createElement(components_1.DynamicTable, { data: courses, header: ["Course tag", "Course Name", "Action"], selector: function (course) { return _this.createEnrollmentRow(studentCourses, course); } }));
-    };
-    StudentPage.prototype.createEnrollmentRow = function (studentCourses, course) {
-        var _this = this;
-        var base = [course.tag, course.name];
-        var curUser = this.userMan.getCurrentUser();
-        if (!curUser) {
-            return base;
-        }
-        if (!helper_1.ArrayHelper.find(studentCourses, function (a) { return a.id === course.id; })) {
-            base.push(React.createElement("button", { onClick: function () { _this.courseMan.addUserToCourse(curUser, course); _this.navMan.refresh(); }, className: "btn btn-primary" }, "Enroll"));
-        }
-        else {
-            base.push("Enrolled");
-        }
-        return base;
+            React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.courseMan.getCourses(), studentCourses: this.getCourses(), curUser: this.userMan.getCurrentUser(), onEnrollmentClick: function (user, course) {
+                    _this.courseMan.addUserToCourse(user, course);
+                    _this.navMan.refresh();
+                } }));
     };
     StudentPage.prototype.course = function (navInfo) {
         this.selectCourse(navInfo.params.courseid);
@@ -2243,11 +2230,20 @@ var CollapsableNavMenu = (function (_super) {
         var animations = [];
         this.topItems.forEach(function (temp, i) {
             if (i === index) {
+                var el = document.getElementById("course-" + index);
                 if (_this.collapseIsOpen(temp)) {
                     animations.push(_this.closeCollapse(temp));
+                    if (el) {
+                        el.classList.remove("glyphicon-minus-sign");
+                        el.classList.add("glyphicon-plus-sign");
+                    }
                 }
                 else {
                     animations.push(_this.openCollapse(temp));
+                    if (el) {
+                        el.classList.remove("glyphicon-plus-sign");
+                        el.classList.add("glyphicon-minus-sign");
+                    }
                 }
             }
             else {
@@ -2327,6 +2323,7 @@ var CollapsableNavMenu = (function (_super) {
                     _this.toggle(index);
                     _this.handleClick(e, links.item);
                 }, href: "/" + links.item.uri },
+                React.createElement("span", { className: "glyphicon glyphicon-plus-sign", id: "course-" + index }),
                 links.item.name,
                 React.createElement("span", { style: { float: "right" } },
                     React.createElement("span", { className: "glyphicon glyphicon-menu-right" }))),
@@ -2423,6 +2420,55 @@ var TeacherPage = (function (_super) {
     return TeacherPage;
 }(ViewPage_1.ViewPage));
 exports.TeacherPage = TeacherPage;
+
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var helper_1 = __webpack_require__(7);
+var EnrollmentView = (function (_super) {
+    __extends(EnrollmentView, _super);
+    function EnrollmentView() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    EnrollmentView.prototype.render = function () {
+        var _this = this;
+        return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: function (course) { return _this.createEnrollmentRow(_this.props.studentCourses, course); } });
+    };
+    EnrollmentView.prototype.createEnrollmentRow = function (studentCourses, course) {
+        var _this = this;
+        var base = [course.tag, course.name];
+        var curUser = this.props.curUser;
+        if (!curUser) {
+            return base;
+        }
+        if (!helper_1.ArrayHelper.find(studentCourses, function (a) { return a.id === course.id; })) {
+            base.push(React.createElement("button", { onClick: function () { _this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"));
+        }
+        else {
+            base.push("Enrolled");
+        }
+        return base;
+    };
+    return EnrollmentView;
+}(React.Component));
+exports.EnrollmentView = EnrollmentView;
 
 
 /***/ })

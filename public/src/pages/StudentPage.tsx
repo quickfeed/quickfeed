@@ -5,7 +5,7 @@ import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { IAssignment, ICourse, ICoursesWithAssignments } from "../models";
+import { IAssignment, ICourse, ICoursesWithAssignments, IUser } from "../models";
 
 import { ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
@@ -16,6 +16,7 @@ import { INavInfo, INavInfoEvent } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { ILinkCollection } from "../managers";
+import { EnrollmentView } from "./views/EnrollmentView";
 
 class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -57,34 +58,18 @@ class StudentPage extends ViewPage {
     }
 
     public enrole(navInfo: INavInfo<any>): JSX.Element {
-        const courses = this.courseMan.getCourses();
-        const studentCourses = this.getCourses();
         return <div>
             <h1>Enrollment page</h1>
-            <DynamicTable
-                data={courses}
-                header={["Course tag", "Course Name", "Action"]}
-                selector={(course: ICourse) => this.createEnrollmentRow(studentCourses, course)}>
-            </DynamicTable>
+            <EnrollmentView
+                courses={this.courseMan.getCourses()}
+                studentCourses={this.getCourses()}
+                curUser={this.userMan.getCurrentUser()}
+                onEnrollmentClick={(user: IUser, course: ICourse) => {
+                    this.courseMan.addUserToCourse(user, course);
+                    this.navMan.refresh();
+                }}>
+            </EnrollmentView>
         </div >;
-    }
-
-    public createEnrollmentRow(studentCourses: ICourse[], course: ICourse): Array<string | JSX.Element> {
-        const base: Array<string | JSX.Element> = [course.tag, course.name];
-        const curUser = this.userMan.getCurrentUser();
-        if (!curUser) {
-            return base;
-        }
-        if (!ArrayHelper.find(studentCourses, (a: ICourse) => a.id === course.id)) {
-            base.push(<button
-                onClick={() => { this.courseMan.addUserToCourse(curUser, course); this.navMan.refresh(); }}
-                className="btn btn-primary">
-                Enroll
-                    </button>);
-        } else {
-            base.push("Enrolled");
-        }
-        return base;
     }
 
     public course(navInfo: INavInfo<{ courseid: string }>): JSX.Element {
