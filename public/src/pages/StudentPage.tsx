@@ -105,8 +105,6 @@ class StudentPage extends ViewPage {
 
             const settings = [
                 { name: "Join course", uri: this.pagePath + "/enroll" },
-                { name: "Users", uri: this.pagePath + "/user" },
-                { name: "Hello world", uri: this.pagePath + "/hello" },
             ];
 
             this.navMan.checkLinkCollection(coursesLinks, this);

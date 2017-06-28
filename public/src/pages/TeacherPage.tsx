@@ -69,10 +69,7 @@ class TeacherPage extends ViewPage {
                     }));
                 });
 
-                const settings = [
-                    { name: "Users", uri: this.pagePath + "/user" },
-                    { name: "Hello world", uri: this.pagePath + "/hello" },
-                ];
+                const settings: ILink[] = [];
 
                 this.navMan.checkLinkCollection(labLinks, this);
                 this.navMan.checkLinks(settings, this);

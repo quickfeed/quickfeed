@@ -186,7 +186,7 @@ function main() {
     navMan.registerPage("app/home", new HomePage());
     navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan));
     navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan, courseMan));
-    navMan.registerPage("app/admin", new AdminPage(navMan));
+    navMan.registerPage("app/admin", new AdminPage(navMan, userMan, courseMan));
     navMan.registerPage("app/help", new HelpPage(navMan));
 
     navMan.registerErrorPage(404, new ErrorPage());

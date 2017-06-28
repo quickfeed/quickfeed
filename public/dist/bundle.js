@@ -767,7 +767,7 @@ function main() {
     navMan.registerPage("app/home", new HomePage_1.HomePage());
     navMan.registerPage("app/student", new StudentPage_1.StudentPage(userMan, navMan, courseMan));
     navMan.registerPage("app/teacher", new TeacherPage_1.TeacherPage(userMan, navMan, courseMan));
-    navMan.registerPage("app/admin", new AdminPage_1.AdminPage(navMan));
+    navMan.registerPage("app/admin", new AdminPage_1.AdminPage(navMan, userMan, courseMan));
     navMan.registerPage("app/help", new HelpPage_1.HelpPage(navMan));
     navMan.registerErrorPage(404, new ErrorPage_1.ErrorPage());
     navMan.onNavigate.addEventListener(function (e) { console.log(e); });
@@ -2279,8 +2279,6 @@ var StudentPage = (function (_super) {
             });
             var settings = [
                 { name: "Join course", uri: this.pagePath + "/enroll" },
-                { name: "Users", uri: this.pagePath + "/user" },
-                { name: "Hello world", uri: this.pagePath + "/hello" },
             ];
             this.navMan.checkLinkCollection(coursesLinks, this);
             this.navMan.checkLinks(settings, this);
@@ -2503,10 +2501,7 @@ var TeacherPage = (function (_super) {
                         uri: _this.pagePath + "/course/" + e.id,
                     }));
                 });
-                var settings = [
-                    { name: "Users", uri: this.pagePath + "/user" },
-                    { name: "Hello world", uri: this.pagePath + "/hello" },
-                ];
+                var settings = [];
                 this.navMan.checkLinkCollection(labLinks_1, this);
                 this.navMan.checkLinks(settings, this);
                 return [
@@ -2557,16 +2552,82 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
+var UserView_1 = __webpack_require__(9);
 var AdminPage = (function (_super) {
     __extends(AdminPage, _super);
-    function AdminPage(navMan) {
+    function AdminPage(navMan, userMan, courseMan) {
         var _this = _super.call(this) || this;
         _this.navMan = navMan;
+        _this.userMan = userMan;
+        _this.courseMan = courseMan;
+        _this.navHelper.defaultPage = "users";
+        _this.navHelper.registerFunction("users", _this.users);
+        _this.navHelper.registerFunction("courses", _this.courses);
+        _this.navHelper.registerFunction("labs", _this.labs);
         return _this;
     }
+    AdminPage.prototype.users = function (info) {
+        var allUsers = this.userMan.getAllUser();
+        return React.createElement("div", null,
+            React.createElement("h1", null, "All Users"),
+            React.createElement(UserView_1.UserView, { users: allUsers }));
+    };
+    AdminPage.prototype.courses = function (info) {
+        var allCourses = this.courseMan.getCourses();
+        return React.createElement("div", null,
+            React.createElement("h1", null, "All Courses"),
+            React.createElement(components_1.DynamicTable, { header: ["ID", "Tag", "Name"], data: allCourses, selector: function (e) { return [e.id.toString(), e.name, e.tag]; } }));
+    };
+    AdminPage.prototype.labs = function (info) {
+        var _this = this;
+        var allCourses = this.courseMan.getCourses();
+        var tables = allCourses.map(function (e, i) {
+            var labs = _this.courseMan.getAssignments(e);
+            return React.createElement("div", { key: i },
+                React.createElement("h3", null,
+                    "Labs for ",
+                    e.name,
+                    " (",
+                    e.tag,
+                    ")"),
+                React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Start", "Deadline", "End"], data: labs, selector: function (lab) { return [
+                        lab.id.toString(),
+                        lab.name,
+                        lab.start.toDateString(),
+                        lab.deadline.toDateString(),
+                        lab.end.toDateString(),
+                    ]; } }));
+        });
+        return React.createElement("div", null, tables);
+    };
     AdminPage.prototype.renderContent = function (page) {
-        return React.createElement("div", null, "Not yet implemented");
+        var temp = this.navHelper.navigateTo(page);
+        if (temp) {
+            return temp;
+        }
+        return React.createElement("h1", null, "404 Page not found");
+    };
+    AdminPage.prototype.renderMenu = function (index) {
+        var _this = this;
+        if (index === 0) {
+            var links = [
+                { name: "All Users", uri: this.pagePath + "/users" },
+                { name: "All Courses", uri: this.pagePath + "/courses" },
+                { name: "All Labs", uri: this.pagePath + "/labs" },
+            ];
+            this.navMan.checkLinks(links, this);
+            return [
+                React.createElement("h4", { key: 0 }, "Admin Menu"),
+                React.createElement(components_1.NavMenu, { key: 1, links: links, onClick: function (e) {
+                        if (e.uri) {
+                            _this.navMan.navigateTo(e.uri);
+                        }
+                    } }),
+            ];
+        }
+        return [];
     };
     return AdminPage;
 }(ViewPage_1.ViewPage));
