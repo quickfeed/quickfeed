@@ -1,5 +1,5 @@
 import * as React from "react";
-import {CourseOverview, NavMenu, StudentLab} from "../components";
+import {CoursesOverview, NavMenu, SingleCourseOverview, StudentLab} from "../components";
 
 import {CourseManager} from "../managers/CourseManager";
 import {ILink, NavigationManager} from "../managers/NavigationManager";
@@ -52,13 +52,14 @@ class StudentPage extends ViewPage {
 
     public index(navInfo: INavInfo<any>): JSX.Element {
         const courseOverview: ICoursesWithAssignments[] = this.getCoursesWithAssignments();
-        return (<CourseOverview course_overview={courseOverview} navMan={this.navMan}/>);
+        return (<CoursesOverview course_overview={courseOverview} navMan={this.navMan}/>);
     }
 
     public course(navInfo: INavInfo<{ courseid: string }>): JSX.Element {
         this.selectCourse(navInfo.params.courseid);
-        if (this.selectedCourse) {
-            return <div>This is the CourseView for {this.selectedCourse.name}</div>;
+        const courseAndLabs: ICoursesWithAssignments | null = this.getLabs();
+        if (this.selectedCourse && courseAndLabs) {
+            return(<SingleCourseOverview courseAndLabs={courseAndLabs}/>);
         }
         return <div>404 not found</div>;
     }

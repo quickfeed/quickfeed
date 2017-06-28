@@ -10,5 +10,6 @@ export * from "./components/progressbar/ProgressBar";
 export * from "./components/lab/LabResult";
 export * from "./components/lab/LastBuild";
 export * from "./components/lab/LastBuildInfo";
-export * from "./components/student/CourseOverview";
+export * from "./components/student/CoursesOverview";
 export * from "./components/student/CoursePanel";
+export * from "./components/student/SingleCourseOverview";

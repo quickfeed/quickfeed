@@ -80,7 +80,7 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(__webpack_require__(11));
-__export(__webpack_require__(3));
+__export(__webpack_require__(4));
 __export(__webpack_require__(12));
 __export(__webpack_require__(13));
 __export(__webpack_require__(14));
@@ -91,145 +91,13 @@ __export(__webpack_require__(19));
 __export(__webpack_require__(20));
 __export(__webpack_require__(21));
 __export(__webpack_require__(22));
-__export(__webpack_require__(35));
-__export(__webpack_require__(37));
+__export(__webpack_require__(38));
+__export(__webpack_require__(24));
+__export(__webpack_require__(39));
 
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var NavigationHelper_1 = __webpack_require__(6);
-function isViewPage(item) {
-    if (item instanceof ViewPage) {
-        return true;
-    }
-    return false;
-}
-exports.isViewPage = isViewPage;
-var ViewPage = (function () {
-    function ViewPage() {
-        this.template = null;
-        this.navHelper = new NavigationHelper_1.NavigationHelper(this);
-    }
-    ViewPage.prototype.setPath = function (path) {
-        this.pagePath = path;
-    };
-    ViewPage.prototype.renderMenu = function (menu) {
-        return [];
-    };
-    return ViewPage;
-}());
-exports.ViewPage = ViewPage;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(6);
-var NavHeaderBar = (function (_super) {
-    __extends(NavHeaderBar, _super);
-    function NavHeaderBar() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    NavHeaderBar.prototype.componentDidMount = function () {
-        var temp = this.refs.button;
-        temp.setAttribute("data-toggle", "collapse");
-        temp.setAttribute("data-target", "#" + this.props.id);
-        temp.setAttribute("aria-expanded", "false");
-    };
-    NavHeaderBar.prototype.render = function () {
-        var _this = this;
-        return React.createElement("div", { className: "navbar-header" },
-            React.createElement("button", { ref: "button", type: "button", className: "navbar-toggle collapsed" },
-                React.createElement("span", { className: "sr-only" }, "Toggle navigation"),
-                React.createElement("span", { className: "icon-bar" }),
-                React.createElement("span", { className: "icon-bar" }),
-                React.createElement("span", { className: "icon-bar" })),
-            React.createElement("a", { className: "navbar-brand", onClick: function (e) {
-                    NavigationHelper_1.NavigationHelper.handleClick(e, function () {
-                        _this.props.brandClick();
-                    });
-                }, href: ";/" }, this.props.brandName));
-    };
-    return NavHeaderBar;
-}(React.Component));
-exports.NavHeaderBar = NavHeaderBar;
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var ArrayHelper = (function () {
-    function ArrayHelper() {
-    }
-    ArrayHelper.find = function (array, predicate) {
-        for (var i = 0; i < array.length; i++) {
-            var cur = array[i];
-            if (predicate.call(array, cur, i, array)) {
-                return cur;
-            }
-        }
-        return null;
-    };
-    return ArrayHelper;
-}());
-exports.ArrayHelper = ArrayHelper;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function newEvent(info) {
-    var callbacks = [];
-    var handler = function EventHandler(event) {
-        callbacks.map((function (v) { return v(event); }));
-    };
-    handler.info = info;
-    handler.addEventListener = function (callback) {
-        callbacks.push(callback);
-    };
-    handler.removeEventListener = function (callback) {
-        var index = callbacks.indexOf(callback);
-        if (index < 0) {
-            console.log(callback);
-            throw Error("Event does noe exist");
-        }
-        callbacks.splice(index, 1);
-    };
-    return handler;
-}
-exports.newEvent = newEvent;
-
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -377,6 +245,139 @@ exports.NavigationHelper = NavigationHelper;
 
 
 /***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var NavigationHelper_1 = __webpack_require__(2);
+function isViewPage(item) {
+    if (item instanceof ViewPage) {
+        return true;
+    }
+    return false;
+}
+exports.isViewPage = isViewPage;
+var ViewPage = (function () {
+    function ViewPage() {
+        this.template = null;
+        this.navHelper = new NavigationHelper_1.NavigationHelper(this);
+    }
+    ViewPage.prototype.setPath = function (path) {
+        this.pagePath = path;
+    };
+    ViewPage.prototype.renderMenu = function (menu) {
+        return [];
+    };
+    return ViewPage;
+}());
+exports.ViewPage = ViewPage;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(2);
+var NavHeaderBar = (function (_super) {
+    __extends(NavHeaderBar, _super);
+    function NavHeaderBar() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    NavHeaderBar.prototype.componentDidMount = function () {
+        var temp = this.refs.button;
+        temp.setAttribute("data-toggle", "collapse");
+        temp.setAttribute("data-target", "#" + this.props.id);
+        temp.setAttribute("aria-expanded", "false");
+    };
+    NavHeaderBar.prototype.render = function () {
+        var _this = this;
+        return React.createElement("div", { className: "navbar-header" },
+            React.createElement("button", { ref: "button", type: "button", className: "navbar-toggle collapsed" },
+                React.createElement("span", { className: "sr-only" }, "Toggle navigation"),
+                React.createElement("span", { className: "icon-bar" }),
+                React.createElement("span", { className: "icon-bar" }),
+                React.createElement("span", { className: "icon-bar" })),
+            React.createElement("a", { className: "navbar-brand", onClick: function (e) {
+                    NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+                        _this.props.brandClick();
+                    });
+                }, href: ";/" }, this.props.brandName));
+    };
+    return NavHeaderBar;
+}(React.Component));
+exports.NavHeaderBar = NavHeaderBar;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function newEvent(info) {
+    var callbacks = [];
+    var handler = function EventHandler(event) {
+        callbacks.map((function (v) { return v(event); }));
+    };
+    handler.info = info;
+    handler.addEventListener = function (callback) {
+        callbacks.push(callback);
+    };
+    handler.removeEventListener = function (callback) {
+        var index = callbacks.indexOf(callback);
+        if (index < 0) {
+            console.log(callback);
+            throw Error("Event does noe exist");
+        }
+        callbacks.splice(index, 1);
+    };
+    return handler;
+}
+exports.newEvent = newEvent;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var ArrayHelper = (function () {
+    function ArrayHelper() {
+    }
+    ArrayHelper.find = function (array, predicate) {
+        for (var i = 0; i < array.length; i++) {
+            var cur = array[i];
+            if (predicate.call(array, cur, i, array)) {
+                return cur;
+            }
+        }
+        return null;
+    };
+    return ArrayHelper;
+}());
+exports.ArrayHelper = ArrayHelper;
+
+
+/***/ }),
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -465,12 +466,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var ReactDOM = __webpack_require__(10);
 var components_1 = __webpack_require__(1);
-var managers_1 = __webpack_require__(23);
-var ErrorPage_1 = __webpack_require__(29);
-var HelpPage_1 = __webpack_require__(30);
-var HomePage_1 = __webpack_require__(32);
-var StudentPage_1 = __webpack_require__(33);
-var TeacherPage_1 = __webpack_require__(34);
+var managers_1 = __webpack_require__(25);
+var ErrorPage_1 = __webpack_require__(31);
+var HelpPage_1 = __webpack_require__(32);
+var HomePage_1 = __webpack_require__(34);
+var StudentPage_1 = __webpack_require__(35);
+var TeacherPage_1 = __webpack_require__(37);
 var topLinks = [
     { name: "Teacher", uri: "app/teacher/", active: false },
     { name: "Student", uri: "app/student/", active: false },
@@ -599,8 +600,8 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavHeaderBar_1 = __webpack_require__(3);
-var NavigationHelper_1 = __webpack_require__(6);
+var NavHeaderBar_1 = __webpack_require__(4);
+var NavigationHelper_1 = __webpack_require__(2);
 var NavBar = (function (_super) {
     __extends(NavBar, _super);
     function NavBar() {
@@ -678,7 +679,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(6);
+var NavigationHelper_1 = __webpack_require__(2);
 var NavMenu = (function (_super) {
     __extends(NavMenu, _super);
     function NavMenu() {
@@ -949,7 +950,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(6);
+var NavigationHelper_1 = __webpack_require__(2);
 var NavDropdown = (function (_super) {
     __extends(NavDropdown, _super);
     function NavDropdown() {
@@ -1180,7 +1181,60 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 23 */
+/* 23 */,
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var CoursePanel = (function (_super) {
+    __extends(CoursePanel, _super);
+    function CoursePanel() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    CoursePanel.prototype.render = function () {
+        var _this = this;
+        var pathPrefix = "app/student/course/" + this.props.course.id + "/lab/";
+        var rowLinks = {};
+        for (var _i = 0, _a = this.props.labs; _i < _a.length; _i++) {
+            var lab = _a[_i];
+            rowLinks[lab.id] = pathPrefix + lab.id;
+        }
+        return (React.createElement("div", { className: "col-lg-3 col-sm-6" },
+            React.createElement("div", { className: "panel panel-primary" },
+                React.createElement("div", { className: "panel-heading clickable", onClick: function () { return _this.handleCourseClick(); } }, this.props.course.name),
+                React.createElement("div", { className: "panel-body" },
+                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: function (item) { return [item.name, "50%", "100%"]; }, onRowClick: function (row) { return _this.handleRowClick(row); }, row_links: rowLinks, link_key_identifier: "id" })))));
+    };
+    CoursePanel.prototype.handleRowClick = function (path) {
+        if (path) {
+            this.props.navMan.navigateTo(path);
+        }
+    };
+    CoursePanel.prototype.handleCourseClick = function () {
+        var uri = "app/student/course/" + this.props.course.id;
+        this.props.navMan.navigateTo(uri);
+    };
+    return CoursePanel;
+}(React.Component));
+exports.CoursePanel = CoursePanel;
+
+
+/***/ }),
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1189,21 +1243,21 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(24));
 __export(__webpack_require__(26));
-__export(__webpack_require__(27));
 __export(__webpack_require__(28));
+__export(__webpack_require__(29));
+__export(__webpack_require__(30));
 
 
 /***/ }),
-/* 24 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var helper_1 = __webpack_require__(4);
-var models_1 = __webpack_require__(25);
+var helper_1 = __webpack_require__(6);
+var models_1 = __webpack_require__(27);
 var CourseManager = (function () {
     function CourseManager(courseProvider) {
         this.courseProvider = courseProvider;
@@ -1260,7 +1314,7 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1276,15 +1330,15 @@ exports.isCourse = isCourse;
 
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var event_1 = __webpack_require__(5);
-var NavigationHelper_1 = __webpack_require__(6);
-var ViewPage_1 = __webpack_require__(2);
+var NavigationHelper_1 = __webpack_require__(2);
+var ViewPage_1 = __webpack_require__(3);
 function isILinkCollection(item) {
     if (item.item) {
         return true;
@@ -1429,7 +1483,7 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 27 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1588,7 +1642,7 @@ exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1620,7 +1674,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1637,7 +1691,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(2);
+var ViewPage_1 = __webpack_require__(3);
 var ErrorPage = (function (_super) {
     __extends(ErrorPage, _super);
     function ErrorPage() {
@@ -1667,7 +1721,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1684,8 +1738,8 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(2);
-var HelpView_1 = __webpack_require__(31);
+var ViewPage_1 = __webpack_require__(3);
+var HelpView_1 = __webpack_require__(33);
 var HelpPage = (function (_super) {
     __extends(HelpPage, _super);
     function HelpPage(navMan) {
@@ -1712,7 +1766,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1783,7 +1837,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1800,7 +1854,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(2);
+var ViewPage_1 = __webpack_require__(3);
 var HomePage = (function (_super) {
     __extends(HomePage, _super);
     function HomePage() {
@@ -1815,7 +1869,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 33 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1833,11 +1887,11 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
-var ViewPage_1 = __webpack_require__(2);
+var ViewPage_1 = __webpack_require__(3);
 var HelloView_1 = __webpack_require__(7);
 var UserView_1 = __webpack_require__(8);
-var helper_1 = __webpack_require__(4);
-var CollapsableNavMenu_1 = __webpack_require__(38);
+var helper_1 = __webpack_require__(6);
+var CollapsableNavMenu_1 = __webpack_require__(36);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -1861,14 +1915,13 @@ var StudentPage = (function (_super) {
     }
     StudentPage.prototype.index = function (navInfo) {
         var courseOverview = this.getCoursesWithAssignments();
-        return (React.createElement(components_1.CourseOverview, { course_overview: courseOverview, navMan: this.navMan }));
+        return (React.createElement(components_1.CoursesOverview, { course_overview: courseOverview, navMan: this.navMan }));
     };
     StudentPage.prototype.course = function (navInfo) {
         this.selectCourse(navInfo.params.courseid);
-        if (this.selectedCourse) {
-            return React.createElement("div", null,
-                "This is the CourseView for ",
-                this.selectedCourse.name);
+        var courseAndLabs = this.getLabs();
+        if (this.selectedCourse && courseAndLabs) {
+            return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: courseAndLabs }));
         }
         return React.createElement("div", null, "404 not found");
     };
@@ -1991,7 +2044,7 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 34 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2008,190 +2061,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var ViewPage_1 = __webpack_require__(2);
-var HelloView_1 = __webpack_require__(7);
-var UserView_1 = __webpack_require__(8);
-var TeacherPage = (function (_super) {
-    __extends(TeacherPage, _super);
-    function TeacherPage(users, navMan) {
-        var _this = _super.call(this) || this;
-        _this.pages = {};
-        _this.navMan = navMan;
-        _this.navHelper.defaultPage = "opsys/lab1";
-        _this.navHelper.registerFunction("opsys/{lab}", _this.course);
-        _this.navHelper.registerFunction("user", function (navInfo) {
-            return React.createElement(UserView_1.UserView, { users: users.getAllUser() });
-        });
-        _this.navHelper.registerFunction("user", function (navInfo) {
-            return React.createElement(HelloView_1.HelloView, null);
-        });
-        return _this;
-    }
-    TeacherPage.prototype.course = function (info) {
-        return React.createElement("h1", null,
-            "Teacher ",
-            info.params.lab);
-    };
-    TeacherPage.prototype.renderMenu = function (menu) {
-        var _this = this;
-        if (menu === 0) {
-            var labLinks = [
-                { name: "Teacher Lab 1", uri: this.pagePath + "/opsys/lab1" },
-                { name: "Teacher Lab 2", uri: this.pagePath + "/opsys/lab2" },
-                { name: "Teacher Lab 3", uri: this.pagePath + "/opsys/lab3" },
-                { name: "Teacher Lab 4", uri: this.pagePath + "/opsys/lab4" },
-            ];
-            var settings = [
-                { name: "Users", uri: this.pagePath + "/user" },
-                { name: "Hello world", uri: this.pagePath + "/hello" },
-            ];
-            this.navMan.checkLinks(labLinks, this);
-            this.navMan.checkLinks(settings, this);
-            return [
-                React.createElement("h4", { key: 0 }, "Labs"),
-                React.createElement(components_1.NavMenu, { key: 1, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),
-                React.createElement("h4", { key: 4 }, "Settings"),
-                React.createElement(components_1.NavMenu, { key: 3, links: settings, onClick: function (link) { return _this.handleClick(link); } }),
-            ];
-        }
-        return [];
-    };
-    TeacherPage.prototype.renderContent = function (page) {
-        var temp = this.navHelper.navigateTo(page);
-        if (temp) {
-            return temp;
-        }
-        return React.createElement("h1", null, "404 page not found");
-    };
-    TeacherPage.prototype.handleClick = function (link) {
-        if (link.uri) {
-            this.navMan.navigateTo(link.uri);
-        }
-    };
-    return TeacherPage;
-}(ViewPage_1.ViewPage));
-exports.TeacherPage = TeacherPage;
-
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var CourseOverview = (function (_super) {
-    __extends(CourseOverview, _super);
-    function CourseOverview() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    CourseOverview.prototype.render = function () {
-        var _this = this;
-        var courses = this.props.course_overview.map(function (val, key) {
-            return React.createElement(components_1.CoursePanel, { course: val.course, labs: val.labs, navMan: _this.props.navMan });
-        });
-        var index = 3;
-        var l = courses.length;
-        for (index; index < l; index += 3) {
-            console.log("index", index);
-            courses.splice(index, 0, React.createElement("div", { className: "visible-lg-block visible-md-block clearfix" }));
-            l += 1;
-            index += 1;
-        }
-        return (React.createElement("div", null,
-            React.createElement("h1", null, "Your Courses"),
-            React.createElement(components_1.Row, null, courses)));
-    };
-    return CourseOverview;
-}(React.Component));
-exports.CourseOverview = CourseOverview;
-
-
-/***/ }),
-/* 36 */,
-/* 37 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var CoursePanel = (function (_super) {
-    __extends(CoursePanel, _super);
-    function CoursePanel() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    CoursePanel.prototype.render = function () {
-        var _this = this;
-        var pathPrefix = "app/student/course/" + this.props.course.id + "/lab/";
-        var rowLinks = {};
-        for (var _i = 0, _a = this.props.labs; _i < _a.length; _i++) {
-            var lab = _a[_i];
-            rowLinks[lab.id] = pathPrefix + lab.id;
-        }
-        return (React.createElement("div", { className: "col-lg-3 col-sm-6" },
-            React.createElement("div", { className: "panel panel-primary" },
-                React.createElement("div", { className: "panel-heading clickable", onClick: function () { return _this.handleCourseClick(); } }, this.props.course.name),
-                React.createElement("div", { className: "panel-body" },
-                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: function (item) { return [item.name, "50%", "100%"]; }, onRowClick: function (row) { return _this.handleRowClick(row); }, row_links: rowLinks, link_key_identifier: "id" })))));
-    };
-    CoursePanel.prototype.handleRowClick = function (path) {
-        if (path) {
-            this.props.navMan.navigateTo(path);
-        }
-    };
-    CoursePanel.prototype.handleCourseClick = function () {
-        var uri = "app/student/course/" + this.props.course.id;
-        this.props.navMan.navigateTo(uri);
-    };
-    return CoursePanel;
-}(React.Component));
-exports.CoursePanel = CoursePanel;
-
-
-/***/ }),
-/* 38 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(6);
+var NavigationHelper_1 = __webpack_require__(2);
 var CollapsableNavMenu = (function (_super) {
     __extends(CollapsableNavMenu, _super);
     function CollapsableNavMenu() {
@@ -2304,6 +2174,176 @@ var CollapsableNavMenu = (function (_super) {
     return CollapsableNavMenu;
 }(React.Component));
 exports.CollapsableNavMenu = CollapsableNavMenu;
+
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var ViewPage_1 = __webpack_require__(3);
+var HelloView_1 = __webpack_require__(7);
+var UserView_1 = __webpack_require__(8);
+var TeacherPage = (function (_super) {
+    __extends(TeacherPage, _super);
+    function TeacherPage(users, navMan) {
+        var _this = _super.call(this) || this;
+        _this.pages = {};
+        _this.navMan = navMan;
+        _this.navHelper.defaultPage = "opsys/lab1";
+        _this.navHelper.registerFunction("opsys/{lab}", _this.course);
+        _this.navHelper.registerFunction("user", function (navInfo) {
+            return React.createElement(UserView_1.UserView, { users: users.getAllUser() });
+        });
+        _this.navHelper.registerFunction("user", function (navInfo) {
+            return React.createElement(HelloView_1.HelloView, null);
+        });
+        return _this;
+    }
+    TeacherPage.prototype.course = function (info) {
+        return React.createElement("h1", null,
+            "Teacher ",
+            info.params.lab);
+    };
+    TeacherPage.prototype.renderMenu = function (menu) {
+        var _this = this;
+        if (menu === 0) {
+            var labLinks = [
+                { name: "Teacher Lab 1", uri: this.pagePath + "/opsys/lab1" },
+                { name: "Teacher Lab 2", uri: this.pagePath + "/opsys/lab2" },
+                { name: "Teacher Lab 3", uri: this.pagePath + "/opsys/lab3" },
+                { name: "Teacher Lab 4", uri: this.pagePath + "/opsys/lab4" },
+            ];
+            var settings = [
+                { name: "Users", uri: this.pagePath + "/user" },
+                { name: "Hello world", uri: this.pagePath + "/hello" },
+            ];
+            this.navMan.checkLinks(labLinks, this);
+            this.navMan.checkLinks(settings, this);
+            return [
+                React.createElement("h4", { key: 0 }, "Labs"),
+                React.createElement(components_1.NavMenu, { key: 1, links: labLinks, onClick: function (link) { return _this.handleClick(link); } }),
+                React.createElement("h4", { key: 4 }, "Settings"),
+                React.createElement(components_1.NavMenu, { key: 3, links: settings, onClick: function (link) { return _this.handleClick(link); } }),
+            ];
+        }
+        return [];
+    };
+    TeacherPage.prototype.renderContent = function (page) {
+        var temp = this.navHelper.navigateTo(page);
+        if (temp) {
+            return temp;
+        }
+        return React.createElement("h1", null, "404 page not found");
+    };
+    TeacherPage.prototype.handleClick = function (link) {
+        if (link.uri) {
+            this.navMan.navigateTo(link.uri);
+        }
+    };
+    return TeacherPage;
+}(ViewPage_1.ViewPage));
+exports.TeacherPage = TeacherPage;
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var CoursesOverview = (function (_super) {
+    __extends(CoursesOverview, _super);
+    function CoursesOverview() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    CoursesOverview.prototype.render = function () {
+        var _this = this;
+        var courses = this.props.course_overview.map(function (val, key) {
+            return React.createElement(components_1.CoursePanel, { course: val.course, labs: val.labs, navMan: _this.props.navMan });
+        });
+        var index = 3;
+        var l = courses.length;
+        for (index; index < l; index += 3) {
+            console.log("index", index);
+            courses.splice(index, 0, React.createElement("div", { className: "visible-lg-block visible-md-block clearfix" }));
+            l += 1;
+            index += 1;
+        }
+        return (React.createElement("div", null,
+            React.createElement("h1", null, "Your Courses"),
+            React.createElement(components_1.Row, null, courses)));
+    };
+    return CoursesOverview;
+}(React.Component));
+exports.CoursesOverview = CoursesOverview;
+
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var ProgressBar_1 = __webpack_require__(19);
+var SingleCourseOverview = (function (_super) {
+    __extends(SingleCourseOverview, _super);
+    function SingleCourseOverview() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    SingleCourseOverview.prototype.render = function () {
+        var labs = this.props.courseAndLabs.labs.map(function (v, k) {
+            return (React.createElement("li", { className: "list-group-item" },
+                React.createElement("strong", null, v.name),
+                React.createElement(ProgressBar_1.ProgressBar, { progress: Math.floor((Math.random() * 100) + 1) })));
+        });
+        return (React.createElement("div", null,
+            React.createElement("h1", null, this.props.courseAndLabs.course.name),
+            React.createElement("div", null,
+                React.createElement("ul", { className: "list-group" }, labs))));
+    };
+    return SingleCourseOverview;
+}(React.Component));
+exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ })

@@ -11,7 +11,7 @@ interface ICourseOverviewProps {
     navMan: NavigationManager;
 }
 
-class CourseOverview extends React.Component<ICourseOverviewProps, any> {
+class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
 
     public render() {
         const courses = this.props.course_overview.map((val, key) => {
@@ -36,4 +36,4 @@ class CourseOverview extends React.Component<ICourseOverviewProps, any> {
     }
 }
 
-export {CourseOverview};
+export {CoursesOverview};
