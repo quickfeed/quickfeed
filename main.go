@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -71,7 +70,10 @@ func main() {
 	db, err := database.NewStructDB(tempFile("agdb.db"), false, e.Logger)
 
 	if err != nil {
-		panic(fmt.Sprintf("could not connect to db: %s", err))
+		log.Fatalj(log.JSON{
+			"message": "could not connect to db",
+			"err":     err,
+		})
 	}
 
 	oauth2 := e.Group("/auth/:provider", withProvider)
@@ -95,18 +97,27 @@ func main() {
 	e.Static("/", *public)
 
 	go func() {
-		if err := e.Start(*httpAddr); err != nil {
-			e.Logger.Info("shutting down the server")
+		if err := e.Start(*httpAddr); err == http.ErrServerClosed {
+			e.Logger.Warn("shutting down the server")
+			return
 		}
+		e.Logger.Fatalj(log.JSON{
+			"message": "could not start server",
+			"err":     err,
+		})
 	}()
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
+		e.Logger.Fatalj(log.JSON{
+			"message": "failure during server shutdown",
+			"err":     err,
+		})
 	}
 }
 
