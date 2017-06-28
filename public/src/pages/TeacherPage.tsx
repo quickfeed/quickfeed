@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavMenu } from "../components";
+import { DynamicTable, NavMenu } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { ViewPage } from "./ViewPage";
@@ -26,6 +26,7 @@ class TeacherPage extends ViewPage {
 
         this.navHelper.defaultPage = "course/0";
         this.navHelper.registerFunction("course/{course}", this.course);
+        this.navHelper.registerFunction("course/{course}/users", this.courseUsers);
         this.navHelper.registerFunction("course/{course}/{page}", this.course);
         this.navHelper.registerFunction("user", (navInfo) => {
             return <UserView users={userMan.getAllUser()}></UserView>;
@@ -40,6 +41,22 @@ class TeacherPage extends ViewPage {
             return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
         }
         return <h1>Teacher Course {info.params.course}</h1>;
+    }
+
+    public courseUsers(info: INavInfo<{ course: string }>): JSX.Element {
+        const course = parseInt(info.params.course, 10);
+        if (!isNaN(course)) {
+            const tempCourse = this.courseMan.getCourse(course);
+            if (tempCourse) {
+                const userIds = this.courseMan.getUserIdsForCourse(tempCourse);
+                const users = this.userMan.getUsers(userIds);
+                return <div>
+                    <h1>Users for {tempCourse.name} ({tempCourse.tag})</h1>
+                    <UserView users={users}></UserView>
+                </div>;
+            }
+        }
+        return <div>404 Page not found</div>;
     }
 
     public generateCollectionFor(link: ILink): ILinkCollection {
@@ -85,14 +102,15 @@ class TeacherPage extends ViewPage {
                 ];
             }
         } else {
-            return [<h4>
-                you are not logged in;
-            </h4>];
+            return [];
         }
         return [];
     }
 
     public renderContent(page: string): JSX.Element {
+        if (!this.userMan.getCurrentUser()) {
+            return <h1>You are not logged in</h1>;
+        }
         const temp = this.navHelper.navigateTo(page);
         if (temp) {
             return temp;

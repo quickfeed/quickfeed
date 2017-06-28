@@ -1,6 +1,8 @@
 import { IEventData, newEvent } from "../event";
 import { IUser } from "../models";
 
+import { ArrayHelper } from "../helper";
+
 interface IUserProvider {
     tryLogin(username: string, password: string): IUser | null;
     logout(user: IUser): void;
@@ -53,6 +55,16 @@ class UserManager {
 
     public getAllUser(): IUser[] {
         return this.userProvider.getAllUser();
+    }
+
+    public getUsers(ids: number[]): IUser[] {
+        const returnUsers: IUser[] = [];
+        this.getAllUser().forEach((user) => {
+            if (ArrayHelper.find(ids, (id) => id === user.id)) {
+                returnUsers.push(user);
+            }
+        });
+        return returnUsers;
     }
 
     public getUser(id: number): IUser {

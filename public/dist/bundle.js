@@ -80,14 +80,14 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(__webpack_require__(13));
-__export(__webpack_require__(6));
+__export(__webpack_require__(7));
 __export(__webpack_require__(14));
 __export(__webpack_require__(15));
 __export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
 __export(__webpack_require__(20));
-__export(__webpack_require__(7));
+__export(__webpack_require__(8));
 __export(__webpack_require__(21));
 __export(__webpack_require__(22));
 __export(__webpack_require__(23));
@@ -103,7 +103,7 @@ __export(__webpack_require__(26));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(4);
+var event_1 = __webpack_require__(5);
 var NavigationHelper = (function () {
     function NavigationHelper(thisObject) {
         this.onPreNavigation = event_1.newEvent("NavigationHelper.onPreNavigation");
@@ -282,6 +282,30 @@ exports.ViewPage = ViewPage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var ArrayHelper = (function () {
+    function ArrayHelper() {
+    }
+    ArrayHelper.find = function (array, predicate) {
+        for (var i = 0; i < array.length; i++) {
+            var cur = array[i];
+            if (predicate.call(array, cur, i, array)) {
+                return cur;
+            }
+        }
+        return null;
+    };
+    return ArrayHelper;
+}());
+exports.ArrayHelper = ArrayHelper;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 function newEvent(info) {
     var callbacks = [];
     var handler = function EventHandler(event) {
@@ -305,31 +329,45 @@ exports.newEvent = newEvent;
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-Object.defineProperty(exports, "__esModule", { value: true });
-var ArrayHelper = (function () {
-    function ArrayHelper() {
-    }
-    ArrayHelper.find = function (array, predicate) {
-        for (var i = 0; i < array.length; i++) {
-            var cur = array[i];
-            if (predicate.call(array, cur, i, array)) {
-                return cur;
-            }
-        }
-        return null;
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
-    return ArrayHelper;
-}());
-exports.ArrayHelper = ArrayHelper;
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var UserView = (function (_super) {
+    __extends(UserView, _super);
+    function UserView() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    UserView.prototype.render = function () {
+        return React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.props.users, selector: function (item) { return [
+                item.id.toString(),
+                item.firstName,
+                item.lastName,
+                item.email,
+                item.personId.toString(),
+            ]; } });
+    };
+    return UserView;
+}(React.Component));
+exports.UserView = UserView;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -378,7 +416,7 @@ exports.NavHeaderBar = NavHeaderBar;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -415,7 +453,7 @@ exports.ProgressBar = ProgressBar;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -443,44 +481,6 @@ var HelloView = (function (_super) {
     return HelloView;
 }(React.Component));
 exports.HelloView = HelloView;
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var UserView = (function (_super) {
-    __extends(UserView, _super);
-    function UserView() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    UserView.prototype.render = function () {
-        return React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.props.users, selector: function (item) { return [
-                item.id.toString(),
-                item.firstName,
-                item.lastName,
-                item.email,
-                item.personId.toString(),
-            ]; } });
-    };
-    return UserView;
-}(React.Component));
-exports.UserView = UserView;
 
 
 /***/ }),
@@ -800,7 +800,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavHeaderBar_1 = __webpack_require__(6);
+var NavHeaderBar_1 = __webpack_require__(7);
 var NavigationHelper_1 = __webpack_require__(2);
 var NavBar = (function (_super) {
     __extends(NavBar, _super);
@@ -1442,7 +1442,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ProgressBar_1 = __webpack_require__(7);
+var ProgressBar_1 = __webpack_require__(8);
 var SingleCourseOverview = (function (_super) {
     __extends(SingleCourseOverview, _super);
     function SingleCourseOverview() {
@@ -1487,7 +1487,7 @@ __export(__webpack_require__(32));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var helper_1 = __webpack_require__(5);
+var helper_1 = __webpack_require__(4);
 var models_1 = __webpack_require__(29);
 var CourseManager = (function () {
     function CourseManager(courseProvider) {
@@ -1525,6 +1525,16 @@ var CourseManager = (function () {
             }
         }
         return courses;
+    };
+    CourseManager.prototype.getUserIdsForCourse = function (course) {
+        var users = [];
+        for (var _i = 0, _a = this.courseProvider.getCoursesStudent(); _i < _a.length; _i++) {
+            var c = _a[_i];
+            if (course.id === c.courseId) {
+                users.push(c.personId);
+            }
+        }
+        return users;
     };
     CourseManager.prototype.getAssignment = function (course, assignmentId) {
         var temp = this.getAssignments(course);
@@ -1570,7 +1580,7 @@ exports.isCourse = isCourse;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(4);
+var event_1 = __webpack_require__(5);
 var NavigationHelper_1 = __webpack_require__(2);
 var ViewPage_1 = __webpack_require__(3);
 function isILinkCollection(item) {
@@ -1951,7 +1961,8 @@ exports.TempDataProvider = TempDataProvider;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(4);
+var event_1 = __webpack_require__(5);
+var helper_1 = __webpack_require__(4);
 var UserManager = (function () {
     function UserManager(userProvider) {
         this.onLogin = event_1.newEvent("UserManager.onLogin");
@@ -1984,6 +1995,15 @@ var UserManager = (function () {
     };
     UserManager.prototype.getAllUser = function () {
         return this.userProvider.getAllUser();
+    };
+    UserManager.prototype.getUsers = function (ids) {
+        var returnUsers = [];
+        this.getAllUser().forEach(function (user) {
+            if (helper_1.ArrayHelper.find(ids, function (id) { return id === user.id; })) {
+                returnUsers.push(user);
+            }
+        });
+        return returnUsers;
     };
     UserManager.prototype.getUser = function (id) {
         throw new Error("Not implemented error");
@@ -2208,9 +2228,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(8);
-var UserView_1 = __webpack_require__(9);
-var helper_1 = __webpack_require__(5);
+var HelloView_1 = __webpack_require__(9);
+var UserView_1 = __webpack_require__(6);
+var helper_1 = __webpack_require__(4);
 var CollapsableNavMenu_1 = __webpack_require__(10);
 var EnrollmentView_1 = __webpack_require__(38);
 var StudentPage = (function (_super) {
@@ -2392,7 +2412,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
-var helper_1 = __webpack_require__(5);
+var helper_1 = __webpack_require__(4);
 var EnrollmentView = (function (_super) {
     __extends(EnrollmentView, _super);
     function EnrollmentView() {
@@ -2442,8 +2462,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(8);
-var UserView_1 = __webpack_require__(9);
+var HelloView_1 = __webpack_require__(9);
+var UserView_1 = __webpack_require__(6);
 var CollapsableNavMenu_1 = __webpack_require__(10);
 var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
@@ -2455,6 +2475,7 @@ var TeacherPage = (function (_super) {
         _this.courseMan = courseMan;
         _this.navHelper.defaultPage = "course/0";
         _this.navHelper.registerFunction("course/{course}", _this.course);
+        _this.navHelper.registerFunction("course/{course}/users", _this.courseUsers);
         _this.navHelper.registerFunction("course/{course}/{page}", _this.course);
         _this.navHelper.registerFunction("user", function (navInfo) {
             return React.createElement(UserView_1.UserView, { users: userMan.getAllUser() });
@@ -2475,6 +2496,25 @@ var TeacherPage = (function (_super) {
         return React.createElement("h1", null,
             "Teacher Course ",
             info.params.course);
+    };
+    TeacherPage.prototype.courseUsers = function (info) {
+        var course = parseInt(info.params.course, 10);
+        if (!isNaN(course)) {
+            var tempCourse = this.courseMan.getCourse(course);
+            if (tempCourse) {
+                var userIds = this.courseMan.getUserIdsForCourse(tempCourse);
+                var users = this.userMan.getUsers(userIds);
+                return React.createElement("div", null,
+                    React.createElement("h1", null,
+                        "Users for ",
+                        tempCourse.name,
+                        " (",
+                        tempCourse.tag,
+                        ")"),
+                    React.createElement(UserView_1.UserView, { users: users }));
+            }
+        }
+        return React.createElement("div", null, "404 Page not found");
     };
     TeacherPage.prototype.generateCollectionFor = function (link) {
         return {
@@ -2513,11 +2553,14 @@ var TeacherPage = (function (_super) {
             }
         }
         else {
-            return [React.createElement("h4", null, "you are not logged in;")];
+            return [];
         }
         return [];
     };
     TeacherPage.prototype.renderContent = function (page) {
+        if (!this.userMan.getCurrentUser()) {
+            return React.createElement("h1", null, "You are not logged in");
+        }
         var temp = this.navHelper.navigateTo(page);
         if (temp) {
             return temp;
@@ -2554,7 +2597,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var UserView_1 = __webpack_require__(9);
+var UserView_1 = __webpack_require__(6);
 var AdminPage = (function (_super) {
     __extends(AdminPage, _super);
     function AdminPage(navMan, userMan, courseMan) {
