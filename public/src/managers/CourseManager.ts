@@ -6,12 +6,17 @@ interface ICourseProvider {
     getAssignments(courseId: number): IAssignment[];
     getCoursesStudent(): ICourseStudent[];
     getCourseByTag(tag: string): ICourse | null;
+    addUserToCourse(user: IUser, course: ICourse): void;
 }
 
 class CourseManager {
     private courseProvider: ICourseProvider;
     constructor(courseProvider: ICourseProvider) {
         this.courseProvider = courseProvider;
+    }
+
+    public addUserToCourse(user: IUser, course: ICourse): void {
+        this.courseProvider.addUserToCourse(user, course);
     }
 
     public getCourse(id: number): ICourse | null {

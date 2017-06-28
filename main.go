@@ -11,7 +11,7 @@ import (
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web/auth"
-	"github.com/gorilla/securecookie"
+	githubHandlers "github.com/autograde/aguis/web/github"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
@@ -20,6 +20,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/bitbucket"
+	"github.com/markbates/goth/providers/faux"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
 )
@@ -44,20 +45,20 @@ func main() {
 		})
 	}
 
-	store := sessions.NewCookieStore(
-		securecookie.GenerateRandomKey(64),
-		securecookie.GenerateRandomKey(32),
-	)
+	store := sessions.NewCookieStore([]byte("secret"))
 	store.Options.HttpOnly = true
 	store.Options.Secure = true
 	gothic.Store = store
 
 	// TODO: Only register if env set.
 	goth.UseProviders(
-		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github")),
+		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github"), "user"),
 		bitbucket.New(os.Getenv("BITBUCKET_KEY"), os.Getenv("BITBUCKET_SECRET"), getCallbackURL(*baseURL, "bitbucket")),
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
 	)
+	if _, err := goth.GetProvider((&faux.Provider{}).Name()); err == nil {
+		log.Fatal("faux provider enabled in production")
+	}
 
 	e.HideBanner = true
 	e.Use(
@@ -82,10 +83,10 @@ func main() {
 	oauth2.GET("/logout", auth.OAuth2Logout())
 
 	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl())
-	api.GET("/test", func(c echo.Context) error {
-		return c.String(http.StatusOK, "api call")
-	})
+	api.Use(auth.AccessControl(db))
+
+	githubAPI := api.Group("/github")
+	githubAPI.GET("/organizations", githubHandlers.ListOrganizations())
 
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)

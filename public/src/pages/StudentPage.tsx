@@ -1,21 +1,22 @@
 import * as React from "react";
-import {CoursesOverview, NavMenu, SingleCourseOverview, StudentLab} from "../components";
+import { CoursesOverview, DynamicTable, NavMenu, SingleCourseOverview, StudentLab } from "../components";
 
-import {CourseManager} from "../managers/CourseManager";
-import {ILink, NavigationManager} from "../managers/NavigationManager";
-import {UserManager} from "../managers/UserManager";
+import { CourseManager } from "../managers/CourseManager";
+import { ILink, NavigationManager } from "../managers/NavigationManager";
+import { UserManager } from "../managers/UserManager";
 
-import {IAssignment, ICourse, ICoursesWithAssignments} from "../models";
+import { IAssignment, ICourse, ICoursesWithAssignments, IUser } from "../models";
 
-import {ViewPage} from "./ViewPage";
-import {HelloView} from "./views/HelloView";
-import {UserView} from "./views/UserView";
+import { ViewPage } from "./ViewPage";
+import { HelloView } from "./views/HelloView";
+import { UserView } from "./views/UserView";
 
-import {ArrayHelper} from "../helper";
-import {INavInfo, INavInfoEvent} from "../NavigationHelper";
+import { ArrayHelper } from "../helper";
+import { INavInfo, INavInfoEvent } from "../NavigationHelper";
 
-import {CollapsableNavMenu} from "../components/navigation/CollapsableNavMenu";
-import {ILinkCollection} from "../managers";
+import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
+import { ILinkCollection } from "../managers";
+import { EnrollmentView } from "./views/EnrollmentView";
 
 class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -44,6 +45,7 @@ class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("index", this.index);
         this.navHelper.registerFunction<any>("course/{courseid}", this.course);
         this.navHelper.registerFunction<any>("course/{courseid}/lab/{labid}", this.courseWithLab);
+        this.navHelper.registerFunction<any>("enroll", this.enrole);
 
         // Only for testing purposes
         this.navHelper.registerFunction<any>("user", (navInfo) => <UserView users={users.getAllUser()}></UserView>);
@@ -52,14 +54,29 @@ class StudentPage extends ViewPage {
 
     public index(navInfo: INavInfo<any>): JSX.Element {
         const courseOverview: ICoursesWithAssignments[] = this.getCoursesWithAssignments();
-        return (<CoursesOverview course_overview={courseOverview} navMan={this.navMan}/>);
+        return (<CoursesOverview course_overview={courseOverview} navMan={this.navMan} />);
+    }
+
+    public enrole(navInfo: INavInfo<any>): JSX.Element {
+        return <div>
+            <h1>Enrollment page</h1>
+            <EnrollmentView
+                courses={this.courseMan.getCourses()}
+                studentCourses={this.getCourses()}
+                curUser={this.userMan.getCurrentUser()}
+                onEnrollmentClick={(user: IUser, course: ICourse) => {
+                    this.courseMan.addUserToCourse(user, course);
+                    this.navMan.refresh();
+                }}>
+            </EnrollmentView>
+        </div >;
     }
 
     public course(navInfo: INavInfo<{ courseid: string }>): JSX.Element {
         this.selectCourse(navInfo.params.courseid);
         const courseAndLabs: ICoursesWithAssignments | null = this.getLabs();
         if (this.selectedCourse && courseAndLabs) {
-            return(<SingleCourseOverview courseAndLabs={courseAndLabs}/>);
+            return (<SingleCourseOverview courseAndLabs={courseAndLabs} />);
         }
         return <div>404 not found</div>;
     }
@@ -79,16 +96,17 @@ class StudentPage extends ViewPage {
         if (key === 0) {
             const coursesLinks: ILinkCollection[] = this.courses.map((course, i) => {
                 return {
-                    item: {name: course.tag, uri: this.pagePath + "/course/" + course.id},
+                    item: { name: course.tag, uri: this.pagePath + "/course/" + course.id },
                     children: this.getLabsfor(course).map((lab, ind) => {
-                        return {name: lab.name, uri: this.pagePath + "/course/" + course.id + "/lab/" + lab.id};
+                        return { name: lab.name, uri: this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
                     }),
                 };
             });
 
             const settings = [
-                {name: "Users", uri: this.pagePath + "/user"},
-                {name: "Hello world", uri: this.pagePath + "/hello"},
+                { name: "Join course", uri: this.pagePath + "/enroll" },
+                { name: "Users", uri: this.pagePath + "/user" },
+                { name: "Hello world", uri: this.pagePath + "/hello" },
             ];
 
             this.navMan.checkLinkCollection(coursesLinks, this);
@@ -172,7 +190,7 @@ class StudentPage extends ViewPage {
         if (this.selectedCourse) {
 
             const labs = this.courseMan.getAssignments(this.selectedCourse);
-            return {course: this.selectedCourse, labs};
+            return { course: this.selectedCourse, labs };
         }
         return null;
     }
@@ -186,7 +204,7 @@ class StudentPage extends ViewPage {
         if (this.courses.length > 0) {
             for (const crs of this.courses) {
                 const labs = this.courseMan.getAssignments(crs);
-                const cl = {course: crs, labs};
+                const cl = { course: crs, labs };
                 courseLabs.push(cl);
             }
             return courseLabs;
@@ -195,4 +213,4 @@ class StudentPage extends ViewPage {
     }
 }
 
-export {StudentPage};
+export { StudentPage };

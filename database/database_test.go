@@ -11,16 +11,16 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-func tempFile(name string) string {
-	return os.TempDir() + string(filepath.Separator) + name
-}
+const (
+	userID         = 0
+	accessToken    = "secret"
+	newAccessToken = "SECRET"
+)
 
 func TestNewStructOnFileDB(t *testing.T) {
 	const (
-		dbpath      = "agdb_test.db"
-		oldSuffix   = "_old"
-		userID      = 0
-		accessToken = "secret"
+		dbpath    = "agdb_test.db"
+		oldSuffix = "_old"
 	)
 
 	logger := log.New("")
@@ -85,7 +85,37 @@ func TestNewStructOnFileDB(t *testing.T) {
 	}
 }
 
+func TestUpdateAccessToken(t *testing.T) {
+	logger := log.New("")
+	logger.SetOutput(ioutil.Discard)
+
+	// Create new database.
+	db, err := database.NewStructDB("", false, logger)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Add new user.
+	if _, err := db.GetUserWithGithubID(userID, accessToken); err != nil {
+		t.Error(err)
+	}
+
+	// Try to get new user with new access token.
+	user, err := db.GetUserWithGithubID(userID, newAccessToken)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if user.AccessToken != newAccessToken {
+		t.Errorf("have '%s' access token want '%s'", user.AccessToken, newAccessToken)
+	}
+}
+
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func tempFile(name string) string {
+	return os.TempDir() + string(filepath.Separator) + name
 }

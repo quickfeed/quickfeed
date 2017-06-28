@@ -113,7 +113,7 @@ func OAuth2Callback(db database.UserDatabase) echo.HandlerFunc {
 // AccessControl returns an AccessControl middleware. Given a valid context with
 // sufficient access the next handler is called. Missing or invalid credentials
 // results in a 401 unauthorized response.
-func AccessControl() echo.MiddlewareFunc {
+func AccessControl(db database.UserDatabase) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			sess, err := session.Get(UserSession, c)
@@ -123,10 +123,20 @@ func AccessControl() echo.MiddlewareFunc {
 				sess.Save(c.Request(), c.Response())
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
-			if _, ok := sess.Values[UserID]; !ok {
+
+			userID, ok := sess.Values[UserID]
+			if !ok {
 				return echo.ErrUnauthorized
 			}
-			// TODO: ACL. Set user in context.
+
+			user, err := db.GetUser(userID.(int))
+			if err != nil {
+				return err
+			}
+
+			// TODO: Check if the user is allowed to access the endpoint.
+			c.Set("user", user)
+
 			return next(c)
 		}
 	}
@@ -152,12 +162,8 @@ func getInteralUser(db database.UserDatabase, externalUser *goth.User) (*databas
 		}
 		return user, nil
 	case "faux": // Provider is only registered and reachable from tests.
-		return &database.User{}, ErrFauxProvider
+		return &database.User{}, nil
 	default:
 		return nil, errors.New("provider not implemented")
 	}
 }
-
-// ErrFauxProvider is returned if the provider is "faux". This could prevent
-// mistakenly authenticating a manipulated session in production.
-var ErrFauxProvider = errors.New("faux provider")
