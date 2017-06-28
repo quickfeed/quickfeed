@@ -8,24 +8,6 @@
   version = "v3.0.0"
 
 [[projects]]
-  name = "github.com/go-kit/kit"
-  packages = ["log"]
-  revision = "a9ca6725cbbea455e61c6bc8a1ed28e81eb3493b"
-  version = "v0.5.0"
-
-[[projects]]
-  name = "github.com/go-logfmt/logfmt"
-  packages = ["."]
-  revision = "390ab7935ee28ec6b286364bba9b4dd6410cb3d5"
-  version = "v0.3.0"
-
-[[projects]]
-  name = "github.com/go-stack/stack"
-  packages = ["."]
-  revision = "7a2f19628aabfe68f0766b59e74d6315f8347d22"
-  version = "v1.5.3"
-
-[[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
@@ -54,12 +36,6 @@
   packages = ["."]
   revision = "ca9ada44574153444b00d3fd9c8559e4cc95f896"
   version = "v1.1"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/kr/logfmt"
-  packages = ["."]
-  revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
   branch = "master"
@@ -119,7 +95,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "5f8847ae0d0e90b6a9dc8148e7ad616874625171"
+  revision = "455220fa52c866a8aa14ff5e8cc68cde16b8395e"
 
 [[projects]]
   branch = "master"
@@ -131,7 +107,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "f7928cfef4d09d1b080aa2b6fd3ca9ba1567c733"
+  revision = "90796e5a05ce440b41c768bd9af257005e470461"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -142,6 +118,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4804822f6d3280ab7730c29ab7ca86b4a30553ce3b9f3171bed936da541fbc0c"
+  inputs-digest = "15dc52dcd9d579d7fd59506285642f0eed1b6ba3a184b484fa2d4e48b6467f91"
   solver-name = "gps-cdcl"
   solver-version = 1
