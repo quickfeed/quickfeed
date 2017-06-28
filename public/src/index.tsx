@@ -11,16 +11,12 @@ import { StudentPage } from "./pages/StudentPage";
 import { TeacherPage } from "./pages/TeacherPage";
 import { ViewPage } from "./pages/ViewPage";
 
-const topLinks: ILink[] = [
-    { name: "Teacher", uri: "app/teacher/", active: false },
-    { name: "Student", uri: "app/student/", active: false },
-    { name: "Admin", uri: "app/admin", active: false },
-    { name: "Help", uri: "app/help", active: false },
-];
+import { IUser } from "./models";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
-    topLink: ILink[];
+    topLinks: ILink[];
+    curUser: IUser | null;
 }
 
 interface IAutoGraderProps {
@@ -29,28 +25,62 @@ interface IAutoGraderProps {
 }
 
 class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
-    private userManager: UserManager;
+    private userMan: UserManager;
     private navMan: NavigationManager;
     private subPage: string;
 
     constructor(props: any) {
         super();
 
-        this.userManager = props.userManager;
+        this.userMan = props.userManager;
         this.navMan = props.navigationManager;
+
+        const curUser = this.userMan.getCurrentUser();
 
         this.state = {
             activePage: undefined,
-            topLink: topLinks,
+            topLinks: this.generateTopLinksFor(curUser),
+            curUser,
         };
 
         this.navMan.onNavigate.addEventListener((e: INavEvent) => {
             this.subPage = e.subPage;
             const old = this.state.activePage;
-            const tempLink = this.state.topLink.slice();
+            const tempLink = this.state.topLinks.slice();
             this.checkLinks(tempLink);
-            this.setState({ activePage: e.page, topLink: tempLink });
+            this.setState({ activePage: e.page, topLinks: tempLink });
         });
+
+        this.userMan.onLogin.addEventListener((e) => {
+            this.setState({
+                curUser: e.user,
+                topLinks: this.generateTopLinksFor(e.user),
+            });
+        });
+
+        this.userMan.onLogout.addEventListener((e) => {
+            this.setState({
+                curUser: null,
+                topLinks: this.generateTopLinksFor(null),
+            });
+        });
+    }
+
+    public generateTopLinksFor(user: IUser | null): ILink[] {
+        if (user) {
+            const basis: ILink[] = [];
+            if (this.userMan.isTeacher(user)) {
+                basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
+            }
+            basis.push({ name: "Student", uri: "app/student/", active: false });
+            if (this.userMan.isAdmin(user)) {
+                basis.push({ name: "Admin", uri: "app/admin", active: false });
+            }
+            basis.push({ name: "Help", uri: "app/help", active: false });
+            return basis;
+        } else {
+            return [{ name: "Help", uri: "app/help", active: false }];
+        }
     }
 
     public componentDidMount() {
@@ -126,9 +156,9 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 <NavBar id="top-bar"
                     isFluid={false}
                     isInverse={true}
-                    links={topLinks}
+                    links={this.state.topLinks}
                     onClick={(link) => this.handleClick(link)}
-                    user={this.userManager.getCurrentUser()}
+                    user={this.state.curUser}
                     brandName="Auto Grader">
                 </NavBar>
                 {body}
@@ -149,12 +179,12 @@ function main() {
 
     (window as any).debugData = { tempData, userMan, courseMan, navMan };
 
-    const user = userMan.tryLogin("test@testersen.no", "1234");
+    // const user = userMan.tryLogin("test@testersen.no", "1234");
 
     navMan.setDefaultPath("app/home");
     navMan.registerPage("app/home", new HomePage());
     navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan));
-    navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan));
+    navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan, courseMan));
     navMan.registerPage("app/help", new HelpPage(navMan));
 
     navMan.registerErrorPage(404, new ErrorPage());

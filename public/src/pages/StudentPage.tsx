@@ -45,7 +45,7 @@ class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("index", this.index);
         this.navHelper.registerFunction<any>("course/{courseid}", this.course);
         this.navHelper.registerFunction<any>("course/{courseid}/lab/{labid}", this.courseWithLab);
-        this.navHelper.registerFunction<any>("enroll", this.enrole);
+        this.navHelper.registerFunction<any>("enroll", this.enroll);
 
         // Only for testing purposes
         this.navHelper.registerFunction<any>("user", (navInfo) => <UserView users={users.getAllUser()}></UserView>);
@@ -57,7 +57,7 @@ class StudentPage extends ViewPage {
         return (<CoursesOverview course_overview={courseOverview} navMan={this.navMan} />);
     }
 
-    public enrole(navInfo: INavInfo<any>): JSX.Element {
+    public enroll(navInfo: INavInfo<any>): JSX.Element {
         return <div>
             <h1>Enrollment page</h1>
             <EnrollmentView
@@ -113,11 +113,11 @@ class StudentPage extends ViewPage {
             this.navMan.checkLinks(settings, this);
 
             return [
-                <h4 key={6}>Courses</h4>,
-                <CollapsableNavMenu key={7} links={coursesLinks} onClick={(link) => this.handleClick(link)}>
+                <h4 key={0}>Courses</h4>,
+                <CollapsableNavMenu key={1} links={coursesLinks} onClick={(link) => this.handleClick(link)}>
                 </CollapsableNavMenu>,
-                <h4 key={4}>Settings</h4>,
-                <NavMenu key={5} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
+                <h4 key={2}>Settings</h4>,
+                <NavMenu key={3} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
             ];
         }
         return [];
