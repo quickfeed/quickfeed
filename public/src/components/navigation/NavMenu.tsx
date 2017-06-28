@@ -21,7 +21,7 @@ class NavMenu extends React.Component<INavMenuProps, undefined> {
                 </a>
             </li>;
         });
-        return <ul className="nav nav-pills nav-stacked">
+        return <ul className="nav nav-list">
             {items}
         </ul>;
     }
