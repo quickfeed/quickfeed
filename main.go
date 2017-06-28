@@ -12,7 +12,6 @@ import (
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web/auth"
-	"github.com/go-kit/kit/log"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
@@ -34,9 +33,6 @@ func main() {
 	)
 	flag.Parse()
 
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	tsLogger := log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(tsLogger, "src", log.DefaultCaller)
 
 	store := sessions.NewCookieStore(
 		securecookie.GenerateRandomKey(64),
