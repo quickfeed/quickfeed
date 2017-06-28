@@ -33,6 +33,7 @@ func main() {
 	)
 	flag.Parse()
 
+	entryPoint := filepath.Join(*public, "index.html")
 
 	store := sessions.NewCookieStore(
 		securecookie.GenerateRandomKey(64),
@@ -76,7 +77,7 @@ func main() {
 	})
 
 	index := func(c echo.Context) error {
-		return c.File(filepath.Join(*public, "index.html"))
+		return c.File(entryPoint)
 	}
 	e.GET("/app", index)
 	e.GET("/app/*", index)
