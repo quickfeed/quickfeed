@@ -1360,13 +1360,20 @@ var CoursesOverview = (function (_super) {
         var courses = this.props.course_overview.map(function (val, key) {
             return React.createElement(components_1.CoursePanel, { course: val.course, labs: val.labs, navMan: _this.props.navMan });
         });
-        var index = 3;
+        var added = 0;
+        var index = 1;
         var l = courses.length;
-        for (index; index < l; index += 3) {
-            console.log("index", index);
-            courses.splice(index, 0, React.createElement("div", { className: "visible-lg-block visible-md-block clearfix" }));
-            l += 1;
-            index += 1;
+        for (index; index < l; index++) {
+            if (index % 2 == 0) {
+                courses.splice(index + added, 0, React.createElement("div", { className: "visible-md-block visible-sm-block clearfix" }));
+                l += 1;
+                added += 1;
+            }
+            if (index % 4 == 0) {
+                courses.splice(index + added, 0, React.createElement("div", { className: "visible-lg-block clearfix" }));
+                l += 1;
+                added += 1;
+            }
         }
         return (React.createElement("div", null,
             React.createElement("h1", null, "Your Courses"),
@@ -1404,7 +1411,7 @@ var CoursePanel = (function (_super) {
     CoursePanel.prototype.render = function () {
         var _this = this;
         var pathPrefix = "app/student/course/" + this.props.course.id + "/lab/";
-        return (React.createElement("div", { className: "col-lg-3 col-sm-6" },
+        return (React.createElement("div", { className: "col-lg-3 col-md-6 col-sm-6" },
             React.createElement("div", { className: "panel panel-primary" },
                 React.createElement("div", { className: "panel-heading clickable", onClick: function () { return _this.handleCourseClick(); } }, this.props.course.name),
                 React.createElement("div", { className: "panel-body" },

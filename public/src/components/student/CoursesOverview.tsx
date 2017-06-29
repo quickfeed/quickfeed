@@ -1,10 +1,10 @@
 import * as React from "react";
 
-import { CoursePanel, Row } from "../../components";
+import {CoursePanel, Row} from "../../components";
 
-import { ICoursesWithAssignments } from "../../models";
+import {ICoursesWithAssignments} from "../../models";
 
-import { NavigationManager } from "../../managers/NavigationManager";
+import {NavigationManager} from "../../managers/NavigationManager";
 
 interface ICourseOverviewProps {
     course_overview: ICoursesWithAssignments[];
@@ -15,16 +15,23 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
 
     public render() {
         const courses = this.props.course_overview.map((val, key) => {
-            return <CoursePanel course={val.course} labs={val.labs} navMan={this.props.navMan} />;
+            return <CoursePanel course={val.course} labs={val.labs} navMan={this.props.navMan}/>;
         });
 
-        let index: number = 3;
+        let added: number = 0;
+        let index: number = 1;
         let l: number = courses.length;
-        for (index; index < l; index += 3) {
-            console.log("index", index);
-            courses.splice(index, 0, <div className="visible-lg-block visible-md-block clearfix"></div>);
-            l += 1;
-            index += 1;
+        for (index; index < l; index++) {
+            if (index % 2 == 0) {
+                courses.splice(index + added, 0, <div className="visible-md-block visible-sm-block clearfix"></div>);
+                l += 1;
+                added += 1;
+            }
+            if (index % 4 == 0) {
+                courses.splice(index + added, 0, <div className="visible-lg-block clearfix"></div>);
+                l += 1;
+                added += 1;
+            }
         }
 
         return (
@@ -36,4 +43,4 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
     }
 }
 
-export { CoursesOverview };
+export {CoursesOverview};

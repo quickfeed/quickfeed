@@ -17,7 +17,7 @@ class CoursePanel extends React.Component<IPanelProps, any> {
         const pathPrefix: string = "app/student/course/" + this.props.course.id + "/lab/";
 
         return (
-            <div className="col-lg-3 col-sm-6">
+            <div className="col-lg-3 col-md-6 col-sm-6">
                 <div className="panel panel-primary">
                     <div className="panel-heading clickable"
                         onClick={() => this.handleCourseClick()}>{this.props.course.name}</div>
