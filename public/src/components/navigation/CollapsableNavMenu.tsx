@@ -117,7 +117,7 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
                 href={"/" + links.item.uri}>
                 {links.item.name}
                 <span style={{ float: "right" }}>
-                    <span className="glyphicon glyphicon-menu-right"></span>
+                    <span className="glyphicon glyphicon-menu-down"></span>
                 </span>
             </a>
             <ul ref={(ele) => {

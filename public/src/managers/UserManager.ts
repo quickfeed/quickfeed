@@ -1,11 +1,22 @@
+import { IEventData, newEvent } from "../event";
 import { IUser } from "../models";
+
+import { ArrayHelper } from "../helper";
 
 interface IUserProvider {
     tryLogin(username: string, password: string): IUser | null;
+    logout(user: IUser): void;
     getAllUser(): IUser[];
 }
 
+interface IUserLoginEvent extends IEventData {
+    user: IUser;
+}
+
 class UserManager {
+    public onLogin = newEvent<IUserLoginEvent>("UserManager.onLogin");
+    public onLogout = newEvent<IEventData>("UserManager.onLogout");
+
     private userProvider: IUserProvider;
     private currentUser: IUser | null;
 
@@ -21,12 +32,39 @@ class UserManager {
         const result = this.userProvider.tryLogin(username, password);
         if (result) {
             this.currentUser = result;
+            this.onLogin({ target: this, user: this.currentUser });
         }
         return result;
     }
 
+    public logout() {
+        if (this.currentUser) {
+            this.userProvider.logout(this.currentUser);
+            this.currentUser = null;
+            this.onLogout({ target: this });
+        }
+    }
+
+    public isAdmin(user: IUser): boolean {
+        return user.id > 100;
+    }
+
+    public isTeacher(user: IUser): boolean {
+        return user.id > 100;
+    }
+
     public getAllUser(): IUser[] {
         return this.userProvider.getAllUser();
+    }
+
+    public getUsers(ids: number[]): IUser[] {
+        const returnUsers: IUser[] = [];
+        this.getAllUser().forEach((user) => {
+            if (ArrayHelper.find(ids, (id) => id === user.id)) {
+                returnUsers.push(user);
+            }
+        });
+        return returnUsers;
     }
 
     public getUser(id: number): IUser {

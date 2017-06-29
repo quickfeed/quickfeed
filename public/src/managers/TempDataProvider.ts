@@ -63,6 +63,10 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
+    public logout(user: IUser): void {
+        "Do nothing";
+    }
+
     public addUserToCourse(user: IUser, course: ICourse): void {
         this.localCourseStudent.push({ courseId: course.id, personId: user.id });
     }

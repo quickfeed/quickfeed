@@ -29,7 +29,7 @@ class EnrollmentView extends React.Component<IEnrollmentViewProps, undefined> {
         }
         if (!ArrayHelper.find(studentCourses, (a: ICourse) => a.id === course.id)) {
             base.push(<button
-                onClick={() => { this.props.onEnrollmentClick(curUser, course) }}
+                onClick={() => { this.props.onEnrollmentClick(curUser, course); }}
                 className="btn btn-primary">
                 Enroll
                     </button>);

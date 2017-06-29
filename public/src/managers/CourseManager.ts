@@ -51,6 +51,16 @@ class CourseManager {
         return courses;
     }
 
+    public getUserIdsForCourse(course: ICourse): number[] {
+        const users: number[] = [];
+        for (const c of this.courseProvider.getCoursesStudent()) {
+            if (course.id === c.courseId) {
+                users.push(c.personId);
+            }
+        }
+        return users;
+    }
+
     public getAssignment(course: ICourse, assignmentId: number): IAssignment | null {
         const temp = this.getAssignments(course);
         for (const a of temp) {
