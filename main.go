@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,15 +11,16 @@ import (
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web/auth"
-	"github.com/go-kit/kit/log"
-	"github.com/gorilla/securecookie"
+	githubHandlers "github.com/autograde/aguis/web/github"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/bitbucket"
+	"github.com/markbates/goth/providers/faux"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
 )
@@ -34,26 +34,32 @@ func main() {
 	)
 	flag.Parse()
 
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	tsLogger := log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(tsLogger, "src", log.DefaultCaller)
+	e := echo.New()
+	e.Logger.SetLevel(log.DEBUG)
 
-	store := sessions.NewCookieStore(
-		securecookie.GenerateRandomKey(64),
-		securecookie.GenerateRandomKey(32),
-	)
+	entryPoint := filepath.Join(*public, "index.html")
+	if !fileExists(entryPoint) {
+		e.Logger.Warnj(log.JSON{
+			"path": entryPoint,
+			"err":  "could not find file",
+		})
+	}
+
+	store := sessions.NewCookieStore([]byte("secret"))
 	store.Options.HttpOnly = true
 	store.Options.Secure = true
 	gothic.Store = store
 
 	// TODO: Only register if env set.
 	goth.UseProviders(
-		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github")),
+		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github"), "user"),
 		bitbucket.New(os.Getenv("BITBUCKET_KEY"), os.Getenv("BITBUCKET_SECRET"), getCallbackURL(*baseURL, "bitbucket")),
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
 	)
+	if _, err := goth.GetProvider((&faux.Provider{}).Name()); err == nil {
+		log.Fatal("faux provider enabled in production")
+	}
 
-	e := echo.New()
 	e.HideBanner = true
 	e.Use(
 		middleware.Logger(),
@@ -65,7 +71,10 @@ func main() {
 	db, err := database.NewStructDB(tempFile("agdb.db"), false, e.Logger)
 
 	if err != nil {
-		panic(fmt.Sprintf("could not connect to db: %s", err))
+		log.Fatalj(log.JSON{
+			"message": "could not connect to db",
+			"err":     err,
+		})
 	}
 
 	oauth2 := e.Group("/auth/:provider", withProvider)
@@ -74,13 +83,13 @@ func main() {
 	oauth2.GET("/logout", auth.OAuth2Logout())
 
 	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl())
-	api.GET("/test", func(c echo.Context) error {
-		return c.String(http.StatusOK, "api call")
-	})
+	api.Use(auth.AccessControl(db))
+
+	githubAPI := api.Group("/github")
+	githubAPI.GET("/organizations", githubHandlers.ListOrganizations())
 
 	index := func(c echo.Context) error {
-		return c.File(filepath.Join(*public, "index.html"))
+		return c.File(entryPoint)
 	}
 	e.GET("/app", index)
 	e.GET("/app/*", index)
@@ -89,18 +98,27 @@ func main() {
 	e.Static("/", *public)
 
 	go func() {
-		if err := e.Start(*httpAddr); err != nil {
-			e.Logger.Info("shutting down the server")
+		if err := e.Start(*httpAddr); err == http.ErrServerClosed {
+			e.Logger.Warn("shutting down the server")
+			return
 		}
+		e.Logger.Fatalj(log.JSON{
+			"message": "could not start server",
+			"err":     err,
+		})
 	}()
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
+		e.Logger.Fatalj(log.JSON{
+			"message": "failure during server shutdown",
+			"err":     err,
+		})
 	}
 }
 
@@ -129,4 +147,9 @@ func envString(env, fallback string) string {
 
 func tempFile(name string) string {
 	return filepath.Join(os.TempDir(), name)
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

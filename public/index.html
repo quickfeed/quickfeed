@@ -11,12 +11,14 @@
     <!--React Javascript files end-->
 
     <!-- Bootstrap Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
 
     <!-- Bootstrap Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
-        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
 
     <style>
         .dropdown-menu {
@@ -24,24 +26,33 @@
             left: initial;
         }
 
-        .nav-sub>li>a {
+        .table-hover > tbody > tr:hover {
+            background-color: #D2D2D2;
+            cursor: pointer;
+        }
+
+        .clickable {
+            cursor: pointer;
+        }
+
+        .nav-sub > li > a {
             padding-left: 40px;
         }
 
-        .nav-list>li.active>a {
+        .nav-list > li.active > a {
             color: #fff;
             background-color: #337ab7;
         }
 
-        .nav-sub>li:nth-child(n+1) {
+        .nav-sub > li:nth-child(n+1) {
             border-top: 1px solid #DDDDDD;
         }
 
-        .nav-list>li:nth-child(n+2) {
+        .nav-list > li:nth-child(n+2) {
             border-top: 1px solid #DDDDDD;
         }
 
-        .nav-sub>li.active>a {
+        .nav-sub > li.active > a {
             color: #fff;
             background-color: #95b1c9;
         }
@@ -50,18 +61,19 @@
 </head>
 
 <body>
-    <div id="root">
+<div id="root">
 
-    </div>
+</div>
 
-    <!--Bootstrap javascript start-->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+<!--Bootstrap javascript start-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
         crossorigin="anonymous"></script>
-    <!--Bootstrap javascript end-->
+<!--Bootstrap javascript end-->
 
-    <!--Components-->
-    <script src="/dist/bundle.js"></script>
+<!--Components-->
+<script src="/dist/bundle.js"></script>
 </body>
 
 </html>

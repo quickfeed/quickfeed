@@ -1,4 +1,4 @@
-import * as React from "React";
+import * as React from "react";
 import { ILink, ILinkCollection } from "../../managers";
 import { NavigationHelper } from "../../NavigationHelper";
 
@@ -35,7 +35,9 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
             }
         });
         setTimeout(() => {
-            animations.forEach((e) => { e(); });
+            animations.forEach((e) => {
+                e();
+            });
         }, 10);
     }
 
@@ -47,7 +49,9 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
         if (this.collapseIsOpen(ele)) {
             return this.closeCollapse(ele);
         }
-        return () => { "do nothing"; };
+        return () => {
+            "do nothing";
+        };
     }
 
     private openCollapse(ele: HTMLElement): () => void {
@@ -106,11 +110,21 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
         }
         return <li key={index} className={isActive}>
             <a
-                onClick={(e) => { this.toggle(index); this.handleClick(e, links.item); }}
+                onClick={(e) => {
+                    this.toggle(index);
+                    this.handleClick(e, links.item);
+                }}
                 href={"/" + links.item.uri}>
                 {links.item.name}
+                <span style={{ float: "right" }}>
+                    <span className="glyphicon glyphicon-menu-down"></span>
+                </span>
             </a>
-            <ul ref={(ele) => { if (ele) { this.topItems[index] = ele; } }}
+            <ul ref={(ele) => {
+                if (ele) {
+                    this.topItems[index] = ele;
+                }
+            }}
                 className={subClass}>
                 {children}
             </ul>

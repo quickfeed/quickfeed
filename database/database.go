@@ -109,10 +109,20 @@ func (db *StructDB) GetUserWithGithubID(githubID int, accessToken string) (*User
 
 	for _, user := range db.Users {
 		if user.GithubID == githubID {
+			user.AccessToken = accessToken
+			if err := db.save(); err != nil {
+				db.logger.Infoj(log.JSON{
+					"userid":   user.ID,
+					"githubid": user.GithubID,
+					"message":  "could not update access token",
+					"err":      err.Error(),
+				})
+				return nil, err
+			}
 			db.logger.Infoj(log.JSON{
 				"userid":   user.ID,
 				"githubid": user.GithubID,
-				"msg":      "user found",
+				"message":  "user found",
 				"new":      false,
 			})
 			return user, nil
@@ -131,7 +141,7 @@ func (db *StructDB) GetUserWithGithubID(githubID int, accessToken string) (*User
 		db.logger.Infoj(log.JSON{
 			"userid":   user.ID,
 			"githubid": user.GithubID,
-			"msg":      "could not persist user to database",
+			"message":  "could not persist user to database",
 			"err":      err.Error(),
 		})
 		return nil, err
@@ -140,7 +150,7 @@ func (db *StructDB) GetUserWithGithubID(githubID int, accessToken string) (*User
 	db.logger.Infoj(log.JSON{
 		"userid":   user.ID,
 		"githubid": user.GithubID,
-		"msg":      "user found",
+		"message":  "user found",
 		"new":      true,
 	})
 

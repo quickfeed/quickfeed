@@ -7,6 +7,7 @@ interface IDummyUser extends IUser {
 }
 
 class TempDataProvider implements IUserProvider, ICourseProvider {
+
     private localUsers: IDummyUser[];
     private localAssignments: IAssignment[];
     private localCourses: ICourse[];
@@ -60,6 +61,14 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
             }
         }
         return null;
+    }
+
+    public logout(user: IUser): void {
+        "Do nothing";
+    }
+
+    public addUserToCourse(user: IUser, course: ICourse): void {
+        this.localCourseStudent.push({ courseId: course.id, personId: user.id });
     }
 
     private addLocalUsers() {
@@ -141,6 +150,54 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 deadline: new Date(2017, 5, 25),
                 end: new Date(2017, 5, 30),
             },
+            {
+                id: 5,
+                courseId: 1,
+                name: "Lab 2",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 6,
+                courseId: 1,
+                name: "Lab 3",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 7,
+                courseId: 2,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 8,
+                courseId: 2,
+                name: "Lab 2",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 9,
+                courseId: 3,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
+            {
+                id: 10,
+                courseId: 4,
+                name: "Lab 1",
+                start: new Date(2017, 5, 1),
+                deadline: new Date(2017, 5, 25),
+                end: new Date(2017, 5, 30),
+            },
         ];
     }
 
@@ -155,6 +212,21 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 id: 1,
                 name: "Algorithms and Datastructures",
                 tag: "DAT200",
+            },
+            {
+                id: 2,
+                name: "Databases",
+                tag: "DAT220",
+            },
+            {
+                id: 3,
+                name: "Communication Technology",
+                tag: "DAT230",
+            },
+            {
+                id: 4,
+                name: "Operating Systems",
+                tag: "DAT320",
             },
         ];
     }
