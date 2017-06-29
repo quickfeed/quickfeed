@@ -9,7 +9,7 @@ import { UserView } from "./views/UserView";
 import { INavInfo, NavigationHelper } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { CourseStudentState, IUser, ICourseStudent } from "../models";
+import { CourseStudentState, ICourseStudent, IUser } from "../models";
 
 import { ArrayHelper } from "../helper";
 

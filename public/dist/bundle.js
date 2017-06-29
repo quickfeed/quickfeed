@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 11);
+/******/ 	return __webpack_require__(__webpack_require__.s = 12);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,21 +79,21 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(13));
-__export(__webpack_require__(7));
 __export(__webpack_require__(14));
+__export(__webpack_require__(8));
 __export(__webpack_require__(15));
 __export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
-__export(__webpack_require__(20));
-__export(__webpack_require__(8));
+__export(__webpack_require__(19));
 __export(__webpack_require__(21));
+__export(__webpack_require__(9));
 __export(__webpack_require__(22));
 __export(__webpack_require__(23));
 __export(__webpack_require__(24));
 __export(__webpack_require__(25));
 __export(__webpack_require__(26));
+__export(__webpack_require__(27));
 
 
 /***/ }),
@@ -103,7 +103,7 @@ __export(__webpack_require__(26));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(5);
+var event_1 = __webpack_require__(6);
 var NavigationHelper = (function () {
     function NavigationHelper(thisObject) {
         this.onPreNavigation = event_1.newEvent("NavigationHelper.onPreNavigation");
@@ -319,6 +319,28 @@ exports.ArrayHelper = ArrayHelper;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+function isCourse(value) {
+    return value
+        && typeof value.id === "number"
+        && typeof value.name === "string"
+        && typeof value.tag === "string";
+}
+exports.isCourse = isCourse;
+var CourseStudentState;
+(function (CourseStudentState) {
+    CourseStudentState[CourseStudentState["pending"] = 0] = "pending";
+    CourseStudentState[CourseStudentState["accepted"] = 1] = "accepted";
+    CourseStudentState[CourseStudentState["rejected"] = 2] = "rejected";
+})(CourseStudentState = exports.CourseStudentState || (exports.CourseStudentState = {}));
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 function newEvent(info) {
     var callbacks = [];
     var handler = function EventHandler(event) {
@@ -342,7 +364,7 @@ exports.newEvent = newEvent;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -380,7 +402,7 @@ exports.UserView = UserView;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -429,7 +451,7 @@ exports.NavHeaderBar = NavHeaderBar;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -466,7 +488,7 @@ exports.ProgressBar = ProgressBar;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -497,7 +519,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -632,7 +654,7 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -649,9 +671,9 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(12);
+var ReactDOM = __webpack_require__(13);
 var components_1 = __webpack_require__(1);
-var managers_1 = __webpack_require__(27);
+var managers_1 = __webpack_require__(28);
 var ErrorPage_1 = __webpack_require__(33);
 var HelpPage_1 = __webpack_require__(34);
 var HomePage_1 = __webpack_require__(36);
@@ -789,13 +811,13 @@ main();
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -812,7 +834,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavHeaderBar_1 = __webpack_require__(7);
+var NavHeaderBar_1 = __webpack_require__(8);
 var NavigationHelper_1 = __webpack_require__(2);
 var NavBar = (function (_super) {
     __extends(NavBar, _super);
@@ -874,7 +896,7 @@ exports.NavBar = NavBar;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -920,7 +942,7 @@ exports.NavMenu = NavMenu;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -967,7 +989,7 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1027,7 +1049,7 @@ exports.DynamicTable = DynamicTable;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1041,7 +1063,7 @@ exports.Row = Row;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1058,7 +1080,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var LabResultView_1 = __webpack_require__(19);
+var LabResultView_1 = __webpack_require__(20);
 var StudentLab = (function (_super) {
     __extends(StudentLab, _super);
     function StudentLab() {
@@ -1092,7 +1114,7 @@ exports.StudentLab = StudentLab;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1133,7 +1155,7 @@ exports.LabResultView = LabResultView;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1205,7 +1227,7 @@ exports.NavDropdown = NavDropdown;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1250,7 +1272,7 @@ exports.LabResult = LabResult;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1285,7 +1307,7 @@ exports.LastBuild = LastBuild;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1344,7 +1366,7 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1391,7 +1413,7 @@ exports.CoursesOverview = CoursesOverview;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1438,7 +1460,7 @@ exports.CoursePanel = CoursePanel;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1455,7 +1477,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ProgressBar_1 = __webpack_require__(8);
+var ProgressBar_1 = __webpack_require__(9);
 var SingleCourseOverview = (function (_super) {
     __extends(SingleCourseOverview, _super);
     function SingleCourseOverview() {
@@ -1478,7 +1500,7 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1487,21 +1509,21 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(28));
+__export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
 __export(__webpack_require__(32));
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var helper_1 = __webpack_require__(4);
-var models_1 = __webpack_require__(29);
+var models_1 = __webpack_require__(5);
 var CourseManager = (function () {
     function CourseManager(courseProvider) {
         this.courseProvider = courseProvider;
@@ -1584,35 +1606,13 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function isCourse(value) {
-    return value
-        && typeof value.id === "number"
-        && typeof value.name === "string"
-        && typeof value.tag === "string";
-}
-exports.isCourse = isCourse;
-var CourseStudentState;
-(function (CourseStudentState) {
-    CourseStudentState[CourseStudentState["pending"] = 0] = "pending";
-    CourseStudentState[CourseStudentState["accepted"] = 1] = "accepted";
-    CourseStudentState[CourseStudentState["rejected"] = 2] = "rejected";
-})(CourseStudentState = exports.CourseStudentState || (exports.CourseStudentState = {}));
-
-
-/***/ }),
 /* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(5);
+var event_1 = __webpack_require__(6);
 var NavigationHelper_1 = __webpack_require__(2);
 var ViewPage_1 = __webpack_require__(3);
 function isILinkCollection(item) {
@@ -1765,7 +1765,7 @@ exports.NavigationManager = NavigationManager;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Models = __webpack_require__(29);
+var Models = __webpack_require__(5);
 var TempDataProvider = (function () {
     function TempDataProvider() {
         this.addLocalAssignments();
@@ -2003,7 +2003,7 @@ exports.TempDataProvider = TempDataProvider;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(5);
+var event_1 = __webpack_require__(6);
 var helper_1 = __webpack_require__(4);
 var UserManager = (function () {
     function UserManager(userProvider) {
@@ -2270,10 +2270,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(9);
-var UserView_1 = __webpack_require__(6);
+var HelloView_1 = __webpack_require__(10);
+var UserView_1 = __webpack_require__(7);
 var helper_1 = __webpack_require__(4);
-var CollapsableNavMenu_1 = __webpack_require__(10);
+var CollapsableNavMenu_1 = __webpack_require__(11);
 var EnrollmentView_1 = __webpack_require__(38);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
@@ -2461,7 +2461,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
-var models_1 = __webpack_require__(29);
+var models_1 = __webpack_require__(5);
 var helper_1 = __webpack_require__(4);
 var EnrollmentView = (function (_super) {
     __extends(EnrollmentView, _super);
@@ -2523,10 +2523,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(9);
-var UserView_1 = __webpack_require__(6);
-var CollapsableNavMenu_1 = __webpack_require__(10);
-var models_1 = __webpack_require__(29);
+var HelloView_1 = __webpack_require__(10);
+var UserView_1 = __webpack_require__(7);
+var CollapsableNavMenu_1 = __webpack_require__(11);
+var models_1 = __webpack_require__(5);
 var helper_1 = __webpack_require__(4);
 var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
@@ -2700,7 +2700,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var UserView_1 = __webpack_require__(6);
+var UserView_1 = __webpack_require__(7);
 var AdminPage = (function (_super) {
     __extends(AdminPage, _super);
     function AdminPage(navMan, userMan, courseMan) {
