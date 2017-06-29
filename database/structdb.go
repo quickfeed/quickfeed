@@ -10,9 +10,10 @@ import (
 
 // StructDB implements UserDatabase.
 type StructDB struct {
-	mu    sync.Mutex
-	path  string
-	Users map[int]*User
+	mu      sync.Mutex
+	path    string
+	Users   map[int]*User
+	Courses map[int]*Course
 
 	logger echo.Logger
 }
@@ -23,8 +24,9 @@ func NewStructDB(path string, truncate bool, logger echo.Logger) (*StructDB, err
 	if path == "" {
 		return &StructDB{
 			// Leave path unset to indicate in memory DB.
-			Users:  make(map[int]*User),
-			logger: logger,
+			Users:   make(map[int]*User),
+			Courses: make(map[int]*Course),
+			logger:  logger,
 		}, nil
 	}
 
@@ -49,9 +51,10 @@ func NewStructDB(path string, truncate bool, logger echo.Logger) (*StructDB, err
 	}
 
 	db := &StructDB{
-		path:   path,
-		Users:  make(map[int]*User),
-		logger: logger,
+		path:    path,
+		Users:   make(map[int]*User),
+		Courses: make(map[int]*Course),
+		logger:  logger,
 	}
 
 	return db, db.save()

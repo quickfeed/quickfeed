@@ -6,4 +6,6 @@ type Database interface {
 	GetUsers() (map[int]*User, error)
 	GetUserWithGithubID(int, string) (*User, error)
 
+	CreateCourse(string, string) error
+	GetCourses() (map[int]*Course, error)
 }
