@@ -9,6 +9,9 @@ import { UserView } from "./views/UserView";
 import { INavInfo, NavigationHelper } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
+import { CourseStudentState, ICourseStudent, IUser } from "../models";
+
+import { ArrayHelper } from "../helper";
 
 class TeacherPage extends ViewPage {
 
@@ -49,14 +52,61 @@ class TeacherPage extends ViewPage {
             const tempCourse = this.courseMan.getCourse(course);
             if (tempCourse) {
                 const userIds = this.courseMan.getUserIdsForCourse(tempCourse);
-                const users = this.userMan.getUsers(userIds);
+                const users = this.userMan.getUsers(userIds.map((e) => e.personId));
+
+                const all = ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
+                console.log(all);
+                const acceptedUsers: IUser[] = [];
+                const pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }> = [];
+                all.forEach((ele, id) => {
+                    switch (ele.ele1.state) {
+                        case CourseStudentState.accepted:
+                            acceptedUsers.push(ele.ele2);
+                            break;
+                        case CourseStudentState.pending:
+                            pendingUsers.push(ele);
+                            break;
+                    }
+                });
                 return <div>
-                    <h1>Users for {tempCourse.name} ({tempCourse.tag})</h1>
-                    <UserView users={users}></UserView>
+                    <h3>Users for {tempCourse.name} ({tempCourse.tag})</h3>
+                    <UserView users={acceptedUsers}></UserView>
+                    <h3>Pending users for {tempCourse.name} ({tempCourse.tag})</h3>
+                    {this.createPendingTable(pendingUsers)}
                 </div>;
             }
         }
         return <div>404 Page not found</div>;
+    }
+
+    public createPendingTable(pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }>): JSX.Element {
+        return <DynamicTable
+            data={pendingUsers}
+            header={["ID", "First name", "Last name", "Email", "StudenID", "Action"]}
+            selector={(ele: { ele1: ICourseStudent, ele2: IUser }) => [
+                ele.ele2.id.toString(),
+                ele.ele2.firstName,
+                ele.ele2.lastName,
+                ele.ele2.email,
+                ele.ele2.personId.toString(),
+                <span>
+                    <button onClick={(e) => {
+                        this.courseMan.changeUserState(ele.ele1, CourseStudentState.accepted);
+                        this.navMan.refresh();
+                    }}
+                        className="btn btn-primary">
+                        Accept
+                    </button>
+                    <button onClick={(e) => {
+                        this.courseMan.changeUserState(ele.ele1, CourseStudentState.rejected);
+                        this.navMan.refresh();
+                    }} className="btn btn-danger">
+                        Reject
+                    </button>
+                </span>,
+            ]}
+        >
+        </DynamicTable>;
     }
 
     public generateCollectionFor(link: ILink): ILinkCollection {

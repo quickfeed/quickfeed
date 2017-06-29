@@ -26,7 +26,7 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undef
         this.topItems.forEach((temp, i) => {
             if (i === index) {
                 if (this.collapseIsOpen(temp)) {
-                    animations.push(this.closeCollapse(temp));
+                    // Just stay opend
                 } else {
                     animations.push(this.openCollapse(temp));
                 }

@@ -2,6 +2,8 @@ import { IAssignment, ICourse, ICourseStudent, IUser } from "../models";
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
+import * as Models from "../models";
+
 interface IDummyUser extends IUser {
     password: string;
 }
@@ -68,7 +70,15 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     public addUserToCourse(user: IUser, course: ICourse): void {
-        this.localCourseStudent.push({ courseId: course.id, personId: user.id });
+        this.localCourseStudent.push({
+            courseId: course.id,
+            personId: user.id,
+            state: Models.CourseStudentState.pending,
+        });
+    }
+
+    public changeUserState(link: ICourseStudent, state: Models.CourseStudentState): void {
+        link.state = state;
     }
 
     private addLocalUsers() {
@@ -233,8 +243,10 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private addLocalCourseStudent() {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999 },
-            { courseId: 1, personId: 999 },
+            { courseId: 0, personId: 999, state: 1 },
+            { courseId: 1, personId: 999, state: 1 },
+            { courseId: 0, personId: 1, state: 0 },
+            { courseId: 0, personId: 2, state: 0 },
         ];
     }
 

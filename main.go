@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 	githubHandlers "github.com/autograde/aguis/web/github"
 	"github.com/gorilla/sessions"
@@ -84,6 +85,9 @@ func main() {
 
 	api := e.Group("/api/v1")
 	api.Use(auth.AccessControl(db))
+
+	api.GET("/courses", web.ListCourses(db))
+	api.POST("/courses", web.NewCourse(db))
 
 	githubAPI := api.Group("/github")
 	githubAPI.GET("/organizations", githubHandlers.ListOrganizations())

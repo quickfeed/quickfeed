@@ -22,12 +22,12 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
         let index: number = 1;
         let l: number = courses.length;
         for (index; index < l; index++) {
-            if (index % 2 == 0) {
+            if (index % 2 === 0) {
                 courses.splice(index + added, 0, <div className="visible-md-block visible-sm-block clearfix"></div>);
                 l += 1;
                 added += 1;
             }
-            if (index % 4 == 0) {
+            if (index % 4 === 0) {
                 courses.splice(index + added, 0, <div className="visible-lg-block clearfix"></div>);
                 l += 1;
                 added += 1;

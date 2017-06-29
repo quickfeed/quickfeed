@@ -41,7 +41,7 @@ func OAuth2Logout() echo.HandlerFunc {
 }
 
 // OAuth2Login tries to authenticate against an oauth2 provider.
-func OAuth2Login(db database.UserDatabase) echo.HandlerFunc {
+func OAuth2Login(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		w := c.Response()
 		r := c.Request()
@@ -78,7 +78,7 @@ func OAuth2Login(db database.UserDatabase) echo.HandlerFunc {
 }
 
 // OAuth2Callback handles the callback from an oauth2 provider.
-func OAuth2Callback(db database.UserDatabase) echo.HandlerFunc {
+func OAuth2Callback(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		w := c.Response()
 		r := c.Request()
@@ -113,7 +113,7 @@ func OAuth2Callback(db database.UserDatabase) echo.HandlerFunc {
 // AccessControl returns an AccessControl middleware. Given a valid context with
 // sufficient access the next handler is called. Missing or invalid credentials
 // results in a 401 unauthorized response.
-func AccessControl(db database.UserDatabase) echo.MiddlewareFunc {
+func AccessControl(db database.Database) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			sess, err := session.Get(UserSession, c)
@@ -142,7 +142,7 @@ func AccessControl(db database.UserDatabase) echo.MiddlewareFunc {
 	}
 }
 
-func getInteralUser(db database.UserDatabase, externalUser *goth.User) (*database.User, error) {
+func getInteralUser(db database.Database, externalUser *goth.User) (*database.User, error) {
 	provider, err := goth.GetProvider(externalUser.Provider)
 
 	if err != nil {
