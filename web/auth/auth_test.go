@@ -113,7 +113,7 @@ func TestOAuth2CallbackLoggedIn(t *testing.T) {
 	testOAuth2LoggedIn(t, auth.OAuth2Callback)
 }
 
-func testOAuth2LoggedIn(t *testing.T, newHandler func(db database.UserDatabase) echo.HandlerFunc) {
+func testOAuth2LoggedIn(t *testing.T, newHandler func(db database.Database) echo.HandlerFunc) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
@@ -145,7 +145,7 @@ func TestOAuth2CallbackAuthenticated(t *testing.T) {
 	testOAuth2Authenticated(t, auth.OAuth2Callback)
 }
 
-func testOAuth2Authenticated(t *testing.T, newHandler func(db database.UserDatabase) echo.HandlerFunc) {
+func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database) echo.HandlerFunc) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
@@ -212,7 +212,7 @@ func TestAccessControl(t *testing.T) {
 	}
 }
 
-func newDB(t *testing.T) database.UserDatabase {
+func newDB(t *testing.T) database.Database {
 	logger := log.New("")
 	logger.SetOutput(ioutil.Discard)
 
