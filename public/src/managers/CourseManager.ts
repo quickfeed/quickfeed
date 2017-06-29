@@ -1,5 +1,5 @@
 import { ArrayHelper } from "../helper";
-import { IAssignment, ICourse, ICourseStudent, isCourse, IUser } from "../models";
+import { CourseStudentState, IAssignment, ICourse, ICourseStudent, isCourse, IUser } from "../models";
 
 interface ICourseProvider {
     getCourses(): ICourse[];
@@ -7,6 +7,7 @@ interface ICourseProvider {
     getCoursesStudent(): ICourseStudent[];
     getCourseByTag(tag: string): ICourse | null;
     addUserToCourse(user: IUser, course: ICourse): void;
+    changeUserState(link: ICourseStudent, state: CourseStudentState): void;
 }
 
 class CourseManager {
@@ -32,10 +33,22 @@ class CourseManager {
         return this.courseProvider.getCourseByTag(tag);
     }
 
-    public getCoursesFor(user: IUser): ICourse[] {
+    public getRelationsFor(user: IUser, state?: CourseStudentState): ICourseStudent[] {
         const cLinks: ICourseStudent[] = [];
+
         for (const c of this.courseProvider.getCoursesStudent()) {
-            if (user.id === c.personId) {
+            if (user.id === c.personId && (state === undefined || c.state === CourseStudentState.accepted)) {
+                cLinks.push(c);
+            }
+        }
+        return cLinks;
+    }
+
+    public getCoursesFor(user: IUser, state?: CourseStudentState): ICourse[] {
+        const cLinks: ICourseStudent[] = [];
+
+        for (const c of this.courseProvider.getCoursesStudent()) {
+            if (user.id === c.personId && (state === undefined || c.state === CourseStudentState.accepted)) {
                 cLinks.push(c);
             }
         }
@@ -51,11 +64,11 @@ class CourseManager {
         return courses;
     }
 
-    public getUserIdsForCourse(course: ICourse): number[] {
-        const users: number[] = [];
+    public getUserIdsForCourse(course: ICourse): ICourseStudent[] {
+        const users: ICourseStudent[] = [];
         for (const c of this.courseProvider.getCoursesStudent()) {
             if (course.id === c.courseId) {
-                users.push(c.personId);
+                users.push(c);
             }
         }
         return users;
@@ -76,6 +89,10 @@ class CourseManager {
             courseId = courseId.id;
         }
         return this.courseProvider.getAssignments(courseId);
+    }
+
+    public changeUserState(link: ICourseStudent, state: CourseStudentState): void {
+        this.courseProvider.changeUserState(link, state);
     }
 
 }

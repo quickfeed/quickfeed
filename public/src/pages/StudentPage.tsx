@@ -5,7 +5,7 @@ import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { IAssignment, ICourse, ICoursesWithAssignments, IUser } from "../models";
+import { IAssignment, ICourse, ICourseStudent, ICoursesWithAssignments, IUser } from "../models";
 
 import { ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
@@ -62,7 +62,7 @@ class StudentPage extends ViewPage {
             <h1>Enrollment page</h1>
             <EnrollmentView
                 courses={this.courseMan.getCourses()}
-                studentCourses={this.getCourses()}
+                studentCourses={this.getRelations()}
                 curUser={this.userMan.getCurrentUser()}
                 onEnrollmentClick={(user: IUser, course: ICourse) => {
                     this.courseMan.addUserToCourse(user, course);
@@ -166,10 +166,18 @@ class StudentPage extends ViewPage {
         }
     }
 
+    private getRelations(): ICourseStudent[] {
+        const curUsr = this.userMan.getCurrentUser();
+        if (curUsr) {
+            return this.courseMan.getRelationsFor(curUsr);
+        }
+        return [];
+    }
+
     private getCourses(): ICourse[] {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return this.courseMan.getCoursesFor(curUsr);
+            return this.courseMan.getCoursesFor(curUsr, 1);
         }
         return [];
     }

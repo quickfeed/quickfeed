@@ -17,10 +17,10 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
         const courses = this.props.course_overview.map((val, key) => {
             return <CoursePanel course={val.course} labs={val.labs} navMan={this.props.navMan} />;
         });
-
-        let index: number = 3;
+        const count = 4;
+        let index: number = count;
         let l: number = courses.length;
-        for (index; index < l; index += 3) {
+        for (index; index < l; index += count) {
             console.log("index", index);
             courses.splice(index, 0, <div className="visible-lg-block visible-md-block clearfix"></div>);
             l += 1;

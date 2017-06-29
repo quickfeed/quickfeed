@@ -1,12 +1,12 @@
 import * as React from "react";
 import { DynamicTable } from "../../components";
-import { ICourse, IUser } from "../../models";
+import { CourseStudentState, ICourse, ICourseStudent, IUser } from "../../models";
 
 import { ArrayHelper } from "../../helper";
 
 interface IEnrollmentViewProps {
     courses: ICourse[];
-    studentCourses: ICourse[];
+    studentCourses: ICourseStudent[];
     curUser: IUser | null;
     onEnrollmentClick: (user: IUser, course: ICourse) => void;
 }
@@ -21,20 +21,38 @@ class EnrollmentView extends React.Component<IEnrollmentViewProps, undefined> {
 
     }
 
-    public createEnrollmentRow(studentCourses: ICourse[], course: ICourse): Array<string | JSX.Element> {
+    public createEnrollmentRow(studentCourses: ICourseStudent[], course: ICourse): Array<string | JSX.Element> {
         const base: Array<string | JSX.Element> = [course.tag, course.name];
         const curUser = this.props.curUser;
         if (!curUser) {
             return base;
         }
-        if (!ArrayHelper.find(studentCourses, (a: ICourse) => a.id === course.id)) {
-            base.push(<button
-                onClick={() => { this.props.onEnrollmentClick(curUser, course); }}
-                className="btn btn-primary">
-                Enroll
-                    </button>);
+        const temp = ArrayHelper.find(studentCourses, (a: ICourseStudent) => a.courseId === course.id);
+        if (temp) {
+            if (temp.state === CourseStudentState.accepted) {
+                base.push("Enrolled");
+            } else if (temp.state === CourseStudentState.pending) {
+                base.push("Pending");
+            } else {
+                base.push(<div>
+                    <button
+                        onClick={() => { this.props.onEnrollmentClick(curUser, course); }}
+                        className="btn btn-primary">
+                        Enroll
+                    </button>
+                    <span style={{ padding: "7px", verticalAlign: "middle" }} className="bg-danger">
+                        Rejected
+                    </span>
+                </div>);
+            }
+
         } else {
-            base.push("Enrolled");
+            base.push(
+                <button
+                    onClick={() => { this.props.onEnrollmentClick(curUser, course); }}
+                    className="btn btn-primary">
+                    Enroll
+                </button>);
         }
         return base;
     }

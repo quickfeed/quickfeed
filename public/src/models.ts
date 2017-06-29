@@ -1,4 +1,4 @@
-interface IUser {
+export interface IUser {
     id: number;
     firstName: string;
     lastName: string;
@@ -6,20 +6,20 @@ interface IUser {
     personId: number;
 }
 
-function isCourse(value: any): value is ICourse {
+export function isCourse(value: any): value is ICourse {
     return value
         && typeof value.id === "number"
         && typeof value.name === "string"
         && typeof value.tag === "string";
 }
 
-interface ICourse {
+export interface ICourse {
     id: number;
     name: string;
     tag: string;
 }
 
-interface IAssignment {
+export interface IAssignment {
     id: number;
     courseId: number;
     name: string;
@@ -28,19 +28,26 @@ interface IAssignment {
     end: Date;
 }
 
-interface ICourseStudent {
-    personId: number;
-    courseId: number;
+export enum CourseStudentState {
+    pending = 0,
+    accepted = 1,
+    rejected = 2,
 }
 
-interface ITestCases {
+export interface ICourseStudent {
+    personId: number;
+    courseId: number;
+    state: CourseStudentState;
+}
+
+export interface ITestCases {
     name: string;
     score: number;
     points: number;
     weight: number;
 }
 
-interface ILabInfo {
+export interface ILabInfo {
     lab: string;
     course: string;
     score: number;
@@ -53,8 +60,7 @@ interface ILabInfo {
     build_id: number;
 }
 
-interface ICoursesWithAssignments {
+export interface ICoursesWithAssignments {
     course: ICourse;
     labs: IAssignment[];
 }
-export {IUser, isCourse, ICourse, IAssignment, ICourseStudent, ITestCases, ILabInfo, ICoursesWithAssignments};

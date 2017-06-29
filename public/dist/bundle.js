@@ -285,6 +285,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var ArrayHelper = (function () {
     function ArrayHelper() {
     }
+    ArrayHelper.join = function (array1, array2, callback) {
+        var returnObj = [];
+        for (var _i = 0, array1_1 = array1; _i < array1_1.length; _i++) {
+            var ele1 = array1_1[_i];
+            for (var _a = 0, array2_1 = array2; _a < array2_1.length; _a++) {
+                var ele2 = array2_1[_a];
+                if (callback(ele1, ele2)) {
+                    returnObj.push({ ele1: ele1, ele2: ele2 });
+                }
+            }
+        }
+        return returnObj;
+    };
     ArrayHelper.find = function (array, predicate) {
         for (var i = 0; i < array.length; i++) {
             var cur = array[i];
@@ -522,7 +535,6 @@ var CollapsableNavMenu = (function (_super) {
         this.topItems.forEach(function (temp, i) {
             if (i === index) {
                 if (_this.collapseIsOpen(temp)) {
-                    animations.push(_this.closeCollapse(temp));
                 }
                 else {
                     animations.push(_this.openCollapse(temp));
@@ -1360,9 +1372,10 @@ var CoursesOverview = (function (_super) {
         var courses = this.props.course_overview.map(function (val, key) {
             return React.createElement(components_1.CoursePanel, { course: val.course, labs: val.labs, navMan: _this.props.navMan });
         });
-        var index = 3;
+        var count = 4;
+        var index = count;
         var l = courses.length;
-        for (index; index < l; index += 3) {
+        for (index; index < l; index += count) {
             console.log("index", index);
             courses.splice(index, 0, React.createElement("div", { className: "visible-lg-block visible-md-block clearfix" }));
             l += 1;
@@ -1505,11 +1518,21 @@ var CourseManager = (function () {
     CourseManager.prototype.getCourseByTag = function (tag) {
         return this.courseProvider.getCourseByTag(tag);
     };
-    CourseManager.prototype.getCoursesFor = function (user) {
+    CourseManager.prototype.getRelationsFor = function (user, state) {
         var cLinks = [];
         for (var _i = 0, _a = this.courseProvider.getCoursesStudent(); _i < _a.length; _i++) {
             var c = _a[_i];
-            if (user.id === c.personId) {
+            if (user.id === c.personId && (state === undefined || c.state === models_1.CourseStudentState.accepted)) {
+                cLinks.push(c);
+            }
+        }
+        return cLinks;
+    };
+    CourseManager.prototype.getCoursesFor = function (user, state) {
+        var cLinks = [];
+        for (var _i = 0, _a = this.courseProvider.getCoursesStudent(); _i < _a.length; _i++) {
+            var c = _a[_i];
+            if (user.id === c.personId && (state === undefined || c.state === models_1.CourseStudentState.accepted)) {
                 cLinks.push(c);
             }
         }
@@ -1531,7 +1554,7 @@ var CourseManager = (function () {
         for (var _i = 0, _a = this.courseProvider.getCoursesStudent(); _i < _a.length; _i++) {
             var c = _a[_i];
             if (course.id === c.courseId) {
-                users.push(c.personId);
+                users.push(c);
             }
         }
         return users;
@@ -1552,6 +1575,9 @@ var CourseManager = (function () {
         }
         return this.courseProvider.getAssignments(courseId);
     };
+    CourseManager.prototype.changeUserState = function (link, state) {
+        this.courseProvider.changeUserState(link, state);
+    };
     return CourseManager;
 }());
 exports.CourseManager = CourseManager;
@@ -1571,6 +1597,12 @@ function isCourse(value) {
         && typeof value.tag === "string";
 }
 exports.isCourse = isCourse;
+var CourseStudentState;
+(function (CourseStudentState) {
+    CourseStudentState[CourseStudentState["pending"] = 0] = "pending";
+    CourseStudentState[CourseStudentState["accepted"] = 1] = "accepted";
+    CourseStudentState[CourseStudentState["rejected"] = 2] = "rejected";
+})(CourseStudentState = exports.CourseStudentState || (exports.CourseStudentState = {}));
 
 
 /***/ }),
@@ -1733,6 +1765,7 @@ exports.NavigationManager = NavigationManager;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var Models = __webpack_require__(29);
 var TempDataProvider = (function () {
     function TempDataProvider() {
         this.addLocalAssignments();
@@ -1784,7 +1817,14 @@ var TempDataProvider = (function () {
         "Do nothing";
     };
     TempDataProvider.prototype.addUserToCourse = function (user, course) {
-        this.localCourseStudent.push({ courseId: course.id, personId: user.id });
+        this.localCourseStudent.push({
+            courseId: course.id,
+            personId: user.id,
+            state: Models.CourseStudentState.pending,
+        });
+    };
+    TempDataProvider.prototype.changeUserState = function (link, state) {
+        link.state = state;
     };
     TempDataProvider.prototype.addLocalUsers = function () {
         this.localUsers = [
@@ -1945,8 +1985,10 @@ var TempDataProvider = (function () {
     };
     TempDataProvider.prototype.addLocalCourseStudent = function () {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999 },
-            { courseId: 1, personId: 999 },
+            { courseId: 0, personId: 999, state: 1 },
+            { courseId: 1, personId: 999, state: 1 },
+            { courseId: 0, personId: 1, state: 0 },
+            { courseId: 0, personId: 2, state: 0 },
         ];
     };
     return TempDataProvider;
@@ -2263,7 +2305,7 @@ var StudentPage = (function (_super) {
         var _this = this;
         return React.createElement("div", null,
             React.createElement("h1", null, "Enrollment page"),
-            React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.courseMan.getCourses(), studentCourses: this.getCourses(), curUser: this.userMan.getCurrentUser(), onEnrollmentClick: function (user, course) {
+            React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.courseMan.getCourses(), studentCourses: this.getRelations(), curUser: this.userMan.getCurrentUser(), onEnrollmentClick: function (user, course) {
                     _this.courseMan.addUserToCourse(user, course);
                     _this.navMan.refresh();
                 } }));
@@ -2351,10 +2393,17 @@ var StudentPage = (function (_super) {
             this.navMan.navigateTo(link.uri);
         }
     };
+    StudentPage.prototype.getRelations = function () {
+        var curUsr = this.userMan.getCurrentUser();
+        if (curUsr) {
+            return this.courseMan.getRelationsFor(curUsr);
+        }
+        return [];
+    };
     StudentPage.prototype.getCourses = function () {
         var curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return this.courseMan.getCoursesFor(curUsr);
+            return this.courseMan.getCoursesFor(curUsr, 1);
         }
         return [];
     };
@@ -2412,6 +2461,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
+var models_1 = __webpack_require__(29);
 var helper_1 = __webpack_require__(4);
 var EnrollmentView = (function (_super) {
     __extends(EnrollmentView, _super);
@@ -2429,11 +2479,22 @@ var EnrollmentView = (function (_super) {
         if (!curUser) {
             return base;
         }
-        if (!helper_1.ArrayHelper.find(studentCourses, function (a) { return a.id === course.id; })) {
-            base.push(React.createElement("button", { onClick: function () { _this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"));
+        var temp = helper_1.ArrayHelper.find(studentCourses, function (a) { return a.courseId === course.id; });
+        if (temp) {
+            if (temp.state === models_1.CourseStudentState.accepted) {
+                base.push("Enrolled");
+            }
+            else if (temp.state === models_1.CourseStudentState.pending) {
+                base.push("Pending");
+            }
+            else {
+                base.push(React.createElement("div", null,
+                    React.createElement("button", { onClick: function () { _this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"),
+                    React.createElement("span", { style: { padding: "7px", verticalAlign: "middle" }, className: "bg-danger" }, "Rejected")));
+            }
         }
         else {
-            base.push("Enrolled");
+            base.push(React.createElement("button", { onClick: function () { _this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"));
         }
         return base;
     };
@@ -2465,6 +2526,8 @@ var ViewPage_1 = __webpack_require__(3);
 var HelloView_1 = __webpack_require__(9);
 var UserView_1 = __webpack_require__(6);
 var CollapsableNavMenu_1 = __webpack_require__(10);
+var models_1 = __webpack_require__(29);
+var helper_1 = __webpack_require__(4);
 var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
     function TeacherPage(userMan, navMan, courseMan) {
@@ -2503,18 +2566,58 @@ var TeacherPage = (function (_super) {
             var tempCourse = this.courseMan.getCourse(course);
             if (tempCourse) {
                 var userIds = this.courseMan.getUserIdsForCourse(tempCourse);
-                var users = this.userMan.getUsers(userIds);
+                var users = this.userMan.getUsers(userIds.map(function (e) { return e.personId; }));
+                var all = helper_1.ArrayHelper.join(userIds, users, function (e1, e2) { return e1.personId === e2.id; });
+                console.log(all);
+                var acceptedUsers_1 = [];
+                var pendingUsers_1 = [];
+                all.forEach(function (ele, id) {
+                    switch (ele.ele1.state) {
+                        case models_1.CourseStudentState.accepted:
+                            acceptedUsers_1.push(ele.ele2);
+                            break;
+                        case models_1.CourseStudentState.pending:
+                            pendingUsers_1.push(ele);
+                            break;
+                    }
+                });
                 return React.createElement("div", null,
-                    React.createElement("h1", null,
+                    React.createElement("h3", null,
                         "Users for ",
                         tempCourse.name,
                         " (",
                         tempCourse.tag,
                         ")"),
-                    React.createElement(UserView_1.UserView, { users: users }));
+                    React.createElement(UserView_1.UserView, { users: acceptedUsers_1 }),
+                    React.createElement("h3", null,
+                        "Pending users for ",
+                        tempCourse.name,
+                        " (",
+                        tempCourse.tag,
+                        ")"),
+                    this.createPendingTable(pendingUsers_1));
             }
         }
         return React.createElement("div", null, "404 Page not found");
+    };
+    TeacherPage.prototype.createPendingTable = function (pendingUsers) {
+        var _this = this;
+        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["ID", "First name", "Last name", "Email", "StudenID", "Action"], selector: function (ele) { return [
+                ele.ele2.id.toString(),
+                ele.ele2.firstName,
+                ele.ele2.lastName,
+                ele.ele2.email,
+                ele.ele2.personId.toString(),
+                React.createElement("span", null,
+                    React.createElement("button", { onClick: function (e) {
+                            _this.courseMan.changeUserState(ele.ele1, models_1.CourseStudentState.accepted);
+                            _this.navMan.refresh();
+                        }, className: "btn btn-primary" }, "Accept"),
+                    React.createElement("button", { onClick: function (e) {
+                            _this.courseMan.changeUserState(ele.ele1, models_1.CourseStudentState.rejected);
+                            _this.navMan.refresh();
+                        }, className: "btn btn-danger" }, "Reject")),
+            ]; } });
     };
     TeacherPage.prototype.generateCollectionFor = function (link) {
         return {
