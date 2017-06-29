@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-// StructDB implements UserDatabase.
+// StructDB implements Database.
 type StructDB struct {
 	mu      sync.Mutex
 	path    string
