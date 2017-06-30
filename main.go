@@ -78,6 +78,10 @@ func main() {
 		})
 	}
 
+	e.GET("/logout", func(c echo.Context) error {
+		return c.Redirect(http.StatusTemporaryRedirect, "/auth/github/logout")
+	})
+
 	oauth2 := e.Group("/auth/:provider", withProvider)
 	oauth2.GET("", auth.OAuth2Login(db))
 	oauth2.GET("/callback", auth.OAuth2Callback(db))
