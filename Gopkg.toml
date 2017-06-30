@@ -13,3 +13,8 @@
 [[constraint]]
   branch = "master"
   name = "github.com/markbates/goth"
+
+[[constraint]]
+  branch = "add-OrganizationService.GetByID"
+  name = "github.com/google/go-github"
+  source = "https://github.com/s111/go-github.git"

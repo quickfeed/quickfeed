@@ -1,11 +1,11 @@
 import { ArrayHelper } from "../helper";
+import { IMap, MapHelper } from "../map";
 import { CourseStudentState, IAssignment, ICourse, ICourseStudent, isCourse, IUser } from "../models";
 
 interface ICourseProvider {
-    getCourses(): ICourse[];
-    getAssignments(courseId: number): IAssignment[];
+    getCourses(): IMap<ICourse>;
+    getAssignments(courseId: number): IMap<IAssignment>;
     getCoursesStudent(): ICourseStudent[];
-    getCourseByTag(tag: string): ICourse | null;
     addUserToCourse(user: IUser, course: ICourse): void;
     changeUserState(link: ICourseStudent, state: CourseStudentState): void;
 }
@@ -21,16 +21,15 @@ class CourseManager {
     }
 
     public getCourse(id: number): ICourse | null {
-        return ArrayHelper.find(this.getCourses(), (a) => a.id === id);
+        const a = this.getCourses()[id];
+        if (a) {
+            return a;
+        }
+        return null;
     }
 
     public getCourses(): ICourse[] {
-        return this.courseProvider.getCourses();
-    }
-
-    // get a course by a given course tag
-    public getCourseByTag(tag: string): ICourse | null {
-        return this.courseProvider.getCourseByTag(tag);
+        return MapHelper.toArray(this.courseProvider.getCourses());
     }
 
     public getRelationsFor(user: IUser, state?: CourseStudentState): ICourseStudent[] {
@@ -53,12 +52,11 @@ class CourseManager {
             }
         }
         const courses: ICourse[] = [];
-        for (const c of this.getCourses()) {
-            for (const link of cLinks) {
-                if (c.id === link.courseId) {
-                    courses.push(c);
-                    break;
-                }
+        const tempCourses = this.getCourses();
+        for (const link of cLinks) {
+            const c = tempCourses[link.courseId];
+            if (c) {
+                courses.push(c);
             }
         }
         return courses;
@@ -76,10 +74,9 @@ class CourseManager {
 
     public getAssignment(course: ICourse, assignmentId: number): IAssignment | null {
         const temp = this.getAssignments(course);
-        for (const a of temp) {
-            if (a.id === assignmentId) {
-                return a;
-            }
+        console.log(temp);
+        if (temp[assignmentId]) {
+            return temp[assignmentId];
         }
         return null;
     }
@@ -88,7 +85,7 @@ class CourseManager {
         if (isCourse(courseId)) {
             courseId = courseId.id;
         }
-        return this.courseProvider.getAssignments(courseId);
+        return MapHelper.toArray(this.courseProvider.getAssignments(courseId));
     }
 
     public changeUserState(link: ICourseStudent, state: CourseStudentState): void {

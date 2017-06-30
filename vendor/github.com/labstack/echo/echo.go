@@ -72,6 +72,7 @@ type (
 		TLSServer        *http.Server
 		Listener         net.Listener
 		TLSListener      net.Listener
+		AutoTLSManager   autocert.Manager
 		DisableHTTP2     bool
 		Debug            bool
 		HideBanner       bool
@@ -79,7 +80,6 @@ type (
 		Binder           Binder
 		Validator        Validator
 		Renderer         Renderer
-		AutoTLSManager   autocert.Manager
 		// Mutex            sync.RWMutex
 		Logger Logger
 	}
@@ -295,7 +295,7 @@ func New() (e *Echo) {
 func (e *Echo) NewContext(r *http.Request, w http.ResponseWriter) Context {
 	return &context{
 		request:  r,
-		response: NewResponse(w, e),
+		response: &Response{echo: e, Writer: w},
 		store:    make(Map),
 		echo:     e,
 		pvalues:  make([]string, *e.maxParam),

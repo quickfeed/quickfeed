@@ -2,11 +2,12 @@ import { IEventData, newEvent } from "../event";
 import { IUser } from "../models";
 
 import { ArrayHelper } from "../helper";
+import { IMap, MapHelper } from "../map";
 
 interface IUserProvider {
     tryLogin(username: string, password: string): IUser | null;
     logout(user: IUser): void;
-    getAllUser(): IUser[];
+    getAllUser(): IMap<IUser>;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -54,14 +55,16 @@ class UserManager {
     }
 
     public getAllUser(): IUser[] {
-        return this.userProvider.getAllUser();
+        return MapHelper.toArray(this.userProvider.getAllUser());
     }
 
     public getUsers(ids: number[]): IUser[] {
         const returnUsers: IUser[] = [];
-        this.getAllUser().forEach((user) => {
-            if (ArrayHelper.find(ids, (id) => id === user.id)) {
-                returnUsers.push(user);
+        const allUsers = this.getAllUser();
+        ids.forEach((ele) => {
+            const temp = allUsers[ele];
+            if (temp) {
+                returnUsers.push(temp);
             }
         });
         return returnUsers;

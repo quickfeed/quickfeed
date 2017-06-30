@@ -14,6 +14,19 @@
   revision = "6a1fa9404c0aebf36c879bc50152edcc953910d2"
 
 [[projects]]
+  branch = "add-OrganizationService.GetByID"
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  revision = "727f52434bf79e226f16d51e705864fa3a1759de"
+  source = "https://github.com/s111/go-github.git"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
+
+[[projects]]
   name = "github.com/gorilla/context"
   packages = ["."]
   revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
@@ -41,7 +54,7 @@
   branch = "master"
   name = "github.com/labstack/echo"
   packages = [".","middleware"]
-  revision = "83eadbad188df0d05305fce89bfb855a19ef5f21"
+  revision = "ee85b46a0539c3a516dc68374d49eff8b04573de"
 
 [[projects]]
   branch = "master"
@@ -89,19 +102,19 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["acme","acme/autocert"]
-  revision = "adbae1b6b6fb4b02448a0fc0dbbc9ba2b95b294d"
+  revision = "5ef0053f77724838734b6945dd364d3847e5de1d"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context"]
-  revision = "455220fa52c866a8aa14ff5e8cc68cde16b8395e"
+  packages = ["context","context/ctxhttp"]
+  revision = "1f9224279e98554b6a6432d4dd998a739f8b2b7c"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","internal"]
-  revision = "f047394b6d14284165300fd82dad67edb3a4d7f6"
+  revision = "cce311a261e6fcf29de72ca96827bdb0b7d9c9e6"
 
 [[projects]]
   branch = "master"
@@ -111,13 +124,13 @@
 
 [[projects]]
   name = "google.golang.org/appengine"
-  packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
+  packages = [".","internal","internal/app_identity","internal/base","internal/datastore","internal/log","internal/modules","internal/remote_api","internal/urlfetch","urlfetch"]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
   version = "v1.0.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "15dc52dcd9d579d7fd59506285642f0eed1b6ba3a184b484fa2d4e48b6467f91"
+  inputs-digest = "9144a87ff07135c93cc12f81d061da205a3edb030d8e7eb66487a76891ebc78b"
   solver-name = "gps-cdcl"
   solver-version = 1

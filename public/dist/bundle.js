@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,21 +79,21 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(14));
-__export(__webpack_require__(8));
 __export(__webpack_require__(15));
+__export(__webpack_require__(9));
 __export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
 __export(__webpack_require__(19));
-__export(__webpack_require__(21));
-__export(__webpack_require__(9));
+__export(__webpack_require__(20));
 __export(__webpack_require__(22));
+__export(__webpack_require__(10));
 __export(__webpack_require__(23));
 __export(__webpack_require__(24));
 __export(__webpack_require__(25));
 __export(__webpack_require__(26));
 __export(__webpack_require__(27));
+__export(__webpack_require__(28));
 
 
 /***/ }),
@@ -103,7 +103,7 @@ __export(__webpack_require__(27));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(6);
+var event_1 = __webpack_require__(5);
 var NavigationHelper = (function () {
     function NavigationHelper(thisObject) {
         this.onPreNavigation = event_1.newEvent("NavigationHelper.onPreNavigation");
@@ -282,43 +282,6 @@ exports.ViewPage = ViewPage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var ArrayHelper = (function () {
-    function ArrayHelper() {
-    }
-    ArrayHelper.join = function (array1, array2, callback) {
-        var returnObj = [];
-        for (var _i = 0, array1_1 = array1; _i < array1_1.length; _i++) {
-            var ele1 = array1_1[_i];
-            for (var _a = 0, array2_1 = array2; _a < array2_1.length; _a++) {
-                var ele2 = array2_1[_a];
-                if (callback(ele1, ele2)) {
-                    returnObj.push({ ele1: ele1, ele2: ele2 });
-                }
-            }
-        }
-        return returnObj;
-    };
-    ArrayHelper.find = function (array, predicate) {
-        for (var i = 0; i < array.length; i++) {
-            var cur = array[i];
-            if (predicate.call(array, cur, i, array)) {
-                return cur;
-            }
-        }
-        return null;
-    };
-    return ArrayHelper;
-}());
-exports.ArrayHelper = ArrayHelper;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
 function isCourse(value) {
     return value
         && typeof value.id === "number"
@@ -335,7 +298,7 @@ var CourseStudentState;
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -361,6 +324,68 @@ function newEvent(info) {
     return handler;
 }
 exports.newEvent = newEvent;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var MapHelper = (function () {
+    function MapHelper() {
+    }
+    MapHelper.mapTo = function (map, callback) {
+        var returnArray = [];
+        var keys = Object.keys(map);
+        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+            var a = keys_1[_i];
+            var index = parseInt(a, 10);
+            returnArray.push(callback(map[index], index, map));
+        }
+        return returnArray;
+    };
+    MapHelper.forEach = function (map, callback) {
+        var keys = Object.keys(map);
+        for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
+            var a = keys_2[_i];
+            var index = parseInt(a, 10);
+            callback(map[index], index, map);
+        }
+    };
+    MapHelper.find = function (map, callback) {
+        var keys = Object.keys(map);
+        for (var _i = 0, keys_3 = keys; _i < keys_3.length; _i++) {
+            var a = keys_3[_i];
+            var index = parseInt(a, 10);
+            if (callback(map[index], index, map)) {
+                return map[index];
+            }
+        }
+        return null;
+    };
+    MapHelper.toArray = function (map) {
+        var returnArray = [];
+        var keys = Object.keys(map);
+        for (var _i = 0, keys_4 = keys; _i < keys_4.length; _i++) {
+            var a = keys_4[_i];
+            var index = parseInt(a, 10);
+            returnArray.push(map[index]);
+        }
+        return returnArray;
+    };
+    return MapHelper;
+}());
+exports.MapHelper = MapHelper;
+function mapify(obj, callback) {
+    var newObj = {};
+    obj.forEach(function (ele, index, array) {
+        newObj[callback(ele, index, obj)] = ele;
+    });
+    return newObj;
+}
+exports.mapify = mapify;
 
 
 /***/ }),
@@ -403,6 +428,43 @@ exports.UserView = UserView;
 
 /***/ }),
 /* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var ArrayHelper = (function () {
+    function ArrayHelper() {
+    }
+    ArrayHelper.join = function (array1, array2, callback) {
+        var returnObj = [];
+        for (var _i = 0, array1_1 = array1; _i < array1_1.length; _i++) {
+            var ele1 = array1_1[_i];
+            for (var _a = 0, array2_1 = array2; _a < array2_1.length; _a++) {
+                var ele2 = array2_1[_a];
+                if (callback(ele1, ele2)) {
+                    returnObj.push({ ele1: ele1, ele2: ele2 });
+                }
+            }
+        }
+        return returnObj;
+    };
+    ArrayHelper.find = function (array, predicate) {
+        for (var i = 0; i < array.length; i++) {
+            var cur = array[i];
+            if (predicate.call(array, cur, i, array)) {
+                return cur;
+            }
+        }
+        return null;
+    };
+    return ArrayHelper;
+}());
+exports.ArrayHelper = ArrayHelper;
+
+
+/***/ }),
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -451,7 +513,7 @@ exports.NavHeaderBar = NavHeaderBar;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -488,7 +550,7 @@ exports.ProgressBar = ProgressBar;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -519,7 +581,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -621,8 +683,14 @@ var CollapsableNavMenu = (function (_super) {
     CollapsableNavMenu.prototype.renderChilds = function (index, link) {
         var _this = this;
         var isActive = link.active ? "active" : "";
-        return React.createElement("li", { key: index, className: isActive },
-            React.createElement("a", { onClick: function (e) { return _this.handleClick(e, link); }, href: "/" + link.uri }, link.name));
+        if (link.uri) {
+            return React.createElement("li", { key: index, className: isActive },
+                React.createElement("a", { onClick: function (e) { return _this.handleClick(e, link); }, href: "/" + link.uri }, link.name));
+        }
+        else {
+            return React.createElement("li", { key: index, className: isActive },
+                React.createElement("span", { className: "header" }, link.name));
+        }
     };
     CollapsableNavMenu.prototype.renderTopElement = function (index, links) {
         var _this = this;
@@ -654,7 +722,7 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -671,15 +739,15 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(13);
+var ReactDOM = __webpack_require__(14);
 var components_1 = __webpack_require__(1);
-var managers_1 = __webpack_require__(28);
-var ErrorPage_1 = __webpack_require__(33);
-var HelpPage_1 = __webpack_require__(34);
-var HomePage_1 = __webpack_require__(36);
-var StudentPage_1 = __webpack_require__(37);
-var TeacherPage_1 = __webpack_require__(39);
-var AdminPage_1 = __webpack_require__(40);
+var managers_1 = __webpack_require__(29);
+var ErrorPage_1 = __webpack_require__(34);
+var HelpPage_1 = __webpack_require__(35);
+var HomePage_1 = __webpack_require__(37);
+var StudentPage_1 = __webpack_require__(38);
+var TeacherPage_1 = __webpack_require__(40);
+var AdminPage_1 = __webpack_require__(41);
 var AutoGrader = (function (_super) {
     __extends(AutoGrader, _super);
     function AutoGrader(props) {
@@ -813,13 +881,13 @@ main();
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -836,7 +904,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavHeaderBar_1 = __webpack_require__(8);
+var NavHeaderBar_1 = __webpack_require__(9);
 var NavigationHelper_1 = __webpack_require__(2);
 var NavBar = (function (_super) {
     __extends(NavBar, _super);
@@ -898,7 +966,7 @@ exports.NavBar = NavBar;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -944,7 +1012,7 @@ exports.NavMenu = NavMenu;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -991,7 +1059,7 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1051,7 +1119,7 @@ exports.DynamicTable = DynamicTable;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1065,7 +1133,7 @@ exports.Row = Row;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1082,7 +1150,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var LabResultView_1 = __webpack_require__(20);
+var LabResultView_1 = __webpack_require__(21);
 var StudentLab = (function (_super) {
     __extends(StudentLab, _super);
     function StudentLab() {
@@ -1116,7 +1184,7 @@ exports.StudentLab = StudentLab;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1157,7 +1225,7 @@ exports.LabResultView = LabResultView;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1229,7 +1297,7 @@ exports.NavDropdown = NavDropdown;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1274,7 +1342,7 @@ exports.LabResult = LabResult;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1309,7 +1377,7 @@ exports.LastBuild = LastBuild;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1368,7 +1436,7 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1421,7 +1489,7 @@ exports.CoursesOverview = CoursesOverview;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1468,7 +1536,7 @@ exports.CoursePanel = CoursePanel;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1485,7 +1553,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ProgressBar_1 = __webpack_require__(9);
+var ProgressBar_1 = __webpack_require__(10);
 var SingleCourseOverview = (function (_super) {
     __extends(SingleCourseOverview, _super);
     function SingleCourseOverview() {
@@ -1508,7 +1576,7 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1517,21 +1585,21 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
 __export(__webpack_require__(32));
+__export(__webpack_require__(33));
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var helper_1 = __webpack_require__(4);
-var models_1 = __webpack_require__(5);
+var map_1 = __webpack_require__(6);
+var models_1 = __webpack_require__(4);
 var CourseManager = (function () {
     function CourseManager(courseProvider) {
         this.courseProvider = courseProvider;
@@ -1540,13 +1608,14 @@ var CourseManager = (function () {
         this.courseProvider.addUserToCourse(user, course);
     };
     CourseManager.prototype.getCourse = function (id) {
-        return helper_1.ArrayHelper.find(this.getCourses(), function (a) { return a.id === id; });
+        var a = this.getCourses()[id];
+        if (a) {
+            return a;
+        }
+        return null;
     };
     CourseManager.prototype.getCourses = function () {
-        return this.courseProvider.getCourses();
-    };
-    CourseManager.prototype.getCourseByTag = function (tag) {
-        return this.courseProvider.getCourseByTag(tag);
+        return map_1.MapHelper.toArray(this.courseProvider.getCourses());
     };
     CourseManager.prototype.getRelationsFor = function (user, state) {
         var cLinks = [];
@@ -1567,14 +1636,12 @@ var CourseManager = (function () {
             }
         }
         var courses = [];
-        for (var _b = 0, _c = this.getCourses(); _b < _c.length; _b++) {
-            var c = _c[_b];
-            for (var _d = 0, cLinks_1 = cLinks; _d < cLinks_1.length; _d++) {
-                var link = cLinks_1[_d];
-                if (c.id === link.courseId) {
-                    courses.push(c);
-                    break;
-                }
+        var tempCourses = this.getCourses();
+        for (var _b = 0, cLinks_1 = cLinks; _b < cLinks_1.length; _b++) {
+            var link = cLinks_1[_b];
+            var c = tempCourses[link.courseId];
+            if (c) {
+                courses.push(c);
             }
         }
         return courses;
@@ -1591,11 +1658,9 @@ var CourseManager = (function () {
     };
     CourseManager.prototype.getAssignment = function (course, assignmentId) {
         var temp = this.getAssignments(course);
-        for (var _i = 0, temp_1 = temp; _i < temp_1.length; _i++) {
-            var a = temp_1[_i];
-            if (a.id === assignmentId) {
-                return a;
-            }
+        console.log(temp);
+        if (temp[assignmentId]) {
+            return temp[assignmentId];
         }
         return null;
     };
@@ -1603,7 +1668,7 @@ var CourseManager = (function () {
         if (models_1.isCourse(courseId)) {
             courseId = courseId.id;
         }
-        return this.courseProvider.getAssignments(courseId);
+        return map_1.MapHelper.toArray(this.courseProvider.getAssignments(courseId));
     };
     CourseManager.prototype.changeUserState = function (link, state) {
         this.courseProvider.changeUserState(link, state);
@@ -1614,13 +1679,13 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(6);
+var event_1 = __webpack_require__(5);
 var NavigationHelper_1 = __webpack_require__(2);
 var ViewPage_1 = __webpack_require__(3);
 function isILinkCollection(item) {
@@ -1767,13 +1832,14 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Models = __webpack_require__(5);
+var map_1 = __webpack_require__(6);
+var Models = __webpack_require__(4);
 var TempDataProvider = (function () {
     function TempDataProvider() {
         this.addLocalAssignments();
@@ -1787,37 +1853,24 @@ var TempDataProvider = (function () {
     TempDataProvider.prototype.getCourses = function () {
         return this.localCourses;
     };
-    TempDataProvider.prototype.getCourseByTag = function (tag) {
-        for (var _i = 0, _a = this.localCourses; _i < _a.length; _i++) {
-            var c = _a[_i];
-            if (c.tag === tag) {
-                return c;
-            }
-        }
-        return null;
-    };
     TempDataProvider.prototype.getCoursesStudent = function () {
         return this.localCourseStudent;
     };
     TempDataProvider.prototype.getAssignments = function (courseId) {
         var temp = [];
-        for (var _i = 0, _a = this.localAssignments; _i < _a.length; _i++) {
-            var a = _a[_i];
+        map_1.MapHelper.forEach(this.localAssignments, function (a, i) {
             if (a.courseId === courseId) {
-                temp.push(a);
+                temp[i] = a;
             }
-        }
+        });
         return temp;
     };
     TempDataProvider.prototype.tryLogin = function (username, password) {
-        for (var _i = 0, _a = this.localUsers; _i < _a.length; _i++) {
-            var u = _a[_i];
-            if (u.email.toLocaleLowerCase() === username.toLocaleLowerCase()) {
-                if (u.password === password) {
-                    return u;
-                }
-                return null;
-            }
+        var user = map_1.MapHelper.find(this.localUsers, function (u) {
+            return u.email.toLocaleLowerCase() === username.toLocaleLowerCase();
+        });
+        if (user && user.password === password) {
+            return user;
         }
         return null;
     };
@@ -1835,7 +1888,7 @@ var TempDataProvider = (function () {
         link.state = state;
     };
     TempDataProvider.prototype.addLocalUsers = function () {
-        this.localUsers = [
+        this.localUsers = map_1.mapify([
             {
                 id: 999,
                 firstName: "Test",
@@ -1868,10 +1921,10 @@ var TempDataProvider = (function () {
                 personId: 1234,
                 password: "1234",
             },
-        ];
+        ], function (ele) { return ele.id; });
     };
     TempDataProvider.prototype.addLocalAssignments = function () {
-        this.localAssignments = [
+        this.localAssignments = map_1.mapify([
             {
                 id: 0,
                 courseId: 0,
@@ -1960,10 +2013,10 @@ var TempDataProvider = (function () {
                 deadline: new Date(2017, 5, 25),
                 end: new Date(2017, 5, 30),
             },
-        ];
+        ], function (ele) { return ele.id; });
     };
     TempDataProvider.prototype.addLocalCourses = function () {
-        this.localCourses = [
+        this.localCourses = map_1.mapify([
             {
                 id: 0,
                 name: "Object Oriented Programming",
@@ -1989,7 +2042,7 @@ var TempDataProvider = (function () {
                 name: "Operating Systems",
                 tag: "DAT320",
             },
-        ];
+        ], function (ele) { return ele.id; });
     };
     TempDataProvider.prototype.addLocalCourseStudent = function () {
         this.localCourseStudent = [
@@ -2005,14 +2058,14 @@ exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(6);
-var helper_1 = __webpack_require__(4);
+var event_1 = __webpack_require__(5);
+var map_1 = __webpack_require__(6);
 var UserManager = (function () {
     function UserManager(userProvider) {
         this.onLogin = event_1.newEvent("UserManager.onLogin");
@@ -2044,13 +2097,15 @@ var UserManager = (function () {
         return user.id > 100;
     };
     UserManager.prototype.getAllUser = function () {
-        return this.userProvider.getAllUser();
+        return map_1.MapHelper.toArray(this.userProvider.getAllUser());
     };
     UserManager.prototype.getUsers = function (ids) {
         var returnUsers = [];
-        this.getAllUser().forEach(function (user) {
-            if (helper_1.ArrayHelper.find(ids, function (id) { return id === user.id; })) {
-                returnUsers.push(user);
+        var allUsers = this.getAllUser();
+        ids.forEach(function (ele) {
+            var temp = allUsers[ele];
+            if (temp) {
+                returnUsers.push(temp);
             }
         });
         return returnUsers;
@@ -2064,7 +2119,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2111,7 +2166,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2129,7 +2184,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var ViewPage_1 = __webpack_require__(3);
-var HelpView_1 = __webpack_require__(35);
+var HelpView_1 = __webpack_require__(36);
 var HelpPage = (function (_super) {
     __extends(HelpPage, _super);
     function HelpPage(navMan) {
@@ -2156,7 +2211,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2227,7 +2282,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2259,7 +2314,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2278,11 +2333,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(10);
+var HelloView_1 = __webpack_require__(11);
 var UserView_1 = __webpack_require__(7);
-var helper_1 = __webpack_require__(4);
-var CollapsableNavMenu_1 = __webpack_require__(11);
-var EnrollmentView_1 = __webpack_require__(38);
+var helper_1 = __webpack_require__(8);
+var CollapsableNavMenu_1 = __webpack_require__(12);
+var EnrollmentView_1 = __webpack_require__(39);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -2342,11 +2397,18 @@ var StudentPage = (function (_super) {
         var _this = this;
         if (key === 0) {
             var coursesLinks = this.courses.map(function (course, i) {
+                var allLinks = [];
+                allLinks.push({ name: "Labs" });
+                allLinks.push.apply(allLinks, _this.getLabsfor(course).map(function (lab, ind) {
+                    return { name: lab.name, uri: _this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
+                }));
+                allLinks.push({ name: "Group Labs" });
+                allLinks.push({ name: "Settings" });
+                allLinks.push({ name: "Members", uri: _this.pagePath + "/course/" + course.id + "/members" });
+                allLinks.push({ name: "Coruse Info", uri: _this.pagePath + "/course/" + course.id + "/info" });
                 return {
                     item: { name: course.tag, uri: _this.pagePath + "/course/" + course.id },
-                    children: _this.getLabsfor(course).map(function (lab, ind) {
-                        return { name: lab.name, uri: _this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
-                    }),
+                    children: allLinks,
                 };
             });
             var settings = [
@@ -2453,7 +2515,7 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2471,8 +2533,8 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
-var models_1 = __webpack_require__(5);
-var helper_1 = __webpack_require__(4);
+var models_1 = __webpack_require__(4);
+var helper_1 = __webpack_require__(8);
 var EnrollmentView = (function (_super) {
     __extends(EnrollmentView, _super);
     function EnrollmentView() {
@@ -2514,7 +2576,7 @@ exports.EnrollmentView = EnrollmentView;
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2533,11 +2595,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(10);
+var HelloView_1 = __webpack_require__(11);
 var UserView_1 = __webpack_require__(7);
-var CollapsableNavMenu_1 = __webpack_require__(11);
-var models_1 = __webpack_require__(5);
-var helper_1 = __webpack_require__(4);
+var CollapsableNavMenu_1 = __webpack_require__(12);
+var models_1 = __webpack_require__(4);
+var helper_1 = __webpack_require__(8);
 var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
     function TeacherPage(userMan, navMan, courseMan) {
@@ -2550,7 +2612,7 @@ var TeacherPage = (function (_super) {
         _this.courses = _this.getCourses();
         _this.navHelper.defaultPage = "course/" + (_this.courses.length > 0 ? _this.courses[0].id.toString() : "");
         _this.navHelper.registerFunction("course/{course}", _this.course);
-        _this.navHelper.registerFunction("course/{course}/users", _this.courseUsers);
+        _this.navHelper.registerFunction("course/{course}/members", _this.courseUsers);
         _this.navHelper.registerFunction("course/{course}/{page}", _this.course);
         _this.navHelper.registerFunction("user", function (navInfo) {
             return React.createElement(UserView_1.UserView, { users: userMan.getAllUser() });
@@ -2640,9 +2702,9 @@ var TeacherPage = (function (_super) {
             children: [
                 { name: "Results", uri: link.uri + "/results" },
                 { name: "Groups", uri: link.uri + "/groups" },
-                { name: "Users", uri: link.uri + "/users" },
+                { name: "Members", uri: link.uri + "/members" },
                 { name: "Settings", uri: link.uri + "/settings" },
-                { name: "Info", uri: link.uri + "/info" },
+                { name: "Course Info", uri: link.uri + "/courseinfo" },
             ],
         };
     };
@@ -2651,9 +2713,9 @@ var TeacherPage = (function (_super) {
         var curUser = this.userMan.getCurrentUser();
         if (curUser && this.isTeacher(curUser)) {
             if (menu === 0) {
-                var couses = this.courseMan.getCoursesFor(curUser);
+                var courses = this.courseMan.getCoursesFor(curUser);
                 var labLinks_1 = [];
-                couses.forEach(function (e) {
+                courses.forEach(function (e) {
                     labLinks_1.push(_this.generateCollectionFor({
                         name: e.tag,
                         uri: _this.pagePath + "/course/" + e.id,
@@ -2718,7 +2780,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
