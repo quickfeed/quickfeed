@@ -47,7 +47,7 @@ class UserManager {
     }
 
     public isAdmin(user: IUser): boolean {
-        return user.id > 100;
+        return user.isAdmin;
     }
 
     public isTeacher(user: IUser): boolean {
