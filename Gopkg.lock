@@ -99,6 +99,12 @@
   revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
 
 [[projects]]
+  name = "github.com/xanzy/go-gitlab"
+  packages = ["."]
+  revision = "5b756e2fdc9f21fd4791fa1453b8fe01af0f82e2"
+  version = "v0.5.1"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["acme","acme/autocert"]
@@ -131,6 +137,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9144a87ff07135c93cc12f81d061da205a3edb030d8e7eb66487a76891ebc78b"
+  inputs-digest = "7659b55f0d4b0f4d570da9b5808a07f3f73ae8d9c0fa30c45ba4a70edeffc76f"
   solver-name = "gps-cdcl"
   solver-version = 1
