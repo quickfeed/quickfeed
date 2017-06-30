@@ -994,15 +994,24 @@ var NavMenu = (function (_super) {
             if (v.active) {
                 active = "active";
             }
-            return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "/" + v.uri, onClick: function (e) { return NavigationHelper_1.NavigationHelper.handleClick(e, function () { _this.handleClick(v); }); } }, v.name));
+            if (v.uri) {
+                return React.createElement("li", { key: i, className: active },
+                    React.createElement("a", { onClick: function (e) { return _this.handleClick(e, v); }, href: "/" + v.uri }, v.name));
+            }
+            else {
+                return React.createElement("li", { key: i, className: active },
+                    React.createElement("span", { className: "header" }, v.name));
+            }
         });
         return React.createElement("ul", { className: "nav nav-list" }, items);
     };
-    NavMenu.prototype.handleClick = function (v) {
-        if (this.props.onClick) {
-            this.props.onClick(v);
-        }
+    NavMenu.prototype.handleClick = function (e, link) {
+        var _this = this;
+        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+            if (_this.props.onClick) {
+                _this.props.onClick(link);
+            }
+        });
     };
     return NavMenu;
 }(React.Component));
