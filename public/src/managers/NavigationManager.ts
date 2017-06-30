@@ -145,12 +145,13 @@ export class NavigationManager {
         if (viewPage && viewPage.pagePath === checkUrl) {
             checkUrl += "/" + viewPage.navHelper.defaultPage;
         }
+        const long = NavigationHelper.getParts(checkUrl);
         for (const l of links) {
             if (!l.uri) {
                 continue;
             }
-            const a = NavigationHelper.getParts(l.uri).join("/");
-            l.active = a === checkUrl.substr(0, a.length);
+            const short = NavigationHelper.getParts(l.uri);
+            l.active = this.checkPartEqual(long, short);
         }
     }
 
@@ -159,12 +160,13 @@ export class NavigationManager {
         if (viewPage && viewPage.pagePath === checkUrl) {
             checkUrl += "/" + viewPage.navHelper.defaultPage;
         }
+        const long = NavigationHelper.getParts(checkUrl);
         for (const l of links) {
             if (!l.item.uri) {
                 continue;
             }
-            const a = NavigationHelper.getParts(l.item.uri).join("/");
-            l.item.active = a === checkUrl.substr(0, a.length);
+            const short = NavigationHelper.getParts(l.item.uri);
+            l.item.active = this.checkPartEqual(long, short);
             if (l.children) {
                 this.checkLinks(l.children, viewPage);
             }
@@ -173,6 +175,18 @@ export class NavigationManager {
 
     public refresh() {
         this.navigateTo(this.currentPath);
+    }
+
+    private checkPartEqual(long: string[], short: string[]): boolean {
+        if (short.length > long.length) {
+            return false;
+        }
+        for (let i = 0; i < short.length; i++) {
+            if (short[i] !== long[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private getErrorPage(statusCode: number): ViewPage {
