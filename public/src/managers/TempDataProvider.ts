@@ -79,6 +79,16 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 email: "test@testersen.no",
                 personId: 9999,
                 password: "1234",
+                isAdmin: true,
+            },
+            {
+                id: 1000,
+                firstName: "Admin",
+                lastName: "Admin",
+                email: "admin@admin",
+                personId: 1000,
+                password: "1234",
+                isAdmin: true,
             },
             {
                 id: 1,
@@ -87,6 +97,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 email: "per@pettersen.no",
                 personId: 1234,
                 password: "1234",
+                isAdmin: false,
             },
             {
                 id: 2,
@@ -95,6 +106,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 email: "bob@bobsen.no",
                 personId: 1234,
                 password: "1234",
+                isAdmin: false,
             },
             {
                 id: 3,
@@ -103,6 +115,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 email: "petter@pan.no",
                 personId: 1234,
                 password: "1234",
+                isAdmin: false,
             },
         ], (ele) => ele.id);
     }

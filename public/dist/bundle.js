@@ -1843,6 +1843,16 @@ var TempDataProvider = (function () {
                 email: "test@testersen.no",
                 personId: 9999,
                 password: "1234",
+                isAdmin: true,
+            },
+            {
+                id: 1000,
+                firstName: "Admin",
+                lastName: "Admin",
+                email: "admin@admin",
+                personId: 1000,
+                password: "1234",
+                isAdmin: true,
             },
             {
                 id: 1,
@@ -1851,6 +1861,7 @@ var TempDataProvider = (function () {
                 email: "per@pettersen.no",
                 personId: 1234,
                 password: "1234",
+                isAdmin: false,
             },
             {
                 id: 2,
@@ -1859,6 +1870,7 @@ var TempDataProvider = (function () {
                 email: "bob@bobsen.no",
                 personId: 1234,
                 password: "1234",
+                isAdmin: false,
             },
             {
                 id: 3,
@@ -1867,6 +1879,7 @@ var TempDataProvider = (function () {
                 email: "petter@pan.no",
                 personId: 1234,
                 password: "1234",
+                isAdmin: false,
             },
         ], function (ele) { return ele.id; });
     };
@@ -2038,7 +2051,7 @@ var UserManager = (function () {
         }
     };
     UserManager.prototype.isAdmin = function (user) {
-        return user.id > 100;
+        return user.isAdmin;
     };
     UserManager.prototype.isTeacher = function (user) {
         return user.id > 100;

@@ -4,6 +4,7 @@ export interface IUser {
     lastName: string;
     email: string;
     personId: number;
+    isAdmin: boolean;
 }
 
 export function isCourse(value: any): value is ICourse {
