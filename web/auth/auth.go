@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/scm"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/markbates/goth"
@@ -113,7 +114,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 // AccessControl returns an AccessControl middleware. Given a valid context with
 // sufficient access the next handler is called. Missing or invalid credentials
 // results in a 401 unauthorized response.
-func AccessControl(db database.Database) echo.MiddlewareFunc {
+func AccessControl(db database.Database, scms map[string]scm.SCM) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			sess, err := session.Get(UserSession, c)
@@ -136,6 +137,11 @@ func AccessControl(db database.Database) echo.MiddlewareFunc {
 
 			// TODO: Check if the user is allowed to access the endpoint.
 			c.Set("user", user)
+			if _, ok := scms[user.AccessToken]; !ok {
+				// TODO: Should be set depending on SCM provider.
+				scms[user.AccessToken] = scm.NewGithubSCMClient(user.AccessToken)
+			}
+			c.Set("scm", scms[user.AccessToken])
 
 			return next(c)
 		}
