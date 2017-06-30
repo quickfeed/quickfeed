@@ -2,6 +2,7 @@ import { IAssignment, ICourse, ICourseStudent, IUser } from "../models";
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
+import { IMap, MapHelper, mapify } from "../map";
 import * as Models from "../models";
 
 interface IDummyUser extends IUser {
@@ -10,9 +11,9 @@ interface IDummyUser extends IUser {
 
 class TempDataProvider implements IUserProvider, ICourseProvider {
 
-    private localUsers: IDummyUser[];
-    private localAssignments: IAssignment[];
-    private localCourses: ICourse[];
+    private localUsers: IMap<IDummyUser>;
+    private localAssignments: IMap<IAssignment>;
+    private localCourses: IMap<ICourse>;
     private localCourseStudent: ICourseStudent[];
 
     constructor() {
@@ -22,45 +23,33 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalUsers();
     }
 
-    public getAllUser(): IUser[] {
+    public getAllUser(): IMap<IUser> {
         return this.localUsers;
     }
 
-    public getCourses(): ICourse[] {
+    public getCourses(): IMap<ICourse> {
         return this.localCourses;
-    }
-
-    public getCourseByTag(tag: string): ICourse | null {
-        for (const c of this.localCourses) {
-            if (c.tag === tag) {
-                return c;
-            }
-        }
-        return null;
     }
 
     public getCoursesStudent(): ICourseStudent[] {
         return this.localCourseStudent;
     }
 
-    public getAssignments(courseId: number): IAssignment[] {
-        const temp: IAssignment[] = [];
-        for (const a of this.localAssignments) {
+    public getAssignments(courseId: number): IMap<IAssignment> {
+        const temp: IMap<IAssignment> = [];
+        MapHelper.forEach(this.localAssignments, (a, i) => {
             if (a.courseId === courseId) {
-                temp.push(a);
+                temp[i] = a;
             }
-        }
+        });
         return temp;
     }
 
     public tryLogin(username: string, password: string): IUser | null {
-        for (const u of this.localUsers) {
-            if (u.email.toLocaleLowerCase() === username.toLocaleLowerCase()) {
-                if (u.password === password) {
-                    return u;
-                }
-                return null;
-            }
+        const user = MapHelper.find(this.localUsers, (u) =>
+            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+        if (user && user.password === password) {
+            return user;
         }
         return null;
     }
@@ -82,7 +71,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalUsers() {
-        this.localUsers = [
+        this.localUsers = mapify([
             {
                 id: 999,
                 firstName: "Test",
@@ -115,11 +104,11 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 personId: 1234,
                 password: "1234",
             },
-        ];
+        ], (ele) => ele.id);
     }
 
     private addLocalAssignments() {
-        this.localAssignments = [
+        this.localAssignments = mapify([
             {
                 id: 0,
                 courseId: 0,
@@ -208,11 +197,11 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 deadline: new Date(2017, 5, 25),
                 end: new Date(2017, 5, 30),
             },
-        ];
+        ], (ele) => ele.id);
     }
 
     private addLocalCourses() {
-        this.localCourses = [
+        this.localCourses = mapify([
             {
                 id: 0,
                 name: "Object Oriented Programming",
@@ -238,7 +227,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 name: "Operating Systems",
                 tag: "DAT320",
             },
-        ];
+        ], (ele) => ele.id);
     }
 
     private addLocalCourseStudent() {

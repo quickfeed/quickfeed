@@ -29,7 +29,7 @@ class TeacherPage extends ViewPage {
 
         this.navHelper.defaultPage = "course/0";
         this.navHelper.registerFunction("course/{course}", this.course);
-        this.navHelper.registerFunction("course/{course}/users", this.courseUsers);
+        this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("course/{course}/{page}", this.course);
         this.navHelper.registerFunction("user", (navInfo) => {
             return <UserView users={userMan.getAllUser()}></UserView>;
@@ -115,9 +115,9 @@ class TeacherPage extends ViewPage {
             children: [
                 { name: "Results", uri: link.uri + "/results" },
                 { name: "Groups", uri: link.uri + "/groups" },
-                { name: "Users", uri: link.uri + "/users" },
+                { name: "Members", uri: link.uri + "/members" },
                 { name: "Settings", uri: link.uri + "/settings" },
-                { name: "Info", uri: link.uri + "/info" },
+                { name: "Course Info", uri: link.uri + "/courseinfo" },
             ],
         };
     }
@@ -126,10 +126,10 @@ class TeacherPage extends ViewPage {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
             if (menu === 0) {
-                const couses = this.courseMan.getCoursesFor(curUser);
+                const courses = this.courseMan.getCoursesFor(curUser);
 
                 const labLinks: ILinkCollection[] = [];
-                couses.forEach((e) => {
+                courses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
                         name: e.tag,
                         uri: this.pagePath + "/course/" + e.id,

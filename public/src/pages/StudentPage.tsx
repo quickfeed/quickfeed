@@ -95,11 +95,18 @@ class StudentPage extends ViewPage {
     public renderMenu(key: number): JSX.Element[] {
         if (key === 0) {
             const coursesLinks: ILinkCollection[] = this.courses.map((course, i) => {
+                const allLinks: ILink[] = [];
+                allLinks.push({ name: "Labs" });
+                allLinks.push(...this.getLabsfor(course).map((lab, ind) => {
+                    return { name: lab.name, uri: this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
+                }));
+                allLinks.push({ name: "Group Labs" });
+                allLinks.push({ name: "Settings" });
+                allLinks.push({ name: "Members", uri: this.pagePath + "/course/" + course.id + "/members" });
+                allLinks.push({ name: "Coruse Info", uri: this.pagePath + "/course/" + course.id + "/info" });
                 return {
                     item: { name: course.tag, uri: this.pagePath + "/course/" + course.id },
-                    children: this.getLabsfor(course).map((lab, ind) => {
-                        return { name: lab.name, uri: this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
-                    }),
+                    children: allLinks,
                 };
             });
 
