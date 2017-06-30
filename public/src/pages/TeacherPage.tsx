@@ -1,33 +1,36 @@
 import * as React from "react";
-import { DynamicTable, NavMenu } from "../components";
-import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
+import {DynamicTable, NavMenu} from "../components";
+import {CourseManager, ILink, ILinkCollection, NavigationManager, UserManager} from "../managers";
 
-import { ViewPage } from "./ViewPage";
-import { HelloView } from "./views/HelloView";
-import { UserView } from "./views/UserView";
+import {ViewPage} from "./ViewPage";
+import {HelloView} from "./views/HelloView";
+import {UserView} from "./views/UserView";
 
-import { INavInfo, NavigationHelper } from "../NavigationHelper";
+import {INavInfo} from "../NavigationHelper";
 
-import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { CourseStudentState, ICourseStudent, IUser } from "../models";
+import {CollapsableNavMenu} from "../components/navigation/CollapsableNavMenu";
+import {CourseStudentState, ICourse, ICourseStudent, IUser} from "../models";
 
-import { ArrayHelper } from "../helper";
+import {ArrayHelper} from "../helper";
 
 class TeacherPage extends ViewPage {
 
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
+    private courses: ICourse[] = [];
 
     private pages: { [name: string]: JSX.Element } = {};
+
     constructor(userMan: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
 
         this.navMan = navMan;
         this.userMan = userMan;
         this.courseMan = courseMan;
+        this.courses = this.getCourses();
 
-        this.navHelper.defaultPage = "course/0";
+        this.navHelper.defaultPage = "course/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
         this.navHelper.registerFunction("course/{course}", this.course);
         this.navHelper.registerFunction("course/{course}/users", this.courseUsers);
         this.navHelper.registerFunction("course/{course}/{page}", this.course);
@@ -40,42 +43,46 @@ class TeacherPage extends ViewPage {
     }
 
     public course(info: INavInfo<{ course: string, page?: string }>): JSX.Element {
-        if (info.params.page) {
-            return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
+        const courseId = parseInt(info.params.course, 10);
+        const course = this.getCourseById(courseId);
+        if (course) {
+            if (info.params.page) {
+                return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
+            }
+            return <h1>Teacher Course {info.params.course}</h1>;
         }
-        return <h1>Teacher Course {info.params.course}</h1>;
+        return <div>404 Page not found</div>;
     }
 
     public courseUsers(info: INavInfo<{ course: string }>): JSX.Element {
-        const course = parseInt(info.params.course, 10);
-        if (!isNaN(course)) {
-            const tempCourse = this.courseMan.getCourse(course);
-            if (tempCourse) {
-                const userIds = this.courseMan.getUserIdsForCourse(tempCourse);
-                const users = this.userMan.getUsers(userIds.map((e) => e.personId));
+        const courseId = parseInt(info.params.course, 10);
+        const course = this.getCourseById(courseId);
+        if (course) {
+            const userIds = this.courseMan.getUserIdsForCourse(course);
+            const users = this.userMan.getUsers(userIds.map((e) => e.personId));
 
-                const all = ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
-                console.log(all);
-                const acceptedUsers: IUser[] = [];
-                const pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }> = [];
-                all.forEach((ele, id) => {
-                    switch (ele.ele1.state) {
-                        case CourseStudentState.accepted:
-                            acceptedUsers.push(ele.ele2);
-                            break;
-                        case CourseStudentState.pending:
-                            pendingUsers.push(ele);
-                            break;
-                    }
-                });
-                return <div>
-                    <h3>Users for {tempCourse.name} ({tempCourse.tag})</h3>
-                    <UserView users={acceptedUsers}></UserView>
-                    <h3>Pending users for {tempCourse.name} ({tempCourse.tag})</h3>
-                    {this.createPendingTable(pendingUsers)}
-                </div>;
-            }
+            const all = ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
+            console.log(all);
+            const acceptedUsers: IUser[] = [];
+            const pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }> = [];
+            all.forEach((ele, id) => {
+                switch (ele.ele1.state) {
+                    case CourseStudentState.accepted:
+                        acceptedUsers.push(ele.ele2);
+                        break;
+                    case CourseStudentState.pending:
+                        pendingUsers.push(ele);
+                        break;
+                }
+            });
+            return <div>
+                <h3>Users for {course.name} ({course.tag})</h3>
+                <UserView users={acceptedUsers}></UserView>
+                <h3>Pending users for {course.name} ({course.tag})</h3>
+                {this.createPendingTable(pendingUsers)}
+            </div>;
         }
+
         return <div>404 Page not found</div>;
     }
 
@@ -94,7 +101,7 @@ class TeacherPage extends ViewPage {
                         this.courseMan.changeUserState(ele.ele1, CourseStudentState.accepted);
                         this.navMan.refresh();
                     }}
-                        className="btn btn-primary">
+                            className="btn btn-primary">
                         Accept
                     </button>
                     <button onClick={(e) => {
@@ -113,18 +120,18 @@ class TeacherPage extends ViewPage {
         return {
             item: link,
             children: [
-                { name: "Results", uri: link.uri + "/results" },
-                { name: "Groups", uri: link.uri + "/groups" },
-                { name: "Users", uri: link.uri + "/users" },
-                { name: "Settings", uri: link.uri + "/settings" },
-                { name: "Info", uri: link.uri + "/info" },
+                {name: "Results", uri: link.uri + "/results"},
+                {name: "Groups", uri: link.uri + "/groups"},
+                {name: "Users", uri: link.uri + "/users"},
+                {name: "Settings", uri: link.uri + "/settings"},
+                {name: "Info", uri: link.uri + "/info"},
             ],
         };
     }
 
     public renderMenu(menu: number): JSX.Element[] {
         const curUser = this.userMan.getCurrentUser();
-        if (curUser) {
+        if (curUser && this.isTeacher(curUser)) {
             if (menu === 0) {
                 const couses = this.courseMan.getCoursesFor(curUser);
 
@@ -151,19 +158,19 @@ class TeacherPage extends ViewPage {
                     <NavMenu key={3} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
                 ];
             }
-        } else {
-            return [];
         }
         return [];
     }
 
     public renderContent(page: string): JSX.Element {
-        if (!this.userMan.getCurrentUser()) {
+        const curUser: IUser | null = this.userMan.getCurrentUser();
+        if (!curUser) {
             return <h1>You are not logged in</h1>;
-        }
-        const temp = this.navHelper.navigateTo(page);
-        if (temp) {
-            return temp;
+        } else if (this.isTeacher(curUser)) {
+            const temp = this.navHelper.navigateTo(page);
+            if (temp) {
+                return temp;
+            }
         }
         return <h1>404 page not found</h1>;
     }
@@ -173,6 +180,31 @@ class TeacherPage extends ViewPage {
             this.navMan.navigateTo(link.uri);
         }
     }
+
+    private getCourses(): ICourse[] {
+        const curUsr = this.userMan.getCurrentUser();
+        if (curUsr) {
+            return this.courseMan.getCoursesFor(curUsr, 1);
+        }
+        return [];
+    }
+
+    private getCourseById(courseId: number): ICourse | null {
+        if (!isNaN(courseId)) {
+            const tempCourse = ArrayHelper.find(this.courses, (e, i) => {
+                if (e.id === courseId) {
+                    return true;
+                }
+                return false;
+            });
+            return tempCourse;
+        }
+        return null;
+    }
+
+    private isTeacher(curUser: IUser): boolean {
+        return this.userMan.isTeacher(curUser);
+    }
 }
 
-export { TeacherPage };
+export {TeacherPage};

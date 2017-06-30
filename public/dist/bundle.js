@@ -804,7 +804,9 @@ function main() {
     navMan.registerPage("app/admin", new AdminPage_1.AdminPage(navMan, userMan, courseMan));
     navMan.registerPage("app/help", new HelpPage_1.HelpPage(navMan));
     navMan.registerErrorPage(404, new ErrorPage_1.ErrorPage());
-    navMan.onNavigate.addEventListener(function (e) { console.log(e); });
+    navMan.onNavigate.addEventListener(function (e) {
+        console.log(e);
+    });
     ReactDOM.render(React.createElement(AutoGrader, { userManager: userMan, navigationManager: navMan }), document.getElementById("root"));
 }
 main();
@@ -2318,11 +2320,13 @@ var StudentPage = (function (_super) {
     };
     StudentPage.prototype.course = function (navInfo) {
         this.selectCourse(navInfo.params.courseid);
-        var courseAndLabs = this.getLabs();
-        if (this.selectedCourse && courseAndLabs) {
-            return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: courseAndLabs }));
+        if (this.selectedCourse) {
+            var courseAndLabs = this.getLabs();
+            if (courseAndLabs) {
+                return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: courseAndLabs }));
+            }
         }
-        return React.createElement("div", null, "404 not found");
+        return React.createElement("h1", null, "404 not found");
     };
     StudentPage.prototype.courseWithLab = function (navInfo) {
         this.selectCourse(navInfo.params.courseid);
@@ -2538,11 +2542,13 @@ var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
     function TeacherPage(userMan, navMan, courseMan) {
         var _this = _super.call(this) || this;
+        _this.courses = [];
         _this.pages = {};
         _this.navMan = navMan;
         _this.userMan = userMan;
         _this.courseMan = courseMan;
-        _this.navHelper.defaultPage = "course/0";
+        _this.courses = _this.getCourses();
+        _this.navHelper.defaultPage = "course/" + (_this.courses.length > 0 ? _this.courses[0].id.toString() : "");
         _this.navHelper.registerFunction("course/{course}", _this.course);
         _this.navHelper.registerFunction("course/{course}/users", _this.courseUsers);
         _this.navHelper.registerFunction("course/{course}/{page}", _this.course);
@@ -2555,54 +2561,57 @@ var TeacherPage = (function (_super) {
         return _this;
     }
     TeacherPage.prototype.course = function (info) {
-        if (info.params.page) {
-            return React.createElement("h3", null,
-                "You are know on page ",
-                info.params.page.toUpperCase(),
-                " in course ",
+        var courseId = parseInt(info.params.course, 10);
+        var course = this.getCourseById(courseId);
+        if (course) {
+            if (info.params.page) {
+                return React.createElement("h3", null,
+                    "You are know on page ",
+                    info.params.page.toUpperCase(),
+                    " in course ",
+                    info.params.course);
+            }
+            return React.createElement("h1", null,
+                "Teacher Course ",
                 info.params.course);
         }
-        return React.createElement("h1", null,
-            "Teacher Course ",
-            info.params.course);
+        return React.createElement("div", null, "404 Page not found");
     };
     TeacherPage.prototype.courseUsers = function (info) {
-        var course = parseInt(info.params.course, 10);
-        if (!isNaN(course)) {
-            var tempCourse = this.courseMan.getCourse(course);
-            if (tempCourse) {
-                var userIds = this.courseMan.getUserIdsForCourse(tempCourse);
-                var users = this.userMan.getUsers(userIds.map(function (e) { return e.personId; }));
-                var all = helper_1.ArrayHelper.join(userIds, users, function (e1, e2) { return e1.personId === e2.id; });
-                console.log(all);
-                var acceptedUsers_1 = [];
-                var pendingUsers_1 = [];
-                all.forEach(function (ele, id) {
-                    switch (ele.ele1.state) {
-                        case models_1.CourseStudentState.accepted:
-                            acceptedUsers_1.push(ele.ele2);
-                            break;
-                        case models_1.CourseStudentState.pending:
-                            pendingUsers_1.push(ele);
-                            break;
-                    }
-                });
-                return React.createElement("div", null,
-                    React.createElement("h3", null,
-                        "Users for ",
-                        tempCourse.name,
-                        " (",
-                        tempCourse.tag,
-                        ")"),
-                    React.createElement(UserView_1.UserView, { users: acceptedUsers_1 }),
-                    React.createElement("h3", null,
-                        "Pending users for ",
-                        tempCourse.name,
-                        " (",
-                        tempCourse.tag,
-                        ")"),
-                    this.createPendingTable(pendingUsers_1));
-            }
+        var courseId = parseInt(info.params.course, 10);
+        var course = this.getCourseById(courseId);
+        if (course) {
+            var userIds = this.courseMan.getUserIdsForCourse(course);
+            var users = this.userMan.getUsers(userIds.map(function (e) { return e.personId; }));
+            var all = helper_1.ArrayHelper.join(userIds, users, function (e1, e2) { return e1.personId === e2.id; });
+            console.log(all);
+            var acceptedUsers_1 = [];
+            var pendingUsers_1 = [];
+            all.forEach(function (ele, id) {
+                switch (ele.ele1.state) {
+                    case models_1.CourseStudentState.accepted:
+                        acceptedUsers_1.push(ele.ele2);
+                        break;
+                    case models_1.CourseStudentState.pending:
+                        pendingUsers_1.push(ele);
+                        break;
+                }
+            });
+            return React.createElement("div", null,
+                React.createElement("h3", null,
+                    "Users for ",
+                    course.name,
+                    " (",
+                    course.tag,
+                    ")"),
+                React.createElement(UserView_1.UserView, { users: acceptedUsers_1 }),
+                React.createElement("h3", null,
+                    "Pending users for ",
+                    course.name,
+                    " (",
+                    course.tag,
+                    ")"),
+                this.createPendingTable(pendingUsers_1));
         }
         return React.createElement("div", null, "404 Page not found");
     };
@@ -2640,7 +2649,7 @@ var TeacherPage = (function (_super) {
     TeacherPage.prototype.renderMenu = function (menu) {
         var _this = this;
         var curUser = this.userMan.getCurrentUser();
-        if (curUser) {
+        if (curUser && this.isTeacher(curUser)) {
             if (menu === 0) {
                 var couses = this.courseMan.getCoursesFor(curUser);
                 var labLinks_1 = [];
@@ -2661,18 +2670,18 @@ var TeacherPage = (function (_super) {
                 ];
             }
         }
-        else {
-            return [];
-        }
         return [];
     };
     TeacherPage.prototype.renderContent = function (page) {
-        if (!this.userMan.getCurrentUser()) {
+        var curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
             return React.createElement("h1", null, "You are not logged in");
         }
-        var temp = this.navHelper.navigateTo(page);
-        if (temp) {
-            return temp;
+        else if (this.isTeacher(curUser)) {
+            var temp = this.navHelper.navigateTo(page);
+            if (temp) {
+                return temp;
+            }
         }
         return React.createElement("h1", null, "404 page not found");
     };
@@ -2680,6 +2689,28 @@ var TeacherPage = (function (_super) {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
         }
+    };
+    TeacherPage.prototype.getCourses = function () {
+        var curUsr = this.userMan.getCurrentUser();
+        if (curUsr) {
+            return this.courseMan.getCoursesFor(curUsr, 1);
+        }
+        return [];
+    };
+    TeacherPage.prototype.getCourseById = function (courseId) {
+        if (!isNaN(courseId)) {
+            var tempCourse = helper_1.ArrayHelper.find(this.courses, function (e, i) {
+                if (e.id === courseId) {
+                    return true;
+                }
+                return false;
+            });
+            return tempCourse;
+        }
+        return null;
+    };
+    TeacherPage.prototype.isTeacher = function (curUser) {
+        return this.userMan.isTeacher(curUser);
     };
     return TeacherPage;
 }(ViewPage_1.ViewPage));

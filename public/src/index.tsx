@@ -1,18 +1,18 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { NavBar, Row } from "./components";
-import { CourseManager, ILink, INavEvent, NavigationManager, TempDataProvider, UserManager } from "./managers";
+import {NavBar, Row} from "./components";
+import {CourseManager, ILink, INavEvent, NavigationManager, TempDataProvider, UserManager} from "./managers";
 
-import { ErrorPage } from "./pages/ErrorPage";
-import { HelpPage } from "./pages/HelpPage";
-import { HomePage } from "./pages/HomePage";
-import { StudentPage } from "./pages/StudentPage";
-import { TeacherPage } from "./pages/TeacherPage";
-import { ViewPage } from "./pages/ViewPage";
+import {ErrorPage} from "./pages/ErrorPage";
+import {HelpPage} from "./pages/HelpPage";
+import {HomePage} from "./pages/HomePage";
+import {StudentPage} from "./pages/StudentPage";
+import {TeacherPage} from "./pages/TeacherPage";
+import {ViewPage} from "./pages/ViewPage";
 
-import { IUser } from "./models";
-import { AdminPage } from "./pages/AdminPage";
+import {IUser} from "./models";
+import {AdminPage} from "./pages/AdminPage";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
@@ -49,7 +49,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             const old = this.state.activePage;
             const tempLink = this.state.topLinks.slice();
             this.checkLinks(tempLink);
-            this.setState({ activePage: e.page, topLinks: tempLink });
+            this.setState({activePage: e.page, topLinks: tempLink});
         });
 
         this.userMan.onLogin.addEventListener((e) => {
@@ -71,16 +71,16 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         if (user) {
             const basis: ILink[] = [];
             if (this.userMan.isTeacher(user)) {
-                basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
+                basis.push({name: "Teacher", uri: "app/teacher/", active: false});
             }
-            basis.push({ name: "Student", uri: "app/student/", active: false });
+            basis.push({name: "Student", uri: "app/student/", active: false});
             if (this.userMan.isAdmin(user)) {
-                basis.push({ name: "Admin", uri: "app/admin", active: false });
+                basis.push({name: "Admin", uri: "app/admin", active: false});
             }
-            basis.push({ name: "Help", uri: "app/help", active: false });
+            basis.push({name: "Help", uri: "app/help", active: false});
             return basis;
         } else {
-            return [{ name: "Help", uri: "app/help", active: false }];
+            return [{name: "Help", uri: "app/help", active: false}];
         }
     }
 
@@ -155,12 +155,12 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         return (
             <div>
                 <NavBar id="top-bar"
-                    isFluid={false}
-                    isInverse={true}
-                    links={this.state.topLinks}
-                    onClick={(link) => this.handleClick(link)}
-                    user={this.state.curUser}
-                    brandName="Auto Grader">
+                        isFluid={false}
+                        isInverse={true}
+                        links={this.state.topLinks}
+                        onClick={(link) => this.handleClick(link)}
+                        user={this.state.curUser}
+                        brandName="Auto Grader">
                 </NavBar>
                 {body}
             </div>);
@@ -178,7 +178,7 @@ function main() {
     const courseMan = new CourseManager(tempData);
     const navMan = new NavigationManager(history);
 
-    (window as any).debugData = { tempData, userMan, courseMan, navMan };
+    (window as any).debugData = {tempData, userMan, courseMan, navMan};
 
     const user = userMan.tryLogin("test@testersen.no", "1234");
 
@@ -190,7 +190,9 @@ function main() {
     navMan.registerPage("app/help", new HelpPage(navMan));
 
     navMan.registerErrorPage(404, new ErrorPage());
-    navMan.onNavigate.addEventListener((e) => { console.log(e); });
+    navMan.onNavigate.addEventListener((e) => {
+        console.log(e);
+    });
 
     ReactDOM.render(
         <AutoGrader userManager={userMan} navigationManager={navMan}>
