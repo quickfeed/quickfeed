@@ -1,6 +1,5 @@
-import { ArrayHelper } from "../helper";
-import { IMap, MapHelper } from "../map";
-import { CourseStudentState, IAssignment, ICourse, ICourseStudent, isCourse, IUser } from "../models";
+import {IMap, MapHelper} from "../map";
+import {CourseStudentState, IAssignment, ICourse, ICourseStudent, isCourse, IUser} from "../models";
 
 interface ICourseProvider {
     getCourses(): IMap<ICourse>;
@@ -8,10 +7,12 @@ interface ICourseProvider {
     getCoursesStudent(): ICourseStudent[];
     addUserToCourse(user: IUser, course: ICourse): void;
     changeUserState(link: ICourseStudent, state: CourseStudentState): void;
+    createNewCourse(courseData: ICourse): void;
 }
 
 class CourseManager {
     private courseProvider: ICourseProvider;
+
     constructor(courseProvider: ICourseProvider) {
         this.courseProvider = courseProvider;
     }
@@ -92,6 +93,10 @@ class CourseManager {
         this.courseProvider.changeUserState(link, state);
     }
 
+    public createNewCourse(courseData: ICourse): void {
+        this.courseProvider.createNewCourse(courseData);
+    }
+
 }
 
-export { ICourseProvider, CourseManager };
+export {ICourseProvider, CourseManager};

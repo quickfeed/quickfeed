@@ -18,6 +18,7 @@ export interface ICourse {
     id: number;
     name: string;
     tag: string;
+    year: string;
 }
 
 export interface IAssignment {

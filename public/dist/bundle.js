@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,21 +79,23 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(14));
-__export(__webpack_require__(8));
 __export(__webpack_require__(15));
+__export(__webpack_require__(9));
 __export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
 __export(__webpack_require__(19));
-__export(__webpack_require__(21));
-__export(__webpack_require__(9));
+__export(__webpack_require__(20));
 __export(__webpack_require__(22));
+__export(__webpack_require__(10));
 __export(__webpack_require__(23));
 __export(__webpack_require__(24));
 __export(__webpack_require__(25));
 __export(__webpack_require__(26));
 __export(__webpack_require__(27));
+__export(__webpack_require__(28));
+__export(__webpack_require__(29));
+__export(__webpack_require__(30));
 
 
 /***/ }),
@@ -103,7 +105,7 @@ __export(__webpack_require__(27));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(6);
+var event_1 = __webpack_require__(5);
 var NavigationHelper = (function () {
     function NavigationHelper(thisObject) {
         this.onPreNavigation = event_1.newEvent("NavigationHelper.onPreNavigation");
@@ -282,43 +284,6 @@ exports.ViewPage = ViewPage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var ArrayHelper = (function () {
-    function ArrayHelper() {
-    }
-    ArrayHelper.join = function (array1, array2, callback) {
-        var returnObj = [];
-        for (var _i = 0, array1_1 = array1; _i < array1_1.length; _i++) {
-            var ele1 = array1_1[_i];
-            for (var _a = 0, array2_1 = array2; _a < array2_1.length; _a++) {
-                var ele2 = array2_1[_a];
-                if (callback(ele1, ele2)) {
-                    returnObj.push({ ele1: ele1, ele2: ele2 });
-                }
-            }
-        }
-        return returnObj;
-    };
-    ArrayHelper.find = function (array, predicate) {
-        for (var i = 0; i < array.length; i++) {
-            var cur = array[i];
-            if (predicate.call(array, cur, i, array)) {
-                return cur;
-            }
-        }
-        return null;
-    };
-    return ArrayHelper;
-}());
-exports.ArrayHelper = ArrayHelper;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
 function isCourse(value) {
     return value
         && typeof value.id === "number"
@@ -335,7 +300,7 @@ var CourseStudentState;
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -361,6 +326,68 @@ function newEvent(info) {
     return handler;
 }
 exports.newEvent = newEvent;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var MapHelper = (function () {
+    function MapHelper() {
+    }
+    MapHelper.mapTo = function (map, callback) {
+        var returnArray = [];
+        var keys = Object.keys(map);
+        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+            var a = keys_1[_i];
+            var index = parseInt(a, 10);
+            returnArray.push(callback(map[index], index, map));
+        }
+        return returnArray;
+    };
+    MapHelper.forEach = function (map, callback) {
+        var keys = Object.keys(map);
+        for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
+            var a = keys_2[_i];
+            var index = parseInt(a, 10);
+            callback(map[index], index, map);
+        }
+    };
+    MapHelper.find = function (map, callback) {
+        var keys = Object.keys(map);
+        for (var _i = 0, keys_3 = keys; _i < keys_3.length; _i++) {
+            var a = keys_3[_i];
+            var index = parseInt(a, 10);
+            if (callback(map[index], index, map)) {
+                return map[index];
+            }
+        }
+        return null;
+    };
+    MapHelper.toArray = function (map) {
+        var returnArray = [];
+        var keys = Object.keys(map);
+        for (var _i = 0, keys_4 = keys; _i < keys_4.length; _i++) {
+            var a = keys_4[_i];
+            var index = parseInt(a, 10);
+            returnArray.push(map[index]);
+        }
+        return returnArray;
+    };
+    return MapHelper;
+}());
+exports.MapHelper = MapHelper;
+function mapify(obj, callback) {
+    var newObj = {};
+    obj.forEach(function (ele, index, array) {
+        newObj[callback(ele, index, obj)] = ele;
+    });
+    return newObj;
+}
+exports.mapify = mapify;
 
 
 /***/ }),
@@ -403,6 +430,43 @@ exports.UserView = UserView;
 
 /***/ }),
 /* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var ArrayHelper = (function () {
+    function ArrayHelper() {
+    }
+    ArrayHelper.join = function (array1, array2, callback) {
+        var returnObj = [];
+        for (var _i = 0, array1_1 = array1; _i < array1_1.length; _i++) {
+            var ele1 = array1_1[_i];
+            for (var _a = 0, array2_1 = array2; _a < array2_1.length; _a++) {
+                var ele2 = array2_1[_a];
+                if (callback(ele1, ele2)) {
+                    returnObj.push({ ele1: ele1, ele2: ele2 });
+                }
+            }
+        }
+        return returnObj;
+    };
+    ArrayHelper.find = function (array, predicate) {
+        for (var i = 0; i < array.length; i++) {
+            var cur = array[i];
+            if (predicate.call(array, cur, i, array)) {
+                return cur;
+            }
+        }
+        return null;
+    };
+    return ArrayHelper;
+}());
+exports.ArrayHelper = ArrayHelper;
+
+
+/***/ }),
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -451,7 +515,7 @@ exports.NavHeaderBar = NavHeaderBar;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -488,7 +552,7 @@ exports.ProgressBar = ProgressBar;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -519,7 +583,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -660,7 +724,7 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -677,15 +741,15 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(13);
+var ReactDOM = __webpack_require__(14);
 var components_1 = __webpack_require__(1);
-var managers_1 = __webpack_require__(28);
-var ErrorPage_1 = __webpack_require__(33);
-var HelpPage_1 = __webpack_require__(34);
-var HomePage_1 = __webpack_require__(36);
-var StudentPage_1 = __webpack_require__(37);
-var TeacherPage_1 = __webpack_require__(39);
-var AdminPage_1 = __webpack_require__(40);
+var managers_1 = __webpack_require__(31);
+var ErrorPage_1 = __webpack_require__(36);
+var HelpPage_1 = __webpack_require__(37);
+var HomePage_1 = __webpack_require__(39);
+var StudentPage_1 = __webpack_require__(40);
+var TeacherPage_1 = __webpack_require__(42);
+var AdminPage_1 = __webpack_require__(43);
 var AutoGrader = (function (_super) {
     __extends(AutoGrader, _super);
     function AutoGrader(props) {
@@ -819,13 +883,13 @@ main();
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -842,7 +906,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavHeaderBar_1 = __webpack_require__(8);
+var NavHeaderBar_1 = __webpack_require__(9);
 var NavigationHelper_1 = __webpack_require__(2);
 var NavBar = (function (_super) {
     __extends(NavBar, _super);
@@ -904,7 +968,7 @@ exports.NavBar = NavBar;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -959,7 +1023,7 @@ exports.NavMenu = NavMenu;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1006,7 +1070,7 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1066,7 +1130,7 @@ exports.DynamicTable = DynamicTable;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1080,7 +1144,7 @@ exports.Row = Row;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1097,7 +1161,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var LabResultView_1 = __webpack_require__(20);
+var LabResultView_1 = __webpack_require__(21);
 var StudentLab = (function (_super) {
     __extends(StudentLab, _super);
     function StudentLab() {
@@ -1131,7 +1195,7 @@ exports.StudentLab = StudentLab;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1172,7 +1236,7 @@ exports.LabResultView = LabResultView;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1244,7 +1308,7 @@ exports.NavDropdown = NavDropdown;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1289,7 +1353,7 @@ exports.LabResult = LabResult;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1324,7 +1388,7 @@ exports.LastBuild = LastBuild;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1383,7 +1447,7 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1436,7 +1500,7 @@ exports.CoursesOverview = CoursesOverview;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1483,7 +1547,7 @@ exports.CoursePanel = CoursePanel;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1500,7 +1564,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ProgressBar_1 = __webpack_require__(9);
+var ProgressBar_1 = __webpack_require__(10);
 var SingleCourseOverview = (function (_super) {
     __extends(SingleCourseOverview, _super);
     function SingleCourseOverview() {
@@ -1523,7 +1587,125 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var Button = (function (_super) {
+    __extends(Button, _super);
+    function Button() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Button.prototype.render = function () {
+        var _this = this;
+        return (React.createElement("button", { className: this.props.className ? "btn " + this.props.className : "btn", type: this.props.type ? this.props.type : "", onClick: function () { return _this.handleOnclick(); } }, this.props.text ? this.props.text : ""));
+    };
+    Button.prototype.handleOnclick = function () {
+        if (this.props.onClick) {
+            this.props.onClick();
+        }
+    };
+    return Button;
+}(React.Component));
+exports.Button = Button;
+
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var components_1 = __webpack_require__(1);
+var CourseForm = (function (_super) {
+    __extends(CourseForm, _super);
+    function CourseForm(props) {
+        var _this = _super.call(this, props) || this;
+        _this.state = {
+            name: "",
+            tag: "",
+            year: "",
+        };
+        return _this;
+    }
+    CourseForm.prototype.render = function () {
+        var _this = this;
+        return (React.createElement("form", { className: this.props.className ? this.props.className : "", onSubmit: function (e) { return _this.handleFormSubmit(e); } },
+            React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "name" }, "Course Name:"),
+                React.createElement("div", { className: "col-sm-10" },
+                    React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter course name", name: "name", value: this.state.name, onChange: function (e) { return _this.handleInputChange(e); } }))),
+            React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Course Tag:"),
+                React.createElement("div", { className: "col-sm-10" },
+                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter course tag", name: "tag", value: this.state.tag, onChange: function (e) { return _this.handleInputChange(e); } }))),
+            React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Year/Semester:"),
+                React.createElement("div", { className: "col-sm-10" },
+                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter year/semester", name: "year", value: this.state.year, onChange: function (e) { return _this.handleInputChange(e); } }))),
+            React.createElement("div", { className: "form-group" },
+                React.createElement("div", { className: "col-sm-offset-2 col-sm-10" },
+                    React.createElement(components_1.Button, { className: "btn btn-primary", text: "Submit", type: "submit" })))));
+    };
+    CourseForm.prototype.handleFormSubmit = function (e) {
+        e.preventDefault();
+        var errors = this.courseValidate();
+        this.props.onSubmit(this.state, errors);
+    };
+    CourseForm.prototype.handleInputChange = function (e) {
+        var target = e.target;
+        var value = target.type === "checkbox" ? target.checked : target.value;
+        var name = target.name;
+        this.setState((_a = {},
+            _a[name] = value,
+            _a));
+        var _a;
+    };
+    CourseForm.prototype.courseValidate = function () {
+        var errors = [];
+        if (this.state.name === "") {
+            errors.push("Course Name cannot be blank");
+        }
+        if (this.state.tag === "") {
+            errors.push("Course Tag cannot be blank.");
+        }
+        if (this.state.year === "") {
+            errors.push("Year/Semester cannot be blank.");
+        }
+        return errors;
+    };
+    return CourseForm;
+}(React.Component));
+exports.CourseForm = CourseForm;
+
+
+/***/ }),
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1532,21 +1714,21 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(29));
-__export(__webpack_require__(30));
-__export(__webpack_require__(31));
 __export(__webpack_require__(32));
+__export(__webpack_require__(33));
+__export(__webpack_require__(34));
+__export(__webpack_require__(35));
 
 
 /***/ }),
-/* 29 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var map_1 = __webpack_require__(41);
-var models_1 = __webpack_require__(5);
+var map_1 = __webpack_require__(6);
+var models_1 = __webpack_require__(4);
 var CourseManager = (function () {
     function CourseManager(courseProvider) {
         this.courseProvider = courseProvider;
@@ -1620,19 +1802,22 @@ var CourseManager = (function () {
     CourseManager.prototype.changeUserState = function (link, state) {
         this.courseProvider.changeUserState(link, state);
     };
+    CourseManager.prototype.createNewCourse = function (courseData) {
+        this.courseProvider.createNewCourse(courseData);
+    };
     return CourseManager;
 }());
 exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 30 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(6);
+var event_1 = __webpack_require__(5);
 var NavigationHelper_1 = __webpack_require__(2);
 var ViewPage_1 = __webpack_require__(3);
 function isILinkCollection(item) {
@@ -1779,14 +1964,14 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 31 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var map_1 = __webpack_require__(41);
-var Models = __webpack_require__(5);
+var Models = __webpack_require__(4);
+var map_1 = __webpack_require__(6);
 var TempDataProvider = (function () {
     function TempDataProvider() {
         this.addLocalAssignments();
@@ -1830,6 +2015,13 @@ var TempDataProvider = (function () {
             personId: user.id,
             state: Models.CourseStudentState.pending,
         });
+    };
+    TempDataProvider.prototype.createNewCourse = function (course) {
+        var courses = map_1.MapHelper.toArray(this.localCourses);
+        course.id = courses.length;
+        var courseData = course;
+        courses.push(courseData);
+        this.localCourses = map_1.mapify(courses, function (ele) { return ele.id; });
     };
     TempDataProvider.prototype.changeUserState = function (link, state) {
         link.state = state;
@@ -1981,26 +2173,31 @@ var TempDataProvider = (function () {
                 id: 0,
                 name: "Object Oriented Programming",
                 tag: "DAT100",
+                year: "Spring 2017",
             },
             {
                 id: 1,
                 name: "Algorithms and Datastructures",
                 tag: "DAT200",
+                year: "Spring 2017",
             },
             {
                 id: 2,
                 name: "Databases",
                 tag: "DAT220",
+                year: "Spring 2017",
             },
             {
                 id: 3,
                 name: "Communication Technology",
                 tag: "DAT230",
+                year: "Spring 2017",
             },
             {
                 id: 4,
                 name: "Operating Systems",
                 tag: "DAT320",
+                year: "Spring 2017",
             },
         ], function (ele) { return ele.id; });
     };
@@ -2018,14 +2215,14 @@ exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 32 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(6);
-var map_1 = __webpack_require__(41);
+var event_1 = __webpack_require__(5);
+var map_1 = __webpack_require__(6);
 var UserManager = (function () {
     function UserManager(userProvider) {
         this.onLogin = event_1.newEvent("UserManager.onLogin");
@@ -2079,7 +2276,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 33 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2126,7 +2323,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 34 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2144,7 +2341,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var ViewPage_1 = __webpack_require__(3);
-var HelpView_1 = __webpack_require__(35);
+var HelpView_1 = __webpack_require__(38);
 var HelpPage = (function (_super) {
     __extends(HelpPage, _super);
     function HelpPage(navMan) {
@@ -2171,7 +2368,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 35 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2242,7 +2439,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 36 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2274,7 +2471,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 37 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2293,11 +2490,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(10);
+var HelloView_1 = __webpack_require__(11);
 var UserView_1 = __webpack_require__(7);
-var helper_1 = __webpack_require__(4);
-var CollapsableNavMenu_1 = __webpack_require__(11);
-var EnrollmentView_1 = __webpack_require__(38);
+var helper_1 = __webpack_require__(8);
+var CollapsableNavMenu_1 = __webpack_require__(12);
+var EnrollmentView_1 = __webpack_require__(41);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
     function StudentPage(users, navMan, courseMan) {
@@ -2475,7 +2672,7 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 38 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2493,8 +2690,8 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
-var models_1 = __webpack_require__(5);
-var helper_1 = __webpack_require__(4);
+var models_1 = __webpack_require__(4);
+var helper_1 = __webpack_require__(8);
 var EnrollmentView = (function (_super) {
     __extends(EnrollmentView, _super);
     function EnrollmentView() {
@@ -2536,7 +2733,7 @@ exports.EnrollmentView = EnrollmentView;
 
 
 /***/ }),
-/* 39 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2555,11 +2752,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
 var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(10);
+var HelloView_1 = __webpack_require__(11);
 var UserView_1 = __webpack_require__(7);
-var CollapsableNavMenu_1 = __webpack_require__(11);
-var models_1 = __webpack_require__(5);
-var helper_1 = __webpack_require__(4);
+var CollapsableNavMenu_1 = __webpack_require__(12);
+var models_1 = __webpack_require__(4);
+var helper_1 = __webpack_require__(8);
 var TeacherPage = (function (_super) {
     __extends(TeacherPage, _super);
     function TeacherPage(userMan, navMan, courseMan) {
@@ -2740,7 +2937,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 40 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2767,10 +2964,12 @@ var AdminPage = (function (_super) {
         _this.navMan = navMan;
         _this.userMan = userMan;
         _this.courseMan = courseMan;
+        _this.flashMessages = null;
         _this.navHelper.defaultPage = "users";
         _this.navHelper.registerFunction("users", _this.users);
         _this.navHelper.registerFunction("courses", _this.courses);
         _this.navHelper.registerFunction("labs", _this.labs);
+        _this.navHelper.registerFunction("courses/new", _this.newCourse);
         return _this;
     }
     AdminPage.prototype.users = function (info) {
@@ -2780,10 +2979,12 @@ var AdminPage = (function (_super) {
             React.createElement(UserView_1.UserView, { users: allUsers }));
     };
     AdminPage.prototype.courses = function (info) {
+        var _this = this;
         var allCourses = this.courseMan.getCourses();
         return React.createElement("div", null,
+            React.createElement(components_1.Button, { className: "btn btn-primary pull-right", text: "+Create New", onClick: function () { return _this.handleNewCourse(); } }),
             React.createElement("h1", null, "All Courses"),
-            React.createElement(components_1.DynamicTable, { header: ["ID", "Tag", "Name"], data: allCourses, selector: function (e) { return [e.id.toString(), e.name, e.tag]; } }));
+            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: allCourses, selector: function (e) { return [e.id.toString(), e.name, e.tag, e.year]; } }));
     };
     AdminPage.prototype.labs = function (info) {
         var _this = this;
@@ -2806,6 +3007,26 @@ var AdminPage = (function (_super) {
                     ]; } }));
         });
         return React.createElement("div", null, tables);
+    };
+    AdminPage.prototype.newCourse = function (info) {
+        var _this = this;
+        var flashHolder = React.createElement("div", null);
+        if (this.flashMessages) {
+            var errors = [];
+            for (var _i = 0, _a = this.flashMessages; _i < _a.length; _i++) {
+                var fm = _a[_i];
+                errors.push(React.createElement("li", null, fm));
+            }
+            flashHolder = React.createElement("div", { className: "alert alert-danger" },
+                React.createElement("h4", null,
+                    errors.length,
+                    " errors prohibited Course from being saved: "),
+                React.createElement("ul", null, errors));
+        }
+        return (React.createElement("div", null,
+            React.createElement("h1", null, "Create New Course"),
+            flashHolder,
+            React.createElement(components_1.CourseForm, { className: "form-horizontal", onSubmit: function (formData, errors) { return _this.createNewCourse(formData, errors); } })));
     };
     AdminPage.prototype.renderContent = function (page) {
         var temp = this.navHelper.navigateTo(page);
@@ -2834,71 +3055,25 @@ var AdminPage = (function (_super) {
         }
         return [];
     };
+    AdminPage.prototype.handleNewCourse = function (flashMessage) {
+        if (flashMessage) {
+            this.flashMessages = flashMessage;
+        }
+        this.navMan.navigateTo(this.pagePath + "/courses/new");
+    };
+    AdminPage.prototype.createNewCourse = function (fd, errors) {
+        if (errors.length === 0) {
+            this.courseMan.createNewCourse(fd);
+            this.flashMessages = null;
+            this.navMan.navigateTo(this.pagePath + "/courses");
+        }
+        else {
+            this.handleNewCourse(errors);
+        }
+    };
     return AdminPage;
 }(ViewPage_1.ViewPage));
 exports.AdminPage = AdminPage;
-
-
-/***/ }),
-/* 41 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var MapHelper = (function () {
-    function MapHelper() {
-    }
-    MapHelper.mapTo = function (map, callback) {
-        var returnArray = [];
-        var keys = Object.keys(map);
-        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-            var a = keys_1[_i];
-            var index = parseInt(a, 10);
-            returnArray.push(callback(map[index], index, map));
-        }
-        return returnArray;
-    };
-    MapHelper.forEach = function (map, callback) {
-        var keys = Object.keys(map);
-        for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
-            var a = keys_2[_i];
-            var index = parseInt(a, 10);
-            callback(map[index], index, map);
-        }
-    };
-    MapHelper.find = function (map, callback) {
-        var keys = Object.keys(map);
-        for (var _i = 0, keys_3 = keys; _i < keys_3.length; _i++) {
-            var a = keys_3[_i];
-            var index = parseInt(a, 10);
-            if (callback(map[index], index, map)) {
-                return map[index];
-            }
-        }
-        return null;
-    };
-    MapHelper.toArray = function (map) {
-        var returnArray = [];
-        var keys = Object.keys(map);
-        for (var _i = 0, keys_4 = keys; _i < keys_4.length; _i++) {
-            var a = keys_4[_i];
-            var index = parseInt(a, 10);
-            returnArray.push(map[index]);
-        }
-        return returnArray;
-    };
-    return MapHelper;
-}());
-exports.MapHelper = MapHelper;
-function mapify(obj, callback) {
-    var newObj = {};
-    obj.forEach(function (ele, index, array) {
-        newObj[callback(ele, index, obj)] = ele;
-    });
-    return newObj;
-}
-exports.mapify = mapify;
 
 
 /***/ })

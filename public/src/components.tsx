@@ -13,3 +13,5 @@ export * from "./components/lab/LastBuildInfo";
 export * from "./components/student/CoursesOverview";
 export * from "./components/student/CoursePanel";
 export * from "./components/student/SingleCourseOverview";
+export * from "./components/bootstrap/Button";
+export * from "./components/forms/CourseForm";

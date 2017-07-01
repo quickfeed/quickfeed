@@ -1,9 +1,9 @@
-import { IAssignment, ICourse, ICourseStudent, IUser } from "../models";
-import { ICourseProvider } from "./CourseManager";
-import { IUserProvider } from "./UserManager";
-
-import { IMap, MapHelper, mapify } from "../map";
 import * as Models from "../models";
+import {IAssignment, ICourse, ICourseStudent, IUser} from "../models";
+import {ICourseProvider} from "./CourseManager";
+import {IUserProvider} from "./UserManager";
+
+import {IMap, MapHelper, mapify} from "../map";
 
 interface IDummyUser extends IUser {
     password: string;
@@ -47,7 +47,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public tryLogin(username: string, password: string): IUser | null {
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+        u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
             return user;
         }
@@ -64,6 +64,14 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
             personId: user.id,
             state: Models.CourseStudentState.pending,
         });
+    }
+
+    public createNewCourse(course: any): void {
+        const courses = MapHelper.toArray(this.localCourses);
+        course.id = courses.length;
+        const courseData: ICourse = course as ICourse;
+        courses.push(courseData);
+        this.localCourses = mapify(courses, (ele) => ele.id);
     }
 
     public changeUserState(link: ICourseStudent, state: Models.CourseStudentState): void {
@@ -219,39 +227,44 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
                 id: 0,
                 name: "Object Oriented Programming",
                 tag: "DAT100",
+                year: "Spring 2017",
             },
             {
                 id: 1,
                 name: "Algorithms and Datastructures",
                 tag: "DAT200",
+                year: "Spring 2017",
             },
             {
                 id: 2,
                 name: "Databases",
                 tag: "DAT220",
+                year: "Spring 2017",
             },
             {
                 id: 3,
                 name: "Communication Technology",
                 tag: "DAT230",
+                year: "Spring 2017",
             },
             {
                 id: 4,
                 name: "Operating Systems",
                 tag: "DAT320",
+                year: "Spring 2017",
             },
         ], (ele) => ele.id);
     }
 
     private addLocalCourseStudent() {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999, state: 1 },
-            { courseId: 1, personId: 999, state: 1 },
-            { courseId: 0, personId: 1, state: 0 },
-            { courseId: 0, personId: 2, state: 0 },
+            {courseId: 0, personId: 999, state: 1},
+            {courseId: 1, personId: 999, state: 1},
+            {courseId: 0, personId: 1, state: 0},
+            {courseId: 0, personId: 2, state: 0},
         ];
     }
 
 }
 
-export { TempDataProvider };
+export {TempDataProvider};
