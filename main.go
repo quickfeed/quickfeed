@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 	githubHandlers "github.com/autograde/aguis/web/github"
@@ -87,8 +88,11 @@ func main() {
 	oauth2.GET("/callback", auth.OAuth2Callback(db))
 	oauth2.GET("/logout", auth.OAuth2Logout())
 
+	// Source code management clients indexed by access token.
+	scms := make(map[string]scm.SCM)
+
 	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl(db))
+	api.Use(auth.AccessControl(db, scms))
 
 	api.GET("/courses", web.ListCourses(db))
 	api.POST("/courses", web.NewCourse(db))

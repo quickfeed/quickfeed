@@ -8,6 +8,7 @@ interface IUserProvider {
     tryLogin(username: string, password: string): IUser | null;
     logout(user: IUser): void;
     getAllUser(): IMap<IUser>;
+    tryRemoteLogin(provider: string, callback: (result: IUser | null) => void): void;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -36,6 +37,12 @@ class UserManager {
             this.onLogin({ target: this, user: this.currentUser });
         }
         return result;
+    }
+
+    public tryRemoteLogin(
+        provider: string,
+        callback: (result: IUser | null) => void) {
+        this.userProvider.tryRemoteLogin(provider, callback);
     }
 
     public logout() {

@@ -54,6 +54,10 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
+    public tryRemoteLogin(provider: string, callback: (result: IUser | null) => void): void {
+        throw new Error("Method not implemented.");
+    }
+
     public logout(user: IUser): void {
         "Do nothing";
     }

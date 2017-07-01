@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 13);
+/******/ 	return __webpack_require__(__webpack_require__.s = 14);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,15 +79,15 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(15));
-__export(__webpack_require__(9));
 __export(__webpack_require__(16));
+__export(__webpack_require__(9));
+__export(__webpack_require__(10));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
 __export(__webpack_require__(19));
 __export(__webpack_require__(20));
 __export(__webpack_require__(22));
-__export(__webpack_require__(10));
+__export(__webpack_require__(11));
 __export(__webpack_require__(23));
 __export(__webpack_require__(24));
 __export(__webpack_require__(25));
@@ -100,6 +100,37 @@ __export(__webpack_require__(30));
 
 /***/ }),
 /* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var NavigationHelper_1 = __webpack_require__(3);
+function isViewPage(item) {
+    if (item instanceof ViewPage) {
+        return true;
+    }
+    return false;
+}
+exports.isViewPage = isViewPage;
+var ViewPage = (function () {
+    function ViewPage() {
+        this.template = null;
+        this.navHelper = new NavigationHelper_1.NavigationHelper(this);
+    }
+    ViewPage.prototype.setPath = function (path) {
+        this.pagePath = path;
+    };
+    ViewPage.prototype.renderMenu = function (menu) {
+        return [];
+    };
+    return ViewPage;
+}());
+exports.ViewPage = ViewPage;
+
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -244,37 +275,6 @@ var NavigationHelper = (function () {
     return NavigationHelper;
 }());
 exports.NavigationHelper = NavigationHelper;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var NavigationHelper_1 = __webpack_require__(2);
-function isViewPage(item) {
-    if (item instanceof ViewPage) {
-        return true;
-    }
-    return false;
-}
-exports.isViewPage = isViewPage;
-var ViewPage = (function () {
-    function ViewPage() {
-        this.template = null;
-        this.navHelper = new NavigationHelper_1.NavigationHelper(this);
-    }
-    ViewPage.prototype.setPath = function (path) {
-        this.pagePath = path;
-    };
-    ViewPage.prototype.renderMenu = function (menu) {
-        return [];
-    };
-    return ViewPage;
-}());
-exports.ViewPage = ViewPage;
 
 
 /***/ }),
@@ -483,7 +483,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(2);
+var NavigationHelper_1 = __webpack_require__(3);
 var NavHeaderBar = (function (_super) {
     __extends(NavHeaderBar, _super);
     function NavHeaderBar() {
@@ -532,6 +532,61 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(3);
+var NavMenu = (function (_super) {
+    __extends(NavMenu, _super);
+    function NavMenu() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    NavMenu.prototype.render = function () {
+        var _this = this;
+        var items = this.props.links.map(function (v, i) {
+            var active = "";
+            if (v.active) {
+                active = "active";
+            }
+            if (v.uri) {
+                return React.createElement("li", { key: i, className: active },
+                    React.createElement("a", { onClick: function (e) { return _this.handleClick(e, v); }, href: "/" + v.uri }, v.name));
+            }
+            else {
+                return React.createElement("li", { key: i, className: active },
+                    React.createElement("span", { className: "header" }, v.name));
+            }
+        });
+        return React.createElement("ul", { className: "nav nav-list" }, items);
+    };
+    NavMenu.prototype.handleClick = function (e, link) {
+        var _this = this;
+        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+            if (_this.props.onClick) {
+                _this.props.onClick(link);
+            }
+        });
+    };
+    return NavMenu;
+}(React.Component));
+exports.NavMenu = NavMenu;
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
 var ProgressBar = (function (_super) {
     __extends(ProgressBar, _super);
     function ProgressBar() {
@@ -552,7 +607,7 @@ exports.ProgressBar = ProgressBar;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -583,7 +638,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -600,7 +655,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(2);
+var NavigationHelper_1 = __webpack_require__(3);
 var CollapsableNavMenu = (function (_super) {
     __extends(CollapsableNavMenu, _super);
     function CollapsableNavMenu() {
@@ -724,7 +779,7 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -741,7 +796,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(14);
+var ReactDOM = __webpack_require__(15);
 var components_1 = __webpack_require__(1);
 var managers_1 = __webpack_require__(31);
 var ErrorPage_1 = __webpack_require__(36);
@@ -750,6 +805,10 @@ var HomePage_1 = __webpack_require__(39);
 var StudentPage_1 = __webpack_require__(40);
 var TeacherPage_1 = __webpack_require__(42);
 var AdminPage_1 = __webpack_require__(43);
+var NavBarLogin_1 = __webpack_require__(44);
+var NavBarMenu_1 = __webpack_require__(45);
+var LoginPage_1 = __webpack_require__(46);
+var ServerProvider_1 = __webpack_require__(47);
 var AutoGrader = (function (_super) {
     __extends(AutoGrader, _super);
     function AutoGrader(props) {
@@ -845,6 +904,10 @@ var AutoGrader = (function (_super) {
         var _this = this;
         var body;
         var content = this.renderActivePage(this.subPage);
+        var loginLink = [
+            { name: "Github", uri: "app/login/login/github" },
+            { name: "Gitlab", uri: "app/login/login/gitlab" },
+        ];
         switch (name) {
             case "frontpage":
                 body = (React.createElement(components_1.Row, { className: "container-fluid" },
@@ -855,24 +918,41 @@ var AutoGrader = (function (_super) {
                     React.createElement("div", { className: "col-md-10 col-sm-9 col-xs-12" }, content)));
         }
         return (React.createElement("div", null,
-            React.createElement(components_1.NavBar, { id: "top-bar", isFluid: false, isInverse: true, links: this.state.topLinks, onClick: function (link) { return _this.handleClick(link); }, user: this.state.curUser, brandName: "Auto Grader" }),
+            React.createElement(components_1.NavBar, { id: "top-bar", isFluid: false, isInverse: true, onClick: function (link) { return _this.handleClick(link); }, brandName: "Auto Grader" },
+                React.createElement(NavBarMenu_1.NavBarMenu, { links: this.state.topLinks, onClick: function (link) { return _this.handleClick(link); } }),
+                React.createElement(NavBarLogin_1.NavBarLogin, { user: this.state.curUser, links: loginLink, onClick: function (link) { return _this.handleClick(link); } })),
             body));
     };
     return AutoGrader;
 }(React.Component));
 function main() {
+    var DEBUG_BROWSER = "DEBUG_BROWSER";
+    var DEBUG_SERVER = "DEBUG_SERVER";
+    var curRunning;
+    curRunning = DEBUG_BROWSER;
     var tempData = new managers_1.TempDataProvider();
-    var userMan = new managers_1.UserManager(tempData);
-    var courseMan = new managers_1.CourseManager(tempData);
-    var navMan = new managers_1.NavigationManager(history);
+    var userMan;
+    var courseMan;
+    var navMan;
+    if (curRunning === DEBUG_SERVER) {
+        var serverData = new ServerProvider_1.ServerProvider();
+        userMan = new managers_1.UserManager(serverData);
+        courseMan = new managers_1.CourseManager(tempData);
+        navMan = new managers_1.NavigationManager(history);
+    }
+    else {
+        userMan = new managers_1.UserManager(tempData);
+        courseMan = new managers_1.CourseManager(tempData);
+        navMan = new managers_1.NavigationManager(history);
+    }
     window.debugData = { tempData: tempData, userMan: userMan, courseMan: courseMan, navMan: navMan };
-    var user = userMan.tryLogin("test@testersen.no", "1234");
     navMan.setDefaultPath("app/home");
     navMan.registerPage("app/home", new HomePage_1.HomePage());
     navMan.registerPage("app/student", new StudentPage_1.StudentPage(userMan, navMan, courseMan));
     navMan.registerPage("app/teacher", new TeacherPage_1.TeacherPage(userMan, navMan, courseMan));
     navMan.registerPage("app/admin", new AdminPage_1.AdminPage(navMan, userMan, courseMan));
     navMan.registerPage("app/help", new HelpPage_1.HelpPage(navMan));
+    navMan.registerPage("app/login", new LoginPage_1.LoginPage(navMan, userMan));
     navMan.registerErrorPage(404, new ErrorPage_1.ErrorPage());
     navMan.onNavigate.addEventListener(function (e) {
         console.log(e);
@@ -883,89 +963,10 @@ main();
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavHeaderBar_1 = __webpack_require__(9);
-var NavigationHelper_1 = __webpack_require__(2);
-var NavBar = (function (_super) {
-    __extends(NavBar, _super);
-    function NavBar() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    NavBar.prototype.render = function () {
-        var _this = this;
-        var items = this.props.links.map(function (link, i) {
-            var active = "";
-            if (link.active) {
-                active = "active";
-            }
-            return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "/" + link.uri, onClick: function (e) {
-                        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
-                            _this.handleClick(link);
-                        });
-                    } }, link.name));
-        });
-        return React.createElement("nav", { className: this.renderNavBarClass() },
-            React.createElement("div", { className: this.renderIsFluid() },
-                React.createElement(NavHeaderBar_1.NavHeaderBar, { id: this.props.id, brandName: this.props.brandName, brandClick: function () { return _this.handleClick({ name: "Home", uri: "/" }); } }),
-                React.createElement("div", { className: "collapse navbar-collapse", id: this.props.id },
-                    React.createElement("ul", { className: "nav navbar-nav" }, items),
-                    React.createElement("p", { className: "navbar-text navbar-right" }, this.renderUser(this.props.user)))));
-    };
-    NavBar.prototype.renderIsFluid = function () {
-        var name = "container";
-        if (this.props.isFluid) {
-            name += "-fluid";
-        }
-        return name;
-    };
-    NavBar.prototype.renderNavBarClass = function () {
-        var name = "navbar navbar-absolute-top";
-        if (this.props.isInverse) {
-            name += " navbar-inverse";
-        }
-        else {
-            name += " navbar-default";
-        }
-        return name;
-    };
-    NavBar.prototype.handleClick = function (link) {
-        if (this.props.onClick) {
-            this.props.onClick(link);
-        }
-    };
-    NavBar.prototype.renderUser = function (user) {
-        if (user) {
-            return "Hello " + user.firstName;
-        }
-        return "Not logged in";
-    };
-    return NavBar;
-}(React.Component));
-exports.NavBar = NavBar;
-
 
 /***/ }),
 /* 16 */
@@ -985,41 +986,44 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(2);
-var NavMenu = (function (_super) {
-    __extends(NavMenu, _super);
-    function NavMenu() {
+var NavHeaderBar_1 = __webpack_require__(9);
+var NavBar = (function (_super) {
+    __extends(NavBar, _super);
+    function NavBar() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    NavMenu.prototype.render = function () {
+    NavBar.prototype.render = function () {
         var _this = this;
-        var items = this.props.links.map(function (v, i) {
-            var active = "";
-            if (v.active) {
-                active = "active";
-            }
-            if (v.uri) {
-                return React.createElement("li", { key: i, className: active },
-                    React.createElement("a", { onClick: function (e) { return _this.handleClick(e, v); }, href: "/" + v.uri }, v.name));
-            }
-            else {
-                return React.createElement("li", { key: i, className: active },
-                    React.createElement("span", { className: "header" }, v.name));
-            }
-        });
-        return React.createElement("ul", { className: "nav nav-list" }, items);
+        return React.createElement("nav", { className: this.renderNavBarClass() },
+            React.createElement("div", { className: this.renderIsFluid() },
+                React.createElement(NavHeaderBar_1.NavHeaderBar, { id: this.props.id, brandName: this.props.brandName, brandClick: function () { return _this.handleClick({ name: "Home", uri: "/" }); } }),
+                React.createElement("div", { className: "collapse navbar-collapse", id: this.props.id }, this.props.children)));
     };
-    NavMenu.prototype.handleClick = function (e, link) {
-        var _this = this;
-        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
-            if (_this.props.onClick) {
-                _this.props.onClick(link);
-            }
-        });
+    NavBar.prototype.handleClick = function (link) {
+        if (this.props.onClick) {
+            this.props.onClick(link);
+        }
     };
-    return NavMenu;
+    NavBar.prototype.renderIsFluid = function () {
+        var name = "container";
+        if (this.props.isFluid) {
+            name += "-fluid";
+        }
+        return name;
+    };
+    NavBar.prototype.renderNavBarClass = function () {
+        var name = "navbar navbar-absolute-top";
+        if (this.props.isInverse) {
+            name += " navbar-inverse";
+        }
+        else {
+            name += " navbar-default";
+        }
+        return name;
+    };
+    return NavBar;
 }(React.Component));
-exports.NavMenu = NavMenu;
+exports.NavBar = NavBar;
 
 
 /***/ }),
@@ -1253,7 +1257,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(2);
+var NavigationHelper_1 = __webpack_require__(3);
 var NavDropdown = (function (_super) {
     __extends(NavDropdown, _super);
     function NavDropdown() {
@@ -1564,7 +1568,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ProgressBar_1 = __webpack_require__(10);
+var ProgressBar_1 = __webpack_require__(11);
 var SingleCourseOverview = (function (_super) {
     __extends(SingleCourseOverview, _super);
     function SingleCourseOverview() {
@@ -1818,8 +1822,8 @@ exports.CourseManager = CourseManager;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var event_1 = __webpack_require__(5);
-var NavigationHelper_1 = __webpack_require__(2);
-var ViewPage_1 = __webpack_require__(3);
+var NavigationHelper_1 = __webpack_require__(3);
+var ViewPage_1 = __webpack_require__(2);
 function isILinkCollection(item) {
     if (item.item) {
         return true;
@@ -1923,13 +1927,14 @@ var NavigationManager = (function () {
         if (viewPage && viewPage.pagePath === checkUrl) {
             checkUrl += "/" + viewPage.navHelper.defaultPage;
         }
+        var long = NavigationHelper_1.NavigationHelper.getParts(checkUrl);
         for (var _i = 0, links_1 = links; _i < links_1.length; _i++) {
             var l = links_1[_i];
             if (!l.uri) {
                 continue;
             }
-            var a = NavigationHelper_1.NavigationHelper.getParts(l.uri).join("/");
-            l.active = a === checkUrl.substr(0, a.length);
+            var short = NavigationHelper_1.NavigationHelper.getParts(l.uri);
+            l.active = this.checkPartEqual(long, short);
         }
     };
     NavigationManager.prototype.checkLinkCollection = function (links, viewPage) {
@@ -1937,13 +1942,14 @@ var NavigationManager = (function () {
         if (viewPage && viewPage.pagePath === checkUrl) {
             checkUrl += "/" + viewPage.navHelper.defaultPage;
         }
+        var long = NavigationHelper_1.NavigationHelper.getParts(checkUrl);
         for (var _i = 0, links_2 = links; _i < links_2.length; _i++) {
             var l = links_2[_i];
             if (!l.item.uri) {
                 continue;
             }
-            var a = NavigationHelper_1.NavigationHelper.getParts(l.item.uri).join("/");
-            l.item.active = a === checkUrl.substr(0, a.length);
+            var short = NavigationHelper_1.NavigationHelper.getParts(l.item.uri);
+            l.item.active = this.checkPartEqual(long, short);
             if (l.children) {
                 this.checkLinks(l.children, viewPage);
             }
@@ -1951,6 +1957,17 @@ var NavigationManager = (function () {
     };
     NavigationManager.prototype.refresh = function () {
         this.navigateTo(this.currentPath);
+    };
+    NavigationManager.prototype.checkPartEqual = function (long, short) {
+        if (short.length > long.length) {
+            return false;
+        }
+        for (var i = 0; i < short.length; i++) {
+            if (short[i] !== long[i]) {
+                return false;
+            }
+        }
+        return true;
     };
     NavigationManager.prototype.getErrorPage = function (statusCode) {
         if (this.errorPages[statusCode]) {
@@ -2005,6 +2022,9 @@ var TempDataProvider = (function () {
             return user;
         }
         return null;
+    };
+    TempDataProvider.prototype.tryRemoteLogin = function (provider, callback) {
+        throw new Error("Method not implemented.");
     };
     TempDataProvider.prototype.logout = function (user) {
         "Do nothing";
@@ -2240,6 +2260,9 @@ var UserManager = (function () {
         }
         return result;
     };
+    UserManager.prototype.tryRemoteLogin = function (provider, callback) {
+        this.userProvider.tryRemoteLogin(provider, callback);
+    };
     UserManager.prototype.logout = function () {
         if (this.currentUser) {
             this.userProvider.logout(this.currentUser);
@@ -2293,7 +2316,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(3);
+var ViewPage_1 = __webpack_require__(2);
 var ErrorPage = (function (_super) {
     __extends(ErrorPage, _super);
     function ErrorPage() {
@@ -2340,7 +2363,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(3);
+var ViewPage_1 = __webpack_require__(2);
 var HelpView_1 = __webpack_require__(38);
 var HelpPage = (function (_super) {
     __extends(HelpPage, _super);
@@ -2456,7 +2479,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(3);
+var ViewPage_1 = __webpack_require__(2);
 var HomePage = (function (_super) {
     __extends(HomePage, _super);
     function HomePage() {
@@ -2489,11 +2512,11 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
-var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(11);
+var ViewPage_1 = __webpack_require__(2);
+var HelloView_1 = __webpack_require__(12);
 var UserView_1 = __webpack_require__(7);
 var helper_1 = __webpack_require__(8);
-var CollapsableNavMenu_1 = __webpack_require__(12);
+var CollapsableNavMenu_1 = __webpack_require__(13);
 var EnrollmentView_1 = __webpack_require__(41);
 var StudentPage = (function (_super) {
     __extends(StudentPage, _super);
@@ -2512,6 +2535,7 @@ var StudentPage = (function (_super) {
         _this.navHelper.registerFunction("index", _this.index);
         _this.navHelper.registerFunction("course/{courseid}", _this.course);
         _this.navHelper.registerFunction("course/{courseid}/lab/{labid}", _this.courseWithLab);
+        _this.navHelper.registerFunction("course/{coruseid}/{page}", _this.courseMissing);
         _this.navHelper.registerFunction("enroll", _this.enroll);
         _this.navHelper.registerFunction("user", function (navInfo) { return React.createElement(UserView_1.UserView, { users: users.getAllUser() }); });
         _this.navHelper.registerFunction("hello", function (INavInfo) { return React.createElement(HelloView_1.HelloView, null); });
@@ -2549,6 +2573,12 @@ var StudentPage = (function (_super) {
             }
         }
         return React.createElement("div", null, "404 not found");
+    };
+    StudentPage.prototype.courseMissing = function (navInfo) {
+        return React.createElement("div", null,
+            "The page ",
+            navInfo.params.page,
+            " is not yet implemented");
     };
     StudentPage.prototype.renderMenu = function (key) {
         var _this = this;
@@ -2751,10 +2781,10 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
-var ViewPage_1 = __webpack_require__(3);
-var HelloView_1 = __webpack_require__(11);
+var ViewPage_1 = __webpack_require__(2);
+var HelloView_1 = __webpack_require__(12);
 var UserView_1 = __webpack_require__(7);
-var CollapsableNavMenu_1 = __webpack_require__(12);
+var CollapsableNavMenu_1 = __webpack_require__(13);
 var models_1 = __webpack_require__(4);
 var helper_1 = __webpack_require__(8);
 var TeacherPage = (function (_super) {
@@ -2955,7 +2985,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(0);
 var components_1 = __webpack_require__(1);
-var ViewPage_1 = __webpack_require__(3);
+var ViewPage_1 = __webpack_require__(2);
 var UserView_1 = __webpack_require__(7);
 var AdminPage = (function (_super) {
     __extends(AdminPage, _super);
@@ -3074,6 +3104,234 @@ var AdminPage = (function (_super) {
     return AdminPage;
 }(ViewPage_1.ViewPage));
 exports.AdminPage = AdminPage;
+
+
+/***/ }),
+/* 44 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var NavMenu_1 = __webpack_require__(10);
+var NavBarLogin = (function (_super) {
+    __extends(NavBarLogin, _super);
+    function NavBarLogin() {
+        var _this = _super.call(this) || this;
+        _this.state = {
+            loginOpen: false,
+        };
+        return _this;
+    }
+    NavBarLogin.prototype.render = function () {
+        var _this = this;
+        if (this.props.user) {
+            return React.createElement("div", { className: "navbar-right" },
+                React.createElement("button", { className: "btn btn-primary navbar-btn", onClick: function () { _this.handleClick({ name: "Logout", uri: "app/login/logout" }); } }, "Log out"));
+        }
+        var links = this.props.links;
+        if (!links) {
+            links = [
+                { name: "Missing links" },
+            ];
+        }
+        var isHidden = "hidden";
+        if (this.state.loginOpen) {
+            isHidden = "";
+        }
+        return React.createElement("div", { className: "navbar-right" },
+            React.createElement("button", { onClick: function () { return _this.toggleMenu(); }, className: "btn btn-primary navbar-btn" }, "Login"),
+            React.createElement("div", { className: "nav-box " + isHidden },
+                React.createElement(NavMenu_1.NavMenu, { links: links, onClick: function (link) { return _this.handleClick(link); } })));
+    };
+    NavBarLogin.prototype.toggleMenu = function () {
+        this.setState({ loginOpen: !this.state.loginOpen });
+    };
+    NavBarLogin.prototype.handleClick = function (link) {
+        this.setState({ loginOpen: false });
+        if (this.props.onClick) {
+            this.props.onClick(link);
+        }
+    };
+    return NavBarLogin;
+}(React.Component));
+exports.NavBarLogin = NavBarLogin;
+
+
+/***/ }),
+/* 45 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var NavigationHelper_1 = __webpack_require__(3);
+var NavBarMenu = (function (_super) {
+    __extends(NavBarMenu, _super);
+    function NavBarMenu() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    NavBarMenu.prototype.render = function () {
+        var _this = this;
+        var items = this.props.links.map(function (link, i) {
+            var active = "";
+            if (link.active) {
+                active = "active";
+            }
+            return React.createElement("li", { className: active, key: i },
+                React.createElement("a", { href: "/" + link.uri, onClick: function (e) {
+                        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
+                            _this.handleClick(link);
+                        });
+                    } }, link.name));
+        });
+        return React.createElement("ul", { className: "nav navbar-nav" }, items);
+    };
+    NavBarMenu.prototype.handleClick = function (link) {
+        if (this.props.onClick) {
+            this.props.onClick(link);
+        }
+    };
+    return NavBarMenu;
+}(React.Component));
+exports.NavBarMenu = NavBarMenu;
+
+
+/***/ }),
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var React = __webpack_require__(0);
+var ViewPage_1 = __webpack_require__(2);
+var LoginPage = (function (_super) {
+    __extends(LoginPage, _super);
+    function LoginPage(navMan, userMan) {
+        var _this = _super.call(this) || this;
+        _this.navMan = navMan;
+        _this.userMan = userMan;
+        _this.navHelper.defaultPage = "index";
+        _this.navHelper.registerFunction("index", _this.index);
+        _this.navHelper.registerFunction("login/{provider}", _this.login);
+        return _this;
+    }
+    LoginPage.prototype.index = function (info) {
+        return React.createElement("div", null, "Quickly hide, you should not be here! Someone is going to get mad...");
+    };
+    LoginPage.prototype.login = function (info) {
+        this.userMan.tryRemoteLogin(info.params.provider, function (result) {
+            if (result) {
+                console.log("Sucessful login of: " + result);
+            }
+            else {
+                console.log("Failed");
+            }
+        });
+        return React.createElement("div", null, "Logging in please wait");
+    };
+    LoginPage.prototype.logout = function (info) {
+        this.userMan.logout();
+        return React.createElement("div", null, "Logged out");
+    };
+    LoginPage.prototype.renderContent = function (page) {
+        var pageContent = this.navHelper.navigateTo(page);
+        if (pageContent) {
+            return pageContent;
+        }
+        return React.createElement("div", null, "404 Not found");
+    };
+    return LoginPage;
+}(ViewPage_1.ViewPage));
+exports.LoginPage = LoginPage;
+
+
+/***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function request(url, callback) {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        if (req.readyState === 4 && req.status === 200) {
+            console.log(req);
+            callback(req.responseText);
+        }
+    };
+    req.open("GET", url, true);
+    req.send();
+}
+var ServerProvider = (function () {
+    function ServerProvider() {
+    }
+    ServerProvider.prototype.tryLogin = function (username, password) {
+        throw new Error("Method not implemented.");
+    };
+    ServerProvider.prototype.logout = function (user) {
+        throw new Error("Method not implemented.");
+    };
+    ServerProvider.prototype.getAllUser = function () {
+        throw new Error("Method not implemented.");
+    };
+    ServerProvider.prototype.tryRemoteLogin = function (provider, callback) {
+        var requestString = null;
+        switch (provider) {
+            case "github":
+                requestString = "/auth/github";
+                break;
+            case "gitlab":
+                requestString = "/auth/gitlab";
+                break;
+        }
+        if (requestString) {
+            request(requestString, function (data) {
+                console.log(data);
+                callback(null);
+            });
+        }
+        else {
+            callback(null);
+        }
+    };
+    return ServerProvider;
+}());
+exports.ServerProvider = ServerProvider;
 
 
 /***/ })

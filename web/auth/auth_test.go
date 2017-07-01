@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
@@ -192,7 +193,7 @@ func TestAccessControl(t *testing.T) {
 		t.Error(err)
 	}
 
-	m := auth.AccessControl(db)
+	m := auth.AccessControl(db, make(map[string]scm.SCM))
 	protected := session.Middleware(store)(m(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}))
