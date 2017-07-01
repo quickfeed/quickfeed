@@ -1,8 +1,4 @@
 [[constraint]]
-  name = "github.com/gorilla/securecookie"
-  version = "1.1.0"
-
-[[constraint]]
   name = "github.com/gorilla/sessions"
   version = "1.1.0"
 
@@ -15,6 +11,9 @@
   name = "github.com/markbates/goth"
 
 [[constraint]]
-  branch = "add-OrganizationService.GetByID"
-  name = "github.com/google/go-github"
-  source = "https://github.com/s111/go-github.git"
+  name = "github.com/xanzy/go-gitlab"
+  version = "0.5.1"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/oauth2"

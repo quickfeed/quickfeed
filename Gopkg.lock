@@ -14,11 +14,10 @@
   revision = "6a1fa9404c0aebf36c879bc50152edcc953910d2"
 
 [[projects]]
-  branch = "add-OrganizationService.GetByID"
+  branch = "master"
   name = "github.com/google/go-github"
   packages = ["github"]
-  revision = "727f52434bf79e226f16d51e705864fa3a1759de"
-  source = "https://github.com/s111/go-github.git"
+  revision = "4c4aea2b66bd1d26305d40a307bfa377d24f9c8c"
 
 [[projects]]
   branch = "master"
@@ -126,7 +125,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "90796e5a05ce440b41c768bd9af257005e470461"
+  revision = "4ed4d404df456f81e878683a0363ed3013a59003"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -137,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7659b55f0d4b0f4d570da9b5808a07f3f73ae8d9c0fa30c45ba4a70edeffc76f"
+  inputs-digest = "94ebe81857ab353c3bad9cece4c3f25e2c9da31852b4c3e1c084b980058e2b89"
   solver-name = "gps-cdcl"
   solver-version = 1
