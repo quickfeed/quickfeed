@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"mime"
 	"net/http"
 	"os"
 	"os/signal"
@@ -35,6 +36,8 @@ func main() {
 		baseURL = flag.String("service.url", "localhost", "service base url")
 	)
 	flag.Parse()
+
+	setDefaultMimeTypes()
 
 	e := echo.New()
 	e.Logger.SetLevel(log.DEBUG)
@@ -132,6 +135,20 @@ func main() {
 			"err":     err,
 		})
 	}
+}
+
+// In Windows, mime.type loads the file extensions from registry which
+// usually has the wrong content-type associated with the file extension.
+// This will enforce the correct types for the most used mime types
+func setDefaultMimeTypes() {
+	mime.AddExtensionType(".html", "text/html")
+	mime.AddExtensionType(".css", "text/css")
+	mime.AddExtensionType(".js", "application/javascript")
+
+	// Useful for debugging in browser
+	mime.AddExtensionType(".jsx", "application/javascript")
+	mime.AddExtensionType(".map", "application/json")
+	mime.AddExtensionType(".ts", "application/x-typescript")
 }
 
 // makes the oauth2 provider available in the request query so that
