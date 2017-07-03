@@ -2,12 +2,12 @@ import { IMap, MapHelper } from "../map";
 import { CourseStudentState, IAssignment, ICourse, ICourseStudent, isCourse, IUser } from "../models";
 
 interface ICourseProvider {
-    getCourses(): IMap<ICourse>;
-    getAssignments(courseId: number): IMap<IAssignment>;
-    getCoursesStudent(): ICourseStudent[];
-    addUserToCourse(user: IUser, course: ICourse): void;
-    changeUserState(link: ICourseStudent, state: CourseStudentState): void;
-    createNewCourse(courseData: ICourse): void;
+    getCourses(): Promise<IMap<ICourse>>;
+    getAssignments(courseId: number): Promise<IMap<IAssignment>>;
+    getCoursesStudent(): Promise<ICourseStudent[]>;
+    addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
+    changeUserState(link: ICourseStudent, state: CourseStudentState): Promise<boolean>;
+    createNewCourse(courseData: ICourse): Promise<boolean>;
 }
 
 class CourseManager {
@@ -17,26 +17,26 @@ class CourseManager {
         this.courseProvider = courseProvider;
     }
 
-    public addUserToCourse(user: IUser, course: ICourse): void {
-        this.courseProvider.addUserToCourse(user, course);
+    public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
+        return this.courseProvider.addUserToCourse(user, course);
     }
 
-    public getCourse(id: number): ICourse | null {
-        const a = this.getCourses()[id];
+    public async getCourse(id: number): Promise<ICourse | null> {
+        const a = (await this.getCourses())[id];
         if (a) {
             return a;
         }
         return null;
     }
 
-    public getCourses(): ICourse[] {
-        return MapHelper.toArray(this.courseProvider.getCourses());
+    public async getCourses(): Promise<ICourse[]> {
+        return MapHelper.toArray(await this.courseProvider.getCourses());
     }
 
-    public getRelationsFor(user: IUser, state?: CourseStudentState): ICourseStudent[] {
+    public async getRelationsFor(user: IUser, state?: CourseStudentState): Promise<ICourseStudent[]> {
         const cLinks: ICourseStudent[] = [];
 
-        for (const c of this.courseProvider.getCoursesStudent()) {
+        for (const c of await this.courseProvider.getCoursesStudent()) {
             if (user.id === c.personId && (state === undefined || c.state === CourseStudentState.accepted)) {
                 cLinks.push(c);
             }
@@ -44,16 +44,16 @@ class CourseManager {
         return cLinks;
     }
 
-    public getCoursesFor(user: IUser, state?: CourseStudentState): ICourse[] {
+    public async getCoursesFor(user: IUser, state?: CourseStudentState): Promise<ICourse[]> {
         const cLinks: ICourseStudent[] = [];
 
-        for (const c of this.courseProvider.getCoursesStudent()) {
+        for (const c of await this.courseProvider.getCoursesStudent()) {
             if (user.id === c.personId && (state === undefined || c.state === CourseStudentState.accepted)) {
                 cLinks.push(c);
             }
         }
         const courses: ICourse[] = [];
-        const tempCourses = this.getCourses();
+        const tempCourses = await this.getCourses();
         for (const link of cLinks) {
             const c = tempCourses[link.courseId];
             if (c) {
@@ -63,9 +63,9 @@ class CourseManager {
         return courses;
     }
 
-    public getUserIdsForCourse(course: ICourse, state?: CourseStudentState): ICourseStudent[] {
+    public async getUserIdsForCourse(course: ICourse, state?: CourseStudentState): Promise<ICourseStudent[]> {
         const users: ICourseStudent[] = [];
-        for (const c of this.courseProvider.getCoursesStudent()) {
+        for (const c of await this.courseProvider.getCoursesStudent()) {
             if (course.id === c.courseId && (state === undefined || c.state === CourseStudentState.accepted)) {
                 users.push(c);
             }
@@ -73,27 +73,27 @@ class CourseManager {
         return users;
     }
 
-    public getAssignment(course: ICourse, assignmentId: number): IAssignment | null {
-        const temp = this.courseProvider.getAssignments(course.id);
+    public async getAssignment(course: ICourse, assignmentId: number): Promise<IAssignment | null> {
+        const temp = await this.courseProvider.getAssignments(course.id);
         if (temp[assignmentId]) {
             return temp[assignmentId];
         }
         return null;
     }
 
-    public getAssignments(courseId: number | ICourse): IAssignment[] {
+    public async getAssignments(courseId: number | ICourse): Promise<IAssignment[]> {
         if (isCourse(courseId)) {
             courseId = courseId.id;
         }
-        return MapHelper.toArray(this.courseProvider.getAssignments(courseId));
+        return MapHelper.toArray(await this.courseProvider.getAssignments(courseId));
     }
 
-    public changeUserState(link: ICourseStudent, state: CourseStudentState): void {
-        this.courseProvider.changeUserState(link, state);
+    public async changeUserState(link: ICourseStudent, state: CourseStudentState): Promise<boolean> {
+        return this.courseProvider.changeUserState(link, state);
     }
 
-    public createNewCourse(courseData: ICourse): void {
-        this.courseProvider.createNewCourse(courseData);
+    public async createNewCourse(courseData: ICourse): Promise<boolean> {
+        return this.courseProvider.createNewCourse(courseData);
     }
 
 }

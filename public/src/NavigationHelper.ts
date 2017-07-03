@@ -17,7 +17,7 @@ interface INavInfoEvent extends IEventData {
 
 interface INavObject {
     path: string[];
-    func: (navInfo: INavInfo<any>) => JSX.Element;
+    func: (navInfo: INavInfo<any>) => Promise<JSX.Element>;
 }
 
 class NavigationHelper {
@@ -75,7 +75,7 @@ class NavigationHelper {
         this.thisObject = thisObject;
     }
 
-    public registerFunction<T>(path: string, callback: (navInfo: INavInfo<T>) => JSX.Element): void {
+    public registerFunction<T>(path: string, callback: (navInfo: INavInfo<T>) => Promise<JSX.Element>): void {
         const pathParts = NavigationHelper.getParts(path);
         if (pathParts.length === 0) {
             throw new Error("Can't register function on empty path");
@@ -89,7 +89,7 @@ class NavigationHelper {
         curObj[this.navObj] = temp;
     }
 
-    public navigateTo(path: string): JSX.Element | null {
+    public async navigateTo(path: string): Promise<JSX.Element | null> {
         if (path.length === 0) {
             path = this.DEFAULT_VALUE;
         }

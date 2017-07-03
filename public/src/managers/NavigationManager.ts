@@ -100,7 +100,7 @@ export class NavigationManager {
         this.onNavigate({ target: this, page: this.getErrorPage(statusCode), subPage: "", uri: statusCode.toString() });
     }
 
-    public registerPage(path: string, page: ViewPage) {
+    public async registerPage(path: string, page: ViewPage): Promise<void> {
         const parts = NavigationHelper.getParts(path);
         if (parts.length === 0) {
             throw Error("Can't add page to index element");
@@ -127,7 +127,7 @@ export class NavigationManager {
             curObj = temp;
         }
         curObj[parts[parts.length - 1]] = page;
-
+        await page.init();
     }
 
     public registerErrorPage(statusCode: number, page: ViewPage) {

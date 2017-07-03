@@ -23,19 +23,19 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalUsers();
     }
 
-    public getAllUser(): IMap<IUser> {
+    public async getAllUser(): Promise<IMap<IUser>> {
         return this.localUsers;
     }
 
-    public getCourses(): IMap<ICourse> {
+    public async getCourses(): Promise<IMap<ICourse>> {
         return this.localCourses;
     }
 
-    public getCoursesStudent(): ICourseStudent[] {
+    public async getCoursesStudent(): Promise<ICourseStudent[]> {
         return this.localCourseStudent;
     }
 
-    public getAssignments(courseId: number): IMap<IAssignment> {
+    public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
         const temp: IMap<IAssignment> = [];
         MapHelper.forEach(this.localAssignments, (a, i) => {
             if (a.courseId === courseId) {
@@ -45,7 +45,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
-    public tryLogin(username: string, password: string): IUser | null {
+    public async tryLogin(username: string, password: string): Promise<IUser | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
             u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
@@ -54,7 +54,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
-    public tryRemoteLogin(provider: string, callback: (result: IUser | null) => void): void {
+    public async tryRemoteLogin(provider: string): Promise<IUser | null> {
         let lookup = "test@testersen.no";
         if (provider === "gitlab") {
             lookup = "bob@bobsen.no";
@@ -62,34 +62,39 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         const user = MapHelper.find(this.localUsers, (u) =>
             u.email.toLocaleLowerCase() === lookup);
 
-        // Simulate async callback
-        setTimeout(() => {
-            callback(user);
-        }, 500);
+        return new Promise<IUser | null>((resolve, reject) => {
+            // Simulate async callback
+            setTimeout(() => {
+                resolve(user);
+            }, 500);
+        });
     }
 
-    public logout(user: IUser): void {
-        "Do nothing";
+    public async logout(user: IUser): Promise<boolean> {
+        return true;
     }
 
-    public addUserToCourse(user: IUser, course: ICourse): void {
+    public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
         this.localCourseStudent.push({
             courseId: course.id,
             personId: user.id,
             state: Models.CourseStudentState.pending,
         });
+        return true;
     }
 
-    public createNewCourse(course: any): void {
+    public async createNewCourse(course: any): Promise<boolean> {
         const courses = MapHelper.toArray(this.localCourses);
         course.id = courses.length;
         const courseData: ICourse = course as ICourse;
         courses.push(courseData);
         this.localCourses = mapify(courses, (ele) => ele.id);
+        return true;
     }
 
-    public changeUserState(link: ICourseStudent, state: Models.CourseStudentState): void {
+    public async changeUserState(link: ICourseStudent, state: Models.CourseStudentState): Promise<boolean> {
         link.state = state;
+        return true;
     }
 
     private addLocalUsers() {

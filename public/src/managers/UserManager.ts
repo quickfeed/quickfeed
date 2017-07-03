@@ -5,10 +5,10 @@ import { ArrayHelper } from "../helper";
 import { IMap, MapHelper } from "../map";
 
 interface IUserProvider {
-    tryLogin(username: string, password: string): IUser | null;
-    logout(user: IUser): void;
-    getAllUser(): IMap<IUser>;
-    tryRemoteLogin(provider: string, callback: (result: IUser | null) => void): void;
+    tryLogin(username: string, password: string): Promise<IUser | null>;
+    logout(user: IUser): Promise<boolean>;
+    getAllUser(): Promise<IMap<IUser>>;
+    tryRemoteLogin(provider: string): Promise<IUser | null>;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -30,8 +30,8 @@ class UserManager {
         return this.currentUser;
     }
 
-    public tryLogin(username: string, password: string): IUser | null {
-        const result = this.userProvider.tryLogin(username, password);
+    public async tryLogin(username: string, password: string): Promise<IUser | null> {
+        const result = await this.userProvider.tryLogin(username, password);
         if (result) {
             this.currentUser = result;
             this.onLogin({ target: this, user: this.currentUser });
@@ -39,21 +39,18 @@ class UserManager {
         return result;
     }
 
-    public tryRemoteLogin(
-        provider: string,
-        callback: (result: IUser | null) => void) {
-        this.userProvider.tryRemoteLogin(provider, (result: IUser | null) => {
-            if (result) {
-                this.currentUser = result;
-                callback(result);
-                this.onLogin({ target: this, user: this.currentUser });
-            }
-        });
+    public async tryRemoteLogin(provider: string): Promise<IUser | null> {
+        const result = await this.userProvider.tryRemoteLogin(provider);
+        if (result) {
+            this.currentUser = result;
+            this.onLogin({ target: this, user: this.currentUser });
+        }
+        return result;
     }
 
-    public logout() {
+    public async logout() {
         if (this.currentUser) {
-            this.userProvider.logout(this.currentUser);
+            await this.userProvider.logout(this.currentUser);
             this.currentUser = null;
             this.onLogout({ target: this });
         }
@@ -63,17 +60,17 @@ class UserManager {
         return user.isAdmin;
     }
 
-    public isTeacher(user: IUser): boolean {
+    public async isTeacher(user: IUser): Promise<boolean> {
         return user.id > 100;
     }
 
-    public getAllUser(): IUser[] {
-        return MapHelper.toArray(this.userProvider.getAllUser());
+    public async getAllUser(): Promise<IUser[]> {
+        return MapHelper.toArray(await this.userProvider.getAllUser());
     }
 
-    public getUsers(ids: number[]): IUser[] {
+    public async getUsers(ids: number[]): Promise<IUser[]> {
         const returnUsers: IUser[] = [];
-        const allUsers = this.userProvider.getAllUser();
+        const allUsers = await this.userProvider.getAllUser();
         ids.forEach((ele) => {
             const temp = allUsers[ele];
             if (temp) {
@@ -83,7 +80,7 @@ class UserManager {
         return returnUsers;
     }
 
-    public getUser(id: number): IUser {
+    public async getUser(id: number): Promise<IUser> {
         throw new Error("Not implemented error");
     }
 }

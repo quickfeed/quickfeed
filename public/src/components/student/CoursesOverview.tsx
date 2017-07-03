@@ -1,10 +1,10 @@
 import * as React from "react";
 
-import {CoursePanel, Row} from "../../components";
+import { CoursePanel, Row } from "../../components";
 
-import {ICoursesWithAssignments} from "../../models";
+import { ICoursesWithAssignments } from "../../models";
 
-import {NavigationManager} from "../../managers/NavigationManager";
+import { NavigationManager } from "../../managers/NavigationManager";
 
 interface ICourseOverviewProps {
     course_overview: ICoursesWithAssignments[];
@@ -15,7 +15,7 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
 
     public render() {
         const courses = this.props.course_overview.map((val, key) => {
-            return <CoursePanel course={val.course} labs={val.labs} navMan={this.props.navMan}/>;
+            return <CoursePanel key={key} course={val.course} labs={val.labs} navMan={this.props.navMan} />;
         });
 
         let added: number = 0;
@@ -43,4 +43,4 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
     }
 }
 
-export {CoursesOverview};
+export { CoursesOverview };

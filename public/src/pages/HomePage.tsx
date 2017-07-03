@@ -7,7 +7,7 @@ class HomePage extends ViewPage {
         super();
     }
 
-    public renderContent(page: string): JSX.Element {
+    public async renderContent(page: string): Promise<JSX.Element> {
         return <h1>Welcome to autograder</h1>;
     }
 }

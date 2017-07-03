@@ -1,6 +1,6 @@
 import * as React from "react";
-import {ICoursesWithAssignments} from "../../models";
-import {ProgressBar} from "../progressbar/ProgressBar";
+import { ICoursesWithAssignments } from "../../models";
+import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: ICoursesWithAssignments;
@@ -10,9 +10,9 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
     public render() {
         const labs: JSX.Element[] = this.props.courseAndLabs.labs.map((v, k) => {
             return (
-                <li className="list-group-item">
+                <li key={k} className="list-group-item">
                     <strong>{v.name}</strong>
-                    <ProgressBar progress={Math.floor((Math.random() * 100) + 1)}/>
+                    <ProgressBar progress={Math.floor((Math.random() * 100) + 1)} />
                 </li>);
         });
         return (
@@ -27,4 +27,4 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
         );
     }
 }
-export {SingleCourseOverview};
+export { SingleCourseOverview };

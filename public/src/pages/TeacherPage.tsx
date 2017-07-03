@@ -1,17 +1,17 @@
 import * as React from "react";
-import {DynamicTable, NavMenu, Results} from "../components";
-import {CourseManager, ILink, ILinkCollection, NavigationManager, UserManager} from "../managers";
+import { DynamicTable, NavMenu, Results } from "../components";
+import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
-import {ViewPage} from "./ViewPage";
-import {HelloView} from "./views/HelloView";
-import {UserView} from "./views/UserView";
+import { View, ViewPage } from "./ViewPage";
+import { HelloView } from "./views/HelloView";
+import { UserView } from "./views/UserView";
 
-import {INavInfo} from "../NavigationHelper";
+import { INavInfo } from "../NavigationHelper";
 
-import {CollapsableNavMenu} from "../components/navigation/CollapsableNavMenu";
-import {CourseStudentState, IAssignment, ICourse, ICourseStudent, IUser} from "../models";
+import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
+import { CourseStudentState, IAssignment, ICourse, ICourseStudent, IUser } from "../models";
 
-import {ArrayHelper} from "../helper";
+import { ArrayHelper } from "../helper";
 
 class TeacherPage extends ViewPage {
 
@@ -28,22 +28,26 @@ class TeacherPage extends ViewPage {
         this.navMan = navMan;
         this.userMan = userMan;
         this.courseMan = courseMan;
-        this.courses = this.getCourses();
+        this.navHelper.defaultPage = "course";
 
-        this.navHelper.defaultPage = "course/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
         this.navHelper.registerFunction("course/{course}", this.course);
         this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("course/{course}/results", this.results);
         this.navHelper.registerFunction("course/{course}/{page}", this.course);
-        this.navHelper.registerFunction("user", (navInfo) => {
-            return <UserView users={userMan.getAllUser()}></UserView>;
+        this.navHelper.registerFunction("user", async (navInfo) => {
+            return <UserView users={await userMan.getAllUser()}></UserView>;
         });
-        this.navHelper.registerFunction("user", (navInfo) => {
+        this.navHelper.registerFunction("user", async (navInfo) => {
             return <HelloView></HelloView>;
         });
     }
 
-    public course(info: INavInfo<{ course: string, page?: string }>): JSX.Element {
+    public async init(): Promise<void> {
+        this.courses = await this.getCourses();
+        this.navHelper.defaultPage = "course/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
+    }
+
+    public async course(info: INavInfo<{ course: string, page?: string }>): View {
         const courseId = parseInt(info.params.course, 10);
         const course = this.courseMan.getCourse(courseId);
         if (course) {
@@ -55,30 +59,29 @@ class TeacherPage extends ViewPage {
         return <div>404 Page not found</div>;
     }
 
-    public results(info: INavInfo<{ course: string }>): JSX.Element {
+    public async results(info: INavInfo<{ course: string }>): View {
         const courseId = parseInt(info.params.course, 10);
-        const course = this.courseMan.getCourse(courseId);
+        const course = await this.courseMan.getCourse(courseId);
         if (course) {
             const courseStds: ICourseStudent[] =
-                this.courseMan.getUserIdsForCourse(course, CourseStudentState.accepted);
+                await this.courseMan.getUserIdsForCourse(course, CourseStudentState.accepted);
             // TODO: currently userMan.getUsers does not return correct users
             // fix: return a Map for getAllUser method in UserManager
-            const students: IUser[] = this.userMan.getUsers(courseStds.map((e) => e.personId));
-            const labs: IAssignment[] = this.courseMan.getAssignments(courseId);
+            const students: IUser[] = await this.userMan.getUsers(courseStds.map((e) => e.personId));
+            const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
             return <Results course={course} students={students} labs={labs}></Results>;
         }
         return <div>404 Page not found</div>;
     }
 
-    public courseUsers(info: INavInfo<{ course: string }>): JSX.Element {
+    public async courseUsers(info: INavInfo<{ course: string }>): View {
         const courseId = parseInt(info.params.course, 10);
-        const course = this.courseMan.getCourse(courseId);
+        const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const userIds = this.courseMan.getUserIdsForCourse(course);
-            const users = this.userMan.getUsers(userIds.map((e) => e.personId));
+            const userIds = await this.courseMan.getUserIdsForCourse(course);
+            const users = await this.userMan.getUsers(userIds.map((e) => e.personId));
 
             const all = ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
-            console.log(all);
             const acceptedUsers: IUser[] = [];
             const pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }> = [];
             all.forEach((ele, id) => {
@@ -98,7 +101,6 @@ class TeacherPage extends ViewPage {
                 {this.createPendingTable(pendingUsers)}
             </div>;
         }
-
         return <div>404 Page not found</div>;
     }
 
@@ -117,7 +119,7 @@ class TeacherPage extends ViewPage {
                         this.courseMan.changeUserState(ele.ele1, CourseStudentState.accepted);
                         this.navMan.refresh();
                     }}
-                            className="btn btn-primary">
+                        className="btn btn-primary">
                         Accept
                     </button>
                     <button onClick={(e) => {
@@ -136,20 +138,20 @@ class TeacherPage extends ViewPage {
         return {
             item: link,
             children: [
-                {name: "Results", uri: link.uri + "/results"},
-                {name: "Groups", uri: link.uri + "/groups"},
-                {name: "Members", uri: link.uri + "/members"},
-                {name: "Settings", uri: link.uri + "/settings"},
-                {name: "Course Info", uri: link.uri + "/courseinfo"},
+                { name: "Results", uri: link.uri + "/results" },
+                { name: "Groups", uri: link.uri + "/groups" },
+                { name: "Members", uri: link.uri + "/members" },
+                { name: "Settings", uri: link.uri + "/settings" },
+                { name: "Course Info", uri: link.uri + "/courseinfo" },
             ],
         };
     }
 
-    public renderMenu(menu: number): JSX.Element[] {
+    public async renderMenu(menu: number): Promise<JSX.Element[]> {
         const curUser = this.userMan.getCurrentUser();
         if (curUser && this.isTeacher(curUser)) {
             if (menu === 0) {
-                const courses = this.courseMan.getCoursesFor(curUser);
+                const courses = await this.courseMan.getCoursesFor(curUser);
 
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
@@ -178,15 +180,12 @@ class TeacherPage extends ViewPage {
         return [];
     }
 
-    public renderContent(page: string): JSX.Element {
+    public async renderContent(page: string): View {
         const curUser: IUser | null = this.userMan.getCurrentUser();
         if (!curUser) {
             return <h1>You are not logged in</h1>;
         } else if (this.isTeacher(curUser)) {
-            const temp = this.navHelper.navigateTo(page);
-            if (temp) {
-                return temp;
-            }
+            return await super.renderContent(page);
         }
         return <h1>404 page not found</h1>;
     }
@@ -197,17 +196,17 @@ class TeacherPage extends ViewPage {
         }
     }
 
-    private getCourses(): ICourse[] {
+    private async getCourses(): Promise<ICourse[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return this.courseMan.getCoursesFor(curUsr, 1);
+            return await this.courseMan.getCoursesFor(curUsr, 1);
         }
         return [];
     }
 
-    private isTeacher(curUser: IUser): boolean {
+    private async isTeacher(curUser: IUser): Promise<boolean> {
         return this.userMan.isTeacher(curUser);
     }
 }
 
-export {TeacherPage};
+export { TeacherPage };

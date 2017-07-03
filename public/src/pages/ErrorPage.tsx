@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ViewPage } from "./ViewPage";
+import { View, ViewPage } from "./ViewPage";
 
 import { NavigationHelper } from "../NavigationHelper";
 
@@ -9,7 +9,7 @@ class ErrorPage extends ViewPage {
     constructor() {
         super();
         this.navHelper.defaultPage = "404";
-        this.navHelper.registerFunction("404", (navInfo) => {
+        this.navHelper.registerFunction("404", async (navInfo) => {
             return <div>
                 <h1>404 Page not found</h1>
                 <p>The page you where looking for does not exist</p>
@@ -17,10 +17,10 @@ class ErrorPage extends ViewPage {
         });
     }
 
-    public renderContent(page: string): JSX.Element {
-        let content = this.navHelper.navigateTo(page);
+    public async renderContent(page: string): View {
+        let content = await this.navHelper.navigateTo(page);
         if (!content) {
-            content = this.navHelper.navigateTo("404");
+            content = await this.navHelper.navigateTo("404");
         }
         if (!content) {
             throw new Error("There is a problem with the navigation");

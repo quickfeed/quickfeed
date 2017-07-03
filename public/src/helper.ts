@@ -24,6 +24,19 @@ class ArrayHelper {
         }
         return null;
     }
+
+    public static async mapAsync<inT, outT>(
+        array: inT[],
+        callback: (
+            element: inT,
+            index: number,
+            array: inT[]) => Promise<outT>): Promise<outT[]> {
+        const newArray: outT[] = [];
+        for (let i = 0; i < array.length; i++) {
+            newArray.push(await callback(array[i], i, array));
+        }
+        return newArray;
+    }
 }
 
 export { ArrayHelper };

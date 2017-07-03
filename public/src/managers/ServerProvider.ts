@@ -3,30 +3,36 @@ import { IUserProvider } from "../managers";
 import { IMap } from "../map";
 import { IUser } from "../models";
 
-function request(url: string, callback: (data: string) => void) {
+async function request(url: string): Promise<string> {
     const req = new XMLHttpRequest();
-
-    req.onreadystatechange = () => {
-        if (req.readyState === 4 && req.status === 200) {
-            console.log(req);
-            callback(req.responseText);
-        }
-    };
-    req.open("GET", url, true);
-    req.send();
+    return new Promise<string>((resolve, reject) => {
+        req.onreadystatechange = () => {
+            if (req.readyState === 4) {
+                if (req.status === 200) {
+                    console.log(req);
+                    resolve(req.responseText);
+                } else {
+                    reject(req);
+                }
+            }
+        };
+        req.open("GET", url, true);
+        req.send();
+    });
 }
 
 export class ServerProvider implements IUserProvider {
-    public tryLogin(username: string, password: string): IUser | null {
+    public async tryLogin(username: string, password: string): Promise<IUser | null> {
         throw new Error("Method not implemented.");
     }
-    public logout(user: IUser): void {
+    public async logout(user: IUser): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    public getAllUser(): IMap<IUser> {
+    public async getAllUser(): Promise<IMap<IUser>> {
         throw new Error("Method not implemented.");
     }
-    public tryRemoteLogin(provider: string, callback: (result: IUser | null) => void): void {
+
+    public async tryRemoteLogin(provider: string): Promise<IUser | null> {
         let requestString: null | string = null;
         switch (provider) {
             case "github":
@@ -37,12 +43,11 @@ export class ServerProvider implements IUserProvider {
                 break;
         }
         if (requestString) {
-            request(requestString, (data: string) => {
-                console.log(data);
-                callback(null);
-            });
+            const data: string = await request(requestString);
+            console.log(data);
+            return null;
         } else {
-            callback(null);
+            return null;
         }
     }
 }

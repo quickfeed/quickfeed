@@ -22,6 +22,7 @@ import { ServerProvider } from "./managers/ServerProvider";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
+    currentContent: JSX.Element;
     topLinks: ILink[];
     curUser: IUser | null;
 }
@@ -48,17 +49,13 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             activePage: undefined,
             topLinks: this.generateTopLinksFor(curUser),
             curUser,
+            currentContent: <div>No Content Available</div>,
         };
 
-        this.navMan.onNavigate.addEventListener((e: INavEvent) => {
-            this.subPage = e.subPage;
-            const old = this.state.activePage;
-            const tempLink = this.state.topLinks.slice();
-            this.checkLinks(tempLink);
-            this.setState({ activePage: e.page, topLinks: tempLink });
-        });
+        this.navMan.onNavigate.addEventListener((e: INavEvent) => this.handleNavigation(e));
 
         this.userMan.onLogin.addEventListener((e) => {
+            console.log("Sign in");
             this.setState({
                 curUser: e.user,
                 topLinks: this.generateTopLinksFor(e.user),
@@ -66,6 +63,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         });
 
         this.userMan.onLogout.addEventListener((e) => {
+            console.log("Sign out");
             this.setState({
                 curUser: null,
                 topLinks: this.generateTopLinksFor(null),
@@ -73,15 +71,12 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         });
     }
 
-    public async promiseTest() {
-        const temp = new Promise<string>((resolve, reject) => {
-            setTimeout(() => {
-                resolve("Hello World");
-            }, 10);
-        });
-
-        const a = await temp;
-        alert(a);
+    public async handleNavigation(e: INavEvent) {
+        this.subPage = e.subPage;
+        const tempLink = this.state.topLinks.slice();
+        this.checkLinks(tempLink);
+        const newContent = await this.renderTemplate(e.page, e.page.template);
+        this.setState({ activePage: e.page, topLinks: tempLink, currentContent: newContent });
     }
 
     public generateTopLinksFor(user: IUser | null): ILink[] {
@@ -112,7 +107,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 
     public render() {
         if (this.state.activePage) {
-            return this.renderTemplate(this.state.activePage.template);
+            return this.state.currentContent;
         } else {
             return <h1>404 not found</h1>;
         }
@@ -126,17 +121,16 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         }
     }
 
-    private renderActiveMenu(menu: number): JSX.Element[] | string {
-        if (this.state.activePage) {
-            return this.state.activePage.renderMenu(menu);
+    private async renderActiveMenu(page: ViewPage, menu: number): Promise<JSX.Element[] | string> {
+        if (page) {
+            return await page.renderMenu(menu);
         }
         return "";
     }
 
-    private renderActivePage(page: string): JSX.Element {
-        const curPage = this.state.activePage;
-        if (curPage) {
-            return curPage.renderContent(page);
+    private async renderActivePage(page: ViewPage, subPage: string): Promise<JSX.Element> {
+        if (page) {
+            return await page.renderContent(subPage);
         }
         return <h1>404 Page not found</h1>;
     }
@@ -145,9 +139,9 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         this.navMan.checkLinks(links);
     }
 
-    private renderTemplate(name: string | null) {
+    private async renderTemplate(page: ViewPage, name: string | null): Promise<JSX.Element> {
         let body: JSX.Element;
-        const content = this.renderActivePage(this.subPage);
+        const content = await this.renderActivePage(page, this.subPage);
         const loginLink: ILink[] = [
             { name: "Github", uri: "app/login/login/github" },
             { name: "Gitlab", uri: "app/login/login/gitlab" },
@@ -165,7 +159,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 body = (
                     <Row className="container-fluid">
                         <div className="col-md-2 col-sm-3 col-xs-12">
-                            {this.renderActiveMenu(0)}
+                            {await this.renderActiveMenu(page, 0)}
                         </div>
                         <div className="col-md-10 col-sm-9 col-xs-12">
                             {content}
@@ -197,7 +191,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 /**
  * @description The main entry point for the application. No other code should be executet outside this function
  */
-function main() {
+async function main(): Promise<void> {
     const DEBUG_BROWSER = "DEBUG_BROWSER";
     const DEBUG_SERVER = "DEBUG_SERVER";
 
@@ -221,18 +215,18 @@ function main() {
         courseMan = new CourseManager(tempData);
         navMan = new NavigationManager(history);
 
-        const user = userMan.tryLogin("test@testersen.no", "1234");
+        const user = await userMan.tryLogin("test@testersen.no", "1234");
     }
 
     (window as any).debugData = { tempData, userMan, courseMan, navMan };
 
     navMan.setDefaultPath("app/home");
-    navMan.registerPage("app/home", new HomePage());
-    navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan));
-    navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan, courseMan));
-    navMan.registerPage("app/admin", new AdminPage(navMan, userMan, courseMan));
-    navMan.registerPage("app/help", new HelpPage(navMan));
-    navMan.registerPage("app/login", new LoginPage(navMan, userMan));
+    await navMan.registerPage("app/home", new HomePage());
+    await navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan));
+    await navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan, courseMan));
+    await navMan.registerPage("app/admin", new AdminPage(navMan, userMan, courseMan));
+    await navMan.registerPage("app/help", new HelpPage(navMan));
+    await navMan.registerPage("app/login", new LoginPage(navMan, userMan));
 
     navMan.registerErrorPage(404, new ErrorPage());
     navMan.onNavigate.addEventListener((e) => {

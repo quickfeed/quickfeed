@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ViewPage } from "./ViewPage";
+import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
 
@@ -22,12 +22,13 @@ export class LoginPage extends ViewPage {
         this.navHelper.registerFunction("logout", this.logout);
     }
 
-    public index(info: INavInfo<{ provider: string }>): JSX.Element {
+    public async index(info: INavInfo<{ provider: string }>): View {
         return <div>Quickly hide, you should not be here! Someone is going to get mad...</div>;
     }
 
-    public login(info: INavInfo<{ provider: string }>): JSX.Element {
-        this.userMan.tryRemoteLogin(info.params.provider, (result: IUser | null) => {
+    public async login(info: INavInfo<{ provider: string }>): View {
+        const temp: Promise<IUser | null> = this.userMan.tryRemoteLogin(info.params.provider);
+        temp.then((result: IUser | null) => {
             if (result) {
                 console.log("Sucessful login of: ", result);
                 this.navMan.navigateToDefault();
@@ -35,19 +36,11 @@ export class LoginPage extends ViewPage {
                 console.log("Failed");
             }
         });
-        return <div>Logging in please wait</div>;
+        return Promise.resolve(<div>Logging in please wait</div>);
     }
 
-    public logout(info: INavInfo<{}>): JSX.Element {
+    public async logout(info: INavInfo<{}>): View {
         this.userMan.logout();
         return <div>Logged out</div>;
-    }
-
-    public renderContent(page: string): JSX.Element {
-        const pageContent = this.navHelper.navigateTo(page);
-        if (pageContent) {
-            return pageContent;
-        }
-        return <div>404 Not found</div>;
     }
 }
