@@ -1,5 +1,5 @@
-import {IMap, MapHelper} from "../map";
-import {CourseStudentState, IAssignment, ICourse, ICourseStudent, isCourse, IUser} from "../models";
+import { IMap, MapHelper } from "../map";
+import { CourseStudentState, IAssignment, ICourse, ICourseStudent, isCourse, IUser } from "../models";
 
 interface ICourseProvider {
     getCourses(): IMap<ICourse>;
@@ -74,8 +74,7 @@ class CourseManager {
     }
 
     public getAssignment(course: ICourse, assignmentId: number): IAssignment | null {
-        const temp = this.getAssignments(course);
-        console.log(temp);
+        const temp = this.courseProvider.getAssignments(course.id);
         if (temp[assignmentId]) {
             return temp[assignmentId];
         }
@@ -99,4 +98,4 @@ class CourseManager {
 
 }
 
-export {ICourseProvider, CourseManager};
+export { ICourseProvider, CourseManager };

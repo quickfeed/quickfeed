@@ -1458,8 +1458,7 @@ class CourseManager {
         return users;
     }
     getAssignment(course, assignmentId) {
-        const temp = this.getAssignments(course);
-        console.log(temp);
+        const temp = this.courseProvider.getAssignments(course.id);
         if (temp[assignmentId]) {
             return temp[assignmentId];
         }
