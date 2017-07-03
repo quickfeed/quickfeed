@@ -1,9 +1,9 @@
 import * as Models from "../models";
-import {IAssignment, ICourse, ICourseStudent, IUser} from "../models";
-import {ICourseProvider} from "./CourseManager";
-import {IUserProvider} from "./UserManager";
+import { IAssignment, ICourse, ICourseStudent, IUser } from "../models";
+import { ICourseProvider } from "./CourseManager";
+import { IUserProvider } from "./UserManager";
 
-import {IMap, MapHelper, mapify} from "../map";
+import { IMap, MapHelper, mapify } from "../map";
 
 interface IDummyUser extends IUser {
     password: string;
@@ -47,7 +47,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public tryLogin(username: string, password: string): IUser | null {
         const user = MapHelper.find(this.localUsers, (u) =>
-        u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
             return user;
         }
@@ -55,7 +55,17 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     public tryRemoteLogin(provider: string, callback: (result: IUser | null) => void): void {
-        throw new Error("Method not implemented.");
+        let lookup = "test@testersen.no";
+        if (provider === "gitlab") {
+            lookup = "bob@bobsen.no";
+        }
+        const user = MapHelper.find(this.localUsers, (u) =>
+            u.email.toLocaleLowerCase() === lookup);
+
+        // Simulate async callback
+        setTimeout(() => {
+            callback(user);
+        }, 500);
     }
 
     public logout(user: IUser): void {
@@ -262,13 +272,13 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private addLocalCourseStudent() {
         this.localCourseStudent = [
-            {courseId: 0, personId: 999, state: 1},
-            {courseId: 1, personId: 999, state: 1},
-            {courseId: 0, personId: 1, state: 0},
-            {courseId: 0, personId: 2, state: 0},
+            { courseId: 0, personId: 999, state: 1 },
+            { courseId: 1, personId: 999, state: 1 },
+            { courseId: 0, personId: 1, state: 0 },
+            { courseId: 0, personId: 2, state: 0 },
         ];
     }
 
 }
 
-export {TempDataProvider};
+export { TempDataProvider };

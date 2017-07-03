@@ -220,11 +220,11 @@ function main() {
         userMan = new UserManager(tempData);
         courseMan = new CourseManager(tempData);
         navMan = new NavigationManager(history);
+
+        const user = userMan.tryLogin("test@testersen.no", "1234");
     }
 
     (window as any).debugData = { tempData, userMan, courseMan, navMan };
-
-    // const user = userMan.tryLogin("test@testersen.no", "1234");
 
     navMan.setDefaultPath("app/home");
     navMan.registerPage("app/home", new HomePage());

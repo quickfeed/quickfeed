@@ -42,7 +42,13 @@ class UserManager {
     public tryRemoteLogin(
         provider: string,
         callback: (result: IUser | null) => void) {
-        this.userProvider.tryRemoteLogin(provider, callback);
+        this.userProvider.tryRemoteLogin(provider, (result: IUser | null) => {
+            if (result) {
+                this.currentUser = result;
+                callback(result);
+                this.onLogin({ target: this, user: this.currentUser });
+            }
+        });
     }
 
     public logout() {

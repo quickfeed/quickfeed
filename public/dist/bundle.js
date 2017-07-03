@@ -833,6 +833,7 @@ function main() {
         userMan = new managers_1.UserManager(tempData);
         courseMan = new managers_1.CourseManager(tempData);
         navMan = new managers_1.NavigationManager(history);
+        const user = userMan.tryLogin("test@testersen.no", "1234");
     }
     window.debugData = { tempData, userMan, courseMan, navMan };
     navMan.setDefaultPath("app/home");
@@ -1684,7 +1685,14 @@ class TempDataProvider {
         return null;
     }
     tryRemoteLogin(provider, callback) {
-        throw new Error("Method not implemented.");
+        let lookup = "test@testersen.no";
+        if (provider === "gitlab") {
+            lookup = "bob@bobsen.no";
+        }
+        const user = map_1.MapHelper.find(this.localUsers, (u) => u.email.toLocaleLowerCase() === lookup);
+        setTimeout(() => {
+            callback(user);
+        }, 500);
     }
     logout(user) {
         "Do nothing";
@@ -1920,7 +1928,13 @@ class UserManager {
         return result;
     }
     tryRemoteLogin(provider, callback) {
-        this.userProvider.tryRemoteLogin(provider, callback);
+        this.userProvider.tryRemoteLogin(provider, (result) => {
+            if (result) {
+                this.currentUser = result;
+                callback(result);
+                this.onLogin({ target: this, user: this.currentUser });
+            }
+        });
     }
     logout() {
         if (this.currentUser) {
@@ -2744,6 +2758,7 @@ class LoginPage extends ViewPage_1.ViewPage {
         this.navHelper.defaultPage = "index";
         this.navHelper.registerFunction("index", this.index);
         this.navHelper.registerFunction("login/{provider}", this.login);
+        this.navHelper.registerFunction("logout", this.logout);
     }
     index(info) {
         return React.createElement("div", null, "Quickly hide, you should not be here! Someone is going to get mad...");
@@ -2751,7 +2766,8 @@ class LoginPage extends ViewPage_1.ViewPage {
     login(info) {
         this.userMan.tryRemoteLogin(info.params.provider, (result) => {
             if (result) {
-                console.log("Sucessful login of: " + result);
+                console.log("Sucessful login of: ", result);
+                this.navMan.navigateToDefault();
             }
             else {
                 console.log("Failed");
