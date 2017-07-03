@@ -105,7 +105,7 @@ __export(__webpack_require__(30));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var NavigationHelper_1 = __webpack_require__(3);
+const NavigationHelper_1 = __webpack_require__(3);
 function isViewPage(item) {
     if (item instanceof ViewPage) {
         return true;
@@ -113,19 +113,18 @@ function isViewPage(item) {
     return false;
 }
 exports.isViewPage = isViewPage;
-var ViewPage = (function () {
-    function ViewPage() {
+class ViewPage {
+    constructor() {
         this.template = null;
         this.navHelper = new NavigationHelper_1.NavigationHelper(this);
     }
-    ViewPage.prototype.setPath = function (path) {
+    setPath(path) {
         this.pagePath = path;
-    };
-    ViewPage.prototype.renderMenu = function (menu) {
+    }
+    renderMenu(menu) {
         return [];
-    };
-    return ViewPage;
-}());
+    }
+}
 exports.ViewPage = ViewPage;
 
 
@@ -136,38 +135,38 @@ exports.ViewPage = ViewPage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(5);
-var NavigationHelper = (function () {
-    function NavigationHelper(thisObject) {
+const event_1 = __webpack_require__(5);
+class NavigationHelper {
+    constructor(thisObject) {
         this.onPreNavigation = event_1.newEvent("NavigationHelper.onPreNavigation");
         this.DEFAULT_VALUE = "";
         this.navObj = "__navObj";
         this.path = {};
         this.thisObject = thisObject;
     }
-    NavigationHelper.getParts = function (path) {
+    static getParts(path) {
         return this.removeEmptyEntries(path.split("/"));
-    };
-    NavigationHelper.removeEmptyEntries = function (array) {
-        var newArray = [];
-        array.map(function (v) {
+    }
+    static removeEmptyEntries(array) {
+        const newArray = [];
+        array.map((v) => {
             if (v.length > 0) {
                 newArray.push(v);
             }
         });
         return newArray;
-    };
-    NavigationHelper.getOptionalField = function (field) {
-        var tField = field.trim();
+    }
+    static getOptionalField(field) {
+        const tField = field.trim();
         if (tField.length > 2 && tField.charAt(0) === "{" && tField.charAt(tField.length - 1) === "}") {
             return tField.substr(1, tField.length - 2);
         }
         return null;
-    };
-    NavigationHelper.isINavObject = function (obj) {
+    }
+    static isINavObject(obj) {
         return obj && obj.path;
-    };
-    NavigationHelper.handleClick = function (e, callback) {
+    }
+    static handleClick(e, callback) {
         if (e.shiftKey || e.ctrlKey || e.button === 1) {
             return;
         }
@@ -175,72 +174,67 @@ var NavigationHelper = (function () {
             e.preventDefault();
             callback();
         }
-    };
-    Object.defineProperty(NavigationHelper.prototype, "defaultPage", {
-        get: function () {
-            return this.DEFAULT_VALUE;
-        },
-        set: function (value) {
-            this.DEFAULT_VALUE = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    NavigationHelper.prototype.registerFunction = function (path, callback) {
-        var pathParts = NavigationHelper.getParts(path);
+    }
+    get defaultPage() {
+        return this.DEFAULT_VALUE;
+    }
+    set defaultPage(value) {
+        this.DEFAULT_VALUE = value;
+    }
+    registerFunction(path, callback) {
+        const pathParts = NavigationHelper.getParts(path);
         if (pathParts.length === 0) {
             throw new Error("Can't register function on empty path");
         }
-        var curObj = this.createNavPath(pathParts);
-        var temp = {
+        const curObj = this.createNavPath(pathParts);
+        const temp = {
             path: pathParts,
             func: callback,
         };
         curObj[this.navObj] = temp;
-    };
-    NavigationHelper.prototype.navigateTo = function (path) {
+    }
+    navigateTo(path) {
         if (path.length === 0) {
             path = this.DEFAULT_VALUE;
         }
-        var pathParts = NavigationHelper.getParts(path);
+        const pathParts = NavigationHelper.getParts(path);
         if (pathParts.length === 0) {
             throw new Error("Can't navigate to an empty path");
         }
-        var curObj = this.getNavPath(pathParts);
+        const curObj = this.getNavPath(pathParts);
         if (!curObj || !curObj[this.navObj]) {
             return null;
         }
-        var navObj = curObj[this.navObj];
-        var navInfo = {
+        const navObj = curObj[this.navObj];
+        const navInfo = {
             matchPath: navObj.path,
             realPath: pathParts,
             params: this.createParamsObj(navObj.path, pathParts),
         };
-        this.onPreNavigation({ target: this, navInfo: navInfo });
+        this.onPreNavigation({ target: this, navInfo });
         return navObj.func.call(this.thisObject, navInfo);
-    };
-    NavigationHelper.prototype.createParamsObj = function (matchPath, realPath) {
+    }
+    createParamsObj(matchPath, realPath) {
         if (matchPath.length !== realPath.length) {
             throw new Error("trying to match different paths");
         }
-        var returnObj = {};
-        for (var i = 0; i < matchPath.length; i++) {
-            var param = NavigationHelper.getOptionalField(matchPath[i]);
+        const returnObj = {};
+        for (let i = 0; i < matchPath.length; i++) {
+            const param = NavigationHelper.getOptionalField(matchPath[i]);
             if (param) {
                 returnObj[param] = realPath[i];
             }
         }
         return returnObj;
-    };
-    NavigationHelper.prototype.getNavPath = function (pathParts) {
-        var curObj = this.path;
-        for (var _i = 0, pathParts_1 = pathParts; _i < pathParts_1.length; _i++) {
-            var part = pathParts_1[_i];
-            var curIndex = part;
+    }
+    getNavPath(pathParts) {
+        let curObj = this.path;
+        for (const part of pathParts) {
+            let curIndex = part;
             if (!curObj[curIndex]) {
                 curIndex = "*";
             }
-            var curWrap = curObj[curIndex];
+            const curWrap = curObj[curIndex];
             if (NavigationHelper.isINavObject(curWrap) || curIndex === this.navObj) {
                 throw new Error("Can't navigate to: " + curIndex);
             }
@@ -250,17 +244,16 @@ var NavigationHelper = (function () {
             curObj = curWrap;
         }
         return curObj;
-    };
-    NavigationHelper.prototype.createNavPath = function (pathParts) {
-        var curObj = this.path;
-        for (var _i = 0, pathParts_2 = pathParts; _i < pathParts_2.length; _i++) {
-            var part = pathParts_2[_i];
-            var curIndex = part;
-            var optional = NavigationHelper.getOptionalField(curIndex);
+    }
+    createNavPath(pathParts) {
+        let curObj = this.path;
+        for (const part of pathParts) {
+            let curIndex = part;
+            const optional = NavigationHelper.getOptionalField(curIndex);
             if (optional) {
                 curIndex = "*";
             }
-            var curWrap = curObj[curIndex];
+            let curWrap = curObj[curIndex];
             if (NavigationHelper.isINavObject(curWrap) || curIndex === this.navObj) {
                 throw new Error("Can't assign path to: " + curIndex);
             }
@@ -271,9 +264,8 @@ var NavigationHelper = (function () {
             curObj = curWrap;
         }
         return curObj;
-    };
-    return NavigationHelper;
-}());
+    }
+}
 exports.NavigationHelper = NavigationHelper;
 
 
@@ -307,16 +299,16 @@ var CourseStudentState;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 function newEvent(info) {
-    var callbacks = [];
-    var handler = function EventHandler(event) {
-        callbacks.map((function (v) { return v(event); }));
+    const callbacks = [];
+    const handler = function EventHandler(event) {
+        callbacks.map(((v) => v(event)));
     };
     handler.info = info;
-    handler.addEventListener = function (callback) {
+    handler.addEventListener = (callback) => {
         callbacks.push(callback);
     };
-    handler.removeEventListener = function (callback) {
-        var index = callbacks.indexOf(callback);
+    handler.removeEventListener = (callback) => {
+        const index = callbacks.indexOf(callback);
         if (index < 0) {
             console.log(callback);
             throw Error("Event does noe exist");
@@ -335,54 +327,47 @@ exports.newEvent = newEvent;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var MapHelper = (function () {
-    function MapHelper() {
-    }
-    MapHelper.mapTo = function (map, callback) {
-        var returnArray = [];
-        var keys = Object.keys(map);
-        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-            var a = keys_1[_i];
-            var index = parseInt(a, 10);
+class MapHelper {
+    static mapTo(map, callback) {
+        const returnArray = [];
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
             returnArray.push(callback(map[index], index, map));
         }
         return returnArray;
-    };
-    MapHelper.forEach = function (map, callback) {
-        var keys = Object.keys(map);
-        for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
-            var a = keys_2[_i];
-            var index = parseInt(a, 10);
+    }
+    static forEach(map, callback) {
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
             callback(map[index], index, map);
         }
-    };
-    MapHelper.find = function (map, callback) {
-        var keys = Object.keys(map);
-        for (var _i = 0, keys_3 = keys; _i < keys_3.length; _i++) {
-            var a = keys_3[_i];
-            var index = parseInt(a, 10);
+    }
+    static find(map, callback) {
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
             if (callback(map[index], index, map)) {
                 return map[index];
             }
         }
         return null;
-    };
-    MapHelper.toArray = function (map) {
-        var returnArray = [];
-        var keys = Object.keys(map);
-        for (var _i = 0, keys_4 = keys; _i < keys_4.length; _i++) {
-            var a = keys_4[_i];
-            var index = parseInt(a, 10);
+    }
+    static toArray(map) {
+        const returnArray = [];
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
             returnArray.push(map[index]);
         }
         return returnArray;
-    };
-    return MapHelper;
-}());
+    }
+}
 exports.MapHelper = MapHelper;
 function mapify(obj, callback) {
-    var newObj = {};
-    obj.forEach(function (ele, index, array) {
+    const newObj = {};
+    obj.forEach((ele, index, array) => {
         newObj[callback(ele, index, obj)] = ele;
     });
     return newObj;
@@ -396,35 +381,20 @@ exports.mapify = mapify;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var UserView = (function (_super) {
-    __extends(UserView, _super);
-    function UserView() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    UserView.prototype.render = function () {
-        return React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.props.users, selector: function (item) { return [
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class UserView extends React.Component {
+    render() {
+        return React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.props.users, selector: (item) => [
                 item.id.toString(),
                 item.firstName,
                 item.lastName,
                 item.email,
                 item.personId.toString(),
-            ]; } });
-    };
-    return UserView;
-}(React.Component));
+            ] });
+    }
+}
 exports.UserView = UserView;
 
 
@@ -435,33 +405,28 @@ exports.UserView = UserView;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var ArrayHelper = (function () {
-    function ArrayHelper() {
-    }
-    ArrayHelper.join = function (array1, array2, callback) {
-        var returnObj = [];
-        for (var _i = 0, array1_1 = array1; _i < array1_1.length; _i++) {
-            var ele1 = array1_1[_i];
-            for (var _a = 0, array2_1 = array2; _a < array2_1.length; _a++) {
-                var ele2 = array2_1[_a];
+class ArrayHelper {
+    static join(array1, array2, callback) {
+        const returnObj = [];
+        for (const ele1 of array1) {
+            for (const ele2 of array2) {
                 if (callback(ele1, ele2)) {
-                    returnObj.push({ ele1: ele1, ele2: ele2 });
+                    returnObj.push({ ele1, ele2 });
                 }
             }
         }
         return returnObj;
-    };
-    ArrayHelper.find = function (array, predicate) {
-        for (var i = 0; i < array.length; i++) {
-            var cur = array[i];
+    }
+    static find(array, predicate) {
+        for (let i = 0; i < array.length; i++) {
+            const cur = array[i];
             if (predicate.call(array, cur, i, array)) {
                 return cur;
             }
         }
         return null;
-    };
-    return ArrayHelper;
-}());
+    }
+}
 exports.ArrayHelper = ArrayHelper;
 
 
@@ -471,46 +436,30 @@ exports.ArrayHelper = ArrayHelper;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(3);
-var NavHeaderBar = (function (_super) {
-    __extends(NavHeaderBar, _super);
-    function NavHeaderBar() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    NavHeaderBar.prototype.componentDidMount = function () {
-        var temp = this.refs.button;
+const React = __webpack_require__(0);
+const NavigationHelper_1 = __webpack_require__(3);
+class NavHeaderBar extends React.Component {
+    componentDidMount() {
+        const temp = this.refs.button;
         temp.setAttribute("data-toggle", "collapse");
         temp.setAttribute("data-target", "#" + this.props.id);
         temp.setAttribute("aria-expanded", "false");
-    };
-    NavHeaderBar.prototype.render = function () {
-        var _this = this;
+    }
+    render() {
         return React.createElement("div", { className: "navbar-header" },
             React.createElement("button", { ref: "button", type: "button", className: "navbar-toggle collapsed" },
                 React.createElement("span", { className: "sr-only" }, "Toggle navigation"),
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" }),
                 React.createElement("span", { className: "icon-bar" })),
-            React.createElement("a", { className: "navbar-brand", onClick: function (e) {
-                    NavigationHelper_1.NavigationHelper.handleClick(e, function () {
-                        _this.props.brandClick();
+            React.createElement("a", { className: "navbar-brand", onClick: (e) => {
+                    NavigationHelper_1.NavigationHelper.handleClick(e, () => {
+                        this.props.brandClick();
                     });
                 }, href: ";/" }, this.props.brandName));
-    };
-    return NavHeaderBar;
-}(React.Component));
+    }
+}
 exports.NavHeaderBar = NavHeaderBar;
 
 
@@ -520,34 +469,19 @@ exports.NavHeaderBar = NavHeaderBar;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(3);
-var NavMenu = (function (_super) {
-    __extends(NavMenu, _super);
-    function NavMenu() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    NavMenu.prototype.render = function () {
-        var _this = this;
-        var items = this.props.links.map(function (v, i) {
-            var active = "";
+const React = __webpack_require__(0);
+const NavigationHelper_1 = __webpack_require__(3);
+class NavMenu extends React.Component {
+    render() {
+        const items = this.props.links.map((v, i) => {
+            let active = "";
             if (v.active) {
                 active = "active";
             }
             if (v.uri) {
                 return React.createElement("li", { key: i, className: active },
-                    React.createElement("a", { onClick: function (e) { return _this.handleClick(e, v); }, href: "/" + v.uri }, v.name));
+                    React.createElement("a", { onClick: (e) => this.handleClick(e, v), href: "/" + v.uri }, v.name));
             }
             else {
                 return React.createElement("li", { key: i, className: active },
@@ -555,17 +489,15 @@ var NavMenu = (function (_super) {
             }
         });
         return React.createElement("ul", { className: "nav nav-list" }, items);
-    };
-    NavMenu.prototype.handleClick = function (e, link) {
-        var _this = this;
-        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
-            if (_this.props.onClick) {
-                _this.props.onClick(link);
+    }
+    handleClick(e, link) {
+        NavigationHelper_1.NavigationHelper.handleClick(e, () => {
+            if (this.props.onClick) {
+                this.props.onClick(link);
             }
         });
-    };
-    return NavMenu;
-}(React.Component));
+    }
+}
 exports.NavMenu = NavMenu;
 
 
@@ -575,34 +507,19 @@ exports.NavMenu = NavMenu;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ProgressBar = (function (_super) {
-    __extends(ProgressBar, _super);
-    function ProgressBar() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    ProgressBar.prototype.render = function () {
-        var progressBarStyle = {
+const React = __webpack_require__(0);
+class ProgressBar extends React.Component {
+    render() {
+        const progressBarStyle = {
             width: this.props.progress + "%",
         };
         return (React.createElement("div", { className: "progress" },
             React.createElement("div", { className: "progress-bar", role: "progressbar", "aria-valuenow": this.props.progress, "aria-valuemin": "0", "aria-valuemax": "100", style: progressBarStyle },
                 this.props.progress,
                 "%")));
-    };
-    return ProgressBar;
-}(React.Component));
+    }
+}
 exports.ProgressBar = ProgressBar;
 
 
@@ -612,28 +529,13 @@ exports.ProgressBar = ProgressBar;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var HelloView = (function (_super) {
-    __extends(HelloView, _super);
-    function HelloView() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    HelloView.prototype.render = function () {
+const React = __webpack_require__(0);
+class HelloView extends React.Component {
+    render() {
         return React.createElement("h1", null, "Hello world");
-    };
-    return HelloView;
-}(React.Component));
+    }
+}
 exports.HelloView = HelloView;
 
 
@@ -643,138 +545,120 @@ exports.HelloView = HelloView;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(3);
-var CollapsableNavMenu = (function (_super) {
-    __extends(CollapsableNavMenu, _super);
-    function CollapsableNavMenu() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.topItems = [];
-        return _this;
+const React = __webpack_require__(0);
+const NavigationHelper_1 = __webpack_require__(3);
+class CollapsableNavMenu extends React.Component {
+    constructor() {
+        super(...arguments);
+        this.topItems = [];
     }
-    CollapsableNavMenu.prototype.render = function () {
-        var _this = this;
-        var children = this.props.links.map(function (e, i) {
-            return _this.renderTopElement(i, e);
+    render() {
+        const children = this.props.links.map((e, i) => {
+            return this.renderTopElement(i, e);
         });
         return React.createElement("ul", { className: "nav nav-list" }, children);
-    };
-    CollapsableNavMenu.prototype.toggle = function (index) {
-        var _this = this;
-        var animations = [];
-        this.topItems.forEach(function (temp, i) {
+    }
+    toggle(index) {
+        const animations = [];
+        this.topItems.forEach((temp, i) => {
             if (i === index) {
-                if (_this.collapseIsOpen(temp)) {
+                if (this.collapseIsOpen(temp)) {
                 }
                 else {
-                    animations.push(_this.openCollapse(temp));
+                    animations.push(this.openCollapse(temp));
                 }
             }
             else {
-                animations.push(_this.closeIfOpen(temp));
+                animations.push(this.closeIfOpen(temp));
             }
         });
-        setTimeout(function () {
-            animations.forEach(function (e) {
+        setTimeout(() => {
+            animations.forEach((e) => {
                 e();
             });
         }, 10);
-    };
-    CollapsableNavMenu.prototype.collapseIsOpen = function (ele) {
+    }
+    collapseIsOpen(ele) {
         return ele.classList.contains("in");
-    };
-    CollapsableNavMenu.prototype.closeIfOpen = function (ele) {
+    }
+    closeIfOpen(ele) {
         if (this.collapseIsOpen(ele)) {
             return this.closeCollapse(ele);
         }
-        return function () {
+        return () => {
             "do nothing";
         };
-    };
-    CollapsableNavMenu.prototype.openCollapse = function (ele) {
+    }
+    openCollapse(ele) {
         ele.classList.remove("collapse");
         ele.classList.add("collapsing");
-        return function () {
+        return () => {
             ele.style.height = ele.scrollHeight + "px";
-            setTimeout(function () {
+            setTimeout(() => {
                 ele.classList.remove("collapsing");
                 ele.classList.add("collapse");
                 ele.classList.add("in");
                 ele.style.height = null;
             }, 350);
         };
-    };
-    CollapsableNavMenu.prototype.closeCollapse = function (ele) {
+    }
+    closeCollapse(ele) {
         ele.style.height = ele.clientHeight + "px";
         ele.classList.add("collapsing");
         ele.classList.remove("collapse");
         ele.classList.remove("in");
-        return function () {
+        return () => {
             ele.style.height = null;
-            setTimeout(function () {
+            setTimeout(() => {
                 ele.classList.remove("collapsing");
                 ele.classList.add("collapse");
                 ele.style.height = null;
             }, 350);
         };
-    };
-    CollapsableNavMenu.prototype.handleClick = function (e, link) {
-        var _this = this;
-        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
-            if (_this.props.onClick) {
-                _this.props.onClick(link);
+    }
+    handleClick(e, link) {
+        NavigationHelper_1.NavigationHelper.handleClick(e, () => {
+            if (this.props.onClick) {
+                this.props.onClick(link);
             }
         });
-    };
-    CollapsableNavMenu.prototype.renderChilds = function (index, link) {
-        var _this = this;
-        var isActive = link.active ? "active" : "";
+    }
+    renderChilds(index, link) {
+        const isActive = link.active ? "active" : "";
         if (link.uri) {
             return React.createElement("li", { key: index, className: isActive },
-                React.createElement("a", { onClick: function (e) { return _this.handleClick(e, link); }, href: "/" + link.uri }, link.name));
+                React.createElement("a", { onClick: (e) => this.handleClick(e, link), href: "/" + link.uri }, link.name));
         }
         else {
             return React.createElement("li", { key: index, className: isActive },
                 React.createElement("span", { className: "header" }, link.name));
         }
-    };
-    CollapsableNavMenu.prototype.renderTopElement = function (index, links) {
-        var _this = this;
-        var isActive = links.item.active ? "active" : "";
-        var subClass = "nav nav-sub collapse " + (links.item.active ? "in" : "");
-        var children = [];
+    }
+    renderTopElement(index, links) {
+        const isActive = links.item.active ? "active" : "";
+        const subClass = "nav nav-sub collapse " + (links.item.active ? "in" : "");
+        let children = [];
         if (links.children) {
-            children = links.children.map(function (e, i) {
-                return _this.renderChilds(i, e);
+            children = links.children.map((e, i) => {
+                return this.renderChilds(i, e);
             });
         }
         return React.createElement("li", { key: index, className: isActive },
-            React.createElement("a", { onClick: function (e) {
-                    _this.toggle(index);
-                    _this.handleClick(e, links.item);
+            React.createElement("a", { onClick: (e) => {
+                    this.toggle(index);
+                    this.handleClick(e, links.item);
                 }, href: "/" + links.item.uri },
                 links.item.name,
                 React.createElement("span", { style: { float: "right" } },
                     React.createElement("span", { className: "glyphicon glyphicon-menu-down" }))),
-            React.createElement("ul", { ref: function (ele) {
+            React.createElement("ul", { ref: (ele) => {
                     if (ele) {
-                        _this.topItems[index] = ele;
+                        this.topItems[index] = ele;
                     }
                 }, className: subClass }, children));
-    };
-    return CollapsableNavMenu;
-}(React.Component));
+    }
+}
 exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
@@ -784,67 +668,74 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ReactDOM = __webpack_require__(15);
-var components_1 = __webpack_require__(1);
-var managers_1 = __webpack_require__(31);
-var ErrorPage_1 = __webpack_require__(36);
-var HelpPage_1 = __webpack_require__(37);
-var HomePage_1 = __webpack_require__(39);
-var StudentPage_1 = __webpack_require__(40);
-var TeacherPage_1 = __webpack_require__(42);
-var AdminPage_1 = __webpack_require__(43);
-var NavBarLogin_1 = __webpack_require__(44);
-var NavBarMenu_1 = __webpack_require__(45);
-var LoginPage_1 = __webpack_require__(46);
-var ServerProvider_1 = __webpack_require__(47);
-var AutoGrader = (function (_super) {
-    __extends(AutoGrader, _super);
-    function AutoGrader(props) {
-        var _this = _super.call(this) || this;
-        _this.userMan = props.userManager;
-        _this.navMan = props.navigationManager;
-        var curUser = _this.userMan.getCurrentUser();
-        _this.state = {
+const React = __webpack_require__(0);
+const ReactDOM = __webpack_require__(15);
+const components_1 = __webpack_require__(1);
+const managers_1 = __webpack_require__(31);
+const ErrorPage_1 = __webpack_require__(36);
+const HelpPage_1 = __webpack_require__(37);
+const HomePage_1 = __webpack_require__(39);
+const StudentPage_1 = __webpack_require__(40);
+const TeacherPage_1 = __webpack_require__(42);
+const AdminPage_1 = __webpack_require__(43);
+const NavBarLogin_1 = __webpack_require__(44);
+const NavBarMenu_1 = __webpack_require__(45);
+const LoginPage_1 = __webpack_require__(46);
+const ServerProvider_1 = __webpack_require__(47);
+class AutoGrader extends React.Component {
+    constructor(props) {
+        super();
+        this.userMan = props.userManager;
+        this.navMan = props.navigationManager;
+        const curUser = this.userMan.getCurrentUser();
+        this.state = {
             activePage: undefined,
-            topLinks: _this.generateTopLinksFor(curUser),
-            curUser: curUser,
+            topLinks: this.generateTopLinksFor(curUser),
+            curUser,
         };
-        _this.navMan.onNavigate.addEventListener(function (e) {
-            _this.subPage = e.subPage;
-            var old = _this.state.activePage;
-            var tempLink = _this.state.topLinks.slice();
-            _this.checkLinks(tempLink);
-            _this.setState({ activePage: e.page, topLinks: tempLink });
+        this.navMan.onNavigate.addEventListener((e) => {
+            this.subPage = e.subPage;
+            const old = this.state.activePage;
+            const tempLink = this.state.topLinks.slice();
+            this.checkLinks(tempLink);
+            this.setState({ activePage: e.page, topLinks: tempLink });
         });
-        _this.userMan.onLogin.addEventListener(function (e) {
-            _this.setState({
+        this.userMan.onLogin.addEventListener((e) => {
+            this.setState({
                 curUser: e.user,
-                topLinks: _this.generateTopLinksFor(e.user),
+                topLinks: this.generateTopLinksFor(e.user),
             });
         });
-        _this.userMan.onLogout.addEventListener(function (e) {
-            _this.setState({
+        this.userMan.onLogout.addEventListener((e) => {
+            this.setState({
                 curUser: null,
-                topLinks: _this.generateTopLinksFor(null),
+                topLinks: this.generateTopLinksFor(null),
             });
         });
-        return _this;
     }
-    AutoGrader.prototype.generateTopLinksFor = function (user) {
+    promiseTest() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const temp = new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve("Hello World");
+                }, 10);
+            });
+            const a = yield temp;
+            alert(a);
+        });
+    }
+    generateTopLinksFor(user) {
         if (user) {
-            var basis = [];
+            const basis = [];
             if (this.userMan.isTeacher(user)) {
                 basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
             }
@@ -858,53 +749,52 @@ var AutoGrader = (function (_super) {
         else {
             return [{ name: "Help", uri: "app/help", active: false }];
         }
-    };
-    AutoGrader.prototype.componentDidMount = function () {
-        var curUrl = location.pathname;
+    }
+    componentDidMount() {
+        const curUrl = location.pathname;
         if (curUrl === "/") {
             this.navMan.navigateToDefault();
         }
         else {
             this.navMan.navigateTo(curUrl);
         }
-    };
-    AutoGrader.prototype.render = function () {
+    }
+    render() {
         if (this.state.activePage) {
             return this.renderTemplate(this.state.activePage.template);
         }
         else {
             return React.createElement("h1", null, "404 not found");
         }
-    };
-    AutoGrader.prototype.handleClick = function (link) {
+    }
+    handleClick(link) {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
         }
         else {
             console.warn("Warning! Empty link detected", link);
         }
-    };
-    AutoGrader.prototype.renderActiveMenu = function (menu) {
+    }
+    renderActiveMenu(menu) {
         if (this.state.activePage) {
             return this.state.activePage.renderMenu(menu);
         }
         return "";
-    };
-    AutoGrader.prototype.renderActivePage = function (page) {
-        var curPage = this.state.activePage;
+    }
+    renderActivePage(page) {
+        const curPage = this.state.activePage;
         if (curPage) {
             return curPage.renderContent(page);
         }
         return React.createElement("h1", null, "404 Page not found");
-    };
-    AutoGrader.prototype.checkLinks = function (links) {
+    }
+    checkLinks(links) {
         this.navMan.checkLinks(links);
-    };
-    AutoGrader.prototype.renderTemplate = function (name) {
-        var _this = this;
-        var body;
-        var content = this.renderActivePage(this.subPage);
-        var loginLink = [
+    }
+    renderTemplate(name) {
+        let body;
+        const content = this.renderActivePage(this.subPage);
+        const loginLink = [
             { name: "Github", uri: "app/login/login/github" },
             { name: "Gitlab", uri: "app/login/login/gitlab" },
         ];
@@ -918,24 +808,23 @@ var AutoGrader = (function (_super) {
                     React.createElement("div", { className: "col-md-10 col-sm-9 col-xs-12" }, content)));
         }
         return (React.createElement("div", null,
-            React.createElement(components_1.NavBar, { id: "top-bar", isFluid: false, isInverse: true, onClick: function (link) { return _this.handleClick(link); }, brandName: "Auto Grader" },
-                React.createElement(NavBarMenu_1.NavBarMenu, { links: this.state.topLinks, onClick: function (link) { return _this.handleClick(link); } }),
-                React.createElement(NavBarLogin_1.NavBarLogin, { user: this.state.curUser, links: loginLink, onClick: function (link) { return _this.handleClick(link); } })),
+            React.createElement(components_1.NavBar, { id: "top-bar", isFluid: false, isInverse: true, onClick: (link) => this.handleClick(link), brandName: "Auto Grader" },
+                React.createElement(NavBarMenu_1.NavBarMenu, { links: this.state.topLinks, onClick: (link) => this.handleClick(link) }),
+                React.createElement(NavBarLogin_1.NavBarLogin, { user: this.state.curUser, links: loginLink, onClick: (link) => this.handleClick(link) })),
             body));
-    };
-    return AutoGrader;
-}(React.Component));
+    }
+}
 function main() {
-    var DEBUG_BROWSER = "DEBUG_BROWSER";
-    var DEBUG_SERVER = "DEBUG_SERVER";
-    var curRunning;
+    const DEBUG_BROWSER = "DEBUG_BROWSER";
+    const DEBUG_SERVER = "DEBUG_SERVER";
+    let curRunning;
     curRunning = DEBUG_BROWSER;
-    var tempData = new managers_1.TempDataProvider();
-    var userMan;
-    var courseMan;
-    var navMan;
+    const tempData = new managers_1.TempDataProvider();
+    let userMan;
+    let courseMan;
+    let navMan;
     if (curRunning === DEBUG_SERVER) {
-        var serverData = new ServerProvider_1.ServerProvider();
+        const serverData = new ServerProvider_1.ServerProvider();
         userMan = new managers_1.UserManager(serverData);
         courseMan = new managers_1.CourseManager(tempData);
         navMan = new managers_1.NavigationManager(history);
@@ -945,7 +834,7 @@ function main() {
         courseMan = new managers_1.CourseManager(tempData);
         navMan = new managers_1.NavigationManager(history);
     }
-    window.debugData = { tempData: tempData, userMan: userMan, courseMan: courseMan, navMan: navMan };
+    window.debugData = { tempData, userMan, courseMan, navMan };
     navMan.setDefaultPath("app/home");
     navMan.registerPage("app/home", new HomePage_1.HomePage());
     navMan.registerPage("app/student", new StudentPage_1.StudentPage(userMan, navMan, courseMan));
@@ -954,7 +843,7 @@ function main() {
     navMan.registerPage("app/help", new HelpPage_1.HelpPage(navMan));
     navMan.registerPage("app/login", new LoginPage_1.LoginPage(navMan, userMan));
     navMan.registerErrorPage(404, new ErrorPage_1.ErrorPage());
-    navMan.onNavigate.addEventListener(function (e) {
+    navMan.onNavigate.addEventListener((e) => {
         console.log(e);
     });
     ReactDOM.render(React.createElement(AutoGrader, { userManager: userMan, navigationManager: navMan }), document.getElementById("root"));
@@ -974,45 +863,30 @@ module.exports = ReactDOM;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavHeaderBar_1 = __webpack_require__(9);
-var NavBar = (function (_super) {
-    __extends(NavBar, _super);
-    function NavBar() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    NavBar.prototype.render = function () {
-        var _this = this;
+const React = __webpack_require__(0);
+const NavHeaderBar_1 = __webpack_require__(9);
+class NavBar extends React.Component {
+    render() {
         return React.createElement("nav", { className: this.renderNavBarClass() },
             React.createElement("div", { className: this.renderIsFluid() },
-                React.createElement(NavHeaderBar_1.NavHeaderBar, { id: this.props.id, brandName: this.props.brandName, brandClick: function () { return _this.handleClick({ name: "Home", uri: "/" }); } }),
+                React.createElement(NavHeaderBar_1.NavHeaderBar, { id: this.props.id, brandName: this.props.brandName, brandClick: () => this.handleClick({ name: "Home", uri: "/" }) }),
                 React.createElement("div", { className: "collapse navbar-collapse", id: this.props.id }, this.props.children)));
-    };
-    NavBar.prototype.handleClick = function (link) {
+    }
+    handleClick(link) {
         if (this.props.onClick) {
             this.props.onClick(link);
         }
-    };
-    NavBar.prototype.renderIsFluid = function () {
-        var name = "container";
+    }
+    renderIsFluid() {
+        let name = "container";
         if (this.props.isFluid) {
             name += "-fluid";
         }
         return name;
-    };
-    NavBar.prototype.renderNavBarClass = function () {
-        var name = "navbar navbar-absolute-top";
+    }
+    renderNavBarClass() {
+        let name = "navbar navbar-absolute-top";
         if (this.props.isInverse) {
             name += " navbar-inverse";
         }
@@ -1020,9 +894,8 @@ var NavBar = (function (_super) {
             name += " navbar-default";
         }
         return name;
-    };
-    return NavBar;
-}(React.Component));
+    }
+}
 exports.NavBar = NavBar;
 
 
@@ -1032,44 +905,28 @@ exports.NavBar = NavBar;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavMenuFormatable = (function (_super) {
-    __extends(NavMenuFormatable, _super);
-    function NavMenuFormatable() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    NavMenuFormatable.prototype.render = function () {
-        var _this = this;
-        var items = this.props.items.map(function (v, i) {
+const React = __webpack_require__(0);
+class NavMenuFormatable extends React.Component {
+    render() {
+        const items = this.props.items.map((v, i) => {
             return React.createElement("li", { key: i },
-                React.createElement("a", { href: "#", onClick: function () { _this.handleItemClick(v); } }, _this.renderObj(v)));
+                React.createElement("a", { href: "#", onClick: () => { this.handleItemClick(v); } }, this.renderObj(v)));
         });
         return React.createElement("ul", { className: "nav nav-pills nav-stacked" }, items);
-    };
-    NavMenuFormatable.prototype.renderObj = function (item) {
+    }
+    renderObj(item) {
         if (this.props.formater) {
             return this.props.formater(item);
         }
         return item.toString();
-    };
-    NavMenuFormatable.prototype.handleItemClick = function (item) {
+    }
+    handleItemClick(item) {
         if (this.props.onClick) {
             this.props.onClick(item);
         }
-    };
-    return NavMenuFormatable;
-}(React.Component));
+    }
+}
 exports.NavMenuFormatable = NavMenuFormatable;
 
 
@@ -1079,57 +936,39 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var DynamicTable = (function (_super) {
-    __extends(DynamicTable, _super);
-    function DynamicTable() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    DynamicTable.prototype.render = function () {
-        var _this = this;
-        var footer = this.props.footer;
-        var rows = this.props.data.map(function (v, i) {
-            return _this.renderRow(v, i);
+const React = __webpack_require__(0);
+class DynamicTable extends React.Component {
+    render() {
+        const footer = this.props.footer;
+        const rows = this.props.data.map((v, i) => {
+            return this.renderRow(v, i);
         });
-        var tableFooter = footer ? React.createElement("tfoot", null,
+        const tableFooter = footer ? React.createElement("tfoot", null,
             React.createElement("tr", null, this.renderCells(footer))) : null;
         return (React.createElement("table", { className: this.props.onRowClick ? "table table-hover" : "table" },
             React.createElement("thead", null,
                 React.createElement("tr", null, this.renderCells(this.props.header, true))),
             React.createElement("tbody", null, rows),
             tableFooter));
-    };
-    DynamicTable.prototype.renderCells = function (values, th) {
-        if (th === void 0) { th = false; }
-        return values.map(function (v, i) {
+    }
+    renderCells(values, th = false) {
+        return values.map((v, i) => {
             if (th) {
                 return React.createElement("th", { key: i }, v);
             }
             return React.createElement("td", { key: i }, v);
         });
-    };
-    DynamicTable.prototype.renderRow = function (item, i) {
-        var _this = this;
-        return (React.createElement("tr", { key: i, onClick: function (e) { return _this.handleRowClick(item); } }, this.renderCells(this.props.selector(item))));
-    };
-    DynamicTable.prototype.handleRowClick = function (item) {
+    }
+    renderRow(item, i) {
+        return (React.createElement("tr", { key: i, onClick: (e) => this.handleRowClick(item) }, this.renderCells(this.props.selector(item))));
+    }
+    handleRowClick(item) {
         if (this.props.onRowClick) {
             this.props.onRowClick(item);
         }
-    };
-    return DynamicTable;
-}(React.Component));
+    }
+}
 exports.DynamicTable = DynamicTable;
 
 
@@ -1140,7 +979,7 @@ exports.DynamicTable = DynamicTable;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
+const React = __webpack_require__(0);
 function Row(props) {
     return React.createElement("div", { className: props.className ? "row " + props.className : "row" }, props.children);
 }
@@ -1153,33 +992,19 @@ exports.Row = Row;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var LabResultView_1 = __webpack_require__(21);
-var StudentLab = (function (_super) {
-    __extends(StudentLab, _super);
-    function StudentLab() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    StudentLab.prototype.render = function () {
-        var testCases = [
+const React = __webpack_require__(0);
+const LabResultView_1 = __webpack_require__(21);
+class StudentLab extends React.Component {
+    render() {
+        const testCases = [
             { name: "Test Case 1", score: 60, points: 100, weight: 1 },
             { name: "Test Case 2", score: 50, points: 100, weight: 1 },
             { name: "Test Case 3", score: 40, points: 100, weight: 1 },
             { name: "Test Case 4", score: 30, points: 100, weight: 1 },
             { name: "Test Case 5", score: 20, points: 100, weight: 1 },
         ];
-        var labInfo = {
+        const labInfo = {
             lab: this.props.assignment.name,
             course: this.props.course.name,
             score: 50,
@@ -1192,9 +1017,8 @@ var StudentLab = (function (_super) {
             build_id: 10,
         };
         return React.createElement(LabResultView_1.LabResultView, { labInfo: labInfo });
-    };
-    return StudentLab;
-}(React.Component));
+    }
+}
 exports.StudentLab = StudentLab;
 
 
@@ -1204,25 +1028,11 @@ exports.StudentLab = StudentLab;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var LabResultView = (function (_super) {
-    __extends(LabResultView, _super);
-    function LabResultView() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    LabResultView.prototype.render = function () {
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class LabResultView extends React.Component {
+    render() {
         return (React.createElement("div", { className: "col-md-9 col-sm-9 col-xs-12" },
             React.createElement("div", { className: "result-content", id: "resultview" },
                 React.createElement("section", { id: "result" },
@@ -1233,9 +1043,8 @@ var LabResultView = (function (_super) {
                         React.createElement("div", { className: "col-lg-12" },
                             React.createElement("div", { className: "well" },
                                 React.createElement("code", { id: "logs" }, "# There is no build for this lab yet."))))))));
-    };
-    return LabResultView;
-}(React.Component));
+    }
+}
 exports.LabResultView = LabResultView;
 
 
@@ -1245,69 +1054,55 @@ exports.LabResultView = LabResultView;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(3);
-var NavDropdown = (function (_super) {
-    __extends(NavDropdown, _super);
-    function NavDropdown() {
-        var _this = _super.call(this) || this;
-        _this.state = {
+const React = __webpack_require__(0);
+const NavigationHelper_1 = __webpack_require__(3);
+class NavDropdown extends React.Component {
+    constructor() {
+        super();
+        this.state = {
             isOpen: false,
         };
-        return _this;
     }
-    NavDropdown.prototype.render = function () {
-        var _this = this;
-        var children = this.props.items.map(function (item, index) {
+    render() {
+        const children = this.props.items.map((item, index) => {
             return React.createElement("li", { key: index },
-                React.createElement("a", { href: "/" + item.uri, onClick: function (e) {
-                        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
-                            _this.toggleOpen();
-                            _this.props.itemClick(item, index);
+                React.createElement("a", { href: "/" + item.uri, onClick: (e) => {
+                        NavigationHelper_1.NavigationHelper.handleClick(e, () => {
+                            this.toggleOpen();
+                            this.props.itemClick(item, index);
                         });
                     } }, item.name));
         });
         return React.createElement("div", { className: this.getButtonClass() },
-            React.createElement("button", { className: "btn btn-default dropdown-toggle", type: "button", onClick: function () { return _this.toggleOpen(); } },
+            React.createElement("button", { className: "btn btn-default dropdown-toggle", type: "button", onClick: () => this.toggleOpen() },
                 this.renderActive(),
                 React.createElement("span", { className: "caret" })),
             React.createElement("ul", { className: "dropdown-menu" }, children));
-    };
-    NavDropdown.prototype.getButtonClass = function () {
+    }
+    getButtonClass() {
         if (this.state.isOpen) {
             return "button open";
         }
         else {
             return "button";
         }
-    };
-    NavDropdown.prototype.toggleOpen = function () {
-        var newState = !this.state.isOpen;
+    }
+    toggleOpen() {
+        const newState = !this.state.isOpen;
         this.setState({ isOpen: newState });
-    };
-    NavDropdown.prototype.renderActive = function () {
+    }
+    renderActive() {
         if (this.props.items.length === 0) {
             return "";
         }
-        var curIndex = this.props.selectedIndex;
+        let curIndex = this.props.selectedIndex;
         if (curIndex >= this.props.items.length || curIndex < 0) {
             curIndex = 0;
         }
         return this.props.items[curIndex].name;
-    };
-    return NavDropdown;
-}(React.Component));
+    }
+}
 exports.NavDropdown = NavDropdown;
 
 
@@ -1317,25 +1112,11 @@ exports.NavDropdown = NavDropdown;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var LabResult = (function (_super) {
-    __extends(LabResult, _super);
-    function LabResult() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    LabResult.prototype.render = function () {
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class LabResult extends React.Component {
+    render() {
         return (React.createElement(components_1.Row, null,
             React.createElement("div", { className: "col-lg-12" },
                 React.createElement("h1", null, this.props.course_name),
@@ -1350,9 +1131,8 @@ var LabResult = (function (_super) {
             React.createElement("div", { className: "col-lg-6" },
                 React.createElement("p", null,
                     React.createElement("strong", { id: "pushtime" }, "Code delievered: - ")))));
-    };
-    return LabResult;
-}(React.Component));
+    }
+}
 exports.LabResult = LabResult;
 
 
@@ -1362,32 +1142,17 @@ exports.LabResult = LabResult;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var LastBuild = (function (_super) {
-    __extends(LastBuild, _super);
-    function LastBuild() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    LastBuild.prototype.render = function () {
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class LastBuild extends React.Component {
+    render() {
         return (React.createElement(components_1.Row, null,
             React.createElement("div", { className: "col-lg-12" },
-                React.createElement(components_1.DynamicTable, { header: ["Test name", "Score", "Weight"], data: this.props.test_cases, selector: function (item) { return [item.name, item.score.toString() + "/"
-                            + item.points.toString() + " pts", item.weight.toString() + " pts"]; }, footer: ["Total score", this.props.score.toString() + "%", this.props.weight.toString() + "%"] }))));
-    };
-    return LastBuild;
-}(React.Component));
+                React.createElement(components_1.DynamicTable, { header: ["Test name", "Score", "Weight"], data: this.props.test_cases, selector: (item) => [item.name, item.score.toString() + "/"
+                            + item.points.toString() + " pts", item.weight.toString() + " pts"], footer: ["Total score", this.props.score.toString() + "%", this.props.weight.toString() + "%"] }))));
+    }
+}
 exports.LastBuild = LastBuild;
 
 
@@ -1397,26 +1162,11 @@ exports.LastBuild = LastBuild;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var LastBuildInfo = (function (_super) {
-    __extends(LastBuildInfo, _super);
-    function LastBuildInfo() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    LastBuildInfo.prototype.render = function () {
-        var _this = this;
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class LastBuildInfo extends React.Component {
+    render() {
         return (React.createElement(components_1.Row, null,
             React.createElement("div", { className: "col-lg-8" },
                 React.createElement("h2", null, "Latest build"),
@@ -1440,13 +1190,12 @@ var LastBuildInfo = (function (_super) {
                 React.createElement(components_1.Row, null,
                     React.createElement("div", { className: "col-lg-12" },
                         React.createElement("p", null,
-                            React.createElement("button", { type: "button", id: "rebuild", className: "btn btn-primary", onClick: function () { return _this.handleClick(); } }, "Rebuild")))))));
-    };
-    LastBuildInfo.prototype.handleClick = function () {
+                            React.createElement("button", { type: "button", id: "rebuild", className: "btn btn-primary", onClick: () => this.handleClick() }, "Rebuild")))))));
+    }
+    handleClick() {
         console.log("Rebuilding...");
-    };
-    return LastBuildInfo;
-}(React.Component));
+    }
+}
 exports.LastBuildInfo = LastBuildInfo;
 
 
@@ -1456,32 +1205,17 @@ exports.LastBuildInfo = LastBuildInfo;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var CoursesOverview = (function (_super) {
-    __extends(CoursesOverview, _super);
-    function CoursesOverview() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    CoursesOverview.prototype.render = function () {
-        var _this = this;
-        var courses = this.props.course_overview.map(function (val, key) {
-            return React.createElement(components_1.CoursePanel, { course: val.course, labs: val.labs, navMan: _this.props.navMan });
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class CoursesOverview extends React.Component {
+    render() {
+        const courses = this.props.course_overview.map((val, key) => {
+            return React.createElement(components_1.CoursePanel, { course: val.course, labs: val.labs, navMan: this.props.navMan });
         });
-        var added = 0;
-        var index = 1;
-        var l = courses.length;
+        let added = 0;
+        let index = 1;
+        let l = courses.length;
         for (index; index < l; index++) {
             if (index % 2 === 0) {
                 courses.splice(index + added, 0, React.createElement("div", { className: "visible-md-block visible-sm-block clearfix" }));
@@ -1497,9 +1231,8 @@ var CoursesOverview = (function (_super) {
         return (React.createElement("div", null,
             React.createElement("h1", null, "Your Courses"),
             React.createElement(components_1.Row, null, courses)));
-    };
-    return CoursesOverview;
-}(React.Component));
+    }
+}
 exports.CoursesOverview = CoursesOverview;
 
 
@@ -1509,44 +1242,28 @@ exports.CoursesOverview = CoursesOverview;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var CoursePanel = (function (_super) {
-    __extends(CoursePanel, _super);
-    function CoursePanel() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    CoursePanel.prototype.render = function () {
-        var _this = this;
-        var pathPrefix = "app/student/course/" + this.props.course.id + "/lab/";
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class CoursePanel extends React.Component {
+    render() {
+        const pathPrefix = "app/student/course/" + this.props.course.id + "/lab/";
         return (React.createElement("div", { className: "col-lg-3 col-md-6 col-sm-6" },
             React.createElement("div", { className: "panel panel-primary" },
-                React.createElement("div", { className: "panel-heading clickable", onClick: function () { return _this.handleCourseClick(); } }, this.props.course.name),
+                React.createElement("div", { className: "panel-heading clickable", onClick: () => this.handleCourseClick() }, this.props.course.name),
                 React.createElement("div", { className: "panel-body" },
-                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: function (item) { return [item.name, "50%", "100%"]; }, onRowClick: function (lab) { return _this.handleRowClick(pathPrefix, lab); } })))));
-    };
-    CoursePanel.prototype.handleRowClick = function (pathPrefix, lab) {
+                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: (item) => [item.name, "50%", "100%"], onRowClick: (lab) => this.handleRowClick(pathPrefix, lab) })))));
+    }
+    handleRowClick(pathPrefix, lab) {
         if (lab) {
             this.props.navMan.navigateTo(pathPrefix + lab.id);
         }
-    };
-    CoursePanel.prototype.handleCourseClick = function () {
-        var uri = "app/student/course/" + this.props.course.id;
+    }
+    handleCourseClick() {
+        const uri = "app/student/course/" + this.props.course.id;
         this.props.navMan.navigateTo(uri);
-    };
-    return CoursePanel;
-}(React.Component));
+    }
+}
 exports.CoursePanel = CoursePanel;
 
 
@@ -1556,26 +1273,12 @@ exports.CoursePanel = CoursePanel;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ProgressBar_1 = __webpack_require__(11);
-var SingleCourseOverview = (function (_super) {
-    __extends(SingleCourseOverview, _super);
-    function SingleCourseOverview() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    SingleCourseOverview.prototype.render = function () {
-        var labs = this.props.courseAndLabs.labs.map(function (v, k) {
+const React = __webpack_require__(0);
+const ProgressBar_1 = __webpack_require__(11);
+class SingleCourseOverview extends React.Component {
+    render() {
+        const labs = this.props.courseAndLabs.labs.map((v, k) => {
             return (React.createElement("li", { className: "list-group-item" },
                 React.createElement("strong", null, v.name),
                 React.createElement(ProgressBar_1.ProgressBar, { progress: Math.floor((Math.random() * 100) + 1) })));
@@ -1584,9 +1287,8 @@ var SingleCourseOverview = (function (_super) {
             React.createElement("h1", null, this.props.courseAndLabs.course.name),
             React.createElement("div", null,
                 React.createElement("ul", { className: "list-group" }, labs))));
-    };
-    return SingleCourseOverview;
-}(React.Component));
+    }
+}
 exports.SingleCourseOverview = SingleCourseOverview;
 
 
@@ -1596,34 +1298,18 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var Button = (function (_super) {
-    __extends(Button, _super);
-    function Button() {
-        return _super !== null && _super.apply(this, arguments) || this;
+const React = __webpack_require__(0);
+class Button extends React.Component {
+    render() {
+        return (React.createElement("button", { className: this.props.className ? "btn " + this.props.className : "btn", type: this.props.type ? this.props.type : "", onClick: () => this.handleOnclick() }, this.props.text ? this.props.text : ""));
     }
-    Button.prototype.render = function () {
-        var _this = this;
-        return (React.createElement("button", { className: this.props.className ? "btn " + this.props.className : "btn", type: this.props.type ? this.props.type : "", onClick: function () { return _this.handleOnclick(); } }, this.props.text ? this.props.text : ""));
-    };
-    Button.prototype.handleOnclick = function () {
+    handleOnclick() {
         if (this.props.onClick) {
             this.props.onClick();
         }
-    };
-    return Button;
-}(React.Component));
+    }
+}
 exports.Button = Button;
 
 
@@ -1633,65 +1319,51 @@ exports.Button = Button;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var CourseForm = (function (_super) {
-    __extends(CourseForm, _super);
-    function CourseForm(props) {
-        var _this = _super.call(this, props) || this;
-        _this.state = {
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class CourseForm extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
             name: "",
             tag: "",
             year: "",
         };
-        return _this;
     }
-    CourseForm.prototype.render = function () {
-        var _this = this;
-        return (React.createElement("form", { className: this.props.className ? this.props.className : "", onSubmit: function (e) { return _this.handleFormSubmit(e); } },
+    render() {
+        return (React.createElement("form", { className: this.props.className ? this.props.className : "", onSubmit: (e) => this.handleFormSubmit(e) },
             React.createElement("div", { className: "form-group" },
                 React.createElement("label", { className: "control-label col-sm-2", htmlFor: "name" }, "Course Name:"),
                 React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter course name", name: "name", value: this.state.name, onChange: function (e) { return _this.handleInputChange(e); } }))),
+                    React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter course name", name: "name", value: this.state.name, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
                 React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Course Tag:"),
                 React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter course tag", name: "tag", value: this.state.tag, onChange: function (e) { return _this.handleInputChange(e); } }))),
+                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter course tag", name: "tag", value: this.state.tag, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
                 React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Year/Semester:"),
                 React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter year/semester", name: "year", value: this.state.year, onChange: function (e) { return _this.handleInputChange(e); } }))),
+                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter year/semester", name: "year", value: this.state.year, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
                 React.createElement("div", { className: "col-sm-offset-2 col-sm-10" },
                     React.createElement(components_1.Button, { className: "btn btn-primary", text: "Submit", type: "submit" })))));
-    };
-    CourseForm.prototype.handleFormSubmit = function (e) {
+    }
+    handleFormSubmit(e) {
         e.preventDefault();
-        var errors = this.courseValidate();
+        const errors = this.courseValidate();
         this.props.onSubmit(this.state, errors);
-    };
-    CourseForm.prototype.handleInputChange = function (e) {
-        var target = e.target;
-        var value = target.type === "checkbox" ? target.checked : target.value;
-        var name = target.name;
-        this.setState((_a = {},
-            _a[name] = value,
-            _a));
-        var _a;
-    };
-    CourseForm.prototype.courseValidate = function () {
-        var errors = [];
+    }
+    handleInputChange(e) {
+        const target = e.target;
+        const value = target.type === "checkbox" ? target.checked : target.value;
+        const name = target.name;
+        this.setState({
+            [name]: value,
+        });
+    }
+    courseValidate() {
+        const errors = [];
         if (this.state.name === "") {
             errors.push("Course Name cannot be blank");
         }
@@ -1702,9 +1374,8 @@ var CourseForm = (function (_super) {
             errors.push("Year/Semester cannot be blank.");
         }
         return errors;
-    };
-    return CourseForm;
-}(React.Component));
+    }
+}
 exports.CourseForm = CourseForm;
 
 
@@ -1731,86 +1402,81 @@ __export(__webpack_require__(35));
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var map_1 = __webpack_require__(6);
-var models_1 = __webpack_require__(4);
-var CourseManager = (function () {
-    function CourseManager(courseProvider) {
+const map_1 = __webpack_require__(6);
+const models_1 = __webpack_require__(4);
+class CourseManager {
+    constructor(courseProvider) {
         this.courseProvider = courseProvider;
     }
-    CourseManager.prototype.addUserToCourse = function (user, course) {
+    addUserToCourse(user, course) {
         this.courseProvider.addUserToCourse(user, course);
-    };
-    CourseManager.prototype.getCourse = function (id) {
-        var a = this.getCourses()[id];
+    }
+    getCourse(id) {
+        const a = this.getCourses()[id];
         if (a) {
             return a;
         }
         return null;
-    };
-    CourseManager.prototype.getCourses = function () {
+    }
+    getCourses() {
         return map_1.MapHelper.toArray(this.courseProvider.getCourses());
-    };
-    CourseManager.prototype.getRelationsFor = function (user, state) {
-        var cLinks = [];
-        for (var _i = 0, _a = this.courseProvider.getCoursesStudent(); _i < _a.length; _i++) {
-            var c = _a[_i];
+    }
+    getRelationsFor(user, state) {
+        const cLinks = [];
+        for (const c of this.courseProvider.getCoursesStudent()) {
             if (user.id === c.personId && (state === undefined || c.state === models_1.CourseStudentState.accepted)) {
                 cLinks.push(c);
             }
         }
         return cLinks;
-    };
-    CourseManager.prototype.getCoursesFor = function (user, state) {
-        var cLinks = [];
-        for (var _i = 0, _a = this.courseProvider.getCoursesStudent(); _i < _a.length; _i++) {
-            var c = _a[_i];
+    }
+    getCoursesFor(user, state) {
+        const cLinks = [];
+        for (const c of this.courseProvider.getCoursesStudent()) {
             if (user.id === c.personId && (state === undefined || c.state === models_1.CourseStudentState.accepted)) {
                 cLinks.push(c);
             }
         }
-        var courses = [];
-        var tempCourses = this.getCourses();
-        for (var _b = 0, cLinks_1 = cLinks; _b < cLinks_1.length; _b++) {
-            var link = cLinks_1[_b];
-            var c = tempCourses[link.courseId];
+        const courses = [];
+        const tempCourses = this.getCourses();
+        for (const link of cLinks) {
+            const c = tempCourses[link.courseId];
             if (c) {
                 courses.push(c);
             }
         }
         return courses;
-    };
-    CourseManager.prototype.getUserIdsForCourse = function (course) {
-        var users = [];
-        for (var _i = 0, _a = this.courseProvider.getCoursesStudent(); _i < _a.length; _i++) {
-            var c = _a[_i];
+    }
+    getUserIdsForCourse(course) {
+        const users = [];
+        for (const c of this.courseProvider.getCoursesStudent()) {
             if (course.id === c.courseId) {
                 users.push(c);
             }
         }
         return users;
-    };
-    CourseManager.prototype.getAssignment = function (course, assignmentId) {
-        var temp = this.getAssignments(course);
+    }
+    getAssignment(course, assignmentId) {
+        const temp = this.getAssignments(course);
         console.log(temp);
         if (temp[assignmentId]) {
             return temp[assignmentId];
         }
         return null;
-    };
-    CourseManager.prototype.getAssignments = function (courseId) {
+    }
+    getAssignments(courseId) {
         if (models_1.isCourse(courseId)) {
             courseId = courseId.id;
         }
         return map_1.MapHelper.toArray(this.courseProvider.getAssignments(courseId));
-    };
-    CourseManager.prototype.changeUserState = function (link, state) {
+    }
+    changeUserState(link, state) {
         this.courseProvider.changeUserState(link, state);
-    };
-    CourseManager.prototype.createNewCourse = function (courseData) {
+    }
+    createNewCourse(courseData) {
         this.courseProvider.createNewCourse(courseData);
-    };
-    return CourseManager;
-}());
+    }
+}
 exports.CourseManager = CourseManager;
 
 
@@ -1821,9 +1487,9 @@ exports.CourseManager = CourseManager;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(5);
-var NavigationHelper_1 = __webpack_require__(3);
-var ViewPage_1 = __webpack_require__(2);
+const event_1 = __webpack_require__(5);
+const NavigationHelper_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(2);
 function isILinkCollection(item) {
     if (item.item) {
         return true;
@@ -1831,35 +1497,34 @@ function isILinkCollection(item) {
     return false;
 }
 exports.isILinkCollection = isILinkCollection;
-var NavigationManager = (function () {
-    function NavigationManager(history) {
-        var _this = this;
+class NavigationManager {
+    constructor(history) {
         this.onNavigate = event_1.newEvent("NavigationManager.onNavigate");
         this.pages = {};
         this.errorPages = [];
         this.defaultPath = "";
         this.currentPath = "";
         this.browserHistory = history;
-        window.addEventListener("popstate", function (e) {
-            _this.navigateTo(location.pathname, true);
+        window.addEventListener("popstate", (e) => {
+            this.navigateTo(location.pathname, true);
         });
     }
-    NavigationManager.prototype.setDefaultPath = function (path) {
+    setDefaultPath(path) {
         this.defaultPath = path;
-    };
-    NavigationManager.prototype.navigateTo = function (path, preventPush) {
+    }
+    navigateTo(path, preventPush) {
         if (path === "/") {
             this.navigateToDefault();
             return;
         }
-        var parts = NavigationHelper_1.NavigationHelper.getParts(path);
-        var curPage = this.pages;
+        const parts = NavigationHelper_1.NavigationHelper.getParts(path);
+        let curPage = this.pages;
         this.currentPath = parts.join("/");
         if (!preventPush) {
             this.browserHistory.pushState({}, "Autograder", "/" + this.currentPath);
         }
-        for (var i = 0; i < parts.length; i++) {
-            var a = parts[i];
+        for (let i = 0; i < parts.length; i++) {
+            const a = parts[i];
             if (ViewPage_1.isViewPage(curPage)) {
                 this.onNavigate({
                     page: curPage,
@@ -1870,7 +1535,7 @@ var NavigationManager = (function () {
                 return;
             }
             else {
-                var cur = curPage[a];
+                const cur = curPage[a];
                 if (!cur) {
                     this.onNavigate({ target: this, page: this.getErrorPage(404), subPage: "", uri: path });
                     return;
@@ -1885,26 +1550,26 @@ var NavigationManager = (function () {
         else {
             this.onNavigate({ target: this, page: this.getErrorPage(404), subPage: "", uri: path });
         }
-    };
-    NavigationManager.prototype.navigateToDefault = function () {
+    }
+    navigateToDefault() {
         this.navigateTo(this.defaultPath);
-    };
-    NavigationManager.prototype.navigateToError = function (statusCode) {
+    }
+    navigateToError(statusCode) {
         this.onNavigate({ target: this, page: this.getErrorPage(statusCode), subPage: "", uri: statusCode.toString() });
-    };
-    NavigationManager.prototype.registerPage = function (path, page) {
-        var parts = NavigationHelper_1.NavigationHelper.getParts(path);
+    }
+    registerPage(path, page) {
+        const parts = NavigationHelper_1.NavigationHelper.getParts(path);
         if (parts.length === 0) {
             throw Error("Can't add page to index element");
         }
         page.setPath(parts.join("/"));
-        var curObj = this.pages;
-        for (var i = 0; i < parts.length - 1; i++) {
-            var a = parts[i];
+        let curObj = this.pages;
+        for (let i = 0; i < parts.length - 1; i++) {
+            const a = parts[i];
             if (a.length === 0) {
                 continue;
             }
-            var temp = curObj[a];
+            let temp = curObj[a];
             if (!temp) {
                 temp = {};
                 curObj[a] = temp;
@@ -1918,65 +1583,62 @@ var NavigationManager = (function () {
             curObj = temp;
         }
         curObj[parts[parts.length - 1]] = page;
-    };
-    NavigationManager.prototype.registerErrorPage = function (statusCode, page) {
+    }
+    registerErrorPage(statusCode, page) {
         this.errorPages[statusCode] = page;
-    };
-    NavigationManager.prototype.checkLinks = function (links, viewPage) {
-        var checkUrl = this.currentPath;
+    }
+    checkLinks(links, viewPage) {
+        let checkUrl = this.currentPath;
         if (viewPage && viewPage.pagePath === checkUrl) {
             checkUrl += "/" + viewPage.navHelper.defaultPage;
         }
-        var long = NavigationHelper_1.NavigationHelper.getParts(checkUrl);
-        for (var _i = 0, links_1 = links; _i < links_1.length; _i++) {
-            var l = links_1[_i];
+        const long = NavigationHelper_1.NavigationHelper.getParts(checkUrl);
+        for (const l of links) {
             if (!l.uri) {
                 continue;
             }
-            var short = NavigationHelper_1.NavigationHelper.getParts(l.uri);
+            const short = NavigationHelper_1.NavigationHelper.getParts(l.uri);
             l.active = this.checkPartEqual(long, short);
         }
-    };
-    NavigationManager.prototype.checkLinkCollection = function (links, viewPage) {
-        var checkUrl = this.currentPath;
+    }
+    checkLinkCollection(links, viewPage) {
+        let checkUrl = this.currentPath;
         if (viewPage && viewPage.pagePath === checkUrl) {
             checkUrl += "/" + viewPage.navHelper.defaultPage;
         }
-        var long = NavigationHelper_1.NavigationHelper.getParts(checkUrl);
-        for (var _i = 0, links_2 = links; _i < links_2.length; _i++) {
-            var l = links_2[_i];
+        const long = NavigationHelper_1.NavigationHelper.getParts(checkUrl);
+        for (const l of links) {
             if (!l.item.uri) {
                 continue;
             }
-            var short = NavigationHelper_1.NavigationHelper.getParts(l.item.uri);
+            const short = NavigationHelper_1.NavigationHelper.getParts(l.item.uri);
             l.item.active = this.checkPartEqual(long, short);
             if (l.children) {
                 this.checkLinks(l.children, viewPage);
             }
         }
-    };
-    NavigationManager.prototype.refresh = function () {
+    }
+    refresh() {
         this.navigateTo(this.currentPath);
-    };
-    NavigationManager.prototype.checkPartEqual = function (long, short) {
+    }
+    checkPartEqual(long, short) {
         if (short.length > long.length) {
             return false;
         }
-        for (var i = 0; i < short.length; i++) {
+        for (let i = 0; i < short.length; i++) {
             if (short[i] !== long[i]) {
                 return false;
             }
         }
         return true;
-    };
-    NavigationManager.prototype.getErrorPage = function (statusCode) {
+    }
+    getErrorPage(statusCode) {
         if (this.errorPages[statusCode]) {
             return this.errorPages[statusCode];
         }
         throw Error("Status page: " + statusCode + " is not defined");
-    };
-    return NavigationManager;
-}());
+    }
+}
 exports.NavigationManager = NavigationManager;
 
 
@@ -1987,66 +1649,64 @@ exports.NavigationManager = NavigationManager;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Models = __webpack_require__(4);
-var map_1 = __webpack_require__(6);
-var TempDataProvider = (function () {
-    function TempDataProvider() {
+const Models = __webpack_require__(4);
+const map_1 = __webpack_require__(6);
+class TempDataProvider {
+    constructor() {
         this.addLocalAssignments();
         this.addLocalCourses();
         this.addLocalCourseStudent();
         this.addLocalUsers();
     }
-    TempDataProvider.prototype.getAllUser = function () {
+    getAllUser() {
         return this.localUsers;
-    };
-    TempDataProvider.prototype.getCourses = function () {
+    }
+    getCourses() {
         return this.localCourses;
-    };
-    TempDataProvider.prototype.getCoursesStudent = function () {
+    }
+    getCoursesStudent() {
         return this.localCourseStudent;
-    };
-    TempDataProvider.prototype.getAssignments = function (courseId) {
-        var temp = [];
-        map_1.MapHelper.forEach(this.localAssignments, function (a, i) {
+    }
+    getAssignments(courseId) {
+        const temp = [];
+        map_1.MapHelper.forEach(this.localAssignments, (a, i) => {
             if (a.courseId === courseId) {
                 temp[i] = a;
             }
         });
         return temp;
-    };
-    TempDataProvider.prototype.tryLogin = function (username, password) {
-        var user = map_1.MapHelper.find(this.localUsers, function (u) {
-            return u.email.toLocaleLowerCase() === username.toLocaleLowerCase();
-        });
+    }
+    tryLogin(username, password) {
+        const user = map_1.MapHelper.find(this.localUsers, (u) => u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
             return user;
         }
         return null;
-    };
-    TempDataProvider.prototype.tryRemoteLogin = function (provider, callback) {
+    }
+    tryRemoteLogin(provider, callback) {
         throw new Error("Method not implemented.");
-    };
-    TempDataProvider.prototype.logout = function (user) {
+    }
+    logout(user) {
         "Do nothing";
-    };
-    TempDataProvider.prototype.addUserToCourse = function (user, course) {
+    }
+    addUserToCourse(user, course) {
         this.localCourseStudent.push({
             courseId: course.id,
             personId: user.id,
             state: Models.CourseStudentState.pending,
         });
-    };
-    TempDataProvider.prototype.createNewCourse = function (course) {
-        var courses = map_1.MapHelper.toArray(this.localCourses);
+    }
+    createNewCourse(course) {
+        const courses = map_1.MapHelper.toArray(this.localCourses);
         course.id = courses.length;
-        var courseData = course;
+        const courseData = course;
         courses.push(courseData);
-        this.localCourses = map_1.mapify(courses, function (ele) { return ele.id; });
-    };
-    TempDataProvider.prototype.changeUserState = function (link, state) {
+        this.localCourses = map_1.mapify(courses, (ele) => ele.id);
+    }
+    changeUserState(link, state) {
         link.state = state;
-    };
-    TempDataProvider.prototype.addLocalUsers = function () {
+    }
+    addLocalUsers() {
         this.localUsers = map_1.mapify([
             {
                 id: 999,
@@ -2093,9 +1753,9 @@ var TempDataProvider = (function () {
                 password: "1234",
                 isAdmin: false,
             },
-        ], function (ele) { return ele.id; });
-    };
-    TempDataProvider.prototype.addLocalAssignments = function () {
+        ], (ele) => ele.id);
+    }
+    addLocalAssignments() {
         this.localAssignments = map_1.mapify([
             {
                 id: 0,
@@ -2185,9 +1845,9 @@ var TempDataProvider = (function () {
                 deadline: new Date(2017, 5, 25),
                 end: new Date(2017, 5, 30),
             },
-        ], function (ele) { return ele.id; });
-    };
-    TempDataProvider.prototype.addLocalCourses = function () {
+        ], (ele) => ele.id);
+    }
+    addLocalCourses() {
         this.localCourses = map_1.mapify([
             {
                 id: 0,
@@ -2219,18 +1879,17 @@ var TempDataProvider = (function () {
                 tag: "DAT320",
                 year: "Spring 2017",
             },
-        ], function (ele) { return ele.id; });
-    };
-    TempDataProvider.prototype.addLocalCourseStudent = function () {
+        ], (ele) => ele.id);
+    }
+    addLocalCourseStudent() {
         this.localCourseStudent = [
             { courseId: 0, personId: 999, state: 1 },
             { courseId: 1, personId: 999, state: 1 },
             { courseId: 0, personId: 1, state: 0 },
             { courseId: 0, personId: 2, state: 0 },
         ];
-    };
-    return TempDataProvider;
-}());
+    }
+}
 exports.TempDataProvider = TempDataProvider;
 
 
@@ -2241,60 +1900,59 @@ exports.TempDataProvider = TempDataProvider;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var event_1 = __webpack_require__(5);
-var map_1 = __webpack_require__(6);
-var UserManager = (function () {
-    function UserManager(userProvider) {
+const event_1 = __webpack_require__(5);
+const map_1 = __webpack_require__(6);
+class UserManager {
+    constructor(userProvider) {
         this.onLogin = event_1.newEvent("UserManager.onLogin");
         this.onLogout = event_1.newEvent("UserManager.onLogout");
         this.userProvider = userProvider;
     }
-    UserManager.prototype.getCurrentUser = function () {
+    getCurrentUser() {
         return this.currentUser;
-    };
-    UserManager.prototype.tryLogin = function (username, password) {
-        var result = this.userProvider.tryLogin(username, password);
+    }
+    tryLogin(username, password) {
+        const result = this.userProvider.tryLogin(username, password);
         if (result) {
             this.currentUser = result;
             this.onLogin({ target: this, user: this.currentUser });
         }
         return result;
-    };
-    UserManager.prototype.tryRemoteLogin = function (provider, callback) {
+    }
+    tryRemoteLogin(provider, callback) {
         this.userProvider.tryRemoteLogin(provider, callback);
-    };
-    UserManager.prototype.logout = function () {
+    }
+    logout() {
         if (this.currentUser) {
             this.userProvider.logout(this.currentUser);
             this.currentUser = null;
             this.onLogout({ target: this });
         }
-    };
-    UserManager.prototype.isAdmin = function (user) {
+    }
+    isAdmin(user) {
         return user.isAdmin;
-    };
-    UserManager.prototype.isTeacher = function (user) {
+    }
+    isTeacher(user) {
         return user.id > 100;
-    };
-    UserManager.prototype.getAllUser = function () {
+    }
+    getAllUser() {
         return map_1.MapHelper.toArray(this.userProvider.getAllUser());
-    };
-    UserManager.prototype.getUsers = function (ids) {
-        var returnUsers = [];
-        var allUsers = this.getAllUser();
-        ids.forEach(function (ele) {
-            var temp = allUsers[ele];
+    }
+    getUsers(ids) {
+        const returnUsers = [];
+        const allUsers = this.getAllUser();
+        ids.forEach((ele) => {
+            const temp = allUsers[ele];
             if (temp) {
                 returnUsers.push(temp);
             }
         });
         return returnUsers;
-    };
-    UserManager.prototype.getUser = function (id) {
+    }
+    getUser(id) {
         throw new Error("Not implemented error");
-    };
-    return UserManager;
-}());
+    }
+}
 exports.UserManager = UserManager;
 
 
@@ -2304,34 +1962,22 @@ exports.UserManager = UserManager;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(2);
-var ErrorPage = (function (_super) {
-    __extends(ErrorPage, _super);
-    function ErrorPage() {
-        var _this = _super.call(this) || this;
-        _this.pages = {};
-        _this.navHelper.defaultPage = "404";
-        _this.navHelper.registerFunction("404", function (navInfo) {
+const React = __webpack_require__(0);
+const ViewPage_1 = __webpack_require__(2);
+class ErrorPage extends ViewPage_1.ViewPage {
+    constructor() {
+        super();
+        this.pages = {};
+        this.navHelper.defaultPage = "404";
+        this.navHelper.registerFunction("404", (navInfo) => {
             return React.createElement("div", null,
                 React.createElement("h1", null, "404 Page not found"),
                 React.createElement("p", null, "The page you where looking for does not exist"));
         });
-        return _this;
     }
-    ErrorPage.prototype.renderContent = function (page) {
-        var content = this.navHelper.navigateTo(page);
+    renderContent(page) {
+        let content = this.navHelper.navigateTo(page);
         if (!content) {
             content = this.navHelper.navigateTo("404");
         }
@@ -2339,9 +1985,8 @@ var ErrorPage = (function (_super) {
             throw new Error("There is a problem with the navigation");
         }
         return content;
-    };
-    return ErrorPage;
-}(ViewPage_1.ViewPage));
+    }
+}
 exports.ErrorPage = ErrorPage;
 
 
@@ -2351,42 +1996,29 @@ exports.ErrorPage = ErrorPage;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(2);
-var HelpView_1 = __webpack_require__(38);
-var HelpPage = (function (_super) {
-    __extends(HelpPage, _super);
-    function HelpPage(navMan) {
-        var _this = _super.call(this) || this;
-        _this.pages = {};
-        _this.navMan = navMan;
-        _this.navHelper.defaultPage = "help";
-        _this.navHelper.registerFunction("help", _this.help);
-        return _this;
+const React = __webpack_require__(0);
+const ViewPage_1 = __webpack_require__(2);
+const HelpView_1 = __webpack_require__(38);
+class HelpPage extends ViewPage_1.ViewPage {
+    constructor(navMan) {
+        super();
+        this.pages = {};
+        this.navMan = navMan;
+        this.navHelper.defaultPage = "help";
+        this.navHelper.registerFunction("help", this.help);
     }
-    HelpPage.prototype.help = function (info) {
+    help(info) {
         return React.createElement(HelpView_1.HelpView, null);
-    };
-    HelpPage.prototype.renderContent = function (page) {
-        var temp = this.navHelper.navigateTo(page);
+    }
+    renderContent(page) {
+        const temp = this.navHelper.navigateTo(page);
         if (temp) {
             return temp;
         }
         return React.createElement("h1", null, "404 page not found");
-    };
-    return HelpPage;
-}(ViewPage_1.ViewPage));
+    }
+}
 exports.HelpPage = HelpPage;
 
 
@@ -2396,25 +2028,11 @@ exports.HelpPage = HelpPage;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var HelpView = (function (_super) {
-    __extends(HelpView, _super);
-    function HelpView() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    HelpView.prototype.render = function () {
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class HelpView extends React.Component {
+    render() {
         return (React.createElement(components_1.Row, { className: "container-fluid" },
             React.createElement("div", { className: "col-md-2 col-sm-3 col-xs-12" },
                 React.createElement("div", { className: "list-group" },
@@ -2455,9 +2073,8 @@ var HelpView = (function (_super) {
                             React.createElement("p", null, "Wait for the teaching staff to verify your Autograder-registration.")),
                         React.createElement("li", null,
                             React.createElement("p", null, "You will get your own repository in the organization \"uis-dat520\" on GitHub after your registration is verified. You will also have access to the feedback pages for this course on Autograder.")))))));
-    };
-    return HelpView;
-}(React.Component));
+    }
+}
 exports.HelpView = HelpView;
 
 
@@ -2467,29 +2084,17 @@ exports.HelpView = HelpView;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(2);
-var HomePage = (function (_super) {
-    __extends(HomePage, _super);
-    function HomePage() {
-        return _super.call(this) || this;
+const React = __webpack_require__(0);
+const ViewPage_1 = __webpack_require__(2);
+class HomePage extends ViewPage_1.ViewPage {
+    constructor() {
+        super();
     }
-    HomePage.prototype.renderContent = function (page) {
+    renderContent(page) {
         return React.createElement("h1", null, "Welcome to autograder");
-    };
-    return HomePage;
-}(ViewPage_1.ViewPage));
+    }
+}
 exports.HomePage = HomePage;
 
 
@@ -2499,72 +2104,59 @@ exports.HomePage = HomePage;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var ViewPage_1 = __webpack_require__(2);
-var HelloView_1 = __webpack_require__(12);
-var UserView_1 = __webpack_require__(7);
-var helper_1 = __webpack_require__(8);
-var CollapsableNavMenu_1 = __webpack_require__(13);
-var EnrollmentView_1 = __webpack_require__(41);
-var StudentPage = (function (_super) {
-    __extends(StudentPage, _super);
-    function StudentPage(users, navMan, courseMan) {
-        var _this = _super.call(this) || this;
-        _this.selectedCourse = null;
-        _this.selectedAssignment = null;
-        _this.currentPage = "";
-        _this.courses = [];
-        _this.foundId = -1;
-        _this.navMan = navMan;
-        _this.userMan = users;
-        _this.courseMan = courseMan;
-        _this.navHelper.defaultPage = "index";
-        _this.navHelper.onPreNavigation.addEventListener(function (e) { return _this.setupData(e); });
-        _this.navHelper.registerFunction("index", _this.index);
-        _this.navHelper.registerFunction("course/{courseid}", _this.course);
-        _this.navHelper.registerFunction("course/{courseid}/lab/{labid}", _this.courseWithLab);
-        _this.navHelper.registerFunction("course/{coruseid}/{page}", _this.courseMissing);
-        _this.navHelper.registerFunction("enroll", _this.enroll);
-        _this.navHelper.registerFunction("user", function (navInfo) { return React.createElement(UserView_1.UserView, { users: users.getAllUser() }); });
-        _this.navHelper.registerFunction("hello", function (INavInfo) { return React.createElement(HelloView_1.HelloView, null); });
-        return _this;
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+const ViewPage_1 = __webpack_require__(2);
+const HelloView_1 = __webpack_require__(12);
+const UserView_1 = __webpack_require__(7);
+const helper_1 = __webpack_require__(8);
+const CollapsableNavMenu_1 = __webpack_require__(13);
+const EnrollmentView_1 = __webpack_require__(41);
+class StudentPage extends ViewPage_1.ViewPage {
+    constructor(users, navMan, courseMan) {
+        super();
+        this.selectedCourse = null;
+        this.selectedAssignment = null;
+        this.currentPage = "";
+        this.courses = [];
+        this.foundId = -1;
+        this.navMan = navMan;
+        this.userMan = users;
+        this.courseMan = courseMan;
+        this.navHelper.defaultPage = "index";
+        this.navHelper.onPreNavigation.addEventListener((e) => this.setupData(e));
+        this.navHelper.registerFunction("index", this.index);
+        this.navHelper.registerFunction("course/{courseid}", this.course);
+        this.navHelper.registerFunction("course/{courseid}/lab/{labid}", this.courseWithLab);
+        this.navHelper.registerFunction("course/{coruseid}/{page}", this.courseMissing);
+        this.navHelper.registerFunction("enroll", this.enroll);
+        this.navHelper.registerFunction("user", (navInfo) => React.createElement(UserView_1.UserView, { users: users.getAllUser() }));
+        this.navHelper.registerFunction("hello", (INavInfo) => React.createElement(HelloView_1.HelloView, null));
     }
-    StudentPage.prototype.index = function (navInfo) {
-        var courseOverview = this.getCoursesWithAssignments();
+    index(navInfo) {
+        const courseOverview = this.getCoursesWithAssignments();
         return (React.createElement(components_1.CoursesOverview, { course_overview: courseOverview, navMan: this.navMan }));
-    };
-    StudentPage.prototype.enroll = function (navInfo) {
-        var _this = this;
+    }
+    enroll(navInfo) {
         return React.createElement("div", null,
             React.createElement("h1", null, "Enrollment page"),
-            React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.courseMan.getCourses(), studentCourses: this.getRelations(), curUser: this.userMan.getCurrentUser(), onEnrollmentClick: function (user, course) {
-                    _this.courseMan.addUserToCourse(user, course);
-                    _this.navMan.refresh();
+            React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.courseMan.getCourses(), studentCourses: this.getRelations(), curUser: this.userMan.getCurrentUser(), onEnrollmentClick: (user, course) => {
+                    this.courseMan.addUserToCourse(user, course);
+                    this.navMan.refresh();
                 } }));
-    };
-    StudentPage.prototype.course = function (navInfo) {
+    }
+    course(navInfo) {
         this.selectCourse(navInfo.params.courseid);
         if (this.selectedCourse) {
-            var courseAndLabs = this.getLabs();
+            const courseAndLabs = this.getLabs();
             if (courseAndLabs) {
                 return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: courseAndLabs }));
             }
         }
         return React.createElement("h1", null, "404 not found");
-    };
-    StudentPage.prototype.courseWithLab = function (navInfo) {
+    }
+    courseWithLab(navInfo) {
         this.selectCourse(navInfo.params.courseid);
         if (this.selectedCourse) {
             this.selectAssignment(navInfo.params.labid);
@@ -2573,131 +2165,127 @@ var StudentPage = (function (_super) {
             }
         }
         return React.createElement("div", null, "404 not found");
-    };
-    StudentPage.prototype.courseMissing = function (navInfo) {
+    }
+    courseMissing(navInfo) {
         return React.createElement("div", null,
             "The page ",
             navInfo.params.page,
             " is not yet implemented");
-    };
-    StudentPage.prototype.renderMenu = function (key) {
-        var _this = this;
+    }
+    renderMenu(key) {
         if (key === 0) {
-            var coursesLinks = this.courses.map(function (course, i) {
-                var allLinks = [];
+            const coursesLinks = this.courses.map((course, i) => {
+                const allLinks = [];
                 allLinks.push({ name: "Labs" });
-                allLinks.push.apply(allLinks, _this.getLabsfor(course).map(function (lab, ind) {
-                    return { name: lab.name, uri: _this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
+                allLinks.push(...this.getLabsfor(course).map((lab, ind) => {
+                    return { name: lab.name, uri: this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
                 }));
                 allLinks.push({ name: "Group Labs" });
                 allLinks.push({ name: "Settings" });
-                allLinks.push({ name: "Members", uri: _this.pagePath + "/course/" + course.id + "/members" });
-                allLinks.push({ name: "Coruse Info", uri: _this.pagePath + "/course/" + course.id + "/info" });
+                allLinks.push({ name: "Members", uri: this.pagePath + "/course/" + course.id + "/members" });
+                allLinks.push({ name: "Coruse Info", uri: this.pagePath + "/course/" + course.id + "/info" });
                 return {
-                    item: { name: course.tag, uri: _this.pagePath + "/course/" + course.id },
+                    item: { name: course.tag, uri: this.pagePath + "/course/" + course.id },
                     children: allLinks,
                 };
             });
-            var settings = [
+            const settings = [
                 { name: "Join course", uri: this.pagePath + "/enroll" },
             ];
             this.navMan.checkLinkCollection(coursesLinks, this);
             this.navMan.checkLinks(settings, this);
             return [
                 React.createElement("h4", { key: 0 }, "Courses"),
-                React.createElement(CollapsableNavMenu_1.CollapsableNavMenu, { key: 1, links: coursesLinks, onClick: function (link) { return _this.handleClick(link); } }),
+                React.createElement(CollapsableNavMenu_1.CollapsableNavMenu, { key: 1, links: coursesLinks, onClick: (link) => this.handleClick(link) }),
                 React.createElement("h4", { key: 2 }, "Settings"),
-                React.createElement(components_1.NavMenu, { key: 3, links: settings, onClick: function (link) { return _this.handleClick(link); } }),
+                React.createElement(components_1.NavMenu, { key: 3, links: settings, onClick: (link) => this.handleClick(link) }),
             ];
         }
         return [];
-    };
-    StudentPage.prototype.renderContent = function (page) {
-        var pageContent = this.navHelper.navigateTo(page);
+    }
+    renderContent(page) {
+        const pageContent = this.navHelper.navigateTo(page);
         this.currentPage = page;
         if (pageContent) {
             return pageContent;
         }
         return React.createElement("div", null, "404 Not found");
-    };
-    StudentPage.prototype.setupData = function (data) {
+    }
+    setupData(data) {
         this.courses = this.getCourses();
-    };
-    StudentPage.prototype.selectCourse = function (courseId) {
-        var _this = this;
+    }
+    selectCourse(courseId) {
         this.selectedCourse = null;
-        var course = parseInt(courseId, 10);
+        const course = parseInt(courseId, 10);
         if (!isNaN(course)) {
-            this.selectedCourse = helper_1.ArrayHelper.find(this.courses, function (e, i) {
+            this.selectedCourse = helper_1.ArrayHelper.find(this.courses, (e, i) => {
                 if (e.id === course) {
-                    _this.foundId = i;
+                    this.foundId = i;
                     return true;
                 }
                 return false;
             });
         }
-    };
-    StudentPage.prototype.selectAssignment = function (labIdString) {
+    }
+    selectAssignment(labIdString) {
         this.selectedAssignment = null;
-        var labId = parseInt(labIdString, 10);
+        const labId = parseInt(labIdString, 10);
         if (this.selectedCourse && !isNaN(labId)) {
-            var lab = this.courseMan.getAssignment(this.selectedCourse, labId);
+            const lab = this.courseMan.getAssignment(this.selectedCourse, labId);
             if (lab) {
                 this.selectedAssignment = lab;
             }
         }
-    };
-    StudentPage.prototype.handleClick = function (link) {
+    }
+    handleClick(link) {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
         }
-    };
-    StudentPage.prototype.getRelations = function () {
-        var curUsr = this.userMan.getCurrentUser();
+    }
+    getRelations() {
+        const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
             return this.courseMan.getRelationsFor(curUsr);
         }
         return [];
-    };
-    StudentPage.prototype.getCourses = function () {
-        var curUsr = this.userMan.getCurrentUser();
+    }
+    getCourses() {
+        const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
             return this.courseMan.getCoursesFor(curUsr, 1);
         }
         return [];
-    };
-    StudentPage.prototype.getLabsfor = function (course) {
+    }
+    getLabsfor(course) {
         return this.courseMan.getAssignments(course);
-    };
-    StudentPage.prototype.getLabs = function () {
-        var curUsr = this.userMan.getCurrentUser();
+    }
+    getLabs() {
+        const curUsr = this.userMan.getCurrentUser();
         if (curUsr && !this.selectedCourse) {
             this.selectedCourse = this.courseMan.getCoursesFor(curUsr)[0];
         }
         if (this.selectedCourse) {
-            var labs = this.courseMan.getAssignments(this.selectedCourse);
-            return { course: this.selectedCourse, labs: labs };
+            const labs = this.courseMan.getAssignments(this.selectedCourse);
+            return { course: this.selectedCourse, labs };
         }
         return null;
-    };
-    StudentPage.prototype.getCoursesWithAssignments = function () {
-        var courseLabs = [];
+    }
+    getCoursesWithAssignments() {
+        const courseLabs = [];
         if (this.courses.length === 0) {
             this.courses = this.getCourses();
         }
         if (this.courses.length > 0) {
-            for (var _i = 0, _a = this.courses; _i < _a.length; _i++) {
-                var crs = _a[_i];
-                var labs = this.courseMan.getAssignments(crs);
-                var cl = { course: crs, labs: labs };
+            for (const crs of this.courses) {
+                const labs = this.courseMan.getAssignments(crs);
+                const cl = { course: crs, labs };
                 courseLabs.push(cl);
             }
             return courseLabs;
         }
         return [];
-    };
-    return StudentPage;
-}(ViewPage_1.ViewPage));
+    }
+}
 exports.StudentPage = StudentPage;
 
 
@@ -2707,38 +2295,22 @@ exports.StudentPage = StudentPage;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var models_1 = __webpack_require__(4);
-var helper_1 = __webpack_require__(8);
-var EnrollmentView = (function (_super) {
-    __extends(EnrollmentView, _super);
-    function EnrollmentView() {
-        return _super !== null && _super.apply(this, arguments) || this;
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+const models_1 = __webpack_require__(4);
+const helper_1 = __webpack_require__(8);
+class EnrollmentView extends React.Component {
+    render() {
+        return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.studentCourses, course) });
     }
-    EnrollmentView.prototype.render = function () {
-        var _this = this;
-        return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: function (course) { return _this.createEnrollmentRow(_this.props.studentCourses, course); } });
-    };
-    EnrollmentView.prototype.createEnrollmentRow = function (studentCourses, course) {
-        var _this = this;
-        var base = [course.tag, course.name];
-        var curUser = this.props.curUser;
+    createEnrollmentRow(studentCourses, course) {
+        const base = [course.tag, course.name];
+        const curUser = this.props.curUser;
         if (!curUser) {
             return base;
         }
-        var temp = helper_1.ArrayHelper.find(studentCourses, function (a) { return a.courseId === course.id; });
+        const temp = helper_1.ArrayHelper.find(studentCourses, (a) => a.courseId === course.id);
         if (temp) {
             if (temp.state === models_1.CourseStudentState.accepted) {
                 base.push("Enrolled");
@@ -2748,17 +2320,16 @@ var EnrollmentView = (function (_super) {
             }
             else {
                 base.push(React.createElement("div", null,
-                    React.createElement("button", { onClick: function () { _this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"),
+                    React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"),
                     React.createElement("span", { style: { padding: "7px", verticalAlign: "middle" }, className: "bg-danger" }, "Rejected")));
             }
         }
         else {
-            base.push(React.createElement("button", { onClick: function () { _this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"));
+            base.push(React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"));
         }
         return base;
-    };
-    return EnrollmentView;
-}(React.Component));
+    }
+}
 exports.EnrollmentView = EnrollmentView;
 
 
@@ -2768,50 +2339,38 @@ exports.EnrollmentView = EnrollmentView;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var ViewPage_1 = __webpack_require__(2);
-var HelloView_1 = __webpack_require__(12);
-var UserView_1 = __webpack_require__(7);
-var CollapsableNavMenu_1 = __webpack_require__(13);
-var models_1 = __webpack_require__(4);
-var helper_1 = __webpack_require__(8);
-var TeacherPage = (function (_super) {
-    __extends(TeacherPage, _super);
-    function TeacherPage(userMan, navMan, courseMan) {
-        var _this = _super.call(this) || this;
-        _this.courses = [];
-        _this.pages = {};
-        _this.navMan = navMan;
-        _this.userMan = userMan;
-        _this.courseMan = courseMan;
-        _this.courses = _this.getCourses();
-        _this.navHelper.defaultPage = "course/" + (_this.courses.length > 0 ? _this.courses[0].id.toString() : "");
-        _this.navHelper.registerFunction("course/{course}", _this.course);
-        _this.navHelper.registerFunction("course/{course}/members", _this.courseUsers);
-        _this.navHelper.registerFunction("course/{course}/{page}", _this.course);
-        _this.navHelper.registerFunction("user", function (navInfo) {
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+const ViewPage_1 = __webpack_require__(2);
+const HelloView_1 = __webpack_require__(12);
+const UserView_1 = __webpack_require__(7);
+const CollapsableNavMenu_1 = __webpack_require__(13);
+const models_1 = __webpack_require__(4);
+const helper_1 = __webpack_require__(8);
+class TeacherPage extends ViewPage_1.ViewPage {
+    constructor(userMan, navMan, courseMan) {
+        super();
+        this.courses = [];
+        this.pages = {};
+        this.navMan = navMan;
+        this.userMan = userMan;
+        this.courseMan = courseMan;
+        this.courses = this.getCourses();
+        this.navHelper.defaultPage = "course/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
+        this.navHelper.registerFunction("course/{course}", this.course);
+        this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
+        this.navHelper.registerFunction("course/{course}/{page}", this.course);
+        this.navHelper.registerFunction("user", (navInfo) => {
             return React.createElement(UserView_1.UserView, { users: userMan.getAllUser() });
         });
-        _this.navHelper.registerFunction("user", function (navInfo) {
+        this.navHelper.registerFunction("user", (navInfo) => {
             return React.createElement(HelloView_1.HelloView, null);
         });
-        return _this;
     }
-    TeacherPage.prototype.course = function (info) {
-        var courseId = parseInt(info.params.course, 10);
-        var course = this.getCourseById(courseId);
+    course(info) {
+        const courseId = parseInt(info.params.course, 10);
+        const course = this.getCourseById(courseId);
         if (course) {
             if (info.params.page) {
                 return React.createElement("h3", null,
@@ -2825,24 +2384,24 @@ var TeacherPage = (function (_super) {
                 info.params.course);
         }
         return React.createElement("div", null, "404 Page not found");
-    };
-    TeacherPage.prototype.courseUsers = function (info) {
-        var courseId = parseInt(info.params.course, 10);
-        var course = this.getCourseById(courseId);
+    }
+    courseUsers(info) {
+        const courseId = parseInt(info.params.course, 10);
+        const course = this.getCourseById(courseId);
         if (course) {
-            var userIds = this.courseMan.getUserIdsForCourse(course);
-            var users = this.userMan.getUsers(userIds.map(function (e) { return e.personId; }));
-            var all = helper_1.ArrayHelper.join(userIds, users, function (e1, e2) { return e1.personId === e2.id; });
+            const userIds = this.courseMan.getUserIdsForCourse(course);
+            const users = this.userMan.getUsers(userIds.map((e) => e.personId));
+            const all = helper_1.ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
             console.log(all);
-            var acceptedUsers_1 = [];
-            var pendingUsers_1 = [];
-            all.forEach(function (ele, id) {
+            const acceptedUsers = [];
+            const pendingUsers = [];
+            all.forEach((ele, id) => {
                 switch (ele.ele1.state) {
                     case models_1.CourseStudentState.accepted:
-                        acceptedUsers_1.push(ele.ele2);
+                        acceptedUsers.push(ele.ele2);
                         break;
                     case models_1.CourseStudentState.pending:
-                        pendingUsers_1.push(ele);
+                        pendingUsers.push(ele);
                         break;
                 }
             });
@@ -2853,37 +2412,36 @@ var TeacherPage = (function (_super) {
                     " (",
                     course.tag,
                     ")"),
-                React.createElement(UserView_1.UserView, { users: acceptedUsers_1 }),
+                React.createElement(UserView_1.UserView, { users: acceptedUsers }),
                 React.createElement("h3", null,
                     "Pending users for ",
                     course.name,
                     " (",
                     course.tag,
                     ")"),
-                this.createPendingTable(pendingUsers_1));
+                this.createPendingTable(pendingUsers));
         }
         return React.createElement("div", null, "404 Page not found");
-    };
-    TeacherPage.prototype.createPendingTable = function (pendingUsers) {
-        var _this = this;
-        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["ID", "First name", "Last name", "Email", "StudenID", "Action"], selector: function (ele) { return [
+    }
+    createPendingTable(pendingUsers) {
+        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["ID", "First name", "Last name", "Email", "StudenID", "Action"], selector: (ele) => [
                 ele.ele2.id.toString(),
                 ele.ele2.firstName,
                 ele.ele2.lastName,
                 ele.ele2.email,
                 ele.ele2.personId.toString(),
                 React.createElement("span", null,
-                    React.createElement("button", { onClick: function (e) {
-                            _this.courseMan.changeUserState(ele.ele1, models_1.CourseStudentState.accepted);
-                            _this.navMan.refresh();
+                    React.createElement("button", { onClick: (e) => {
+                            this.courseMan.changeUserState(ele.ele1, models_1.CourseStudentState.accepted);
+                            this.navMan.refresh();
                         }, className: "btn btn-primary" }, "Accept"),
-                    React.createElement("button", { onClick: function (e) {
-                            _this.courseMan.changeUserState(ele.ele1, models_1.CourseStudentState.rejected);
-                            _this.navMan.refresh();
+                    React.createElement("button", { onClick: (e) => {
+                            this.courseMan.changeUserState(ele.ele1, models_1.CourseStudentState.rejected);
+                            this.navMan.refresh();
                         }, className: "btn btn-danger" }, "Reject")),
-            ]; } });
-    };
-    TeacherPage.prototype.generateCollectionFor = function (link) {
+            ] });
+    }
+    generateCollectionFor(link) {
         return {
             item: link,
             children: [
@@ -2894,61 +2452,60 @@ var TeacherPage = (function (_super) {
                 { name: "Course Info", uri: link.uri + "/courseinfo" },
             ],
         };
-    };
-    TeacherPage.prototype.renderMenu = function (menu) {
-        var _this = this;
-        var curUser = this.userMan.getCurrentUser();
+    }
+    renderMenu(menu) {
+        const curUser = this.userMan.getCurrentUser();
         if (curUser && this.isTeacher(curUser)) {
             if (menu === 0) {
-                var courses = this.courseMan.getCoursesFor(curUser);
-                var labLinks_1 = [];
-                courses.forEach(function (e) {
-                    labLinks_1.push(_this.generateCollectionFor({
+                const courses = this.courseMan.getCoursesFor(curUser);
+                const labLinks = [];
+                courses.forEach((e) => {
+                    labLinks.push(this.generateCollectionFor({
                         name: e.tag,
-                        uri: _this.pagePath + "/course/" + e.id,
+                        uri: this.pagePath + "/course/" + e.id,
                     }));
                 });
-                var settings = [];
-                this.navMan.checkLinkCollection(labLinks_1, this);
+                const settings = [];
+                this.navMan.checkLinkCollection(labLinks, this);
                 this.navMan.checkLinks(settings, this);
                 return [
                     React.createElement("h4", { key: 0 }, "Courses"),
-                    React.createElement(CollapsableNavMenu_1.CollapsableNavMenu, { key: 1, links: labLinks_1, onClick: function (link) { return _this.handleClick(link); } }),
+                    React.createElement(CollapsableNavMenu_1.CollapsableNavMenu, { key: 1, links: labLinks, onClick: (link) => this.handleClick(link) }),
                     React.createElement("h4", { key: 2 }, "Settings"),
-                    React.createElement(components_1.NavMenu, { key: 3, links: settings, onClick: function (link) { return _this.handleClick(link); } }),
+                    React.createElement(components_1.NavMenu, { key: 3, links: settings, onClick: (link) => this.handleClick(link) }),
                 ];
             }
         }
         return [];
-    };
-    TeacherPage.prototype.renderContent = function (page) {
-        var curUser = this.userMan.getCurrentUser();
+    }
+    renderContent(page) {
+        const curUser = this.userMan.getCurrentUser();
         if (!curUser) {
             return React.createElement("h1", null, "You are not logged in");
         }
         else if (this.isTeacher(curUser)) {
-            var temp = this.navHelper.navigateTo(page);
+            const temp = this.navHelper.navigateTo(page);
             if (temp) {
                 return temp;
             }
         }
         return React.createElement("h1", null, "404 page not found");
-    };
-    TeacherPage.prototype.handleClick = function (link) {
+    }
+    handleClick(link) {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
         }
-    };
-    TeacherPage.prototype.getCourses = function () {
-        var curUsr = this.userMan.getCurrentUser();
+    }
+    getCourses() {
+        const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
             return this.courseMan.getCoursesFor(curUsr, 1);
         }
         return [];
-    };
-    TeacherPage.prototype.getCourseById = function (courseId) {
+    }
+    getCourseById(courseId) {
         if (!isNaN(courseId)) {
-            var tempCourse = helper_1.ArrayHelper.find(this.courses, function (e, i) {
+            const tempCourse = helper_1.ArrayHelper.find(this.courses, (e, i) => {
                 if (e.id === courseId) {
                     return true;
                 }
@@ -2957,12 +2514,11 @@ var TeacherPage = (function (_super) {
             return tempCourse;
         }
         return null;
-    };
-    TeacherPage.prototype.isTeacher = function (curUser) {
+    }
+    isTeacher(curUser) {
         return this.userMan.isTeacher(curUser);
-    };
-    return TeacherPage;
-}(ViewPage_1.ViewPage));
+    }
+}
 exports.TeacherPage = TeacherPage;
 
 
@@ -2972,55 +2528,41 @@ exports.TeacherPage = TeacherPage;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var components_1 = __webpack_require__(1);
-var ViewPage_1 = __webpack_require__(2);
-var UserView_1 = __webpack_require__(7);
-var AdminPage = (function (_super) {
-    __extends(AdminPage, _super);
-    function AdminPage(navMan, userMan, courseMan) {
-        var _this = _super.call(this) || this;
-        _this.navMan = navMan;
-        _this.userMan = userMan;
-        _this.courseMan = courseMan;
-        _this.flashMessages = null;
-        _this.navHelper.defaultPage = "users";
-        _this.navHelper.registerFunction("users", _this.users);
-        _this.navHelper.registerFunction("courses", _this.courses);
-        _this.navHelper.registerFunction("labs", _this.labs);
-        _this.navHelper.registerFunction("courses/new", _this.newCourse);
-        return _this;
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+const ViewPage_1 = __webpack_require__(2);
+const UserView_1 = __webpack_require__(7);
+class AdminPage extends ViewPage_1.ViewPage {
+    constructor(navMan, userMan, courseMan) {
+        super();
+        this.navMan = navMan;
+        this.userMan = userMan;
+        this.courseMan = courseMan;
+        this.flashMessages = null;
+        this.navHelper.defaultPage = "users";
+        this.navHelper.registerFunction("users", this.users);
+        this.navHelper.registerFunction("courses", this.courses);
+        this.navHelper.registerFunction("labs", this.labs);
+        this.navHelper.registerFunction("courses/new", this.newCourse);
     }
-    AdminPage.prototype.users = function (info) {
-        var allUsers = this.userMan.getAllUser();
+    users(info) {
+        const allUsers = this.userMan.getAllUser();
         return React.createElement("div", null,
             React.createElement("h1", null, "All Users"),
             React.createElement(UserView_1.UserView, { users: allUsers }));
-    };
-    AdminPage.prototype.courses = function (info) {
-        var _this = this;
-        var allCourses = this.courseMan.getCourses();
+    }
+    courses(info) {
+        const allCourses = this.courseMan.getCourses();
         return React.createElement("div", null,
-            React.createElement(components_1.Button, { className: "btn btn-primary pull-right", text: "+Create New", onClick: function () { return _this.handleNewCourse(); } }),
+            React.createElement(components_1.Button, { className: "btn btn-primary pull-right", text: "+Create New", onClick: () => this.handleNewCourse() }),
             React.createElement("h1", null, "All Courses"),
-            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: allCourses, selector: function (e) { return [e.id.toString(), e.name, e.tag, e.year]; } }));
-    };
-    AdminPage.prototype.labs = function (info) {
-        var _this = this;
-        var allCourses = this.courseMan.getCourses();
-        var tables = allCourses.map(function (e, i) {
-            var labs = _this.courseMan.getAssignments(e);
+            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: allCourses, selector: (e) => [e.id.toString(), e.name, e.tag, e.year] }));
+    }
+    labs(info) {
+        const allCourses = this.courseMan.getCourses();
+        const tables = allCourses.map((e, i) => {
+            const labs = this.courseMan.getAssignments(e);
             return React.createElement("div", { key: i },
                 React.createElement("h3", null,
                     "Labs for ",
@@ -3028,23 +2570,21 @@ var AdminPage = (function (_super) {
                     " (",
                     e.tag,
                     ")"),
-                React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Start", "Deadline", "End"], data: labs, selector: function (lab) { return [
+                React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Start", "Deadline", "End"], data: labs, selector: (lab) => [
                         lab.id.toString(),
                         lab.name,
                         lab.start.toDateString(),
                         lab.deadline.toDateString(),
                         lab.end.toDateString(),
-                    ]; } }));
+                    ] }));
         });
         return React.createElement("div", null, tables);
-    };
-    AdminPage.prototype.newCourse = function (info) {
-        var _this = this;
-        var flashHolder = React.createElement("div", null);
+    }
+    newCourse(info) {
+        let flashHolder = React.createElement("div", null);
         if (this.flashMessages) {
-            var errors = [];
-            for (var _i = 0, _a = this.flashMessages; _i < _a.length; _i++) {
-                var fm = _a[_i];
+            const errors = [];
+            for (const fm of this.flashMessages) {
                 errors.push(React.createElement("li", null, fm));
             }
             flashHolder = React.createElement("div", { className: "alert alert-danger" },
@@ -3056,19 +2596,18 @@ var AdminPage = (function (_super) {
         return (React.createElement("div", null,
             React.createElement("h1", null, "Create New Course"),
             flashHolder,
-            React.createElement(components_1.CourseForm, { className: "form-horizontal", onSubmit: function (formData, errors) { return _this.createNewCourse(formData, errors); } })));
-    };
-    AdminPage.prototype.renderContent = function (page) {
-        var temp = this.navHelper.navigateTo(page);
+            React.createElement(components_1.CourseForm, { className: "form-horizontal", onSubmit: (formData, errors) => this.createNewCourse(formData, errors) })));
+    }
+    renderContent(page) {
+        const temp = this.navHelper.navigateTo(page);
         if (temp) {
             return temp;
         }
         return React.createElement("h1", null, "404 Page not found");
-    };
-    AdminPage.prototype.renderMenu = function (index) {
-        var _this = this;
+    }
+    renderMenu(index) {
         if (index === 0) {
-            var links = [
+            const links = [
                 { name: "All Users", uri: this.pagePath + "/users" },
                 { name: "All Courses", uri: this.pagePath + "/courses" },
                 { name: "All Labs", uri: this.pagePath + "/labs" },
@@ -3076,22 +2615,22 @@ var AdminPage = (function (_super) {
             this.navMan.checkLinks(links, this);
             return [
                 React.createElement("h4", { key: 0 }, "Admin Menu"),
-                React.createElement(components_1.NavMenu, { key: 1, links: links, onClick: function (e) {
+                React.createElement(components_1.NavMenu, { key: 1, links: links, onClick: (e) => {
                         if (e.uri) {
-                            _this.navMan.navigateTo(e.uri);
+                            this.navMan.navigateTo(e.uri);
                         }
                     } }),
             ];
         }
         return [];
-    };
-    AdminPage.prototype.handleNewCourse = function (flashMessage) {
+    }
+    handleNewCourse(flashMessage) {
         if (flashMessage) {
             this.flashMessages = flashMessage;
         }
         this.navMan.navigateTo(this.pagePath + "/courses/new");
-    };
-    AdminPage.prototype.createNewCourse = function (fd, errors) {
+    }
+    createNewCourse(fd, errors) {
         if (errors.length === 0) {
             this.courseMan.createNewCourse(fd);
             this.flashMessages = null;
@@ -3100,9 +2639,8 @@ var AdminPage = (function (_super) {
         else {
             this.handleNewCourse(errors);
         }
-    };
-    return AdminPage;
-}(ViewPage_1.ViewPage));
+    }
+}
 exports.AdminPage = AdminPage;
 
 
@@ -3112,60 +2650,46 @@ exports.AdminPage = AdminPage;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavMenu_1 = __webpack_require__(10);
-var NavBarLogin = (function (_super) {
-    __extends(NavBarLogin, _super);
-    function NavBarLogin() {
-        var _this = _super.call(this) || this;
-        _this.state = {
+const React = __webpack_require__(0);
+const NavMenu_1 = __webpack_require__(10);
+class NavBarLogin extends React.Component {
+    constructor() {
+        super();
+        this.state = {
             loginOpen: false,
         };
-        return _this;
     }
-    NavBarLogin.prototype.render = function () {
-        var _this = this;
+    render() {
         if (this.props.user) {
             return React.createElement("div", { className: "navbar-right" },
-                React.createElement("button", { className: "btn btn-primary navbar-btn", onClick: function () { _this.handleClick({ name: "Logout", uri: "app/login/logout" }); } }, "Log out"));
+                React.createElement("button", { className: "btn btn-primary navbar-btn", onClick: () => { this.handleClick({ name: "Logout", uri: "app/login/logout" }); } }, "Log out"));
         }
-        var links = this.props.links;
+        let links = this.props.links;
         if (!links) {
             links = [
                 { name: "Missing links" },
             ];
         }
-        var isHidden = "hidden";
+        let isHidden = "hidden";
         if (this.state.loginOpen) {
             isHidden = "";
         }
         return React.createElement("div", { className: "navbar-right" },
-            React.createElement("button", { onClick: function () { return _this.toggleMenu(); }, className: "btn btn-primary navbar-btn" }, "Login"),
+            React.createElement("button", { onClick: () => this.toggleMenu(), className: "btn btn-primary navbar-btn" }, "Login"),
             React.createElement("div", { className: "nav-box " + isHidden },
-                React.createElement(NavMenu_1.NavMenu, { links: links, onClick: function (link) { return _this.handleClick(link); } })));
-    };
-    NavBarLogin.prototype.toggleMenu = function () {
+                React.createElement(NavMenu_1.NavMenu, { links: links, onClick: (link) => this.handleClick(link) })));
+    }
+    toggleMenu() {
         this.setState({ loginOpen: !this.state.loginOpen });
-    };
-    NavBarLogin.prototype.handleClick = function (link) {
+    }
+    handleClick(link) {
         this.setState({ loginOpen: false });
         if (this.props.onClick) {
             this.props.onClick(link);
         }
-    };
-    return NavBarLogin;
-}(React.Component));
+    }
+}
 exports.NavBarLogin = NavBarLogin;
 
 
@@ -3175,47 +2699,31 @@ exports.NavBarLogin = NavBarLogin;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var NavigationHelper_1 = __webpack_require__(3);
-var NavBarMenu = (function (_super) {
-    __extends(NavBarMenu, _super);
-    function NavBarMenu() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    NavBarMenu.prototype.render = function () {
-        var _this = this;
-        var items = this.props.links.map(function (link, i) {
-            var active = "";
+const React = __webpack_require__(0);
+const NavigationHelper_1 = __webpack_require__(3);
+class NavBarMenu extends React.Component {
+    render() {
+        const items = this.props.links.map((link, i) => {
+            let active = "";
             if (link.active) {
                 active = "active";
             }
             return React.createElement("li", { className: active, key: i },
-                React.createElement("a", { href: "/" + link.uri, onClick: function (e) {
-                        NavigationHelper_1.NavigationHelper.handleClick(e, function () {
-                            _this.handleClick(link);
+                React.createElement("a", { href: "/" + link.uri, onClick: (e) => {
+                        NavigationHelper_1.NavigationHelper.handleClick(e, () => {
+                            this.handleClick(link);
                         });
                     } }, link.name));
         });
         return React.createElement("ul", { className: "nav navbar-nav" }, items);
-    };
-    NavBarMenu.prototype.handleClick = function (link) {
+    }
+    handleClick(link) {
         if (this.props.onClick) {
             this.props.onClick(link);
         }
-    };
-    return NavBarMenu;
-}(React.Component));
+    }
+}
 exports.NavBarMenu = NavBarMenu;
 
 
@@ -3225,35 +2733,23 @@ exports.NavBarMenu = NavBarMenu;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var React = __webpack_require__(0);
-var ViewPage_1 = __webpack_require__(2);
-var LoginPage = (function (_super) {
-    __extends(LoginPage, _super);
-    function LoginPage(navMan, userMan) {
-        var _this = _super.call(this) || this;
-        _this.navMan = navMan;
-        _this.userMan = userMan;
-        _this.navHelper.defaultPage = "index";
-        _this.navHelper.registerFunction("index", _this.index);
-        _this.navHelper.registerFunction("login/{provider}", _this.login);
-        return _this;
+const React = __webpack_require__(0);
+const ViewPage_1 = __webpack_require__(2);
+class LoginPage extends ViewPage_1.ViewPage {
+    constructor(navMan, userMan) {
+        super();
+        this.navMan = navMan;
+        this.userMan = userMan;
+        this.navHelper.defaultPage = "index";
+        this.navHelper.registerFunction("index", this.index);
+        this.navHelper.registerFunction("login/{provider}", this.login);
     }
-    LoginPage.prototype.index = function (info) {
+    index(info) {
         return React.createElement("div", null, "Quickly hide, you should not be here! Someone is going to get mad...");
-    };
-    LoginPage.prototype.login = function (info) {
-        this.userMan.tryRemoteLogin(info.params.provider, function (result) {
+    }
+    login(info) {
+        this.userMan.tryRemoteLogin(info.params.provider, (result) => {
             if (result) {
                 console.log("Sucessful login of: " + result);
             }
@@ -3262,20 +2758,19 @@ var LoginPage = (function (_super) {
             }
         });
         return React.createElement("div", null, "Logging in please wait");
-    };
-    LoginPage.prototype.logout = function (info) {
+    }
+    logout(info) {
         this.userMan.logout();
         return React.createElement("div", null, "Logged out");
-    };
-    LoginPage.prototype.renderContent = function (page) {
-        var pageContent = this.navHelper.navigateTo(page);
+    }
+    renderContent(page) {
+        const pageContent = this.navHelper.navigateTo(page);
         if (pageContent) {
             return pageContent;
         }
         return React.createElement("div", null, "404 Not found");
-    };
-    return LoginPage;
-}(ViewPage_1.ViewPage));
+    }
+}
 exports.LoginPage = LoginPage;
 
 
@@ -3287,8 +2782,8 @@ exports.LoginPage = LoginPage;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 function request(url, callback) {
-    var req = new XMLHttpRequest();
-    req.onreadystatechange = function () {
+    const req = new XMLHttpRequest();
+    req.onreadystatechange = () => {
         if (req.readyState === 4 && req.status === 200) {
             console.log(req);
             callback(req.responseText);
@@ -3297,20 +2792,18 @@ function request(url, callback) {
     req.open("GET", url, true);
     req.send();
 }
-var ServerProvider = (function () {
-    function ServerProvider() {
+class ServerProvider {
+    tryLogin(username, password) {
+        throw new Error("Method not implemented.");
     }
-    ServerProvider.prototype.tryLogin = function (username, password) {
+    logout(user) {
         throw new Error("Method not implemented.");
-    };
-    ServerProvider.prototype.logout = function (user) {
+    }
+    getAllUser() {
         throw new Error("Method not implemented.");
-    };
-    ServerProvider.prototype.getAllUser = function () {
-        throw new Error("Method not implemented.");
-    };
-    ServerProvider.prototype.tryRemoteLogin = function (provider, callback) {
-        var requestString = null;
+    }
+    tryRemoteLogin(provider, callback) {
+        let requestString = null;
         switch (provider) {
             case "github":
                 requestString = "/auth/github";
@@ -3320,7 +2813,7 @@ var ServerProvider = (function () {
                 break;
         }
         if (requestString) {
-            request(requestString, function (data) {
+            request(requestString, (data) => {
                 console.log(data);
                 callback(null);
             });
@@ -3328,9 +2821,8 @@ var ServerProvider = (function () {
         else {
             callback(null);
         }
-    };
-    return ServerProvider;
-}());
+    }
+}
 exports.ServerProvider = ServerProvider;
 
 

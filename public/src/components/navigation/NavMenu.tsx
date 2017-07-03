@@ -7,7 +7,7 @@ interface INavMenuProps {
     onClick?: (link: ILink) => void;
 }
 
-class NavMenu extends React.Component<INavMenuProps, undefined> {
+class NavMenu extends React.Component<INavMenuProps, {}> {
     public render() {
         const items = this.props.links.map((v: ILink, i: number) => {
             let active = "";

@@ -5,7 +5,7 @@ import { ILabInfo } from "../../models";
 interface ILabInfoProps {
     labInfo: ILabInfo;
 }
-class LabResultView extends React.Component<ILabInfoProps, undefined> {
+class LabResultView extends React.Component<ILabInfoProps, {}> {
 
     public render() {
         return (

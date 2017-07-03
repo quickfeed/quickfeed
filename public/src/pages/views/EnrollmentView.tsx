@@ -11,7 +11,7 @@ interface IEnrollmentViewProps {
     onEnrollmentClick: (user: IUser, course: ICourse) => void;
 }
 
-class EnrollmentView extends React.Component<IEnrollmentViewProps, undefined> {
+class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     public render() {
         return <DynamicTable
             data={this.props.courses}

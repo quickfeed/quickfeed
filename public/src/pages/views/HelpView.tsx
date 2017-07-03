@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Row } from "../../components";
 
-class HelpView extends React.Component<any, undefined> {
+class HelpView extends React.Component<{}, {}> {
     public render() {
         return (
             <Row className="container-fluid">

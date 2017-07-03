@@ -73,6 +73,17 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         });
     }
 
+    public async promiseTest() {
+        const temp = new Promise<string>((resolve, reject) => {
+            setTimeout(() => {
+                resolve("Hello World");
+            }, 10);
+        });
+
+        const a = await temp;
+        alert(a);
+    }
+
     public generateTopLinksFor(user: IUser | null): ILink[] {
         if (user) {
             const basis: ILink[] = [];

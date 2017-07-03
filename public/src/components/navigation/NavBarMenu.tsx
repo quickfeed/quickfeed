@@ -8,7 +8,7 @@ export interface INavBarMenuProps {
     onClick?: (lin: ILink) => void;
 }
 
-export class NavBarMenu extends React.Component<INavBarMenuProps, undefined> {
+export class NavBarMenu extends React.Component<INavBarMenuProps, {}> {
     public render(): JSX.Element {
         const items = this.props.links.map((link, i) => {
             let active = "";

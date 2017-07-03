@@ -6,12 +6,12 @@ interface IButtonProps {
     type?: string;
     onClick?: () => void;
 }
-class Button extends React.Component<IButtonProps, undefined> {
+class Button extends React.Component<IButtonProps, {}> {
     public render() {
         return (
             <button className={this.props.className ? "btn " + this.props.className : "btn"}
-                    type={this.props.type ? this.props.type : ""}
-                    onClick={() => this.handleOnclick()}
+                type={this.props.type ? this.props.type : ""}
+                onClick={() => this.handleOnclick()}
             >
                 {this.props.text ? this.props.text : ""}
             </button>
@@ -24,4 +24,4 @@ class Button extends React.Component<IButtonProps, undefined> {
         }
     }
 }
-export {Button};
+export { Button };
