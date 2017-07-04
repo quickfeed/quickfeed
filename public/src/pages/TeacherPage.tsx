@@ -48,8 +48,9 @@ class TeacherPage extends ViewPage {
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
+        this.courses = await this.getCourses();
         const courseId = parseInt(info.params.course, 10);
-        const course = this.courseMan.getCourse(courseId);
+        const course = await this.courseMan.getCourse(courseId);
         if (course) {
             if (info.params.page) {
                 return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
@@ -75,6 +76,7 @@ class TeacherPage extends ViewPage {
     }
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
+        this.courses = await this.getCourses();
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
@@ -199,7 +201,7 @@ class TeacherPage extends ViewPage {
     private async getCourses(): Promise<ICourse[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return await this.courseMan.getCoursesFor(curUsr, 1);
+            return await this.courseMan.getCoursesFor(curUsr);
         }
         return [];
     }

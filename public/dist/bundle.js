@@ -754,51 +754,56 @@ class AutoGrader extends React.Component {
         const curUser = this.userMan.getCurrentUser();
         this.state = {
             activePage: undefined,
-            topLinks: this.generateTopLinksFor(curUser),
+            topLinks: [],
             curUser,
             currentContent: React.createElement("div", null, "No Content Available"),
         };
+        (() => __awaiter(this, void 0, void 0, function* () {
+            this.setState({ topLinks: yield this.generateTopLinksFor(curUser) });
+        }))();
         this.navMan.onNavigate.addEventListener((e) => this.handleNavigation(e));
-        this.userMan.onLogin.addEventListener((e) => {
+        this.userMan.onLogin.addEventListener((e) => __awaiter(this, void 0, void 0, function* () {
             console.log("Sign in");
             this.setState({
                 curUser: e.user,
-                topLinks: this.generateTopLinksFor(e.user),
+                topLinks: yield this.generateTopLinksFor(e.user),
             });
-        });
-        this.userMan.onLogout.addEventListener((e) => {
+        }));
+        this.userMan.onLogout.addEventListener((e) => __awaiter(this, void 0, void 0, function* () {
             console.log("Sign out");
             this.setState({
                 curUser: null,
-                topLinks: this.generateTopLinksFor(null),
+                topLinks: yield this.generateTopLinksFor(null),
             });
-        });
+        }));
     }
     handleNavigation(e) {
         return __awaiter(this, void 0, void 0, function* () {
             this.subPage = e.subPage;
+            const newContent = yield this.renderTemplate(e.page, e.page.template);
             const tempLink = this.state.topLinks.slice();
             this.checkLinks(tempLink);
-            const newContent = yield this.renderTemplate(e.page, e.page.template);
             this.setState({ activePage: e.page, topLinks: tempLink, currentContent: newContent });
         });
     }
     generateTopLinksFor(user) {
-        if (user) {
-            const basis = [];
-            if (this.userMan.isTeacher(user)) {
-                basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
+        return __awaiter(this, void 0, void 0, function* () {
+            if (user) {
+                const basis = [];
+                if (yield this.userMan.isTeacher(user)) {
+                    basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
+                }
+                basis.push({ name: "Student", uri: "app/student/", active: false });
+                if (this.userMan.isAdmin(user)) {
+                    basis.push({ name: "Admin", uri: "app/admin", active: false });
+                }
+                basis.push({ name: "Help", uri: "app/help", active: false });
+                return basis;
             }
-            basis.push({ name: "Student", uri: "app/student/", active: false });
-            if (this.userMan.isAdmin(user)) {
-                basis.push({ name: "Admin", uri: "app/admin", active: false });
+            else {
+                return [{ name: "Help", uri: "app/help", active: false }];
             }
-            basis.push({ name: "Help", uri: "app/help", active: false });
-            return basis;
-        }
-        else {
-            return [{ name: "Help", uri: "app/help", active: false }];
-        }
+        });
     }
     componentDidMount() {
         const curUrl = location.pathname;
@@ -2676,8 +2681,9 @@ class TeacherPage extends ViewPage_1.ViewPage {
     }
     course(info) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.courses = yield this.getCourses();
             const courseId = parseInt(info.params.course, 10);
-            const course = this.courseMan.getCourse(courseId);
+            const course = yield this.courseMan.getCourse(courseId);
             if (course) {
                 if (info.params.page) {
                     return React.createElement("h3", null,
@@ -2708,6 +2714,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
     }
     courseUsers(info) {
         return __awaiter(this, void 0, void 0, function* () {
+            this.courses = yield this.getCourses();
             const courseId = parseInt(info.params.course, 10);
             const course = yield this.courseMan.getCourse(courseId);
             if (course) {
@@ -2824,7 +2831,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             const curUsr = this.userMan.getCurrentUser();
             if (curUsr) {
-                return yield this.courseMan.getCoursesFor(curUsr, 1);
+                return yield this.courseMan.getCoursesFor(curUsr);
             }
             return [];
         });

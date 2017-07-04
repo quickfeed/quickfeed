@@ -47,42 +47,48 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 
         this.state = {
             activePage: undefined,
-            topLinks: this.generateTopLinksFor(curUser),
+            topLinks: [],
             curUser,
             currentContent: <div>No Content Available</div>,
         };
 
+        (async () => {
+            this.setState({ topLinks: await this.generateTopLinksFor(curUser) });
+        })();
+
         this.navMan.onNavigate.addEventListener((e: INavEvent) => this.handleNavigation(e));
 
-        this.userMan.onLogin.addEventListener((e) => {
+        this.userMan.onLogin.addEventListener(async (e) => {
             console.log("Sign in");
             this.setState({
                 curUser: e.user,
-                topLinks: this.generateTopLinksFor(e.user),
+                topLinks: await this.generateTopLinksFor(e.user),
             });
         });
 
-        this.userMan.onLogout.addEventListener((e) => {
+        this.userMan.onLogout.addEventListener(async (e) => {
             console.log("Sign out");
             this.setState({
                 curUser: null,
-                topLinks: this.generateTopLinksFor(null),
+                topLinks: await this.generateTopLinksFor(null),
             });
         });
     }
 
     public async handleNavigation(e: INavEvent) {
         this.subPage = e.subPage;
+        const newContent = await this.renderTemplate(e.page, e.page.template);
+
         const tempLink = this.state.topLinks.slice();
         this.checkLinks(tempLink);
-        const newContent = await this.renderTemplate(e.page, e.page.template);
+
         this.setState({ activePage: e.page, topLinks: tempLink, currentContent: newContent });
     }
 
-    public generateTopLinksFor(user: IUser | null): ILink[] {
+    public async generateTopLinksFor(user: IUser | null): Promise<ILink[]> {
         if (user) {
             const basis: ILink[] = [];
-            if (this.userMan.isTeacher(user)) {
+            if (await this.userMan.isTeacher(user)) {
                 basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
             }
             basis.push({ name: "Student", uri: "app/student/", active: false });
