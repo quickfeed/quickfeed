@@ -97,6 +97,7 @@ __export(__webpack_require__(28));
 __export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
+__export(__webpack_require__(49));
 
 
 /***/ }),
@@ -423,14 +424,43 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 class UserView extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            users: this.props.users,
+        };
+    }
     render() {
-        return React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.props.users, selector: (item) => [
-                item.id.toString(),
-                item.firstName,
-                item.lastName,
-                item.email,
-                item.personId.toString(),
-            ] });
+        let searchForm = null;
+        if (this.props.addSearchOption) {
+            const searchIcon = React.createElement("span", { className: "input-group-addon" },
+                React.createElement("i", { className: "glyphicon glyphicon-search" }));
+            searchForm = React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for students", onChange: (query) => this.handleOnchange(query) });
+        }
+        return (React.createElement("div", null,
+            searchForm,
+            React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.state.users, selector: (item) => [
+                    item.id.toString(),
+                    item.firstName,
+                    item.lastName,
+                    item.email,
+                    item.personId.toString(),
+                ] })));
+    }
+    handleOnchange(query) {
+        query = query.toLowerCase();
+        let filteredData = [];
+        this.props.users.forEach((user) => {
+            if (user.firstName.toLowerCase().indexOf(query) != -1
+                || user.lastName.toLowerCase().indexOf(query) != -1
+                || user.email.toLowerCase().indexOf(query) != -1
+                || user.personId.toString().indexOf(query) != -1) {
+                filteredData.push(user);
+            }
+        });
+        this.setState({
+            users: filteredData,
+        });
     }
 }
 exports.UserView = UserView;
@@ -1470,21 +1500,25 @@ class Results extends React.Component {
         super(props);
         this.state = {
             assignment: this.props.labs[0],
-            student: this.props.students[0],
+            selectedStudent: this.props.students[0],
+            students: this.props.students,
         };
     }
     render() {
         let studentLab = null;
         if (this.props.students.length > 0) {
-            studentLab = React.createElement(components_1.StudentLab, { course: this.props.course, assignment: this.state.assignment, student: this.state.student });
+            studentLab = React.createElement(components_1.StudentLab, { course: this.props.course, assignment: this.state.assignment, student: this.state.selectedStudent });
         }
+        const searchIcon = React.createElement("span", { className: "input-group-addon" },
+            React.createElement("i", { className: "glyphicon glyphicon-search" }));
         return (React.createElement("div", null,
             React.createElement("h1", null,
                 "Result: ",
                 this.props.course.name),
             React.createElement(components_1.Row, null,
                 React.createElement("div", { className: "col-lg6 col-md-6 col-sm-12" },
-                    React.createElement(components_1.DynamicTable, { header: this.getResultHeader(), data: this.props.students, selector: (item) => this.getResultSelector(item) })),
+                    React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for students", onChange: (query) => this.handleOnchange(query) }),
+                    React.createElement(components_1.DynamicTable, { header: this.getResultHeader(), data: this.state.students, selector: (item) => this.getResultSelector(item) })),
                 React.createElement("div", { className: "col-lg-6 col-md-6 col-sm-12" }, studentLab))));
     }
     getResultHeader() {
@@ -1499,8 +1533,22 @@ class Results extends React.Component {
     }
     handleOnclick(std, lab) {
         this.setState({
-            student: std,
+            selectedStudent: std,
             assignment: lab,
+        });
+    }
+    handleOnchange(query) {
+        query = query.toLowerCase();
+        let filteredData = [];
+        this.props.students.forEach((std) => {
+            if (std.firstName.toLowerCase().indexOf(query) != -1
+                || std.lastName.toLowerCase().indexOf(query) != -1
+                || std.email.toLowerCase().indexOf(query) != -1) {
+                filteredData.push(std);
+            }
+        });
+        this.setState({
+            students: filteredData,
         });
     }
 }
@@ -2882,7 +2930,7 @@ class AdminPage extends ViewPage_1.ViewPage {
             const allUsers = yield this.userMan.getAllUser();
             return React.createElement("div", null,
                 React.createElement("h1", null, "All Users"),
-                React.createElement(UserView_1.UserView, { users: allUsers }));
+                React.createElement(UserView_1.UserView, { users: allUsers, addSearchOption: true }));
         });
     }
     courses(info) {
@@ -3194,6 +3242,42 @@ class ServerProvider {
     }
 }
 exports.ServerProvider = ServerProvider;
+
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
+class Search extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            query: "",
+        };
+    }
+    render() {
+        let addOn = null;
+        if (this.props.addonBefore) {
+            addOn = this.props.addonBefore;
+        }
+        return (React.createElement("div", { className: this.props.className ? this.props.className : "" },
+            addOn,
+            React.createElement("input", { className: "form-control", type: "text", placeholder: this.props.placeholder ? this.props.placeholder : "", onChange: (e) => this.onChange(e), value: this.state.query })));
+    }
+    onChange(e) {
+        this.setState({
+            query: e.target.value,
+        });
+        if (this.props.onChange) {
+            this.props.onChange(e.target.value);
+        }
+    }
+}
+exports.Search = Search;
 
 
 /***/ })

@@ -1,13 +1,13 @@
 import * as React from "react";
 
-import { Button, CourseForm, DynamicTable, NavMenu } from "../components";
+import {Button, CourseForm, DynamicTable, NavMenu, Search} from "../components";
 
-import { CourseManager, ILink, NavigationManager, UserManager } from "../managers";
-import { INavInfo } from "../NavigationHelper";
-import { View, ViewPage } from "./ViewPage";
-import { UserView } from "./views/UserView";
+import {CourseManager, ILink, NavigationManager, UserManager} from "../managers";
+import {INavInfo} from "../NavigationHelper";
+import {View, ViewPage} from "./ViewPage";
+import {UserView} from "./views/UserView";
 
-import { IAssignment, ICourse } from "../models";
+import {IAssignment, ICourse} from "../models";
 
 class AdminPage extends ViewPage {
     private navMan: NavigationManager;
@@ -33,7 +33,7 @@ class AdminPage extends ViewPage {
         const allUsers = await this.userMan.getAllUser();
         return <div>
             <h1>All Users</h1>
-            <UserView users={allUsers}></UserView>
+            <UserView users={allUsers} addSearchOption={true}/>
         </div>;
     }
 
@@ -41,7 +41,7 @@ class AdminPage extends ViewPage {
         const allCourses = await this.courseMan.getCourses();
         return <div>
             <Button className="btn btn-primary pull-right" text="+Create New"
-                onClick={() => this.handleNewCourse()}
+                    onClick={() => this.handleNewCourse()}
             />
             <h1>All Courses</h1>
             <DynamicTable
@@ -101,7 +101,7 @@ class AdminPage extends ViewPage {
                 <h1>Create New Course</h1>
                 {flashHolder}
                 <CourseForm className="form-horizontal"
-                    onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
+                            onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
                 />
             </div>
         );
@@ -110,9 +110,9 @@ class AdminPage extends ViewPage {
     public async renderMenu(index: number): Promise<JSX.Element[]> {
         if (index === 0) {
             const links: ILink[] = [
-                { name: "All Users", uri: this.pagePath + "/users" },
-                { name: "All Courses", uri: this.pagePath + "/courses" },
-                { name: "All Labs", uri: this.pagePath + "/labs" },
+                {name: "All Users", uri: this.pagePath + "/users"},
+                {name: "All Courses", uri: this.pagePath + "/courses"},
+                {name: "All Labs", uri: this.pagePath + "/labs"},
             ];
 
             this.navMan.checkLinks(links, this);
@@ -153,4 +153,4 @@ class AdminPage extends ViewPage {
 
 }
 
-export { AdminPage };
+export {AdminPage};

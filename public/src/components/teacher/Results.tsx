@@ -1,7 +1,7 @@
 import * as React from "react";
 import {IAssignment, ICourse, IUser} from "../../models";
 
-import {DynamicTable, Row, StudentLab} from "../../components";
+import {DynamicTable, Row, Search, StudentLab} from "../../components";
 
 interface IResultsProp {
     course: ICourse;
@@ -10,14 +10,16 @@ interface IResultsProp {
 }
 interface IResultsState {
     assignment: IAssignment;
-    student: IUser;
+    selectedStudent: IUser;
+    students: IUser[];
 }
 class Results extends React.Component<IResultsProp, IResultsState> {
     constructor(props: any) {
         super(props);
         this.state = {
             assignment: this.props.labs[0],
-            student: this.props.students[0],
+            selectedStudent: this.props.students[0],
+            students: this.props.students,
         };
     }
 
@@ -26,16 +28,26 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         if (this.props.students.length > 0) {
             studentLab = <StudentLab course={this.props.course}
                                      assignment={this.state.assignment}
-                                     student={this.state.student}
+                                     student={this.state.selectedStudent}
             />;
         }
+
+        const searchIcon: JSX.Element = <span className="input-group-addon">
+            <i className="glyphicon glyphicon-search"></i>
+        </span>;
+
         return (
             <div>
                 <h1>Result: {this.props.course.name}</h1>
                 <Row>
                     <div className="col-lg6 col-md-6 col-sm-12">
+                        <Search className="input-group"
+                                addonBefore={searchIcon}
+                                placeholder="Search for students"
+                                onChange={(query) => this.handleOnchange(query)}
+                        />
                         <DynamicTable header={this.getResultHeader()}
-                                      data={this.props.students}
+                                      data={this.state.students}
                                       selector={(item: IUser) => this.getResultSelector(item)}
                         />
                     </div>
@@ -64,9 +76,26 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     private handleOnclick(std: IUser, lab: IAssignment): void {
         this.setState({
-            student: std,
+            selectedStudent: std,
             assignment: lab,
         });
+    }
+
+    private handleOnchange(query: string):void {
+        query = query.toLowerCase();
+        let filteredData: IUser[] = [];
+        this.props.students.forEach((std)=> {
+            if (std.firstName.toLowerCase().indexOf(query) != -1
+                || std.lastName.toLowerCase().indexOf(query) != -1
+                || std.email.toLowerCase().indexOf(query) != -1
+            ){
+                filteredData.push(std);
+            }
+        });
+
+        this.setState({
+            students: filteredData,
+        })
     }
 
 }
