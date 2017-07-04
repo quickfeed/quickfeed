@@ -167,7 +167,11 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 			c.Set("user", user)
 			for _, remoteIdentity := range user.RemoteIdentities {
 				if _, ok := scms[remoteIdentity.AccessToken]; !ok {
-					scms[remoteIdentity.AccessToken] = scm.NewGithubSCMClient(remoteIdentity.AccessToken)
+					client, err := scm.NewSCMClient(remoteIdentity.Provider, remoteIdentity.AccessToken)
+					if err != nil {
+						return err
+					}
+					scms[remoteIdentity.AccessToken] = client
 				}
 				c.Set(remoteIdentity.Provider, scms[remoteIdentity.AccessToken])
 			}
@@ -186,13 +190,13 @@ func getInteralUser(db database.Database, externalUser *goth.User) (*models.User
 
 	// TODO: Extract each case into a function so that they can be tested.
 	switch provider.Name() {
-	case "github":
-		githubID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
+	case "github", "gitlab":
+		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
 		if err != nil {
 			return nil, err
 		}
 
-		user, err := db.GetUserByRemoteIdentity(provider.Name(), githubID, externalUser.AccessToken)
+		user, err := db.GetUserByRemoteIdentity(provider.Name(), remoteID, externalUser.AccessToken)
 		if err != nil {
 			return nil, err
 		}
