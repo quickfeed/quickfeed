@@ -31,7 +31,7 @@ func (s *GithubSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 	var directories []*Directory
 	for _, org := range orgs {
 		directories = append(directories, &Directory{
-			ID:   org.Organization.GetID(),
+			ID:   uint64(org.Organization.GetID()),
 			Name: org.Organization.GetLogin(),
 		})
 	}
@@ -44,8 +44,8 @@ func (s *GithubSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 }
 
 // GetDirectory implements the SCM interface.
-func (s *GithubSCM) GetDirectory(ctx context.Context, id int) (*Directory, error) {
-	org, _, err := s.client.Organizations.GetByID(ctx, id)
+func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, error) {
+	org, _, err := s.client.Organizations.GetByID(ctx, int(id))
 	if err != nil {
 		return nil, err
 	}

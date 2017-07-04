@@ -10,13 +10,13 @@ type SCM interface {
 	// Creates a new directory.
 	CreateDirectory(context.Context, *CreateDirectoryOptions) (*Directory, error)
 	// Gets a directory.
-	GetDirectory(context.Context, int) (*Directory, error)
+	GetDirectory(context.Context, uint64) (*Directory, error)
 }
 
 // Directory represents an entity which is capable of managing source code
 // repositories as well as user access to those repositories.
 type Directory struct {
-	ID   int
+	ID   uint64
 	Name string
 }
 

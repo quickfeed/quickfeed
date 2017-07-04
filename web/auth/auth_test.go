@@ -4,15 +4,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/gommon/log"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/faux"
@@ -80,7 +81,10 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	authHandler := auth.OAuth2Login(newDB(t))
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	authHandler := auth.OAuth2Login(db)
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != nil {
 		t.Error(err)
@@ -99,7 +103,10 @@ func TestOAuth2CallbackUnauthorized(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	authHandler := auth.OAuth2Callback(newDB(t))
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	authHandler := auth.OAuth2Callback(db)
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != echo.ErrUnauthorized {
 		t.Errorf("have error '%s' want '%s'", err, echo.ErrUnauthorized)
@@ -128,7 +135,10 @@ func testOAuth2LoggedIn(t *testing.T, newHandler func(db database.Database) echo
 		t.Error(err)
 	}
 
-	authHandler := newHandler(newDB(t))
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	authHandler := newHandler(db)
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -163,7 +173,10 @@ func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database)
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	authHandler := newHandler(newDB(t))
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	authHandler := newHandler(db)
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -175,8 +188,9 @@ func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database)
 
 func TestAccessControl(t *testing.T) {
 	const (
-		userID = 0
-		secret = "secret"
+		provider = "github"
+		userID   = 0
+		secret   = "secret"
 	)
 
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
@@ -187,9 +201,11 @@ func TestAccessControl(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	db := newDB(t)
+	db, cleanup := setup(t)
+	defer cleanup()
+
 	// Create a new user.
-	if _, err := db.GetUserWithGithubID(userID, secret); err != nil {
+	if _, err := db.GetUserByRemoteIdentity(provider, userID, secret); err != nil {
 		t.Error(err)
 	}
 
@@ -213,15 +229,35 @@ func TestAccessControl(t *testing.T) {
 	}
 }
 
-func newDB(t *testing.T) database.Database {
-	logger := log.New("")
-	logger.SetOutput(ioutil.Discard)
+func setup(t *testing.T) (*database.GormDB, func()) {
+	const (
+		driver = "sqlite3"
+		prefix = "testdb"
+	)
 
-	db, err := database.NewStructDB("", false, logger)
+	f, err := ioutil.TempFile(os.TempDir(), prefix)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return db
+	if err := f.Close(); err != nil {
+		os.Remove(f.Name())
+		t.Fatal(err)
+	}
+
+	db, err := database.NewGormDB(driver, f.Name(), true)
+	if err != nil {
+		os.Remove(f.Name())
+		t.Fatal(err)
+	}
+
+	return db, func() {
+		if err := db.Close(); err != nil {
+			t.Error(err)
+		}
+		if err := os.Remove(f.Name()); err != nil {
+			t.Error(err)
+		}
+	}
 }
 
 func assertCode(t *testing.T, haveCode, wantCode int) {
@@ -245,7 +281,7 @@ func (ts testStore) login(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	s.Values[auth.UserID] = 0
+	s.Values[auth.UserID] = uint64(1)
 	return s.Save(c.Request(), c.Response())
 }
 

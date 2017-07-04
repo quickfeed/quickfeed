@@ -28,7 +28,7 @@ func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 	var directories []*Directory
 	for _, group := range groups {
 		directories = append(directories, &Directory{
-			ID:   group.ID,
+			ID:   uint64(group.ID),
 			Name: group.Name,
 		})
 	}
@@ -47,20 +47,20 @@ func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 	}
 
 	return &Directory{
-		ID:   group.ID,
+		ID:   uint64(group.ID),
 		Name: group.Name,
 	}, nil
 }
 
 // GetDirectory implements the SCM interface.
-func (s *GitlabSCM) GetDirectory(ctx context.Context, id int) (*Directory, error) {
+func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, error) {
 	group, _, err := s.client.Groups.GetGroup(id, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Directory{
-		ID:   group.ID,
+		ID:   uint64(group.ID),
 		Name: group.Name,
 	}, nil
 }
