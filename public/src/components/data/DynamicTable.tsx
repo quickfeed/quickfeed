@@ -8,7 +8,7 @@ interface IDynamicTableProps<T> {
     onRowClick?: (link: T) => void;
 }
 
-class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, undefined> {
+class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, {}> {
 
     public render() {
         const footer = this.props.footer;

@@ -7,7 +7,7 @@ interface INavHeaderBarProps {
     brandClick: () => void;
 }
 
-class NavHeaderBar extends React.Component<INavHeaderBarProps, undefined> {
+class NavHeaderBar extends React.Component<INavHeaderBarProps, {}> {
     public componentDidMount() {
         const temp = this.refs.button as HTMLElement;
         temp.setAttribute("data-toggle", "collapse");

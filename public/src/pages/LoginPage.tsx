@@ -19,6 +19,7 @@ export class LoginPage extends ViewPage {
 
         this.navHelper.registerFunction("index", this.index);
         this.navHelper.registerFunction("login/{provider}", this.login);
+        this.navHelper.registerFunction("logout", this.logout);
     }
 
     public index(info: INavInfo<{ provider: string }>): JSX.Element {
@@ -28,7 +29,8 @@ export class LoginPage extends ViewPage {
     public login(info: INavInfo<{ provider: string }>): JSX.Element {
         this.userMan.tryRemoteLogin(info.params.provider, (result: IUser | null) => {
             if (result) {
-                console.log("Sucessful login of: " + result);
+                console.log("Sucessful login of: ", result);
+                this.navMan.navigateToDefault();
             } else {
                 console.log("Failed");
             }

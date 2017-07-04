@@ -73,6 +73,17 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         });
     }
 
+    public async promiseTest() {
+        const temp = new Promise<string>((resolve, reject) => {
+            setTimeout(() => {
+                resolve("Hello World");
+            }, 10);
+        });
+
+        const a = await temp;
+        alert(a);
+    }
+
     public generateTopLinksFor(user: IUser | null): ILink[] {
         if (user) {
             const basis: ILink[] = [];
@@ -209,11 +220,11 @@ function main() {
         userMan = new UserManager(tempData);
         courseMan = new CourseManager(tempData);
         navMan = new NavigationManager(history);
+
+        const user = userMan.tryLogin("test@testersen.no", "1234");
     }
 
     (window as any).debugData = { tempData, userMan, courseMan, navMan };
-
-    // const user = userMan.tryLogin("test@testersen.no", "1234");
 
     navMan.setDefaultPath("app/home");
     navMan.registerPage("app/home", new HomePage());

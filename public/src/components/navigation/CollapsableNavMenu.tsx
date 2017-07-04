@@ -7,7 +7,7 @@ interface ICollapsableNavMenuProps {
     onClick?: (link: ILink) => void;
 }
 
-class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, undefined> {
+class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
 
     private topItems: HTMLElement[] = [];
 

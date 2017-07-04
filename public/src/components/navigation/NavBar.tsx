@@ -15,7 +15,7 @@ interface INavBarProps {
     onClick?: (lin: ILink) => void;
 }
 
-class NavBar extends React.Component<INavBarProps, undefined> {
+class NavBar extends React.Component<INavBarProps, {}> {
 
     public render() {
         return <nav className={this.renderNavBarClass()}>

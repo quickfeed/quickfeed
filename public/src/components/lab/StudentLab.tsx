@@ -8,7 +8,7 @@ interface IStudentLabProbs {
     student?: IUser;
 }
 
-class StudentLab extends React.Component<IStudentLabProbs, undefined> {
+class StudentLab extends React.Component<IStudentLabProbs, {}> {
     public render() {
         // return <h1>{this.props.assignment.name}</h1>;
         // TODO: fetch real data from backend database for corresponding course assignment
