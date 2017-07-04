@@ -2019,7 +2019,7 @@ class UserManager {
     }
     getUsers(ids) {
         const returnUsers = [];
-        const allUsers = this.getAllUser();
+        const allUsers = this.userProvider.getAllUser();
         ids.forEach((ele) => {
             const temp = allUsers[ele];
             if (temp) {

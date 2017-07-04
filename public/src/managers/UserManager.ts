@@ -73,7 +73,7 @@ class UserManager {
 
     public getUsers(ids: number[]): IUser[] {
         const returnUsers: IUser[] = [];
-        const allUsers = this.getAllUser();
+        const allUsers = this.userProvider.getAllUser();
         ids.forEach((ele) => {
             const temp = allUsers[ele];
             if (temp) {
