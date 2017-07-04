@@ -58,7 +58,7 @@ func main() {
 	// TODO: Only register if env set.
 	goth.UseProviders(
 		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github"), "user"),
-		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
+		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab"), "api"),
 	)
 	if _, err := goth.GetProvider((&faux.Provider{}).Name()); err == nil {
 		log.Fatal("faux provider enabled in production")
