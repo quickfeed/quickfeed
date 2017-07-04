@@ -20,6 +20,12 @@ const (
 	UserID      = "userid"
 )
 
+// Frontend URLs.
+const (
+	logout = "/app/logout"
+	login  = "/app/newlogin"
+)
+
 // OAuth2Logout invalidates the session for the logged in user.
 func OAuth2Logout() echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -38,7 +44,7 @@ func OAuth2Logout() echo.HandlerFunc {
 		// Invalidate gothic user session.
 		gothic.Logout(w, r)
 
-		return c.Redirect(http.StatusFound, "/")
+		return c.Redirect(http.StatusFound, logout)
 	}
 }
 
@@ -52,8 +58,12 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return sess.Save(r, w)
 		}
-		if _, ok := sess.Values[UserID]; ok {
-			return c.Redirect(http.StatusFound, "/")
+
+		if userID, ok := sess.Values[UserID]; ok {
+			if _, err := db.GetUser(userID.(uint64)); err != nil {
+				return OAuth2Logout()(c)
+			}
+			return c.Redirect(http.StatusFound, login)
 		}
 
 		externalUser, err := gothic.CompleteUserAuth(w, r)
@@ -75,7 +85,7 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		return c.Redirect(http.StatusFound, "/")
+		return c.Redirect(http.StatusFound, login)
 	}
 }
 
@@ -89,8 +99,12 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return sess.Save(r, w)
 		}
-		if _, ok := sess.Values[UserID]; ok {
-			return c.Redirect(http.StatusFound, "/")
+
+		if userID, ok := sess.Values[UserID]; ok {
+			if _, err := db.GetUser(userID.(uint64)); err != nil {
+				return OAuth2Logout()(c)
+			}
+			return c.Redirect(http.StatusFound, login)
 		}
 
 		externalUser, err := gothic.CompleteUserAuth(w, r)
@@ -108,7 +122,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		return c.Redirect(http.StatusFound, "/")
+		return c.Redirect(http.StatusFound, login)
 	}
 }
 
