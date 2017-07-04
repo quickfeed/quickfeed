@@ -14,7 +14,6 @@ import (
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
-	githubHandlers "github.com/autograde/aguis/web/github"
 	"github.com/gorilla/sessions"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo"
@@ -99,9 +98,7 @@ func main() {
 
 	api.GET("/courses", web.ListCourses(db))
 	api.POST("/courses", web.NewCourse(db))
-
-	githubAPI := api.Group("/github")
-	githubAPI.GET("/organizations", githubHandlers.ListOrganizations())
+	api.POST("/directories", web.ListDirectories())
 
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)
