@@ -81,21 +81,21 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         });
     }
 
-    private handleOnchange(query: string):void {
+    private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        let filteredData: IUser[] = [];
-        this.props.students.forEach((std)=> {
-            if (std.firstName.toLowerCase().indexOf(query) != -1
-                || std.lastName.toLowerCase().indexOf(query) != -1
-                || std.email.toLowerCase().indexOf(query) != -1
-            ){
+        const filteredData: IUser[] = [];
+        this.props.students.forEach((std) => {
+            if (std.firstName.toLowerCase().indexOf(query) !== -1
+                || std.lastName.toLowerCase().indexOf(query) !== -1
+                || std.email.toLowerCase().indexOf(query) !== -1
+            ) {
                 filteredData.push(std);
             }
         });
 
         this.setState({
             students: filteredData,
-        })
+        });
     }
 
 }

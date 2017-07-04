@@ -16,7 +16,7 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
         super(props);
         this.state = {
             users: this.props.users,
-        }
+        };
     }
 
     public render() {
@@ -50,12 +50,12 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
 
     private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        let filteredData: IUser[] = [];
+        const filteredData: IUser[] = [];
         this.props.users.forEach((user) => {
-            if (user.firstName.toLowerCase().indexOf(query) != -1
-                || user.lastName.toLowerCase().indexOf(query) != -1
-                || user.email.toLowerCase().indexOf(query) != -1
-                || user.personId.toString().indexOf(query) != -1
+            if (user.firstName.toLowerCase().indexOf(query) !== -1
+                || user.lastName.toLowerCase().indexOf(query) !== -1
+                || user.email.toLowerCase().indexOf(query) !== -1
+                || user.personId.toString().indexOf(query) !== -1
             ) {
                 filteredData.push(user);
             }
@@ -63,7 +63,7 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
 
         this.setState({
             users: filteredData,
-        })
+        });
     }
 }
 

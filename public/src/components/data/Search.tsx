@@ -1,30 +1,30 @@
 import * as React from "react";
-import {Row} from "../../components";
 
-interface ISearchProp{
+interface ISearchProp {
     className?: string;
     placeholder?: string;
     addonBefore?: JSX.Element;
-    onChange?: (val:string) => void;
+    onChange?: (val: string) => void;
 }
 interface ISearchState {
     query: string;
 }
-class Search extends React.Component<ISearchProp, ISearchState>{
+class Search extends React.Component<ISearchProp, ISearchState> {
 
-    constructor(props:any){
+    constructor(props: any) {
         super(props);
         this.state = {
             query: "",
-        }
+        };
     }
-    public render(){
-        let addOn:JSX.Element | null = null;
+
+    public render() {
+        let addOn: JSX.Element | null = null;
         if (this.props.addonBefore) {
             addOn = this.props.addonBefore;
         }
-        return(
-            <div className={this.props.className ? this.props.className : ""} >
+        return (
+            <div className={this.props.className ? this.props.className : ""}>
                 {addOn}
                 <input
                     className="form-control"
@@ -37,12 +37,12 @@ class Search extends React.Component<ISearchProp, ISearchState>{
         );
     }
 
-    private onChange(e:any){
+    private onChange(e: any) {
         this.setState({
             query: e.target.value,
         });
-        if (this.props.onChange){
-           this.props.onChange(e.target.value)
+        if (this.props.onChange) {
+            this.props.onChange(e.target.value);
         }
     }
 }

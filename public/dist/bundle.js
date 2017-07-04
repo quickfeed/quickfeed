@@ -97,7 +97,7 @@ __export(__webpack_require__(28));
 __export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
-__export(__webpack_require__(49));
+__export(__webpack_require__(32));
 
 
 /***/ }),
@@ -449,12 +449,12 @@ class UserView extends React.Component {
     }
     handleOnchange(query) {
         query = query.toLowerCase();
-        let filteredData = [];
+        const filteredData = [];
         this.props.users.forEach((user) => {
-            if (user.firstName.toLowerCase().indexOf(query) != -1
-                || user.lastName.toLowerCase().indexOf(query) != -1
-                || user.email.toLowerCase().indexOf(query) != -1
-                || user.personId.toString().indexOf(query) != -1) {
+            if (user.firstName.toLowerCase().indexOf(query) !== -1
+                || user.lastName.toLowerCase().indexOf(query) !== -1
+                || user.email.toLowerCase().indexOf(query) !== -1
+                || user.personId.toString().indexOf(query) !== -1) {
                 filteredData.push(user);
             }
         });
@@ -765,17 +765,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const ReactDOM = __webpack_require__(15);
 const components_1 = __webpack_require__(1);
-const managers_1 = __webpack_require__(32);
-const ErrorPage_1 = __webpack_require__(37);
-const HelpPage_1 = __webpack_require__(38);
-const HomePage_1 = __webpack_require__(40);
-const StudentPage_1 = __webpack_require__(41);
-const TeacherPage_1 = __webpack_require__(43);
-const AdminPage_1 = __webpack_require__(44);
-const NavBarLogin_1 = __webpack_require__(45);
-const NavBarMenu_1 = __webpack_require__(46);
-const LoginPage_1 = __webpack_require__(47);
-const ServerProvider_1 = __webpack_require__(48);
+const managers_1 = __webpack_require__(33);
+const ErrorPage_1 = __webpack_require__(38);
+const HelpPage_1 = __webpack_require__(39);
+const HomePage_1 = __webpack_require__(41);
+const StudentPage_1 = __webpack_require__(42);
+const TeacherPage_1 = __webpack_require__(44);
+const AdminPage_1 = __webpack_require__(45);
+const NavBarLogin_1 = __webpack_require__(46);
+const NavBarMenu_1 = __webpack_require__(47);
+const LoginPage_1 = __webpack_require__(48);
+const ServerProvider_1 = __webpack_require__(49);
 class AutoGrader extends React.Component {
     constructor(props) {
         super();
@@ -1539,11 +1539,11 @@ class Results extends React.Component {
     }
     handleOnchange(query) {
         query = query.toLowerCase();
-        let filteredData = [];
+        const filteredData = [];
         this.props.students.forEach((std) => {
-            if (std.firstName.toLowerCase().indexOf(query) != -1
-                || std.lastName.toLowerCase().indexOf(query) != -1
-                || std.email.toLowerCase().indexOf(query) != -1) {
+            if (std.firstName.toLowerCase().indexOf(query) !== -1
+                || std.lastName.toLowerCase().indexOf(query) !== -1
+                || std.email.toLowerCase().indexOf(query) !== -1) {
                 filteredData.push(std);
             }
         });
@@ -1561,18 +1561,54 @@ exports.Results = Results;
 
 "use strict";
 
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(33));
-__export(__webpack_require__(34));
-__export(__webpack_require__(35));
-__export(__webpack_require__(36));
+const React = __webpack_require__(0);
+class Search extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            query: "",
+        };
+    }
+    render() {
+        let addOn = null;
+        if (this.props.addonBefore) {
+            addOn = this.props.addonBefore;
+        }
+        return (React.createElement("div", { className: this.props.className ? this.props.className : "" },
+            addOn,
+            React.createElement("input", { className: "form-control", type: "text", placeholder: this.props.placeholder ? this.props.placeholder : "", onChange: (e) => this.onChange(e), value: this.state.query })));
+    }
+    onChange(e) {
+        this.setState({
+            query: e.target.value,
+        });
+        if (this.props.onChange) {
+            this.props.onChange(e.target.value);
+        }
+    }
+}
+exports.Search = Search;
 
 
 /***/ }),
 /* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+__export(__webpack_require__(34));
+__export(__webpack_require__(35));
+__export(__webpack_require__(36));
+__export(__webpack_require__(37));
+
+
+/***/ }),
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1684,7 +1720,7 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1857,7 +1893,7 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2148,7 +2184,7 @@ exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2238,7 +2274,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2282,7 +2318,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2298,7 +2334,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const ViewPage_1 = __webpack_require__(2);
-const HelpView_1 = __webpack_require__(39);
+const HelpView_1 = __webpack_require__(40);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
         super();
@@ -2317,7 +2353,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2373,7 +2409,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2403,7 +2439,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2424,7 +2460,7 @@ const HelloView_1 = __webpack_require__(12);
 const UserView_1 = __webpack_require__(7);
 const helper_1 = __webpack_require__(8);
 const CollapsableNavMenu_1 = __webpack_require__(13);
-const EnrollmentView_1 = __webpack_require__(42);
+const EnrollmentView_1 = __webpack_require__(43);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
         super();
@@ -2635,7 +2671,7 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2679,7 +2715,7 @@ exports.EnrollmentView = EnrollmentView;
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2894,7 +2930,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3029,7 +3065,7 @@ exports.AdminPage = AdminPage;
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3078,7 +3114,7 @@ exports.NavBarLogin = NavBarLogin;
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3112,7 +3148,7 @@ exports.NavBarMenu = NavBarMenu;
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3169,7 +3205,7 @@ exports.LoginPage = LoginPage;
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3242,42 +3278,6 @@ class ServerProvider {
     }
 }
 exports.ServerProvider = ServerProvider;
-
-
-/***/ }),
-/* 49 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const React = __webpack_require__(0);
-class Search extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            query: "",
-        };
-    }
-    render() {
-        let addOn = null;
-        if (this.props.addonBefore) {
-            addOn = this.props.addonBefore;
-        }
-        return (React.createElement("div", { className: this.props.className ? this.props.className : "" },
-            addOn,
-            React.createElement("input", { className: "form-control", type: "text", placeholder: this.props.placeholder ? this.props.placeholder : "", onChange: (e) => this.onChange(e), value: this.state.query })));
-    }
-    onChange(e) {
-        this.setState({
-            query: e.target.value,
-        });
-        if (this.props.onChange) {
-            this.props.onChange(e.target.value);
-        }
-    }
-}
-exports.Search = Search;
 
 
 /***/ })
