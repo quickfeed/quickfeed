@@ -17,6 +17,7 @@ func NewGormDB(driver, path string, debug bool) (*GormDB, error) {
 		return nil, err
 	}
 
+	conn.LogMode(debug)
 	conn.AutoMigrate(
 		&models.User{},
 		&models.RemoteIdentity{},
