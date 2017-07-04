@@ -13,7 +13,7 @@ import (
 // GET api.github.com/user/memberships/orgs.
 func ListOrganizations() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		s := c.Get("scm").(scm.SCM)
+		s := c.Get("github").(scm.SCM)
 		ctx, cancel := context.WithTimeout(c.Request().Context(), web.MaxWait)
 		defer cancel()
 

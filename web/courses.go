@@ -46,7 +46,8 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		s := c.Get("scm").(scm.SCM)
+		// TODO: Should get provider from request.
+		s := c.Get("github").(scm.SCM)
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
 		directory, err := s.GetDirectory(ctx, cr.Organization)

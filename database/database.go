@@ -1,11 +1,13 @@
 package database
 
+import "github.com/autograde/aguis/models"
+
 // Database contains methods for manipulating the database.
 type Database interface {
-	GetUser(int) (*User, error)
-	GetUsers() (map[int]*User, error)
-	GetUserWithGithubID(int, string) (*User, error)
+	GetUser(uint64) (*models.User, error)
+	GetUsers() (*[]models.User, error)
+	GetUserByRemoteIdentity(string, uint64, string) (*models.User, error)
 
 	CreateCourse(string, string) error
-	GetCourses() (map[int]*Course, error)
+	GetCourses() (*[]models.Course, error)
 }

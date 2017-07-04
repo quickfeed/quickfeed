@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
@@ -130,25 +131,26 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				return echo.ErrUnauthorized
 			}
 
-			user, err := db.GetUser(userID.(int))
+			user, err := db.GetUser(userID.(uint64))
 			if err != nil {
 				return err
 			}
 
 			// TODO: Check if the user is allowed to access the endpoint.
 			c.Set("user", user)
-			if _, ok := scms[user.AccessToken]; !ok {
-				// TODO: Should be set depending on SCM provider.
-				scms[user.AccessToken] = scm.NewGithubSCMClient(user.AccessToken)
+			for _, remoteIdentity := range user.RemoteIdentities {
+				if _, ok := scms[remoteIdentity.AccessToken]; !ok {
+					scms[remoteIdentity.AccessToken] = scm.NewGithubSCMClient(remoteIdentity.AccessToken)
+				}
+				c.Set(remoteIdentity.Provider, scms[remoteIdentity.AccessToken])
 			}
-			c.Set("scm", scms[user.AccessToken])
 
 			return next(c)
 		}
 	}
 }
 
-func getInteralUser(db database.Database, externalUser *goth.User) (*database.User, error) {
+func getInteralUser(db database.Database, externalUser *goth.User) (*models.User, error) {
 	provider, err := goth.GetProvider(externalUser.Provider)
 
 	if err != nil {
@@ -158,17 +160,18 @@ func getInteralUser(db database.Database, externalUser *goth.User) (*database.Us
 	// TODO: Extract each case into a function so that they can be tested.
 	switch provider.Name() {
 	case "github":
-		githubID, err := strconv.Atoi(externalUser.UserID)
+		githubID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
 		if err != nil {
 			return nil, err
 		}
-		user, err := db.GetUserWithGithubID(githubID, externalUser.AccessToken)
+
+		user, err := db.GetUserByRemoteIdentity(provider.Name(), githubID, externalUser.AccessToken)
 		if err != nil {
 			return nil, err
 		}
 		return user, nil
 	case "faux": // Provider is only registered and reachable from tests.
-		return &database.User{}, nil
+		return &models.User{}, nil
 	default:
 		return nil, errors.New("provider not implemented")
 	}

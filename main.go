@@ -16,6 +16,7 @@ import (
 	"github.com/autograde/aguis/web/auth"
 	githubHandlers "github.com/autograde/aguis/web/github"
 	"github.com/gorilla/sessions"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
@@ -73,7 +74,8 @@ func main() {
 		session.Middleware(store),
 	)
 
-	db, err := database.NewStructDB(tempFile("agdb.db"), false, e.Logger)
+	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), true)
+	defer db.Close()
 
 	if err != nil {
 		log.Fatalj(log.JSON{
