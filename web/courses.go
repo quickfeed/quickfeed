@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/labstack/echo"
 )
@@ -16,12 +17,13 @@ const MaxWait = 10 * time.Second
 
 // NewCourseRequest represents a request for a new course.
 type NewCourseRequest struct {
-	Name         string `json:"name"`
-	Organization int    `json:"organization"`
+	Name        string `json:"name"`
+	Provider    string `json:"provider"`
+	DirectoryID uint64 `json:"organization"`
 }
 
 func (cr *NewCourseRequest) valid() bool {
-	return cr != nil && cr.Name != "" && cr.Organization != 0
+	return cr != nil && cr.Name != "" && cr.Provider != "" && cr.DirectoryID != 0
 }
 
 // ListCourses returns a JSON object containing all the courses in the database.
@@ -46,20 +48,23 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		// TODO: Should get provider from request.
-		s := c.Get("github").(scm.SCM)
+		s := c.Get(cr.Provider).(scm.SCM)
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
-		directory, err := s.GetDirectory(ctx, cr.Organization)
+
+		// Check that the directory exists.
+		directory, err := s.GetDirectory(ctx, cr.DirectoryID)
 		if err != nil {
 			return err
 		}
 
 		// TODO: Does the user have sufficient rights?
-		// TODO: Initialize organization?
+		// TODO: Initialize directory?
 
-		// TODO: Should take directory.ID not name.
-		if err := db.CreateCourse(cr.Name, directory.Name); err != nil {
+		if err := db.CreateCourse(&models.Course{
+			Name:        cr.Name,
+			DirectoryID: directory.ID,
+		}); err != nil {
 			return err
 		}
 

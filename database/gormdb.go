@@ -91,11 +91,8 @@ func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToke
 }
 
 // CreateCourse implements the Database interface.
-func (db *GormDB) CreateCourse(name, organization string) error {
-	return db.conn.Create(&models.Course{
-		Name:      name,
-		Directory: 0,
-	}).Error
+func (db *GormDB) CreateCourse(course *models.Course) error {
+	return db.conn.Create(course).Error
 }
 
 // GetCourses implements the Database interface.

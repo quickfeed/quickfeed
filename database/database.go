@@ -8,6 +8,6 @@ type Database interface {
 	GetUsers() (*[]models.User, error)
 	GetUserByRemoteIdentity(string, uint64, string) (*models.User, error)
 
-	CreateCourse(string, string) error
+	CreateCourse(*models.Course) error
 	GetCourses() (*[]models.Course, error)
 }

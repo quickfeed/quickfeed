@@ -4,6 +4,6 @@ package models
 type Course struct {
 	ID uint64
 
-	Name      string
-	Directory uint64
+	Name        string
+	DirectoryID uint64
 }
