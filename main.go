@@ -14,7 +14,6 @@ import (
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
-	githubHandlers "github.com/autograde/aguis/web/github"
 	"github.com/gorilla/sessions"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo"
@@ -23,7 +22,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/bitbucket"
 	"github.com/markbates/goth/providers/faux"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
@@ -59,8 +57,7 @@ func main() {
 	// TODO: Only register if env set.
 	goth.UseProviders(
 		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github"), "user"),
-		bitbucket.New(os.Getenv("BITBUCKET_KEY"), os.Getenv("BITBUCKET_SECRET"), getCallbackURL(*baseURL, "bitbucket")),
-		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab")),
+		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab"), "api"),
 	)
 	if _, err := goth.GetProvider((&faux.Provider{}).Name()); err == nil {
 		log.Fatal("faux provider enabled in production")
@@ -101,9 +98,7 @@ func main() {
 
 	api.GET("/courses", web.ListCourses(db))
 	api.POST("/courses", web.NewCourse(db))
-
-	githubAPI := api.Group("/github")
-	githubAPI.GET("/organizations", githubHandlers.ListOrganizations())
+	api.POST("/directories", web.ListDirectories())
 
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)

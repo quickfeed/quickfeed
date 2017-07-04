@@ -48,7 +48,11 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
+		if c.Get(cr.Provider) == nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
+		}
 		s := c.Get(cr.Provider).(scm.SCM)
+
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
 

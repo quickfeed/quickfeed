@@ -60,7 +60,11 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		}
 
 		if userID, ok := sess.Values[UserID]; ok {
-			if _, err := db.GetUser(userID.(uint64)); err != nil {
+			id, ok := userID.(uint64)
+			if !ok {
+				return OAuth2Logout()(c)
+			}
+			if _, err := db.GetUser(id); err != nil {
 				return OAuth2Logout()(c)
 			}
 			return c.Redirect(http.StatusFound, login)
@@ -101,7 +105,11 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		}
 
 		if userID, ok := sess.Values[UserID]; ok {
-			if _, err := db.GetUser(userID.(uint64)); err != nil {
+			id, ok := userID.(uint64)
+			if !ok {
+				return OAuth2Logout()(c)
+			}
+			if _, err := db.GetUser(id); err != nil {
 				return OAuth2Logout()(c)
 			}
 			return c.Redirect(http.StatusFound, login)
@@ -145,7 +153,12 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				return echo.ErrUnauthorized
 			}
 
-			user, err := db.GetUser(userID.(uint64))
+			id, ok := userID.(uint64)
+			if !ok {
+				return echo.ErrUnauthorized
+			}
+
+			user, err := db.GetUser(id)
 			if err != nil {
 				return err
 			}
@@ -154,7 +167,11 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 			c.Set("user", user)
 			for _, remoteIdentity := range user.RemoteIdentities {
 				if _, ok := scms[remoteIdentity.AccessToken]; !ok {
-					scms[remoteIdentity.AccessToken] = scm.NewGithubSCMClient(remoteIdentity.AccessToken)
+					client, err := scm.NewSCMClient(remoteIdentity.Provider, remoteIdentity.AccessToken)
+					if err != nil {
+						return err
+					}
+					scms[remoteIdentity.AccessToken] = client
 				}
 				c.Set(remoteIdentity.Provider, scms[remoteIdentity.AccessToken])
 			}
@@ -173,13 +190,13 @@ func getInteralUser(db database.Database, externalUser *goth.User) (*models.User
 
 	// TODO: Extract each case into a function so that they can be tested.
 	switch provider.Name() {
-	case "github":
-		githubID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
+	case "github", "gitlab":
+		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
 		if err != nil {
 			return nil, err
 		}
 
-		user, err := db.GetUserByRemoteIdentity(provider.Name(), githubID, externalUser.AccessToken)
+		user, err := db.GetUserByRemoteIdentity(provider.Name(), remoteID, externalUser.AccessToken)
 		if err != nil {
 			return nil, err
 		}
