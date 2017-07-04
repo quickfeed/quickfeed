@@ -60,7 +60,11 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		}
 
 		if userID, ok := sess.Values[UserID]; ok {
-			if _, err := db.GetUser(userID.(uint64)); err != nil {
+			id, ok := userID.(uint64)
+			if !ok {
+				return OAuth2Logout()(c)
+			}
+			if _, err := db.GetUser(id); err != nil {
 				return OAuth2Logout()(c)
 			}
 			return c.Redirect(http.StatusFound, login)
@@ -101,7 +105,11 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		}
 
 		if userID, ok := sess.Values[UserID]; ok {
-			if _, err := db.GetUser(userID.(uint64)); err != nil {
+			id, ok := userID.(uint64)
+			if !ok {
+				return OAuth2Logout()(c)
+			}
+			if _, err := db.GetUser(id); err != nil {
 				return OAuth2Logout()(c)
 			}
 			return c.Redirect(http.StatusFound, login)
@@ -145,7 +153,12 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				return echo.ErrUnauthorized
 			}
 
-			user, err := db.GetUser(userID.(uint64))
+			id, ok := userID.(uint64)
+			if !ok {
+				return echo.ErrUnauthorized
+			}
+
+			user, err := db.GetUser(id)
 			if err != nil {
 				return err
 			}
