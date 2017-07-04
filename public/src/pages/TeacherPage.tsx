@@ -1,5 +1,5 @@
 import * as React from "react";
-import {DynamicTable, NavMenu} from "../components";
+import {DynamicTable, NavMenu, Results} from "../components";
 import {CourseManager, ILink, ILinkCollection, NavigationManager, UserManager} from "../managers";
 
 import {ViewPage} from "./ViewPage";
@@ -9,7 +9,7 @@ import {UserView} from "./views/UserView";
 import {INavInfo} from "../NavigationHelper";
 
 import {CollapsableNavMenu} from "../components/navigation/CollapsableNavMenu";
-import {CourseStudentState, ICourse, ICourseStudent, IUser} from "../models";
+import {CourseStudentState, IAssignment, ICourse, ICourseStudent, IUser} from "../models";
 
 import {ArrayHelper} from "../helper";
 
@@ -33,6 +33,7 @@ class TeacherPage extends ViewPage {
         this.navHelper.defaultPage = "course/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
         this.navHelper.registerFunction("course/{course}", this.course);
         this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
+        this.navHelper.registerFunction("course/{course}/results", this.results);
         this.navHelper.registerFunction("course/{course}/{page}", this.course);
         this.navHelper.registerFunction("user", (navInfo) => {
             return <UserView users={userMan.getAllUser()}></UserView>;
@@ -44,7 +45,7 @@ class TeacherPage extends ViewPage {
 
     public course(info: INavInfo<{ course: string, page?: string }>): JSX.Element {
         const courseId = parseInt(info.params.course, 10);
-        const course = this.getCourseById(courseId);
+        const course = this.courseMan.getCourse(courseId);
         if (course) {
             if (info.params.page) {
                 return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
@@ -54,9 +55,24 @@ class TeacherPage extends ViewPage {
         return <div>404 Page not found</div>;
     }
 
+    public results(info: INavInfo<{ course: string }>): JSX.Element {
+        const courseId = parseInt(info.params.course, 10);
+        const course = this.courseMan.getCourse(courseId);
+        if (course) {
+            const courseStds: ICourseStudent[] =
+                this.courseMan.getUserIdsForCourse(course, CourseStudentState.accepted);
+            // TODO: currently userMan.getUsers does not return correct users
+            // fix: return a Map for getAllUser method in UserManager
+            const students: IUser[] = this.userMan.getUsers(courseStds.map((e) => e.personId));
+            const labs: IAssignment[] = this.courseMan.getAssignments(courseId);
+            return <Results course={course} students={students} labs={labs}></Results>;
+        }
+        return <div>404 Page not found</div>;
+    }
+
     public courseUsers(info: INavInfo<{ course: string }>): JSX.Element {
         const courseId = parseInt(info.params.course, 10);
-        const course = this.getCourseById(courseId);
+        const course = this.courseMan.getCourse(courseId);
         if (course) {
             const userIds = this.courseMan.getUserIdsForCourse(course);
             const users = this.userMan.getUsers(userIds.map((e) => e.personId));
@@ -187,19 +203,6 @@ class TeacherPage extends ViewPage {
             return this.courseMan.getCoursesFor(curUsr, 1);
         }
         return [];
-    }
-
-    private getCourseById(courseId: number): ICourse | null {
-        if (!isNaN(courseId)) {
-            const tempCourse = ArrayHelper.find(this.courses, (e, i) => {
-                if (e.id === courseId) {
-                    return true;
-                }
-                return false;
-            });
-            return tempCourse;
-        }
-        return null;
     }
 
     private isTeacher(curUser: IUser): boolean {

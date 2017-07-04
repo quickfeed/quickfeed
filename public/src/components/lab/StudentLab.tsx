@@ -1,10 +1,11 @@
 import * as React from "react";
-import { IAssignment, ICourse, ILabInfo, ITestCases } from "../../models";
-import { LabResultView } from "../../pages/views/LabResultView";
+import {IAssignment, ICourse, ILabInfo, ITestCases, IUser} from "../../models";
+import {LabResultView} from "../../pages/views/LabResultView";
 
 interface IStudentLabProbs {
     course: ICourse;
     assignment: IAssignment;
+    student?: IUser;
 }
 
 class StudentLab extends React.Component<IStudentLabProbs, undefined> {
@@ -12,11 +13,11 @@ class StudentLab extends React.Component<IStudentLabProbs, undefined> {
         // return <h1>{this.props.assignment.name}</h1>;
         // TODO: fetch real data from backend database for corresponding course assignment
         const testCases: ITestCases[] = [
-            { name: "Test Case 1", score: 60, points: 100, weight: 1 },
-            { name: "Test Case 2", score: 50, points: 100, weight: 1 },
-            { name: "Test Case 3", score: 40, points: 100, weight: 1 },
-            { name: "Test Case 4", score: 30, points: 100, weight: 1 },
-            { name: "Test Case 5", score: 20, points: 100, weight: 1 },
+            {name: "Test Case 1", score: 60, points: 100, weight: 1},
+            {name: "Test Case 2", score: 50, points: 100, weight: 1},
+            {name: "Test Case 3", score: 40, points: 100, weight: 1},
+            {name: "Test Case 4", score: 30, points: 100, weight: 1},
+            {name: "Test Case 5", score: 20, points: 100, weight: 1},
         ];
 
         const labInfo: ILabInfo = {
@@ -31,8 +32,11 @@ class StudentLab extends React.Component<IStudentLabProbs, undefined> {
             build_time: new Date(2017, 5, 25),
             build_id: 10,
         };
+        if (this.props.student) {
+            labInfo.student = this.props.student;
+        }
         return <LabResultView labInfo={labInfo}></LabResultView>;
     }
 }
 
-export { StudentLab, IStudentLabProbs };
+export {StudentLab, IStudentLabProbs};

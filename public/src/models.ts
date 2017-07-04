@@ -60,6 +60,7 @@ export interface ILabInfo {
     exec_time: number;
     build_time: Date;
     build_id: number;
+    student?: IUser;
 }
 
 export interface ICoursesWithAssignments {

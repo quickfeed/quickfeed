@@ -63,10 +63,10 @@ class CourseManager {
         return courses;
     }
 
-    public getUserIdsForCourse(course: ICourse): ICourseStudent[] {
+    public getUserIdsForCourse(course: ICourse, state?: CourseStudentState): ICourseStudent[] {
         const users: ICourseStudent[] = [];
         for (const c of this.courseProvider.getCoursesStudent()) {
-            if (course.id === c.courseId) {
+            if (course.id === c.courseId && (state === undefined || c.state === CourseStudentState.accepted)) {
                 users.push(c);
             }
         }

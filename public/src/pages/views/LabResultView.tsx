@@ -1,6 +1,6 @@
 import * as React from "react";
-import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
-import { ILabInfo } from "../../models";
+import {LabResult, LastBuild, LastBuildInfo, Row} from "../../components";
+import {ILabInfo} from "../../models";
 
 interface ILabInfoProps {
     labInfo: ILabInfo;
@@ -15,20 +15,21 @@ class LabResultView extends React.Component<ILabInfoProps, undefined> {
                         <LabResult
                             course_name={this.props.labInfo.course}
                             lab={this.props.labInfo.lab}
-                            progress={this.props.labInfo.score}>
-                        </LabResult>
+                            progress={this.props.labInfo.score}
+                            student={this.props.labInfo.student}
+                        />
                         <LastBuild
                             test_cases={this.props.labInfo.test_cases}
                             score={this.props.labInfo.score}
-                            weight={this.props.labInfo.weight}>
-                        </LastBuild>
+                            weight={this.props.labInfo.weight}
+                        />
                         <LastBuildInfo
                             pass_tests={this.props.labInfo.pass_tests}
                             fail_tests={this.props.labInfo.fail_tests}
                             exec_time={this.props.labInfo.exec_time}
                             build_time={this.props.labInfo.build_time}
-                            build_id={this.props.labInfo.build_id}>
-                        </LastBuildInfo>
+                            build_id={this.props.labInfo.build_id}
+                        />
                         <Row>
                             <div className="col-lg-12">
                                 <div className="well">
@@ -44,4 +45,4 @@ class LabResultView extends React.Component<ILabInfoProps, undefined> {
     }
 }
 
-export { LabResultView };
+export {LabResultView};

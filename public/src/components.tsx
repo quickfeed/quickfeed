@@ -15,3 +15,4 @@ export * from "./components/student/CoursePanel";
 export * from "./components/student/SingleCourseOverview";
 export * from "./components/bootstrap/Button";
 export * from "./components/forms/CourseForm";
+export * from "./components/teacher/Results";
