@@ -277,11 +277,14 @@ func newStore() *testStore {
 }
 
 func (ts testStore) login(c echo.Context) error {
-	s, err := ts.Get(c.Request(), auth.UserSession)
+	s, err := ts.Get(c.Request(), auth.SessionKey)
 	if err != nil {
 		return err
 	}
-	s.Values[auth.UserID] = uint64(1)
+	s.Values[auth.UserKey] = &auth.UserSession{
+		ID:        1,
+		Providers: map[string]struct{}{"github": struct{}{}},
+	}
 	return s.Save(c.Request(), c.Response())
 }
 
