@@ -2947,6 +2947,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
+const CourseView_1 = __webpack_require__(50);
 const UserView_1 = __webpack_require__(7);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
@@ -2975,7 +2976,7 @@ class AdminPage extends ViewPage_1.ViewPage {
             return React.createElement("div", null,
                 React.createElement(components_1.Button, { className: "btn btn-primary pull-right", text: "+Create New", onClick: () => this.handleNewCourse() }),
                 React.createElement("h1", null, "All Courses"),
-                React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: allCourses, selector: (e) => [e.id.toString(), e.name, e.tag, e.year] }));
+                React.createElement(CourseView_1.CourseView, { courses: allCourses }));
         });
     }
     labs(info) {
@@ -3277,6 +3278,47 @@ class ServerProvider {
     }
 }
 exports.ServerProvider = ServerProvider;
+
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class CourseView extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            courses: this.props.courses,
+        };
+    }
+    render() {
+        const searchIcon = React.createElement("span", { className: "input-group-addon" },
+            React.createElement("i", { className: "glyphicon glyphicon-search" }));
+        return (React.createElement("div", null,
+            React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for courses", onChange: (query) => this.handleOnchange(query) }),
+            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.tag, e.year] })));
+    }
+    handleOnchange(query) {
+        query = query.toLowerCase();
+        const filteredData = [];
+        this.props.courses.forEach((course) => {
+            if (course.name.toLowerCase().indexOf(query) !== -1
+                || course.tag.toLowerCase().indexOf(query) !== -1
+                || course.year.toLowerCase().indexOf(query) !== -1) {
+                filteredData.push(course);
+            }
+        });
+        this.setState({
+            courses: filteredData,
+        });
+    }
+}
+exports.CourseView = CourseView;
 
 
 /***/ })
