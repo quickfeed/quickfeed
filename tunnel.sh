@@ -1,13 +1,18 @@
 #!/bin/bash
 
-if [[ $# -ne 3 ]]; then
-    echo -e "usage: $0 remote_user remote_host local_port";
+if [ $# -ne 1 ] && [ $# -ne 3 ]; then
+    echo -e "usage: $0 remote_user [remote_host] [local_port]";
     exit;
 fi
 
 username=$1
-rhost=$2
-lport=$3
+rhost="ag2.ux.uis.no"
+lport="8080"
+
+if [[ $# -eq 3 ]]; then
+    rhost=$2
+    lport=$3
+fi
 
 case $username in
     pedersen)
