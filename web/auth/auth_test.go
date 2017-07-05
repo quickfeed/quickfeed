@@ -84,7 +84,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Login(db)
+	authHandler := auth.PreAuth(db)(auth.OAuth2Login(db))
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != nil {
 		t.Error(err)
@@ -106,7 +106,7 @@ func TestOAuth2CallbackUnauthorized(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Callback(db)
+	authHandler := auth.PreAuth(db)(auth.OAuth2Callback(db))
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != echo.ErrUnauthorized {
 		t.Errorf("have error '%s' want '%s'", err, echo.ErrUnauthorized)
@@ -138,7 +138,7 @@ func testOAuth2LoggedIn(t *testing.T, newHandler func(db database.Database) echo
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := newHandler(db)
+	authHandler := auth.PreAuth(db)(newHandler(db))
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -176,7 +176,7 @@ func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database)
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := newHandler(db)
+	authHandler := auth.PreAuth(db)(newHandler(db))
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {

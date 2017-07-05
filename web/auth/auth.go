@@ -90,30 +90,43 @@ func OAuth2Logout() echo.HandlerFunc {
 	}
 }
 
+// PreAuth checks the current user session and executes the next handler if none
+// was found for the given provider.
+func PreAuth(db database.Database) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			sess, err := session.Get(SessionKey, c)
+			if err != nil {
+				if err := sess.Save(c.Request(), c.Response()); err != nil {
+					return err
+				}
+				return next(c)
+			}
+
+			if i, ok := sess.Values[UserKey]; ok {
+				us, ok := i.(*UserSession)
+				if !ok {
+					return OAuth2Logout()(c)
+				}
+				if _, err := db.GetUser(us.ID); err != nil {
+					return OAuth2Logout()(c)
+				}
+				if _, ok := us.Providers[c.Param("provider")]; ok {
+					// Provider has already been registered.
+					return c.Redirect(http.StatusFound, home)
+				}
+			}
+
+			return next(c)
+		}
+	}
+}
+
 // OAuth2Login tries to authenticate against an oauth2 provider.
 func OAuth2Login(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		w := c.Response()
 		r := c.Request()
-
-		sess, err := session.Get(SessionKey, c)
-		if err != nil {
-			return sess.Save(r, w)
-		}
-
-		if i, ok := sess.Values[UserKey]; ok {
-			us, ok := i.(*UserSession)
-			if !ok {
-				return OAuth2Logout()(c)
-			}
-			if _, err := db.GetUser(us.ID); err != nil {
-				return OAuth2Logout()(c)
-			}
-			if _, ok := us.Providers[c.Param("provider")]; ok {
-				// Provider has already been registered.
-				return c.Redirect(http.StatusFound, login)
-			}
-		}
 
 		externalUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
@@ -129,6 +142,10 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
+		sess, err := session.Get(SessionKey, c)
+		if err != nil {
+			return err
+		}
 		if sess.Values[UserKey] == nil {
 			sess.Values[UserKey] = newUserSession(user.ID)
 		}
@@ -148,25 +165,6 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
-		sess, err := session.Get(SessionKey, c)
-		if err != nil {
-			return sess.Save(r, w)
-		}
-
-		if i, ok := sess.Values[UserKey]; ok {
-			us, ok := i.(*UserSession)
-			if !ok {
-				return OAuth2Logout()(c)
-			}
-			if _, err := db.GetUser(us.ID); err != nil {
-				return OAuth2Logout()(c)
-			}
-			if _, ok := us.Providers[c.Param("provider")]; ok {
-				// Provider has already been registered.
-				return c.Redirect(http.StatusFound, login)
-			}
-		}
-
 		externalUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
 			return echo.ErrUnauthorized
@@ -177,6 +175,10 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
+		sess, err := session.Get(SessionKey, c)
+		if err != nil {
+			return err
+		}
 		if sess.Values[UserKey] == nil {
 			sess.Values[UserKey] = newUserSession(user.ID)
 		}

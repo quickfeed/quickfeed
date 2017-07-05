@@ -83,7 +83,7 @@ func main() {
 
 	e.GET("/logout", auth.OAuth2Logout())
 
-	oauth2 := e.Group("/auth/:provider", withProvider)
+	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(db))
 	oauth2.GET("", auth.OAuth2Login(db))
 	oauth2.GET("/callback", auth.OAuth2Callback(db))
 
