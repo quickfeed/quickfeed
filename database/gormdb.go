@@ -50,7 +50,7 @@ func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToke
 	tx := db.conn.Begin()
 
 	var remoteIdentity models.RemoteIdentity
-	if err := db.conn.
+	if err := tx.
 		Where("provider = ? AND remote_id = ?", provider, id).
 		First(&remoteIdentity).Error; err == gorm.ErrRecordNotFound {
 		user := models.User{
@@ -60,7 +60,7 @@ func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToke
 				AccessToken: accessToken,
 			}},
 		}
-		if err := db.conn.Create(&user).Error; err != nil {
+		if err := tx.Create(&user).Error; err != nil {
 			tx.Rollback()
 			return nil, err
 		}
@@ -73,13 +73,13 @@ func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToke
 		return nil, err
 	}
 
-	if err := db.conn.Model(&remoteIdentity).Update("access_token", accessToken).Error; err != nil {
+	if err := tx.Model(&remoteIdentity).Update("access_token", accessToken).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
 	var user models.User
-	if err := db.conn.Preload("RemoteIdentities").First(&user, remoteIdentity.UserID).Error; err != nil {
+	if err := tx.Preload("RemoteIdentities").First(&user, remoteIdentity.UserID).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}

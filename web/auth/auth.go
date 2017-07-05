@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/gob"
 	"errors"
 	"net/http"
 	"strconv"
@@ -14,11 +15,9 @@ import (
 	"github.com/markbates/goth/gothic"
 )
 
-// User session keys.
-const (
-	UserSession = "session"
-	UserID      = "userid"
-)
+func init() {
+	gob.Register(&UserSession{})
+}
 
 // Frontend URLs.
 const (
@@ -26,23 +25,66 @@ const (
 	login  = "/app/newlogin"
 )
 
+// Session keys.
+const (
+	SessionKey       = "session"
+	GothicSessionKey = "_gothic_session"
+	UserKey          = "user"
+)
+
+// UserSession holds user session information.
+type UserSession struct {
+	ID        uint64
+	Providers map[string]struct{}
+}
+
+func newUserSession(id uint64) *UserSession {
+	return &UserSession{
+		ID:        id,
+		Providers: make(map[string]struct{}),
+	}
+}
+
+func (us *UserSession) enableProvider(provider string) {
+	us.Providers[provider] = struct{}{}
+}
+
+func (us *UserSession) disableProvider(provider string) {
+	delete(us.Providers, provider)
+}
+
 // OAuth2Logout invalidates the session for the logged in user.
 func OAuth2Logout() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		r := c.Request()
 		w := c.Response()
 
+		sess, err := session.Get(SessionKey, c)
+		if err != nil {
+			return sess.Save(r, w)
+		}
+
+		if i, ok := sess.Values[UserKey]; ok {
+			us, ok := i.(*UserSession)
+			if !ok {
+				return c.Redirect(http.StatusFound, logout)
+			}
+			// Invalidate gothic user sessions.
+			for provider := range us.Providers {
+				sess, err := session.Get(provider+GothicSessionKey, c)
+				if err != nil {
+					return err
+				}
+				sess.Options.MaxAge = -1
+				sess.Values = make(map[interface{}]interface{})
+				sess.Save(r, w)
+			}
+		}
+
 		// Invalidate our user session.
-		sess, _ := session.Get(UserSession, c)
 		sess.Options.MaxAge = -1
 		sess.Values = make(map[interface{}]interface{})
 		sess.Save(r, w)
-
-		// TODO: Get correct provider from user session and move
-		// /:proivder/logout to /logout.
-
-		// Invalidate gothic user session.
-		gothic.Logout(w, r)
 
 		return c.Redirect(http.StatusFound, logout)
 	}
@@ -54,20 +96,23 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
-		sess, err := session.Get(UserSession, c)
+		sess, err := session.Get(SessionKey, c)
 		if err != nil {
 			return sess.Save(r, w)
 		}
 
-		if userID, ok := sess.Values[UserID]; ok {
-			id, ok := userID.(uint64)
+		if i, ok := sess.Values[UserKey]; ok {
+			us, ok := i.(*UserSession)
 			if !ok {
 				return OAuth2Logout()(c)
 			}
-			if _, err := db.GetUser(id); err != nil {
+			if _, err := db.GetUser(us.ID); err != nil {
 				return OAuth2Logout()(c)
 			}
-			return c.Redirect(http.StatusFound, login)
+			if _, ok := us.Providers[c.Param("provider")]; ok {
+				// Provider has already been registered.
+				return c.Redirect(http.StatusFound, login)
+			}
 		}
 
 		externalUser, err := gothic.CompleteUserAuth(w, r)
@@ -84,7 +129,11 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		sess.Values[UserID] = user.ID
+		if sess.Values[UserKey] == nil {
+			sess.Values[UserKey] = newUserSession(user.ID)
+		}
+		us := sess.Values[UserKey].(*UserSession)
+		us.enableProvider(c.Param("provider"))
 		if err := sess.Save(r, w); err != nil {
 			return err
 		}
@@ -99,20 +148,23 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
-		sess, err := session.Get(UserSession, c)
+		sess, err := session.Get(SessionKey, c)
 		if err != nil {
 			return sess.Save(r, w)
 		}
 
-		if userID, ok := sess.Values[UserID]; ok {
-			id, ok := userID.(uint64)
+		if i, ok := sess.Values[UserKey]; ok {
+			us, ok := i.(*UserSession)
 			if !ok {
 				return OAuth2Logout()(c)
 			}
-			if _, err := db.GetUser(id); err != nil {
+			if _, err := db.GetUser(us.ID); err != nil {
 				return OAuth2Logout()(c)
 			}
-			return c.Redirect(http.StatusFound, login)
+			if _, ok := us.Providers[c.Param("provider")]; ok {
+				// Provider has already been registered.
+				return c.Redirect(http.StatusFound, login)
+			}
 		}
 
 		externalUser, err := gothic.CompleteUserAuth(w, r)
@@ -125,7 +177,11 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		sess.Values[UserID] = user.ID
+		if sess.Values[UserKey] == nil {
+			sess.Values[UserKey] = newUserSession(user.ID)
+		}
+		us := sess.Values[UserKey].(*UserSession)
+		us.enableProvider(c.Param("provider"))
 		if err := sess.Save(r, w); err != nil {
 			return err
 		}
@@ -140,7 +196,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 func AccessControl(db database.Database, scms map[string]scm.SCM) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			sess, err := session.Get(UserSession, c)
+			sess, err := session.Get(SessionKey, c)
 			if err != nil {
 				// Save fixes the session if it has been modified
 				// or it is no longer valid due to change of keys.
@@ -148,17 +204,17 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
 
-			userID, ok := sess.Values[UserID]
+			i, ok := sess.Values[UserKey]
 			if !ok {
 				return echo.ErrUnauthorized
 			}
 
-			id, ok := userID.(uint64)
+			us, ok := i.(*UserSession)
 			if !ok {
 				return echo.ErrUnauthorized
 			}
 
-			user, err := db.GetUser(id)
+			user, err := db.GetUser(us.ID)
 			if err != nil {
 				return err
 			}
