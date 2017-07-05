@@ -101,7 +101,7 @@ class TeacherPage extends ViewPage {
                 condPending = <div><h3>Pending users</h3>{this.createPendingTable(pendingUsers)}</div>;
             }
             return <div>
-                <h1>{course.name} ({course.tag})</h1>
+                <h1>{course.name}</h1>
                 <h3>Registered users</h3>
                 <UserView users={acceptedUsers}></UserView>
                 {condPending}
@@ -113,13 +113,11 @@ class TeacherPage extends ViewPage {
     public createPendingTable(pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }>): JSX.Element {
         return <DynamicTable
             data={pendingUsers}
-            header={["ID", "First name", "Last name", "Email", "StudenID", "Action"]}
+            header={["Name", "Email", "Student ID", "Action"]}
             selector={
                 (ele: { ele1: ICourseStudent, ele2: IUser }) => [
-                    ele.ele2.id.toString(),
-                    ele.ele2.firstName,
-                    ele.ele2.lastName,
-                    ele.ele2.email,
+                    ele.ele2.firstName + " " + ele.ele2.lastName,
+                    <a href={"mailto:" + ele.ele2.email}>{ele.ele2.email}</a>,
                     ele.ele2.personId.toString(),
                     <span>
                         <button onClick={(e) => {

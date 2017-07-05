@@ -1,7 +1,7 @@
 import * as React from "react";
-import {DynamicTable, Search} from "../../components";
-import {NavigationManager, UserManager} from "../../managers";
-import {IUser} from "../../models";
+import { DynamicTable, Search } from "../../components";
+import { NavigationManager, UserManager } from "../../managers";
+import { IUser } from "../../models";
 
 interface IUserViewerProps {
     users: IUser[];
@@ -26,12 +26,12 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
         let searchForm: JSX.Element | null = null;
         if (this.props.addSearchOption) {
             const searchIcon: JSX.Element = <span className="input-group-addon">
-            <i className="glyphicon glyphicon-search"></i>
-        </span>;
+                <i className="glyphicon glyphicon-search"></i>
+            </span>;
             searchForm = <Search className="input-group"
-                                 addonBefore={searchIcon}
-                                 placeholder="Search for students"
-                                 onChange={(query) => this.handleOnchange(query)}
+                addonBefore={searchIcon}
+                placeholder="Search for students"
+                onChange={(query) => this.handleOnchange(query)}
             />;
         }
         return (
@@ -46,7 +46,7 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
     }
 
     private getTableHeading(): string[] {
-        let heading: string[] = ["ID", "First name", "Last name", "Email", "StudentID"];
+        let heading: string[] = ["Name", "Email", "Student ID"];
         if (this.props.userMan) {
             heading = heading.concat("Action");
         }
@@ -55,26 +55,24 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
 
     private getTableSelector(user: IUser): Array<string | JSX.Element> {
         let selector: Array<string | JSX.Element> = [
-            user.id.toString(),
-            user.firstName,
-            user.lastName,
-            user.email,
+            user.firstName + " " + user.lastName,
+            <a href={"mailto:" + user.email}>{user.email}</a>,
             user.personId.toString(),
         ];
         if (this.props.userMan) {
             if (this.props.userMan.isAdmin(user)) {
                 selector = selector.concat(
                     <button className="btn btn-danger"
-                            onClick={() => this.handleAdminRoleClick(user)}
-                            data-toggle="tooltip"
-                            title="Demote from Admin">
+                        onClick={() => this.handleAdminRoleClick(user)}
+                        data-toggle="tooltip"
+                        title="Demote from Admin">
                         Demote</button>);
             } else {
                 selector = selector.concat(
                     <button className="btn btn-primary"
-                            onClick={() => this.handleAdminRoleClick(user)}
-                            data-toggle="tooltip"
-                            title="Promote to Admin">
+                        onClick={() => this.handleAdminRoleClick(user)}
+                        data-toggle="tooltip"
+                        title="Promote to Admin">
                         Promote</button>);
             }
         }
@@ -111,4 +109,4 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
     }
 }
 
-export {UserView};
+export { UserView };

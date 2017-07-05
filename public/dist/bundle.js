@@ -450,7 +450,7 @@ class UserView extends React.Component {
             React.createElement(components_1.DynamicTable, { header: this.getTableHeading(), data: this.state.users, selector: (item) => this.getTableSelector(item) })));
     }
     getTableHeading() {
-        let heading = ["ID", "First name", "Last name", "Email", "StudentID"];
+        let heading = ["Name", "Email", "Student ID"];
         if (this.props.userMan) {
             heading = heading.concat("Action");
         }
@@ -458,10 +458,8 @@ class UserView extends React.Component {
     }
     getTableSelector(user) {
         let selector = [
-            user.id.toString(),
-            user.firstName,
-            user.lastName,
-            user.email,
+            user.firstName + " " + user.lastName,
+            React.createElement("a", { href: "mailto:" + user.email }, user.email),
             user.personId.toString(),
         ];
         if (this.props.userMan) {
@@ -948,7 +946,7 @@ function main() {
         const DEBUG_BROWSER = "DEBUG_BROWSER";
         const DEBUG_SERVER = "DEBUG_SERVER";
         let curRunning;
-        curRunning = DEBUG_SERVER;
+        curRunning = DEBUG_BROWSER;
         const tempData = new managers_1.TempDataProvider();
         let userMan;
         let courseMan;
@@ -2867,31 +2865,25 @@ class TeacherPage extends ViewPage_1.ViewPage {
                             break;
                     }
                 });
+                let condPending;
+                if (pendingUsers.length > 0) {
+                    condPending = React.createElement("div", null,
+                        React.createElement("h3", null, "Pending users"),
+                        this.createPendingTable(pendingUsers));
+                }
                 return React.createElement("div", null,
-                    React.createElement("h3", null,
-                        "Users for ",
-                        course.name,
-                        " (",
-                        course.tag,
-                        ")"),
+                    React.createElement("h1", null, course.name),
+                    React.createElement("h3", null, "Registered users"),
                     React.createElement(UserView_1.UserView, { users: acceptedUsers }),
-                    React.createElement("h3", null,
-                        "Pending users for ",
-                        course.name,
-                        " (",
-                        course.tag,
-                        ")"),
-                    this.createPendingTable(pendingUsers));
+                    condPending);
             }
             return React.createElement("div", null, "404 Page not found");
         });
     }
     createPendingTable(pendingUsers) {
-        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["ID", "First name", "Last name", "Email", "StudenID", "Action"], selector: (ele) => [
-                ele.ele2.id.toString(),
-                ele.ele2.firstName,
-                ele.ele2.lastName,
-                ele.ele2.email,
+        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["Name", "Email", "Student ID", "Action"], selector: (ele) => [
+                ele.ele2.firstName + " " + ele.ele2.lastName,
+                React.createElement("a", { href: "mailto:" + ele.ele2.email }, ele.ele2.email),
                 ele.ele2.personId.toString(),
                 React.createElement("span", null,
                     React.createElement("button", { onClick: (e) => {
