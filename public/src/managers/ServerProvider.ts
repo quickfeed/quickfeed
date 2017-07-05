@@ -49,4 +49,8 @@ export class ServerProvider implements IUserProvider {
             return null;
         }
     }
+
+    public async changeAdminRole(user: IUser): Promise<boolean> {
+        throw new Error("Method not implemented");
+    }
 }

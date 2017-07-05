@@ -9,6 +9,7 @@ interface IUserProvider {
     logout(user: IUser): Promise<boolean>;
     getAllUser(): Promise<IMap<IUser>>;
     tryRemoteLogin(provider: string): Promise<IUser | null>;
+    changeAdminRole(user: IUser): Promise<boolean>;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -82,6 +83,10 @@ class UserManager {
 
     public async getUser(id: number): Promise<IUser> {
         throw new Error("Not implemented error");
+    }
+
+    public async changeAdminRole(user: IUser): Promise<boolean> {
+            return this.userProvider.changeAdminRole(user);
     }
 }
 
