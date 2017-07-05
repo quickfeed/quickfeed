@@ -36,6 +36,37 @@ func (db *GormDB) GetUser(id uint64) (*models.User, error) {
 	return &user, nil
 }
 
+// GetUserByRemoteIdentity implements the Database interface.
+func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToken string) (*models.User, error) {
+	tx := db.conn.Begin()
+
+	// Get the remote identity.
+	var remoteIdentity models.RemoteIdentity
+	if err := tx.
+		Where("provider = ? AND remote_id = ?", provider, id).
+		First(&remoteIdentity).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Update the access token.
+	if err := tx.Model(&remoteIdentity).Update("access_token", accessToken).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Get the user.
+	var user models.User
+	if err := tx.Preload("RemoteIdentities").First(&user, remoteIdentity.UserID).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // GetUsers implements the Database interface.
 func (db *GormDB) GetUsers() (*[]models.User, error) {
 	var users []models.User
@@ -45,49 +76,30 @@ func (db *GormDB) GetUsers() (*[]models.User, error) {
 	return &users, nil
 }
 
-// GetUserByRemoteIdentity implements the Database interface.
-func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToken string) (*models.User, error) {
-	tx := db.conn.Begin()
-
-	var remoteIdentity models.RemoteIdentity
-	if err := tx.
-		Where("provider = ? AND remote_id = ?", provider, id).
-		First(&remoteIdentity).Error; err == gorm.ErrRecordNotFound {
-		user := models.User{
-			RemoteIdentities: []models.RemoteIdentity{{
-				Provider:    provider,
-				RemoteID:    id,
-				AccessToken: accessToken,
-			}},
-		}
-		if err := tx.Create(&user).Error; err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-		if err := tx.Commit().Error; err != nil {
-			return nil, err
-		}
-		return &user, nil
-	} else if err != nil {
-		tx.Rollback()
-		return nil, err
+// NewUserFromRemoteIdentity implements the Database interface.
+func (db *GormDB) NewUserFromRemoteIdentity(provider string, remoteID uint64, accessToken string) (*models.User, error) {
+	user := models.User{
+		RemoteIdentities: []models.RemoteIdentity{{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: accessToken,
+		}},
 	}
-
-	if err := tx.Model(&remoteIdentity).Update("access_token", accessToken).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	var user models.User
-	if err := tx.Preload("RemoteIdentities").First(&user, remoteIdentity.UserID).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Commit().Error; err != nil {
+	if err := db.conn.Create(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
+}
+
+// AssociateUserWithRemoteIdentity implements the Database interface.
+func (db *GormDB) AssociateUserWithRemoteIdentity(userID uint64, provider string, remoteID uint64, accessToken string) error {
+	remoteIdentity := models.RemoteIdentity{
+		Provider:    provider,
+		RemoteID:    remoteID,
+		AccessToken: accessToken,
+		UserID:      userID,
+	}
+	return db.conn.Create(&remoteIdentity).Error
 }
 
 // CreateCourse implements the Database interface.

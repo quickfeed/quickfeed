@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/autograde/aguis/database"
@@ -108,9 +109,13 @@ func TestOAuth2CallbackUnauthorized(t *testing.T) {
 
 	authHandler := auth.PreAuth(db)(auth.OAuth2Callback(db))
 	withSession := session.Middleware(store)(authHandler)
-	if err := withSession(c); err != echo.ErrUnauthorized {
-		t.Errorf("have error '%s' want '%s'", err, echo.ErrUnauthorized)
+	err := withSession(c)
+	httpErr, ok := err.(*echo.HTTPError)
+	if !ok {
+		t.Errorf("unexpected error type: %v", reflect.TypeOf(err))
 	}
+
+	assertCode(t, httpErr.Code, http.StatusBadRequest)
 }
 
 func TestOAuth2LoginLoggedIn(t *testing.T) {
@@ -157,13 +162,15 @@ func TestOAuth2CallbackAuthenticated(t *testing.T) {
 }
 
 func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database) echo.HandlerFunc) {
+	const userID = "1"
+
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
 	store := newStore()
 	gothic.Store = store
 
-	fauxSession := faux.Session{}
+	fauxSession := faux.Session{ID: userID}
 	s, _ := store.Get(r, fauxSessionName)
 	s.Values[fauxSessionKey] = fauxSession.Marshal()
 	if err := s.Save(r, w); err != nil {
@@ -205,7 +212,7 @@ func TestAccessControl(t *testing.T) {
 	defer cleanup()
 
 	// Create a new user.
-	if _, err := db.GetUserByRemoteIdentity(provider, userID, secret); err != nil {
+	if _, err := db.NewUserFromRemoteIdentity(provider, userID, secret); err != nil {
 		t.Error(err)
 	}
 

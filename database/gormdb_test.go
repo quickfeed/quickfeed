@@ -61,40 +61,58 @@ func TestGormDBGetUsers(t *testing.T) {
 	}
 }
 
-func TestGormDBGetUserByRemoteIdentity(t *testing.T) {
+func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	const (
-		initialToken = "123"
-		newToken     = "ABC"
-		provider     = "github"
-		remoteID     = 10
+		uID  = 1
+		rID1 = 1
+		rID2 = 2
+
+		secret1   = "123"
+		provider1 = "github"
+		remoteID1 = 10
+
+		secret2   = "ABC"
+		provider2 = "gitlab"
+		remoteID2 = 20
 	)
 
-	wantUser1 := &models.User{
-		ID: 1,
-		RemoteIdentities: []models.RemoteIdentity{{
-			ID:          1,
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: initialToken,
-			UserID:      1,
-		}},
-	}
+	var (
+		wantUser1 = &models.User{
+			ID: uID,
+			RemoteIdentities: []models.RemoteIdentity{{
+				ID:          rID1,
+				Provider:    provider1,
+				RemoteID:    remoteID1,
+				AccessToken: secret1,
+				UserID:      uID,
+			}},
+		}
 
-	wantUser2 := &models.User{
-		ID: 1,
-		RemoteIdentities: []models.RemoteIdentity{{
-			ID:          1,
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: newToken,
-			UserID:      1,
-		}},
-	}
+		wantUser2 = &models.User{
+			ID: uID,
+			RemoteIdentities: []models.RemoteIdentity{
+				{
+					ID:          rID1,
+					Provider:    provider1,
+					RemoteID:    remoteID1,
+					AccessToken: secret1,
+					UserID:      uID,
+				},
+				{
+					ID:          rID2,
+					Provider:    provider2,
+					RemoteID:    remoteID2,
+					AccessToken: secret2,
+					UserID:      uID,
+				},
+			},
+		}
+	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.GetUserByRemoteIdentity(provider, remoteID, initialToken)
+	user1, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +121,11 @@ func TestGormDBGetUserByRemoteIdentity(t *testing.T) {
 		t.Errorf("have user %+v want %+v", user1, wantUser1)
 	}
 
-	user2, err := db.GetUserByRemoteIdentity(provider, remoteID, newToken)
+	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret2); err != nil {
+		t.Fatal(err)
+	}
+
+	user2, err := db.GetUser(uID)
 	if err != nil {
 		t.Fatal(err)
 	}

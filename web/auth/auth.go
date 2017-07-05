@@ -2,16 +2,15 @@ package auth
 
 import (
 	"encoding/gob"
-	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
+	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
-	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 )
 
@@ -21,6 +20,7 @@ func init() {
 
 // Frontend URLs.
 const (
+	home   = "/app/home"
 	logout = "/app/logout"
 	login  = "/app/newlogin"
 )
@@ -128,34 +128,19 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
-		externalUser, err := gothic.CompleteUserAuth(w, r)
+		_, err := gothic.CompleteUserAuth(w, r)
+		// An error indicates that authentication needs to be performed at the provider.
 		if err != nil {
 			url, err := gothic.GetAuthURL(w, r)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
+			// Redirect to provider to perform authentication.
 			return c.Redirect(http.StatusTemporaryRedirect, url)
 		}
 
-		user, err := getInteralUser(db, &externalUser)
-		if err != nil {
-			return err
-		}
-
-		sess, err := session.Get(SessionKey, c)
-		if err != nil {
-			return err
-		}
-		if sess.Values[UserKey] == nil {
-			sess.Values[UserKey] = newUserSession(user.ID)
-		}
-		us := sess.Values[UserKey].(*UserSession)
-		us.enableProvider(c.Param("provider"))
-		if err := sess.Save(r, w); err != nil {
-			return err
-		}
-
-		return c.Redirect(http.StatusFound, login)
+		// The user navigated to /auth/:provider but is already authenticated.
+		return c.Redirect(http.StatusFound, home)
 	}
 }
 
@@ -165,12 +150,13 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
+		// Complete authentication.
 		externalUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
-			return echo.ErrUnauthorized
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
-		user, err := getInteralUser(db, &externalUser)
+		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
 		if err != nil {
 			return err
 		}
@@ -179,11 +165,43 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		if sess.Values[UserKey] == nil {
-			sess.Values[UserKey] = newUserSession(user.ID)
+
+		// Try to get already logged in user.
+		if sess.Values[UserKey] != nil {
+			i, ok := sess.Values[UserKey]
+			if !ok {
+				return OAuth2Logout()(c)
+			}
+
+			us := i.(*UserSession)
+			// Associate user with remote identity.
+			if err := db.AssociateUserWithRemoteIdentity(
+				us.ID, externalUser.Provider, remoteID, externalUser.AccessToken,
+			); err != nil {
+				return err
+			}
+			return c.Redirect(http.StatusFound, login)
 		}
-		us := sess.Values[UserKey].(*UserSession)
+
+		// Try to get user from database.
+		var user *models.User
+		user, err = db.GetUserByRemoteIdentity(externalUser.Provider, remoteID, externalUser.AccessToken)
+		if err == gorm.ErrRecordNotFound {
+			// Create new user.
+			user, err = db.NewUserFromRemoteIdentity(
+				externalUser.Provider, remoteID, externalUser.AccessToken,
+			)
+			if err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+
+		// Register user session.
+		us := newUserSession(user.ID)
 		us.enableProvider(c.Param("provider"))
+		sess.Values[UserKey] = us
 		if err := sess.Save(r, w); err != nil {
 			return err
 		}
@@ -236,32 +254,5 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 
 			return next(c)
 		}
-	}
-}
-
-func getInteralUser(db database.Database, externalUser *goth.User) (*models.User, error) {
-	provider, err := goth.GetProvider(externalUser.Provider)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Extract each case into a function so that they can be tested.
-	switch provider.Name() {
-	case "github", "gitlab":
-		remoteID, err := strconv.ParseUint(externalUser.UserID, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-
-		user, err := db.GetUserByRemoteIdentity(provider.Name(), remoteID, externalUser.AccessToken)
-		if err != nil {
-			return nil, err
-		}
-		return user, nil
-	case "faux": // Provider is only registered and reachable from tests.
-		return &models.User{}, nil
-	default:
-		return nil, errors.New("provider not implemented")
 	}
 }
