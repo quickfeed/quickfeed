@@ -244,7 +244,7 @@ func setup(t *testing.T) (*database.GormDB, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(), true)
+	db, err := database.NewGormDB(driver, f.Name(), envSet("LOGDB"))
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
@@ -310,4 +310,8 @@ func (ts testStore) New(r *http.Request, name string) (*sessions.Session, error)
 func (ts testStore) Save(r *http.Request, w http.ResponseWriter, s *sessions.Session) error {
 	ts.store[r] = s
 	return nil
+}
+
+func envSet(env string) bool {
+	return os.Getenv(env) != ""
 }

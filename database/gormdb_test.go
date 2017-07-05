@@ -27,7 +27,7 @@ func setup(t *testing.T) (*database.GormDB, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(), true)
+	db, err := database.NewGormDB(driver, f.Name(), envSet("LOGDB"))
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
@@ -111,4 +111,8 @@ func TestGormDBGetUserByRemoteIdentity(t *testing.T) {
 	if !reflect.DeepEqual(user2, wantUser2) {
 		t.Errorf("have user %+v want %+v", user2, wantUser2)
 	}
+}
+
+func envSet(env string) bool {
+	return os.Getenv(env) != ""
 }
