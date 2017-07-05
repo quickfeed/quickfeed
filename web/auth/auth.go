@@ -59,17 +59,32 @@ func OAuth2Logout() echo.HandlerFunc {
 		r := c.Request()
 		w := c.Response()
 
+		sess, err := session.Get(SessionKey, c)
+		if err != nil {
+			return sess.Save(r, w)
+		}
+
+		if i, ok := sess.Values[UserKey]; ok {
+			us, ok := i.(*UserSession)
+			if !ok {
+				return c.Redirect(http.StatusFound, logout)
+			}
+			// Invalidate gothic user sessions.
+			for provider := range us.Providers {
+				sess, err := session.Get(provider+GothicSessionKey, c)
+				if err != nil {
+					return err
+				}
+				sess.Options.MaxAge = -1
+				sess.Values = make(map[interface{}]interface{})
+				sess.Save(r, w)
+			}
+		}
+
 		// Invalidate our user session.
-		sess, _ := session.Get(SessionKey, c)
 		sess.Options.MaxAge = -1
 		sess.Values = make(map[interface{}]interface{})
 		sess.Save(r, w)
-
-		// TODO: Get correct provider from user session and move
-		// /:proivder/logout to /logout.
-
-		// Invalidate gothic user session.
-		gothic.Logout(w, r)
 
 		return c.Redirect(http.StatusFound, logout)
 	}
