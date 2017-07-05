@@ -1,5 +1,5 @@
 import * as Models from "../models";
-import { IAssignment, ICourse, ICourseStudent, IUser } from "../models";
+import { IAssignment, ICourse, ICourseStudent, ILabInfo, IUser } from "../models";
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
@@ -15,12 +15,14 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     private localAssignments: IMap<IAssignment>;
     private localCourses: IMap<ICourse>;
     private localCourseStudent: ICourseStudent[];
+    private localLabInfo: IMap<ILabInfo>;
 
     constructor() {
         this.addLocalAssignments();
         this.addLocalCourses();
         this.addLocalCourseStudent();
         this.addLocalUsers();
+        this.addLocalLabInfo();
     }
 
     public async getAllUser(): Promise<IMap<IUser>> {
@@ -100,6 +102,10 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     public async changeAdminRole(user: IUser): Promise<boolean> {
         user.isAdmin = !user.isAdmin;
         return true;
+    }
+
+    public async getAllLabInfos(): Promise<IMap<ILabInfo>> {
+        return this.localLabInfo;
     }
 
     private addLocalUsers() {
@@ -287,6 +293,113 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
             { courseId: 0, personId: 1, state: 0 },
             { courseId: 0, personId: 2, state: 0 },
         ];
+    }
+
+    private addLocalLabInfo() {
+        this.localLabInfo = mapify<ILabInfo>([
+            {
+                id: 1,
+                assignmentId: 0,
+                studentId: 999,
+                buildId: 1,
+
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 1",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+            {
+                id: 2,
+                assignmentId: 1,
+                studentId: 999,
+                buildId: 2,
+
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 2",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+            {
+                id: 3,
+                assignmentId: 2,
+                studentId: 999,
+                buildId: 3,
+
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 3",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+            {
+                id: 4,
+                assignmentId: 3,
+                studentId: 999,
+                buildId: 4,
+
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 4",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+            {
+                id: 5,
+                assignmentId: 4,
+                studentId: 999,
+                buildId: 5,
+
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 5",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+        ], (ele: ILabInfo) => {
+            return ele.id;
+        });
     }
 
 }

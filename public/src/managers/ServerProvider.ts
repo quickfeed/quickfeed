@@ -26,7 +26,8 @@ export class ServerProvider implements IUserProvider {
         throw new Error("Method not implemented.");
     }
     public async logout(user: IUser): Promise<boolean> {
-        throw new Error("Method not implemented.");
+        window.location.assign("/logout");
+        return true;
     }
     public async getAllUser(): Promise<IMap<IUser>> {
         throw new Error("Method not implemented.");

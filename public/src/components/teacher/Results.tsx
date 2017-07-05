@@ -1,7 +1,7 @@
 import * as React from "react";
-import {IAssignment, ICourse, IUser} from "../../models";
+import { IAssignment, ICourse, IUser } from "../../models";
 
-import {DynamicTable, Row, Search, StudentLab} from "../../components";
+import { DynamicTable, Row, Search, StudentLab } from "../../components";
 
 interface IResultsProp {
     course: ICourse;
@@ -24,13 +24,14 @@ class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     public render() {
-        let studentLab: JSX.Element | null = null;
-        if (this.props.students.length > 0) {
-            studentLab = <StudentLab course={this.props.course}
-                                     assignment={this.state.assignment}
-                                     student={this.state.selectedStudent}
+        const studentLab: JSX.Element | null = null;
+        /*if (this.props.students.length > 0) {
+            studentLab = <StudentLab
+                course={this.props.course}
+                assignment={this.state.assignment}
+                student={this.state.selectedStudent}
             />;
-        }
+        }*/
 
         const searchIcon: JSX.Element = <span className="input-group-addon">
             <i className="glyphicon glyphicon-search"></i>
@@ -42,13 +43,13 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                 <Row>
                     <div className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
-                                addonBefore={searchIcon}
-                                placeholder="Search for students"
-                                onChange={(query) => this.handleOnchange(query)}
+                            addonBefore={searchIcon}
+                            placeholder="Search for students"
+                            onChange={(query) => this.handleOnchange(query)}
                         />
                         <DynamicTable header={this.getResultHeader()}
-                                      data={this.state.students}
-                                      selector={(item: IUser) => this.getResultSelector(item)}
+                            data={this.state.students}
+                            selector={(item: IUser) => this.getResultSelector(item)}
                         />
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12">
@@ -68,8 +69,8 @@ class Results extends React.Component<IResultsProp, IResultsState> {
     private getResultSelector(student: IUser): Array<string | JSX.Element> {
         let selector: Array<string | JSX.Element> = [student.firstName + " " + student.lastName, "5"];
         selector = selector.concat(this.props.labs.map((e) => <a className="lab-result-cell"
-                                                                 onClick={() => this.handleOnclick(student, e)}
-                                                                 href="#">
+            onClick={() => this.handleOnclick(student, e)}
+            href="#">
             {Math.floor((Math.random() * 100) + 1).toString() + "%"}</a>));
         return selector;
     }
@@ -99,4 +100,4 @@ class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
 }
-export {Results};
+export { Results };

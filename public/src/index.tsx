@@ -202,7 +202,7 @@ async function main(): Promise<void> {
     const DEBUG_SERVER = "DEBUG_SERVER";
 
     let curRunning: string;
-    curRunning = DEBUG_SERVER;
+    curRunning = DEBUG_BROWSER;
 
     const tempData = new TempDataProvider();
 
@@ -227,12 +227,15 @@ async function main(): Promise<void> {
     (window as any).debugData = { tempData, userMan, courseMan, navMan };
 
     navMan.setDefaultPath("app/home");
-    await navMan.registerPage("app/home", new HomePage());
-    await navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan));
-    await navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan, courseMan));
-    await navMan.registerPage("app/admin", new AdminPage(navMan, userMan, courseMan));
-    await navMan.registerPage("app/help", new HelpPage(navMan));
-    await navMan.registerPage("app/login", new LoginPage(navMan, userMan));
+    const all: Array<Promise<void>> = [];
+    all.push(navMan.registerPage("app/home", new HomePage()));
+    all.push(navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan)));
+    all.push(navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan, courseMan)));
+    all.push(navMan.registerPage("app/admin", new AdminPage(navMan, userMan, courseMan)));
+    all.push(navMan.registerPage("app/help", new HelpPage(navMan)));
+    all.push(navMan.registerPage("app/login", new LoginPage(navMan, userMan)));
+
+    Promise.all(all);
 
     navMan.registerErrorPage(404, new ErrorPage());
     navMan.onNavigate.addEventListener((e) => {

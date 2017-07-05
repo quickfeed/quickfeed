@@ -1,48 +1,51 @@
 import * as React from "react";
-import {LabResult, LastBuild, LastBuildInfo, Row} from "../../components";
-import {ILabInfo} from "../../models";
+import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
+import { ICourse, ILabInfo, IStudentSubmission } from "../../models";
 
 interface ILabInfoProps {
-    labInfo: ILabInfo;
+    course: ICourse;
+    labInfo: IStudentSubmission;
 }
 class LabResultView extends React.Component<ILabInfoProps, {}> {
 
     public render() {
-        return (
-            <div className="col-md-9 col-sm-9 col-xs-12">
-                <div className="result-content" id="resultview">
-                    <section id="result">
-                        <LabResult
-                            course_name={this.props.labInfo.course}
-                            lab={this.props.labInfo.lab}
-                            progress={this.props.labInfo.score}
-                            student={this.props.labInfo.student}
-                        />
-                        <LastBuild
-                            test_cases={this.props.labInfo.test_cases}
-                            score={this.props.labInfo.score}
-                            weight={this.props.labInfo.weight}
-                        />
-                        <LastBuildInfo
-                            pass_tests={this.props.labInfo.pass_tests}
-                            fail_tests={this.props.labInfo.fail_tests}
-                            exec_time={this.props.labInfo.exec_time}
-                            build_time={this.props.labInfo.build_time}
-                            build_id={this.props.labInfo.build_id}
-                        />
-                        <Row>
-                            <div className="col-lg-12">
-                                <div className="well">
-                                    <code id="logs"># There is no build for this lab yet.</code>
+        if (this.props.labInfo.latest) {
+            return (
+                <div className="col-md-9 col-sm-9 col-xs-12">
+                    <div className="result-content" id="resultview">
+                        <section id="result">
+                            <LabResult
+                                course_name={this.props.course.name}
+                                lab={this.props.labInfo.assignment.name}
+                                progress={this.props.labInfo.latest.score}
+                            />
+                            <LastBuild
+                                test_cases={this.props.labInfo.latest.testCases}
+                                score={this.props.labInfo.latest.score}
+                                weight={this.props.labInfo.latest.weight}
+                            />
+                            <LastBuildInfo
+                                pass_tests={this.props.labInfo.latest.passedTests}
+                                fail_tests={this.props.labInfo.latest.failedTests}
+                                exec_time={this.props.labInfo.latest.executetionTime}
+                                build_time={this.props.labInfo.latest.buildDate}
+                                build_id={this.props.labInfo.latest.buildId}
+                            />
+                            <Row>
+                                <div className="col-lg-12">
+                                    <div className="well">
+                                        <code id="logs">{this.props.labInfo.latest.buildLog}</code>
+                                    </div>
                                 </div>
-                            </div>
-                        </Row>
+                            </Row>
 
-                    </section>
+                        </section>
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        }
+        return <h1>No subissions have been submitted yet</h1>;
     }
 }
 
-export {LabResultView};
+export { LabResultView };

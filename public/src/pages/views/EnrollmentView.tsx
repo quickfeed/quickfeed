@@ -1,14 +1,12 @@
 import * as React from "react";
 import { DynamicTable } from "../../components";
-import { CourseStudentState, ICourse, ICourseStudent, IUser } from "../../models";
+import { CourseStudentState, ICourse, ICourseStudent, IStudentCourse, IUser } from "../../models";
 
 import { ArrayHelper } from "../../helper";
 
 interface IEnrollmentViewProps {
-    courses: ICourse[];
-    studentCourses: ICourseStudent[];
-    curUser: IUser | null;
-    onEnrollmentClick: (user: IUser, course: ICourse) => void;
+    courses: IStudentCourse[];
+    onEnrollmentClick: (course: ICourse) => void;
 }
 
 class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
@@ -16,27 +14,22 @@ class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         return <DynamicTable
             data={this.props.courses}
             header={["Course tag", "Course Name", "Action"]}
-            selector={(course: ICourse) => this.createEnrollmentRow(this.props.studentCourses, course)}>
+            selector={(course: IStudentCourse) => this.createEnrollmentRow(this.props.courses, course)}>
         </DynamicTable>;
 
     }
 
-    public createEnrollmentRow(studentCourses: ICourseStudent[], course: ICourse): Array<string | JSX.Element> {
-        const base: Array<string | JSX.Element> = [course.tag, course.name];
-        const curUser = this.props.curUser;
-        if (!curUser) {
-            return base;
-        }
-        const temp = ArrayHelper.find(studentCourses, (a: ICourseStudent) => a.courseId === course.id);
-        if (temp) {
-            if (temp.state === CourseStudentState.accepted) {
+    public createEnrollmentRow(studentCourses: IStudentCourse[], course: IStudentCourse): Array<string | JSX.Element> {
+        const base: Array<string | JSX.Element> = [course.course.tag, course.course.name];
+        if (course.link) {
+            if (course.link.state === CourseStudentState.accepted) {
                 base.push("Enrolled");
-            } else if (temp.state === CourseStudentState.pending) {
+            } else if (course.link.state === CourseStudentState.pending) {
                 base.push("Pending");
             } else {
                 base.push(<div>
                     <button
-                        onClick={() => { this.props.onEnrollmentClick(curUser, course); }}
+                        onClick={() => { this.props.onEnrollmentClick(course.course); }}
                         className="btn btn-primary">
                         Enroll
                     </button>
@@ -45,11 +38,10 @@ class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
                     </span>
                 </div>);
             }
-
         } else {
             base.push(
                 <button
-                    onClick={() => { this.props.onEnrollmentClick(curUser, course); }}
+                    onClick={() => { this.props.onEnrollmentClick(course.course); }}
                     className="btn btn-primary">
                     Enroll
                 </button>);

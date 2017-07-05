@@ -2,13 +2,13 @@ import * as React from "react";
 
 import { DynamicTable } from "../../components";
 
-import { IAssignment, ICourse } from "../../models";
+import { IAssignment, ICourse, IStudentSubmission } from "../../models";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
 interface IPanelProps {
     course: ICourse;
-    labs: IAssignment[];
+    labs: IStudentSubmission[];
     navMan: NavigationManager;
 }
 class CoursePanel extends React.Component<IPanelProps, any> {
@@ -25,8 +25,15 @@ class CoursePanel extends React.Component<IPanelProps, any> {
                         <DynamicTable
                             header={["Labs", "Score", "Weight"]}
                             data={this.props.labs}
-                            selector={(item: IAssignment) => [item.name, "50%", "100%"]}
-                            onRowClick={(lab: IAssignment) => this.handleRowClick(pathPrefix, lab)}
+                            selector={(item: IStudentSubmission) => {
+                                const score = item.latest ? item.latest.score.toString() : "No submissions yet";
+                                return [
+                                    item.assignment.name,
+                                    score,
+                                    "",
+                                ];
+                            }}
+                            onRowClick={(lab: IStudentSubmission) => this.handleRowClick(pathPrefix, lab.assignment)}
                         />
                     </div>
                 </div>

@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 14);
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,15 +79,16 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(16));
+__export(__webpack_require__(15));
+__export(__webpack_require__(8));
 __export(__webpack_require__(9));
-__export(__webpack_require__(10));
+__export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
 __export(__webpack_require__(19));
-__export(__webpack_require__(20));
+__export(__webpack_require__(21));
+__export(__webpack_require__(10));
 __export(__webpack_require__(22));
-__export(__webpack_require__(11));
 __export(__webpack_require__(23));
 __export(__webpack_require__(24));
 __export(__webpack_require__(25));
@@ -97,7 +98,6 @@ __export(__webpack_require__(28));
 __export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
-__export(__webpack_require__(32));
 
 
 /***/ }),
@@ -509,55 +509,6 @@ exports.UserView = UserView;
 
 "use strict";
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-class ArrayHelper {
-    static join(array1, array2, callback) {
-        const returnObj = [];
-        for (const ele1 of array1) {
-            for (const ele2 of array2) {
-                if (callback(ele1, ele2)) {
-                    returnObj.push({ ele1, ele2 });
-                }
-            }
-        }
-        return returnObj;
-    }
-    static find(array, predicate) {
-        for (let i = 0; i < array.length; i++) {
-            const cur = array[i];
-            if (predicate.call(array, cur, i, array)) {
-                return cur;
-            }
-        }
-        return null;
-    }
-    static mapAsync(array, callback) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const newArray = [];
-            for (let i = 0; i < array.length; i++) {
-                newArray.push(yield callback(array[i], i, array));
-            }
-            return newArray;
-        });
-    }
-}
-exports.ArrayHelper = ArrayHelper;
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const NavigationHelper_1 = __webpack_require__(3);
@@ -586,7 +537,7 @@ exports.NavHeaderBar = NavHeaderBar;
 
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -624,7 +575,7 @@ exports.NavMenu = NavMenu;
 
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -646,7 +597,7 @@ exports.ProgressBar = ProgressBar;
 
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -662,7 +613,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -785,7 +736,7 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -800,14 +751,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(15);
+const ReactDOM = __webpack_require__(14);
 const components_1 = __webpack_require__(1);
-const managers_1 = __webpack_require__(33);
-const ErrorPage_1 = __webpack_require__(38);
-const HelpPage_1 = __webpack_require__(39);
-const HomePage_1 = __webpack_require__(41);
-const StudentPage_1 = __webpack_require__(42);
-const TeacherPage_1 = __webpack_require__(44);
+const managers_1 = __webpack_require__(32);
+const ErrorPage_1 = __webpack_require__(37);
+const HelpPage_1 = __webpack_require__(38);
+const HomePage_1 = __webpack_require__(40);
+const StudentPage_1 = __webpack_require__(41);
+const TeacherPage_1 = __webpack_require__(43);
 const AdminPage_1 = __webpack_require__(45);
 const NavBarLogin_1 = __webpack_require__(47);
 const NavBarMenu_1 = __webpack_require__(48);
@@ -965,12 +916,14 @@ function main() {
         }
         window.debugData = { tempData, userMan, courseMan, navMan };
         navMan.setDefaultPath("app/home");
-        yield navMan.registerPage("app/home", new HomePage_1.HomePage());
-        yield navMan.registerPage("app/student", new StudentPage_1.StudentPage(userMan, navMan, courseMan));
-        yield navMan.registerPage("app/teacher", new TeacherPage_1.TeacherPage(userMan, navMan, courseMan));
-        yield navMan.registerPage("app/admin", new AdminPage_1.AdminPage(navMan, userMan, courseMan));
-        yield navMan.registerPage("app/help", new HelpPage_1.HelpPage(navMan));
-        yield navMan.registerPage("app/login", new LoginPage_1.LoginPage(navMan, userMan));
+        const all = [];
+        all.push(navMan.registerPage("app/home", new HomePage_1.HomePage()));
+        all.push(navMan.registerPage("app/student", new StudentPage_1.StudentPage(userMan, navMan, courseMan)));
+        all.push(navMan.registerPage("app/teacher", new TeacherPage_1.TeacherPage(userMan, navMan, courseMan)));
+        all.push(navMan.registerPage("app/admin", new AdminPage_1.AdminPage(navMan, userMan, courseMan)));
+        all.push(navMan.registerPage("app/help", new HelpPage_1.HelpPage(navMan)));
+        all.push(navMan.registerPage("app/login", new LoginPage_1.LoginPage(navMan, userMan)));
+        Promise.all(all);
         navMan.registerErrorPage(404, new ErrorPage_1.ErrorPage());
         navMan.onNavigate.addEventListener((e) => {
             console.log(e);
@@ -982,20 +935,20 @@ main();
 
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const NavHeaderBar_1 = __webpack_require__(9);
+const NavHeaderBar_1 = __webpack_require__(8);
 class NavBar extends React.Component {
     render() {
         return React.createElement("nav", { className: this.renderNavBarClass() },
@@ -1030,7 +983,7 @@ exports.NavBar = NavBar;
 
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1061,7 +1014,7 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1103,7 +1056,7 @@ exports.DynamicTable = DynamicTable;
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1117,46 +1070,24 @@ exports.Row = Row;
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const LabResultView_1 = __webpack_require__(21);
+const LabResultView_1 = __webpack_require__(20);
 class StudentLab extends React.Component {
     render() {
-        const testCases = [
-            { name: "Test Case 1", score: 60, points: 100, weight: 1 },
-            { name: "Test Case 2", score: 50, points: 100, weight: 1 },
-            { name: "Test Case 3", score: 40, points: 100, weight: 1 },
-            { name: "Test Case 4", score: 30, points: 100, weight: 1 },
-            { name: "Test Case 5", score: 20, points: 100, weight: 1 },
-        ];
-        const labInfo = {
-            lab: this.props.assignment.name,
-            course: this.props.course.name,
-            score: 50,
-            weight: 100,
-            test_cases: testCases,
-            pass_tests: 10,
-            fail_tests: 20,
-            exec_time: 0.33,
-            build_time: new Date(2017, 5, 25),
-            build_id: 10,
-        };
-        if (this.props.student) {
-            labInfo.student = this.props.student;
-        }
-        return React.createElement(LabResultView_1.LabResultView, { labInfo: labInfo });
+        return React.createElement(LabResultView_1.LabResultView, { course: this.props.course, labInfo: this.props.assignment });
     }
 }
 exports.StudentLab = StudentLab;
 
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1166,23 +1097,26 @@ const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 class LabResultView extends React.Component {
     render() {
-        return (React.createElement("div", { className: "col-md-9 col-sm-9 col-xs-12" },
-            React.createElement("div", { className: "result-content", id: "resultview" },
-                React.createElement("section", { id: "result" },
-                    React.createElement(components_1.LabResult, { course_name: this.props.labInfo.course, lab: this.props.labInfo.lab, progress: this.props.labInfo.score, student: this.props.labInfo.student }),
-                    React.createElement(components_1.LastBuild, { test_cases: this.props.labInfo.test_cases, score: this.props.labInfo.score, weight: this.props.labInfo.weight }),
-                    React.createElement(components_1.LastBuildInfo, { pass_tests: this.props.labInfo.pass_tests, fail_tests: this.props.labInfo.fail_tests, exec_time: this.props.labInfo.exec_time, build_time: this.props.labInfo.build_time, build_id: this.props.labInfo.build_id }),
-                    React.createElement(components_1.Row, null,
-                        React.createElement("div", { className: "col-lg-12" },
-                            React.createElement("div", { className: "well" },
-                                React.createElement("code", { id: "logs" }, "# There is no build for this lab yet."))))))));
+        if (this.props.labInfo.latest) {
+            return (React.createElement("div", { className: "col-md-9 col-sm-9 col-xs-12" },
+                React.createElement("div", { className: "result-content", id: "resultview" },
+                    React.createElement("section", { id: "result" },
+                        React.createElement(components_1.LabResult, { course_name: this.props.course.name, lab: this.props.labInfo.assignment.name, progress: this.props.labInfo.latest.score }),
+                        React.createElement(components_1.LastBuild, { test_cases: this.props.labInfo.latest.testCases, score: this.props.labInfo.latest.score, weight: this.props.labInfo.latest.weight }),
+                        React.createElement(components_1.LastBuildInfo, { pass_tests: this.props.labInfo.latest.passedTests, fail_tests: this.props.labInfo.latest.failedTests, exec_time: this.props.labInfo.latest.executetionTime, build_time: this.props.labInfo.latest.buildDate, build_id: this.props.labInfo.latest.buildId }),
+                        React.createElement(components_1.Row, null,
+                            React.createElement("div", { className: "col-lg-12" },
+                                React.createElement("div", { className: "well" },
+                                    React.createElement("code", { id: "logs" }, this.props.labInfo.latest.buildLog))))))));
+        }
+        return React.createElement("h1", null, "No subissions have been submitted yet");
     }
 }
 exports.LabResultView = LabResultView;
 
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1240,7 +1174,7 @@ exports.NavDropdown = NavDropdown;
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1281,7 +1215,7 @@ exports.LabResult = LabResult;
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1301,7 +1235,7 @@ exports.LastBuild = LastBuild;
 
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1344,7 +1278,7 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1354,8 +1288,8 @@ const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 class CoursesOverview extends React.Component {
     render() {
-        const courses = this.props.course_overview.map((val, key) => {
-            return React.createElement(components_1.CoursePanel, { key: key, course: val.course, labs: val.labs, navMan: this.props.navMan });
+        const courses = this.props.courseOverview.map((val, key) => {
+            return React.createElement(components_1.CoursePanel, { key: key, course: val.course, labs: val.assignments, navMan: this.props.navMan });
         });
         let added = 0;
         let index = 1;
@@ -1381,7 +1315,7 @@ exports.CoursesOverview = CoursesOverview;
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1396,7 +1330,14 @@ class CoursePanel extends React.Component {
             React.createElement("div", { className: "panel panel-primary" },
                 React.createElement("div", { className: "panel-heading clickable", onClick: () => this.handleCourseClick() }, this.props.course.name),
                 React.createElement("div", { className: "panel-body" },
-                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: (item) => [item.name, "50%", "100%"], onRowClick: (lab) => this.handleRowClick(pathPrefix, lab) })))));
+                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: (item) => {
+                            const score = item.latest ? item.latest.score.toString() : "No submissions yet";
+                            return [
+                                item.assignment.name,
+                                score,
+                                "",
+                            ];
+                        }, onRowClick: (lab) => this.handleRowClick(pathPrefix, lab.assignment) })))));
     }
     handleRowClick(pathPrefix, lab) {
         if (lab) {
@@ -1412,19 +1353,19 @@ exports.CoursePanel = CoursePanel;
 
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ProgressBar_1 = __webpack_require__(11);
+const ProgressBar_1 = __webpack_require__(10);
 class SingleCourseOverview extends React.Component {
     render() {
-        const labs = this.props.courseAndLabs.labs.map((v, k) => {
+        const labs = this.props.courseAndLabs.assignments.map((v, k) => {
             return (React.createElement("li", { key: k, className: "list-group-item" },
-                React.createElement("strong", null, v.name),
+                React.createElement("strong", null, v.assignment.name),
                 React.createElement(ProgressBar_1.ProgressBar, { progress: Math.floor((Math.random() * 100) + 1) })));
         });
         return (React.createElement("div", null,
@@ -1437,7 +1378,7 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1458,7 +1399,7 @@ exports.Button = Button;
 
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1524,7 +1465,7 @@ exports.CourseForm = CourseForm;
 
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1542,10 +1483,7 @@ class Results extends React.Component {
         };
     }
     render() {
-        let studentLab = null;
-        if (this.props.students.length > 0) {
-            studentLab = React.createElement(components_1.StudentLab, { course: this.props.course, assignment: this.state.assignment, student: this.state.selectedStudent });
-        }
+        const studentLab = null;
         const searchIcon = React.createElement("span", { className: "input-group-addon" },
             React.createElement("i", { className: "glyphicon glyphicon-search" }));
         return (React.createElement("div", null,
@@ -1593,7 +1531,7 @@ exports.Results = Results;
 
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1629,7 +1567,7 @@ exports.Search = Search;
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1638,14 +1576,14 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
+__export(__webpack_require__(33));
 __export(__webpack_require__(34));
 __export(__webpack_require__(35));
 __export(__webpack_require__(36));
-__export(__webpack_require__(37));
 
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1752,12 +1690,78 @@ class CourseManager {
             return this.courseProvider.createNewCourse(courseData);
         });
     }
+    getStudentCourse(student, course) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const link = (yield this.courseProvider.getCoursesStudent())
+                .find((val) => val.courseId === course.id && val.personId === student.id);
+            if (link) {
+                const assignments = this.courseProvider.getAssignments(course.id);
+                const returnTemp = {
+                    link,
+                    course,
+                    assignments: [],
+                };
+                yield this.fillLinks(student, returnTemp);
+                return returnTemp;
+            }
+            return null;
+        });
+    }
+    getUserSubmittions(student, assignment) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const temp = map_1.MapHelper.find(yield this.courseProvider.getAllLabInfos(), (ele) => ele.studentId === student.id && ele.assignmentId === assignment.id);
+            if (temp) {
+                return {
+                    assignment,
+                    latest: temp,
+                };
+            }
+            return {
+                assignment,
+                latest: undefined,
+            };
+        });
+    }
+    getStudentCourses(student) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const allLinks = yield this.courseProvider.getCoursesStudent();
+            const allCourses = this.courseProvider.getCourses();
+            const links = [];
+            map_1.MapHelper.forEach(yield allCourses, (course) => {
+                const curLink = allLinks.find((link) => link.courseId === course.id && link.personId === student.id);
+                links.push({
+                    assignments: [],
+                    course,
+                    link: curLink,
+                });
+            });
+            for (const link of links) {
+                yield this.fillLinks(student, link);
+            }
+            return links;
+        });
+    }
+    fillLinks(student, studentCourse) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!studentCourse.link) {
+                return;
+            }
+            const allSubmissions = [];
+            const assigns = yield this.getAssignments(studentCourse.course.id);
+            for (const assign of assigns) {
+                const submission = yield this.getUserSubmittions(student, assign);
+                if (submission) {
+                    studentCourse.assignments.push(submission);
+                }
+            }
+        });
+    }
 }
 exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1930,7 +1934,7 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1952,6 +1956,7 @@ class TempDataProvider {
         this.addLocalCourses();
         this.addLocalCourseStudent();
         this.addLocalUsers();
+        this.addLocalLabInfo();
     }
     getAllUser() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -2037,6 +2042,11 @@ class TempDataProvider {
         return __awaiter(this, void 0, void 0, function* () {
             user.isAdmin = !user.isAdmin;
             return true;
+        });
+    }
+    getAllLabInfos() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.localLabInfo;
         });
     }
     addLocalUsers() {
@@ -2222,12 +2232,108 @@ class TempDataProvider {
             { courseId: 0, personId: 2, state: 0 },
         ];
     }
+    addLocalLabInfo() {
+        this.localLabInfo = map_1.mapify([
+            {
+                id: 1,
+                assignmentId: 0,
+                studentId: 999,
+                buildId: 1,
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 1",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+            {
+                id: 2,
+                assignmentId: 1,
+                studentId: 999,
+                buildId: 2,
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 2",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+            {
+                id: 3,
+                assignmentId: 2,
+                studentId: 999,
+                buildId: 3,
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 3",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+            {
+                id: 4,
+                assignmentId: 3,
+                studentId: 999,
+                buildId: 4,
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 4",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+            {
+                id: 5,
+                assignmentId: 4,
+                studentId: 999,
+                buildId: 5,
+                buildDate: new Date(2017, 6, 4),
+                buildLog: "Build log for build 5",
+                executetionTime: 1,
+                score: 75,
+                weight: 1,
+                failedTests: 2,
+                passedTests: 6,
+                testCases: [
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                ],
+            },
+        ], (ele) => {
+            return ele.id;
+        });
+    }
 }
 exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2322,7 +2428,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2366,7 +2472,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2382,7 +2488,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const ViewPage_1 = __webpack_require__(2);
-const HelpView_1 = __webpack_require__(40);
+const HelpView_1 = __webpack_require__(39);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
         super();
@@ -2401,7 +2507,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2457,7 +2563,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2487,7 +2593,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2504,23 +2610,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
-const HelloView_1 = __webpack_require__(12);
+const HelloView_1 = __webpack_require__(11);
 const UserView_1 = __webpack_require__(7);
-const helper_1 = __webpack_require__(8);
-const CollapsableNavMenu_1 = __webpack_require__(13);
-const EnrollmentView_1 = __webpack_require__(43);
+const CollapsableNavMenu_1 = __webpack_require__(12);
+const EnrollmentView_1 = __webpack_require__(42);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
         super();
-        this.selectedCourse = null;
-        this.selectedAssignment = null;
-        this.courses = [];
+        this.studentCourses = [];
         this.foundId = -1;
         this.navMan = navMan;
         this.userMan = users;
         this.courseMan = courseMan;
         this.navHelper.defaultPage = "index";
-        this.navHelper.onPreNavigation.addEventListener((e) => this.setupNavData(e));
         this.navHelper.registerFunction("index", this.index);
         this.navHelper.registerFunction("course/{courseid}", this.course);
         this.navHelper.registerFunction("course/{courseid}/lab/{labid}", this.courseWithLab);
@@ -2538,17 +2640,23 @@ class StudentPage extends ViewPage_1.ViewPage {
     index(navInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.setupData();
-            const courseOverview = yield this.getCoursesWithAssignments();
-            return (React.createElement(components_1.CoursesOverview, { course_overview: courseOverview, navMan: this.navMan }));
+            if (this.studentCourses) {
+                return (React.createElement(components_1.CoursesOverview, { courseOverview: this.onlyActiveCourses(this.studentCourses), navMan: this.navMan }));
+            }
+            return React.createElement("h1", null, "404");
         });
     }
     enroll(navInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.setupData();
+            const curUser = this.userMan.getCurrentUser();
+            if (!curUser) {
+                return React.createElement("h1", null, "404");
+            }
             return React.createElement("div", null,
                 React.createElement("h1", null, "Enrollment page"),
-                React.createElement(EnrollmentView_1.EnrollmentView, { courses: yield this.courseMan.getCourses(), studentCourses: yield this.getRelations(), curUser: this.userMan.getCurrentUser(), onEnrollmentClick: (user, course) => {
-                        this.courseMan.addUserToCourse(user, course);
+                React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.studentCourses, onEnrollmentClick: (course) => {
+                        this.courseMan.addUserToCourse(curUser, course);
                         this.navMan.refresh();
                     } }));
         });
@@ -2557,11 +2665,8 @@ class StudentPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.setupData();
             this.selectCourse(navInfo.params.courseid);
-            if (this.selectedCourse) {
-                const courseAndLabs = yield this.getLabs();
-                if (courseAndLabs) {
-                    return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: courseAndLabs }));
-                }
+            if (this.selectedStudentCourse) {
+                return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: this.selectedStudentCourse }));
             }
             return React.createElement("h1", null, "404 not found");
         });
@@ -2570,12 +2675,15 @@ class StudentPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.setupData();
             this.selectCourse(navInfo.params.courseid);
-            if (this.selectedCourse) {
+            console.log("Course with lab", this.selectedStudentCourse);
+            if (this.selectedStudentCourse) {
                 yield this.selectAssignment(navInfo.params.labid);
-                if (this.selectedAssignment) {
-                    return React.createElement(components_1.StudentLab, { course: this.selectedCourse, assignment: this.selectedAssignment });
+                if (this.selectedStudentAssignment) {
+                    console.log("selected!");
+                    return React.createElement(components_1.StudentLab, { course: this.selectedStudentCourse.course, assignment: this.selectedStudentAssignment });
                 }
             }
+            console.log(navInfo);
             return React.createElement("div", null, "404 not found");
         });
     }
@@ -2590,22 +2698,29 @@ class StudentPage extends ViewPage_1.ViewPage {
     renderMenu(key) {
         return __awaiter(this, void 0, void 0, function* () {
             if (key === 0) {
-                const coursesLinks = yield helper_1.ArrayHelper.mapAsync(this.courses, (course, i) => __awaiter(this, void 0, void 0, function* () {
+                const coursesLinks = this.onlyActiveCourses(this.studentCourses).map((course, i) => {
                     const allLinks = [];
                     allLinks.push({ name: "Labs" });
-                    const labs = yield this.getLabsfor(course);
+                    const labs = course.assignments;
                     allLinks.push(...labs.map((lab, ind) => {
-                        return { name: lab.name, uri: this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
+                        return {
+                            name: lab.assignment.name,
+                            uri: this.pagePath + "/course/" + course.course.id + "/lab/" + lab.assignment.id,
+                        };
                     }));
                     allLinks.push({ name: "Group Labs" });
                     allLinks.push({ name: "Settings" });
-                    allLinks.push({ name: "Members", uri: this.pagePath + "/course/" + course.id + "/members" });
-                    allLinks.push({ name: "Coruse Info", uri: this.pagePath + "/course/" + course.id + "/info" });
+                    allLinks.push({
+                        name: "Members", uri: this.pagePath + "/course/" + course.course.id + "/members",
+                    });
+                    allLinks.push({
+                        name: "Coruse Info", uri: this.pagePath + "/course/" + course.course.id + "/info",
+                    });
                     return {
-                        item: { name: course.tag, uri: this.pagePath + "/course/" + course.id },
+                        item: { name: course.course.tag, uri: this.pagePath + "/course/" + course.course.id },
                         children: allLinks,
                     };
-                }));
+                });
                 const settings = [
                     { name: "Join course", uri: this.pagePath + "/enroll" },
                 ];
@@ -2621,105 +2736,49 @@ class StudentPage extends ViewPage_1.ViewPage {
             return [];
         });
     }
-    setupNavData(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.setupData();
+    onlyActiveCourses(studentCourse) {
+        const temp = [];
+        studentCourse.forEach((a) => {
+            if (a.link) {
+                temp.push(a);
+            }
         });
+        return temp;
     }
     setupData() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.courses = yield this.getCourses();
+            const curUser = this.userMan.getCurrentUser();
+            console.log("Setup data");
+            if (curUser) {
+                this.studentCourses = yield this.courseMan.getStudentCourses(curUser);
+            }
         });
     }
     selectCourse(courseId) {
-        this.selectedCourse = null;
+        this.selectedStudentCourse = undefined;
         const course = parseInt(courseId, 10);
         if (!isNaN(course)) {
-            this.selectedCourse = helper_1.ArrayHelper.find(this.courses, (e, i) => {
-                if (e.id === course) {
-                    this.foundId = i;
-                    return true;
-                }
-                return false;
-            });
+            this.selectedStudentCourse = this.studentCourses.find((e) => e.course.id === course);
         }
     }
     selectAssignment(labIdString) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.selectedAssignment = null;
-            const labId = parseInt(labIdString, 10);
-            if (this.selectedCourse && !isNaN(labId)) {
-                const lab = yield this.courseMan.getAssignment(this.selectedCourse, labId);
-                if (lab) {
-                    this.selectedAssignment = lab;
-                }
-            }
-        });
+        const labId = parseInt(labIdString, 10);
+        console.log("Student course", this.selectedStudentCourse);
+        if (this.selectedStudentCourse && !isNaN(labId)) {
+            this.selectedStudentAssignment = this.selectedStudentCourse.assignments.find((e) => e.assignment.id === labId);
+        }
     }
     handleClick(link) {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
         }
     }
-    getRelations() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const curUsr = this.userMan.getCurrentUser();
-            if (curUsr) {
-                return this.courseMan.getRelationsFor(curUsr);
-            }
-            return [];
-        });
-    }
-    getCourses() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const curUsr = this.userMan.getCurrentUser();
-            if (curUsr) {
-                return this.courseMan.getCoursesFor(curUsr, 1);
-            }
-            return [];
-        });
-    }
-    getLabsfor(course) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.courseMan.getAssignments(course);
-        });
-    }
-    getLabs() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const curUsr = this.userMan.getCurrentUser();
-            if (curUsr && !this.selectedCourse) {
-                this.selectedCourse = (yield this.courseMan.getCoursesFor(curUsr))[0];
-            }
-            if (this.selectedCourse) {
-                const labs = yield this.courseMan.getAssignments(this.selectedCourse);
-                return { course: this.selectedCourse, labs };
-            }
-            return null;
-        });
-    }
-    getCoursesWithAssignments() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const courseLabs = [];
-            if (this.courses.length === 0) {
-                this.courses = yield this.getCourses();
-            }
-            if (this.courses.length > 0) {
-                for (const crs of this.courses) {
-                    const labs = yield this.courseMan.getAssignments(crs);
-                    const cl = { course: crs, labs };
-                    courseLabs.push(cl);
-                }
-                return courseLabs;
-            }
-            return [];
-        });
-    }
 }
 exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2728,33 +2787,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const models_1 = __webpack_require__(4);
-const helper_1 = __webpack_require__(8);
 class EnrollmentView extends React.Component {
     render() {
-        return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.studentCourses, course) });
+        return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
     }
     createEnrollmentRow(studentCourses, course) {
-        const base = [course.tag, course.name];
-        const curUser = this.props.curUser;
-        if (!curUser) {
-            return base;
-        }
-        const temp = helper_1.ArrayHelper.find(studentCourses, (a) => a.courseId === course.id);
-        if (temp) {
-            if (temp.state === models_1.CourseStudentState.accepted) {
+        const base = [course.course.tag, course.course.name];
+        if (course.link) {
+            if (course.link.state === models_1.CourseStudentState.accepted) {
                 base.push("Enrolled");
             }
-            else if (temp.state === models_1.CourseStudentState.pending) {
+            else if (course.link.state === models_1.CourseStudentState.pending) {
                 base.push("Pending");
             }
             else {
                 base.push(React.createElement("div", null,
-                    React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"),
+                    React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course.course); }, className: "btn btn-primary" }, "Enroll"),
                     React.createElement("span", { style: { padding: "7px", verticalAlign: "middle" }, className: "bg-danger" }, "Rejected")));
             }
         }
         else {
-            base.push(React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(curUser, course); }, className: "btn btn-primary" }, "Enroll"));
+            base.push(React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course.course); }, className: "btn btn-primary" }, "Enroll"));
         }
         return base;
     }
@@ -2763,7 +2816,7 @@ exports.EnrollmentView = EnrollmentView;
 
 
 /***/ }),
-/* 44 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2780,11 +2833,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
-const HelloView_1 = __webpack_require__(12);
+const HelloView_1 = __webpack_require__(11);
 const UserView_1 = __webpack_require__(7);
-const CollapsableNavMenu_1 = __webpack_require__(13);
+const CollapsableNavMenu_1 = __webpack_require__(12);
 const models_1 = __webpack_require__(4);
-const helper_1 = __webpack_require__(8);
+const helper_1 = __webpack_require__(44);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
         super();
@@ -2972,6 +3025,55 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
+/* 44 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+class ArrayHelper {
+    static join(array1, array2, callback) {
+        const returnObj = [];
+        for (const ele1 of array1) {
+            for (const ele2 of array2) {
+                if (callback(ele1, ele2)) {
+                    returnObj.push({ ele1, ele2 });
+                }
+            }
+        }
+        return returnObj;
+    }
+    static find(array, predicate) {
+        for (let i = 0; i < array.length; i++) {
+            const cur = array[i];
+            if (predicate.call(array, cur, i, array)) {
+                return cur;
+            }
+        }
+        return null;
+    }
+    static mapAsync(array, callback) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const newArray = [];
+            for (let i = 0; i < array.length; i++) {
+                newArray.push(yield callback(array[i], i, array));
+            }
+            return newArray;
+        });
+    }
+}
+exports.ArrayHelper = ArrayHelper;
+
+
+/***/ }),
 /* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3156,7 +3258,7 @@ exports.CourseView = CourseView;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const NavMenu_1 = __webpack_require__(10);
+const NavMenu_1 = __webpack_require__(9);
 class NavBarLogin extends React.Component {
     constructor() {
         super();
@@ -3331,7 +3433,8 @@ class ServerProvider {
     }
     logout(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            window.location.assign("/logout");
+            return true;
         });
     }
     getAllUser() {

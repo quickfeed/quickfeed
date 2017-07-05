@@ -5,7 +5,15 @@ import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { IAssignment, ICourse, ICourseStudent, ICoursesWithAssignments, IUser } from "../models";
+import {
+    IAssignment,
+    ICourse,
+    ICourseStudent,
+    ICoursesWithAssignments,
+    IStudentCourse,
+    IStudentSubmission,
+    IUser,
+} from "../models";
 
 import { View, ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
@@ -23,10 +31,9 @@ class StudentPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
 
-    private selectedCourse: ICourse | null = null;
-    private selectedAssignment: IAssignment | null = null;
-
-    private courses: ICourse[] = [];
+    private studentCourses: IStudentCourse[] = [];
+    private selectedStudentCourse: IStudentCourse | undefined;
+    private selectedStudentAssignment: IStudentSubmission | undefined;
 
     private foundId: number = -1;
 
@@ -38,7 +45,6 @@ class StudentPage extends ViewPage {
         this.courseMan = courseMan;
 
         this.navHelper.defaultPage = "index";
-        this.navHelper.onPreNavigation.addEventListener((e) => this.setupNavData(e));
 
         this.navHelper.registerFunction<any>("index", this.index);
         this.navHelper.registerFunction<any>("course/{courseid}", this.course);
@@ -59,20 +65,27 @@ class StudentPage extends ViewPage {
 
     public async index(navInfo: INavInfo<any>): View {
         await this.setupData();
-        const courseOverview: ICoursesWithAssignments[] = await this.getCoursesWithAssignments();
-        return (<CoursesOverview course_overview={courseOverview} navMan={this.navMan} />);
+        if (this.studentCourses) {
+            return (<CoursesOverview
+                courseOverview={this.onlyActiveCourses(this.studentCourses)}
+                navMan={this.navMan}
+            />);
+        }
+        return <h1>404</h1>;
     }
 
     public async enroll(navInfo: INavInfo<any>): View {
         await this.setupData();
+        const curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
+            return <h1>404</h1>;
+        }
         return <div>
             <h1>Enrollment page</h1>
             <EnrollmentView
-                courses={await this.courseMan.getCourses()}
-                studentCourses={await this.getRelations()}
-                curUser={this.userMan.getCurrentUser()}
-                onEnrollmentClick={(user: IUser, course: ICourse) => {
-                    this.courseMan.addUserToCourse(user, course);
+                courses={this.studentCourses}
+                onEnrollmentClick={(course: ICourse) => {
+                    this.courseMan.addUserToCourse(curUser, course);
                     this.navMan.refresh();
                 }}>
             </EnrollmentView>
@@ -82,11 +95,8 @@ class StudentPage extends ViewPage {
     public async course(navInfo: INavInfo<{ courseid: string }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
-        if (this.selectedCourse) {
-            const courseAndLabs: ICoursesWithAssignments | null = await this.getLabs();
-            if (courseAndLabs) {
-                return (<SingleCourseOverview courseAndLabs={courseAndLabs} />);
-            }
+        if (this.selectedStudentCourse) {
+            return (<SingleCourseOverview courseAndLabs={this.selectedStudentCourse} />);
         }
         return <h1>404 not found</h1>;
     }
@@ -94,37 +104,51 @@ class StudentPage extends ViewPage {
     public async courseWithLab(navInfo: INavInfo<{ courseid: string, labid: string }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
-        if (this.selectedCourse) {
+        console.log("Course with lab", this.selectedStudentCourse);
+        if (this.selectedStudentCourse) {
             await this.selectAssignment(navInfo.params.labid);
-            if (this.selectedAssignment) {
-                return <StudentLab course={this.selectedCourse} assignment={this.selectedAssignment}></StudentLab>;
+            if (this.selectedStudentAssignment) {
+                console.log("selected!");
+                return <StudentLab
+                    course={this.selectedStudentCourse.course}
+                    assignment={this.selectedStudentAssignment}>
+                </StudentLab>;
             }
         }
+        console.log(navInfo);
         return <div>404 not found</div>;
     }
 
     public async courseMissing(navInfo: INavInfo<{ courseid: string, page: string }>): View {
-        return <div>The page {navInfo.params.page} is not yet implemented</div>;
+        return <div>The page {navInfo.params.page} is not yet implemented</div >;
     }
 
     public async renderMenu(key: number): Promise<JSX.Element[]> {
         if (key === 0) {
-            const coursesLinks: ILinkCollection[] = await ArrayHelper.mapAsync(this.courses, async (course, i) => {
-                const allLinks: ILink[] = [];
-                allLinks.push({ name: "Labs" });
-                const labs = await this.getLabsfor(course);
-                allLinks.push(...labs.map((lab, ind) => {
-                    return { name: lab.name, uri: this.pagePath + "/course/" + course.id + "/lab/" + lab.id };
-                }));
-                allLinks.push({ name: "Group Labs" });
-                allLinks.push({ name: "Settings" });
-                allLinks.push({ name: "Members", uri: this.pagePath + "/course/" + course.id + "/members" });
-                allLinks.push({ name: "Coruse Info", uri: this.pagePath + "/course/" + course.id + "/info" });
-                return {
-                    item: { name: course.tag, uri: this.pagePath + "/course/" + course.id },
-                    children: allLinks,
-                };
-            });
+            const coursesLinks: ILinkCollection[] = this.onlyActiveCourses(this.studentCourses).map(
+                (course, i) => {
+                    const allLinks: ILink[] = [];
+                    allLinks.push({ name: "Labs" });
+                    const labs = course.assignments;
+                    allLinks.push(...labs.map((lab, ind) => {
+                        return {
+                            name: lab.assignment.name,
+                            uri: this.pagePath + "/course/" + course.course.id + "/lab/" + lab.assignment.id,
+                        };
+                    }));
+                    allLinks.push({ name: "Group Labs" });
+                    allLinks.push({ name: "Settings" });
+                    allLinks.push({
+                        name: "Members", uri: this.pagePath + "/course/" + course.course.id + "/members",
+                    });
+                    allLinks.push({
+                        name: "Coruse Info", uri: this.pagePath + "/course/" + course.course.id + "/info",
+                    });
+                    return {
+                        item: { name: course.course.tag, uri: this.pagePath + "/course/" + course.course.id },
+                        children: allLinks,
+                    };
+                });
 
             const settings = [
                 { name: "Join course", uri: this.pagePath + "/enroll" },
@@ -144,37 +168,41 @@ class StudentPage extends ViewPage {
         return [];
     }
 
-    private async setupNavData(data: INavInfoEvent) {
-        await this.setupData();
+    private onlyActiveCourses(studentCourse: IStudentCourse[]): IStudentCourse[] {
+        const temp: IStudentCourse[] = [];
+        studentCourse.forEach((a) => {
+            if (a.link) {
+                temp.push(a);
+            }
+        });
+        return temp;
     }
 
     private async setupData() {
-        this.courses = await this.getCourses();
-    }
-
-    private selectCourse(courseId: string) {
-        this.selectedCourse = null;
-        const course = parseInt(courseId, 10);
-        if (!isNaN(course)) {
-            this.selectedCourse = ArrayHelper.find(this.courses, (e, i) => {
-                if (e.id === course) {
-                    this.foundId = i;
-                    return true;
-                }
-                return false;
-            });
+        const curUser = this.userMan.getCurrentUser();
+        console.log("Setup data");
+        if (curUser) {
+            this.studentCourses = await this.courseMan.getStudentCourses(curUser);
         }
     }
 
-    private async selectAssignment(labIdString: string) {
-        this.selectedAssignment = null;
+    private selectCourse(courseId: string) {
+        this.selectedStudentCourse = undefined;
+        const course = parseInt(courseId, 10);
+        if (!isNaN(course)) {
+            this.selectedStudentCourse = this.studentCourses.find(
+                (e) => e.course.id === course);
+        }
+    }
+
+    private selectAssignment(labIdString: string) {
         const labId = parseInt(labIdString, 10);
-        if (this.selectedCourse && !isNaN(labId)) {
+        console.log("Student course", this.selectedStudentCourse);
+        if (this.selectedStudentCourse && !isNaN(labId)) {
             // TODO: Be carefull not to return anything that sould not be able to be returned
-            const lab = await this.courseMan.getAssignment(this.selectedCourse, labId);
-            if (lab) {
-                this.selectedAssignment = lab;
-            }
+            this.selectedStudentAssignment = this.selectedStudentCourse.assignments.find(
+                (e) => e.assignment.id === labId,
+            );
         }
     }
 
@@ -182,58 +210,6 @@ class StudentPage extends ViewPage {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
         }
-    }
-
-    private async  getRelations(): Promise<ICourseStudent[]> {
-        const curUsr = this.userMan.getCurrentUser();
-        if (curUsr) {
-            return this.courseMan.getRelationsFor(curUsr);
-        }
-        return [];
-    }
-
-    private async getCourses(): Promise<ICourse[]> {
-        const curUsr = this.userMan.getCurrentUser();
-        if (curUsr) {
-            return this.courseMan.getCoursesFor(curUsr, 1);
-        }
-        return [];
-    }
-
-    private async getLabsfor(course: ICourse): Promise<IAssignment[]> {
-        return this.courseMan.getAssignments(course);
-
-    }
-
-    private async getLabs(): Promise<{ course: ICourse, labs: IAssignment[] } | null> {
-        const curUsr = this.userMan.getCurrentUser();
-        if (curUsr && !this.selectedCourse) {
-            this.selectedCourse = (await this.courseMan.getCoursesFor(curUsr))[0];
-        }
-
-        if (this.selectedCourse) {
-
-            const labs = await this.courseMan.getAssignments(this.selectedCourse);
-            return { course: this.selectedCourse, labs };
-        }
-        return null;
-    }
-
-    private async getCoursesWithAssignments(): Promise<ICoursesWithAssignments[]> {
-        const courseLabs: ICoursesWithAssignments[] = [];
-        if (this.courses.length === 0) {
-            this.courses = await this.getCourses();
-        }
-
-        if (this.courses.length > 0) {
-            for (const crs of this.courses) {
-                const labs = await this.courseMan.getAssignments(crs);
-                const cl = { course: crs, labs };
-                courseLabs.push(cl);
-            }
-            return courseLabs;
-        }
-        return [];
     }
 }
 

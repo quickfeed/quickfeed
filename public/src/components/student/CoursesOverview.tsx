@@ -2,20 +2,20 @@ import * as React from "react";
 
 import { CoursePanel, Row } from "../../components";
 
-import { ICoursesWithAssignments } from "../../models";
+import { ICoursesWithAssignments, IStudentCourse } from "../../models";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
 interface ICourseOverviewProps {
-    course_overview: ICoursesWithAssignments[];
+    courseOverview: IStudentCourse[];
     navMan: NavigationManager;
 }
 
 class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
 
     public render() {
-        const courses = this.props.course_overview.map((val, key) => {
-            return <CoursePanel key={key} course={val.course} labs={val.labs} navMan={this.props.navMan} />;
+        const courses = this.props.courseOverview.map((val, key) => {
+            return <CoursePanel key={key} course={val.course} labs={val.assignments} navMan={this.props.navMan} />;
         });
 
         let added: number = 0;

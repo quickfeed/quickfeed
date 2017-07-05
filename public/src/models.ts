@@ -14,6 +14,21 @@ export function isCourse(value: any): value is ICourse {
         && typeof value.tag === "string";
 }
 
+// Browser only objects START
+
+export interface IStudentCourse {
+    course: ICourse;
+    link?: ICourseStudent;
+    assignments: IStudentSubmission[];
+}
+
+export interface IStudentSubmission {
+    assignment: IAssignment;
+    latest?: ILabInfo;
+}
+
+// Browser only objects END
+
 export interface ICourse {
     id: number;
     name: string;
@@ -28,6 +43,12 @@ export interface IAssignment {
     start: Date;
     deadline: Date;
     end: Date;
+    assignmentGroupId?: number;
+}
+
+export interface IAssignmentGroup {
+    id: number;
+    required: number;
 }
 
 export enum CourseStudentState {
@@ -50,17 +71,21 @@ export interface ITestCases {
 }
 
 export interface ILabInfo {
-    lab: string;
-    course: string;
+    id: number;
+    studentId: number;
+    assignmentId: number;
+
+    passedTests: number;
+    failedTests: number;
     score: number;
     weight: number;
-    test_cases: ITestCases[];
-    pass_tests: number;
-    fail_tests: number;
-    exec_time: number;
-    build_time: Date;
-    build_id: number;
-    student?: IUser;
+
+    buildId: number;
+    buildDate: Date;
+    executetionTime: number;
+    buildLog: string;
+    testCases: ITestCases[];
+
 }
 
 export interface ICoursesWithAssignments {
