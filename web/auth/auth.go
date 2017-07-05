@@ -190,9 +190,9 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// AccessControl returns an AccessControl middleware. Given a valid context with
-// sufficient access the next handler is called. Missing or invalid credentials
-// results in a 401 unauthorized response.
+// AccessControl returns an access control middleware. Given a valid context
+// with sufficient access the next handler is called. Missing or invalid
+// credentials results in a 401 unauthorized response.
 func AccessControl(db database.Database, scms map[string]scm.SCM) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
