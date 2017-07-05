@@ -61,6 +61,46 @@ func TestGormDBGetUsers(t *testing.T) {
 	}
 }
 
+func TestGormDBDuplicateIdentity(t *testing.T) {
+	const (
+		uID  = 1
+		rID1 = 1
+
+		secret1   = "123"
+		provider1 = "github"
+		remoteID1 = 10
+	)
+
+	var (
+		wantUser1 = &models.User{
+			ID: uID,
+			RemoteIdentities: []models.RemoteIdentity{{
+				ID:          rID1,
+				Provider:    provider1,
+				RemoteID:    remoteID1,
+				AccessToken: secret1,
+				UserID:      uID,
+			}},
+		}
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	user1, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(user1, wantUser1) {
+		t.Errorf("have user %+v want %+v", user1, wantUser1)
+	}
+
+	if _, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1); err == nil {
+		t.Errorf("expected error '%v'", database.ErrDuplicateIdentity)
+	}
+}
+
 func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	const (
 		uID  = 1

@@ -1,6 +1,8 @@
 package database
 
 import (
+	"errors"
+
 	"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
 )
@@ -78,6 +80,17 @@ func (db *GormDB) GetUsers() (*[]models.User, error) {
 
 // NewUserFromRemoteIdentity implements the Database interface.
 func (db *GormDB) NewUserFromRemoteIdentity(provider string, remoteID uint64, accessToken string) (*models.User, error) {
+	var count int64
+	if err := db.conn.
+		Model(&models.RemoteIdentity{}).
+		Where("provider = ? AND remote_id = ?", provider, remoteID).
+		Count(&count).Error; err != nil {
+		return nil, err
+	}
+	if count != 0 {
+		return nil, ErrDuplicateIdentity
+	}
+
 	user := models.User{
 		RemoteIdentities: []models.RemoteIdentity{{
 			Provider:    provider,
@@ -91,8 +104,23 @@ func (db *GormDB) NewUserFromRemoteIdentity(provider string, remoteID uint64, ac
 	return &user, nil
 }
 
+// ErrDuplicateIdentity is returned when trying to associate a remote identity
+// with a user account and the identity is already in use.
+var ErrDuplicateIdentity = errors.New("remote identity register with another user")
+
 // AssociateUserWithRemoteIdentity implements the Database interface.
 func (db *GormDB) AssociateUserWithRemoteIdentity(userID uint64, provider string, remoteID uint64, accessToken string) error {
+	var count int64
+	if err := db.conn.
+		Model(&models.RemoteIdentity{}).
+		Where("provider = ? AND remote_id = ? AND NOT user_id = ?", provider, remoteID, userID).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count != 0 {
+		return ErrDuplicateIdentity
+	}
+
 	remoteIdentity := models.RemoteIdentity{
 		Provider:    provider,
 		RemoteID:    remoteID,
