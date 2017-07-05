@@ -420,6 +420,14 @@ exports.mapify = mapify;
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
@@ -439,13 +447,44 @@ class UserView extends React.Component {
         }
         return (React.createElement("div", null,
             searchForm,
-            React.createElement(components_1.DynamicTable, { header: ["ID", "First name", "Last name", "Email", "StudentID"], data: this.state.users, selector: (item) => [
-                    item.id.toString(),
-                    item.firstName,
-                    item.lastName,
-                    item.email,
-                    item.personId.toString(),
-                ] })));
+            React.createElement(components_1.DynamicTable, { header: this.getTableHeading(), data: this.state.users, selector: (item) => this.getTableSelector(item) })));
+    }
+    getTableHeading() {
+        let heading = ["ID", "First name", "Last name", "Email", "StudentID"];
+        if (this.props.userMan) {
+            heading = heading.concat("Action");
+        }
+        return heading;
+    }
+    getTableSelector(user) {
+        let selector = [
+            user.id.toString(),
+            user.firstName,
+            user.lastName,
+            user.email,
+            user.personId.toString(),
+        ];
+        if (this.props.userMan) {
+            if (this.props.userMan.isAdmin(user)) {
+                selector = selector.concat(React.createElement("button", { className: "btn btn-danger", onClick: () => this.handleAdminRoleClick(user), "data-toggle": "tooltip", title: "Demote from Admin" }, "Demote"));
+            }
+            else {
+                selector = selector.concat(React.createElement("button", { className: "btn btn-primary", onClick: () => this.handleAdminRoleClick(user), "data-toggle": "tooltip", title: "Promote to Admin" }, "Promote"));
+            }
+        }
+        return selector;
+    }
+    handleAdminRoleClick(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (confirm("Are you sure?")) {
+                if (this.props.userMan && this.props.navMan) {
+                    const res = this.props.userMan.changeAdminRole(user);
+                    this.props.navMan.refresh();
+                    return res;
+                }
+            }
+            return false;
+        });
     }
     handleOnchange(query) {
         query = query.toLowerCase();
@@ -772,10 +811,10 @@ const HomePage_1 = __webpack_require__(41);
 const StudentPage_1 = __webpack_require__(42);
 const TeacherPage_1 = __webpack_require__(44);
 const AdminPage_1 = __webpack_require__(45);
-const NavBarLogin_1 = __webpack_require__(46);
-const NavBarMenu_1 = __webpack_require__(47);
-const LoginPage_1 = __webpack_require__(48);
-const ServerProvider_1 = __webpack_require__(49);
+const NavBarLogin_1 = __webpack_require__(47);
+const NavBarMenu_1 = __webpack_require__(48);
+const LoginPage_1 = __webpack_require__(49);
+const ServerProvider_1 = __webpack_require__(50);
 class AutoGrader extends React.Component {
     constructor(props) {
         super();
@@ -1996,6 +2035,12 @@ class TempDataProvider {
             return true;
         });
     }
+    changeAdminRole(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            user.isAdmin = !user.isAdmin;
+            return true;
+        });
+    }
     addLocalUsers() {
         this.localUsers = map_1.mapify([
             {
@@ -2267,6 +2312,11 @@ class UserManager {
     getUser(id) {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error("Not implemented error");
+        });
+    }
+    changeAdminRole(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.userProvider.changeAdminRole(user);
         });
     }
 }
@@ -2947,6 +2997,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
+const CourseView_1 = __webpack_require__(46);
 const UserView_1 = __webpack_require__(7);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
@@ -2966,7 +3017,7 @@ class AdminPage extends ViewPage_1.ViewPage {
             const allUsers = yield this.userMan.getAllUser();
             return React.createElement("div", null,
                 React.createElement("h1", null, "All Users"),
-                React.createElement(UserView_1.UserView, { users: allUsers, addSearchOption: true }));
+                React.createElement(UserView_1.UserView, { users: allUsers, userMan: this.userMan, navMan: this.navMan, addSearchOption: true }));
         });
     }
     courses(info) {
@@ -2975,7 +3026,7 @@ class AdminPage extends ViewPage_1.ViewPage {
             return React.createElement("div", null,
                 React.createElement(components_1.Button, { className: "btn btn-primary pull-right", text: "+Create New", onClick: () => this.handleNewCourse() }),
                 React.createElement("h1", null, "All Courses"),
-                React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: allCourses, selector: (e) => [e.id.toString(), e.name, e.tag, e.year] }));
+                React.createElement(CourseView_1.CourseView, { courses: allCourses }));
         });
     }
     labs(info) {
@@ -3072,6 +3123,47 @@ exports.AdminPage = AdminPage;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class CourseView extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            courses: this.props.courses,
+        };
+    }
+    render() {
+        const searchIcon = React.createElement("span", { className: "input-group-addon" },
+            React.createElement("i", { className: "glyphicon glyphicon-search" }));
+        return (React.createElement("div", null,
+            React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for courses", onChange: (query) => this.handleOnchange(query) }),
+            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.tag, e.year] })));
+    }
+    handleOnchange(query) {
+        query = query.toLowerCase();
+        const filteredData = [];
+        this.props.courses.forEach((course) => {
+            if (course.name.toLowerCase().indexOf(query) !== -1
+                || course.tag.toLowerCase().indexOf(query) !== -1
+                || course.year.toLowerCase().indexOf(query) !== -1) {
+                filteredData.push(course);
+            }
+        });
+        this.setState({
+            courses: filteredData,
+        });
+    }
+}
+exports.CourseView = CourseView;
+
+
+/***/ }),
+/* 47 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
 const NavMenu_1 = __webpack_require__(10);
 class NavBarLogin extends React.Component {
     constructor() {
@@ -3114,7 +3206,7 @@ exports.NavBarLogin = NavBarLogin;
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3148,7 +3240,7 @@ exports.NavBarMenu = NavBarMenu;
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3205,7 +3297,7 @@ exports.LoginPage = LoginPage;
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3273,6 +3365,11 @@ class ServerProvider {
             else {
                 return null;
             }
+        });
+    }
+    changeAdminRole(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented");
         });
     }
 }

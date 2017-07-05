@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/autograde/aguis/database"
@@ -84,7 +85,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Login(db)
+	authHandler := auth.PreAuth(db)(auth.OAuth2Login(db))
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != nil {
 		t.Error(err)
@@ -106,11 +107,15 @@ func TestOAuth2CallbackUnauthorized(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Callback(db)
+	authHandler := auth.PreAuth(db)(auth.OAuth2Callback(db))
 	withSession := session.Middleware(store)(authHandler)
-	if err := withSession(c); err != echo.ErrUnauthorized {
-		t.Errorf("have error '%s' want '%s'", err, echo.ErrUnauthorized)
+	err := withSession(c)
+	httpErr, ok := err.(*echo.HTTPError)
+	if !ok {
+		t.Errorf("unexpected error type: %v", reflect.TypeOf(err))
 	}
+
+	assertCode(t, httpErr.Code, http.StatusBadRequest)
 }
 
 func TestOAuth2LoginLoggedIn(t *testing.T) {
@@ -138,7 +143,7 @@ func testOAuth2LoggedIn(t *testing.T, newHandler func(db database.Database) echo
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := newHandler(db)
+	authHandler := auth.PreAuth(db)(newHandler(db))
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -157,13 +162,15 @@ func TestOAuth2CallbackAuthenticated(t *testing.T) {
 }
 
 func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database) echo.HandlerFunc) {
+	const userID = "1"
+
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
 	store := newStore()
 	gothic.Store = store
 
-	fauxSession := faux.Session{}
+	fauxSession := faux.Session{ID: userID}
 	s, _ := store.Get(r, fauxSessionName)
 	s.Values[fauxSessionKey] = fauxSession.Marshal()
 	if err := s.Save(r, w); err != nil {
@@ -176,7 +183,7 @@ func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database)
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := newHandler(db)
+	authHandler := auth.PreAuth(db)(newHandler(db))
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -205,7 +212,7 @@ func TestAccessControl(t *testing.T) {
 	defer cleanup()
 
 	// Create a new user.
-	if _, err := db.GetUserByRemoteIdentity(provider, userID, secret); err != nil {
+	if _, err := db.NewUserFromRemoteIdentity(provider, userID, secret); err != nil {
 		t.Error(err)
 	}
 
@@ -244,7 +251,7 @@ func setup(t *testing.T) (*database.GormDB, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(), true)
+	db, err := database.NewGormDB(driver, f.Name(), envSet("LOGDB"))
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
@@ -277,11 +284,14 @@ func newStore() *testStore {
 }
 
 func (ts testStore) login(c echo.Context) error {
-	s, err := ts.Get(c.Request(), auth.UserSession)
+	s, err := ts.Get(c.Request(), auth.SessionKey)
 	if err != nil {
 		return err
 	}
-	s.Values[auth.UserID] = uint64(1)
+	s.Values[auth.UserKey] = &auth.UserSession{
+		ID:        1,
+		Providers: map[string]struct{}{"github": struct{}{}},
+	}
 	return s.Save(c.Request(), c.Response())
 }
 
@@ -307,4 +317,8 @@ func (ts testStore) New(r *http.Request, name string) (*sessions.Session, error)
 func (ts testStore) Save(r *http.Request, w http.ResponseWriter, s *sessions.Session) error {
 	ts.store[r] = s
 	return nil
+}
+
+func envSet(env string) bool {
+	return os.Getenv(env) != ""
 }

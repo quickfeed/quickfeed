@@ -1,9 +1,12 @@
 import * as React from "react";
 import {DynamicTable, Search} from "../../components";
+import {NavigationManager, UserManager} from "../../managers";
 import {IUser} from "../../models";
 
 interface IUserViewerProps {
     users: IUser[];
+    userMan?: UserManager;
+    navMan?: NavigationManager;
     addSearchOption?: boolean;
 }
 
@@ -35,17 +38,58 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
             <div>
                 {searchForm}
                 <DynamicTable
-                    header={["ID", "First name", "Last name", "Email", "StudentID"]}
+                    header={this.getTableHeading()}
                     data={this.state.users}
-                    selector={(item: IUser) => [
-                        item.id.toString(),
-                        item.firstName,
-                        item.lastName,
-                        item.email,
-                        item.personId.toString(),
-                    ]}
+                    selector={(item: IUser) => this.getTableSelector(item)}
                 />
             </div>);
+    }
+
+    private getTableHeading(): string[] {
+        let heading: string[] = ["ID", "First name", "Last name", "Email", "StudentID"];
+        if (this.props.userMan) {
+            heading = heading.concat("Action");
+        }
+        return heading;
+    }
+
+    private getTableSelector(user: IUser): Array<string | JSX.Element> {
+        let selector: Array<string | JSX.Element> = [
+            user.id.toString(),
+            user.firstName,
+            user.lastName,
+            user.email,
+            user.personId.toString(),
+        ];
+        if (this.props.userMan) {
+            if (this.props.userMan.isAdmin(user)) {
+                selector = selector.concat(
+                    <button className="btn btn-danger"
+                            onClick={() => this.handleAdminRoleClick(user)}
+                            data-toggle="tooltip"
+                            title="Demote from Admin">
+                        Demote</button>);
+            } else {
+                selector = selector.concat(
+                    <button className="btn btn-primary"
+                            onClick={() => this.handleAdminRoleClick(user)}
+                            data-toggle="tooltip"
+                            title="Promote to Admin">
+                        Promote</button>);
+            }
+        }
+        return selector;
+    }
+
+    private async handleAdminRoleClick(user: IUser): Promise<boolean> {
+        if (confirm("Are you sure?")) {
+            if (this.props.userMan && this.props.navMan) {
+                const res = this.props.userMan.changeAdminRole(user);
+                this.props.navMan.refresh();
+                return res;
+            }
+        }
+        return false;
     }
 
     private handleOnchange(query: string): void {

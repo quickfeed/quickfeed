@@ -97,6 +97,11 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async changeAdminRole(user: IUser): Promise<boolean> {
+        user.isAdmin = !user.isAdmin;
+        return true;
+    }
+
     private addLocalUsers() {
         this.localUsers = mapify([
             {

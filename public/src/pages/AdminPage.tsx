@@ -1,10 +1,12 @@
 import * as React from "react";
 
-import {Button, CourseForm, DynamicTable, NavMenu, Search} from "../components";
+import {Button, CourseForm, DynamicTable, NavMenu} from "../components";
 
 import {CourseManager, ILink, NavigationManager, UserManager} from "../managers";
 import {INavInfo} from "../NavigationHelper";
 import {View, ViewPage} from "./ViewPage";
+
+import {CourseView} from "./views/CourseView";
 import {UserView} from "./views/UserView";
 
 import {IAssignment, ICourse} from "../models";
@@ -33,7 +35,7 @@ class AdminPage extends ViewPage {
         const allUsers = await this.userMan.getAllUser();
         return <div>
             <h1>All Users</h1>
-            <UserView users={allUsers} addSearchOption={true}/>
+            <UserView users={allUsers} userMan={this.userMan} navMan={this.navMan} addSearchOption={true}/>
         </div>;
     }
 
@@ -44,12 +46,7 @@ class AdminPage extends ViewPage {
                     onClick={() => this.handleNewCourse()}
             />
             <h1>All Courses</h1>
-            <DynamicTable
-                header={["ID", "Name", "Tag", "Year/Semester"]}
-                data={allCourses}
-                selector={(e: ICourse) => [e.id.toString(), e.name, e.tag, e.year]}
-            >
-            </DynamicTable>
+            <CourseView courses={allCourses}/>
         </div>;
     }
 
