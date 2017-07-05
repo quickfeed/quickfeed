@@ -909,7 +909,7 @@ function main() {
         const DEBUG_BROWSER = "DEBUG_BROWSER";
         const DEBUG_SERVER = "DEBUG_SERVER";
         let curRunning;
-        curRunning = DEBUG_BROWSER;
+        curRunning = DEBUG_SERVER;
         const tempData = new managers_1.TempDataProvider();
         let userMan;
         let courseMan;
@@ -3267,8 +3267,7 @@ class ServerProvider {
                     break;
             }
             if (requestString) {
-                const data = yield request(requestString);
-                console.log(data);
+                window.location.assign(requestString);
                 return null;
             }
             else {

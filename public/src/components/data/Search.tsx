@@ -24,7 +24,7 @@ class Search extends React.Component<ISearchProp, ISearchState> {
             addOn = this.props.addonBefore;
         }
         return (
-            <div className={this.props.className ? this.props.className : ""}>
+            <div className={this.props.className ? this.props.className : ""} >
                 {addOn}
                 <input
                     className="form-control"
@@ -46,4 +46,4 @@ class Search extends React.Component<ISearchProp, ISearchState> {
         }
     }
 }
-export {Search};
+export { Search };

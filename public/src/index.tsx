@@ -202,7 +202,7 @@ async function main(): Promise<void> {
     const DEBUG_SERVER = "DEBUG_SERVER";
 
     let curRunning: string;
-    curRunning = DEBUG_BROWSER;
+    curRunning = DEBUG_SERVER;
 
     const tempData = new TempDataProvider();
 
