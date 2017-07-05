@@ -96,11 +96,15 @@ class TeacherPage extends ViewPage {
                         break;
                 }
             });
+            let condPending;
+            if (pendingUsers.length > 0) {
+                condPending = <div><h3>Pending users</h3>{this.createPendingTable(pendingUsers)}</div>;
+            }
             return <div>
-                <h3>Users for {course.name} ({course.tag})</h3>
+                <h1>{course.name} ({course.tag})</h1>
+                <h3>Registered users</h3>
                 <UserView users={acceptedUsers}></UserView>
-                <h3>Pending users for {course.name} ({course.tag})</h3>
-                {this.createPendingTable(pendingUsers)}
+                {condPending}
             </div>;
         }
         return <div>404 Page not found</div>;
@@ -110,28 +114,29 @@ class TeacherPage extends ViewPage {
         return <DynamicTable
             data={pendingUsers}
             header={["ID", "First name", "Last name", "Email", "StudenID", "Action"]}
-            selector={(ele: { ele1: ICourseStudent, ele2: IUser }) => [
-                ele.ele2.id.toString(),
-                ele.ele2.firstName,
-                ele.ele2.lastName,
-                ele.ele2.email,
-                ele.ele2.personId.toString(),
-                <span>
-                    <button onClick={(e) => {
-                        this.courseMan.changeUserState(ele.ele1, CourseStudentState.accepted);
-                        this.navMan.refresh();
-                    }}
-                        className="btn btn-primary">
-                        Accept
+            selector={
+                (ele: { ele1: ICourseStudent, ele2: IUser }) => [
+                    ele.ele2.id.toString(),
+                    ele.ele2.firstName,
+                    ele.ele2.lastName,
+                    ele.ele2.email,
+                    ele.ele2.personId.toString(),
+                    <span>
+                        <button onClick={(e) => {
+                            this.courseMan.changeUserState(ele.ele1, CourseStudentState.accepted);
+                            this.navMan.refresh();
+                        }}
+                            className="btn btn-primary">
+                            Accept
                     </button>
-                    <button onClick={(e) => {
-                        this.courseMan.changeUserState(ele.ele1, CourseStudentState.rejected);
-                        this.navMan.refresh();
-                    }} className="btn btn-danger">
-                        Reject
+                        <button onClick={(e) => {
+                            this.courseMan.changeUserState(ele.ele1, CourseStudentState.rejected);
+                            this.navMan.refresh();
+                        }} className="btn btn-danger">
+                            Reject
                     </button>
-                </span>,
-            ]}
+                    </span>,
+                ]}
         >
         </DynamicTable>;
     }
