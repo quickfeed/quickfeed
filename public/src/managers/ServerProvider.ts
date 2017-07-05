@@ -43,8 +43,7 @@ export class ServerProvider implements IUserProvider {
                 break;
         }
         if (requestString) {
-            const data: string = await request(requestString);
-            console.log(data);
+            window.location.assign(requestString);
             return null;
         } else {
             return null;
