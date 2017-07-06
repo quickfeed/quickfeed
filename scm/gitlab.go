@@ -28,8 +28,9 @@ func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 	var directories []*Directory
 	for _, group := range groups {
 		directories = append(directories, &Directory{
-			ID:   uint64(group.ID),
-			Name: group.Name,
+			ID:     uint64(group.ID),
+			Name:   group.Name,
+			Avatar: group.AvatarURL,
 		})
 	}
 	return directories, nil
@@ -47,8 +48,9 @@ func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 	}
 
 	return &Directory{
-		ID:   uint64(group.ID),
-		Name: group.Name,
+		ID:     uint64(group.ID),
+		Name:   group.Name,
+		Avatar: group.AvatarURL,
 	}, nil
 }
 
@@ -60,8 +62,9 @@ func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 	}
 
 	return &Directory{
-		ID:   uint64(group.ID),
-		Name: group.Name,
+		ID:     uint64(group.ID),
+		Name:   group.Name,
+		Avatar: group.AvatarURL,
 	}, nil
 }
 

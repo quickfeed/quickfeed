@@ -30,8 +30,9 @@ func NewSCMClient(provider, token string) (SCM, error) {
 // Directory represents an entity which is capable of managing source code
 // repositories as well as user access to those repositories.
 type Directory struct {
-	ID   uint64
-	Name string
+	ID     uint64 `json:"id"`
+	Name   string `json:"name"`
+	Avatar string `json:"avatar,omitempty"`
 }
 
 // CreateDirectoryOptions contains information on how a directory should be

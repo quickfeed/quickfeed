@@ -31,8 +31,9 @@ func (s *GithubSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 	var directories []*Directory
 	for _, org := range orgs {
 		directories = append(directories, &Directory{
-			ID:   uint64(org.Organization.GetID()),
-			Name: org.Organization.GetLogin(),
+			ID:     uint64(org.Organization.GetID()),
+			Name:   org.Organization.GetLogin(),
+			Avatar: org.Organization.GetAvatarURL(),
 		})
 	}
 	return directories, nil
@@ -51,6 +52,8 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 	}
 
 	return &Directory{
-		Name: org.GetName(),
+		ID:     uint64(org.GetID()),
+		Name:   org.GetName(),
+		Avatar: org.GetAvatarURL(),
 	}, nil
 }
