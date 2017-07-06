@@ -40,7 +40,7 @@ func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*Directory, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
 		Name:            &opt.Name,
-		Path:            &opt.Name,
+		Path:            &opt.Path,
 		VisibilityLevel: getVisibilityLevel(false),
 	}, gitlab.WithContext(ctx))
 	if err != nil {

@@ -38,6 +38,7 @@ type Directory struct {
 // CreateDirectoryOptions contains information on how a directory should be
 // created.
 type CreateDirectoryOptions struct {
+	Path string
 	Name string
 }
 
