@@ -41,7 +41,10 @@ func (s *GithubSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 
 // CreateDirectory implements the SCM interface.
 func (s *GithubSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*Directory, error) {
-	panic("CreateDirectory is not provided by github")
+	return nil, ErrNotSupported{
+		SCM:    "github",
+		Method: "CreateDirectory",
+	}
 }
 
 // GetDirectory implements the SCM interface.

@@ -40,3 +40,14 @@ type Directory struct {
 type CreateDirectoryOptions struct {
 	Name string
 }
+
+// ErrNotSupported is returned when the source code management solution used
+// does not provide a sufficient API for the method called.
+type ErrNotSupported struct {
+	SCM    string
+	Method string
+}
+
+func (e ErrNotSupported) Error() string {
+	return "method" + e.Method + " not supported by " + e.SCM + " SCM"
+}
