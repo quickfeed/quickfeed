@@ -134,7 +134,7 @@ func TestPreAuthLoggedInNewIdentity(t *testing.T) {
 	testPreAuthLoggedIn(t, true, true, "gitlab")
 }
 
-func testPreAuthLoggedIn(t *testing.T, haveSession, loggedIn bool, newProvider string) {
+func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvider string) {
 	const (
 		provider = "github"
 		remoteID = 0
@@ -160,7 +160,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, loggedIn bool, newProvider s
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if loggedIn {
+	if existingUser {
 		if _, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
 			t.Fatal(err)
 		}
@@ -179,7 +179,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, loggedIn bool, newProvider s
 	switch {
 	case shouldPass:
 		wantLocation = ""
-	case loggedIn:
+	case existingUser:
 		wantLocation = auth.Home
 	}
 	location := w.Header().Get("Location")
