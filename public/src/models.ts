@@ -18,7 +18,7 @@ export function isCourse(value: any): value is ICourse {
 
 export interface IStudentCourse {
     course: ICourse;
-    link?: ICourseStudent;
+    link?: ICourseUser;
     assignments: IStudentSubmission[];
 }
 
@@ -51,17 +51,17 @@ export interface IAssignmentGroup {
     required: number;
 }
 
-export enum CourseStudentState {
+export enum CourseUserState {
     pending = 0,
     student = 1,
     rejected = 2,
     teacher = 3,
 }
 
-export interface ICourseStudent {
+export interface ICourseUser {
     personId: number;
     courseId: number;
-    state: CourseStudentState;
+    state: CourseUserState;
 }
 
 export interface ITestCases {

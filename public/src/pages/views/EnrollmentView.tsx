@@ -1,6 +1,6 @@
 import * as React from "react";
 import { DynamicTable } from "../../components";
-import { CourseStudentState, ICourse, ICourseStudent, IStudentCourse, IUser } from "../../models";
+import { CourseUserState, ICourse, ICourseUser, IStudentCourse, IUser } from "../../models";
 
 import { ArrayHelper } from "../../helper";
 
@@ -22,9 +22,9 @@ class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     public createEnrollmentRow(studentCourses: IStudentCourse[], course: IStudentCourse): Array<string | JSX.Element> {
         const base: Array<string | JSX.Element> = [course.course.tag, course.course.name];
         if (course.link) {
-            if (course.link.state === CourseStudentState.student) {
+            if (course.link.state === CourseUserState.student) {
                 base.push("Enrolled");
-            } else if (course.link.state === CourseStudentState.pending) {
+            } else if (course.link.state === CourseUserState.pending) {
                 base.push("Pending");
             } else {
                 base.push(<div>

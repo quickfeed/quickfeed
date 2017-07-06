@@ -8,8 +8,8 @@ import { UserManager } from "../managers/UserManager";
 import {
     IAssignment,
     ICourse,
-    ICourseStudent,
     ICoursesWithAssignments,
+    ICourseUser,
     IStudentCourse,
     IStudentSubmission,
     IUser,

@@ -9,7 +9,7 @@ import { UserView } from "./views/UserView";
 import { INavInfo } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { CourseStudentState, IAssignment, ICourse, ICourseStudent, IUser } from "../models";
+import { CourseUserState, IAssignment, ICourse, ICourseUser, IUser } from "../models";
 
 import { ArrayHelper } from "../helper";
 
@@ -64,8 +64,8 @@ class TeacherPage extends ViewPage {
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const courseStds: ICourseStudent[] =
-                await this.courseMan.getUserIdsForCourse(course, CourseStudentState.student);
+            const courseStds: ICourseUser[] =
+                await this.courseMan.getUserIdsForCourse(course, CourseUserState.student);
             // TODO: currently userMan.getUsers does not return correct users
             // fix: return a Map for getAllUser method in UserManager
             const students: IUser[] = await this.userMan.getUsers(courseStds.map((e) => e.personId));
@@ -85,13 +85,13 @@ class TeacherPage extends ViewPage {
 
             const all = ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
             const acceptedUsers: IUser[] = [];
-            const pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }> = [];
+            const pendingUsers: Array<{ ele1: ICourseUser, ele2: IUser }> = [];
             all.forEach((ele, id) => {
                 switch (ele.ele1.state) {
-                    case CourseStudentState.student:
+                    case CourseUserState.student:
                         acceptedUsers.push(ele.ele2);
                         break;
-                    case CourseStudentState.pending:
+                    case CourseUserState.pending:
                         pendingUsers.push(ele);
                         break;
                 }
@@ -110,25 +110,25 @@ class TeacherPage extends ViewPage {
         return <div>404 Page not found</div>;
     }
 
-    public createPendingTable(pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }>): JSX.Element {
+    public createPendingTable(pendingUsers: Array<{ ele1: ICourseUser, ele2: IUser }>): JSX.Element {
         return <DynamicTable
             data={pendingUsers}
             header={["Name", "Email", "Student ID", "Action"]}
             selector={
-                (ele: { ele1: ICourseStudent, ele2: IUser }) => [
+                (ele: { ele1: ICourseUser, ele2: IUser }) => [
                     ele.ele2.firstName + " " + ele.ele2.lastName,
                     <a href={"mailto:" + ele.ele2.email}>{ele.ele2.email}</a>,
                     ele.ele2.personId.toString(),
                     <span>
                         <button onClick={(e) => {
-                            this.courseMan.changeUserState(ele.ele1, CourseStudentState.student);
+                            this.courseMan.changeUserState(ele.ele1, CourseUserState.student);
                             this.navMan.refresh();
                         }}
                             className="btn btn-primary">
                             Accept
                     </button>
                         <button onClick={(e) => {
-                            this.courseMan.changeUserState(ele.ele1, CourseStudentState.rejected);
+                            this.courseMan.changeUserState(ele.ele1, CourseUserState.rejected);
                             this.navMan.refresh();
                         }} className="btn btn-danger">
                             Reject
