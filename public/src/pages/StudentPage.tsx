@@ -145,7 +145,7 @@ export class StudentPage extends ViewPage {
                         name: "Coruse Info", uri: this.pagePath + "/course/" + course.course.id + "/info",
                     });
                     return {
-                        item: { name: course.course.tag, uri: this.pagePath + "/course/" + course.course.id },
+                        item: { name: course.course.code, uri: this.pagePath + "/course/" + course.course.id },
                         children: allLinks,
                     };
                 });

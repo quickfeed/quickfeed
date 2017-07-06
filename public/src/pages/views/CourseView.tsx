@@ -31,7 +31,7 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
                 <DynamicTable
                     header={["ID", "Name", "Tag", "Year/Semester"]}
                     data={this.state.courses}
-                    selector={(e: ICourse) => [e.id.toString(), e.name, e.tag, e.year]}
+                    selector={(e: ICourse) => [e.id.toString(), e.name, e.code, e.year]}
                 >
                 </DynamicTable>
             </div>
@@ -43,7 +43,7 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
         const filteredData: ICourse[] = [];
         this.props.courses.forEach((course) => {
             if (course.name.toLowerCase().indexOf(query) !== -1
-                || course.tag.toLowerCase().indexOf(query) !== -1
+                || course.code.toLowerCase().indexOf(query) !== -1
                 || course.year.toLowerCase().indexOf(query) !== -1
             ) {
                 filteredData.push(course);

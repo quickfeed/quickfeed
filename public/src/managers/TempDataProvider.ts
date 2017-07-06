@@ -256,31 +256,31 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             {
                 id: 0,
                 name: "Object Oriented Programming",
-                tag: "DAT100",
+                code: "DAT100",
                 year: "Spring 2017",
             },
             {
                 id: 1,
                 name: "Algorithms and Datastructures",
-                tag: "DAT200",
+                code: "DAT200",
                 year: "Spring 2017",
             },
             {
                 id: 2,
                 name: "Databases",
-                tag: "DAT220",
+                code: "DAT220",
                 year: "Spring 2017",
             },
             {
                 id: 3,
                 name: "Communication Technology",
-                tag: "DAT230",
+                code: "DAT230",
                 year: "Spring 2017",
             },
             {
                 id: 4,
                 name: "Operating Systems",
-                tag: "DAT320",
+                code: "DAT320",
                 year: "Spring 2017",
             },
         ], (ele) => ele.id);

@@ -42,7 +42,7 @@ export interface IUserRelation {
 export interface ICourse {
     id: number;
     name: string;
-    tag: string;
+    code: string;
     year: string;
 }
 

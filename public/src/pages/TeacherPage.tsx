@@ -46,9 +46,10 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("user", async (navInfo) => {
             return <UserView users={await userMan.getAllUser()}></UserView>;
         });
-        this.navHelper.registerFunction("user", async (navInfo) => {
-            return <HelloView></HelloView>;
-        });
+        // TODO remove the following code; it does not appear to be in use since the above endpoint is equal.
+        // this.navHelper.registerFunction("user", async (navInfo) => {
+        //     return <HelloView></HelloView>;
+        // });
     }
 
     public async init(): Promise<void> {
@@ -142,7 +143,7 @@ export class TeacherPage extends ViewPage {
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
-                        name: e.tag,
+                        name: e.code,
                         uri: this.pagePath + "/course/" + e.id,
                     }));
                 });
