@@ -20,9 +20,9 @@ func init() {
 
 // Frontend URLs.
 const (
-	home   = "/app/home"
-	logout = "/app/logout"
-	login  = "/app/newlogin"
+	Home   = "/app/home"
+	Logout = "/app/logout"
+	Login  = "/app/newlogin"
 )
 
 // Session keys.
@@ -65,10 +65,7 @@ func OAuth2Logout() echo.HandlerFunc {
 		}
 
 		if i, ok := sess.Values[UserKey]; ok {
-			us, ok := i.(*UserSession)
-			if !ok {
-				return c.Redirect(http.StatusFound, logout)
-			}
+			us := i.(*UserSession)
 			// Invalidate gothic user sessions.
 			for provider := range us.Providers {
 				sess, err := session.Get(provider+GothicSessionKey, c)
@@ -86,7 +83,7 @@ func OAuth2Logout() echo.HandlerFunc {
 		sess.Values = make(map[interface{}]interface{})
 		sess.Save(r, w)
 
-		return c.Redirect(http.StatusFound, logout)
+		return c.Redirect(http.StatusFound, Logout)
 	}
 }
 
@@ -104,16 +101,13 @@ func PreAuth(db database.Database) echo.MiddlewareFunc {
 			}
 
 			if i, ok := sess.Values[UserKey]; ok {
-				us, ok := i.(*UserSession)
-				if !ok {
-					return OAuth2Logout()(c)
-				}
+				us := i.(*UserSession)
 				if _, err := db.GetUser(us.ID); err != nil {
 					return OAuth2Logout()(c)
 				}
 				if _, ok := us.Providers[c.Param("provider")]; ok {
 					// Provider has already been registered.
-					return c.Redirect(http.StatusFound, home)
+					return c.Redirect(http.StatusFound, Home)
 				}
 			}
 
@@ -140,7 +134,7 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		}
 
 		// The user navigated to /auth/:provider but is already authenticated.
-		return c.Redirect(http.StatusFound, home)
+		return c.Redirect(http.StatusFound, Home)
 	}
 }
 
@@ -172,15 +166,15 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			if !ok {
 				return OAuth2Logout()(c)
 			}
-
 			us := i.(*UserSession)
+
 			// Associate user with remote identity.
 			if err := db.AssociateUserWithRemoteIdentity(
 				us.ID, externalUser.Provider, remoteID, externalUser.AccessToken,
 			); err != nil {
 				return err
 			}
-			return c.Redirect(http.StatusFound, login)
+			return c.Redirect(http.StatusFound, Login)
 		}
 
 		// Try to get user from database.
@@ -206,7 +200,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		return c.Redirect(http.StatusFound, login)
+		return c.Redirect(http.StatusFound, Login)
 	}
 }
 
@@ -229,11 +223,7 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				return echo.ErrUnauthorized
 			}
 
-			us, ok := i.(*UserSession)
-			if !ok {
-				return echo.ErrUnauthorized
-			}
-
+			us := i.(*UserSession)
 			user, err := db.GetUser(us.ID)
 			if err != nil {
 				return err

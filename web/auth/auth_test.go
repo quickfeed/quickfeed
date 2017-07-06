@@ -85,7 +85,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.PreAuth(db)(auth.OAuth2Login(db))
+	authHandler := auth.OAuth2Login(db)
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != nil {
 		t.Error(err)
@@ -107,7 +107,7 @@ func TestOAuth2CallbackUnauthorized(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.PreAuth(db)(auth.OAuth2Callback(db))
+	authHandler := auth.OAuth2Callback(db)
 	withSession := session.Middleware(store)(authHandler)
 	err := withSession(c)
 	httpErr, ok := err.(*echo.HTTPError)
@@ -118,15 +118,30 @@ func TestOAuth2CallbackUnauthorized(t *testing.T) {
 	assertCode(t, httpErr.Code, http.StatusBadRequest)
 }
 
-func TestOAuth2LoginLoggedIn(t *testing.T) {
-	testOAuth2LoggedIn(t, auth.OAuth2Login)
+func TestPreAuthNoSession(t *testing.T) {
+	testPreAuthLoggedIn(t, false, false, "github")
 }
 
-func TestOAuth2CallbackLoggedIn(t *testing.T) {
-	testOAuth2LoggedIn(t, auth.OAuth2Callback)
+func TestPreAuthLoggedIn(t *testing.T) {
+	testPreAuthLoggedIn(t, true, false, "github")
 }
 
-func testOAuth2LoggedIn(t *testing.T, newHandler func(db database.Database) echo.HandlerFunc) {
+func TestPreAuthLoggedInNoDBUser(t *testing.T) {
+	testPreAuthLoggedIn(t, true, true, "github")
+}
+
+func TestPreAuthLoggedInNewIdentity(t *testing.T) {
+	testPreAuthLoggedIn(t, true, true, "gitlab")
+}
+
+func testPreAuthLoggedIn(t *testing.T, haveSession, loggedIn bool, newProvider string) {
+	const (
+		provider = "github"
+		userID   = 0
+		secret   = "secret"
+	)
+	shouldPass := !haveSession || newProvider != provider
+
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
@@ -136,32 +151,59 @@ func testOAuth2LoggedIn(t *testing.T, newHandler func(db database.Database) echo
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	if err := store.login(c); err != nil {
-		t.Error(err)
+	if haveSession {
+		if err := store.login(c); err != nil {
+			t.Error(err)
+		}
 	}
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.PreAuth(db)(newHandler(db))
+	if loggedIn {
+		if _, err := db.NewUserFromRemoteIdentity(provider, userID, secret); err != nil {
+			t.Fatal(err)
+		}
+		c.SetParamNames("provider")
+		c.SetParamValues(newProvider)
+	}
+
+	authHandler := auth.PreAuth(db)(func(c echo.Context) error { return nil })
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
 		t.Error(err)
 	}
 
-	assertCode(t, w.Code, http.StatusFound)
+	wantLocation := auth.Logout
+	switch {
+	case shouldPass:
+		wantLocation = ""
+	case loggedIn:
+		wantLocation = auth.Home
+	}
+	location := w.Header().Get("Location")
+	if location != wantLocation {
+		t.Errorf("have Location '%v' want '%v'", location, wantLocation)
+	}
+
+	wantCode := http.StatusFound
+	if shouldPass {
+		wantCode = http.StatusOK
+	}
+
+	assertCode(t, w.Code, wantCode)
 }
 
 func TestOAuth2LoginAuthenticated(t *testing.T) {
-	testOAuth2Authenticated(t, auth.OAuth2Login)
+	testOAuth2Authenticated(t, auth.Home, auth.OAuth2Login)
 }
 
 func TestOAuth2CallbackAuthenticated(t *testing.T) {
-	testOAuth2Authenticated(t, auth.OAuth2Callback)
+	testOAuth2Authenticated(t, auth.Login, auth.OAuth2Callback)
 }
 
-func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database) echo.HandlerFunc) {
+func testOAuth2Authenticated(t *testing.T, wantLocation string, newHandler func(db database.Database) echo.HandlerFunc) {
 	const userID = "1"
 
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
@@ -183,13 +225,17 @@ func testOAuth2Authenticated(t *testing.T, newHandler func(db database.Database)
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.PreAuth(db)(newHandler(db))
+	authHandler := newHandler(db)
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
 		t.Error(err)
 	}
 
+	location := w.Header().Get("Location")
+	if location != wantLocation {
+		t.Errorf("have Location '%v' want '%v'", location, wantLocation)
+	}
 	assertCode(t, w.Code, http.StatusFound)
 }
 
@@ -290,7 +336,7 @@ func (ts testStore) login(c echo.Context) error {
 	}
 	s.Values[auth.UserKey] = &auth.UserSession{
 		ID:        1,
-		Providers: map[string]struct{}{"github": struct{}{}},
+		Providers: map[string]struct{}{"github": {}},
 	}
 	return s.Save(c.Request(), c.Response())
 }
