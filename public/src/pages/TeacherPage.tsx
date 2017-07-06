@@ -22,7 +22,7 @@ import {
 import { ArrayHelper } from "../helper";
 import { MemberView } from "./views/MemberView";
 
-class TeacherPage extends ViewPage {
+export class TeacherPage extends ViewPage {
 
     private navMan: NavigationManager;
     private userMan: UserManager;
@@ -194,5 +194,3 @@ class TeacherPage extends ViewPage {
         return this.userMan.isTeacher(curUser);
     }
 }
-
-export { TeacherPage };

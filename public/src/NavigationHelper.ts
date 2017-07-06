@@ -1,26 +1,26 @@
 
 import { IEventData, newEvent } from "./event";
 
-interface INavPath {
+export interface INavPath {
     [path: string]: INavPath | INavObject;
 }
 
-interface INavInfo<T> {
+export interface INavInfo<T> {
     matchPath: string[];
     realPath: string[];
     params: T;
 }
 
-interface INavInfoEvent extends IEventData {
+export interface INavInfoEvent extends IEventData {
     navInfo: INavInfo<any>;
 }
 
-interface INavObject {
+export interface INavObject {
     path: string[];
     func: (navInfo: INavInfo<any>) => Promise<JSX.Element>;
 }
 
-class NavigationHelper {
+export class NavigationHelper {
     public static getParts(path: string): string[] {
         return this.removeEmptyEntries(path.split("/"));
     }
@@ -169,5 +169,3 @@ class NavigationHelper {
         return curObj;
     }
 }
-
-export { INavInfo, INavInfoEvent, INavObject, INavPath, NavigationHelper };

@@ -15,7 +15,7 @@ import {
 
 import { UserManager } from "../managers";
 
-interface ICourseProvider {
+export interface ICourseProvider {
     getCourses(): Promise<IMap<ICourse>>;
     getAssignments(courseId: number): Promise<IMap<IAssignment>>;
     getCoursesStudent(): Promise<ICourseUserLink[]>;
@@ -25,7 +25,7 @@ interface ICourseProvider {
     getAllLabInfos(): Promise<IMap<ILabInfo>>;
 }
 
-class CourseManager {
+export class CourseManager {
     private courseProvider: ICourseProvider;
 
     constructor(courseProvider: ICourseProvider) {
@@ -199,5 +199,3 @@ class CourseManager {
         }
     }
 }
-
-export { ICourseProvider, CourseManager };

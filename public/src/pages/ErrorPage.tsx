@@ -3,7 +3,7 @@ import { View, ViewPage } from "./ViewPage";
 
 import { NavigationHelper } from "../NavigationHelper";
 
-class ErrorPage extends ViewPage {
+export class ErrorPage extends ViewPage {
     private pages: { [key: string]: JSX.Element } = {};
 
     constructor() {
@@ -28,5 +28,3 @@ class ErrorPage extends ViewPage {
         return content;
     }
 }
-
-export { ErrorPage };

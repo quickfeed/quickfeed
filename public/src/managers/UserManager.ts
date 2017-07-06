@@ -4,7 +4,7 @@ import { IUser } from "../models";
 import { ArrayHelper } from "../helper";
 import { IMap, MapHelper } from "../map";
 
-interface IUserProvider {
+export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<IUser | null>;
     logout(user: IUser): Promise<boolean>;
     getAllUser(): Promise<IMap<IUser>>;
@@ -16,7 +16,7 @@ interface IUserLoginEvent extends IEventData {
     user: IUser;
 }
 
-class UserManager {
+export class UserManager {
     public onLogin = newEvent<IUserLoginEvent>("UserManager.onLogin");
     public onLogout = newEvent<IEventData>("UserManager.onLogout");
 
@@ -93,5 +93,3 @@ class UserManager {
         return this.userProvider.changeAdminRole(user);
     }
 }
-
-export { IUserProvider, UserManager };

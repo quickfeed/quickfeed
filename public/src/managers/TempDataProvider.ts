@@ -9,7 +9,7 @@ interface IDummyUser extends IUser {
     password: string;
 }
 
-class TempDataProvider implements IUserProvider, ICourseProvider {
+export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private localUsers: IMap<IDummyUser>;
     private localAssignments: IMap<IAssignment>;
@@ -403,5 +403,3 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
 }
-
-export { TempDataProvider };

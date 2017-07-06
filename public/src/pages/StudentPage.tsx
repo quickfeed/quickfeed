@@ -26,7 +26,7 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { ILinkCollection } from "../managers";
 import { EnrollmentView } from "./views/EnrollmentView";
 
-class StudentPage extends ViewPage {
+export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
@@ -212,5 +212,3 @@ class StudentPage extends ViewPage {
         }
     }
 }
-
-export { StudentPage };

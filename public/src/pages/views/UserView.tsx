@@ -14,7 +14,7 @@ interface IUserViewerState {
     users: IUser[];
 }
 
-class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
+export class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
 
     public constructor(props: IUserViewerProps) {
         super(props);
@@ -87,12 +87,10 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
     }
 
     private async handleAdminRoleClick(user: IUser): Promise<boolean> {
-        if (confirm("Are you sure?")) {
-            if (this.props.userMan && this.props.navMan) {
-                const res = this.props.userMan.changeAdminRole(user);
-                this.props.navMan.refresh();
-                return res;
-            }
+        if (this.props.userMan && this.props.navMan) {
+            const res = this.props.userMan.changeAdminRole(user);
+            this.props.navMan.refresh();
+            return res;
         }
         return false;
     }
@@ -115,5 +113,3 @@ class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
         });
     }
 }
-
-export { UserView };

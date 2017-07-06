@@ -6,7 +6,8 @@ interface ILabInfoProps {
     course: ICourse;
     labInfo: IStudentSubmission;
 }
-class LabResultView extends React.Component<ILabInfoProps, {}> {
+
+export class LabResultView extends React.Component<ILabInfoProps, {}> {
 
     public render() {
         if (this.props.labInfo.latest) {
@@ -47,5 +48,3 @@ class LabResultView extends React.Component<ILabInfoProps, {}> {
         return <h1>No subissions have been submitted yet</h1>;
     }
 }
-
-export { LabResultView };

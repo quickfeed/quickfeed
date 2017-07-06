@@ -1,8 +1,8 @@
-interface IEventData {
+export interface IEventData {
     target: any;
 }
 
-interface INewEvent<T extends IEventData> {
+export interface INewEvent<T extends IEventData> {
     (event: T): void;
     info: string;
     addEventListener(listener: (event: T) => void): void;
@@ -16,7 +16,7 @@ interface INewEvent<T extends IEventData> {
  * @param info The name of the event that should fire.
  * Usualy at the format {ClassName/sender}.{eventName}
  */
-function newEvent<T extends IEventData>(info: string): INewEvent<T> {
+export function newEvent<T extends IEventData>(info: string): INewEvent<T> {
     const callbacks: Array<((event: T) => void)> = [];
 
     const handler = function EventHandler(event: T) {
@@ -37,5 +37,3 @@ function newEvent<T extends IEventData>(info: string): INewEvent<T> {
     };
     return handler;
 }
-
-export { IEventData, INewEvent, newEvent };

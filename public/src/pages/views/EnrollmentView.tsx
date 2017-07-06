@@ -4,12 +4,12 @@ import { CourseUserState, ICourse, ICourseUserLink, IUser, IUserCourse } from ".
 
 import { ArrayHelper } from "../../helper";
 
-interface IEnrollmentViewProps {
+export interface IEnrollmentViewProps {
     courses: IUserCourse[];
     onEnrollmentClick: (course: ICourse) => void;
 }
 
-class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
+export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     public render() {
         return <DynamicTable
             data={this.props.courses}
@@ -49,5 +49,3 @@ class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         return base;
     }
 }
-
-export { EnrollmentView, IEnrollmentViewProps };

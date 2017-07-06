@@ -1,8 +1,4 @@
-interface IJoinType<T extends { [key: string]: T1 | T2 }, K extends keyof T, T1, T2> {
-    [key: string]: T1 | T2;
-}
-
-class ArrayHelper {
+export class ArrayHelper {
 
     public static join<T, T2>(
         array1: T[],
@@ -42,5 +38,3 @@ class ArrayHelper {
         return newArray;
     }
 }
-
-export { ArrayHelper };

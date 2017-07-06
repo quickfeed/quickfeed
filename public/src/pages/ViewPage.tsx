@@ -2,16 +2,16 @@ import * as React from "react";
 
 import { NavigationHelper } from "../NavigationHelper";
 
-type View = Promise<JSX.Element>;
+export type View = Promise<JSX.Element>;
 
-function isViewPage(item: any): item is ViewPage {
+export function isViewPage(item: any): item is ViewPage {
     if (item instanceof ViewPage) {
         return true;
     }
     return false;
 }
 
-abstract class ViewPage {
+export abstract class ViewPage {
     public template: string | null = null;
     public pagePath: string;
     public navHelper: NavigationHelper = new NavigationHelper(this);
@@ -38,5 +38,3 @@ abstract class ViewPage {
         return <div>404 Not found</div>;
     }
 }
-
-export { isViewPage, View, ViewPage };

@@ -1,6 +1,6 @@
 import * as React from "react";
-import {DynamicTable, Search} from "../../components";
-import {ICourse} from "../../models";
+import { DynamicTable, Search } from "../../components";
+import { ICourse } from "../../models";
 
 interface ICourseViewProp {
     courses: ICourse[];
@@ -10,7 +10,7 @@ interface ICourseViewState {
     courses: ICourse[];
 }
 
-class CourseView extends React.Component<ICourseViewProp, ICourseViewState> {
+export class CourseView extends React.Component<ICourseViewProp, ICourseViewState> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -24,9 +24,9 @@ class CourseView extends React.Component<ICourseViewProp, ICourseViewState> {
         return (
             <div>
                 <Search className="input-group"
-                        addonBefore={searchIcon}
-                        placeholder="Search for courses"
-                        onChange={(query) => this.handleOnchange(query)}
+                    addonBefore={searchIcon}
+                    placeholder="Search for courses"
+                    onChange={(query) => this.handleOnchange(query)}
                 />
                 <DynamicTable
                     header={["ID", "Name", "Tag", "Year/Semester"]}
@@ -55,4 +55,3 @@ class CourseView extends React.Component<ICourseViewProp, ICourseViewState> {
         });
     }
 }
-export {CourseView};

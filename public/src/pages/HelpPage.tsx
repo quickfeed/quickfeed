@@ -5,7 +5,7 @@ import { HelpView } from "./views/HelpView";
 
 import { INavInfo, NavigationHelper } from "../NavigationHelper";
 
-class HelpPage extends ViewPage {
+export class HelpPage extends ViewPage {
 
     private navMan: NavigationManager;
     private pages: { [name: string]: JSX.Element } = {};
@@ -21,4 +21,3 @@ class HelpPage extends ViewPage {
         return <HelpView></HelpView>;
     }
 }
-export { HelpPage };
