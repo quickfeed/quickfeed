@@ -31,7 +31,7 @@ func NewSCMClient(provider, token string) (SCM, error) {
 // repositories as well as user access to those repositories.
 type Directory struct {
 	ID     uint64 `json:"id"`
-	Name   string `json:"name"`
+	Path   string `json:"path"`
 	Avatar string `json:"avatar,omitempty"`
 }
 
