@@ -137,7 +137,7 @@ func TestPreAuthLoggedInNewIdentity(t *testing.T) {
 func testPreAuthLoggedIn(t *testing.T, haveSession, loggedIn bool, newProvider string) {
 	const (
 		provider = "github"
-		userID   = 0
+		remoteID = 0
 		secret   = "secret"
 	)
 	shouldPass := !haveSession || newProvider != provider
@@ -161,7 +161,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, loggedIn bool, newProvider s
 	defer cleanup()
 
 	if loggedIn {
-		if _, err := db.NewUserFromRemoteIdentity(provider, userID, secret); err != nil {
+		if _, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
 			t.Fatal(err)
 		}
 		c.SetParamNames("provider")
@@ -242,7 +242,7 @@ func testOAuth2Authenticated(t *testing.T, wantLocation string, newHandler func(
 func TestAccessControl(t *testing.T) {
 	const (
 		provider = "github"
-		userID   = 0
+		remoteID = 0
 		secret   = "secret"
 	)
 
@@ -258,7 +258,7 @@ func TestAccessControl(t *testing.T) {
 	defer cleanup()
 
 	// Create a new user.
-	if _, err := db.NewUserFromRemoteIdentity(provider, userID, secret); err != nil {
+	if _, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
 		t.Error(err)
 	}
 
