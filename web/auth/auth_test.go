@@ -196,14 +196,6 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 }
 
 func TestOAuth2LoginAuthenticated(t *testing.T) {
-	testOAuth2Authenticated(t, auth.Home, auth.OAuth2Login)
-}
-
-func TestOAuth2CallbackAuthenticated(t *testing.T) {
-	testOAuth2Authenticated(t, auth.Login, auth.OAuth2Callback)
-}
-
-func testOAuth2Authenticated(t *testing.T, wantLocation string, newHandler func(db database.Database) echo.HandlerFunc) {
 	const userID = "1"
 
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
@@ -225,7 +217,7 @@ func testOAuth2Authenticated(t *testing.T, wantLocation string, newHandler func(
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := newHandler(db)
+	authHandler := auth.OAuth2Login(db)
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -233,9 +225,64 @@ func testOAuth2Authenticated(t *testing.T, wantLocation string, newHandler func(
 	}
 
 	location := w.Header().Get("Location")
-	if location != wantLocation {
-		t.Errorf("have Location '%v' want '%v'", location, wantLocation)
+	if location != auth.Home {
+		t.Errorf("have Location '%v' want '%v'", location, auth.Home)
 	}
+	assertCode(t, w.Code, http.StatusFound)
+}
+
+func TestOAuth2CallbackNoSession(t *testing.T) {
+	testOAuth2Callback(t, false)
+}
+
+func TestOAuth2CallbackLoggedIn(t *testing.T) {
+	testOAuth2Callback(t, true)
+}
+
+func testOAuth2Callback(t *testing.T, haveSession bool) {
+	const (
+		provider = "github"
+		userID   = "1"
+		remoteID = 0
+		secret   = "secret"
+	)
+	r := httptest.NewRequest(http.MethodGet, authURL, nil)
+	w := httptest.NewRecorder()
+
+	store := newStore()
+	gothic.Store = store
+
+	fauxSession := faux.Session{ID: userID}
+	s, _ := store.Get(r, fauxSessionName)
+	s.Values[fauxSessionKey] = fauxSession.Marshal()
+	if err := s.Save(r, w); err != nil {
+		t.Error(err)
+	}
+
+	e := echo.New()
+	c := e.NewContext(r, w)
+
+	if haveSession {
+		if err := store.login(c); err != nil {
+			t.Error(err)
+		}
+	}
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	authHandler := auth.OAuth2Callback(db)
+	withSession := session.Middleware(store)(authHandler)
+
+	if err := withSession(c); err != nil {
+		t.Error(err)
+	}
+
+	location := w.Header().Get("Location")
+	if location != auth.Login {
+		t.Errorf("have Location '%v' want '%v'", location, auth.Login)
+	}
+
 	assertCode(t, w.Code, http.StatusFound)
 }
 
