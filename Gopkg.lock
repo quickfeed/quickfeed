@@ -116,10 +116,10 @@
   revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/xanzy/go-gitlab"
   packages = ["."]
-  revision = "5b756e2fdc9f21fd4791fa1453b8fe01af0f82e2"
-  version = "v0.5.1"
+  revision = "a8062fd5e8b87cc1f308b7c85fd94560324ee2b7"
 
 [[projects]]
   branch = "master"
@@ -154,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "514166fd3bb739d32ec87bcdf1892a19294363fee9aa76d6223d86c24047fb52"
+  inputs-digest = "9a75f5e1b85c3717e3cb4d735f8009f602c69e9fa2c075d3a0eee1a5289ca443"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -11,8 +11,8 @@
   name = "github.com/markbates/goth"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/xanzy/go-gitlab"
-  version = "0.5.1"
 
 [[constraint]]
   branch = "master"
