@@ -49,7 +49,7 @@ class CourseManager {
         const cLinks: ICourseStudent[] = [];
 
         for (const c of await this.courseProvider.getCoursesStudent()) {
-            if (user.id === c.personId && (state === undefined || c.state === CourseStudentState.accepted)) {
+            if (user.id === c.personId && (state === undefined || c.state === CourseStudentState.student)) {
                 cLinks.push(c);
             }
         }
@@ -60,7 +60,7 @@ class CourseManager {
         const cLinks: ICourseStudent[] = [];
 
         for (const c of await this.courseProvider.getCoursesStudent()) {
-            if (user.id === c.personId && (state === undefined || c.state === CourseStudentState.accepted)) {
+            if (user.id === c.personId && (state === undefined || c.state === CourseStudentState.student)) {
                 cLinks.push(c);
             }
         }
@@ -78,7 +78,7 @@ class CourseManager {
     public async getUserIdsForCourse(course: ICourse, state?: CourseStudentState): Promise<ICourseStudent[]> {
         const users: ICourseStudent[] = [];
         for (const c of await this.courseProvider.getCoursesStudent()) {
-            if (course.id === c.courseId && (state === undefined || c.state === CourseStudentState.accepted)) {
+            if (course.id === c.courseId && (state === undefined || c.state === CourseStudentState.student)) {
                 users.push(c);
             }
         }

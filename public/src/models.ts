@@ -53,8 +53,9 @@ export interface IAssignmentGroup {
 
 export enum CourseStudentState {
     pending = 0,
-    accepted = 1,
+    student = 1,
     rejected = 2,
+    teacher = 3,
 }
 
 export interface ICourseStudent {

@@ -22,7 +22,7 @@ class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     public createEnrollmentRow(studentCourses: IStudentCourse[], course: IStudentCourse): Array<string | JSX.Element> {
         const base: Array<string | JSX.Element> = [course.course.tag, course.course.name];
         if (course.link) {
-            if (course.link.state === CourseStudentState.accepted) {
+            if (course.link.state === CourseStudentState.student) {
                 base.push("Enrolled");
             } else if (course.link.state === CourseStudentState.pending) {
                 base.push("Pending");

@@ -65,7 +65,7 @@ class TeacherPage extends ViewPage {
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
             const courseStds: ICourseStudent[] =
-                await this.courseMan.getUserIdsForCourse(course, CourseStudentState.accepted);
+                await this.courseMan.getUserIdsForCourse(course, CourseStudentState.student);
             // TODO: currently userMan.getUsers does not return correct users
             // fix: return a Map for getAllUser method in UserManager
             const students: IUser[] = await this.userMan.getUsers(courseStds.map((e) => e.personId));
@@ -88,7 +88,7 @@ class TeacherPage extends ViewPage {
             const pendingUsers: Array<{ ele1: ICourseStudent, ele2: IUser }> = [];
             all.forEach((ele, id) => {
                 switch (ele.ele1.state) {
-                    case CourseStudentState.accepted:
+                    case CourseStudentState.student:
                         acceptedUsers.push(ele.ele2);
                         break;
                     case CourseStudentState.pending:
@@ -121,7 +121,7 @@ class TeacherPage extends ViewPage {
                     ele.ele2.personId.toString(),
                     <span>
                         <button onClick={(e) => {
-                            this.courseMan.changeUserState(ele.ele1, CourseStudentState.accepted);
+                            this.courseMan.changeUserState(ele.ele1, CourseStudentState.student);
                             this.navMan.refresh();
                         }}
                             className="btn btn-primary">
