@@ -17,7 +17,7 @@
   branch = "master"
   name = "github.com/google/go-github"
   packages = ["github"]
-  revision = "4c4aea2b66bd1d26305d40a307bfa377d24f9c8c"
+  revision = "fe7d11f8add400587b6718d9f39a62e42cb04c28"
 
 [[projects]]
   branch = "master"
@@ -71,7 +71,7 @@
   branch = "master"
   name = "github.com/labstack/echo-contrib"
   packages = ["session"]
-  revision = "255bef50e82e5fbcc1aff36a69793b1c9bc654aa"
+  revision = "80e234165843ae77aa9f3277a11000f0ab9393cc"
 
 [[projects]]
   name = "github.com/labstack/gommon"
@@ -82,7 +82,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/markbates/goth"
-  packages = [".","gothic","providers/bitbucket","providers/faux","providers/github","providers/gitlab"]
+  packages = [".","gothic","providers/faux","providers/github","providers/gitlab"]
   revision = "054a763742fba5da4962727ba9ba8eec567324e5"
 
 [[projects]]
@@ -125,13 +125,13 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["acme","acme/autocert"]
-  revision = "69be088f860613049aa58c65154d1b1d32bbdf90"
+  revision = "d625dfd80595a76324dea1452ceb9cfbcaee8e3e"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp"]
-  revision = "570fa1c91359c1869590e9cedf3b53162a51a167"
+  revision = "054b33e6527139ad5b1ec2f6232c3b175bd9a30c"
 
 [[projects]]
   branch = "master"
@@ -143,7 +143,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "94b76065f2d2081d0fef24a6e67c571f51a6408a"
+  revision = "6faef541c73732f438fb660a212750a9ba9f9362"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -154,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1a0ced092c338733f2ef107698e9aaa3a331d008601a7d49e64ec8824cf7f614"
+  inputs-digest = "514166fd3bb739d32ec87bcdf1892a19294363fee9aa76d6223d86c24047fb52"
   solver-name = "gps-cdcl"
   solver-version = 1
