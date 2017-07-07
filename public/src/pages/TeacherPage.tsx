@@ -96,8 +96,8 @@ export class TeacherPage extends ViewPage {
                 this.userMan);
             const acceptedUsers: IUserRelation[] = [];
             const pendingUsers: IUserRelation[] = [];
-            // Sort all users to the right tables, and ignores the rejected once
-            // Maybe move this to the Members view
+            // Sorts all the users to the correct tables, and ignores the rejected once
+            // TODO: Maybe move this to the Members view
             all.forEach((user, id) => {
                 switch (user.link.state) {
                     case CourseUserState.teacher:

@@ -775,11 +775,11 @@ const HelpPage_1 = __webpack_require__(38);
 const HomePage_1 = __webpack_require__(40);
 const StudentPage_1 = __webpack_require__(41);
 const TeacherPage_1 = __webpack_require__(43);
-const AdminPage_1 = __webpack_require__(46);
-const NavBarLogin_1 = __webpack_require__(48);
-const NavBarMenu_1 = __webpack_require__(49);
-const LoginPage_1 = __webpack_require__(50);
-const ServerProvider_1 = __webpack_require__(51);
+const AdminPage_1 = __webpack_require__(45);
+const NavBarLogin_1 = __webpack_require__(47);
+const NavBarMenu_1 = __webpack_require__(48);
+const LoginPage_1 = __webpack_require__(49);
+const ServerProvider_1 = __webpack_require__(50);
 class AutoGrader extends React.Component {
     constructor(props) {
         super();
@@ -1315,13 +1315,13 @@ class CoursesOverview extends React.Component {
         let index = 1;
         let l = courses.length;
         for (index; index < l; index++) {
-            if (index % 2 === 0) {
-                courses.splice(index + added, 0, React.createElement("div", { className: "visible-md-block visible-sm-block clearfix" }));
+            if (index % 4 === 0) {
+                courses.splice(index + added, 0, React.createElement("div", { key: index * 10000, className: "visible-md-block visible-sm-block visible-lg-block clearfix" }));
                 l += 1;
                 added += 1;
             }
-            if (index % 4 === 0) {
-                courses.splice(index + added, 0, React.createElement("div", { className: "visible-lg-block clearfix" }));
+            else if (index % 2 === 0) {
+                courses.splice(index + added, 0, React.createElement("div", { key: index * 10000, className: "visible-md-block visible-sm-block clearfix" }));
                 l += 1;
                 added += 1;
             }
@@ -1350,12 +1350,12 @@ class CoursePanel extends React.Component {
             React.createElement("div", { className: "panel panel-primary" },
                 React.createElement("div", { className: "panel-heading clickable", onClick: () => this.handleCourseClick() }, this.props.course.name),
                 React.createElement("div", { className: "panel-body" },
-                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Weight"], data: this.props.labs, selector: (item) => {
-                            const score = item.latest ? item.latest.score.toString() : "No submissions yet";
+                    React.createElement(components_1.DynamicTable, { header: ["Labs", "Score", "Deadline"], data: this.props.labs, selector: (item) => {
+                            const score = item.latest ? (item.latest.score.toString() + "%") : "N/A";
                             return [
                                 item.assignment.name,
                                 score,
-                                "",
+                                item.assignment.deadline.toDateString(),
                             ];
                         }, onRowClick: (lab) => this.handleRowClick(pathPrefix, lab.assignment) })))));
     }
@@ -1383,10 +1383,32 @@ const React = __webpack_require__(0);
 const ProgressBar_1 = __webpack_require__(10);
 class SingleCourseOverview extends React.Component {
     render() {
-        const labs = this.props.courseAndLabs.assignments.map((v, k) => {
+        const labs = this.props.courseAndLabs.assignments.map((submission, k) => {
+            let submissionInfo = React.createElement("div", null, "No submissions");
+            if (submission.latest) {
+                submissionInfo = React.createElement("div", { className: "row" },
+                    React.createElement("div", { className: "col-md-6 col-lg-8" },
+                        React.createElement(ProgressBar_1.ProgressBar, { progress: submission.latest.score })),
+                    React.createElement("div", { className: "col-md-3 col-lg-2" },
+                        React.createElement("span", { className: "text-success" },
+                            " Passed: ",
+                            submission.latest.passedTests,
+                            " "),
+                        React.createElement("span", { className: "text-danger" },
+                            " Failed: ",
+                            submission.latest.failedTests,
+                            " ")),
+                    React.createElement("div", { className: "col-md-3 col-lg-2" },
+                        "Deadline:",
+                        React.createElement("span", { style: { display: "inline-block", verticalAlign: "top", paddingLeft: "10px" } },
+                            submission.assignment.deadline.toDateString(),
+                            " ",
+                            React.createElement("br", null),
+                            submission.assignment.deadline.toLocaleTimeString("en-GB"))));
+            }
             return (React.createElement("li", { key: k, className: "list-group-item" },
-                React.createElement("strong", null, v.assignment.name),
-                React.createElement(ProgressBar_1.ProgressBar, { progress: Math.floor((Math.random() * 100) + 1) })));
+                React.createElement("strong", null, submission.assignment.name),
+                submissionInfo));
         });
         return (React.createElement("div", null,
             React.createElement("h1", null, this.props.courseAndLabs.course.name),
@@ -2652,6 +2674,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
+const models_1 = __webpack_require__(4);
 const ViewPage_1 = __webpack_require__(2);
 const HelloView_1 = __webpack_require__(11);
 const UserView_1 = __webpack_require__(5);
@@ -2660,7 +2683,8 @@ const EnrollmentView_1 = __webpack_require__(42);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
         super();
-        this.studentCourses = [];
+        this.courses = [];
+        this.activeCourses = [];
         this.foundId = -1;
         this.navMan = navMan;
         this.userMan = users;
@@ -2683,8 +2707,9 @@ class StudentPage extends ViewPage_1.ViewPage {
     index(navInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.setupData();
-            if (this.studentCourses) {
-                return (React.createElement(components_1.CoursesOverview, { courseOverview: this.onlyActiveCourses(this.studentCourses), navMan: this.navMan }));
+            if (this.activeCourses) {
+                console.log(this.activeCourses);
+                return (React.createElement(components_1.CoursesOverview, { courseOverview: this.activeCourses, navMan: this.navMan }));
             }
             return React.createElement("h1", null, "404");
         });
@@ -2698,7 +2723,7 @@ class StudentPage extends ViewPage_1.ViewPage {
             }
             return React.createElement("div", null,
                 React.createElement("h1", null, "Enrollment page"),
-                React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.studentCourses, onEnrollmentClick: (course) => {
+                React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.courses, onEnrollmentClick: (course) => {
                         this.courseMan.addUserToCourse(curUser, course);
                         this.navMan.refresh();
                     } }));
@@ -2708,8 +2733,8 @@ class StudentPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.setupData();
             this.selectCourse(navInfo.params.courseid);
-            if (this.selectedStudentCourse) {
-                return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: this.selectedStudentCourse }));
+            if (this.selectedCourse) {
+                return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: this.selectedCourse }));
             }
             return React.createElement("h1", null, "404 not found");
         });
@@ -2718,12 +2743,12 @@ class StudentPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.setupData();
             this.selectCourse(navInfo.params.courseid);
-            console.log("Course with lab", this.selectedStudentCourse);
-            if (this.selectedStudentCourse) {
+            console.log("Course with lab", this.selectedCourse);
+            if (this.selectedCourse) {
                 yield this.selectAssignment(navInfo.params.labid);
-                if (this.selectedStudentAssignment) {
+                if (this.selectedAssignment) {
                     console.log("selected!");
-                    return React.createElement(components_1.StudentLab, { course: this.selectedStudentCourse.course, assignment: this.selectedStudentAssignment });
+                    return React.createElement(components_1.StudentLab, { course: this.selectedCourse.course, assignment: this.selectedAssignment });
                 }
             }
             console.log(navInfo);
@@ -2741,7 +2766,7 @@ class StudentPage extends ViewPage_1.ViewPage {
     renderMenu(key) {
         return __awaiter(this, void 0, void 0, function* () {
             if (key === 0) {
-                const coursesLinks = this.onlyActiveCourses(this.studentCourses).map((course, i) => {
+                const coursesLinks = this.activeCourses.map((course, i) => {
                     const allLinks = [];
                     allLinks.push({ name: "Labs" });
                     const labs = course.assignments;
@@ -2782,7 +2807,7 @@ class StudentPage extends ViewPage_1.ViewPage {
     onlyActiveCourses(studentCourse) {
         const temp = [];
         studentCourse.forEach((a) => {
-            if (a.link) {
+            if (a.link && a.link.state === models_1.CourseUserState.student) {
                 temp.push(a);
             }
         });
@@ -2793,22 +2818,22 @@ class StudentPage extends ViewPage_1.ViewPage {
             const curUser = this.userMan.getCurrentUser();
             console.log("Setup data");
             if (curUser) {
-                this.studentCourses = yield this.courseMan.getStudentCourses(curUser);
+                this.courses = yield this.courseMan.getStudentCourses(curUser);
+                this.activeCourses = this.onlyActiveCourses(this.courses);
             }
         });
     }
     selectCourse(courseId) {
-        this.selectedStudentCourse = undefined;
+        this.selectedCourse = undefined;
         const course = parseInt(courseId, 10);
         if (!isNaN(course)) {
-            this.selectedStudentCourse = this.studentCourses.find((e) => e.course.id === course);
+            this.selectedCourse = this.activeCourses.find((e) => e.course.id === course);
         }
     }
     selectAssignment(labIdString) {
         const labId = parseInt(labIdString, 10);
-        console.log("Student course", this.selectedStudentCourse);
-        if (this.selectedStudentCourse && !isNaN(labId)) {
-            this.selectedStudentAssignment = this.selectedStudentCourse.assignments.find((e) => e.assignment.id === labId);
+        if (this.selectedCourse && !isNaN(labId)) {
+            this.selectedAssignment = this.selectedCourse.assignments.find((e) => e.assignment.id === labId);
         }
     }
     handleClick(link) {
@@ -2880,7 +2905,7 @@ const HelloView_1 = __webpack_require__(11);
 const UserView_1 = __webpack_require__(5);
 const CollapsableNavMenu_1 = __webpack_require__(12);
 const models_1 = __webpack_require__(4);
-const MemberView_1 = __webpack_require__(45);
+const MemberView_1 = __webpack_require__(44);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
         super();
@@ -2950,7 +2975,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
             const courseId = parseInt(info.params.course, 10);
             const course = yield this.courseMan.getCourse(courseId);
             if (course) {
-                const all = yield this.courseMan.getUsersForCourse(course, this.userMan, models_1.CourseUserState.student);
+                const all = yield this.courseMan.getUsersForCourse(course, this.userMan);
                 const acceptedUsers = [];
                 const pendingUsers = [];
                 all.forEach((user, id) => {
@@ -3043,8 +3068,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 44 */,
-/* 45 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3092,7 +3116,7 @@ exports.MemberView = MemberView;
 
 
 /***/ }),
-/* 46 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3109,7 +3133,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
-const CourseView_1 = __webpack_require__(47);
+const CourseView_1 = __webpack_require__(46);
 const UserView_1 = __webpack_require__(5);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
@@ -3228,7 +3252,7 @@ exports.AdminPage = AdminPage;
 
 
 /***/ }),
-/* 47 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3269,7 +3293,7 @@ exports.CourseView = CourseView;
 
 
 /***/ }),
-/* 48 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3318,7 +3342,7 @@ exports.NavBarLogin = NavBarLogin;
 
 
 /***/ }),
-/* 49 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3352,7 +3376,7 @@ exports.NavBarMenu = NavBarMenu;
 
 
 /***/ }),
-/* 50 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3409,7 +3433,7 @@ exports.LoginPage = LoginPage;
 
 
 /***/ }),
-/* 51 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

@@ -6,6 +6,7 @@ import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
 import {
+    CourseUserState,
     IAssignment,
     ICourse,
     ICoursesWithAssignments,
@@ -31,9 +32,10 @@ export class StudentPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
 
-    private studentCourses: IUserCourse[] = [];
-    private selectedStudentCourse: IUserCourse | undefined;
-    private selectedStudentAssignment: IStudentSubmission | undefined;
+    private courses: IUserCourse[] = [];
+    private activeCourses: IUserCourse[] = [];
+    private selectedCourse: IUserCourse | undefined;
+    private selectedAssignment: IStudentSubmission | undefined;
 
     private foundId: number = -1;
 
@@ -65,9 +67,10 @@ export class StudentPage extends ViewPage {
 
     public async index(navInfo: INavInfo<any>): View {
         await this.setupData();
-        if (this.studentCourses) {
+        if (this.activeCourses) {
+            console.log(this.activeCourses);
             return (<CoursesOverview
-                courseOverview={this.onlyActiveCourses(this.studentCourses)}
+                courseOverview={this.activeCourses}
                 navMan={this.navMan}
             />);
         }
@@ -83,7 +86,7 @@ export class StudentPage extends ViewPage {
         return <div>
             <h1>Enrollment page</h1>
             <EnrollmentView
-                courses={this.studentCourses}
+                courses={this.courses}
                 onEnrollmentClick={(course: ICourse) => {
                     this.courseMan.addUserToCourse(curUser, course);
                     this.navMan.refresh();
@@ -95,8 +98,8 @@ export class StudentPage extends ViewPage {
     public async course(navInfo: INavInfo<{ courseid: string }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
-        if (this.selectedStudentCourse) {
-            return (<SingleCourseOverview courseAndLabs={this.selectedStudentCourse} />);
+        if (this.selectedCourse) {
+            return (<SingleCourseOverview courseAndLabs={this.selectedCourse} />);
         }
         return <h1>404 not found</h1>;
     }
@@ -104,14 +107,14 @@ export class StudentPage extends ViewPage {
     public async courseWithLab(navInfo: INavInfo<{ courseid: string, labid: string }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
-        console.log("Course with lab", this.selectedStudentCourse);
-        if (this.selectedStudentCourse) {
+        console.log("Course with lab", this.selectedCourse);
+        if (this.selectedCourse) {
             await this.selectAssignment(navInfo.params.labid);
-            if (this.selectedStudentAssignment) {
+            if (this.selectedAssignment) {
                 console.log("selected!");
                 return <StudentLab
-                    course={this.selectedStudentCourse.course}
-                    assignment={this.selectedStudentAssignment}>
+                    course={this.selectedCourse.course}
+                    assignment={this.selectedAssignment}>
                 </StudentLab>;
             }
         }
@@ -125,7 +128,7 @@ export class StudentPage extends ViewPage {
 
     public async renderMenu(key: number): Promise<JSX.Element[]> {
         if (key === 0) {
-            const coursesLinks: ILinkCollection[] = this.onlyActiveCourses(this.studentCourses).map(
+            const coursesLinks: ILinkCollection[] = this.activeCourses.map(
                 (course, i) => {
                     const allLinks: ILink[] = [];
                     allLinks.push({ name: "Labs" });
@@ -171,7 +174,7 @@ export class StudentPage extends ViewPage {
     private onlyActiveCourses(studentCourse: IUserCourse[]): IUserCourse[] {
         const temp: IUserCourse[] = [];
         studentCourse.forEach((a) => {
-            if (a.link) {
+            if (a.link && a.link.state === CourseUserState.student) {
                 temp.push(a);
             }
         });
@@ -182,25 +185,25 @@ export class StudentPage extends ViewPage {
         const curUser = this.userMan.getCurrentUser();
         console.log("Setup data");
         if (curUser) {
-            this.studentCourses = await this.courseMan.getStudentCourses(curUser);
+            this.courses = await this.courseMan.getStudentCourses(curUser);
+            this.activeCourses = this.onlyActiveCourses(this.courses);
         }
     }
 
     private selectCourse(courseId: string) {
-        this.selectedStudentCourse = undefined;
+        this.selectedCourse = undefined;
         const course = parseInt(courseId, 10);
         if (!isNaN(course)) {
-            this.selectedStudentCourse = this.studentCourses.find(
+            this.selectedCourse = this.activeCourses.find(
                 (e) => e.course.id === course);
         }
     }
 
     private selectAssignment(labIdString: string) {
         const labId = parseInt(labIdString, 10);
-        console.log("Student course", this.selectedStudentCourse);
-        if (this.selectedStudentCourse && !isNaN(labId)) {
+        if (this.selectedCourse && !isNaN(labId)) {
             // TODO: Be carefull not to return anything that sould not be able to be returned
-            this.selectedStudentAssignment = this.selectedStudentCourse.assignments.find(
+            this.selectedAssignment = this.selectedCourse.assignments.find(
                 (e) => e.assignment.id === labId,
             );
         }

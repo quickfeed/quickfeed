@@ -8,11 +8,30 @@ interface ISingleCourseOverviewProps {
 
 class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
     public render() {
-        const labs: JSX.Element[] = this.props.courseAndLabs.assignments.map((v, k) => {
+        const labs: JSX.Element[] = this.props.courseAndLabs.assignments.map((submission, k) => {
+            let submissionInfo = <div>No submissions</div>;
+            if (submission.latest) {
+                submissionInfo = <div className="row">
+                    <div className="col-md-6 col-lg-8">
+                        <ProgressBar progress={submission.latest.score} />
+                    </div>
+                    <div className="col-md-3 col-lg-2" >
+                        <span className="text-success"> Passed: {submission.latest.passedTests} </span>
+                        <span className="text-danger"> Failed: {submission.latest.failedTests} </span>
+                    </div>
+                    <div className="col-md-3 col-lg-2">
+                        Deadline:
+                        <span style={{ display: "inline-block", verticalAlign: "top", paddingLeft: "10px" }}>
+                            {submission.assignment.deadline.toDateString()} <br />
+                            {submission.assignment.deadline.toLocaleTimeString("en-GB")}
+                        </span>
+                    </div>
+                </div>;
+            }
             return (
                 <li key={k} className="list-group-item">
-                    <strong>{v.assignment.name}</strong>
-                    <ProgressBar progress={Math.floor((Math.random() * 100) + 1)} />
+                    <strong>{submission.assignment.name}</strong>
+                    {submissionInfo}
                 </li>);
         });
         return (

@@ -23,14 +23,14 @@ class CoursePanel extends React.Component<IPanelProps, any> {
                         onClick={() => this.handleCourseClick()}>{this.props.course.name}</div>
                     <div className="panel-body">
                         <DynamicTable
-                            header={["Labs", "Score", "Weight"]}
+                            header={["Labs", "Score", "Deadline"]}
                             data={this.props.labs}
                             selector={(item: IStudentSubmission) => {
-                                const score = item.latest ? item.latest.score.toString() : "No submissions yet";
+                                const score = item.latest ? (item.latest.score.toString() + "%") : "N/A";
                                 return [
                                     item.assignment.name,
                                     score,
-                                    "",
+                                    item.assignment.deadline.toDateString(),
                                 ];
                             }}
                             onRowClick={(lab: IStudentSubmission) => this.handleRowClick(pathPrefix, lab.assignment)}
