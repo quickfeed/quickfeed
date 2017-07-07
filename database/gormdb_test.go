@@ -114,6 +114,8 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		secret2   = "ABC"
 		provider2 = "gitlab"
 		remoteID2 = 20
+
+		secret3 = "DEF"
 	)
 
 	var (
@@ -172,6 +174,20 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 
 	if !reflect.DeepEqual(user2, wantUser2) {
 		t.Errorf("have user %+v want %+v", user2, wantUser2)
+	}
+
+	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret3); err != nil {
+		t.Fatal(err)
+	}
+
+	user3, err := db.GetUser(uID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantUser2.RemoteIdentities[1].AccessToken = secret3
+	if !reflect.DeepEqual(user3, wantUser2) {
+		t.Errorf("have user %+v want %+v", user3, wantUser2)
 	}
 }
 

@@ -121,13 +121,11 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(userID uint64, provider string
 		return ErrDuplicateIdentity
 	}
 
-	remoteIdentity := models.RemoteIdentity{
-		Provider:    provider,
-		RemoteID:    remoteID,
-		AccessToken: accessToken,
-		UserID:      userID,
-	}
-	return db.conn.Create(&remoteIdentity).Error
+	var remoteIdentity models.RemoteIdentity
+	return db.conn.
+		Where(models.RemoteIdentity{Provider: provider, RemoteID: remoteID, UserID: userID}).
+		Assign(models.RemoteIdentity{AccessToken: accessToken}).
+		FirstOrCreate(&remoteIdentity).Error
 }
 
 // CreateCourse implements the Database interface.
