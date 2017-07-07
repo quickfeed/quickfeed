@@ -49,7 +49,7 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("index", this.index);
         this.navHelper.registerFunction<any>("course/{courseid}", this.course);
         this.navHelper.registerFunction<any>("course/{courseid}/lab/{labid}", this.courseWithLab);
-        this.navHelper.registerFunction<any>("course/{coruseid}/{page}", this.courseMissing);
+        this.navHelper.registerFunction<any>("course/{courseid}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
 
         // Only for testing purposes
