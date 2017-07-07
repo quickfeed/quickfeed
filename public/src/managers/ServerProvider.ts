@@ -1,7 +1,15 @@
 
 import { IUserProvider } from "../managers";
 import { IMap } from "../map";
-import { IUser } from "../models";
+import {
+    CourseUserState,
+    IAssignment,
+    ICourse,
+    ICourseUserLink,
+    ILabInfo,
+    IUser,
+} from "../models";
+import { ICourseProvider } from "./CourseManager";
 
 async function request(url: string): Promise<string> {
     const req = new XMLHttpRequest();
@@ -21,14 +29,44 @@ async function request(url: string): Promise<string> {
     });
 }
 
-export class ServerProvider implements IUserProvider {
+export class ServerProvider implements IUserProvider, ICourseProvider {
+    public async getCourses(): Promise<IMap<ICourse>> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async getCoursesStudent(): Promise<ICourseUserLink[]> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async createNewCourse(courseData: ICourse): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async getAllLabInfos(): Promise<IMap<ILabInfo>> {
+        throw new Error("Method not implemented.");
+    }
+
     public async tryLogin(username: string, password: string): Promise<IUser | null> {
         throw new Error("Method not implemented.");
     }
+
     public async logout(user: IUser): Promise<boolean> {
         window.location.assign("/logout");
         return true;
     }
+
     public async getAllUser(): Promise<IMap<IUser>> {
         throw new Error("Method not implemented.");
     }

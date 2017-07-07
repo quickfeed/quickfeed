@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 13);
+/******/ 	return __webpack_require__(__webpack_require__.s = 12);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,15 +79,16 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(15));
+__export(__webpack_require__(14));
 __export(__webpack_require__(8));
 __export(__webpack_require__(9));
+__export(__webpack_require__(15));
 __export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
-__export(__webpack_require__(19));
-__export(__webpack_require__(21));
+__export(__webpack_require__(20));
 __export(__webpack_require__(10));
+__export(__webpack_require__(21));
 __export(__webpack_require__(22));
 __export(__webpack_require__(23));
 __export(__webpack_require__(24));
@@ -97,7 +98,6 @@ __export(__webpack_require__(27));
 __export(__webpack_require__(28));
 __export(__webpack_require__(29));
 __export(__webpack_require__(30));
-__export(__webpack_require__(31));
 
 
 /***/ }),
@@ -396,12 +396,10 @@ class UserView extends React.Component {
     }
     handleAdminRoleClick(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (confirm("Are you sure?")) {
-                if (this.props.userMan && this.props.navMan) {
-                    const res = this.props.userMan.changeAdminRole(user);
-                    this.props.navMan.refresh();
-                    return res;
-                }
+            if (this.props.userMan && this.props.navMan) {
+                const res = this.props.userMan.changeAdminRole(user);
+                this.props.navMan.refresh();
+                return res;
             }
             return false;
         });
@@ -620,22 +618,6 @@ exports.ProgressBar = ProgressBar;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-class HelloView extends React.Component {
-    render() {
-        return React.createElement("h1", null, "Hello world");
-    }
-}
-exports.HelloView = HelloView;
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const React = __webpack_require__(0);
 const NavigationHelper_1 = __webpack_require__(3);
 class CollapsableNavMenu extends React.Component {
     constructor() {
@@ -752,7 +734,7 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -767,13 +749,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(14);
+const ReactDOM = __webpack_require__(13);
 const components_1 = __webpack_require__(1);
-const managers_1 = __webpack_require__(32);
-const ErrorPage_1 = __webpack_require__(37);
-const HelpPage_1 = __webpack_require__(38);
-const HomePage_1 = __webpack_require__(40);
-const StudentPage_1 = __webpack_require__(41);
+const managers_1 = __webpack_require__(31);
+const ErrorPage_1 = __webpack_require__(36);
+const HelpPage_1 = __webpack_require__(37);
+const HomePage_1 = __webpack_require__(39);
+const StudentPage_1 = __webpack_require__(40);
 const TeacherPage_1 = __webpack_require__(43);
 const AdminPage_1 = __webpack_require__(45);
 const NavBarLogin_1 = __webpack_require__(47);
@@ -955,13 +937,13 @@ main();
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1003,7 +985,7 @@ exports.NavBar = NavBar;
 
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1034,7 +1016,7 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1076,7 +1058,7 @@ exports.DynamicTable = DynamicTable;
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1090,14 +1072,14 @@ exports.Row = Row;
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const LabResultView_1 = __webpack_require__(20);
+const LabResultView_1 = __webpack_require__(19);
 class StudentLab extends React.Component {
     render() {
         return React.createElement(LabResultView_1.LabResultView, { course: this.props.course, labInfo: this.props.assignment });
@@ -1107,7 +1089,7 @@ exports.StudentLab = StudentLab;
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1136,7 +1118,7 @@ exports.LabResultView = LabResultView;
 
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1194,7 +1176,7 @@ exports.NavDropdown = NavDropdown;
 
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1235,7 +1217,7 @@ exports.LabResult = LabResult;
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1255,7 +1237,7 @@ exports.LastBuild = LastBuild;
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1298,7 +1280,7 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1335,7 +1317,7 @@ exports.CoursesOverview = CoursesOverview;
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1373,7 +1355,7 @@ exports.CoursePanel = CoursePanel;
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1420,7 +1402,7 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1441,7 +1423,7 @@ exports.Button = Button;
 
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1507,7 +1489,7 @@ exports.CourseForm = CourseForm;
 
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1574,7 +1556,7 @@ exports.Results = Results;
 
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1610,7 +1592,7 @@ exports.Search = Search;
 
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1619,14 +1601,14 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
+__export(__webpack_require__(32));
 __export(__webpack_require__(33));
 __export(__webpack_require__(34));
 __export(__webpack_require__(35));
-__export(__webpack_require__(36));
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1821,7 +1803,7 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1994,7 +1976,7 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2255,31 +2237,31 @@ class TempDataProvider {
             {
                 id: 0,
                 name: "Object Oriented Programming",
-                tag: "DAT100",
+                code: "DAT100",
                 year: "Spring 2017",
             },
             {
                 id: 1,
                 name: "Algorithms and Datastructures",
-                tag: "DAT200",
+                code: "DAT200",
                 year: "Spring 2017",
             },
             {
                 id: 2,
                 name: "Databases",
-                tag: "DAT220",
+                code: "DAT220",
                 year: "Spring 2017",
             },
             {
                 id: 3,
                 name: "Communication Technology",
-                tag: "DAT230",
+                code: "DAT230",
                 year: "Spring 2017",
             },
             {
                 id: 4,
                 name: "Operating Systems",
-                tag: "DAT320",
+                code: "DAT320",
                 year: "Spring 2017",
             },
         ], (ele) => ele.id);
@@ -2393,7 +2375,7 @@ exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2493,7 +2475,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2537,7 +2519,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2553,7 +2535,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const ViewPage_1 = __webpack_require__(2);
-const HelpView_1 = __webpack_require__(39);
+const HelpView_1 = __webpack_require__(38);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
         super();
@@ -2572,7 +2554,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2628,7 +2610,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2658,7 +2640,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2676,9 +2658,9 @@ const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const models_1 = __webpack_require__(4);
 const ViewPage_1 = __webpack_require__(2);
-const HelloView_1 = __webpack_require__(11);
+const HelloView_1 = __webpack_require__(41);
 const UserView_1 = __webpack_require__(5);
-const CollapsableNavMenu_1 = __webpack_require__(12);
+const CollapsableNavMenu_1 = __webpack_require__(11);
 const EnrollmentView_1 = __webpack_require__(42);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
@@ -2693,7 +2675,7 @@ class StudentPage extends ViewPage_1.ViewPage {
         this.navHelper.registerFunction("index", this.index);
         this.navHelper.registerFunction("course/{courseid}", this.course);
         this.navHelper.registerFunction("course/{courseid}/lab/{labid}", this.courseWithLab);
-        this.navHelper.registerFunction("course/{coruseid}/{page}", this.courseMissing);
+        this.navHelper.registerFunction("course/{courseid}/{page}", this.courseMissing);
         this.navHelper.registerFunction("enroll", this.enroll);
         this.navHelper.registerFunction("user", this.getUsers);
         this.navHelper.registerFunction("hello", (navInfo) => Promise.resolve(React.createElement(HelloView_1.HelloView, null)));
@@ -2785,7 +2767,7 @@ class StudentPage extends ViewPage_1.ViewPage {
                         name: "Coruse Info", uri: this.pagePath + "/course/" + course.course.id + "/info",
                     });
                     return {
-                        item: { name: course.course.tag, uri: this.pagePath + "/course/" + course.course.id },
+                        item: { name: course.course.code, uri: this.pagePath + "/course/" + course.course.id },
                         children: allLinks,
                     };
                 });
@@ -2846,6 +2828,22 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
+/* 41 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
+class HelloView extends React.Component {
+    render() {
+        return React.createElement("h1", null, "Hello world");
+    }
+}
+exports.HelloView = HelloView;
+
+
+/***/ }),
 /* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2860,7 +2858,7 @@ class EnrollmentView extends React.Component {
         return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
     }
     createEnrollmentRow(studentCourses, course) {
-        const base = [course.course.tag, course.course.name];
+        const base = [course.course.code, course.course.name];
         if (course.link) {
             if (course.link.state === models_1.CourseUserState.student) {
                 base.push("Enrolled");
@@ -2901,9 +2899,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
-const HelloView_1 = __webpack_require__(11);
 const UserView_1 = __webpack_require__(5);
-const CollapsableNavMenu_1 = __webpack_require__(12);
+const CollapsableNavMenu_1 = __webpack_require__(11);
 const models_1 = __webpack_require__(4);
 const MemberView_1 = __webpack_require__(44);
 class TeacherPage extends ViewPage_1.ViewPage {
@@ -2921,9 +2918,6 @@ class TeacherPage extends ViewPage_1.ViewPage {
         this.navHelper.registerFunction("course/{course}/{page}", this.course);
         this.navHelper.registerFunction("user", (navInfo) => __awaiter(this, void 0, void 0, function* () {
             return React.createElement(UserView_1.UserView, { users: yield userMan.getAllUser() });
-        }));
-        this.navHelper.registerFunction("user", (navInfo) => __awaiter(this, void 0, void 0, function* () {
-            return React.createElement(HelloView_1.HelloView, null);
         }));
     }
     init() {
@@ -3013,7 +3007,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
                     const labLinks = [];
                     courses.forEach((e) => {
                         labLinks.push(this.generateCollectionFor({
-                            name: e.tag,
+                            name: e.code,
                             uri: this.pagePath + "/course/" + e.id,
                         }));
                     });
@@ -3177,7 +3171,7 @@ class AdminPage extends ViewPage_1.ViewPage {
                         "Labs for ",
                         e.name,
                         " (",
-                        e.tag,
+                        e.code,
                         ")"),
                     React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Start", "Deadline", "End"], data: labs, selector: (lab) => [
                             lab.id.toString(),
@@ -3272,14 +3266,14 @@ class CourseView extends React.Component {
             React.createElement("i", { className: "glyphicon glyphicon-search" }));
         return (React.createElement("div", null,
             React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for courses", onChange: (query) => this.handleOnchange(query) }),
-            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.tag, e.year] })));
+            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.code, e.year] })));
     }
     handleOnchange(query) {
         query = query.toLowerCase();
         const filteredData = [];
         this.props.courses.forEach((course) => {
             if (course.name.toLowerCase().indexOf(query) !== -1
-                || course.tag.toLowerCase().indexOf(query) !== -1
+                || course.code.toLowerCase().indexOf(query) !== -1
                 || course.year.toLowerCase().indexOf(query) !== -1) {
                 filteredData.push(course);
             }
@@ -3468,6 +3462,41 @@ function request(url) {
     });
 }
 class ServerProvider {
+    getCourses() {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
+        });
+    }
+    getAssignments(courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
+        });
+    }
+    getCoursesStudent() {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
+        });
+    }
+    addUserToCourse(user, course) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
+        });
+    }
+    changeUserState(link, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
+        });
+    }
+    createNewCourse(courseData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
+        });
+    }
+    getAllLabInfos() {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
+        });
+    }
     tryLogin(username, password) {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error("Method not implemented.");
