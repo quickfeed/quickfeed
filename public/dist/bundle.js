@@ -818,7 +818,10 @@ class AutoGrader extends React.Component {
                 return basis;
             }
             else {
-                return [{ name: "Help", uri: "app/help", active: false }];
+                return [
+                    { name: "Help", uri: "app/help", active: false },
+                    { name: "New Course", uri: "app/admin/courses/new", active: false },
+                ];
             }
         });
     }
@@ -1438,8 +1441,8 @@ class CourseForm extends React.Component {
         super(props);
         this.state = {
             name: "",
+            code: "",
             tag: "",
-            semester: "",
             year: "",
             provider: "",
             directoryid: 0,
@@ -1463,17 +1466,17 @@ class CourseForm extends React.Component {
                 React.createElement("div", { className: "col-sm-10" },
                     React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter course name", name: "name", value: this.state.name, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
-                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Course Tag:"),
+                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "code" }, "Course Code:"),
                 React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter course tag", name: "tag", value: this.state.tag, onChange: (e) => this.handleInputChange(e) }))),
+                    React.createElement("input", { type: "text", className: "form-control", id: "code", placeholder: "Enter course code", name: "code", value: this.state.code, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
                 React.createElement("label", { className: "control-label col-sm-2", htmlFor: "year" }, "Year:"),
                 React.createElement("div", { className: "col-sm-10" },
                     React.createElement("input", { type: "text", className: "form-control", id: "year", placeholder: "Enter year", name: "year", value: this.state.year, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
-                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "semester" }, "Semester:"),
+                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Semester:"),
                 React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "semester", placeholder: "Enter semester", name: "semester", value: this.state.semester, onChange: (e) => this.handleInputChange(e) }))),
+                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter semester", name: "tag", value: this.state.tag, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
                 React.createElement("div", { className: "col-sm-offset-2 col-sm-10" },
                     React.createElement(components_1.Button, { className: "btn btn-primary", text: "Create", type: "submit" })))));
@@ -1483,8 +1486,8 @@ class CourseForm extends React.Component {
         const errors = this.courseValidate();
         const courseData = {
             name: this.state.name,
+            code: this.state.code,
             tag: this.state.tag,
-            semester: this.state.semester,
             year: parseInt(this.state.year, 10),
             provider: this.state.provider,
             directoryid: this.state.directoryid,
@@ -1540,13 +1543,10 @@ class CourseForm extends React.Component {
         if (this.state.name === "") {
             errors.push("Course Name cannot be blank");
         }
-        if (this.state.tag === "") {
+        if (this.state.code === "") {
             errors.push("Course Tag cannot be blank.");
         }
-        if (this.state.year === "") {
-            errors.push("Year cannot be blank.");
-        }
-        if (this.state.semester === "") {
+        if (this.state.tag === "") {
             errors.push("Semester cannot be blank.");
         }
         if (this.state.provider === "") {
@@ -1554,6 +1554,16 @@ class CourseForm extends React.Component {
         }
         if (this.state.directoryid === 0) {
             errors.push("Organisation cannot be blank.");
+        }
+        const year = parseInt(this.state.year, 10);
+        if (this.state.year === "") {
+            errors.push("Year cannot be blank.");
+        }
+        else if (Number.isNaN(year)) {
+            errors.push("Year must be a number");
+        }
+        else if (year < (new Date()).getFullYear()) {
+            errors.push("Year must be greater or equal to current year");
         }
         return errors;
     }

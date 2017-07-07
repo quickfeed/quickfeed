@@ -1,8 +1,8 @@
 import * as React from "react";
-import {Button} from "../../components";
-import {IOrganization} from "../../models";
+import { Button } from "../../components";
+import { IOrganization } from "../../models";
 
-import {CourseManager} from "../../managers/CourseManager";
+import { CourseManager } from "../../managers/CourseManager";
 
 interface ICourseFormProps<T> {
     className?: string;
@@ -12,8 +12,8 @@ interface ICourseFormProps<T> {
 
 interface ICourseFormStates {
     name: string;
+    code: string;
     tag: string;
-    semester: string;
     year: string;
     provider: string;
     directoryid: number;
@@ -25,8 +25,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         super(props);
         this.state = {
             name: "",
+            code: "",
             tag: "",
-            semester: "",
             year: "",
             provider: "",
             directoryid: 0,
@@ -37,22 +37,22 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     public render() {
         return (
             <form className={this.props.className ? this.props.className : ""}
-                  onSubmit={(e) => this.handleFormSubmit(e)}>
+                onSubmit={(e) => this.handleFormSubmit(e)}>
                 <div className="form-group">
                     <label className="control-label col-sm-2">Provider:</label>
                     <div className="col-sm-10">
                         <label className="radio-inline">
                             <input type="radio"
-                                   name="provider"
-                                   value="github"
-                                   onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
+                                name="provider"
+                                value="github"
+                                onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
                             />Github
                         </label>
                         <label className="radio-inline">
                             <input type="radio"
-                                   name="provider"
-                                   value="gitlab"
-                                   onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
+                                name="provider"
+                                value="gitlab"
+                                onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
                             />Gitlab
                         </label>
                     </div>
@@ -65,24 +65,24 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                     <label className="control-label col-sm-2" htmlFor="name">Course Name:</label>
                     <div className="col-sm-10">
                         <input type="text" className="form-control"
-                               id="name"
-                               placeholder="Enter course name"
-                               name="name"
-                               value={this.state.name}
-                               onChange={(e) => this.handleInputChange(e)}
+                            id="name"
+                            placeholder="Enter course name"
+                            name="name"
+                            value={this.state.name}
+                            onChange={(e) => this.handleInputChange(e)}
                         />
                     </div>
                 </div>
                 <div className="form-group">
-                    <label className="control-label col-sm-2" htmlFor="tag">Course Tag:</label>
+                    <label className="control-label col-sm-2" htmlFor="code">Course Code:</label>
                     <div className="col-sm-10">
                         <input type="text"
-                               className="form-control"
-                               id="tag"
-                               placeholder="Enter course tag"
-                               name="tag"
-                               value={this.state.tag}
-                               onChange={(e) => this.handleInputChange(e)}
+                            className="form-control"
+                            id="code"
+                            placeholder="Enter course code"
+                            name="code"
+                            value={this.state.code}
+                            onChange={(e) => this.handleInputChange(e)}
                         />
                     </div>
                 </div>
@@ -91,32 +91,32 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                     <label className="control-label col-sm-2" htmlFor="year">Year:</label>
                     <div className="col-sm-10">
                         <input type="text"
-                               className="form-control"
-                               id="year"
-                               placeholder="Enter year"
-                               name="year"
-                               value={this.state.year}
-                               onChange={(e) => this.handleInputChange(e)}
+                            className="form-control"
+                            id="year"
+                            placeholder="Enter year"
+                            name="year"
+                            value={this.state.year}
+                            onChange={(e) => this.handleInputChange(e)}
                         />
                     </div>
                 </div>
                 <div className="form-group">
-                    <label className="control-label col-sm-2" htmlFor="semester">Semester:</label>
+                    <label className="control-label col-sm-2" htmlFor="tag">Semester:</label>
                     <div className="col-sm-10">
                         <input type="text"
-                               className="form-control"
-                               id="semester"
-                               placeholder="Enter semester"
-                               name="semester"
-                               value={this.state.semester}
-                               onChange={(e) => this.handleInputChange(e)}
+                            className="form-control"
+                            id="tag"
+                            placeholder="Enter semester"
+                            name="tag"
+                            value={this.state.tag}
+                            onChange={(e) => this.handleInputChange(e)}
                         />
                     </div>
                 </div>
 
                 <div className="form-group">
                     <div className="col-sm-offset-2 col-sm-10">
-                        <Button className="btn btn-primary" text="Create" type="submit"/>
+                        <Button className="btn btn-primary" text="Create" type="submit" />
                     </div>
                 </div>
             </form>
@@ -128,8 +128,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         const errors: string[] = this.courseValidate();
         const courseData = {
             name: this.state.name,
+            code: this.state.code,
             tag: this.state.tag,
-            semester: this.state.semester,
             year: parseInt(this.state.year, 10),
             provider: this.state.provider,
             directoryid: this.state.directoryid,
@@ -175,17 +175,17 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         for (let i: number = 0; i < orgs.length; i++) {
             organisationDetails.push(
                 <button key={i} className="btn organisation"
-                        data-directoryid={orgs[i].id}
-                        onClick={(e) => this.handleOrgClick(e)}>
+                    data-directoryid={orgs[i].id}
+                    onClick={(e) => this.handleOrgClick(e)}>
 
                     <div className="organisationInfo">
                         <img src={orgs[i].avatar}
-                             className="img-rounded"
-                             width={80}
-                             height={80}/>
+                            className="img-rounded"
+                            width={80}
+                            height={80} />
                         <div className="caption">{orgs[i].path}</div>
                     </div>
-                    <input type="radio"/>
+                    <input type="radio" />
                 </button>,
             );
 
@@ -211,13 +211,10 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         if (this.state.name === "") {
             errors.push("Course Name cannot be blank");
         }
-        if (this.state.tag === "") {
+        if (this.state.code === "") {
             errors.push("Course Tag cannot be blank.");
         }
-        if (this.state.year === "") {
-            errors.push("Year cannot be blank.");
-        }
-        if (this.state.semester === "") {
+        if (this.state.tag === "") {
             errors.push("Semester cannot be blank.");
         }
         if (this.state.provider === "") {
@@ -226,8 +223,16 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         if (this.state.directoryid === 0) {
             errors.push("Organisation cannot be blank.");
         }
+        const year = parseInt(this.state.year, 10);
+        if (this.state.year === "") {
+            errors.push("Year cannot be blank.");
+        } else if (Number.isNaN(year)) {
+            errors.push("Year must be a number");
+        } else if (year < (new Date()).getFullYear()) {
+            errors.push("Year must be greater or equal to current year");
+        }
         return errors;
     }
 
 }
-export {CourseForm};
+export { CourseForm };
