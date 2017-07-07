@@ -230,14 +230,18 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 }
 
 func TestOAuth2CallbackNoSession(t *testing.T) {
-	testOAuth2Callback(t, false)
+	testOAuth2Callback(t, false, false)
+}
+
+func TestOAuth2CallbackExistingUser(t *testing.T) {
+	testOAuth2Callback(t, true, false)
 }
 
 func TestOAuth2CallbackLoggedIn(t *testing.T) {
-	testOAuth2Callback(t, true)
+	testOAuth2Callback(t, true, true)
 }
 
-func testOAuth2Callback(t *testing.T, haveSession bool) {
+func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	const (
 		provider = "github"
 		userID   = "1"
@@ -268,6 +272,12 @@ func testOAuth2Callback(t *testing.T, haveSession bool) {
 
 	db, cleanup := setup(t)
 	defer cleanup()
+
+	if existingUser {
+		if _, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
+			t.Fatal(err)
+		}
+	}
 
 	authHandler := auth.OAuth2Callback(db)
 	withSession := session.Middleware(store)(authHandler)
