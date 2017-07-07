@@ -1,5 +1,5 @@
 import * as Models from "../models";
-import { IAssignment, ICourse, ICourseUser, ILabInfo, IUser } from "../models";
+import { IAssignment, ICourse, ICourseUserLink, ILabInfo, IUser } from "../models";
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
@@ -14,7 +14,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
     private localUsers: IMap<IDummyUser>;
     private localAssignments: IMap<IAssignment>;
     private localCourses: IMap<ICourse>;
-    private localCourseStudent: ICourseUser[];
+    private localCourseStudent: ICourseUserLink[];
     private localLabInfo: IMap<ILabInfo>;
 
     constructor() {
@@ -33,7 +33,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourses;
     }
 
-    public async getCoursesStudent(): Promise<ICourseUser[]> {
+    public async getCoursesStudent(): Promise<ICourseUserLink[]> {
         return this.localCourseStudent;
     }
 
@@ -94,7 +94,7 @@ class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async changeUserState(link: ICourseUser, state: Models.CourseUserState): Promise<boolean> {
+    public async changeUserState(link: ICourseUserLink, state: Models.CourseUserState): Promise<boolean> {
         link.state = state;
         return true;
     }

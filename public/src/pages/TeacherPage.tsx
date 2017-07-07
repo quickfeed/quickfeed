@@ -9,9 +9,10 @@ import { UserView } from "./views/UserView";
 import { INavInfo } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { CourseUserState, IAssignment, ICourse, ICourseUser, IUser } from "../models";
+import { CourseUserState, IAssignment, ICourse, ICourseUserLink, IUser, IUserCourseCollection } from "../models";
 
 import { ArrayHelper } from "../helper";
+import { MemberView } from "./views/MemberView";
 
 class TeacherPage extends ViewPage {
 
@@ -48,7 +49,6 @@ class TeacherPage extends ViewPage {
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
-        this.courses = await this.getCourses();
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
@@ -64,28 +64,33 @@ class TeacherPage extends ViewPage {
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const courseStds: ICourseUser[] =
-                await this.courseMan.getUserIdsForCourse(course, CourseUserState.student);
             // TODO: currently userMan.getUsers does not return correct users
             // fix: return a Map for getAllUser method in UserManager
-            const students: IUser[] = await this.userMan.getUsers(courseStds.map((e) => e.personId));
+
+            const students = await this.courseMan.getUsersForCourse(course, this.userMan, CourseUserState.student);
+            const linkedStudents: IUserCourseCollection[] = [];
+            for (const student of students) {
+                const temp = await this.courseMan.getStudentCourse(student, course);
+                if (temp) {
+                    linkedStudents.push({ courses: temp, user: student });
+                }
+            }
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
-            return <Results course={course} students={students} labs={labs}></Results>;
+            return <Results course={course} labs={labs} students={linkedStudents}></Results>;
         }
         return <div>404 Page not found</div>;
     }
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
-        this.courses = await this.getCourses();
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const userIds = await this.courseMan.getUserIdsForCourse(course);
+            const userIds = await this.courseMan.getUserLinksForCourse(course);
             const users = await this.userMan.getUsers(userIds.map((e) => e.personId));
 
             const all = ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
             const acceptedUsers: IUser[] = [];
-            const pendingUsers: Array<{ ele1: ICourseUser, ele2: IUser }> = [];
+            const pendingUsers: Array<{ ele1: ICourseUserLink, ele2: IUser }> = [];
             all.forEach((ele, id) => {
                 switch (ele.ele1.state) {
                     case CourseUserState.student:
@@ -96,47 +101,16 @@ class TeacherPage extends ViewPage {
                         break;
                 }
             });
-            let condPending;
-            if (pendingUsers.length > 0) {
-                condPending = <div><h3>Pending users</h3>{this.createPendingTable(pendingUsers)}</div>;
-            }
-            return <div>
-                <h1>{course.name}</h1>
-                <h3>Registered users</h3>
-                <UserView users={acceptedUsers}></UserView>
-                {condPending}
-            </div>;
+            return <MemberView
+                acceptedUsers={acceptedUsers}
+                course={course}
+                navMan={this.navMan}
+                pendingUsers={pendingUsers}
+                courseMan={this.courseMan}
+                users={users}>
+            </MemberView>;
         }
         return <div>404 Page not found</div>;
-    }
-
-    public createPendingTable(pendingUsers: Array<{ ele1: ICourseUser, ele2: IUser }>): JSX.Element {
-        return <DynamicTable
-            data={pendingUsers}
-            header={["Name", "Email", "Student ID", "Action"]}
-            selector={
-                (ele: { ele1: ICourseUser, ele2: IUser }) => [
-                    ele.ele2.firstName + " " + ele.ele2.lastName,
-                    <a href={"mailto:" + ele.ele2.email}>{ele.ele2.email}</a>,
-                    ele.ele2.personId.toString(),
-                    <span>
-                        <button onClick={(e) => {
-                            this.courseMan.changeUserState(ele.ele1, CourseUserState.student);
-                            this.navMan.refresh();
-                        }}
-                            className="btn btn-primary">
-                            Accept
-                    </button>
-                        <button onClick={(e) => {
-                            this.courseMan.changeUserState(ele.ele1, CourseUserState.rejected);
-                            this.navMan.refresh();
-                        }} className="btn btn-danger">
-                            Reject
-                    </button>
-                    </span>,
-                ]}
-        >
-        </DynamicTable>;
     }
 
     public generateCollectionFor(link: ILink): ILinkCollection {
@@ -146,8 +120,8 @@ class TeacherPage extends ViewPage {
                 { name: "Results", uri: link.uri + "/results" },
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
-                { name: "Settings", uri: link.uri + "/settings" },
-                { name: "Course Info", uri: link.uri + "/courseinfo" },
+                // {name: "Settings", uri: link.uri + "/settings" },
+                // {name: "Course Info", uri: link.uri + "/courseinfo" },
             ],
         };
     }

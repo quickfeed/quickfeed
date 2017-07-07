@@ -172,7 +172,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(5);
+const event_1 = __webpack_require__(6);
 class NavigationHelper {
     constructor(thisObject) {
         this.onPreNavigation = event_1.newEvent("NavigationHelper.onPreNavigation");
@@ -322,100 +322,17 @@ function isCourse(value) {
         && typeof value.tag === "string";
 }
 exports.isCourse = isCourse;
-var CourseStudentState;
-(function (CourseStudentState) {
-    CourseStudentState[CourseStudentState["pending"] = 0] = "pending";
-    CourseStudentState[CourseStudentState["accepted"] = 1] = "accepted";
-    CourseStudentState[CourseStudentState["rejected"] = 2] = "rejected";
-})(CourseStudentState = exports.CourseStudentState || (exports.CourseStudentState = {}));
+var CourseUserState;
+(function (CourseUserState) {
+    CourseUserState[CourseUserState["pending"] = 0] = "pending";
+    CourseUserState[CourseUserState["student"] = 1] = "student";
+    CourseUserState[CourseUserState["rejected"] = 2] = "rejected";
+    CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
+})(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
 
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function newEvent(info) {
-    const callbacks = [];
-    const handler = function EventHandler(event) {
-        callbacks.map(((v) => v(event)));
-    };
-    handler.info = info;
-    handler.addEventListener = (callback) => {
-        callbacks.push(callback);
-    };
-    handler.removeEventListener = (callback) => {
-        const index = callbacks.indexOf(callback);
-        if (index < 0) {
-            console.log(callback);
-            throw Error("Event does noe exist");
-        }
-        callbacks.splice(index, 1);
-    };
-    return handler;
-}
-exports.newEvent = newEvent;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-class MapHelper {
-    static mapTo(map, callback) {
-        const returnArray = [];
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            returnArray.push(callback(map[index], index, map));
-        }
-        return returnArray;
-    }
-    static forEach(map, callback) {
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            callback(map[index], index, map);
-        }
-    }
-    static find(map, callback) {
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            if (callback(map[index], index, map)) {
-                return map[index];
-            }
-        }
-        return null;
-    }
-    static toArray(map) {
-        const returnArray = [];
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            returnArray.push(map[index]);
-        }
-        return returnArray;
-    }
-}
-exports.MapHelper = MapHelper;
-function mapify(obj, callback) {
-    const newObj = {};
-    obj.forEach((ele, index, array) => {
-        newObj[callback(ele, index, obj)] = ele;
-    });
-    return newObj;
-}
-exports.mapify = mapify;
-
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -435,7 +352,12 @@ class UserView extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            users: this.props.users,
+            users: props.users,
+        };
+    }
+    componentWillReceiveProps(nextProps, nextContext) {
+        this.state = {
+            users: nextProps.users,
         };
     }
     render() {
@@ -501,6 +423,90 @@ class UserView extends React.Component {
     }
 }
 exports.UserView = UserView;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function newEvent(info) {
+    const callbacks = [];
+    const handler = function EventHandler(event) {
+        callbacks.map(((v) => v(event)));
+    };
+    handler.info = info;
+    handler.addEventListener = (callback) => {
+        callbacks.push(callback);
+    };
+    handler.removeEventListener = (callback) => {
+        const index = callbacks.indexOf(callback);
+        if (index < 0) {
+            console.log(callback);
+            throw Error("Event does noe exist");
+        }
+        callbacks.splice(index, 1);
+    };
+    return handler;
+}
+exports.newEvent = newEvent;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class MapHelper {
+    static mapTo(map, callback) {
+        const returnArray = [];
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            returnArray.push(callback(map[index], index, map));
+        }
+        return returnArray;
+    }
+    static forEach(map, callback) {
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            callback(map[index], index, map);
+        }
+    }
+    static find(map, callback) {
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            if (callback(map[index], index, map)) {
+                return map[index];
+            }
+        }
+        return null;
+    }
+    static toArray(map) {
+        const returnArray = [];
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            returnArray.push(map[index]);
+        }
+        return returnArray;
+    }
+}
+exports.MapHelper = MapHelper;
+function mapify(obj, callback) {
+    const newObj = {};
+    obj.forEach((ele, index, array) => {
+        newObj[callback(ele, index, obj)] = ele;
+    });
+    return newObj;
+}
+exports.mapify = mapify;
 
 
 /***/ }),
@@ -759,11 +765,11 @@ const HelpPage_1 = __webpack_require__(38);
 const HomePage_1 = __webpack_require__(40);
 const StudentPage_1 = __webpack_require__(41);
 const TeacherPage_1 = __webpack_require__(43);
-const AdminPage_1 = __webpack_require__(45);
-const NavBarLogin_1 = __webpack_require__(47);
-const NavBarMenu_1 = __webpack_require__(48);
-const LoginPage_1 = __webpack_require__(49);
-const ServerProvider_1 = __webpack_require__(50);
+const AdminPage_1 = __webpack_require__(46);
+const NavBarLogin_1 = __webpack_require__(48);
+const NavBarMenu_1 = __webpack_require__(49);
+const LoginPage_1 = __webpack_require__(50);
+const ServerProvider_1 = __webpack_require__(51);
 class AutoGrader extends React.Component {
     constructor(props) {
         super();
@@ -897,7 +903,11 @@ function main() {
         const DEBUG_BROWSER = "DEBUG_BROWSER";
         const DEBUG_SERVER = "DEBUG_SERVER";
         let curRunning;
-        curRunning = DEBUG_BROWSER;
+        curRunning = DEBUG_SERVER;
+        if (window.location.host.match("localhost")
+            || localStorage.getItem("debug")) {
+            curRunning = DEBUG_BROWSER;
+        }
         const tempData = new managers_1.TempDataProvider();
         let userMan;
         let courseMan;
@@ -1477,13 +1487,15 @@ class Results extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            assignment: this.props.labs[0],
-            selectedStudent: this.props.students[0],
+            assignment: this.props.students[0].courses.assignments[0],
             students: this.props.students,
         };
     }
     render() {
-        const studentLab = null;
+        let studentLab = null;
+        if (this.props.students.length > 0) {
+            studentLab = React.createElement(components_1.StudentLab, { course: this.props.course, assignment: this.state.assignment });
+        }
         const searchIcon = React.createElement("span", { className: "input-group-addon" },
             React.createElement("i", { className: "glyphicon glyphicon-search" }));
         return (React.createElement("div", null,
@@ -1502,23 +1514,22 @@ class Results extends React.Component {
         return headers;
     }
     getResultSelector(student) {
-        let selector = [student.firstName + " " + student.lastName, "5"];
-        selector = selector.concat(this.props.labs.map((e) => React.createElement("a", { className: "lab-result-cell", onClick: () => this.handleOnclick(student, e), href: "#" }, Math.floor((Math.random() * 100) + 1).toString() + "%")));
+        let selector = [student.user.firstName + " " + student.user.lastName, "5"];
+        selector = selector.concat(student.courses.assignments.map((e, i) => React.createElement("a", { className: "lab-result-cell", onClick: () => this.handleOnclick(e), href: "#" }, e.latest ? (e.latest.score + "%") : "N/A")));
         return selector;
     }
-    handleOnclick(std, lab) {
+    handleOnclick(item) {
         this.setState({
-            selectedStudent: std,
-            assignment: lab,
+            assignment: item,
         });
     }
     handleOnchange(query) {
         query = query.toLowerCase();
         const filteredData = [];
         this.props.students.forEach((std) => {
-            if (std.firstName.toLowerCase().indexOf(query) !== -1
-                || std.lastName.toLowerCase().indexOf(query) !== -1
-                || std.email.toLowerCase().indexOf(query) !== -1) {
+            if (std.user.firstName.toLowerCase().indexOf(query) !== -1
+                || std.user.lastName.toLowerCase().indexOf(query) !== -1
+                || std.user.email.toLowerCase().indexOf(query) !== -1) {
                 filteredData.push(std);
             }
         });
@@ -1597,7 +1608,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const map_1 = __webpack_require__(6);
+const map_1 = __webpack_require__(7);
 const models_1 = __webpack_require__(4);
 class CourseManager {
     constructor(courseProvider) {
@@ -1626,7 +1637,7 @@ class CourseManager {
         return __awaiter(this, void 0, void 0, function* () {
             const cLinks = [];
             for (const c of yield this.courseProvider.getCoursesStudent()) {
-                if (user.id === c.personId && (state === undefined || c.state === models_1.CourseStudentState.accepted)) {
+                if (user.id === c.personId && (state === undefined || c.state === models_1.CourseUserState.student)) {
                     cLinks.push(c);
                 }
             }
@@ -1637,7 +1648,7 @@ class CourseManager {
         return __awaiter(this, void 0, void 0, function* () {
             const cLinks = [];
             for (const c of yield this.courseProvider.getCoursesStudent()) {
-                if (user.id === c.personId && (state === undefined || c.state === models_1.CourseStudentState.accepted)) {
+                if (user.id === c.personId && (state === undefined || c.state === models_1.CourseUserState.student)) {
                     cLinks.push(c);
                 }
             }
@@ -1652,11 +1663,11 @@ class CourseManager {
             return courses;
         });
     }
-    getUserIdsForCourse(course, state) {
+    getUserLinksForCourse(course, state) {
         return __awaiter(this, void 0, void 0, function* () {
             const users = [];
             for (const c of yield this.courseProvider.getCoursesStudent()) {
-                if (course.id === c.courseId && (state === undefined || c.state === models_1.CourseStudentState.accepted)) {
+                if (course.id === c.courseId && (state === undefined || c.state === models_1.CourseUserState.student)) {
                     users.push(c);
                 }
             }
@@ -1741,6 +1752,12 @@ class CourseManager {
             return links;
         });
     }
+    getUsersForCourse(course, userMan, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courseStds = yield this.getUserLinksForCourse(course, state);
+            return yield userMan.getUsers(courseStds.map((e) => e.personId));
+        });
+    }
     fillLinks(student, studentCourse) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!studentCourse.link) {
@@ -1775,7 +1792,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(5);
+const event_1 = __webpack_require__(6);
 const NavigationHelper_1 = __webpack_require__(3);
 const ViewPage_1 = __webpack_require__(2);
 function isILinkCollection(item) {
@@ -1949,7 +1966,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Models = __webpack_require__(4);
-const map_1 = __webpack_require__(6);
+const map_1 = __webpack_require__(7);
 class TempDataProvider {
     constructor() {
         this.addLocalAssignments();
@@ -2017,7 +2034,7 @@ class TempDataProvider {
             this.localCourseStudent.push({
                 courseId: course.id,
                 personId: user.id,
-                state: Models.CourseStudentState.pending,
+                state: Models.CourseUserState.pending,
             });
             return true;
         });
@@ -2347,8 +2364,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(5);
-const map_1 = __webpack_require__(6);
+const event_1 = __webpack_require__(6);
+const map_1 = __webpack_require__(7);
 class UserManager {
     constructor(userProvider) {
         this.onLogin = event_1.newEvent("UserManager.onLogin");
@@ -2611,7 +2628,7 @@ const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
 const HelloView_1 = __webpack_require__(11);
-const UserView_1 = __webpack_require__(7);
+const UserView_1 = __webpack_require__(5);
 const CollapsableNavMenu_1 = __webpack_require__(12);
 const EnrollmentView_1 = __webpack_require__(42);
 class StudentPage extends ViewPage_1.ViewPage {
@@ -2794,10 +2811,10 @@ class EnrollmentView extends React.Component {
     createEnrollmentRow(studentCourses, course) {
         const base = [course.course.tag, course.course.name];
         if (course.link) {
-            if (course.link.state === models_1.CourseStudentState.accepted) {
+            if (course.link.state === models_1.CourseUserState.student) {
                 base.push("Enrolled");
             }
-            else if (course.link.state === models_1.CourseStudentState.pending) {
+            else if (course.link.state === models_1.CourseUserState.pending) {
                 base.push("Pending");
             }
             else {
@@ -2834,10 +2851,11 @@ const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
 const HelloView_1 = __webpack_require__(11);
-const UserView_1 = __webpack_require__(7);
+const UserView_1 = __webpack_require__(5);
 const CollapsableNavMenu_1 = __webpack_require__(12);
 const models_1 = __webpack_require__(4);
 const helper_1 = __webpack_require__(44);
+const MemberView_1 = __webpack_require__(45);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
         super();
@@ -2866,7 +2884,6 @@ class TeacherPage extends ViewPage_1.ViewPage {
     }
     course(info) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.courses = yield this.getCourses();
             const courseId = parseInt(info.params.course, 10);
             const course = yield this.courseMan.getCourse(courseId);
             if (course) {
@@ -2889,65 +2906,44 @@ class TeacherPage extends ViewPage_1.ViewPage {
             const courseId = parseInt(info.params.course, 10);
             const course = yield this.courseMan.getCourse(courseId);
             if (course) {
-                const courseStds = yield this.courseMan.getUserIdsForCourse(course, models_1.CourseStudentState.accepted);
-                const students = yield this.userMan.getUsers(courseStds.map((e) => e.personId));
+                const students = yield this.courseMan.getUsersForCourse(course, this.userMan, models_1.CourseUserState.student);
+                const linkedStudents = [];
+                for (const student of students) {
+                    const temp = yield this.courseMan.getStudentCourse(student, course);
+                    if (temp) {
+                        linkedStudents.push({ courses: temp, user: student });
+                    }
+                }
                 const labs = yield this.courseMan.getAssignments(courseId);
-                return React.createElement(components_1.Results, { course: course, students: students, labs: labs });
+                return React.createElement(components_1.Results, { course: course, labs: labs, students: linkedStudents });
             }
             return React.createElement("div", null, "404 Page not found");
         });
     }
     courseUsers(info) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.courses = yield this.getCourses();
             const courseId = parseInt(info.params.course, 10);
             const course = yield this.courseMan.getCourse(courseId);
             if (course) {
-                const userIds = yield this.courseMan.getUserIdsForCourse(course);
+                const userIds = yield this.courseMan.getUserLinksForCourse(course);
                 const users = yield this.userMan.getUsers(userIds.map((e) => e.personId));
                 const all = helper_1.ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
                 const acceptedUsers = [];
                 const pendingUsers = [];
                 all.forEach((ele, id) => {
                     switch (ele.ele1.state) {
-                        case models_1.CourseStudentState.accepted:
+                        case models_1.CourseUserState.student:
                             acceptedUsers.push(ele.ele2);
                             break;
-                        case models_1.CourseStudentState.pending:
+                        case models_1.CourseUserState.pending:
                             pendingUsers.push(ele);
                             break;
                     }
                 });
-                let condPending;
-                if (pendingUsers.length > 0) {
-                    condPending = React.createElement("div", null,
-                        React.createElement("h3", null, "Pending users"),
-                        this.createPendingTable(pendingUsers));
-                }
-                return React.createElement("div", null,
-                    React.createElement("h1", null, course.name),
-                    React.createElement("h3", null, "Registered users"),
-                    React.createElement(UserView_1.UserView, { users: acceptedUsers }),
-                    condPending);
+                return React.createElement(MemberView_1.MemberView, { acceptedUsers: acceptedUsers, course: course, navMan: this.navMan, pendingUsers: pendingUsers, courseMan: this.courseMan, users: users });
             }
             return React.createElement("div", null, "404 Page not found");
         });
-    }
-    createPendingTable(pendingUsers) {
-        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["Name", "Email", "Student ID", "Action"], selector: (ele) => [
-                ele.ele2.firstName + " " + ele.ele2.lastName,
-                React.createElement("a", { href: "mailto:" + ele.ele2.email }, ele.ele2.email),
-                ele.ele2.personId.toString(),
-                React.createElement("span", null,
-                    React.createElement("button", { onClick: (e) => {
-                            this.courseMan.changeUserState(ele.ele1, models_1.CourseStudentState.accepted);
-                            this.navMan.refresh();
-                        }, className: "btn btn-primary" }, "Accept"),
-                    React.createElement("button", { onClick: (e) => {
-                            this.courseMan.changeUserState(ele.ele1, models_1.CourseStudentState.rejected);
-                            this.navMan.refresh();
-                        }, className: "btn btn-danger" }, "Reject")),
-            ] });
     }
     generateCollectionFor(link) {
         return {
@@ -2956,8 +2952,6 @@ class TeacherPage extends ViewPage_1.ViewPage {
                 { name: "Results", uri: link.uri + "/results" },
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
-                { name: "Settings", uri: link.uri + "/settings" },
-                { name: "Course Info", uri: link.uri + "/courseinfo" },
             ],
         };
     }
@@ -3079,6 +3073,57 @@ exports.ArrayHelper = ArrayHelper;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
+const models_1 = __webpack_require__(4);
+const components_1 = __webpack_require__(1);
+const UserView_1 = __webpack_require__(5);
+exports.UserView = UserView_1.UserView;
+class MemberView extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        let condPending;
+        if (this.props.pendingUsers.length > 0) {
+            condPending = React.createElement("div", null,
+                React.createElement("h3", null, "Pending users"),
+                this.createPendingTable(this.props.pendingUsers));
+        }
+        const userView = React.createElement("div", null,
+            React.createElement("h3", null, "Registered users"),
+            React.createElement(UserView_1.UserView, { users: this.props.acceptedUsers }));
+        return React.createElement("div", null,
+            React.createElement("h1", null, this.props.course.name),
+            userView,
+            condPending);
+    }
+    createPendingTable(pendingUsers) {
+        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["Name", "Email", "Student ID", "Action"], selector: (ele) => [
+                ele.ele2.firstName + " " + ele.ele2.lastName,
+                React.createElement("a", { href: "mailto:" + ele.ele2.email }, ele.ele2.email),
+                ele.ele2.personId.toString(),
+                React.createElement("span", null,
+                    React.createElement("button", { onClick: (e) => {
+                            this.props.courseMan.changeUserState(ele.ele1, models_1.CourseUserState.student);
+                            this.props.navMan.refresh();
+                        }, className: "btn btn-primary" }, "Accept"),
+                    React.createElement("button", { onClick: (e) => {
+                            this.props.courseMan.changeUserState(ele.ele1, models_1.CourseUserState.rejected);
+                            this.props.navMan.refresh();
+                        }, className: "btn btn-danger" }, "Reject")),
+            ] });
+    }
+}
+exports.MemberView = MemberView;
+
+
+/***/ }),
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -3091,8 +3136,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(2);
-const CourseView_1 = __webpack_require__(46);
-const UserView_1 = __webpack_require__(7);
+const CourseView_1 = __webpack_require__(47);
+const UserView_1 = __webpack_require__(5);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
         super();
@@ -3210,7 +3255,7 @@ exports.AdminPage = AdminPage;
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3251,7 +3296,7 @@ exports.CourseView = CourseView;
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3300,7 +3345,7 @@ exports.NavBarLogin = NavBarLogin;
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3334,7 +3379,7 @@ exports.NavBarMenu = NavBarMenu;
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3391,7 +3436,7 @@ exports.LoginPage = LoginPage;
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

@@ -2,12 +2,12 @@ import * as React from "react";
 
 import { CoursePanel, Row } from "../../components";
 
-import { ICoursesWithAssignments, IStudentCourse } from "../../models";
+import { ICoursesWithAssignments, IUserCourse } from "../../models";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
 interface ICourseOverviewProps {
-    courseOverview: IStudentCourse[];
+    courseOverview: IUserCourse[];
     navMan: NavigationManager;
 }
 

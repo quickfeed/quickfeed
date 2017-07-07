@@ -9,10 +9,10 @@ import {
     IAssignment,
     ICourse,
     ICoursesWithAssignments,
-    ICourseUser,
-    IStudentCourse,
+    ICourseUserLink,
     IStudentSubmission,
     IUser,
+    IUserCourse,
 } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
@@ -31,8 +31,8 @@ class StudentPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
 
-    private studentCourses: IStudentCourse[] = [];
-    private selectedStudentCourse: IStudentCourse | undefined;
+    private studentCourses: IUserCourse[] = [];
+    private selectedStudentCourse: IUserCourse | undefined;
     private selectedStudentAssignment: IStudentSubmission | undefined;
 
     private foundId: number = -1;
@@ -168,8 +168,8 @@ class StudentPage extends ViewPage {
         return [];
     }
 
-    private onlyActiveCourses(studentCourse: IStudentCourse[]): IStudentCourse[] {
-        const temp: IStudentCourse[] = [];
+    private onlyActiveCourses(studentCourse: IUserCourse[]): IUserCourse[] {
+        const temp: IUserCourse[] = [];
         studentCourse.forEach((a) => {
             if (a.link) {
                 temp.push(a);

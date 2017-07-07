@@ -1,9 +1,9 @@
 import * as React from "react";
-import { ICoursesWithAssignments, IStudentCourse } from "../../models";
+import { ICoursesWithAssignments, IUserCourse } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
-    courseAndLabs: IStudentCourse;
+    courseAndLabs: IUserCourse;
 }
 
 class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {

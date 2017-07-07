@@ -15,10 +15,17 @@ interface IUserViewerState {
 }
 
 class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
-    constructor(props: any) {
+
+    public constructor(props: IUserViewerProps) {
         super(props);
         this.state = {
-            users: this.props.users,
+            users: props.users,
+        };
+    }
+
+    public componentWillReceiveProps(nextProps: Readonly<IUserViewerProps>, nextContext: any): void {
+        this.state = {
+            users: nextProps.users,
         };
     }
 

@@ -1,11 +1,11 @@
 import * as React from "react";
 import { DynamicTable } from "../../components";
-import { CourseUserState, ICourse, ICourseUser, IStudentCourse, IUser } from "../../models";
+import { CourseUserState, ICourse, ICourseUserLink, IUser, IUserCourse } from "../../models";
 
 import { ArrayHelper } from "../../helper";
 
 interface IEnrollmentViewProps {
-    courses: IStudentCourse[];
+    courses: IUserCourse[];
     onEnrollmentClick: (course: ICourse) => void;
 }
 
@@ -14,12 +14,12 @@ class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         return <DynamicTable
             data={this.props.courses}
             header={["Course tag", "Course Name", "Action"]}
-            selector={(course: IStudentCourse) => this.createEnrollmentRow(this.props.courses, course)}>
+            selector={(course: IUserCourse) => this.createEnrollmentRow(this.props.courses, course)}>
         </DynamicTable>;
 
     }
 
-    public createEnrollmentRow(studentCourses: IStudentCourse[], course: IStudentCourse): Array<string | JSX.Element> {
+    public createEnrollmentRow(studentCourses: IUserCourse[], course: IUserCourse): Array<string | JSX.Element> {
         const base: Array<string | JSX.Element> = [course.course.tag, course.course.name];
         if (course.link) {
             if (course.link.state === CourseUserState.student) {

@@ -1,3 +1,7 @@
+interface IJoinType<T extends { [key: string]: T1 | T2 }, K extends keyof T, T1, T2> {
+    [key: string]: T1 | T2;
+}
+
 class ArrayHelper {
 
     public static join<T, T2>(

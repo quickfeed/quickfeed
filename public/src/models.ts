@@ -16,10 +16,15 @@ export function isCourse(value: any): value is ICourse {
 
 // Browser only objects START
 
-export interface IStudentCourse {
+export interface IUserCourse {
     course: ICourse;
-    link?: ICourseUser;
+    link?: ICourseUserLink;
     assignments: IStudentSubmission[];
+}
+
+export interface IUserCourseCollection {
+    user: IUser;
+    courses: IUserCourse;
 }
 
 export interface IStudentSubmission {
@@ -58,7 +63,7 @@ export enum CourseUserState {
     teacher = 3,
 }
 
-export interface ICourseUser {
+export interface ICourseUserLink {
     personId: number;
     courseId: number;
     state: CourseUserState;

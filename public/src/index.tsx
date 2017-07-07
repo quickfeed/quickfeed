@@ -202,7 +202,12 @@ async function main(): Promise<void> {
     const DEBUG_SERVER = "DEBUG_SERVER";
 
     let curRunning: string;
-    curRunning = DEBUG_BROWSER;
+    curRunning = DEBUG_SERVER;
+
+    if (window.location.host.match("localhost")
+        || localStorage.getItem("debug")) {
+        curRunning = DEBUG_BROWSER;
+    }
 
     const tempData = new TempDataProvider();
 

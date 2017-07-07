@@ -1,37 +1,34 @@
 import * as React from "react";
-import { IAssignment, ICourse, IUser } from "../../models";
+import { IAssignment, ICourse, IStudentSubmission, IUser, IUserCourseCollection } from "../../models";
 
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 
 interface IResultsProp {
     course: ICourse;
-    students: IUser[];
+    students: IUserCourseCollection[];
     labs: IAssignment[];
 }
 interface IResultsState {
-    assignment: IAssignment;
-    selectedStudent: IUser;
-    students: IUser[];
+    assignment: IStudentSubmission;
+    students: IUserCourseCollection[];
 }
 class Results extends React.Component<IResultsProp, IResultsState> {
-    constructor(props: any) {
+    constructor(props: IResultsProp) {
         super(props);
         this.state = {
-            assignment: this.props.labs[0],
-            selectedStudent: this.props.students[0],
+            assignment: this.props.students[0].courses.assignments[0],
             students: this.props.students,
         };
     }
 
     public render() {
-        const studentLab: JSX.Element | null = null;
-        /*if (this.props.students.length > 0) {
+        let studentLab: JSX.Element | null = null;
+        if (this.props.students.length > 0) {
             studentLab = <StudentLab
                 course={this.props.course}
                 assignment={this.state.assignment}
-                student={this.state.selectedStudent}
             />;
-        }*/
+        }
 
         const searchIcon: JSX.Element = <span className="input-group-addon">
             <i className="glyphicon glyphicon-search"></i>
@@ -49,7 +46,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.students}
-                            selector={(item: IUser) => this.getResultSelector(item)}
+                            selector={(item: IUserCourseCollection) => this.getResultSelector(item)}
                         />
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12">
@@ -66,29 +63,28 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IUser): Array<string | JSX.Element> {
-        let selector: Array<string | JSX.Element> = [student.firstName + " " + student.lastName, "5"];
-        selector = selector.concat(this.props.labs.map((e) => <a className="lab-result-cell"
-            onClick={() => this.handleOnclick(student, e)}
+    private getResultSelector(student: IUserCourseCollection): Array<string | JSX.Element> {
+        let selector: Array<string | JSX.Element> = [student.user.firstName + " " + student.user.lastName, "5"];
+        selector = selector.concat(student.courses.assignments.map((e, i) => <a className="lab-result-cell"
+            onClick={() => this.handleOnclick(e)}
             href="#">
-            {Math.floor((Math.random() * 100) + 1).toString() + "%"}</a>));
+            {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
         return selector;
     }
 
-    private handleOnclick(std: IUser, lab: IAssignment): void {
+    private handleOnclick(item: IStudentSubmission): void {
         this.setState({
-            selectedStudent: std,
-            assignment: lab,
+            assignment: item,
         });
     }
 
     private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        const filteredData: IUser[] = [];
+        const filteredData: IUserCourseCollection[] = [];
         this.props.students.forEach((std) => {
-            if (std.firstName.toLowerCase().indexOf(query) !== -1
-                || std.lastName.toLowerCase().indexOf(query) !== -1
-                || std.email.toLowerCase().indexOf(query) !== -1
+            if (std.user.firstName.toLowerCase().indexOf(query) !== -1
+                || std.user.lastName.toLowerCase().indexOf(query) !== -1
+                || std.user.email.toLowerCase().indexOf(query) !== -1
             ) {
                 filteredData.push(std);
             }
