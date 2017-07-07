@@ -170,6 +170,12 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			); err != nil {
 				return err
 			}
+
+			// Enable provider in session.
+			us.enableProvider(c.Param("provider"))
+			if err := sess.Save(r, w); err != nil {
+				return err
+			}
 			return c.Redirect(http.StatusFound, Login)
 		}
 
