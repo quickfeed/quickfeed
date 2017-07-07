@@ -43,8 +43,8 @@ export interface ICourse {
     id: number;
     name: string;
     code: string;
-    year: string;
     tag: string;
+    year: number;
     provider: string;
     directoryid: number;
 }

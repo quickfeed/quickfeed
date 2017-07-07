@@ -5,6 +5,7 @@ import {
     ICourse,
     ICourseUserLink,
     ILabInfo,
+    IOrganization,
     isCourse,
     IStudentSubmission,
     IUser,
@@ -23,6 +24,7 @@ export interface ICourseProvider {
     changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean>;
     createNewCourse(courseData: ICourse): Promise<boolean>;
     getAllLabInfos(): Promise<IMap<ILabInfo>>;
+    getDirectories(provider: string): Promise<IOrganization[]>;
 }
 
 export class CourseManager {
@@ -183,6 +185,10 @@ export class CourseManager {
                 user,
             };
         });
+    }
+
+    public async  getDirectories(provider: string): Promise<IOrganization[]> {
+        return await this.courseProvider.getDirectories(provider);
     }
 
     private async fillLinks(student: IUser, studentCourse: IUserCourse): Promise<void> {

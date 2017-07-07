@@ -2,8 +2,11 @@ import * as React from "react";
 import {Button} from "../../components";
 import {IOrganization} from "../../models";
 
+import {CourseManager} from "../../managers/CourseManager";
+
 interface ICourseFormProps<T> {
     className?: string;
+    courseMan: CourseManager;
     onSubmit: (formData: object, errors: string[]) => void;
 }
 
@@ -127,7 +130,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             name: this.state.name,
             tag: this.state.tag,
             semester: this.state.semester,
-            year: this.state.year,
+            year: parseInt(this.state.year, 10),
             provider: this.state.provider,
             directoryid: this.state.directoryid,
         };
@@ -160,34 +163,20 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             provider: pvdr,
         });
 
-        const xhttp = new XMLHttpRequest();
-        const url: string = "/api/v1/directories";
-        const data: string = JSON.stringify({provider: pvdr});
-        const self = this;
-        xhttp.onreadystatechange = () => {
-            if (xhttp.readyState === 4 && xhttp.status === 200) {
-                callback(xhttp, self);
-            } else {
-                self.setState({
-                    organisations: null,
-                });
-            }
-        };
-
-        xhttp.open("POST", url, true);
-        xhttp.setRequestHeader("Content-type", "application/json");
-        xhttp.send(data);
+        const pRes = this.props.courseMan.getDirectories(pvdr);
+        pRes.then((orgs: IOrganization[]) => {
+            callback.call(this, orgs);
+        });
 
     }
 
-    private updateOrganisationDivs(xhttp: XMLHttpRequest, self: any): void {
-        const orgs: IOrganization[] = JSON.parse(xhttp.response);
+    private updateOrganisationDivs(orgs: IOrganization[]): void {
         const organisationDetails: JSX.Element[] = [];
         for (let i: number = 0; i < orgs.length; i++) {
             organisationDetails.push(
                 <button key={i} className="btn organisation"
                         data-directoryid={orgs[i].id}
-                        onClick={(e) => self.handleOrgClick(e)}>
+                        onClick={(e) => this.handleOrgClick(e)}>
 
                     <div className="organisationInfo">
                         <img src={orgs[i].avatar}
@@ -211,8 +200,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                 </div>
             </div>
         </div>;
-        console.log(self);
-        self.setState({
+
+        this.setState({
             organisations: orgDivs,
         });
     }

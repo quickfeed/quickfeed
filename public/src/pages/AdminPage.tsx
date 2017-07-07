@@ -98,7 +98,8 @@ export class AdminPage extends ViewPage {
                 <h1>Create New Course</h1>
                 {flashHolder}
                 <CourseForm className="form-horizontal"
-                    onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
+                            courseMan={this.courseMan}
+                            onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
                 />
             </div>
         );

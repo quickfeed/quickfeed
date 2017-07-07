@@ -1,17 +1,9 @@
+import {IUserProvider} from "../managers";
+import {IMap} from "../map";
+import {CourseUserState, IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser} from "../models";
+import {ICourseProvider} from "./CourseManager";
 
-import { IUserProvider } from "../managers";
-import { IMap } from "../map";
-import {
-    CourseUserState,
-    IAssignment,
-    ICourse,
-    ICourseUserLink,
-    ILabInfo,
-    IUser,
-} from "../models";
-import { ICourseProvider } from "./CourseManager";
-
-import { HttpHelper } from "../HttpHelper";
+import {HttpHelper} from "../HttpHelper";
 
 async function request(url: string): Promise<string> {
     const req = new XMLHttpRequest();
@@ -59,7 +51,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async createNewCourse(courseData: ICourse): Promise<boolean> {
-        throw new Error("Method not implemented.");
+        const uri: string = "courses";
+        const data: ICourse  = courseData;
+        const resp = await this.helper.post<ICourse, ICourse>(uri, data);
+       // return resp.data;
+        console.log("res = ", resp);
+        return true;
     }
 
     public async getAllLabInfos(): Promise<IMap<ILabInfo>> {
@@ -99,5 +96,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async changeAdminRole(user: IUser): Promise<boolean> {
         throw new Error("Method not implemented");
+    }
+
+    // TODO: check if resp.status contain correct status
+    public async getDirectories(provider: string): Promise<IOrganization[]> {
+        const uri: string = "directories";
+        const data: { provider: string } = {provider};
+        const resp = await this.helper.post<{ provider: string }, IOrganization[]>(uri, data);
+        return resp.data;
     }
 }

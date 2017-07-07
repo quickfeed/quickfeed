@@ -762,6 +762,7 @@ const NavBarLogin_1 = __webpack_require__(47);
 const NavBarMenu_1 = __webpack_require__(48);
 const LoginPage_1 = __webpack_require__(49);
 const ServerProvider_1 = __webpack_require__(50);
+const HttpHelper_1 = __webpack_require__(51);
 class AutoGrader extends React.Component {
     constructor(props) {
         super();
@@ -905,9 +906,10 @@ function main() {
         let courseMan;
         let navMan;
         if (curRunning === DEBUG_SERVER) {
-            const serverData = new ServerProvider_1.ServerProvider();
+            const httpHelper = new HttpHelper_1.HttpHelper("/api/v1/");
+            const serverData = new ServerProvider_1.ServerProvider(httpHelper);
             userMan = new managers_1.UserManager(serverData);
-            courseMan = new managers_1.CourseManager(tempData);
+            courseMan = new managers_1.CourseManager(serverData);
             navMan = new managers_1.NavigationManager(history);
         }
         else {
@@ -1483,7 +1485,7 @@ class CourseForm extends React.Component {
             name: this.state.name,
             tag: this.state.tag,
             semester: this.state.semester,
-            year: this.state.year,
+            year: parseInt(this.state.year, 10),
             provider: this.state.provider,
             directoryid: this.state.directoryid,
         };
@@ -1510,29 +1512,15 @@ class CourseForm extends React.Component {
         this.setState({
             provider: pvdr,
         });
-        const xhttp = new XMLHttpRequest();
-        const url = "/api/v1/directories";
-        const data = JSON.stringify({ provider: pvdr });
-        const self = this;
-        xhttp.onreadystatechange = () => {
-            if (xhttp.readyState === 4 && xhttp.status === 200) {
-                callback(xhttp, self);
-            }
-            else {
-                self.setState({
-                    organisations: null,
-                });
-            }
-        };
-        xhttp.open("POST", url, true);
-        xhttp.setRequestHeader("Content-type", "application/json");
-        xhttp.send(data);
+        const pRes = this.props.courseMan.getDirectories(pvdr);
+        pRes.then((orgs) => {
+            callback.call(this, orgs);
+        });
     }
-    updateOrganisationDivs(xhttp, self) {
-        const orgs = JSON.parse(xhttp.response);
+    updateOrganisationDivs(orgs) {
         const organisationDetails = [];
         for (let i = 0; i < orgs.length; i++) {
-            organisationDetails.push(React.createElement("button", { key: i, className: "btn organisation", "data-directoryid": orgs[i].id, onClick: (e) => self.handleOrgClick(e) },
+            organisationDetails.push(React.createElement("button", { key: i, className: "btn organisation", "data-directoryid": orgs[i].id, onClick: (e) => this.handleOrgClick(e) },
                 React.createElement("div", { className: "organisationInfo" },
                     React.createElement("img", { src: orgs[i].avatar, className: "img-rounded", width: 80, height: 80 }),
                     React.createElement("div", { className: "caption" }, orgs[i].path)),
@@ -1543,8 +1531,7 @@ class CourseForm extends React.Component {
             React.createElement("div", { className: "organisationWrap col-sm-10" },
                 React.createElement("p", null, " Select an Organisation"),
                 React.createElement("div", { className: "btn-group organisationBtnGroup", "data-toggle": "buttons" }, organisationDetails)));
-        console.log(self);
-        self.setState({
+        this.setState({
             organisations: orgDivs,
         });
     }
@@ -1869,6 +1856,11 @@ class CourseManager {
             });
         });
     }
+    getDirectories(provider) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.courseProvider.getDirectories(provider);
+        });
+    }
     fillLinks(student, studentCourse) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!studentCourse.link) {
@@ -2085,6 +2077,11 @@ class TempDataProvider {
         this.addLocalCourseStudent();
         this.addLocalUsers();
         this.addLocalLabInfo();
+    }
+    getDirectories(provider) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Not implemented");
+        });
     }
     getAllUser() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -2324,8 +2321,8 @@ class TempDataProvider {
                 id: 0,
                 name: "Object Oriented Programming",
                 code: "DAT100",
-                year: "Spring 2017",
-                semester: "Spring",
+                tag: "Spring",
+                year: 2017,
                 provider: "github",
                 directoryid: 23650610,
             },
@@ -2333,8 +2330,8 @@ class TempDataProvider {
                 id: 1,
                 name: "Algorithms and Datastructures",
                 code: "DAT200",
-                year: "Spring 2017",
-                semester: "Spring",
+                tag: "Spring",
+                year: 2017,
                 provider: "github",
                 directoryid: 23650611,
             },
@@ -2342,8 +2339,8 @@ class TempDataProvider {
                 id: 2,
                 name: "Databases",
                 code: "DAT220",
-                year: "Spring 2017",
-                semester: "Spring",
+                tag: "Spring",
+                year: 2017,
                 provider: "github",
                 directoryid: 23650612,
             },
@@ -2351,8 +2348,8 @@ class TempDataProvider {
                 id: 3,
                 name: "Communication Technology",
                 code: "DAT230",
-                year: "Spring 2017",
-                semester: "Spring",
+                tag: "Spring",
+                year: 2017,
                 provider: "github",
                 directoryid: 23650613,
             },
@@ -2360,8 +2357,8 @@ class TempDataProvider {
                 id: 4,
                 name: "Operating Systems",
                 code: "DAT320",
-                year: "Spring 2017",
-                semester: "Spring",
+                tag: "Spring",
+                year: 2017,
                 provider: "github",
                 directoryid: 23650614,
             },
@@ -3311,7 +3308,7 @@ class AdminPage extends ViewPage_1.ViewPage {
             return (React.createElement("div", null,
                 React.createElement("h1", null, "Create New Course"),
                 flashHolder,
-                React.createElement(components_1.CourseForm, { className: "form-horizontal", onSubmit: (formData, errors) => this.createNewCourse(formData, errors) })));
+                React.createElement(components_1.CourseForm, { className: "form-horizontal", courseMan: this.courseMan, onSubmit: (formData, errors) => this.createNewCourse(formData, errors) })));
         });
     }
     renderMenu(index) {
@@ -3376,7 +3373,7 @@ class CourseView extends React.Component {
             React.createElement("i", { className: "glyphicon glyphicon-search" }));
         return (React.createElement("div", null,
             React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for courses", onChange: (query) => this.handleOnchange(query) }),
-            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Tag", "Year/Semester"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.code, e.year] })));
+            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Course Code", "Year"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.code, e.year.toString()] })));
     }
     handleOnchange(query) {
         query = query.toLowerCase();
@@ -3384,7 +3381,7 @@ class CourseView extends React.Component {
         this.props.courses.forEach((course) => {
             if (course.name.toLowerCase().indexOf(query) !== -1
                 || course.code.toLowerCase().indexOf(query) !== -1
-                || course.year.toLowerCase().indexOf(query) !== -1) {
+                || course.year.toString().indexOf(query) !== -1) {
                 filteredData.push(course);
             }
         });
@@ -3572,6 +3569,9 @@ function request(url) {
     });
 }
 class ServerProvider {
+    constructor(helper) {
+        this.helper = helper;
+    }
     getCourses() {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error("Method not implemented.");
@@ -3599,7 +3599,11 @@ class ServerProvider {
     }
     createNewCourse(courseData) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            const uri = "courses";
+            const data = courseData;
+            const resp = yield this.helper.post(uri, data);
+            console.log("res = ", resp);
+            return true;
         });
     }
     getAllLabInfos() {
@@ -3648,8 +3652,64 @@ class ServerProvider {
             throw new Error("Method not implemented");
         });
     }
+    getDirectories(provider) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const uri = "directories";
+            const data = { provider };
+            const resp = yield this.helper.post(uri, data);
+            return resp.data;
+        });
+    }
 }
 exports.ServerProvider = ServerProvider;
+
+
+/***/ }),
+/* 51 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class HttpHelper {
+    constructor(pathPrefix) {
+        this.PATH_PREFIX = "";
+        this.PATH_PREFIX = pathPrefix;
+    }
+    get pathPrefix() {
+        return this.PATH_PREFIX;
+    }
+    get(uri) {
+        return this.send("get", uri);
+    }
+    post(uri, sendData) {
+        return this.send("POST", uri, sendData);
+    }
+    send(method, uri, sendData) {
+        const request = new XMLHttpRequest();
+        const requestPromise = new Promise((resolve, reject) => {
+            request.onreadystatechange = (ev) => {
+                if (request.readyState === 4) {
+                    const temp = {
+                        data: JSON.parse(request.responseText),
+                        statusCode: request.status,
+                    };
+                    resolve(temp);
+                }
+            };
+            request.open(method, this.PATH_PREFIX + uri, true);
+            request.setRequestHeader("Content-Type", "application/json");
+            if (sendData) {
+                request.send(JSON.stringify(sendData));
+            }
+            else {
+                request.send();
+            }
+        });
+        return requestPromise;
+    }
+}
+exports.HttpHelper = HttpHelper;
 
 
 /***/ })

@@ -21,6 +21,8 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
     public render() {
         const searchIcon: JSX.Element = <span className="input-group-addon">
             <i className="glyphicon glyphicon-search"></i></span>;
+
+        // TODO: remember to add tag/semester to the dynamic table
         return (
             <div>
                 <Search className="input-group"
@@ -29,9 +31,9 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
                     onChange={(query) => this.handleOnchange(query)}
                 />
                 <DynamicTable
-                    header={["ID", "Name", "Tag", "Year/Semester"]}
+                    header={["ID", "Name", "Course Code", "Year"]}
                     data={this.state.courses}
-                    selector={(e: ICourse) => [e.id.toString(), e.name, e.code, e.year]}
+                    selector={(e: ICourse) => [e.id.toString(), e.name, e.code, e.year.toString()]}
                 >
                 </DynamicTable>
             </div>
@@ -44,7 +46,7 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
         this.props.courses.forEach((course) => {
             if (course.name.toLowerCase().indexOf(query) !== -1
                 || course.code.toLowerCase().indexOf(query) !== -1
-                || course.year.toLowerCase().indexOf(query) !== -1
+                || course.year.toString().indexOf(query) !== -1
             ) {
                 filteredData.push(course);
             }
