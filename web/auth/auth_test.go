@@ -17,18 +17,23 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/faux"
 )
 
 const (
-	authURL         = "/auth?provider=faux"
-	logoutURL       = "/logout?provider=faux"
-	fauxSessionName = "faux" + gothic.SessionName
-	fauxSessionKey  = "faux"
+	loginRedirect  = "/login"
+	logoutRedirect = "/logout"
+
+	authURL   = "/auth?provider=fake&redirect=" + loginRedirect
+	logoutURL = "/logout?provider=fake&redirect=" + logoutRedirect
+
+	fakeSessionKey  = "fake"
+	fakeSessionName = fakeSessionKey + gothic.SessionName
 )
 
 func init() {
-	goth.UseProviders(&faux.Provider{})
+	goth.UseProviders(&auth.FakeProvider{
+		Callback: "/auth/fake/callback",
+	})
 }
 
 func TestOAuth2Logout(t *testing.T) {
@@ -41,9 +46,9 @@ func TestOAuth2Logout(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	fauxSession := faux.Session{}
-	s, _ := store.Get(r, fauxSessionName)
-	s.Values[fauxSessionKey] = fauxSession.Marshal()
+	fakeSession := auth.FakeSession{}
+	s, _ := store.Get(r, fakeSessionName)
+	s.Values[fakeSessionKey] = fakeSession.Marshal()
 	if err := s.Save(r, w); err != nil {
 		t.Error(err)
 	}
@@ -175,7 +180,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 		t.Error(err)
 	}
 
-	wantLocation := auth.Logout
+	wantLocation := loginRedirect
 	switch {
 	case shouldPass:
 		wantLocation = ""
@@ -199,14 +204,23 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
+	qv := r.URL.Query()
+	qv.Set(auth.State, r.URL.Query().Get(auth.Redirect))
+	r.URL.RawQuery = qv.Encode()
+
 	store := newStore()
 	gothic.Store = store
 
-	fauxSession := faux.Session{ID: userID}
-	s, _ := store.Get(r, fauxSessionName)
-	s.Values[fauxSessionKey] = fauxSession.Marshal()
+	fakeSession := auth.FakeSession{ID: userID}
+	s, _ := store.Get(r, fakeSessionName)
+	s.Values[fakeSessionKey] = fakeSession.Marshal()
 	if err := s.Save(r, w); err != nil {
 		t.Error(err)
+	}
+
+	_, err := gothic.GetAuthURL(w, r)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	e := echo.New()
@@ -223,8 +237,8 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 	}
 
 	location := w.Header().Get("Location")
-	if location != auth.Home {
-		t.Errorf("have Location '%v' want '%v'", location, auth.Home)
+	if location != loginRedirect {
+		t.Errorf("have Location '%v' want '%v'", location, loginRedirect)
 	}
 	assertCode(t, w.Code, http.StatusFound)
 }
@@ -251,14 +265,23 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
+	qv := r.URL.Query()
+	qv.Set(auth.State, r.URL.Query().Get(auth.Redirect))
+	r.URL.RawQuery = qv.Encode()
+
 	store := newStore()
 	gothic.Store = store
 
-	fauxSession := faux.Session{ID: userID}
-	s, _ := store.Get(r, fauxSessionName)
-	s.Values[fauxSessionKey] = fauxSession.Marshal()
+	fakeSession := auth.FakeSession{ID: userID}
+	s, _ := store.Get(r, fakeSessionName)
+	s.Values[fakeSessionKey] = fakeSession.Marshal()
 	if err := s.Save(r, w); err != nil {
 		t.Error(err)
+	}
+
+	_, err := gothic.GetAuthURL(w, r)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	e := echo.New()
@@ -287,8 +310,8 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	}
 
 	location := w.Header().Get("Location")
-	if location != auth.Login {
-		t.Errorf("have Location '%v' want '%v'", location, auth.Login)
+	if location != loginRedirect {
+		t.Errorf("have Location '%v' want '%v'", location, loginRedirect)
 	}
 
 	assertCode(t, w.Code, http.StatusFound)

@@ -22,8 +22,8 @@ type FakeProvider struct {
 	providerName string
 }
 
-// Session is used only for testing.
-type Session struct {
+// FakeSession is used only for testing.
+type FakeSession struct {
 	ID          string
 	Name        string
 	Email       string
@@ -49,7 +49,7 @@ func (p *FakeProvider) BeginAuth(state string) (goth.Session, error) {
 		},
 	}
 	url := c.AuthCodeURL(state)
-	return &Session{
+	return &FakeSession{
 		ID:      "1",
 		AuthURL: url,
 	}, nil
@@ -57,7 +57,7 @@ func (p *FakeProvider) BeginAuth(state string) (goth.Session, error) {
 
 // FetchUser is used only for testing.
 func (p *FakeProvider) FetchUser(session goth.Session) (goth.User, error) {
-	sess := session.(*Session)
+	sess := session.(*FakeSession)
 	user := goth.User{
 		UserID:      sess.ID,
 		Name:        sess.Name,
@@ -74,7 +74,7 @@ func (p *FakeProvider) FetchUser(session goth.Session) (goth.User, error) {
 
 // UnmarshalSession is used only for testing.
 func (p *FakeProvider) UnmarshalSession(data string) (goth.Session, error) {
-	sess := &Session{}
+	sess := &FakeSession{}
 	err := json.NewDecoder(strings.NewReader(data)).Decode(sess)
 	return sess, err
 }
@@ -98,18 +98,18 @@ func (p *FakeProvider) RefreshToken(refreshToken string) (*oauth2.Token, error) 
 }
 
 // Authorize is used only for testing.
-func (s *Session) Authorize(provider goth.Provider, params goth.Params) (string, error) {
+func (s *FakeSession) Authorize(provider goth.Provider, params goth.Params) (string, error) {
 	s.AccessToken = "access"
 	return s.AccessToken, nil
 }
 
 // Marshal is used only for testing.
-func (s *Session) Marshal() string {
+func (s *FakeSession) Marshal() string {
 	b, _ := json.Marshal(s)
 	return string(b)
 }
 
 // GetAuthURL is used only for testing.
-func (s *Session) GetAuthURL() (string, error) {
+func (s *FakeSession) GetAuthURL() (string, error) {
 	return s.AuthURL, nil
 }

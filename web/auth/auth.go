@@ -18,18 +18,17 @@ func init() {
 	gob.Register(&UserSession{})
 }
 
-// Frontend URLs.
-const (
-	Home   = "/app/home"
-	Logout = "/app/logout"
-	Login  = "/app/newlogin"
-)
-
 // Session keys.
 const (
 	SessionKey       = "session"
 	GothicSessionKey = "_gothic_session"
 	UserKey          = "user"
+)
+
+// Query keys.
+const (
+	State    = "state" // As defined by the OAuth2 RFC.
+	Redirect = "redirect"
 )
 
 // UserSession holds user session information.
@@ -83,7 +82,7 @@ func OAuth2Logout() echo.HandlerFunc {
 		sess.Values = make(map[interface{}]interface{})
 		sess.Save(r, w)
 
-		return c.Redirect(http.StatusFound, Logout)
+		return c.Redirect(http.StatusFound, extractRedirectURL(r, Redirect))
 	}
 }
 
@@ -118,6 +117,12 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
+		qv := r.URL.Query()
+		redirect := extractRedirectURL(r, Redirect)
+		// TODO: Add a random string to protect against CSRF.
+		qv.Set(State, redirect)
+		r.URL.RawQuery = qv.Encode()
+
 		_, err := gothic.CompleteUserAuth(w, r)
 		// An error indicates that authentication needs to be performed at the provider.
 		if err != nil {
@@ -130,7 +135,7 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		}
 
 		// The user navigated to /auth/:provider but is already authenticated.
-		return c.Redirect(http.StatusFound, Home)
+		return c.Redirect(http.StatusFound, extractRedirectURL(r, State))
 	}
 }
 
@@ -176,7 +181,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			if err := sess.Save(r, w); err != nil {
 				return err
 			}
-			return c.Redirect(http.StatusFound, Login)
+			return c.Redirect(http.StatusFound, extractRedirectURL(r, State))
 		}
 
 		// Try to get user from database.
@@ -202,7 +207,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		return c.Redirect(http.StatusFound, Login)
+		return c.Redirect(http.StatusFound, extractRedirectURL(r, State))
 	}
 }
 
@@ -247,4 +252,13 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 			return next(c)
 		}
 	}
+}
+
+func extractRedirectURL(r *http.Request, key string) string {
+	// TODO: Validate redirect URL.
+	url := r.URL.Query().Get(key)
+	if url == "" {
+		url = "/"
+	}
+	return url
 }
