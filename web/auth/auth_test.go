@@ -122,11 +122,11 @@ func TestPreAuthNoSession(t *testing.T) {
 	testPreAuthLoggedIn(t, false, false, "github")
 }
 
-func TestPreAuthLoggedIn(t *testing.T) {
+func TestPreAuthLoggedInNoDBUser(t *testing.T) {
 	testPreAuthLoggedIn(t, true, false, "github")
 }
 
-func TestPreAuthLoggedInNoDBUser(t *testing.T) {
+func TestPreAuthLogged(t *testing.T) {
 	testPreAuthLoggedIn(t, true, true, "github")
 }
 
