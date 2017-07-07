@@ -79,6 +79,7 @@ func (p *FakeProvider) UnmarshalSession(data string) (goth.Session, error) {
 	return sess, err
 }
 
+// Client is used only for testing.
 func (p *FakeProvider) Client() *http.Client {
 	return goth.HTTPClientWithFallBack(p.HTTPClient)
 }
