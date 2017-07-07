@@ -140,7 +140,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 		remoteID = 0
 		secret   = "secret"
 	)
-	shouldPass := !haveSession || newProvider != provider
+	shouldPass := !haveSession || existingUser
 
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
@@ -179,8 +179,6 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 	switch {
 	case shouldPass:
 		wantLocation = ""
-	case existingUser:
-		wantLocation = auth.Home
 	}
 	location := w.Header().Get("Location")
 	if location != wantLocation {

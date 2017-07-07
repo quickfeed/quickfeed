@@ -105,10 +105,6 @@ func PreAuth(db database.Database) echo.MiddlewareFunc {
 				if _, err := db.GetUser(us.ID); err != nil {
 					return OAuth2Logout()(c)
 				}
-				if _, ok := us.Providers[c.Param("provider")]; ok {
-					// Provider has already been registered.
-					return c.Redirect(http.StatusFound, Home)
-				}
 			}
 
 			return next(c)
