@@ -44,6 +44,9 @@ export interface ICourse {
     name: string;
     code: string;
     year: string;
+    semester: string;
+    provider: string;
+    directoryid: number;
 }
 
 export interface IAssignment {
@@ -102,4 +105,10 @@ export interface ILabInfo {
 export interface ICoursesWithAssignments {
     course: ICourse;
     labs: IAssignment[];
+}
+
+export interface IOrganization {
+    id: number;
+    path: string;
+    avatar: string;
 }

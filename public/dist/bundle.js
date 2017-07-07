@@ -1437,11 +1437,25 @@ class CourseForm extends React.Component {
         this.state = {
             name: "",
             tag: "",
+            semester: "",
             year: "",
+            provider: "",
+            directoryid: 0,
+            organisations: null,
         };
     }
     render() {
         return (React.createElement("form", { className: this.props.className ? this.props.className : "", onSubmit: (e) => this.handleFormSubmit(e) },
+            React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "control-label col-sm-2" }, "Provider:"),
+                React.createElement("div", { className: "col-sm-10" },
+                    React.createElement("label", { className: "radio-inline" },
+                        React.createElement("input", { type: "radio", name: "provider", value: "github", onClick: (e) => this.getOrganizations(e, this.updateOrganisationDivs) }),
+                        "Github"),
+                    React.createElement("label", { className: "radio-inline" },
+                        React.createElement("input", { type: "radio", name: "provider", value: "gitlab", onClick: (e) => this.getOrganizations(e, this.updateOrganisationDivs) }),
+                        "Gitlab"))),
+            React.createElement("div", { className: "form-group", id: "organisation-container" }, this.state.organisations),
             React.createElement("div", { className: "form-group" },
                 React.createElement("label", { className: "control-label col-sm-2", htmlFor: "name" }, "Course Name:"),
                 React.createElement("div", { className: "col-sm-10" },
@@ -1451,17 +1465,29 @@ class CourseForm extends React.Component {
                 React.createElement("div", { className: "col-sm-10" },
                     React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter course tag", name: "tag", value: this.state.tag, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
-                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Year/Semester:"),
+                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "year" }, "Year:"),
                 React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter year/semester", name: "year", value: this.state.year, onChange: (e) => this.handleInputChange(e) }))),
+                    React.createElement("input", { type: "text", className: "form-control", id: "year", placeholder: "Enter year", name: "year", value: this.state.year, onChange: (e) => this.handleInputChange(e) }))),
+            React.createElement("div", { className: "form-group" },
+                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "semester" }, "Semester:"),
+                React.createElement("div", { className: "col-sm-10" },
+                    React.createElement("input", { type: "text", className: "form-control", id: "semester", placeholder: "Enter semester", name: "semester", value: this.state.semester, onChange: (e) => this.handleInputChange(e) }))),
             React.createElement("div", { className: "form-group" },
                 React.createElement("div", { className: "col-sm-offset-2 col-sm-10" },
-                    React.createElement(components_1.Button, { className: "btn btn-primary", text: "Submit", type: "submit" })))));
+                    React.createElement(components_1.Button, { className: "btn btn-primary", text: "Create", type: "submit" })))));
     }
     handleFormSubmit(e) {
         e.preventDefault();
         const errors = this.courseValidate();
-        this.props.onSubmit(this.state, errors);
+        const courseData = {
+            name: this.state.name,
+            tag: this.state.tag,
+            semester: this.state.semester,
+            year: this.state.year,
+            provider: this.state.provider,
+            directoryid: this.state.directoryid,
+        };
+        this.props.onSubmit(courseData, errors);
     }
     handleInputChange(e) {
         const target = e.target;
@@ -1469,6 +1495,57 @@ class CourseForm extends React.Component {
         const name = target.name;
         this.setState({
             [name]: value,
+        });
+    }
+    handleOrgClick(e) {
+        const target = e.target;
+        if (target.hasAttribute("data-directoryid")) {
+            this.setState({
+                directoryid: target.getAttribute("data-directoryid"),
+            });
+        }
+    }
+    getOrganizations(e, callback) {
+        const pvdr = e.target.value;
+        this.setState({
+            provider: pvdr,
+        });
+        const xhttp = new XMLHttpRequest();
+        const url = "/api/v1/directories";
+        const data = JSON.stringify({ provider: pvdr });
+        const self = this;
+        xhttp.onreadystatechange = () => {
+            if (xhttp.readyState === 4 && xhttp.status === 200) {
+                callback(xhttp, self);
+            }
+            else {
+                self.setState({
+                    organisations: null,
+                });
+            }
+        };
+        xhttp.open("POST", url, true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.send(data);
+    }
+    updateOrganisationDivs(xhttp, self) {
+        const orgs = JSON.parse(xhttp.response);
+        const organisationDetails = [];
+        for (let i = 0; i < orgs.length; i++) {
+            organisationDetails.push(React.createElement("button", { key: i, className: "btn organisation", "data-directoryid": orgs[i].id, onClick: (e) => self.handleOrgClick(e) },
+                React.createElement("div", { className: "organisationInfo" },
+                    React.createElement("img", { src: orgs[i].avatar, className: "img-rounded", width: 80, height: 80 }),
+                    React.createElement("div", { className: "caption" }, orgs[i].path)),
+                React.createElement("input", { type: "radio" })));
+        }
+        const orgDivs = React.createElement("div", null,
+            React.createElement("label", { className: "control-label col-sm-2" }, "Organisation:"),
+            React.createElement("div", { className: "organisationWrap col-sm-10" },
+                React.createElement("p", null, " Select an Organisation"),
+                React.createElement("div", { className: "btn-group organisationBtnGroup", "data-toggle": "buttons" }, organisationDetails)));
+        console.log(self);
+        self.setState({
+            organisations: orgDivs,
         });
     }
     courseValidate() {
@@ -1480,7 +1557,16 @@ class CourseForm extends React.Component {
             errors.push("Course Tag cannot be blank.");
         }
         if (this.state.year === "") {
-            errors.push("Year/Semester cannot be blank.");
+            errors.push("Year cannot be blank.");
+        }
+        if (this.state.semester === "") {
+            errors.push("Semester cannot be blank.");
+        }
+        if (this.state.provider === "") {
+            errors.push("Provider cannot be blank.");
+        }
+        if (this.state.directoryid === 0) {
+            errors.push("Organisation cannot be blank.");
         }
         return errors;
     }
@@ -2239,30 +2325,45 @@ class TempDataProvider {
                 name: "Object Oriented Programming",
                 code: "DAT100",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650610,
             },
             {
                 id: 1,
                 name: "Algorithms and Datastructures",
                 code: "DAT200",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650611,
             },
             {
                 id: 2,
                 name: "Databases",
                 code: "DAT220",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650612,
             },
             {
                 id: 3,
                 name: "Communication Technology",
                 code: "DAT230",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650613,
             },
             {
                 id: 4,
                 name: "Operating Systems",
                 code: "DAT320",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650614,
             },
         ], (ele) => ele.id);
     }
@@ -2369,6 +2470,15 @@ class TempDataProvider {
         ], (ele) => {
             return ele.id;
         });
+    }
+    getLocalDirectories() {
+        return ([
+            {
+                id: 23650610,
+                path: "dat520-2017",
+                avatar: "https://avatars2.githubusercontent.com/u/23650610?v=3",
+            },
+        ]);
     }
 }
 exports.TempDataProvider = TempDataProvider;

@@ -1,8 +1,9 @@
 import * as Models from "../models";
-import { IAssignment, ICourse, ICourseUserLink, ILabInfo, IUser } from "../models";
-import { ICourseProvider } from "./CourseManager";
-import { IUserProvider } from "./UserManager";
 
+import { IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
+import { ICourseProvider } from "./CourseManager";
+
+import { IUserProvider } from "./UserManager";
 import { IMap, MapHelper, mapify } from "../map";
 
 interface IDummyUser extends IUser {
@@ -49,7 +50,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async tryLogin(username: string, password: string): Promise<IUser | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+        u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
             return user;
         }
@@ -62,7 +63,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             lookup = "bob@bobsen.no";
         }
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === lookup);
+        u.email.toLocaleLowerCase() === lookup);
 
         return new Promise<IUser | null>((resolve, reject) => {
             // Simulate async callback
@@ -258,40 +259,56 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 name: "Object Oriented Programming",
                 code: "DAT100",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650610,
+
             },
             {
                 id: 1,
                 name: "Algorithms and Datastructures",
                 code: "DAT200",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650611,
             },
             {
                 id: 2,
                 name: "Databases",
                 code: "DAT220",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650612,
             },
             {
                 id: 3,
                 name: "Communication Technology",
                 code: "DAT230",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650613,
             },
             {
                 id: 4,
                 name: "Operating Systems",
                 code: "DAT320",
                 year: "Spring 2017",
+                semester: "Spring",
+                provider: "github",
+                directoryid: 23650614,
             },
         ], (ele) => ele.id);
     }
 
     private addLocalCourseStudent() {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999, state: 1 },
-            { courseId: 1, personId: 999, state: 1 },
-            { courseId: 0, personId: 1, state: 0 },
-            { courseId: 0, personId: 2, state: 0 },
+            {courseId: 0, personId: 999, state: 1},
+            {courseId: 1, personId: 999, state: 1},
+            {courseId: 0, personId: 1, state: 0},
+            {courseId: 0, personId: 2, state: 0},
         ];
     }
 
@@ -312,9 +329,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    {name: "Test 1", score: 2, points: 2, weight: 20},
+                    {name: "Test 2", score: 1, points: 3, weight: 40},
+                    {name: "Test 3", score: 3, points: 3, weight: 40},
                 ],
             },
             {
@@ -332,9 +349,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    {name: "Test 1", score: 2, points: 2, weight: 20},
+                    {name: "Test 2", score: 1, points: 3, weight: 40},
+                    {name: "Test 3", score: 3, points: 3, weight: 40},
                 ],
             },
             {
@@ -352,9 +369,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    {name: "Test 1", score: 2, points: 2, weight: 20},
+                    {name: "Test 2", score: 1, points: 3, weight: 40},
+                    {name: "Test 3", score: 3, points: 3, weight: 40},
                 ],
             },
             {
@@ -372,9 +389,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    {name: "Test 1", score: 2, points: 2, weight: 20},
+                    {name: "Test 2", score: 1, points: 3, weight: 40},
+                    {name: "Test 3", score: 3, points: 3, weight: 40},
                 ],
             },
             {
@@ -392,14 +409,26 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    {name: "Test 1", score: 2, points: 2, weight: 20},
+                    {name: "Test 2", score: 1, points: 3, weight: 40},
+                    {name: "Test 3", score: 3, points: 3, weight: 40},
                 ],
             },
         ], (ele: ILabInfo) => {
             return ele.id;
         });
+    }
+
+    private getLocalDirectories(): IOrganization[] {
+        return (
+            [
+                {
+                    id: 23650610,
+                    path: "dat520-2017",
+                    avatar: "https://avatars2.githubusercontent.com/u/23650610?v=3",
+                },
+            ]
+        );
     }
 
 }

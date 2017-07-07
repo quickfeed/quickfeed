@@ -1,0 +1,105 @@
+.dropdown-menu {
+    top: initial;
+    left: initial;
+}
+
+.table-hover>tbody>tr:hover {
+    background-color: #D2D2D2;
+    cursor: pointer;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.nav-sub>li>span,
+.nav-list>li>span {
+    position: relative;
+    display: block;
+    padding: 5px 15px;
+}
+
+.nav-sub>li>span.header,
+.nav-list>li>span.header {
+    background-color: #f6f6f6;
+}
+
+.nav-sub>li>a,
+.nav-sub>li>span {
+    padding-left: 40px;
+}
+
+.nav-list>li.active>a {
+    color: #fff;
+    background-color: #337ab7;
+}
+
+.nav-sub>li:nth-child(n+1) {
+    border-top: 1px solid #DDDDDD;
+}
+
+.nav-list>li:nth-child(n+2) {
+    border-top: 1px solid #DDDDDD;
+}
+
+.nav-sub>li.active>a {
+    color: #fff;
+    background-color: #95b1c9;
+}
+
+.nav-box {
+    background: white;
+    border: 1px solid #DDDDDD;
+    display: block;
+    position: absolute;
+    z-index: 10000;
+}
+
+.hidden {
+    display: none;
+}
+
+.organisationWrap {
+    padding: 15px;
+}
+
+.organisationWrap .organisationBtnGroup {
+    max-width: 800px;
+    margin: auto;
+}
+
+.organisationWrap .organisationBtnGroup .organisation {
+    padding: 45px;
+    box-shadow: none;
+    position: relative;
+    margin-right: 25px;
+}
+
+.organisationWrap .organisationBtnGroup .organisation.active {
+    outline: none !important;
+}
+
+.organisationWrap .organisationBtnGroup .organisation.active .organisationInfo {
+    border-color: #337AB7;
+    outline: none !important;
+    box-shadow: 0px 3px 22px 0px #7b7b7b;
+}
+
+.organisationWrap .organisationBtnGroup .organisation .organisationInfo {
+    position: absolute;
+    right: 3px;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: 2px solid transparent;
+    transition: all 0.5s;
+}
+
+
+.organisationWrap .organisationBtnGroup .organisation .organisationInfo:hover {
+    border-color: #337AB7;
+    outline: none !important;
+}
