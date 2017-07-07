@@ -44,7 +44,7 @@ export interface ICourse {
     name: string;
     code: string;
     year: string;
-    semester: string;
+    tag: string;
     provider: string;
     directoryid: number;
 }
