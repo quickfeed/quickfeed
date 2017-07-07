@@ -22,7 +22,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/faux"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
 )
@@ -33,6 +32,8 @@ func main() {
 		public   = flag.String("http.public", "public", "directory to server static files from")
 
 		baseURL = flag.String("service.url", "localhost", "service base url")
+
+		fake = flag.Bool("provider.fake", false, "enable fake provider")
 	)
 	flag.Parse()
 
@@ -59,8 +60,10 @@ func main() {
 		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github"), "user"),
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab"), "api"),
 	)
-	if _, err := goth.GetProvider((&faux.Provider{}).Name()); err == nil {
-		log.Fatal("faux provider enabled in production")
+
+	if *fake {
+		e.Logger.Warn("fake provider enabled")
+		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(*baseURL, "fake")})
 	}
 
 	e.HideBanner = true

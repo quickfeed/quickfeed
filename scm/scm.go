@@ -23,6 +23,8 @@ func NewSCMClient(provider, token string) (SCM, error) {
 		return NewGithubSCMClient(token), nil
 	case "gitlab":
 		return NewGitlabSCMClient(token), nil
+	case "fake":
+		return &FakeSCM{}, nil
 	}
 	return nil, errors.New("invalid provider: " + provider)
 }
