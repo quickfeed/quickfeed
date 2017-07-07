@@ -152,7 +152,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         const target = e.target;
         if (target.hasAttribute("data-directoryid")) {
             this.setState({
-                directoryid: target.getAttribute("data-directoryid"),
+                directoryid: parseInt(target.getAttribute("data-directoryid"), 10),
             });
         }
     }
