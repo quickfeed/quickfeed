@@ -4,10 +4,10 @@ package models
 type Course struct {
 	ID uint64
 
-	Name       string
-	CourseCode string
-	Year       uint
-	Tag        string
+	Name string
+	Code string
+	Year uint
+	Tag  string
 
 	Provider    string
 	DirectoryID uint64

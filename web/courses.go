@@ -17,10 +17,10 @@ const MaxWait = 10 * time.Second
 
 // NewCourseRequest represents a request for a new course.
 type NewCourseRequest struct {
-	Name       string `json:"name"`
-	CourseCode string `json:"coursecode"`
-	Year       uint   `json:"year"`
-	Tag        string `json:"tag"`
+	Name string `json:"name"`
+	Code string `json:"code"`
+	Year uint   `json:"year"`
+	Tag  string `json:"tag"`
 
 	Provider    string `json:"provider"`
 	DirectoryID uint64 `json:"directoryid"`
@@ -29,7 +29,7 @@ type NewCourseRequest struct {
 func (cr *NewCourseRequest) valid() bool {
 	return cr != nil &&
 		cr.Name != "" &&
-		cr.CourseCode != "" &&
+		cr.Code != "" &&
 		(cr.Provider == "github" || cr.Provider == "gitlab") &&
 		cr.DirectoryID != 0 &&
 		cr.Year != 0 &&
@@ -77,7 +77,7 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 
 		if err := db.CreateCourse(&models.Course{
 			Name:        cr.Name,
-			CourseCode:  cr.CourseCode,
+			Code:        cr.Code,
 			Year:        cr.Year,
 			Tag:         cr.Tag,
 			Provider:    cr.Provider,
