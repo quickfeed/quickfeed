@@ -4,7 +4,7 @@ package models
 type User struct {
 	ID uint64
 
-	RemoteIdentities []RemoteIdentity
+	RemoteIdentities []RemoteIdentity `json:"remoteidentities,omitempty"`
 }
 
 // RemoteIdentity represents a third-party identity which can be attached to a
@@ -16,7 +16,7 @@ type RemoteIdentity struct {
 	Provider string
 	RemoteID uint64
 
-	AccessToken string
+	AccessToken string `json:"-"`
 
 	UserID uint64
 }

@@ -93,6 +93,10 @@ func main() {
 	api := e.Group("/api/v1")
 	api.Use(auth.AccessControl(db, scms))
 
+	api.GET("/user", web.GetSelf())
+	api.GET("/users/:id", web.GetUser(db))
+	api.GET("/users", web.GetUsers(db))
+
 	api.GET("/courses", web.ListCourses(db))
 	api.POST("/courses", web.NewCourse(db))
 	api.POST("/directories", web.ListDirectories())
