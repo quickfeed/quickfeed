@@ -4,7 +4,10 @@ export class MapHelper {
         const keys = Object.keys(map);
         for (const a of keys) {
             const index = parseInt(a, 10);
-            returnArray.push(callback(map[index], index, map));
+            const temp = map[index];
+            if (temp) {
+                returnArray.push(callback(temp, index, map));
+            }
         }
         return returnArray;
     }
@@ -13,7 +16,10 @@ export class MapHelper {
         const keys = Object.keys(map);
         for (const a of keys) {
             const index = parseInt(a, 10);
-            callback(map[index], index, map);
+            const temp = map[index];
+            if (temp) {
+                callback(temp, index, map);
+            }
         }
     }
 
@@ -21,26 +27,30 @@ export class MapHelper {
         const keys = Object.keys(map);
         for (const a of keys) {
             const index = parseInt(a, 10);
-            if (callback(map[index], index, map)) {
-                return map[index];
+            const temp = map[index];
+            if (temp && callback(temp, index, map)) {
+                return temp;
             }
         }
         return null;
     }
 
-    public static toArray<T>(map: IMap<T>) {
-        const returnArray = [];
+    public static toArray<T>(map: IMap<T>): T[] {
+        const returnArray: T[] = [];
         const keys = Object.keys(map);
         for (const a of keys) {
             const index = parseInt(a, 10);
-            returnArray.push(map[index]);
+            const temp = map[index];
+            if (temp) {
+                returnArray.push(temp);
+            }
         }
         return returnArray;
     }
 }
 
 export interface IMap<T> {
-    [index: number]: T;
+    [index: number]: T | undefined;
 }
 
 export function mapify<T>(obj: T[], callback: (ele: T, index: number, array: T[]) => number) {

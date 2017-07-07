@@ -70,12 +70,16 @@ class UserManager {
     }
 
     public async getUsers(ids: number[]): Promise<IUser[]> {
-        const returnUsers: IUser[] = [];
+        return MapHelper.toArray(await this.getUsersAsMap(ids));
+    }
+
+    public async getUsersAsMap(ids: number[]): Promise<IMap<IUser>> {
+        const returnUsers: IMap<IUser> = {};
         const allUsers = await this.userProvider.getAllUser();
         ids.forEach((ele) => {
             const temp = allUsers[ele];
             if (temp) {
-                returnUsers.push(temp);
+                returnUsers[ele] = temp;
             }
         });
         return returnUsers;
@@ -86,7 +90,7 @@ class UserManager {
     }
 
     public async changeAdminRole(user: IUser): Promise<boolean> {
-            return this.userProvider.changeAdminRole(user);
+        return this.userProvider.changeAdminRole(user);
     }
 }
 

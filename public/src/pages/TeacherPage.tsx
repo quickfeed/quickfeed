@@ -9,7 +9,15 @@ import { UserView } from "./views/UserView";
 import { INavInfo } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { CourseUserState, IAssignment, ICourse, ICourseUserLink, IUser, IUserCourseCollection } from "../models";
+import {
+    CourseUserState,
+    IAssignment,
+    ICourse,
+    ICourseUserLink,
+    IUser,
+    IUserCourseCollection,
+    IUserRelation,
+} from "../models";
 
 import { ArrayHelper } from "../helper";
 import { MemberView } from "./views/MemberView";
@@ -64,15 +72,12 @@ class TeacherPage extends ViewPage {
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            // TODO: currently userMan.getUsers does not return correct users
-            // fix: return a Map for getAllUser method in UserManager
-
             const students = await this.courseMan.getUsersForCourse(course, this.userMan, CourseUserState.student);
             const linkedStudents: IUserCourseCollection[] = [];
             for (const student of students) {
-                const temp = await this.courseMan.getStudentCourse(student, course);
+                const temp = await this.courseMan.getStudentCourse(student.user, course);
                 if (temp) {
-                    linkedStudents.push({ courses: temp, user: student });
+                    linkedStudents.push({ courses: temp, user: student.user });
                 }
             }
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
@@ -85,19 +90,21 @@ class TeacherPage extends ViewPage {
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const userIds = await this.courseMan.getUserLinksForCourse(course);
-            const users = await this.userMan.getUsers(userIds.map((e) => e.personId));
-
-            const all = ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
-            const acceptedUsers: IUser[] = [];
-            const pendingUsers: Array<{ ele1: ICourseUserLink, ele2: IUser }> = [];
-            all.forEach((ele, id) => {
-                switch (ele.ele1.state) {
+            const all = await this.courseMan.getUsersForCourse(
+                course,
+                this.userMan);
+            const acceptedUsers: IUserRelation[] = [];
+            const pendingUsers: IUserRelation[] = [];
+            // Sort all users to the right tables, and ignores the rejected once
+            // Maybe move this to the Members view
+            all.forEach((user, id) => {
+                switch (user.link.state) {
+                    case CourseUserState.teacher:
                     case CourseUserState.student:
-                        acceptedUsers.push(ele.ele2);
+                        acceptedUsers.push(user);
                         break;
                     case CourseUserState.pending:
-                        pendingUsers.push(ele);
+                        pendingUsers.push(user);
                         break;
                 }
             });
@@ -107,7 +114,7 @@ class TeacherPage extends ViewPage {
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
                 courseMan={this.courseMan}
-                users={users}>
+            >
             </MemberView>;
         }
         return <div>404 Page not found</div>;

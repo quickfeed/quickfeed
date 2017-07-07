@@ -9,6 +9,7 @@ import {
     IStudentSubmission,
     IUser,
     IUserCourse,
+    IUserRelation,
 
 } from "../models";
 
@@ -89,8 +90,9 @@ class CourseManager {
 
     public async getAssignment(course: ICourse, assignmentId: number): Promise<IAssignment | null> {
         const temp = await this.courseProvider.getAssignments(course.id);
-        if (temp[assignmentId]) {
-            return temp[assignmentId];
+        const assign = temp[assignmentId];
+        if (assign) {
+            return assign;
         }
         return null;
     }
@@ -162,10 +164,25 @@ class CourseManager {
         return links;
     }
 
-    public async getUsersForCourse(course: ICourse, userMan: UserManager, state?: CourseUserState): Promise<IUser[]> {
+    public async getUsersForCourse(
+        course: ICourse,
+        userMan: UserManager,
+        state?: CourseUserState): Promise<IUserRelation[]> {
+
         const courseStds: ICourseUserLink[] =
             await this.getUserLinksForCourse(course, state);
-        return await userMan.getUsers(courseStds.map((e) => e.personId));
+        const users = await userMan.getUsersAsMap(courseStds.map((e) => e.personId));
+        return courseStds.map<IUserRelation>((link) => {
+            const user = users[link.personId];
+            if (!user) {
+                // TODO: See if we should have an error here or not
+                throw new Error("Link exist witout a user object");
+            }
+            return {
+                link,
+                user,
+            };
+        });
     }
 
     private async fillLinks(student: IUser, studentCourse: IUserCourse): Promise<void> {

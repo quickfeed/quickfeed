@@ -467,7 +467,10 @@ class MapHelper {
         const keys = Object.keys(map);
         for (const a of keys) {
             const index = parseInt(a, 10);
-            returnArray.push(callback(map[index], index, map));
+            const temp = map[index];
+            if (temp) {
+                returnArray.push(callback(temp, index, map));
+            }
         }
         return returnArray;
     }
@@ -475,15 +478,19 @@ class MapHelper {
         const keys = Object.keys(map);
         for (const a of keys) {
             const index = parseInt(a, 10);
-            callback(map[index], index, map);
+            const temp = map[index];
+            if (temp) {
+                callback(temp, index, map);
+            }
         }
     }
     static find(map, callback) {
         const keys = Object.keys(map);
         for (const a of keys) {
             const index = parseInt(a, 10);
-            if (callback(map[index], index, map)) {
-                return map[index];
+            const temp = map[index];
+            if (temp && callback(temp, index, map)) {
+                return temp;
             }
         }
         return null;
@@ -493,7 +500,10 @@ class MapHelper {
         const keys = Object.keys(map);
         for (const a of keys) {
             const index = parseInt(a, 10);
-            returnArray.push(map[index]);
+            const temp = map[index];
+            if (temp) {
+                returnArray.push(temp);
+            }
         }
         return returnArray;
     }
@@ -1677,8 +1687,9 @@ class CourseManager {
     getAssignment(course, assignmentId) {
         return __awaiter(this, void 0, void 0, function* () {
             const temp = yield this.courseProvider.getAssignments(course.id);
-            if (temp[assignmentId]) {
-                return temp[assignmentId];
+            const assign = temp[assignmentId];
+            if (assign) {
+                return assign;
             }
             return null;
         });
@@ -1755,7 +1766,17 @@ class CourseManager {
     getUsersForCourse(course, userMan, state) {
         return __awaiter(this, void 0, void 0, function* () {
             const courseStds = yield this.getUserLinksForCourse(course, state);
-            return yield userMan.getUsers(courseStds.map((e) => e.personId));
+            const users = yield userMan.getUsersAsMap(courseStds.map((e) => e.personId));
+            return courseStds.map((link) => {
+                const user = users[link.personId];
+                if (!user) {
+                    throw new Error("Link exist witout a user object");
+                }
+                return {
+                    link,
+                    user,
+                };
+            });
         });
     }
     fillLinks(student, studentCourse) {
@@ -2419,12 +2440,17 @@ class UserManager {
     }
     getUsers(ids) {
         return __awaiter(this, void 0, void 0, function* () {
-            const returnUsers = [];
+            return map_1.MapHelper.toArray(yield this.getUsersAsMap(ids));
+        });
+    }
+    getUsersAsMap(ids) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const returnUsers = {};
             const allUsers = yield this.userProvider.getAllUser();
             ids.forEach((ele) => {
                 const temp = allUsers[ele];
                 if (temp) {
-                    returnUsers.push(temp);
+                    returnUsers[ele] = temp;
                 }
             });
             return returnUsers;
@@ -2854,7 +2880,6 @@ const HelloView_1 = __webpack_require__(11);
 const UserView_1 = __webpack_require__(5);
 const CollapsableNavMenu_1 = __webpack_require__(12);
 const models_1 = __webpack_require__(4);
-const helper_1 = __webpack_require__(44);
 const MemberView_1 = __webpack_require__(45);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
@@ -2909,9 +2934,9 @@ class TeacherPage extends ViewPage_1.ViewPage {
                 const students = yield this.courseMan.getUsersForCourse(course, this.userMan, models_1.CourseUserState.student);
                 const linkedStudents = [];
                 for (const student of students) {
-                    const temp = yield this.courseMan.getStudentCourse(student, course);
+                    const temp = yield this.courseMan.getStudentCourse(student.user, course);
                     if (temp) {
-                        linkedStudents.push({ courses: temp, user: student });
+                        linkedStudents.push({ courses: temp, user: student.user });
                     }
                 }
                 const labs = yield this.courseMan.getAssignments(courseId);
@@ -2925,22 +2950,21 @@ class TeacherPage extends ViewPage_1.ViewPage {
             const courseId = parseInt(info.params.course, 10);
             const course = yield this.courseMan.getCourse(courseId);
             if (course) {
-                const userIds = yield this.courseMan.getUserLinksForCourse(course);
-                const users = yield this.userMan.getUsers(userIds.map((e) => e.personId));
-                const all = helper_1.ArrayHelper.join(userIds, users, (e1, e2) => e1.personId === e2.id);
+                const all = yield this.courseMan.getUsersForCourse(course, this.userMan, models_1.CourseUserState.student);
                 const acceptedUsers = [];
                 const pendingUsers = [];
-                all.forEach((ele, id) => {
-                    switch (ele.ele1.state) {
+                all.forEach((user, id) => {
+                    switch (user.link.state) {
+                        case models_1.CourseUserState.teacher:
                         case models_1.CourseUserState.student:
-                            acceptedUsers.push(ele.ele2);
+                            acceptedUsers.push(user);
                             break;
                         case models_1.CourseUserState.pending:
-                            pendingUsers.push(ele);
+                            pendingUsers.push(user);
                             break;
                     }
                 });
-                return React.createElement(MemberView_1.MemberView, { acceptedUsers: acceptedUsers, course: course, navMan: this.navMan, pendingUsers: pendingUsers, courseMan: this.courseMan, users: users });
+                return React.createElement(MemberView_1.MemberView, { acceptedUsers: acceptedUsers, course: course, navMan: this.navMan, pendingUsers: pendingUsers, courseMan: this.courseMan });
             }
             return React.createElement("div", null, "404 Page not found");
         });
@@ -3019,55 +3043,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 44 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-class ArrayHelper {
-    static join(array1, array2, callback) {
-        const returnObj = [];
-        for (const ele1 of array1) {
-            for (const ele2 of array2) {
-                if (callback(ele1, ele2)) {
-                    returnObj.push({ ele1, ele2 });
-                }
-            }
-        }
-        return returnObj;
-    }
-    static find(array, predicate) {
-        for (let i = 0; i < array.length; i++) {
-            const cur = array[i];
-            if (predicate.call(array, cur, i, array)) {
-                return cur;
-            }
-        }
-        return null;
-    }
-    static mapAsync(array, callback) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const newArray = [];
-            for (let i = 0; i < array.length; i++) {
-                newArray.push(yield callback(array[i], i, array));
-            }
-            return newArray;
-        });
-    }
-}
-exports.ArrayHelper = ArrayHelper;
-
-
-/***/ }),
+/* 44 */,
 /* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -3080,9 +3056,6 @@ const components_1 = __webpack_require__(1);
 const UserView_1 = __webpack_require__(5);
 exports.UserView = UserView_1.UserView;
 class MemberView extends React.Component {
-    constructor(props) {
-        super(props);
-    }
     render() {
         let condPending;
         if (this.props.pendingUsers.length > 0) {
@@ -3092,24 +3065,24 @@ class MemberView extends React.Component {
         }
         const userView = React.createElement("div", null,
             React.createElement("h3", null, "Registered users"),
-            React.createElement(UserView_1.UserView, { users: this.props.acceptedUsers }));
+            React.createElement(UserView_1.UserView, { users: this.props.acceptedUsers.map((userRel) => userRel.user) }));
         return React.createElement("div", null,
             React.createElement("h1", null, this.props.course.name),
             userView,
             condPending);
     }
     createPendingTable(pendingUsers) {
-        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["Name", "Email", "Student ID", "Action"], selector: (ele) => [
-                ele.ele2.firstName + " " + ele.ele2.lastName,
-                React.createElement("a", { href: "mailto:" + ele.ele2.email }, ele.ele2.email),
-                ele.ele2.personId.toString(),
+        return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["Name", "Email", "Student ID", "Action"], selector: (userRel) => [
+                userRel.user.firstName + " " + userRel.user.lastName,
+                React.createElement("a", { href: "mailto:" + userRel.user.email }, userRel.user.email),
+                userRel.user.personId.toString(),
                 React.createElement("span", null,
                     React.createElement("button", { onClick: (e) => {
-                            this.props.courseMan.changeUserState(ele.ele1, models_1.CourseUserState.student);
+                            this.props.courseMan.changeUserState(userRel.link, models_1.CourseUserState.student);
                             this.props.navMan.refresh();
                         }, className: "btn btn-primary" }, "Accept"),
                     React.createElement("button", { onClick: (e) => {
-                            this.props.courseMan.changeUserState(ele.ele1, models_1.CourseUserState.rejected);
+                            this.props.courseMan.changeUserState(userRel.link, models_1.CourseUserState.rejected);
                             this.props.navMan.refresh();
                         }, className: "btn btn-danger" }, "Reject")),
             ] });

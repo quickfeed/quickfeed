@@ -32,6 +32,11 @@ export interface IStudentSubmission {
     latest?: ILabInfo;
 }
 
+export interface IUserRelation {
+    user: IUser;
+    link: ICourseUserLink;
+}
+
 // Browser only objects END
 
 export interface ICourse {
