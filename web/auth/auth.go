@@ -232,7 +232,7 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 			}
 
 			// TODO: Check if the user is allowed to access the endpoint.
-			c.Set("user", user)
+			c.Set(UserKey, user)
 			for _, remoteIdentity := range user.RemoteIdentities {
 				if _, ok := scms[remoteIdentity.AccessToken]; !ok {
 					client, err := scm.NewSCMClient(remoteIdentity.Provider, remoteIdentity.AccessToken)
