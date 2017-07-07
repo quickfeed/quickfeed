@@ -20,6 +20,8 @@ import { LoginPage } from "./pages/LoginPage";
 
 import { ServerProvider } from "./managers/ServerProvider";
 
+import { HttpHelper } from "./HttpHelper";
+
 interface IAutoGraderState {
     activePage?: ViewPage;
     currentContent: JSX.Element;
@@ -216,10 +218,11 @@ async function main(): Promise<void> {
     let navMan: NavigationManager;
 
     if (curRunning === DEBUG_SERVER) {
-        const serverData = new ServerProvider();
+        const httpHelper = new HttpHelper("/api/v1/");
+        const serverData = new ServerProvider(httpHelper);
 
         userMan = new UserManager(serverData);
-        courseMan = new CourseManager(tempData);
+        courseMan = new CourseManager(serverData);
         navMan = new NavigationManager(history);
     } else {
         userMan = new UserManager(tempData);

@@ -11,6 +11,8 @@ import {
 } from "../models";
 import { ICourseProvider } from "./CourseManager";
 
+import { HttpHelper } from "../HttpHelper";
+
 async function request(url: string): Promise<string> {
     const req = new XMLHttpRequest();
     return new Promise<string>((resolve, reject) => {
@@ -30,6 +32,12 @@ async function request(url: string): Promise<string> {
 }
 
 export class ServerProvider implements IUserProvider, ICourseProvider {
+    private helper: HttpHelper;
+
+    constructor(helper: HttpHelper) {
+        this.helper = helper;
+    }
+
     public async getCourses(): Promise<IMap<ICourse>> {
         throw new Error("Method not implemented.");
     }
