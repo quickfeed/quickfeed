@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"time"
 	"unicode"
 
@@ -59,7 +60,11 @@ func (l Logger) Print(values ...interface{}) {
 			}
 
 			latency := values[2]
-			entry.WithField("latency", latency).Print(fmt.Sprintf(sqlRegexp.ReplaceAllString(values[3].(string), "%v"), formattedValues...))
+			entry.WithFields(logrus.Fields{
+				"time_rfc3339":  time.Now().Format(time.RFC3339),
+				"latency_human": latency,
+				"latency":       strconv.FormatInt(latency.(time.Duration).Nanoseconds()/1000, 10),
+			}).Print(fmt.Sprintf(sqlRegexp.ReplaceAllString(values[3].(string), "%v"), formattedValues...))
 
 		} else {
 			l.Error(values[2:]...)
