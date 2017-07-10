@@ -68,8 +68,8 @@ func main() {
 
 	e.HideBanner = true
 	e.Use(
-		middleware.Logger(),
 		middleware.Recover(),
+		middleware.Logger(),
 		middleware.Secure(),
 		session.Middleware(store),
 	)
