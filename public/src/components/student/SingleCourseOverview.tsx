@@ -4,6 +4,7 @@ import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IUserCourse;
+    onLabClick: (courseId: number, labId: number) => void;
 }
 
 class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
@@ -29,7 +30,8 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
                 </div>;
             }
             return (
-                <li key={k} className="list-group-item">
+                <li key={k} className="list-group-item clickable"
+                    onClick={() => this.props.onLabClick(submission.assignment.courseId, submission.assignment.id)}>
                     <strong>{submission.assignment.name}</strong>
                     {submissionInfo}
                 </li>);

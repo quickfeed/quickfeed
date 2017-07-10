@@ -1393,7 +1393,7 @@ class SingleCourseOverview extends React.Component {
                             React.createElement("br", null),
                             submission.assignment.deadline.toLocaleTimeString("en-GB"))));
             }
-            return (React.createElement("li", { key: k, className: "list-group-item" },
+            return (React.createElement("li", { key: k, className: "list-group-item clickable", onClick: () => this.props.onLabClick(submission.assignment.courseId, submission.assignment.id) },
                 React.createElement("strong", null, submission.assignment.name),
                 submissionInfo));
         });
@@ -2873,7 +2873,7 @@ class StudentPage extends ViewPage_1.ViewPage {
             yield this.setupData();
             this.selectCourse(navInfo.params.courseid);
             if (this.selectedCourse) {
-                return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: this.selectedCourse }));
+                return (React.createElement(components_1.SingleCourseOverview, { courseAndLabs: this.selectedCourse, onLabClick: (courseId, labId) => this.handleLabClick(courseId, labId) }));
             }
             return React.createElement("h1", null, "404 not found");
         });
@@ -2979,6 +2979,9 @@ class StudentPage extends ViewPage_1.ViewPage {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
         }
+    }
+    handleLabClick(courseId, labId) {
+        this.navMan.navigateTo(this.pagePath + "/course/" + courseId + "/lab/" + labId);
     }
 }
 exports.StudentPage = StudentPage;

@@ -1,31 +1,21 @@
 import * as React from "react";
-import { CoursesOverview, NavMenu, SingleCourseOverview, StudentLab } from "../components";
+import {CoursesOverview, NavMenu, SingleCourseOverview, StudentLab} from "../components";
 
-import { CourseManager } from "../managers/CourseManager";
-import { ILink, NavigationManager } from "../managers/NavigationManager";
-import { UserManager } from "../managers/UserManager";
+import {CourseManager} from "../managers/CourseManager";
+import {ILink, NavigationManager} from "../managers/NavigationManager";
+import {UserManager} from "../managers/UserManager";
 
-import {
-    CourseUserState,
-    IAssignment,
-    ICourse,
-    ICoursesWithAssignments,
-    ICourseUserLink,
-    IStudentSubmission,
-    IUser,
-    IUserCourse,
-} from "../models";
+import {CourseUserState, ICourse, IStudentSubmission, IUserCourse} from "../models";
 
-import { View, ViewPage } from "./ViewPage";
-import { HelloView } from "./views/HelloView";
-import { UserView } from "./views/UserView";
+import {View, ViewPage} from "./ViewPage";
+import {HelloView} from "./views/HelloView";
+import {UserView} from "./views/UserView";
 
-import { ArrayHelper } from "../helper";
-import { INavInfo, INavInfoEvent } from "../NavigationHelper";
+import {INavInfo} from "../NavigationHelper";
 
-import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { ILinkCollection } from "../managers";
-import { EnrollmentView } from "./views/EnrollmentView";
+import {CollapsableNavMenu} from "../components/navigation/CollapsableNavMenu";
+import {ILinkCollection} from "../managers";
+import {EnrollmentView} from "./views/EnrollmentView";
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -99,7 +89,9 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
         if (this.selectedCourse) {
-            return (<SingleCourseOverview courseAndLabs={this.selectedCourse} />);
+            return (<SingleCourseOverview
+                courseAndLabs={this.selectedCourse}
+                onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}/>);
         }
         return <h1>404 not found</h1>;
     }
@@ -131,7 +123,7 @@ export class StudentPage extends ViewPage {
             const coursesLinks: ILinkCollection[] = this.activeCourses.map(
                 (course, i) => {
                     const allLinks: ILink[] = [];
-                    allLinks.push({ name: "Labs" });
+                    allLinks.push({name: "Labs"});
                     const labs = course.assignments;
                     allLinks.push(...labs.map((lab, ind) => {
                         return {
@@ -139,8 +131,8 @@ export class StudentPage extends ViewPage {
                             uri: this.pagePath + "/course/" + course.course.id + "/lab/" + lab.assignment.id,
                         };
                     }));
-                    allLinks.push({ name: "Group Labs" });
-                    allLinks.push({ name: "Settings" });
+                    allLinks.push({name: "Group Labs"});
+                    allLinks.push({name: "Settings"});
                     allLinks.push({
                         name: "Members", uri: this.pagePath + "/course/" + course.course.id + "/members",
                     });
@@ -148,13 +140,13 @@ export class StudentPage extends ViewPage {
                         name: "Coruse Info", uri: this.pagePath + "/course/" + course.course.id + "/info",
                     });
                     return {
-                        item: { name: course.course.code, uri: this.pagePath + "/course/" + course.course.id },
+                        item: {name: course.course.code, uri: this.pagePath + "/course/" + course.course.id},
                         children: allLinks,
                     };
                 });
 
             const settings = [
-                { name: "Join course", uri: this.pagePath + "/enroll" },
+                {name: "Join course", uri: this.pagePath + "/enroll"},
             ];
 
             this.navMan.checkLinkCollection(coursesLinks, this);
@@ -213,5 +205,9 @@ export class StudentPage extends ViewPage {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
         }
+    }
+
+    private  handleLabClick(courseId: number, labId: number): void {
+        this.navMan.navigateTo(this.pagePath + "/course/" + courseId + "/lab/" + labId);
     }
 }
