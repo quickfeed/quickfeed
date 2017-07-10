@@ -1,9 +1,9 @@
-import {IUserProvider} from "../managers";
-import {IMap} from "../map";
-import {CourseUserState, IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser} from "../models";
-import {ICourseProvider} from "./CourseManager";
+import { IUserProvider } from "../managers";
+import { IMap, mapify } from "../map";
+import { CourseUserState, IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
+import { ICourseProvider } from "./CourseManager";
 
-import {HttpHelper} from "../HttpHelper";
+import { HttpHelper } from "../HttpHelper";
 
 async function request(url: string): Promise<string> {
     const req = new XMLHttpRequest();
@@ -31,7 +31,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getCourses(): Promise<IMap<ICourse>> {
-        throw new Error("Method not implemented.");
+        const result = await this.helper.get<any>("courses");
+        if (result.statusCode !== 200 || !result.data) {
+            return {};
+        }
+        const data = JSON.parse(JSON.stringify(result.data).toLowerCase()) as ICourse[];
+        return mapify(data, (ele) => ele.id);
+        // throw new Error("Method not implemented.");
     }
 
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
@@ -81,7 +87,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getAllUser(): Promise<IMap<IUser>> {
-        throw new Error("Method not implemented.");
+        const result = await this.helper.get<Array<{ ID: number }>>("users");
+        if (result.statusCode !== 302 || !result.data) {
+            return {};
+        }
+        const newArray = result.data.map<IUser>((ele) => this.makeUserInfo(ele));
+        return mapify(newArray, (ele) => ele.id);
     }
 
     public async tryRemoteLogin(provider: string): Promise<IUser | null> {
@@ -109,8 +120,44 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     // TODO: check if resp.status contain correct status
     public async getDirectories(provider: string): Promise<IOrganization[]> {
         const uri: string = "directories";
-        const data: { provider: string } = {provider};
+        const data: { provider: string } = { provider };
         const resp = await this.helper.post<{ provider: string }, IOrganization[]>(uri, data);
-        return resp.data;
+        if (resp.data) {
+            return resp.data;
+        }
+        return [];
     }
+
+    public async getLoggedInUser(): Promise<IUser | null> {
+        const result = await this.helper.get<{ ID: number }>("user");
+        if (result.statusCode !== 302 || !result.data) {
+            return null;
+        }
+        return this.makeUserInfo(result.data);
+    }
+
+    private makeUserInfo(data: { ID: number }): IUser {
+        return {
+            firstName: "No name",
+            lastName: "names",
+            isAdmin: true,
+            id: data.ID,
+            personId: 1000,
+            email: "no@name.com",
+        };
+    }
+
+    /*
+    {
+  "ID": 1,
+  "remoteidentities": [
+    {
+      "ID": 1,
+      "Provider": "github",
+      "RemoteID": 1964338,
+      "UserID": 1
+    }
+  ]
+}
+     */
 }

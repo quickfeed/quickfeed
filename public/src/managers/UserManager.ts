@@ -10,6 +10,7 @@ export interface IUserProvider {
     getAllUser(): Promise<IMap<IUser>>;
     tryRemoteLogin(provider: string): Promise<IUser | null>;
     changeAdminRole(user: IUser): Promise<boolean>;
+    getLoggedInUser(): Promise<IUser | null>;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -153,5 +154,17 @@ export class UserManager {
      */
     public async changeAdminRole(user: IUser): Promise<boolean> {
         return this.userProvider.changeAdminRole(user);
+    }
+
+    /**
+     * Communicates with the backend to see if there is a logged inn user
+     */
+    public async checkUserLoggedIn(): Promise<boolean> {
+        const user = await this.userProvider.getLoggedInUser();
+        this.currentUser = user;
+        if (user) {
+            return true;
+        }
+        return false;
     }
 }

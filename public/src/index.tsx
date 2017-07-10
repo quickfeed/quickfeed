@@ -221,7 +221,7 @@ async function main(): Promise<void> {
     let navMan: NavigationManager;
 
     if (curRunning === DEBUG_SERVER) {
-        const httpHelper = new HttpHelper("/api/v1/");
+        const httpHelper = new HttpHelper("/api/v1");
         const serverData = new ServerProvider(httpHelper);
 
         userMan = new UserManager(serverData);
@@ -234,6 +234,8 @@ async function main(): Promise<void> {
 
         const user = await userMan.tryLogin("test@testersen.no", "1234");
     }
+
+    await userMan.checkUserLoggedIn();
 
     (window as any).debugData = { tempData, userMan, courseMan, navMan };
 

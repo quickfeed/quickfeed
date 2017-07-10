@@ -1,15 +1,15 @@
 import * as React from "react";
 
-import {Button, CourseForm, DynamicTable, NavMenu} from "../components";
+import { Button, CourseForm, DynamicTable, NavMenu } from "../components";
 
-import {CourseManager, ILink, NavigationManager, UserManager} from "../managers";
-import {INavInfo} from "../NavigationHelper";
-import {View, ViewPage} from "./ViewPage";
+import { CourseManager, ILink, NavigationManager, UserManager } from "../managers";
+import { INavInfo } from "../NavigationHelper";
+import { View, ViewPage } from "./ViewPage";
 
-import {CourseView} from "./views/CourseView";
-import {UserView} from "./views/UserView";
+import { CourseView } from "./views/CourseView";
+import { UserView } from "./views/UserView";
 
-import {IAssignment} from "../models";
+import { IAssignment } from "../models";
 
 export class AdminPage extends ViewPage {
     private navMan: NavigationManager;
@@ -36,7 +36,7 @@ export class AdminPage extends ViewPage {
         const allUsers = await this.userMan.getAllUser();
         return <div>
             <h1>All Users</h1>
-            <UserView users={allUsers} userMan={this.userMan} navMan={this.navMan} addSearchOption={true}/>
+            <UserView users={allUsers} userMan={this.userMan} navMan={this.navMan} addSearchOption={true} />
         </div>;
     }
 
@@ -44,12 +44,12 @@ export class AdminPage extends ViewPage {
         const allCourses = await this.courseMan.getCourses();
         return <div>
             <Button className="btn btn-primary pull-right" text="+Create New"
-                    onClick={() => this.handleNewCourse()}
+                onClick={() => this.handleNewCourse()}
             />
             <h1>All Courses</h1>
             <CourseView courses={allCourses}
-                        onEditClick={(id: number) => this.handleEditCourseClick(id)}
-                        onDeleteClick={(id: number) => this.handleDeleteCourseClick(id)}
+                onEditClick={(id: number) => this.handleEditCourseClick(id)}
+                onDeleteClick={(id: number) => this.handleDeleteCourseClick(id)}
             />
         </div>;
     }
@@ -101,8 +101,8 @@ export class AdminPage extends ViewPage {
             <div>
                 {flashHolder}
                 <CourseForm className="form-horizontal"
-                            courseMan={this.courseMan}
-                            onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
+                    courseMan={this.courseMan}
+                    onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
                 />
             </div>
         );
@@ -130,9 +130,9 @@ export class AdminPage extends ViewPage {
                 <div>
                     {flashHolder}
                     <CourseForm className="form-horizontal"
-                                courseMan={this.courseMan}
-                                onSubmit={(formData, errors) => this.updateCourse(formData, errors)}
-                                courseData={course}
+                        courseMan={this.courseMan}
+                        onSubmit={(formData, errors) => this.updateCourse(formData, errors)}
+                        courseData={course}
                     />
                 </div>
             );
@@ -143,9 +143,9 @@ export class AdminPage extends ViewPage {
     public async renderMenu(index: number): Promise<JSX.Element[]> {
         if (index === 0) {
             const links: ILink[] = [
-                {name: "All Users", uri: this.pagePath + "/users"},
-                {name: "All Courses", uri: this.pagePath + "/courses"},
-                {name: "All Labs", uri: this.pagePath + "/labs"},
+                { name: "All Users", uri: this.pagePath + "/users" },
+                { name: "All Courses", uri: this.pagePath + "/courses" },
+                { name: "All Labs", uri: this.pagePath + "/labs" },
             ];
 
             this.navMan.checkLinks(links, this);
@@ -174,10 +174,13 @@ export class AdminPage extends ViewPage {
         this.navMan.navigateTo(this.pagePath + "/courses/new");
     }
 
-    private createNewCourse(fd: any, errors: string[]): void {
+    private async createNewCourse(fd: any, errors: string[]): Promise<void> {
         if (errors.length === 0) {
             // TODO: check returned value from backend and take appropriate action
-            this.courseMan.createNewCourse(fd);
+            const a = await this.courseMan.createNewCourse(fd);
+            if (!a) {
+                console.log("Failed to create course");
+            }
             this.flashMessages = null;
             this.navMan.navigateTo(this.pagePath + "/courses");
         } else {

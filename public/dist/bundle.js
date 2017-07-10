@@ -115,64 +115,43 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const React = __webpack_require__(0);
-const NavigationHelper_1 = __webpack_require__(3);
-function isViewPage(item) {
-    if (item instanceof ViewPage) {
-        return true;
+const event_1 = __webpack_require__(7);
+function trimChars(str, char) {
+    if (str.length === 0) {
+        return "";
     }
-    return false;
+    let start = 0;
+    let end = str.length - 1;
+    while (str[start] === char) {
+        start++;
+    }
+    while (str[end] === char) {
+        end--;
+    }
+    if (start >= end) {
+        return "";
+    }
+    return str.substring(start, end + 1);
 }
-exports.isViewPage = isViewPage;
-class ViewPage {
-    constructor() {
-        this.template = null;
-        this.navHelper = new NavigationHelper_1.NavigationHelper(this);
-        this.currentPage = "";
+exports.trimChars = trimChars;
+function combinePath(...parts) {
+    if (parts.length === 0) {
+        return "";
     }
-    init() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return;
-        });
+    let newPath = "";
+    for (let i = 0; i < parts.length; i++) {
+        if (i !== 0 || (i === 0 && parts[0].length > 0 && parts[0][0] === "/")) {
+            newPath += "/";
+        }
+        newPath += trimChars(parts[i], "/");
     }
-    setPath(path) {
-        this.pagePath = path;
-    }
-    renderMenu(menu) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return [];
-        });
-    }
-    renderContent(page) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const pageContent = yield this.navHelper.navigateTo(page);
-            this.currentPage = page;
-            if (pageContent) {
-                return pageContent;
-            }
-            return React.createElement("div", null, "404 Not found");
-        });
-    }
+    return newPath;
 }
-exports.ViewPage = ViewPage;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(6);
+exports.combinePath = combinePath;
+function combineAbsPath(...parts) {
+    return combinePath("", ...parts);
+}
+exports.combineAbsPath = combineAbsPath;
 class NavigationHelper {
     constructor(thisObject) {
         this.onPreNavigation = event_1.newEvent("NavigationHelper.onPreNavigation");
@@ -196,7 +175,8 @@ class NavigationHelper {
     static getOptionalField(field) {
         const tField = field.trim();
         if (tField.length > 2 && tField.charAt(0) === "{" && tField.charAt(tField.length - 1) === "}") {
-            return tField.substr(1, tField.length - 2);
+            const parts = tField.substr(1, tField.length - 2).split(":");
+            return { name: parts[0], type: (parts.length > 1 ? parts[1] : undefined) };
         }
         return null;
     }
@@ -249,9 +229,33 @@ class NavigationHelper {
                 realPath: pathParts,
                 params: this.createParamsObj(navObj.path, pathParts),
             };
+            if (!navInfo.params) {
+                console.error("One or more parameteres has wrong value", navInfo.matchPath, navInfo.realPath);
+                return null;
+            }
             this.onPreNavigation({ target: this, navInfo });
             return navObj.func.call(this.thisObject, navInfo);
         });
+    }
+    parseValue(value, type) {
+        switch (type) {
+            case "string":
+                return value;
+            case "number":
+                const num = parseFloat(value);
+                if (isNaN(num)) {
+                    return undefined;
+                }
+                return num;
+            case "boolean":
+                if (value.toLowerCase() === "true") {
+                    return true;
+                }
+                else if (value.toLowerCase() === "false") {
+                    return false;
+                }
+                return undefined;
+        }
     }
     createParamsObj(matchPath, realPath) {
         if (matchPath.length !== realPath.length) {
@@ -261,7 +265,23 @@ class NavigationHelper {
         for (let i = 0; i < matchPath.length; i++) {
             const param = NavigationHelper.getOptionalField(matchPath[i]);
             if (param) {
-                returnObj[param] = realPath[i];
+                if (param.type) {
+                    if (param.type === "string" || param.type === "boolean" || param.type === "number") {
+                        const value = this.parseValue(realPath[i], param.type);
+                        if (value !== undefined) {
+                            returnObj[param.name] = value;
+                        }
+                        else {
+                            return undefined;
+                        }
+                    }
+                    else {
+                        console.error("Type not supportet in navigation path: ", param.type, matchPath, realPath);
+                    }
+                }
+                else {
+                    returnObj[param.name] = realPath[i];
+                }
             }
         }
         return returnObj;
@@ -309,6 +329,65 @@ exports.NavigationHelper = NavigationHelper;
 
 
 /***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
+const NavigationHelper_1 = __webpack_require__(2);
+function isViewPage(item) {
+    if (item instanceof ViewPage) {
+        return true;
+    }
+    return false;
+}
+exports.isViewPage = isViewPage;
+class ViewPage {
+    constructor() {
+        this.template = null;
+        this.navHelper = new NavigationHelper_1.NavigationHelper(this);
+        this.currentPage = "";
+    }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return;
+        });
+    }
+    setPath(path) {
+        this.pagePath = path;
+    }
+    renderMenu(menu) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return [];
+        });
+    }
+    renderContent(page) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log("started rendering");
+            const pageContent = yield this.navHelper.navigateTo(page);
+            console.log(pageContent);
+            this.currentPage = page;
+            if (pageContent) {
+                return pageContent;
+            }
+            return React.createElement("div", null, "404 Not found");
+        });
+    }
+}
+exports.ViewPage = ViewPage;
+
+
+/***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -333,6 +412,71 @@ var CourseUserState;
 
 /***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class MapHelper {
+    static mapTo(map, callback) {
+        const returnArray = [];
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            const temp = map[index];
+            if (temp) {
+                returnArray.push(callback(temp, index, map));
+            }
+        }
+        return returnArray;
+    }
+    static forEach(map, callback) {
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            const temp = map[index];
+            if (temp) {
+                callback(temp, index, map);
+            }
+        }
+    }
+    static find(map, callback) {
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            const temp = map[index];
+            if (temp && callback(temp, index, map)) {
+                return temp;
+            }
+        }
+        return null;
+    }
+    static toArray(map) {
+        const returnArray = [];
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            const temp = map[index];
+            if (temp) {
+                returnArray.push(temp);
+            }
+        }
+        return returnArray;
+    }
+}
+exports.MapHelper = MapHelper;
+function mapify(obj, callback) {
+    const newObj = {};
+    obj.forEach((ele, index, array) => {
+        newObj[callback(ele, index, obj)] = ele;
+    });
+    return newObj;
+}
+exports.mapify = mapify;
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -424,7 +568,7 @@ exports.UserView = UserView;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -453,71 +597,6 @@ exports.newEvent = newEvent;
 
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-class MapHelper {
-    static mapTo(map, callback) {
-        const returnArray = [];
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            const temp = map[index];
-            if (temp) {
-                returnArray.push(callback(temp, index, map));
-            }
-        }
-        return returnArray;
-    }
-    static forEach(map, callback) {
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            const temp = map[index];
-            if (temp) {
-                callback(temp, index, map);
-            }
-        }
-    }
-    static find(map, callback) {
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            const temp = map[index];
-            if (temp && callback(temp, index, map)) {
-                return temp;
-            }
-        }
-        return null;
-    }
-    static toArray(map) {
-        const returnArray = [];
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            const temp = map[index];
-            if (temp) {
-                returnArray.push(temp);
-            }
-        }
-        return returnArray;
-    }
-}
-exports.MapHelper = MapHelper;
-function mapify(obj, callback) {
-    const newObj = {};
-    obj.forEach((ele, index, array) => {
-        newObj[callback(ele, index, obj)] = ele;
-    });
-    return newObj;
-}
-exports.mapify = mapify;
-
-
-/***/ }),
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -525,7 +604,7 @@ exports.mapify = mapify;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const NavigationHelper_1 = __webpack_require__(3);
+const NavigationHelper_1 = __webpack_require__(2);
 class NavHeaderBar extends React.Component {
     componentDidMount() {
         const temp = this.refs.button;
@@ -558,7 +637,7 @@ exports.NavHeaderBar = NavHeaderBar;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const NavigationHelper_1 = __webpack_require__(3);
+const NavigationHelper_1 = __webpack_require__(2);
 class NavMenu extends React.Component {
     render() {
         const items = this.props.links.map((v, i) => {
@@ -618,7 +697,7 @@ exports.ProgressBar = ProgressBar;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const NavigationHelper_1 = __webpack_require__(3);
+const NavigationHelper_1 = __webpack_require__(2);
 class CollapsableNavMenu extends React.Component {
     constructor() {
         super(...arguments);
@@ -909,7 +988,7 @@ function main() {
         let courseMan;
         let navMan;
         if (curRunning === DEBUG_SERVER) {
-            const httpHelper = new HttpHelper_1.HttpHelper("/api/v1/");
+            const httpHelper = new HttpHelper_1.HttpHelper("/api/v1");
             const serverData = new ServerProvider_1.ServerProvider(httpHelper);
             userMan = new managers_1.UserManager(serverData);
             courseMan = new managers_1.CourseManager(serverData);
@@ -921,6 +1000,7 @@ function main() {
             navMan = new managers_1.NavigationManager(history);
             const user = yield userMan.tryLogin("test@testersen.no", "1234");
         }
+        yield userMan.checkUserLoggedIn();
         window.debugData = { tempData, userMan, courseMan, navMan };
         navMan.setDefaultPath("app/home");
         const all = [];
@@ -1130,7 +1210,7 @@ exports.LabResultView = LabResultView;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const NavigationHelper_1 = __webpack_require__(3);
+const NavigationHelper_1 = __webpack_require__(2);
 class NavDropdown extends React.Component {
     constructor() {
         super();
@@ -1592,7 +1672,7 @@ class Results extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            assignment: this.props.students[0].courses.assignments[0],
+            assignment: this.props.students[0].course.assignments[0],
             students: this.props.students,
         };
     }
@@ -1620,7 +1700,7 @@ class Results extends React.Component {
     }
     getResultSelector(student) {
         let selector = [student.user.firstName + " " + student.user.lastName, "5"];
-        selector = selector.concat(student.courses.assignments.map((e, i) => React.createElement("a", { className: "lab-result-cell", onClick: () => this.handleOnclick(e), href: "#" }, e.latest ? (e.latest.score + "%") : "N/A")));
+        selector = selector.concat(student.course.assignments.map((e, i) => React.createElement("a", { className: "lab-result-cell", onClick: () => this.handleOnclick(e), href: "#" }, e.latest ? (e.latest.score + "%") : "N/A")));
         return selector;
     }
     handleOnclick(item) {
@@ -1713,7 +1793,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const map_1 = __webpack_require__(7);
+const map_1 = __webpack_require__(5);
 const models_1 = __webpack_require__(4);
 class CourseManager {
     constructor(courseProvider) {
@@ -1923,9 +2003,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(6);
-const NavigationHelper_1 = __webpack_require__(3);
-const ViewPage_1 = __webpack_require__(2);
+const event_1 = __webpack_require__(7);
+const NavigationHelper_1 = __webpack_require__(2);
+const ViewPage_1 = __webpack_require__(3);
 function isILinkCollection(item) {
     if (item.item) {
         return true;
@@ -2097,9 +2177,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Models = __webpack_require__(4);
-const map_1 = __webpack_require__(7);
+const map_1 = __webpack_require__(5);
 class TempDataProvider {
     constructor() {
+        this.currentLoggedIn = null;
         this.addLocalAssignments();
         this.addLocalCourses();
         this.addLocalCourseStudent();
@@ -2141,6 +2222,7 @@ class TempDataProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const user = map_1.MapHelper.find(this.localUsers, (u) => u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
             if (user && user.password === password) {
+                this.currentLoggedIn = user;
                 return user;
             }
             return null;
@@ -2155,6 +2237,7 @@ class TempDataProvider {
             const user = map_1.MapHelper.find(this.localUsers, (u) => u.email.toLocaleLowerCase() === lookup);
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
+                    this.currentLoggedIn = user;
                     resolve(user);
                 }, 500);
             });
@@ -2222,6 +2305,11 @@ class TempDataProvider {
     getAllLabInfos() {
         return __awaiter(this, void 0, void 0, function* () {
             return this.localLabInfo;
+        });
+    }
+    getLoggedInUser() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.currentLoggedIn;
         });
     }
     addLocalUsers() {
@@ -2546,8 +2634,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(6);
-const map_1 = __webpack_require__(7);
+const event_1 = __webpack_require__(7);
+const map_1 = __webpack_require__(5);
 class UserManager {
     constructor(userProvider) {
         this.onLogin = event_1.newEvent("UserManager.onLogin");
@@ -2627,6 +2715,16 @@ class UserManager {
             return this.userProvider.changeAdminRole(user);
         });
     }
+    checkUserLoggedIn() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this.userProvider.getLoggedInUser();
+            this.currentUser = user;
+            if (user) {
+                return true;
+            }
+            return false;
+        });
+    }
 }
 exports.UserManager = UserManager;
 
@@ -2647,7 +2745,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(2);
+const ViewPage_1 = __webpack_require__(3);
 class ErrorPage extends ViewPage_1.ViewPage {
     constructor() {
         super();
@@ -2691,7 +2789,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(2);
+const ViewPage_1 = __webpack_require__(3);
 const HelpView_1 = __webpack_require__(38);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
@@ -2782,7 +2880,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(2);
+const ViewPage_1 = __webpack_require__(3);
 class HomePage extends ViewPage_1.ViewPage {
     constructor() {
         super();
@@ -2814,9 +2912,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const models_1 = __webpack_require__(4);
-const ViewPage_1 = __webpack_require__(2);
+const ViewPage_1 = __webpack_require__(3);
 const HelloView_1 = __webpack_require__(41);
-const UserView_1 = __webpack_require__(5);
+const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(11);
 const EnrollmentView_1 = __webpack_require__(42);
 class StudentPage extends ViewPage_1.ViewPage {
@@ -2830,9 +2928,9 @@ class StudentPage extends ViewPage_1.ViewPage {
         this.courseMan = courseMan;
         this.navHelper.defaultPage = "index";
         this.navHelper.registerFunction("index", this.index);
-        this.navHelper.registerFunction("course/{courseid}", this.course);
-        this.navHelper.registerFunction("course/{courseid}/lab/{labid}", this.courseWithLab);
-        this.navHelper.registerFunction("course/{courseid}/{page}", this.courseMissing);
+        this.navHelper.registerFunction("course/{courseid:number}", this.course);
+        this.navHelper.registerFunction("course/{courseid:number}/lab/{labid:number}", this.courseWithLab);
+        this.navHelper.registerFunction("course/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction("enroll", this.enroll);
         this.navHelper.registerFunction("user", this.getUsers);
         this.navHelper.registerFunction("hello", (navInfo) => Promise.resolve(React.createElement(HelloView_1.HelloView, null)));
@@ -2962,16 +3060,12 @@ class StudentPage extends ViewPage_1.ViewPage {
             }
         });
     }
-    selectCourse(courseId) {
+    selectCourse(course) {
         this.selectedCourse = undefined;
-        const course = parseInt(courseId, 10);
-        if (!isNaN(course)) {
-            this.selectedCourse = this.activeCourses.find((e) => e.course.id === course);
-        }
+        this.selectedCourse = this.activeCourses.find((e) => e.course.id === course);
     }
-    selectAssignment(labIdString) {
-        const labId = parseInt(labIdString, 10);
-        if (this.selectedCourse && !isNaN(labId)) {
+    selectAssignment(labId) {
+        if (this.selectedCourse) {
             this.selectedAssignment = this.selectedCourse.assignments.find((e) => e.assignment.id === labId);
         }
     }
@@ -3058,8 +3152,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const ViewPage_1 = __webpack_require__(2);
-const UserView_1 = __webpack_require__(5);
+const ViewPage_1 = __webpack_require__(3);
+const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(11);
 const models_1 = __webpack_require__(4);
 const MemberView_1 = __webpack_require__(44);
@@ -3115,7 +3209,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
                 for (const student of students) {
                     const temp = yield this.courseMan.getStudentCourse(student.user, course);
                     if (temp) {
-                        linkedStudents.push({ courses: temp, user: student.user });
+                        linkedStudents.push({ course: temp, user: student.user });
                     }
                 }
                 const labs = yield this.courseMan.getAssignments(courseId);
@@ -3231,7 +3325,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const models_1 = __webpack_require__(4);
 const components_1 = __webpack_require__(1);
-const UserView_1 = __webpack_require__(5);
+const UserView_1 = __webpack_require__(6);
 exports.UserView = UserView_1.UserView;
 class MemberView extends React.Component {
     render() {
@@ -3286,9 +3380,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const ViewPage_1 = __webpack_require__(2);
+const ViewPage_1 = __webpack_require__(3);
 const CourseView_1 = __webpack_require__(46);
-const UserView_1 = __webpack_require__(5);
+const UserView_1 = __webpack_require__(6);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
         super();
@@ -3416,14 +3510,19 @@ class AdminPage extends ViewPage_1.ViewPage {
         this.navMan.navigateTo(this.pagePath + "/courses/new");
     }
     createNewCourse(fd, errors) {
-        if (errors.length === 0) {
-            this.courseMan.createNewCourse(fd);
-            this.flashMessages = null;
-            this.navMan.navigateTo(this.pagePath + "/courses");
-        }
-        else {
-            this.handleNewCourse(errors);
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            if (errors.length === 0) {
+                const a = yield this.courseMan.createNewCourse(fd);
+                if (!a) {
+                    console.log("Failed to create course");
+                }
+                this.flashMessages = null;
+                this.navMan.navigateTo(this.pagePath + "/courses");
+            }
+            else {
+                this.handleNewCourse(errors);
+            }
+        });
     }
     handleEditCourseClick(id) {
         this.navMan.navigateTo(this.pagePath + "/courses/" + id + "/edit");
@@ -3551,7 +3650,7 @@ exports.NavBarLogin = NavBarLogin;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const NavigationHelper_1 = __webpack_require__(3);
+const NavigationHelper_1 = __webpack_require__(2);
 class NavBarMenu extends React.Component {
     render() {
         const items = this.props.links.map((link, i) => {
@@ -3593,7 +3692,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(2);
+const ViewPage_1 = __webpack_require__(3);
 class LoginPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan) {
         super();
@@ -3649,6 +3748,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const map_1 = __webpack_require__(5);
 function request(url) {
     return __awaiter(this, void 0, void 0, function* () {
         const req = new XMLHttpRequest();
@@ -3675,7 +3775,12 @@ class ServerProvider {
     }
     getCourses() {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            const result = yield this.helper.get("courses");
+            if (result.statusCode !== 200 || !result.data) {
+                return {};
+            }
+            const data = JSON.parse(JSON.stringify(result.data).toLowerCase());
+            return map_1.mapify(data, (ele) => ele.id);
         });
     }
     getAssignments(courseId) {
@@ -3735,7 +3840,12 @@ class ServerProvider {
     }
     getAllUser() {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            const result = yield this.helper.get("users");
+            if (result.statusCode !== 302 || !result.data) {
+                return {};
+            }
+            const newArray = result.data.map((ele) => this.makeUserInfo(ele));
+            return map_1.mapify(newArray, (ele) => ele.id);
         });
     }
     tryRemoteLogin(provider) {
@@ -3768,8 +3878,30 @@ class ServerProvider {
             const uri = "directories";
             const data = { provider };
             const resp = yield this.helper.post(uri, data);
-            return resp.data;
+            if (resp.data) {
+                return resp.data;
+            }
+            return [];
         });
+    }
+    getLoggedInUser() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield this.helper.get("user");
+            if (result.statusCode !== 302 || !result.data) {
+                return null;
+            }
+            return this.makeUserInfo(result.data);
+        });
+    }
+    makeUserInfo(data) {
+        return {
+            firstName: "No name",
+            lastName: "names",
+            isAdmin: true,
+            id: data.ID,
+            personId: 1000,
+            email: "no@name.com",
+        };
     }
 }
 exports.ServerProvider = ServerProvider;
@@ -3782,6 +3914,7 @@ exports.ServerProvider = ServerProvider;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const NavigationHelper_1 = __webpack_require__(2);
 class HttpHelper {
     constructor(pathPrefix) {
         this.PATH_PREFIX = "";
@@ -3801,14 +3934,30 @@ class HttpHelper {
         const requestPromise = new Promise((resolve, reject) => {
             request.onreadystatechange = (ev) => {
                 if (request.readyState === 4) {
+                    let data;
+                    const responseText = request.responseText.trim();
+                    if (request.responseText.length < 2) {
+                        console.log("Empty response detected");
+                    }
+                    else if (responseText[0] !== "{" && responseText[0] !== "[") {
+                        console.log("Non JSON respons detected");
+                    }
+                    else {
+                        try {
+                            data = JSON.parse(request.responseText);
+                        }
+                        catch (e) {
+                            console.error("Could not parse response from server", e, request.responseText);
+                        }
+                    }
                     const temp = {
-                        data: JSON.parse(request.responseText),
+                        data,
                         statusCode: request.status,
                     };
                     resolve(temp);
                 }
             };
-            request.open(method, this.PATH_PREFIX + uri, true);
+            request.open(method, NavigationHelper_1.combinePath(this.PATH_PREFIX, uri), true);
             request.setRequestHeader("Content-Type", "application/json");
             if (sendData) {
                 request.send(JSON.stringify(sendData));

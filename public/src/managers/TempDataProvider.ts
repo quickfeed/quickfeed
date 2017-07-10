@@ -21,6 +21,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     private localCourseStudent: ICourseUserLink[];
     private localLabInfo: IMap<ILabInfo>;
 
+    private currentLoggedIn: IUser | null = null;
+
     constructor() {
         this.addLocalAssignments();
         this.addLocalCourses();
@@ -59,6 +61,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         const user = MapHelper.find(this.localUsers, (u) =>
             u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
+            this.currentLoggedIn = user;
             return user;
         }
         return null;
@@ -75,6 +78,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return new Promise<IUser | null>((resolve, reject) => {
             // Simulate async callback
             setTimeout(() => {
+                this.currentLoggedIn = user;
                 resolve(user);
             }, 500);
         });
@@ -134,6 +138,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async getAllLabInfos(): Promise<IMap<ILabInfo>> {
         return this.localLabInfo;
+    }
+
+    public async getLoggedInUser(): Promise<IUser | null> {
+        return this.currentLoggedIn;
     }
 
     private addLocalUsers() {

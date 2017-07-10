@@ -1,21 +1,21 @@
 import * as React from "react";
-import {CoursesOverview, NavMenu, SingleCourseOverview, StudentLab} from "../components";
+import { CoursesOverview, NavMenu, SingleCourseOverview, StudentLab } from "../components";
 
-import {CourseManager} from "../managers/CourseManager";
-import {ILink, NavigationManager} from "../managers/NavigationManager";
-import {UserManager} from "../managers/UserManager";
+import { CourseManager } from "../managers/CourseManager";
+import { ILink, NavigationManager } from "../managers/NavigationManager";
+import { UserManager } from "../managers/UserManager";
 
-import {CourseUserState, ICourse, IStudentSubmission, IUserCourse} from "../models";
+import { CourseUserState, ICourse, IStudentSubmission, IUserCourse } from "../models";
 
-import {View, ViewPage} from "./ViewPage";
-import {HelloView} from "./views/HelloView";
-import {UserView} from "./views/UserView";
+import { View, ViewPage } from "./ViewPage";
+import { HelloView } from "./views/HelloView";
+import { UserView } from "./views/UserView";
 
-import {INavInfo} from "../NavigationHelper";
+import { INavInfo } from "../NavigationHelper";
 
-import {CollapsableNavMenu} from "../components/navigation/CollapsableNavMenu";
-import {ILinkCollection} from "../managers";
-import {EnrollmentView} from "./views/EnrollmentView";
+import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
+import { ILinkCollection } from "../managers";
+import { EnrollmentView } from "./views/EnrollmentView";
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -39,9 +39,9 @@ export class StudentPage extends ViewPage {
         this.navHelper.defaultPage = "index";
 
         this.navHelper.registerFunction<any>("index", this.index);
-        this.navHelper.registerFunction<any>("course/{courseid}", this.course);
-        this.navHelper.registerFunction<any>("course/{courseid}/lab/{labid}", this.courseWithLab);
-        this.navHelper.registerFunction<any>("course/{courseid}/{page}", this.courseMissing);
+        this.navHelper.registerFunction<any>("course/{courseid:number}", this.course);
+        this.navHelper.registerFunction<any>("course/{courseid:number}/lab/{labid:number}", this.courseWithLab);
+        this.navHelper.registerFunction<any>("course/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
 
         // Only for testing purposes
@@ -85,18 +85,18 @@ export class StudentPage extends ViewPage {
         </div >;
     }
 
-    public async course(navInfo: INavInfo<{ courseid: string }>): View {
+    public async course(navInfo: INavInfo<{ courseid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
         if (this.selectedCourse) {
             return (<SingleCourseOverview
                 courseAndLabs={this.selectedCourse}
-                onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}/>);
+                onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)} />);
         }
         return <h1>404 not found</h1>;
     }
 
-    public async courseWithLab(navInfo: INavInfo<{ courseid: string, labid: string }>): View {
+    public async courseWithLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
         console.log("Course with lab", this.selectedCourse);
@@ -114,7 +114,7 @@ export class StudentPage extends ViewPage {
         return <div>404 not found</div>;
     }
 
-    public async courseMissing(navInfo: INavInfo<{ courseid: string, page: string }>): View {
+    public async courseMissing(navInfo: INavInfo<{ courseid: number, page: string }>): View {
         return <div>The page {navInfo.params.page} is not yet implemented</div >;
     }
 
@@ -123,7 +123,7 @@ export class StudentPage extends ViewPage {
             const coursesLinks: ILinkCollection[] = this.activeCourses.map(
                 (course, i) => {
                     const allLinks: ILink[] = [];
-                    allLinks.push({name: "Labs"});
+                    allLinks.push({ name: "Labs" });
                     const labs = course.assignments;
                     allLinks.push(...labs.map((lab, ind) => {
                         return {
@@ -131,8 +131,8 @@ export class StudentPage extends ViewPage {
                             uri: this.pagePath + "/course/" + course.course.id + "/lab/" + lab.assignment.id,
                         };
                     }));
-                    allLinks.push({name: "Group Labs"});
-                    allLinks.push({name: "Settings"});
+                    allLinks.push({ name: "Group Labs" });
+                    allLinks.push({ name: "Settings" });
                     allLinks.push({
                         name: "Members", uri: this.pagePath + "/course/" + course.course.id + "/members",
                     });
@@ -140,13 +140,13 @@ export class StudentPage extends ViewPage {
                         name: "Coruse Info", uri: this.pagePath + "/course/" + course.course.id + "/info",
                     });
                     return {
-                        item: {name: course.course.code, uri: this.pagePath + "/course/" + course.course.id},
+                        item: { name: course.course.code, uri: this.pagePath + "/course/" + course.course.id },
                         children: allLinks,
                     };
                 });
 
             const settings = [
-                {name: "Join course", uri: this.pagePath + "/enroll"},
+                { name: "Join course", uri: this.pagePath + "/enroll" },
             ];
 
             this.navMan.checkLinkCollection(coursesLinks, this);
@@ -182,18 +182,14 @@ export class StudentPage extends ViewPage {
         }
     }
 
-    private selectCourse(courseId: string) {
+    private selectCourse(course: number) {
         this.selectedCourse = undefined;
-        const course = parseInt(courseId, 10);
-        if (!isNaN(course)) {
-            this.selectedCourse = this.activeCourses.find(
-                (e) => e.course.id === course);
-        }
+        this.selectedCourse = this.activeCourses.find(
+            (e) => e.course.id === course);
     }
 
-    private selectAssignment(labIdString: string) {
-        const labId = parseInt(labIdString, 10);
-        if (this.selectedCourse && !isNaN(labId)) {
+    private selectAssignment(labId: number) {
+        if (this.selectedCourse) {
             // TODO: Be carefull not to return anything that sould not be able to be returned
             this.selectedAssignment = this.selectedCourse.assignments.find(
                 (e) => e.assignment.id === labId,
@@ -207,7 +203,7 @@ export class StudentPage extends ViewPage {
         }
     }
 
-    private  handleLabClick(courseId: number, labId: number): void {
+    private handleLabClick(courseId: number, labId: number): void {
         this.navMan.navigateTo(this.pagePath + "/course/" + courseId + "/lab/" + labId);
     }
 }

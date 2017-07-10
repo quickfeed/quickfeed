@@ -1,6 +1,8 @@
+import { combineAbsPath, combinePath } from "./NavigationHelper";
+
 export interface IHTTPResult<T> {
     statusCode: number;
-    data: T;
+    data?: T;
 }
 
 export class HttpHelper {
@@ -26,14 +28,27 @@ export class HttpHelper {
         const requestPromise = new Promise<IHTTPResult<TReceive>>((resolve, reject) => {
             request.onreadystatechange = (ev: Event) => {
                 if (request.readyState === 4) {
+                    let data: TReceive | undefined;
+                    const responseText = request.responseText.trim();
+                    if (request.responseText.length < 2) {
+                        console.log("Empty response detected");
+                    } else if (responseText[0] !== "{" && responseText[0] !== "[") {
+                        console.log("Non JSON respons detected");
+                    } else {
+                        try {
+                            data = JSON.parse(request.responseText) as TReceive;
+                        } catch (e) {
+                            console.error("Could not parse response from server", e, request.responseText);
+                        }
+                    }
                     const temp: IHTTPResult<TReceive> = {
-                        data: JSON.parse(request.responseText) as TReceive,
+                        data,
                         statusCode: request.status,
                     };
                     resolve(temp);
                 }
             };
-            request.open(method, this.PATH_PREFIX + uri, true);
+            request.open(method, combinePath(this.PATH_PREFIX, uri), true);
             request.setRequestHeader("Content-Type", "application/json");
             if (sendData) {
                 request.send(JSON.stringify(sendData));
