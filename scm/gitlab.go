@@ -2,6 +2,7 @@ package scm
 
 import (
 	"context"
+	"strconv"
 
 	gitlab "github.com/xanzy/go-gitlab"
 )
@@ -56,7 +57,7 @@ func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 
 // GetDirectory implements the SCM interface.
 func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, error) {
-	group, _, err := s.client.Groups.GetGroup(id, gitlab.WithContext(ctx))
+	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
