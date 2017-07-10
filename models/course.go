@@ -11,4 +11,6 @@ type Course struct {
 
 	Provider    string
 	DirectoryID uint64
+
+	Users []User `gorm:"many2many:user_courses;"`
 }
