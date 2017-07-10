@@ -82,7 +82,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/markbates/goth"
-  packages = [".","gothic","providers/faux","providers/github","providers/gitlab"]
+  packages = [".","gothic","providers/github","providers/gitlab"]
   revision = "054a763742fba5da4962727ba9ba8eec567324e5"
 
 [[projects]]
@@ -154,6 +154,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9a75f5e1b85c3717e3cb4d735f8009f602c69e9fa2c075d3a0eee1a5289ca443"
+  inputs-digest = "6585f33629e34c92acad76290d24b66ed2122e3408d368e460e6846b92d56afb"
   solver-name = "gps-cdcl"
   solver-version = 1
