@@ -38,10 +38,20 @@ export class CourseManager {
         this.courseProvider = courseProvider;
     }
 
+    /**
+     * Adds a user to a course
+     * @param user The user to be added to a course
+     * @param course The course the user should be added to
+     * @returns True if succeeded and false otherwise
+     */
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
         return this.courseProvider.addUserToCourse(user, course);
     }
 
+    /**
+     * Get a course from and id
+     * @param id The id of the course
+     */
     public async getCourse(id: number): Promise<ICourse | null> {
         const a = (await this.getCourses())[id];
         if (a) {
@@ -50,10 +60,18 @@ export class CourseManager {
         return null;
     }
 
+    /**
+     * Get all the courses available at the server
+     */
     public async getCourses(): Promise<ICourse[]> {
         return MapHelper.toArray(await this.courseProvider.getCourses());
     }
 
+    /**
+     * The all relations for a user to other courses
+     * @param user The users relations
+     * @param state Optional. The state the relations should be in
+     */
     public async getRelationsFor(user: IUser, state?: CourseUserState): Promise<ICourseUserLink[]> {
         const cLinks: ICourseUserLink[] = [];
 
@@ -65,6 +83,11 @@ export class CourseManager {
         return cLinks;
     }
 
+    /**
+     * Get all courses related to a user
+     * @param user The user to get courses to
+     * @param state Optional. The state the relations should be in, all if not present
+     */
     public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]> {
         const cLinks: ICourseUserLink[] = [];
 
@@ -84,6 +107,11 @@ export class CourseManager {
         return courses;
     }
 
+    /**
+     * Get all userlinks for a single course
+     * @param course The course userlinks should be retrived from
+     * @param state Optinal. The state of the relation, all if not present
+     */
     public async getUserLinksForCourse(course: ICourse, state?: CourseUserState): Promise<ICourseUserLink[]> {
         const users: ICourseUserLink[] = [];
         for (const c of await this.courseProvider.getCoursesStudent()) {
@@ -94,6 +122,11 @@ export class CourseManager {
         return users;
     }
 
+    /**
+     * Retrives one assignment from a single course
+     * @param course The course the assignment is in
+     * @param assignmentId The id to the assignment
+     */
     public async getAssignment(course: ICourse, assignmentId: number): Promise<IAssignment | null> {
         const temp = await this.courseProvider.getAssignments(course.id);
         const assign = temp[assignmentId];
@@ -103,6 +136,10 @@ export class CourseManager {
         return null;
     }
 
+    /**
+     * Get all assignments in a single course
+     * @param courseId The course id or ICourse to retrive assignments from
+     */
     public async getAssignments(courseId: number | ICourse): Promise<IAssignment[]> {
         if (isCourse(courseId)) {
             courseId = courseId.id;
@@ -110,22 +147,45 @@ export class CourseManager {
         return MapHelper.toArray(await this.courseProvider.getAssignments(courseId));
     }
 
+    /**
+     * Change the userstate for a relation between a course and a user
+     * @param link The link to change state of
+     * @param state The new state of the relation
+     */
     public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
         return this.courseProvider.changeUserState(link, state);
     }
 
+    /**
+     * Creates a new course in the backend
+     * @param courseData The course information to create a course from
+     */
     public async createNewCourse(courseData: ICourse): Promise<boolean> {
         return this.courseProvider.createNewCourse(courseData);
     }
 
+    /**
+     * Updates a course with new information
+     * @param courseData The new information for the course
+     */
     public async updateCourse(courseData: ICourse): Promise<boolean> {
         return this.courseProvider.updateCourse(courseData);
     }
 
+    /**
+     * Delete a course
+     * @param id The id of the course to delete
+     */
     public async deleteCourse(id: number): Promise<boolean> {
+        // TODO: Should it be possible to delete a course
         return this.courseProvider.deleteCourse(id);
     }
 
+    /**
+     * Load an IUserCourse object for a single user and a single course
+     * @param student The student the information should be retrived from
+     * @param course The course the data should be loaded for
+     */
     public async getStudentCourse(student: IUser, course: ICourse): Promise<IUserCourse | null> {
         const link = (await this.courseProvider.getCoursesStudent())
             .find((val) => val.courseId === course.id && val.personId === student.id);
@@ -142,6 +202,13 @@ export class CourseManager {
         return null;
     }
 
+    /**
+     * Loads a single IStudentSubmission for a student and an assignment.
+     * This will contains information about an assignment and the lates
+     * sumbission information related to that assignment.
+     * @param student The student the information should be retrived from
+     * @param assignment The assignment the data should be loaded for
+     */
     public async getUserSubmittions(student: IUser, assignment: IAssignment): Promise<IStudentSubmission> {
         const temp = MapHelper.find(await this.courseProvider.getAllLabInfos(),
             (ele) => ele.studentId === student.id && ele.assignmentId === assignment.id);
@@ -157,6 +224,11 @@ export class CourseManager {
         };
     }
 
+    /**
+     * Retrives all course relations, and courses related to a
+     * a single student
+     * @param student The student to load the information for
+     */
     public async getStudentCourses(student: IUser): Promise<IUserCourse[]> {
         const allLinks = await this.courseProvider.getCoursesStudent();
         const allCourses = this.courseProvider.getCourses();
@@ -178,6 +250,12 @@ export class CourseManager {
         return links;
     }
 
+    /**
+     * Retrives all users related to a single course
+     * @param course The course to retrive userinformation to
+     * @param userMan Usermanager to be able to get user information
+     * @param state Optinal. The state of the user to course relation
+     */
     public async getUsersForCourse(
         course: ICourse,
         userMan: UserManager,
@@ -199,10 +277,19 @@ export class CourseManager {
         });
     }
 
+    /**
+     * Get all available directories or organisations for a single provider
+     * @param provider The provider to load information from, for instance github og gitlab
+     */
     public async  getDirectories(provider: string): Promise<IOrganization[]> {
         return await this.courseProvider.getDirectories(provider);
     }
 
+    /**
+     * Add IStudentSubmissions to an IUserCourse
+     * @param student The student
+     * @param studentCourse The student course
+     */
     private async fillLinks(student: IUser, studentCourse: IUserCourse): Promise<void> {
         if (!studentCourse.link) {
             return;

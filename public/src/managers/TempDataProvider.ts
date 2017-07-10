@@ -1,14 +1,18 @@
 import * as Models from "../models";
-import {IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser} from "../models";
-import {ICourseProvider} from "./CourseManager";
+import { IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
+import { ICourseProvider } from "./CourseManager";
 
-import {IMap, MapHelper, mapify} from "../map";
-import {IUserProvider} from "./UserManager";
+import { IMap, MapHelper, mapify } from "../map";
+import { IUserProvider } from "./UserManager";
 
 interface IDummyUser extends IUser {
     password: string;
 }
 
+/**
+ * The TempDataProvider is a fake implemetation of the backend
+ * to be able to simulate the backend for easier developtment
+ */
 export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private localUsers: IMap<IDummyUser>;
@@ -53,7 +57,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async tryLogin(username: string, password: string): Promise<IUser | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
-        u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
             return user;
         }
@@ -66,7 +70,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             lookup = "bob@bobsen.no";
         }
         const user = MapHelper.find(this.localUsers, (u) =>
-        u.email.toLocaleLowerCase() === lookup);
+            u.email.toLocaleLowerCase() === lookup);
 
         return new Promise<IUser | null>((resolve, reject) => {
             // Simulate async callback
@@ -328,10 +332,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private addLocalCourseStudent() {
         this.localCourseStudent = [
-            {courseId: 0, personId: 999, state: 1},
-            {courseId: 1, personId: 999, state: 1},
-            {courseId: 0, personId: 1, state: 0},
-            {courseId: 0, personId: 2, state: 0},
+            { courseId: 0, personId: 999, state: 1 },
+            { courseId: 1, personId: 999, state: 1 },
+            { courseId: 0, personId: 1, state: 0 },
+            { courseId: 0, personId: 2, state: 0 },
         ] as ICourseUserLink[];
     }
 
@@ -352,9 +356,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    {name: "Test 1", score: 2, points: 2, weight: 20},
-                    {name: "Test 2", score: 1, points: 3, weight: 40},
-                    {name: "Test 3", score: 3, points: 3, weight: 40},
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
                 ],
             },
             {
@@ -372,9 +376,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    {name: "Test 1", score: 2, points: 2, weight: 20},
-                    {name: "Test 2", score: 1, points: 3, weight: 40},
-                    {name: "Test 3", score: 3, points: 3, weight: 40},
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
                 ],
             },
             {
@@ -392,9 +396,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    {name: "Test 1", score: 2, points: 2, weight: 20},
-                    {name: "Test 2", score: 1, points: 3, weight: 40},
-                    {name: "Test 3", score: 3, points: 3, weight: 40},
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
                 ],
             },
             {
@@ -412,9 +416,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    {name: "Test 1", score: 2, points: 2, weight: 20},
-                    {name: "Test 2", score: 1, points: 3, weight: 40},
-                    {name: "Test 3", score: 3, points: 3, weight: 40},
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
                 ],
             },
             {
@@ -432,9 +436,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    {name: "Test 1", score: 2, points: 2, weight: 20},
-                    {name: "Test 2", score: 1, points: 3, weight: 40},
-                    {name: "Test 3", score: 3, points: 3, weight: 40},
+                    { name: "Test 1", score: 2, points: 2, weight: 20 },
+                    { name: "Test 2", score: 1, points: 3, weight: 40 },
+                    { name: "Test 3", score: 3, points: 3, weight: 40 },
                 ],
             },
         ] as ILabInfo[], (ele: ILabInfo) => {

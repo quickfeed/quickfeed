@@ -1,22 +1,22 @@
 import * as React from "react";
-import { IAssignment, ICourse, IStudentSubmission, IUser, IUserCourseCollection } from "../../models";
+import { IAssignment, ICourse, IStudentSubmission, IUser, IUserCourseWithUser } from "../../models";
 
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 
 interface IResultsProp {
     course: ICourse;
-    students: IUserCourseCollection[];
+    students: IUserCourseWithUser[];
     labs: IAssignment[];
 }
 interface IResultsState {
     assignment: IStudentSubmission;
-    students: IUserCourseCollection[];
+    students: IUserCourseWithUser[];
 }
 class Results extends React.Component<IResultsProp, IResultsState> {
     constructor(props: IResultsProp) {
         super(props);
         this.state = {
-            assignment: this.props.students[0].courses.assignments[0],
+            assignment: this.props.students[0].course.assignments[0],
             students: this.props.students,
         };
     }
@@ -46,7 +46,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.students}
-                            selector={(item: IUserCourseCollection) => this.getResultSelector(item)}
+                            selector={(item: IUserCourseWithUser) => this.getResultSelector(item)}
                         />
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12">
@@ -63,9 +63,9 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IUserCourseCollection): Array<string | JSX.Element> {
+    private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element> {
         let selector: Array<string | JSX.Element> = [student.user.firstName + " " + student.user.lastName, "5"];
-        selector = selector.concat(student.courses.assignments.map((e, i) => <a className="lab-result-cell"
+        selector = selector.concat(student.course.assignments.map((e, i) => <a className="lab-result-cell"
             onClick={() => this.handleOnclick(e)}
             href="#">
             {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
@@ -80,7 +80,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        const filteredData: IUserCourseCollection[] = [];
+        const filteredData: IUserCourseWithUser[] = [];
         this.props.students.forEach((std) => {
             if (std.user.firstName.toLowerCase().indexOf(query) !== -1
                 || std.user.lastName.toLowerCase().indexOf(query) !== -1

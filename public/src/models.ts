@@ -7,6 +7,10 @@ export interface IUser {
     isAdmin: boolean;
 }
 
+/**
+ * Checks if value is compatible with the ICourse interface
+ * @param value A value to check if it is an ICourse
+ */
 export function isCourse(value: any): value is ICourse {
     return value
         && typeof value.id === "number"
@@ -16,22 +20,51 @@ export function isCourse(value: any): value is ICourse {
 
 // Browser only objects START
 
+/**
+ * An interface which contains bouth the course, the course
+ * link, all assignments and the latest submission to a single user
+ */
 export interface IUserCourse {
+    /**
+     * The course to the user
+     */
     course: ICourse;
+    /**
+     * The relation between the user and the course.
+     * Is null if there is none
+     */
     link?: ICourseUserLink;
+    /**
+     * A list of all assignments and the last submission if there
+     * is a relation between the user and the course which is
+     * student or teacher
+     */
     assignments: IStudentSubmission[];
 }
 
-export interface IUserCourseCollection {
+/**
+ * An IUserCourse instance which also contains the user it
+ * is related to.
+ * @see IUserCourse
+ */
+export interface IUserCourseWithUser {
     user: IUser;
-    courses: IUserCourse;
+    course: IUserCourse;
 }
 
+/**
+ * An interface which contains an assignment and the latest submission
+ * for a spessific user.
+ */
 export interface IStudentSubmission {
     assignment: IAssignment;
     latest?: ILabInfo;
 }
 
+/**
+ * An interface which contains a user and the relation to a signe course.
+ * Usualy returned when a course is given.
+ */
 export interface IUserRelation {
     user: IUser;
     link: ICourseUserLink;
@@ -39,6 +72,9 @@ export interface IUserRelation {
 
 // Browser only objects END
 
+/**
+ * Information about a single course
+ */
 export interface ICourse {
     id: number;
     name: string;
@@ -49,6 +85,9 @@ export interface ICourse {
     directoryid: number;
 }
 
+/**
+ * Information about a single assignment
+ */
 export interface IAssignment {
     id: number;
     courseId: number;
@@ -59,11 +98,18 @@ export interface IAssignment {
     assignmentGroupId?: number;
 }
 
+/**
+ * Information about an assignment group
+ * This is not implemented and is a feature for the future
+ */
 export interface IAssignmentGroup {
     id: number;
     required: number;
 }
 
+/**
+ * A description of the relation between a user and a course
+ */
 export enum CourseUserState {
     pending = 0,
     student = 1,
@@ -71,12 +117,18 @@ export enum CourseUserState {
     teacher = 3,
 }
 
+/**
+ * The relation description between a user and course
+ */
 export interface ICourseUserLink {
     personId: number;
     courseId: number;
     state: CourseUserState;
 }
 
+/**
+ * A description of a single test case object
+ */
 export interface ITestCases {
     name: string;
     score: number;
@@ -84,6 +136,9 @@ export interface ITestCases {
     weight: number;
 }
 
+/**
+ * A description of a single user submission
+ */
 export interface ILabInfo {
     id: number;
     studentId: number;
@@ -102,11 +157,17 @@ export interface ILabInfo {
 
 }
 
+/**
+ * A course description with all related assignments
+ */
 export interface ICoursesWithAssignments {
     course: ICourse;
     labs: IAssignment[];
 }
 
+/**
+ * Description of an organization from the git web page
+ */
 export interface IOrganization {
     id: number;
     path: string;

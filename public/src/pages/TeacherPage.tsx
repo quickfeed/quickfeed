@@ -15,7 +15,7 @@ import {
     ICourse,
     ICourseUserLink,
     IUser,
-    IUserCourseCollection,
+    IUserCourseWithUser,
     IUserRelation,
 } from "../models";
 
@@ -74,11 +74,11 @@ export class TeacherPage extends ViewPage {
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
             const students = await this.courseMan.getUsersForCourse(course, this.userMan, CourseUserState.student);
-            const linkedStudents: IUserCourseCollection[] = [];
+            const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
                 const temp = await this.courseMan.getStudentCourse(student.user, course);
                 if (temp) {
-                    linkedStudents.push({ courses: temp, user: student.user });
+                    linkedStudents.push({ course: temp, user: student.user });
                 }
             }
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
