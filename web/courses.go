@@ -75,17 +75,19 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 		// TODO: Does the user have sufficient rights?
 		// TODO: Initialize directory?
 
-		if err := db.CreateCourse(&models.Course{
+		course := models.Course{
 			Name:        cr.Name,
 			Code:        cr.Code,
 			Year:        cr.Year,
 			Tag:         cr.Tag,
 			Provider:    cr.Provider,
 			DirectoryID: directory.ID,
-		}); err != nil {
+		}
+
+		if err := db.CreateCourse(&course); err != nil {
 			return err
 		}
 
-		return c.NoContent(http.StatusCreated)
+		return c.JSONPretty(http.StatusCreated, &course, "\t")
 	}
 }
