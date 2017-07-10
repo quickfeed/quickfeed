@@ -373,9 +373,7 @@ class ViewPage {
     }
     renderContent(page) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("started rendering");
             const pageContent = yield this.navHelper.navigateTo(page);
-            console.log(pageContent);
             this.currentPage = page;
             if (pageContent) {
                 return pageContent;
@@ -796,7 +794,6 @@ class CollapsableNavMenu extends React.Component {
         }
         return React.createElement("li", { key: index, className: isActive },
             React.createElement("a", { onClick: (e) => {
-                    this.toggle(index);
                     this.handleClick(e, links.item);
                 }, href: "/" + links.item.uri },
                 links.item.name,

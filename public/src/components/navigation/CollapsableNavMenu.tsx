@@ -118,7 +118,7 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
         return <li key={index} className={isActive}>
             <a
                 onClick={(e) => {
-                    this.toggle(index);
+                    // this.toggle(index);
                     this.handleClick(e, links.item);
                 }}
                 href={"/" + links.item.uri}>

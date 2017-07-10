@@ -48,7 +48,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
                         }}
                             className="btn btn-primary">
                             Accept
-                    </button>
+                        </button>
                         <button onClick={(e) => {
                             this.props.courseMan.changeUserState(userRel.link, CourseUserState.rejected);
                             this.props.navMan.refresh();
