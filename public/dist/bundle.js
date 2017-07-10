@@ -1440,46 +1440,51 @@ class CourseForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            name: "",
-            code: "",
-            tag: "",
-            year: "",
-            provider: "",
-            directoryid: 0,
+            name: this.props.courseData ? this.props.courseData.name : "",
+            code: this.props.courseData ? this.props.courseData.code : "",
+            tag: this.props.courseData ? this.props.courseData.tag : "",
+            year: this.props.courseData ? this.props.courseData.year.toString() : "",
+            provider: this.props.courseData ? this.props.courseData.provider : "",
+            directoryid: this.props.courseData ? this.props.courseData.directoryid : 0,
             organisations: null,
         };
     }
     render() {
-        return (React.createElement("form", { className: this.props.className ? this.props.className : "", onSubmit: (e) => this.handleFormSubmit(e) },
-            React.createElement("div", { className: "form-group" },
-                React.createElement("label", { className: "control-label col-sm-2" }, "Provider:"),
-                React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("label", { className: "radio-inline" },
-                        React.createElement("input", { type: "radio", name: "provider", value: "github", onClick: (e) => this.getOrganizations(e, this.updateOrganisationDivs) }),
-                        "Github"),
-                    React.createElement("label", { className: "radio-inline" },
-                        React.createElement("input", { type: "radio", name: "provider", value: "gitlab", onClick: (e) => this.getOrganizations(e, this.updateOrganisationDivs) }),
-                        "Gitlab"))),
-            React.createElement("div", { className: "form-group", id: "organisation-container" }, this.state.organisations),
-            React.createElement("div", { className: "form-group" },
-                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "name" }, "Course Name:"),
-                React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter course name", name: "name", value: this.state.name, onChange: (e) => this.handleInputChange(e) }))),
-            React.createElement("div", { className: "form-group" },
-                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "code" }, "Course Code:"),
-                React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "code", placeholder: "Enter course code", name: "code", value: this.state.code, onChange: (e) => this.handleInputChange(e) }))),
-            React.createElement("div", { className: "form-group" },
-                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "year" }, "Year:"),
-                React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "year", placeholder: "Enter year", name: "year", value: this.state.year, onChange: (e) => this.handleInputChange(e) }))),
-            React.createElement("div", { className: "form-group" },
-                React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Semester:"),
-                React.createElement("div", { className: "col-sm-10" },
-                    React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter semester", name: "tag", value: this.state.tag, onChange: (e) => this.handleInputChange(e) }))),
-            React.createElement("div", { className: "form-group" },
-                React.createElement("div", { className: "col-sm-offset-2 col-sm-10" },
-                    React.createElement(components_1.Button, { className: "btn btn-primary", text: "Create", type: "submit" })))));
+        const getTitleText = this.props.courseData ? "Edit Course" : "Create New Course";
+        return (React.createElement("div", null,
+            React.createElement("h1", null, getTitleText),
+            React.createElement("form", { className: this.props.className ? this.props.className : "", onSubmit: (e) => this.handleFormSubmit(e) },
+                React.createElement("div", { className: "form-group" },
+                    React.createElement("label", { className: "control-label col-sm-2" }, "Provider:"),
+                    React.createElement("div", { className: "col-sm-10" },
+                        React.createElement("label", { className: "radio-inline" },
+                            React.createElement("input", { type: "radio", name: "provider", value: "github", defaultChecked: this.props.courseData
+                                    && this.props.courseData.provider === "github" ? true : false, onClick: (e) => this.getOrganizations(e, this.updateOrganisationDivs) }),
+                            "Github"),
+                        React.createElement("label", { className: "radio-inline" },
+                            React.createElement("input", { type: "radio", name: "provider", defaultChecked: this.props.courseData
+                                    && this.props.courseData.provider === "gitlab" ? true : false, value: "gitlab", onClick: (e) => this.getOrganizations(e, this.updateOrganisationDivs) }),
+                            "Gitlab"))),
+                React.createElement("div", { className: "form-group", id: "organisation-container" }, this.state.organisations),
+                React.createElement("div", { className: "form-group" },
+                    React.createElement("label", { className: "control-label col-sm-2", htmlFor: "name" }, "Course Name:"),
+                    React.createElement("div", { className: "col-sm-10" },
+                        React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter course name", name: "name", value: this.state.name, onChange: (e) => this.handleInputChange(e) }))),
+                React.createElement("div", { className: "form-group" },
+                    React.createElement("label", { className: "control-label col-sm-2", htmlFor: "code" }, "Course Code:"),
+                    React.createElement("div", { className: "col-sm-10" },
+                        React.createElement("input", { type: "text", className: "form-control", id: "code", placeholder: "Enter course code", name: "code", value: this.state.code, onChange: (e) => this.handleInputChange(e) }))),
+                React.createElement("div", { className: "form-group" },
+                    React.createElement("label", { className: "control-label col-sm-2", htmlFor: "year" }, "Year:"),
+                    React.createElement("div", { className: "col-sm-10" },
+                        React.createElement("input", { type: "text", className: "form-control", id: "year", placeholder: "Enter year", name: "year", value: this.state.year, onChange: (e) => this.handleInputChange(e) }))),
+                React.createElement("div", { className: "form-group" },
+                    React.createElement("label", { className: "control-label col-sm-2", htmlFor: "tag" }, "Semester:"),
+                    React.createElement("div", { className: "col-sm-10" },
+                        React.createElement("input", { type: "text", className: "form-control", id: "tag", placeholder: "Enter semester", name: "tag", value: this.state.tag, onChange: (e) => this.handleInputChange(e) }))),
+                React.createElement("div", { className: "form-group" },
+                    React.createElement("div", { className: "col-sm-offset-2 col-sm-10" },
+                        React.createElement(components_1.Button, { className: "btn btn-primary", text: this.props.courseData ? "Update" : "Create", type: "submit" }))))));
     }
     handleFormSubmit(e) {
         e.preventDefault();
@@ -1492,6 +1497,9 @@ class CourseForm extends React.Component {
             provider: this.state.provider,
             directoryid: this.state.directoryid,
         };
+        if (this.props.courseData) {
+            courseData.id = this.props.courseData.id;
+        }
         this.props.onSubmit(courseData, errors);
     }
     handleInputChange(e) {
@@ -1797,6 +1805,16 @@ class CourseManager {
     createNewCourse(courseData) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.courseProvider.createNewCourse(courseData);
+        });
+    }
+    updateCourse(courseData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.courseProvider.updateCourse(courseData);
+        });
+    }
+    deleteCourse(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.courseProvider.deleteCourse(id);
         });
     }
     getStudentCourse(student, course) {
@@ -2165,6 +2183,28 @@ class TempDataProvider {
             courses.push(courseData);
             this.localCourses = map_1.mapify(courses, (ele) => ele.id);
             return true;
+        });
+    }
+    updateCourse(courseData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const course = this.localCourses[courseData.id];
+            if (course) {
+                this.localCourses[courseData.id] = courseData;
+                return true;
+            }
+            return false;
+        });
+    }
+    deleteCourse(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const course = this.localCourses[id];
+            if (course) {
+                const courses = map_1.MapHelper.toArray(this.localCourses);
+                courses.splice(id, 1);
+                this.localCourses = map_1.mapify(courses, (ele) => ele.id);
+                return true;
+            }
+            return false;
         });
     }
     changeUserState(link, state) {
@@ -3258,6 +3298,7 @@ class AdminPage extends ViewPage_1.ViewPage {
         this.navHelper.registerFunction("courses", this.courses);
         this.navHelper.registerFunction("labs", this.labs);
         this.navHelper.registerFunction("courses/new", this.newCourse);
+        this.navHelper.registerFunction("courses/{id}/edit", this.editCourse);
     }
     users(info) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -3273,7 +3314,7 @@ class AdminPage extends ViewPage_1.ViewPage {
             return React.createElement("div", null,
                 React.createElement(components_1.Button, { className: "btn btn-primary pull-right", text: "+Create New", onClick: () => this.handleNewCourse() }),
                 React.createElement("h1", null, "All Courses"),
-                React.createElement(CourseView_1.CourseView, { courses: allCourses }));
+                React.createElement(CourseView_1.CourseView, { courses: allCourses, onEditClick: (id) => this.handleEditCourseClick(id), onDeleteClick: (id) => this.handleDeleteCourseClick(id) }));
         });
     }
     labs(info) {
@@ -3306,8 +3347,8 @@ class AdminPage extends ViewPage_1.ViewPage {
             let flashHolder = React.createElement("div", null);
             if (this.flashMessages) {
                 const errors = [];
-                for (const fm of this.flashMessages) {
-                    errors.push(React.createElement("li", null, fm));
+                for (let i = 0; i < this.flashMessages.length; i++) {
+                    errors.push(React.createElement("li", { key: i }, this.flashMessages[i]));
                 }
                 flashHolder = React.createElement("div", { className: "alert alert-danger" },
                     React.createElement("h4", null,
@@ -3316,9 +3357,32 @@ class AdminPage extends ViewPage_1.ViewPage {
                     React.createElement("ul", null, errors));
             }
             return (React.createElement("div", null,
-                React.createElement("h1", null, "Create New Course"),
                 flashHolder,
                 React.createElement(components_1.CourseForm, { className: "form-horizontal", courseMan: this.courseMan, onSubmit: (formData, errors) => this.createNewCourse(formData, errors) })));
+        });
+    }
+    editCourse(info) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courseId = parseInt(info.params.id, 10);
+            const course = yield this.courseMan.getCourse(courseId);
+            if (course) {
+                let flashHolder = React.createElement("div", null);
+                if (this.flashMessages) {
+                    const errors = [];
+                    for (let i = 0; i < this.flashMessages.length; i++) {
+                        errors.push(React.createElement("li", { key: i }, this.flashMessages[i]));
+                    }
+                    flashHolder = React.createElement("div", { className: "alert alert-danger" },
+                        React.createElement("h4", null,
+                            errors.length,
+                            " errors prohibited Course from being saved: "),
+                        React.createElement("ul", null, errors));
+                }
+                return (React.createElement("div", null,
+                    flashHolder,
+                    React.createElement(components_1.CourseForm, { className: "form-horizontal", courseMan: this.courseMan, onSubmit: (formData, errors) => this.updateCourse(formData, errors), courseData: course })));
+            }
+            return React.createElement("h1", null, "Page not found");
         });
     }
     renderMenu(index) {
@@ -3358,6 +3422,26 @@ class AdminPage extends ViewPage_1.ViewPage {
             this.handleNewCourse(errors);
         }
     }
+    handleEditCourseClick(id) {
+        this.navMan.navigateTo(this.pagePath + "/courses/" + id + "/edit");
+    }
+    handleDeleteCourseClick(id) {
+        if (confirm("Are you sure?")) {
+            this.courseMan.deleteCourse(id);
+        }
+        this.navMan.navigateTo(this.pagePath + "/courses");
+    }
+    updateCourse(fd, errors) {
+        if (errors.length === 0) {
+            this.courseMan.updateCourse(fd);
+            this.flashMessages = null;
+            this.navMan.navigateTo(this.pagePath + "/courses");
+        }
+        else {
+            this.flashMessages = errors;
+            this.navMan.navigateTo(this.pagePath + "/courses/" + fd.id + "/edit");
+        }
+    }
 }
 exports.AdminPage = AdminPage;
 
@@ -3382,10 +3466,14 @@ class CourseView extends React.Component {
         const searchIcon = React.createElement("span", { className: "input-group-addon" },
             React.createElement("i", { className: "glyphicon glyphicon-search" }));
         return (React.createElement("div", null,
-            React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for courses", onChange: (query) => this.handleOnchange(query) }),
-            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Course Code", "Year"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.code, e.year.toString()] })));
+            React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for courses", onChange: (query) => this.handleSearch(query) }),
+            React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Course Code", "Year", "Semester", "Action"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.code, e.year.toString(), e.tag,
+                    React.createElement("span", null,
+                        React.createElement("button", { className: "btn btn-primary", onClick: () => this.props.onEditClick(e.id) }, "Edit"),
+                        React.createElement("button", { className: "btn btn-danger", onClick: () => this.props.onDeleteClick(e.id) }, "Delete")),
+                ] })));
     }
-    handleOnchange(query) {
+    handleSearch(query) {
         query = query.toLowerCase();
         const filteredData = [];
         this.props.courses.forEach((course) => {
@@ -3614,6 +3702,16 @@ class ServerProvider {
             const resp = yield this.helper.post(uri, data);
             console.log("res = ", resp);
             return true;
+        });
+    }
+    updateCourse(courseData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented");
+        });
+    }
+    deleteCourse(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented");
         });
     }
     getAllLabInfos() {

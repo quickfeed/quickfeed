@@ -1,9 +1,11 @@
 import * as React from "react";
-import { DynamicTable, Search } from "../../components";
-import { ICourse } from "../../models";
+import {DynamicTable, Search} from "../../components";
+import {ICourse} from "../../models";
 
 interface ICourseViewProp {
     courses: ICourse[];
+    onEditClick: (id: number) => void;
+    onDeleteClick: (id: number) => void;
 }
 
 interface ICourseViewState {
@@ -22,25 +24,31 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
         const searchIcon: JSX.Element = <span className="input-group-addon">
             <i className="glyphicon glyphicon-search"></i></span>;
 
-        // TODO: remember to add tag/semester to the dynamic table
         return (
             <div>
                 <Search className="input-group"
-                    addonBefore={searchIcon}
-                    placeholder="Search for courses"
-                    onChange={(query) => this.handleOnchange(query)}
+                        addonBefore={searchIcon}
+                        placeholder="Search for courses"
+                        onChange={(query) => this.handleSearch(query)}
                 />
                 <DynamicTable
-                    header={["ID", "Name", "Course Code", "Year"]}
+                    header={["ID", "Name", "Course Code", "Year", "Semester", "Action"]}
                     data={this.state.courses}
-                    selector={(e: ICourse) => [e.id.toString(), e.name, e.code, e.year.toString()]}
+                    selector={(e: ICourse) => [e.id.toString(), e.name, e.code, e.year.toString(), e.tag,
+                        <span>
+                            <button className="btn btn-primary"
+                                    onClick={() => this.props.onEditClick(e.id)}>Edit</button>
+                            <button className="btn btn-danger"
+                                    onClick={() => this.props.onDeleteClick(e.id)}>Delete</button>
+                        </span>,
+                    ]}
                 >
                 </DynamicTable>
             </div>
         );
     }
 
-    private handleOnchange(query: string): void {
+    private handleSearch(query: string): void {
         query = query.toLowerCase();
         const filteredData: ICourse[] = [];
         this.props.courses.forEach((course) => {

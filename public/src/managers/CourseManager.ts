@@ -22,7 +22,11 @@ export interface ICourseProvider {
     getCoursesStudent(): Promise<ICourseUserLink[]>;
     addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
     changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean>;
+
     createNewCourse(courseData: ICourse): Promise<boolean>;
+    updateCourse(courseData: ICourse): Promise<boolean>;
+    deleteCourse(id: number): Promise<boolean>;
+
     getAllLabInfos(): Promise<IMap<ILabInfo>>;
     getDirectories(provider: string): Promise<IOrganization[]>;
 }
@@ -112,6 +116,14 @@ export class CourseManager {
 
     public async createNewCourse(courseData: ICourse): Promise<boolean> {
         return this.courseProvider.createNewCourse(courseData);
+    }
+
+    public async updateCourse(courseData: ICourse): Promise<boolean> {
+        return this.courseProvider.updateCourse(courseData);
+    }
+
+    public async deleteCourse(id: number): Promise<boolean> {
+        return this.courseProvider.deleteCourse(id);
     }
 
     public async getStudentCourse(student: IUser, course: ICourse): Promise<IUserCourse | null> {

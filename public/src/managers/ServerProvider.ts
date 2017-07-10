@@ -52,11 +52,19 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async createNewCourse(courseData: ICourse): Promise<boolean> {
         const uri: string = "courses";
-        const data: ICourse  = courseData;
+        const data: ICourse = courseData;
         const resp = await this.helper.post<ICourse, ICourse>(uri, data);
-       // return resp.data;
+        // return resp.data;
         console.log("res = ", resp);
         return true;
+    }
+
+    public async updateCourse(courseData: ICourse): Promise<boolean> {
+        throw new Error("Method not implemented");
+    }
+
+    public async deleteCourse(id: number): Promise<boolean> {
+        throw new Error("Method not implemented");
     }
 
     public async getAllLabInfos(): Promise<IMap<ILabInfo>> {

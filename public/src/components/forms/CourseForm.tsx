@@ -1,13 +1,14 @@
 import * as React from "react";
-import { Button } from "../../components";
-import { IOrganization } from "../../models";
+import {Button} from "../../components";
+import {ICourse, IOrganization} from "../../models";
 
-import { CourseManager } from "../../managers/CourseManager";
+import {CourseManager} from "../../managers/CourseManager";
 
 interface ICourseFormProps<T> {
     className?: string;
     courseMan: CourseManager;
     onSubmit: (formData: object, errors: string[]) => void;
+    courseData?: ICourse; // for editing an existing course
 }
 
 interface ICourseFormStates {
@@ -20,113 +21,133 @@ interface ICourseFormStates {
     organisations: JSX.Element | null;
 }
 
+interface ICourseFormData {
+    id?: number;
+    name: string;
+    code: string;
+    tag: string;
+    year: number;
+    provider: string;
+    directoryid: number;
+}
+
 class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStates> {
     constructor(props: any) {
         super(props);
         this.state = {
-            name: "",
-            code: "",
-            tag: "",
-            year: "",
-            provider: "",
-            directoryid: 0,
+            name: this.props.courseData ? this.props.courseData.name : "",
+            code: this.props.courseData ? this.props.courseData.code : "",
+            tag: this.props.courseData ? this.props.courseData.tag : "",
+            year: this.props.courseData ? this.props.courseData.year.toString() : "",
+            provider: this.props.courseData ? this.props.courseData.provider : "",
+            directoryid: this.props.courseData ? this.props.courseData.directoryid : 0,
             organisations: null,
         };
     }
 
     public render() {
+        const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
         return (
-            <form className={this.props.className ? this.props.className : ""}
-                onSubmit={(e) => this.handleFormSubmit(e)}>
-                <div className="form-group">
-                    <label className="control-label col-sm-2">Provider:</label>
-                    <div className="col-sm-10">
-                        <label className="radio-inline">
-                            <input type="radio"
-                                name="provider"
-                                value="github"
-                                onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
-                            />Github
-                        </label>
-                        <label className="radio-inline">
-                            <input type="radio"
-                                name="provider"
-                                value="gitlab"
-                                onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
-                            />Gitlab
-                        </label>
+            <div>
+                <h1>{getTitleText}</h1>
+                <form className={this.props.className ? this.props.className : ""}
+                      onSubmit={(e) => this.handleFormSubmit(e)}>
+                    <div className="form-group">
+                        <label className="control-label col-sm-2">Provider:</label>
+                        <div className="col-sm-10">
+                            <label className="radio-inline">
+                                <input type="radio"
+                                       name="provider"
+                                       value="github"
+                                       defaultChecked={this.props.courseData
+                                       && this.props.courseData.provider === "github" ? true : false}
+                                       onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
+                                />Github
+                            </label>
+                            <label className="radio-inline">
+                                <input type="radio"
+                                       name="provider"
+                                       defaultChecked={this.props.courseData
+                                       && this.props.courseData.provider === "gitlab" ? true : false}
+                                       value="gitlab"
+                                       onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
+                                />Gitlab
+                            </label>
+                        </div>
                     </div>
-                </div>
-                <div className="form-group" id="organisation-container">
-                    {this.state.organisations}
-                </div>
+                    <div className="form-group" id="organisation-container">
+                        {this.state.organisations}
+                    </div>
 
-                <div className="form-group">
-                    <label className="control-label col-sm-2" htmlFor="name">Course Name:</label>
-                    <div className="col-sm-10">
-                        <input type="text" className="form-control"
-                            id="name"
-                            placeholder="Enter course name"
-                            name="name"
-                            value={this.state.name}
-                            onChange={(e) => this.handleInputChange(e)}
-                        />
+                    <div className="form-group">
+                        <label className="control-label col-sm-2" htmlFor="name">Course Name:</label>
+                        <div className="col-sm-10">
+                            <input type="text" className="form-control"
+                                   id="name"
+                                   placeholder="Enter course name"
+                                   name="name"
+                                   value={this.state.name}
+                                   onChange={(e) => this.handleInputChange(e)}
+                            />
+                        </div>
                     </div>
-                </div>
-                <div className="form-group">
-                    <label className="control-label col-sm-2" htmlFor="code">Course Code:</label>
-                    <div className="col-sm-10">
-                        <input type="text"
-                            className="form-control"
-                            id="code"
-                            placeholder="Enter course code"
-                            name="code"
-                            value={this.state.code}
-                            onChange={(e) => this.handleInputChange(e)}
-                        />
+                    <div className="form-group">
+                        <label className="control-label col-sm-2" htmlFor="code">Course Code:</label>
+                        <div className="col-sm-10">
+                            <input type="text"
+                                   className="form-control"
+                                   id="code"
+                                   placeholder="Enter course code"
+                                   name="code"
+                                   value={this.state.code}
+                                   onChange={(e) => this.handleInputChange(e)}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                <div className="form-group">
-                    <label className="control-label col-sm-2" htmlFor="year">Year:</label>
-                    <div className="col-sm-10">
-                        <input type="text"
-                            className="form-control"
-                            id="year"
-                            placeholder="Enter year"
-                            name="year"
-                            value={this.state.year}
-                            onChange={(e) => this.handleInputChange(e)}
-                        />
+                    <div className="form-group">
+                        <label className="control-label col-sm-2" htmlFor="year">Year:</label>
+                        <div className="col-sm-10">
+                            <input type="text"
+                                   className="form-control"
+                                   id="year"
+                                   placeholder="Enter year"
+                                   name="year"
+                                   value={this.state.year}
+                                   onChange={(e) => this.handleInputChange(e)}
+                            />
+                        </div>
                     </div>
-                </div>
-                <div className="form-group">
-                    <label className="control-label col-sm-2" htmlFor="tag">Semester:</label>
-                    <div className="col-sm-10">
-                        <input type="text"
-                            className="form-control"
-                            id="tag"
-                            placeholder="Enter semester"
-                            name="tag"
-                            value={this.state.tag}
-                            onChange={(e) => this.handleInputChange(e)}
-                        />
+                    <div className="form-group">
+                        <label className="control-label col-sm-2" htmlFor="tag">Semester:</label>
+                        <div className="col-sm-10">
+                            <input type="text"
+                                   className="form-control"
+                                   id="tag"
+                                   placeholder="Enter semester"
+                                   name="tag"
+                                   value={this.state.tag}
+                                   onChange={(e) => this.handleInputChange(e)}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                <div className="form-group">
-                    <div className="col-sm-offset-2 col-sm-10">
-                        <Button className="btn btn-primary" text="Create" type="submit" />
+                    <div className="form-group">
+                        <div className="col-sm-offset-2 col-sm-10">
+                            <Button className="btn btn-primary"
+                                    text={this.props.courseData ? "Update" : "Create"}
+                                    type="submit"/>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         );
     }
 
     private handleFormSubmit(e: React.FormEvent<any>) {
         e.preventDefault();
         const errors: string[] = this.courseValidate();
-        const courseData = {
+        const courseData: ICourseFormData = {
             name: this.state.name,
             code: this.state.code,
             tag: this.state.tag,
@@ -134,6 +155,9 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             provider: this.state.provider,
             directoryid: this.state.directoryid,
         };
+        if (this.props.courseData) {
+            courseData.id = this.props.courseData.id;
+        }
 
         this.props.onSubmit(courseData, errors);
     }
@@ -175,17 +199,17 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         for (let i: number = 0; i < orgs.length; i++) {
             organisationDetails.push(
                 <button key={i} className="btn organisation"
-                    data-directoryid={orgs[i].id}
-                    onClick={(e) => this.handleOrgClick(e)}>
+                        data-directoryid={orgs[i].id}
+                        onClick={(e) => this.handleOrgClick(e)}>
 
                     <div className="organisationInfo">
                         <img src={orgs[i].avatar}
-                            className="img-rounded"
-                            width={80}
-                            height={80} />
+                             className="img-rounded"
+                             width={80}
+                             height={80}/>
                         <div className="caption">{orgs[i].path}</div>
                     </div>
-                    <input type="radio" />
+                    <input type="radio"/>
                 </button>,
             );
 
@@ -235,4 +259,4 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     }
 
 }
-export { CourseForm };
+export {CourseForm};

@@ -98,6 +98,26 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async updateCourse(courseData: ICourse): Promise<boolean> {
+        const course: ICourse | undefined = this.localCourses[courseData.id];
+        if (course) {
+            this.localCourses[courseData.id] = courseData;
+            return true;
+        }
+        return false;
+    }
+
+    public async deleteCourse(id: number): Promise<boolean> {
+        const course: ICourse | undefined = this.localCourses[id];
+        if (course) {
+            const courses: ICourse[] = MapHelper.toArray(this.localCourses);
+            courses.splice(id, 1);
+            this.localCourses = mapify(courses, (ele) => ele.id);
+            return true;
+        }
+        return false;
+    }
+
     public async changeUserState(link: ICourseUserLink, state: Models.CourseUserState): Promise<boolean> {
         link.state = state;
         return true;
