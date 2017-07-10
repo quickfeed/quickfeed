@@ -237,11 +237,7 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 		t.Error(err)
 	}
 
-	location := w.Header().Get("Location")
-	if location != loginRedirect {
-		t.Errorf("have Location '%v' want '%v'", location, loginRedirect)
-	}
-	assertCode(t, w.Code, http.StatusFound)
+	assertCode(t, w.Code, http.StatusTemporaryRedirect)
 }
 
 func TestOAuth2CallbackNoSession(t *testing.T) {
