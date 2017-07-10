@@ -100,7 +100,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	assertCode(t, w.Code, http.StatusTemporaryRedirect)
 }
 
-func TestOAuth2CallbackUnauthorized(t *testing.T) {
+func TestOAuth2CallbackBadRequest(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, authURL, nil)
 	w := httptest.NewRecorder()
 
