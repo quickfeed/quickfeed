@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
@@ -19,7 +20,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
-	"github.com/labstack/gommon/log"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
@@ -40,14 +40,12 @@ func main() {
 	setDefaultMimeTypes()
 
 	e := echo.New()
-	e.Logger.SetLevel(log.DEBUG)
+	logger := logrus.New()
+	e.Logger = web.EchoLogger{Logger: logger}
 
 	entryPoint := filepath.Join(*public, "index.html")
 	if !fileExists(entryPoint) {
-		e.Logger.Warnj(log.JSON{
-			"path": entryPoint,
-			"err":  "could not find file",
-		})
+		logger.WithField("path", entryPoint).Warn("could not find file")
 	}
 
 	store := sessions.NewCookieStore([]byte("secret"))
@@ -62,26 +60,23 @@ func main() {
 	)
 
 	if *fake {
-		e.Logger.Warn("fake provider enabled")
+		logger.Warn("fake provider enabled")
 		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(*baseURL, "fake")})
 	}
 
 	e.HideBanner = true
 	e.Use(
 		middleware.Recover(),
-		middleware.Logger(),
+		web.Logger(logger),
 		middleware.Secure(),
 		session.Middleware(store),
 	)
 
-	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), true)
+	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: logger})
 	defer db.Close()
 
 	if err != nil {
-		log.Fatalj(log.JSON{
-			"message": "could not connect to db",
-			"err":     err,
-		})
+		logger.WithError(err).Fatal("could not connect to db")
 	}
 
 	e.GET("/logout", auth.OAuth2Logout())
@@ -115,13 +110,10 @@ func main() {
 
 	go func() {
 		if err := e.Start(*httpAddr); err == http.ErrServerClosed {
-			e.Logger.Warn("shutting down the server")
+			logger.Warn("shutting down theserver")
 			return
 		}
-		e.Logger.Fatalj(log.JSON{
-			"message": "could not start server",
-			"err":     err,
-		})
+		logger.WithError(err).Fatal("could not start server")
 	}()
 
 	quit := make(chan os.Signal)
@@ -131,10 +123,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatalj(log.JSON{
-			"message": "failure during server shutdown",
-			"err":     err,
-		})
+		logger.WithError(err).Fatal("failure during server shutdown")
 	}
 }
 

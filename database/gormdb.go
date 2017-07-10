@@ -13,13 +13,17 @@ type GormDB struct {
 }
 
 // NewGormDB creates a new gorm database using the provided driver.
-func NewGormDB(driver, path string, debug bool) (*GormDB, error) {
+func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 	conn, err := gorm.Open(driver, path)
 	if err != nil {
 		return nil, err
 	}
 
-	conn.LogMode(debug)
+	if logger != nil {
+		conn.LogMode(true)
+		conn.SetLogger(logger)
+	}
+
 	conn.AutoMigrate(
 		&models.User{},
 		&models.RemoteIdentity{},

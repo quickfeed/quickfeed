@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
@@ -191,6 +192,9 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	}
 }
 
-func envSet(env string) bool {
-	return os.Getenv(env) != ""
+func envSet(env string) database.GormLogger {
+	if os.Getenv(env) != "" {
+		return database.Logger{Logger: logrus.New()}
+	}
+	return nil
 }

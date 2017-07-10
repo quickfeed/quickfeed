@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web/auth"
@@ -443,6 +444,9 @@ func (ts testStore) Save(r *http.Request, w http.ResponseWriter, s *sessions.Ses
 	return nil
 }
 
-func envSet(env string) bool {
-	return os.Getenv(env) != ""
+func envSet(env string) database.GormLogger {
+	if os.Getenv(env) != "" {
+		return database.Logger{Logger: logrus.New()}
+	}
+	return nil
 }
