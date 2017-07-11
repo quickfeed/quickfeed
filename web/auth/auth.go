@@ -123,19 +123,12 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		qv.Set(State, redirect)
 		r.URL.RawQuery = qv.Encode()
 
-		_, err := gothic.CompleteUserAuth(w, r)
-		// An error indicates that authentication needs to be performed at the provider.
+		url, err := gothic.GetAuthURL(w, r)
 		if err != nil {
-			url, err := gothic.GetAuthURL(w, r)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-			}
-			// Redirect to provider to perform authentication.
-			return c.Redirect(http.StatusTemporaryRedirect, url)
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-
-		// The user navigated to /auth/:provider but is already authenticated.
-		return c.Redirect(http.StatusFound, extractRedirectURL(r, State))
+		// Redirect to provider to perform authentication.
+		return c.Redirect(http.StatusTemporaryRedirect, url)
 	}
 }
 

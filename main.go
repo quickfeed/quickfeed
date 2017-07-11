@@ -55,7 +55,7 @@ func main() {
 
 	// TODO: Only register if env set.
 	goth.UseProviders(
-		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github"), "user"),
+		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github"), "user", "repo"),
 		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab"), "api"),
 	)
 
@@ -96,7 +96,7 @@ func main() {
 	api.GET("/users", web.GetUsers(db))
 
 	api.GET("/courses", web.ListCourses(db))
-	api.POST("/courses", web.NewCourse(db))
+	api.POST("/courses", web.NewCourse(logger, db))
 	api.POST("/directories", web.ListDirectories())
 
 	index := func(c echo.Context) error {

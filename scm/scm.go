@@ -14,6 +14,12 @@ type SCM interface {
 	CreateDirectory(context.Context, *CreateDirectoryOptions) (*Directory, error)
 	// Gets a directory.
 	GetDirectory(context.Context, uint64) (*Directory, error)
+	// Create a new repository.
+	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
+	// Get repositories within directory.
+	GetRepositories(context.Context, *Directory) ([]*Repository, error)
+	// Delete repository.
+	DeleteRepository(context.Context, uint64) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -42,6 +48,28 @@ type Directory struct {
 type CreateDirectoryOptions struct {
 	Path string
 	Name string
+}
+
+// Repository represents a git remote repository.
+type Repository struct {
+	ID   uint64
+	Path string
+
+	// Repository website.
+	WebURL string
+	// SSH clone URL.
+	SSHURL string
+	// HTTP(S) clone URL.
+	HTTPURL string
+
+	DirectoryID uint64
+}
+
+// CreateRepositoryOptions contains information on how a repository should be
+// created.
+type CreateRepositoryOptions struct {
+	Path      string
+	Directory *Directory
 }
 
 // ErrNotSupported is returned when the source code management solution used

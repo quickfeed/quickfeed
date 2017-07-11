@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
@@ -14,7 +15,7 @@ import (
 
 // MaxWait is the maximum time a request is allowed to stay open before
 // aborting.
-const MaxWait = 10 * time.Second
+const MaxWait = 60 * time.Second
 
 // NewCourseRequest represents a request for a new course.
 type NewCourseRequest struct {
@@ -60,8 +61,16 @@ func ListCourses(db database.Database) echo.HandlerFunc {
 	}
 }
 
+// Default repository names.
+const (
+	InfoRepo       = "course-info"
+	AssignmentRepo = "assignments"
+	TestsRepo      = "tests"
+	SolutionsRepo  = "solutions"
+)
+
 // NewCourse creates a new course and associates it with an organization.
-func NewCourse(db database.Database) echo.HandlerFunc {
+func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var cr NewCourseRequest
 		if err := c.Bind(&cr); err != nil {
@@ -79,14 +88,24 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
 
-		// Check that the directory exists.
 		directory, err := s.GetDirectory(ctx, cr.DirectoryID)
 		if err != nil {
 			return err
 		}
 
-		// TODO: Does the user have sufficient rights?
-		// TODO: Initialize directory?
+		var paths = []string{InfoRepo, AssignmentRepo, TestsRepo, SolutionsRepo}
+		for _, path := range paths {
+			repo, err := s.CreateRepository(
+				ctx,
+				&scm.CreateRepositoryOptions{
+					Path:      path,
+					Directory: directory},
+			)
+			if err != nil {
+				return err
+			}
+			logger.WithField("repo", repo).Println("Created new repository")
+		}
 
 		course := models.Course{
 			Name:        cr.Name,

@@ -60,3 +60,65 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 		Avatar: org.GetAvatarURL(),
 	}, nil
 }
+
+// CreateRepository implements the SCM interface.
+func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	repo, _, err := s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{Name: &opt.Path})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Repository{
+		ID:          uint64(repo.GetID()),
+		Path:        repo.GetName(),
+		WebURL:      repo.GetHTMLURL(),
+		SSHURL:      repo.GetSSHURL(),
+		HTTPURL:     repo.GetCloneURL(),
+		DirectoryID: opt.Directory.ID,
+	}, nil
+}
+
+// GetRepositories implements the SCM interface.
+func (s *GithubSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+	var path string
+	if directory.Path != "" {
+		path = directory.Path
+	} else {
+		directory, err := s.GetDirectory(ctx, directory.ID)
+		if err != nil {
+			return nil, err
+		}
+		path = directory.Path
+	}
+
+	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, &github.RepositoryListByOrgOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var repositories []*Repository
+	for _, repo := range repos {
+		repositories = append(repositories, &Repository{
+			ID:          uint64(repo.GetID()),
+			Path:        repo.GetName(),
+			WebURL:      repo.GetHTMLURL(),
+			SSHURL:      repo.GetSSHURL(),
+			HTTPURL:     repo.GetCloneURL(),
+			DirectoryID: directory.ID,
+		})
+	}
+
+	return repositories, nil
+}
+
+// DeleteRepository implements the SCM interface.
+func (s *GithubSCM) DeleteRepository(ctx context.Context, id uint64) error {
+	repo, _, err := s.client.Repositories.GetByID(ctx, int(id))
+	if err != nil {
+		return err
+	}
+	if _, err := s.client.Repositories.Delete(ctx, repo.Owner.GetLogin(), repo.GetName()); err != nil {
+		return err
+	}
+	return nil
+}

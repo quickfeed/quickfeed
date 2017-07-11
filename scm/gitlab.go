@@ -69,6 +69,58 @@ func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 	}, nil
 }
 
+// CreateRepository implements the SCM interface.
+func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	directoryID := int(opt.Directory.ID)
+	repo, _, err := s.client.Projects.CreateProject(
+		&gitlab.CreateProjectOptions{
+			Path:        &opt.Path,
+			NamespaceID: &directoryID,
+		},
+		gitlab.WithContext(ctx),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Repository{
+		ID:          uint64(repo.ID),
+		Path:        repo.Path,
+		WebURL:      repo.WebURL,
+		SSHURL:      repo.SSHURLToRepo,
+		HTTPURL:     repo.HTTPURLToRepo,
+		DirectoryID: opt.Directory.ID,
+	}, nil
+}
+
+// GetRepositories implements the SCM interface.
+func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+	repos, _, err := s.client.Groups.ListGroupProjects(directory.ID, &gitlab.ListGroupProjectsOptions{}, gitlab.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	var repositories []*Repository
+	for _, repo := range repos {
+		repositories = append(repositories, &Repository{
+			ID:          uint64(repo.ID),
+			Path:        repo.Path,
+			WebURL:      repo.WebURL,
+			SSHURL:      repo.SSHURLToRepo,
+			HTTPURL:     repo.HTTPURLToRepo,
+			DirectoryID: directory.ID,
+		})
+	}
+
+	return repositories, nil
+}
+
+// DeleteRepository implements the SCM interface.
+func (s *GitlabSCM) DeleteRepository(ctx context.Context, id uint64) (err error) {
+	_, err = s.client.Projects.DeleteProject(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
+	return
+}
+
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)
