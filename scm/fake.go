@@ -52,10 +52,11 @@ func (s *FakeSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 
 // CreateDirectory implements the SCM interface.
 func (s *FakeSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*Directory, error) {
-	return nil, ErrNotSupported{
-		SCM:    "fake",
-		Method: "CreateDirectory",
-	}
+	return &Directory{
+		ID:     999,
+		Path:   opt.Path,
+		Avatar: "https://avatars3.githubusercontent.com/u/29543863?v=3",
+	}, nil
 }
 
 // GetDirectory implements the SCM interface.
