@@ -4,8 +4,8 @@
 [[projects]]
   name = "github.com/Sirupsen/logrus"
   packages = ["."]
-  revision = "202f25545ea4cf9b191ff7f846df5d87c9382c2b"
-  version = "v1.0.0"
+  revision = "7f976d3a76720c4c27af2ba716b85d2e0a7e38b1"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/dgrijalva/jwt-go"
@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/google/go-github"
   packages = ["github"]
-  revision = "fe7d11f8add400587b6718d9f39a62e42cb04c28"
+  revision = "e42c33570031cfbf2d76867b7f83ae2d21fcf168"
 
 [[projects]]
   branch = "master"
@@ -71,13 +71,13 @@
   branch = "master"
   name = "github.com/labstack/echo"
   packages = [".","middleware"]
-  revision = "e0ea129c5ce03a91613a4a04c992a1f32038143b"
+  revision = "d79c13108c62b80d3dfa550bfe94ade4290b2bc8"
 
 [[projects]]
   branch = "master"
   name = "github.com/labstack/echo-contrib"
   packages = ["session"]
-  revision = "80e234165843ae77aa9f3277a11000f0ab9393cc"
+  revision = "c43bc4a1577d32bc1c485cb435aedf3e19d1bf14"
 
 [[projects]]
   name = "github.com/labstack/gommon"
@@ -89,7 +89,7 @@
   branch = "master"
   name = "github.com/markbates/goth"
   packages = [".","gothic","providers/github","providers/gitlab"]
-  revision = "054a763742fba5da4962727ba9ba8eec567324e5"
+  revision = "125cd04af542031c7ea089c49078fbee4103dcd9"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
@@ -137,7 +137,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["acme","acme/autocert"]
-  revision = "d625dfd80595a76324dea1452ceb9cfbcaee8e3e"
+  revision = "dd85ac7e6a88fc6ca420478e934de5f1a42dd3c6"
 
 [[projects]]
   branch = "master"
@@ -155,7 +155,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "6faef541c73732f438fb660a212750a9ba9f9362"
+  revision = "abf9c25f54453410d0c6668e519582a9e1115027"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -166,6 +166,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "249e4366f24360108381a21a6ee13c85b2bdce010cb6b8829a43d5d3d88e14fa"
+  inputs-digest = "561209f6dc0dbc4d13d9b1f33f180c1e54637f3d5a66da797b612515748ad2dc"
   solver-name = "gps-cdcl"
   solver-version = 1
