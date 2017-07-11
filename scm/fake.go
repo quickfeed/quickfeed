@@ -78,3 +78,33 @@ func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 		DirectoryID: opt.Directory.ID,
 	}, nil
 }
+
+// GetRepositories implements the SCM interface.
+func (s *FakeSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+	return []*Repository{
+		newRepository(123456, directory),
+		newRepository(234567, directory),
+		newRepository(345678, directory),
+	}, nil
+}
+
+func newRepository(id uint64, dir *Directory) *Repository {
+	var dirID uint64
+	var dirPath string
+	if dir.Path != "" {
+		dirID = 999
+		dirPath = dir.Path
+	} else {
+		dirID = dir.ID
+		dirPath = fmt.Sprintf("fake-dir-%d", dirID)
+	}
+	repoPath := fmt.Sprintf("fake-repo-%d", id)
+	return &Repository{
+		ID:          id,
+		Path:        repoPath,
+		WebURL:      "https://example.com/" + dirPath + "/" + repoPath,
+		SSHURL:      "git@example.com:" + dirPath + "/" + repoPath,
+		HTTPURL:     "https://example.com/" + dirPath + "/" + repoPath + ".git",
+		DirectoryID: dirID,
+	}
+}

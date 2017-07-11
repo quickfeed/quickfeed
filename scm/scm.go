@@ -16,6 +16,8 @@ type SCM interface {
 	GetDirectory(context.Context, uint64) (*Directory, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
+	// Get repositories within directory.
+	GetRepositories(context.Context, *Directory) ([]*Repository, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

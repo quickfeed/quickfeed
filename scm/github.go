@@ -77,3 +77,36 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		DirectoryID: opt.Directory.ID,
 	}, nil
 }
+
+// GetRepositories implements the SCM interface.
+func (s *GithubSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+	var path string
+	if directory.Path != "" {
+		path = directory.Path
+	} else {
+		directory, err := s.GetDirectory(ctx, directory.ID)
+		if err != nil {
+			return nil, err
+		}
+		path = directory.Path
+	}
+
+	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, &github.RepositoryListByOrgOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var repositories []*Repository
+	for _, repo := range repos {
+		repositories = append(repositories, &Repository{
+			ID:          uint64(repo.GetID()),
+			Path:        repo.GetName(),
+			WebURL:      repo.GetHTMLURL(),
+			SSHURL:      repo.GetSSHURL(),
+			HTTPURL:     repo.GetCloneURL(),
+			DirectoryID: directory.ID,
+		})
+	}
+
+	return repositories, nil
+}
