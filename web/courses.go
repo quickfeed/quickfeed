@@ -66,14 +66,11 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
 
-		// Check that the directory exists.
 		directory, err := s.GetDirectory(ctx, cr.DirectoryID)
 		if err != nil {
 			return err
 		}
 
-		// TODO: Does the user have sufficient rights?
-		// TODO: Initialize directory?
 
 		course := models.Course{
 			Name:        cr.Name,
