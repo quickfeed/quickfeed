@@ -14,7 +14,7 @@ type SCM interface {
 	CreateDirectory(context.Context, *CreateDirectoryOptions) (*Directory, error)
 	// Gets a directory.
 	GetDirectory(context.Context, uint64) (*Directory, error)
-	// Create repository creates a new repository.
+	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 }
 
