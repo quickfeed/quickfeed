@@ -102,7 +102,7 @@ export class UserManager {
      * @returns Returns true if user is teacher in one or more courses
      */
     public async isTeacher(user: IUser): Promise<boolean> {
-        return user.id > 100;
+        return user.isadmin;
     }
 
     /**

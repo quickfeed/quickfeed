@@ -2658,7 +2658,7 @@ class UserManager {
     }
     isTeacher(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            return user.id > 100;
+            return user.isadmin;
         });
     }
     getAllUser() {
@@ -3750,7 +3750,7 @@ class ServerProvider {
     }
     getCourses() {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.helper.get("courses");
+            const result = yield this.helper.get("courses?user=0");
             if (result.statusCode !== 200 || !result.data) {
                 return {};
             }

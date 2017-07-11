@@ -31,7 +31,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getCourses(): Promise<IMap<ICourse>> {
-        const result = await this.helper.get<any>("courses");
+        const result = await this.helper.get<any>("courses?user=0");
         if (result.statusCode !== 200 || !result.data) {
             return {};
         }
