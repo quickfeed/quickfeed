@@ -1,10 +1,10 @@
 export interface IUser {
     id: number;
-    firstName: string;
-    lastName: string;
+    firstname: string;
+    lastname: string;
     email: string;
-    personId: number;
-    isAdmin: boolean;
+    personid: number;
+    isadmin: boolean;
 }
 
 /**
@@ -90,11 +90,15 @@ export interface ICourse {
  */
 export interface IAssignment {
     id: number;
-    courseId: number;
+    courseid: number;
     name: string;
-    start: Date;
+
     deadline: Date;
-    end: Date;
+
+    // Not implemented yet
+    // start: Date;
+    // end: Date;
+
     assignmentGroupId?: number;
 }
 

@@ -38,9 +38,9 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
             header={["Name", "Email", "Student ID", "Action"]}
             selector={
                 (userRel: IUserRelation) => [
-                    userRel.user.firstName + " " + userRel.user.lastName,
+                    userRel.user.firstname + " " + userRel.user.lastname,
                     <a href={"mailto:" + userRel.user.email}>{userRel.user.email}</a>,
-                    userRel.user.personId.toString(),
+                    userRel.user.personid.toString(),
                     <span>
                         <button onClick={(e) => {
                             this.props.courseMan.changeUserState(userRel.link, CourseUserState.student);

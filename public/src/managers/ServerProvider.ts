@@ -87,7 +87,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getAllUser(): Promise<IMap<IUser>> {
-        const result = await this.helper.get<Array<{ ID: number }>>("users");
+        const result = await this.helper.get<Array<{ id: number }>>("users");
         if (result.statusCode !== 302 || !result.data) {
             return {};
         }
@@ -129,20 +129,20 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getLoggedInUser(): Promise<IUser | null> {
-        const result = await this.helper.get<{ ID: number }>("user");
+        const result = await this.helper.get<{ id: number }>("user");
         if (result.statusCode !== 302 || !result.data) {
             return null;
         }
         return this.makeUserInfo(result.data);
     }
 
-    private makeUserInfo(data: { ID: number }): IUser {
+    private makeUserInfo(data: { id: number }): IUser {
         return {
-            firstName: "No name",
-            lastName: "names",
-            isAdmin: true,
-            id: data.ID,
-            personId: 1000,
+            firstname: "No name",
+            lastname: "names",
+            isadmin: true,
+            id: data.id,
+            personid: 1000,
             email: "no@name.com",
         };
     }

@@ -2,15 +2,15 @@ package models
 
 // Course represents a course backed by a directory.
 type Course struct {
-	ID uint64
+	ID uint64 `json:"id"`
 
-	Name string
-	Code string
-	Year uint
-	Tag  string
+	Name string `json:"name"`
+	Code string `json:"code"`
+	Year uint   `json:"year"`
+	Tag  string `json:"tag"`
 
-	Provider    string
-	DirectoryID uint64
+	Provider    string `json:"provider"`
+	DirectoryID uint64 `json:"directoryid"`
 
 	Users []User `gorm:"many2many:user_courses;"`
 }

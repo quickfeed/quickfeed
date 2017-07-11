@@ -64,7 +64,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element> {
-        let selector: Array<string | JSX.Element> = [student.user.firstName + " " + student.user.lastName, "5"];
+        let selector: Array<string | JSX.Element> = [student.user.firstname + " " + student.user.lastname, "5"];
         selector = selector.concat(student.course.assignments.map((e, i) => <a className="lab-result-cell"
             onClick={() => this.handleOnclick(e)}
             href="#">
@@ -82,8 +82,8 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         query = query.toLowerCase();
         const filteredData: IUserCourseWithUser[] = [];
         this.props.students.forEach((std) => {
-            if (std.user.firstName.toLowerCase().indexOf(query) !== -1
-                || std.user.lastName.toLowerCase().indexOf(query) !== -1
+            if (std.user.firstname.toLowerCase().indexOf(query) !== -1
+                || std.user.lastname.toLowerCase().indexOf(query) !== -1
                 || std.user.email.toLowerCase().indexOf(query) !== -1
             ) {
                 filteredData.push(std);

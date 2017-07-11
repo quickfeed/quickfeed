@@ -31,7 +31,7 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
             }
             return (
                 <li key={k} className="list-group-item clickable"
-                    onClick={() => this.props.onLabClick(submission.assignment.courseId, submission.assignment.id)}>
+                    onClick={() => this.props.onLabClick(submission.assignment.courseid, submission.assignment.id)}>
                     <strong>{submission.assignment.name}</strong>
                     {submissionInfo}
                 </li>);

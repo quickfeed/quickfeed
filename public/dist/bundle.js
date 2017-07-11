@@ -234,6 +234,11 @@ class NavigationHelper {
                 return null;
             }
             this.onPreNavigation({ target: this, navInfo });
+            if (this.checkAuthentication) {
+                if (!this.checkAuthentication(navInfo)) {
+                    return null;
+                }
+            }
             return navObj.func.call(this.thisObject, navInfo);
         });
     }
@@ -522,9 +527,9 @@ class UserView extends React.Component {
     }
     getTableSelector(user) {
         let selector = [
-            user.firstName + " " + user.lastName,
+            user.firstname + " " + user.lastname,
             React.createElement("a", { href: "mailto:" + user.email }, user.email),
-            user.personId.toString(),
+            user.personid.toString(),
         ];
         if (this.props.userMan) {
             if (this.props.userMan.isAdmin(user)) {
@@ -550,10 +555,10 @@ class UserView extends React.Component {
         query = query.toLowerCase();
         const filteredData = [];
         this.props.users.forEach((user) => {
-            if (user.firstName.toLowerCase().indexOf(query) !== -1
-                || user.lastName.toLowerCase().indexOf(query) !== -1
+            if (user.firstname.toLowerCase().indexOf(query) !== -1
+                || user.lastname.toLowerCase().indexOf(query) !== -1
                 || user.email.toLowerCase().indexOf(query) !== -1
-                || user.personId.toString().indexOf(query) !== -1) {
+                || user.personid.toString().indexOf(query) !== -1) {
                 filteredData.push(user);
             }
         });
@@ -1271,7 +1276,7 @@ class LabResult extends React.Component {
         let labHeading;
         if (this.props.student) {
             labHeading = React.createElement("h3", null,
-                this.props.student.firstName + " " + this.props.student.lastName,
+                this.props.student.firstname + " " + this.props.student.lastname,
                 ": ",
                 this.props.lab);
         }
@@ -1470,7 +1475,7 @@ class SingleCourseOverview extends React.Component {
                             React.createElement("br", null),
                             submission.assignment.deadline.toLocaleTimeString("en-GB"))));
             }
-            return (React.createElement("li", { key: k, className: "list-group-item clickable", onClick: () => this.props.onLabClick(submission.assignment.courseId, submission.assignment.id) },
+            return (React.createElement("li", { key: k, className: "list-group-item clickable", onClick: () => this.props.onLabClick(submission.assignment.courseid, submission.assignment.id) },
                 React.createElement("strong", null, submission.assignment.name),
                 submissionInfo));
         });
@@ -1695,7 +1700,7 @@ class Results extends React.Component {
         return headers;
     }
     getResultSelector(student) {
-        let selector = [student.user.firstName + " " + student.user.lastName, "5"];
+        let selector = [student.user.firstname + " " + student.user.lastname, "5"];
         selector = selector.concat(student.course.assignments.map((e, i) => React.createElement("a", { className: "lab-result-cell", onClick: () => this.handleOnclick(e), href: "#" }, e.latest ? (e.latest.score + "%") : "N/A")));
         return selector;
     }
@@ -1708,8 +1713,8 @@ class Results extends React.Component {
         query = query.toLowerCase();
         const filteredData = [];
         this.props.students.forEach((std) => {
-            if (std.user.firstName.toLowerCase().indexOf(query) !== -1
-                || std.user.lastName.toLowerCase().indexOf(query) !== -1
+            if (std.user.firstname.toLowerCase().indexOf(query) !== -1
+                || std.user.lastname.toLowerCase().indexOf(query) !== -1
                 || std.user.email.toLowerCase().indexOf(query) !== -1) {
                 filteredData.push(std);
             }
@@ -2207,7 +2212,7 @@ class TempDataProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const temp = [];
             map_1.MapHelper.forEach(this.localAssignments, (a, i) => {
-                if (a.courseId === courseId) {
+                if (a.courseid === courseId) {
                     temp[i] = a;
                 }
             });
@@ -2294,7 +2299,7 @@ class TempDataProvider {
     }
     changeAdminRole(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            user.isAdmin = !user.isAdmin;
+            user.isadmin = !user.isadmin;
             return true;
         });
     }
@@ -2312,48 +2317,48 @@ class TempDataProvider {
         this.localUsers = map_1.mapify([
             {
                 id: 999,
-                firstName: "Test",
-                lastName: "Testersen",
+                firstname: "Test",
+                lastname: "Testersen",
                 email: "test@testersen.no",
-                personId: 9999,
+                personid: 9999,
                 password: "1234",
-                isAdmin: true,
+                isadmin: true,
             },
             {
                 id: 1000,
-                firstName: "Admin",
-                lastName: "Admin",
+                firstname: "Admin",
+                lastname: "Admin",
                 email: "admin@admin",
-                personId: 1000,
+                personid: 1000,
                 password: "1234",
-                isAdmin: true,
+                isadmin: true,
             },
             {
                 id: 1,
-                firstName: "Per",
-                lastName: "Pettersen",
+                firstname: "Per",
+                lastname: "Pettersen",
                 email: "per@pettersen.no",
-                personId: 1234,
+                personid: 1234,
                 password: "1234",
-                isAdmin: false,
+                isadmin: false,
             },
             {
                 id: 2,
-                firstName: "Bob",
-                lastName: "Bobsen",
+                firstname: "Bob",
+                lastname: "Bobsen",
                 email: "bob@bobsen.no",
-                personId: 1234,
+                personid: 1234,
                 password: "1234",
-                isAdmin: false,
+                isadmin: false,
             },
             {
                 id: 3,
-                firstName: "Petter",
-                lastName: "Pan",
+                firstname: "Petter",
+                lastname: "Pan",
                 email: "petter@pan.no",
-                personId: 1234,
+                personid: 1234,
                 password: "1234",
-                isAdmin: false,
+                isadmin: false,
             },
         ], (ele) => ele.id);
     }
@@ -2361,91 +2366,69 @@ class TempDataProvider {
         this.localAssignments = map_1.mapify([
             {
                 id: 0,
-                courseId: 0,
+                courseid: 0,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 1,
-                courseId: 0,
+                courseid: 0,
                 name: "Lab 2",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 2,
-                courseId: 0,
+                courseid: 0,
                 name: "Lab 3",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 3,
-                courseId: 0,
+                courseid: 0,
                 name: "Lab 4",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 4,
-                courseId: 1,
+                courseid: 1,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 5,
-                courseId: 1,
+                courseid: 1,
                 name: "Lab 2",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 6,
-                courseId: 1,
+                courseid: 1,
                 name: "Lab 3",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 7,
-                courseId: 2,
+                courseid: 2,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 8,
-                courseId: 2,
+                courseid: 2,
                 name: "Lab 2",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 9,
-                courseId: 3,
+                courseid: 3,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
             {
                 id: 10,
-                courseId: 4,
+                courseid: 4,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
             },
         ], (ele) => ele.id);
     }
@@ -2671,7 +2654,7 @@ class UserManager {
         });
     }
     isAdmin(user) {
-        return user.isAdmin;
+        return user.isadmin;
     }
     isTeacher(user) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -2923,6 +2906,7 @@ class StudentPage extends ViewPage_1.ViewPage {
         this.userMan = users;
         this.courseMan = courseMan;
         this.navHelper.defaultPage = "index";
+        this.navHelper.checkAuthentication = () => this.checkAuthentication();
         this.navHelper.registerFunction("index", this.index);
         this.navHelper.registerFunction("course/{courseid:number}", this.course);
         this.navHelper.registerFunction("course/{courseid:number}/lab/{labid:number}", this.courseWithLab);
@@ -2930,6 +2914,13 @@ class StudentPage extends ViewPage_1.ViewPage {
         this.navHelper.registerFunction("enroll", this.enroll);
         this.navHelper.registerFunction("user", this.getUsers);
         this.navHelper.registerFunction("hello", (navInfo) => Promise.resolve(React.createElement(HelloView_1.HelloView, null)));
+    }
+    checkAuthentication() {
+        const curUser = this.userMan.getCurrentUser();
+        if (curUser) {
+            return true;
+        }
+        return false;
     }
     getUsers(navInfo) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -3049,7 +3040,6 @@ class StudentPage extends ViewPage_1.ViewPage {
     setupData() {
         return __awaiter(this, void 0, void 0, function* () {
             const curUser = this.userMan.getCurrentUser();
-            console.log("Setup data");
             if (curUser) {
                 this.courses = yield this.courseMan.getStudentCourses(curUser);
                 this.activeCourses = this.onlyActiveCourses(this.courses);
@@ -3162,6 +3152,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
         this.userMan = userMan;
         this.courseMan = courseMan;
         this.navHelper.defaultPage = "course";
+        this.navHelper.checkAuthentication = () => this.checkAuthentication();
         this.navHelper.registerFunction("course/{course}", this.course);
         this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("course/{course}/results", this.results);
@@ -3169,6 +3160,14 @@ class TeacherPage extends ViewPage_1.ViewPage {
         this.navHelper.registerFunction("user", (navInfo) => __awaiter(this, void 0, void 0, function* () {
             return React.createElement(UserView_1.UserView, { users: yield userMan.getAllUser() });
         }));
+    }
+    checkAuthentication() {
+        this.curUser = this.userMan.getCurrentUser();
+        if (this.curUser && this.userMan.isTeacher(this.curUser)) {
+            return true;
+        }
+        this.curUser = null;
+        return false;
     }
     init() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -3251,7 +3250,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
     renderMenu(menu) {
         return __awaiter(this, void 0, void 0, function* () {
             const curUser = this.userMan.getCurrentUser();
-            if (curUser && this.isTeacher(curUser)) {
+            if (curUser) {
                 if (menu === 0) {
                     const courses = yield this.courseMan.getCoursesFor(curUser);
                     const labLinks = [];
@@ -3275,19 +3274,6 @@ class TeacherPage extends ViewPage_1.ViewPage {
             return [];
         });
     }
-    renderContent(page) {
-        const _super = name => super[name];
-        return __awaiter(this, void 0, void 0, function* () {
-            const curUser = this.userMan.getCurrentUser();
-            if (!curUser) {
-                return React.createElement("h1", null, "You are not logged in");
-            }
-            else if (this.isTeacher(curUser)) {
-                return yield _super("renderContent").call(this, page);
-            }
-            return React.createElement("h1", null, "404 page not found");
-        });
-    }
     handleClick(link) {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
@@ -3300,11 +3286,6 @@ class TeacherPage extends ViewPage_1.ViewPage {
                 return yield this.courseMan.getCoursesFor(curUsr);
             }
             return [];
-        });
-    }
-    isTeacher(curUser) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.userMan.isTeacher(curUser);
         });
     }
 }
@@ -3341,9 +3322,9 @@ class MemberView extends React.Component {
     }
     createPendingTable(pendingUsers) {
         return React.createElement(components_1.DynamicTable, { data: pendingUsers, header: ["Name", "Email", "Student ID", "Action"], selector: (userRel) => [
-                userRel.user.firstName + " " + userRel.user.lastName,
+                userRel.user.firstname + " " + userRel.user.lastname,
                 React.createElement("a", { href: "mailto:" + userRel.user.email }, userRel.user.email),
-                userRel.user.personId.toString(),
+                userRel.user.personid.toString(),
                 React.createElement("span", null,
                     React.createElement("button", { onClick: (e) => {
                             this.props.courseMan.changeUserState(userRel.link, models_1.CourseUserState.student);
@@ -3424,12 +3405,10 @@ class AdminPage extends ViewPage_1.ViewPage {
                         " (",
                         e.code,
                         ")"),
-                    React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Start", "Deadline", "End"], data: labs, selector: (lab) => [
+                    React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Deadline"], data: labs, selector: (lab) => [
                             lab.id.toString(),
                             lab.name,
-                            lab.start.toDateString(),
                             lab.deadline.toDateString(),
-                            lab.end.toDateString(),
                         ] })));
             }
             return React.createElement("div", null, tables);
@@ -3891,11 +3870,11 @@ class ServerProvider {
     }
     makeUserInfo(data) {
         return {
-            firstName: "No name",
-            lastName: "names",
-            isAdmin: true,
-            id: data.ID,
-            personId: 1000,
+            firstname: "No name",
+            lastname: "names",
+            isadmin: true,
+            id: data.id,
+            personid: 1000,
             email: "no@name.com",
         };
     }
@@ -3940,6 +3919,7 @@ class HttpHelper {
                     }
                     else {
                         try {
+                            console.log(request.responseText);
                             data = JSON.parse(request.responseText);
                         }
                         catch (e) {

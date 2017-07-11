@@ -62,9 +62,9 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private getTableSelector(user: IUser): Array<string | JSX.Element> {
         let selector: Array<string | JSX.Element> = [
-            user.firstName + " " + user.lastName,
+            user.firstname + " " + user.lastname,
             <a href={"mailto:" + user.email}>{user.email}</a>,
-            user.personId.toString(),
+            user.personid.toString(),
         ];
         if (this.props.userMan) {
             if (this.props.userMan.isAdmin(user)) {
@@ -99,10 +99,10 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         query = query.toLowerCase();
         const filteredData: IUser[] = [];
         this.props.users.forEach((user) => {
-            if (user.firstName.toLowerCase().indexOf(query) !== -1
-                || user.lastName.toLowerCase().indexOf(query) !== -1
+            if (user.firstname.toLowerCase().indexOf(query) !== -1
+                || user.lastname.toLowerCase().indexOf(query) !== -1
                 || user.email.toLowerCase().indexOf(query) !== -1
-                || user.personId.toString().indexOf(query) !== -1
+                || user.personid.toString().indexOf(query) !== -1
             ) {
                 filteredData.push(user);
             }

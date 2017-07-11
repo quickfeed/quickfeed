@@ -50,7 +50,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
         const temp: IMap<IAssignment> = [];
         MapHelper.forEach(this.localAssignments, (a, i) => {
-            if (a.courseId === courseId) {
+            if (a.courseid === courseId) {
                 temp[i] = a;
             }
         });
@@ -132,7 +132,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeAdminRole(user: IUser): Promise<boolean> {
-        user.isAdmin = !user.isAdmin;
+        user.isadmin = !user.isadmin;
         return true;
     }
 
@@ -148,48 +148,48 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.localUsers = mapify([
             {
                 id: 999,
-                firstName: "Test",
-                lastName: "Testersen",
+                firstname: "Test",
+                lastname: "Testersen",
                 email: "test@testersen.no",
-                personId: 9999,
+                personid: 9999,
                 password: "1234",
-                isAdmin: true,
+                isadmin: true,
             },
             {
                 id: 1000,
-                firstName: "Admin",
-                lastName: "Admin",
+                firstname: "Admin",
+                lastname: "Admin",
                 email: "admin@admin",
-                personId: 1000,
+                personid: 1000,
                 password: "1234",
-                isAdmin: true,
+                isadmin: true,
             },
             {
                 id: 1,
-                firstName: "Per",
-                lastName: "Pettersen",
+                firstname: "Per",
+                lastname: "Pettersen",
                 email: "per@pettersen.no",
-                personId: 1234,
+                personid: 1234,
                 password: "1234",
-                isAdmin: false,
+                isadmin: false,
             },
             {
                 id: 2,
-                firstName: "Bob",
-                lastName: "Bobsen",
+                firstname: "Bob",
+                lastname: "Bobsen",
                 email: "bob@bobsen.no",
-                personId: 1234,
+                personid: 1234,
                 password: "1234",
-                isAdmin: false,
+                isadmin: false,
             },
             {
                 id: 3,
-                firstName: "Petter",
-                lastName: "Pan",
+                firstname: "Petter",
+                lastname: "Pan",
                 email: "petter@pan.no",
-                personId: 1234,
+                personid: 1234,
                 password: "1234",
-                isAdmin: false,
+                isadmin: false,
             },
         ] as IDummyUser[], (ele) => ele.id);
     }
@@ -198,91 +198,91 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.localAssignments = mapify([
             {
                 id: 0,
-                courseId: 0,
+                courseid: 0,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 1,
-                courseId: 0,
+                courseid: 0,
                 name: "Lab 2",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 2,
-                courseId: 0,
+                courseid: 0,
                 name: "Lab 3",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 3,
-                courseId: 0,
+                courseid: 0,
                 name: "Lab 4",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 4,
-                courseId: 1,
+                courseid: 1,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 5,
-                courseId: 1,
+                courseid: 1,
                 name: "Lab 2",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 6,
-                courseId: 1,
+                courseid: 1,
                 name: "Lab 3",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 7,
-                courseId: 2,
+                courseid: 2,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 8,
-                courseId: 2,
+                courseid: 2,
                 name: "Lab 2",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 9,
-                courseId: 3,
+                courseid: 3,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
             {
                 id: 10,
-                courseId: 4,
+                courseid: 4,
                 name: "Lab 1",
-                start: new Date(2017, 5, 1),
+                // start new Date(2017, 5, 1),
                 deadline: new Date(2017, 5, 25),
-                end: new Date(2017, 5, 30),
+                // end new Date(2017, 5, 30),
             },
         ] as IAssignment[], (ele) => ele.id);
     }

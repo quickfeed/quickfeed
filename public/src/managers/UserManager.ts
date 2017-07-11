@@ -93,7 +93,7 @@ export class UserManager {
      * @returns Returns true if admin. False otherwise
      */
     public isAdmin(user: IUser): boolean {
-        return user.isAdmin;
+        return user.isadmin;
     }
 
     /**

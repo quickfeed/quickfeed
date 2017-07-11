@@ -63,14 +63,14 @@ export class AdminPage extends ViewPage {
             tables.push(<div key={i}>
                 <h3>Labs for {e.name} ({e.code})</h3>
                 <DynamicTable
-                    header={["ID", "Name", "Start", "Deadline", "End"]}
+                    header={["ID", "Name", /*"Start",*/ "Deadline"/*, "End"*/]}
                     data={labs}
                     selector={(lab: IAssignment) => [
                         lab.id.toString(),
                         lab.name,
-                        lab.start.toDateString(),
+                        // lab.start.toDateString(),
                         lab.deadline.toDateString(),
-                        lab.end.toDateString(),
+                        // lab.end.toDateString(),
                     ]}>
                 </DynamicTable>
             </div>);
