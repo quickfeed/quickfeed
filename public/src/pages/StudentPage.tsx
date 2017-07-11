@@ -38,6 +38,8 @@ export class StudentPage extends ViewPage {
 
         this.navHelper.defaultPage = "index";
 
+        this.navHelper.checkAuthentication = () => this.checkAuthentication();
+
         this.navHelper.registerFunction<any>("index", this.index);
         this.navHelper.registerFunction<any>("course/{courseid:number}", this.course);
         this.navHelper.registerFunction<any>("course/{courseid:number}/lab/{labid:number}", this.courseWithLab);
@@ -47,6 +49,15 @@ export class StudentPage extends ViewPage {
         // Only for testing purposes
         this.navHelper.registerFunction<any>("user", this.getUsers);
         this.navHelper.registerFunction<any>("hello", (navInfo) => Promise.resolve(<HelloView></HelloView>));
+    }
+
+    public checkAuthentication(): boolean {
+        const curUser = this.userMan.getCurrentUser();
+        if (curUser) {
+            return true;
+        }
+        return false;
+
     }
 
     public async getUsers(navInfo: INavInfo<any>): View {
@@ -175,7 +186,6 @@ export class StudentPage extends ViewPage {
 
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
-        console.log("Setup data");
         if (curUser) {
             this.courses = await this.courseMan.getStudentCourses(curUser);
             this.activeCourses = this.onlyActiveCourses(this.courses);

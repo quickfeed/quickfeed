@@ -101,6 +101,7 @@ export class NavigationHelper {
     }
 
     public onPreNavigation = newEvent<INavInfoEvent>("NavigationHelper.onPreNavigation");
+    public checkAuthentication: ((navInfo: INavInfo<any>) => boolean) | undefined;
 
     private DEFAULT_VALUE: string = "";
     private navObj = "__navObj";
@@ -168,6 +169,12 @@ export class NavigationHelper {
             return null;
         }
         this.onPreNavigation({ target: this, navInfo });
+        if (this.checkAuthentication) {
+            if (!this.checkAuthentication(navInfo)) {
+                // TODO: Same as above, should be proper error handling
+                return null;
+            }
+        }
         return navObj.func.call(this.thisObject, navInfo);
     }
 

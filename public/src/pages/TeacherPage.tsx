@@ -30,6 +30,7 @@ export class TeacherPage extends ViewPage {
     private courses: ICourse[] = [];
 
     private pages: { [name: string]: JSX.Element } = {};
+    private curUser: IUser | null;
 
     constructor(userMan: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
@@ -38,6 +39,7 @@ export class TeacherPage extends ViewPage {
         this.userMan = userMan;
         this.courseMan = courseMan;
         this.navHelper.defaultPage = "course";
+        this.navHelper.checkAuthentication = () => this.checkAuthentication();
 
         this.navHelper.registerFunction("course/{course}", this.course);
         this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
@@ -50,6 +52,15 @@ export class TeacherPage extends ViewPage {
         // this.navHelper.registerFunction("user", async (navInfo) => {
         //     return <HelloView></HelloView>;
         // });
+    }
+
+    public checkAuthentication(): boolean {
+        this.curUser = this.userMan.getCurrentUser();
+        if (this.curUser && this.userMan.isTeacher(this.curUser)) {
+            return true;
+        }
+        this.curUser = null;
+        return false;
     }
 
     public async init(): Promise<void> {
@@ -136,7 +147,7 @@ export class TeacherPage extends ViewPage {
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
         const curUser = this.userMan.getCurrentUser();
-        if (curUser && this.isTeacher(curUser)) {
+        if (curUser) {
             if (menu === 0) {
                 const courses = await this.courseMan.getCoursesFor(curUser);
 
@@ -167,16 +178,6 @@ export class TeacherPage extends ViewPage {
         return [];
     }
 
-    public async renderContent(page: string): View {
-        const curUser: IUser | null = this.userMan.getCurrentUser();
-        if (!curUser) {
-            return <h1>You are not logged in</h1>;
-        } else if (this.isTeacher(curUser)) {
-            return await super.renderContent(page);
-        }
-        return <h1>404 page not found</h1>;
-    }
-
     private handleClick(link: ILink) {
         if (link.uri) {
             this.navMan.navigateTo(link.uri);
@@ -189,9 +190,5 @@ export class TeacherPage extends ViewPage {
             return await this.courseMan.getCoursesFor(curUsr);
         }
         return [];
-    }
-
-    private async isTeacher(curUser: IUser): Promise<boolean> {
-        return this.userMan.isTeacher(curUser);
     }
 }
