@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/autograde/aguis/database"
@@ -39,7 +40,19 @@ func (cr *NewCourseRequest) valid() bool {
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		courses, err := db.GetCourses()
+		// TODO check if user has rights to view other course ;
+		// make tests and ensure that a user only gets its own courses and nobody elses
+		id, err := strconv.ParseUint(c.QueryParam("user"), 10, 64)
+		if err != nil {
+			return err
+		}
+
+		var courses *[]models.Course
+		if id > 0 {
+			courses, err = db.GetCoursesForUser(id)
+		} else {
+			courses, err = db.GetCourses()
+		}
 		if err != nil {
 			return err
 		}

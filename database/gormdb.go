@@ -146,6 +146,20 @@ func (db *GormDB) GetCourses() (*[]models.Course, error) {
 	return &courses, nil
 }
 
+// GetCoursesForUser implements the Database interface.
+func (db *GormDB) GetCoursesForUser(userID uint64) (*[]models.Course, error) {
+	var user models.User
+	if err := db.conn.Preload("Courses").First(&user, userID).Error; err != nil {
+		return nil, err
+	}
+	return &user.Courses, nil
+}
+
+// EnrollUserInCourse implements the Database interface.
+func (db *GormDB) EnrollUserInCourse(userID, courseID uint64) error {
+	return db.conn.Model(models.Course{ID: courseID}).Association("Users").Append(models.User{ID: userID}).Error
+}
+
 // Close closes the gorm database.
 func (db *GormDB) Close() error {
 	return db.conn.Close()
