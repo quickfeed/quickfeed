@@ -18,6 +18,8 @@ type SCM interface {
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within directory.
 	GetRepositories(context.Context, *Directory) ([]*Repository, error)
+	// Delete repository.
+	DeleteRepository(context.Context, uint64) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

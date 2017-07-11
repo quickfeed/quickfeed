@@ -108,3 +108,8 @@ func newRepository(id uint64, dir *Directory) *Repository {
 		DirectoryID: dirID,
 	}
 }
+
+// DeleteRepository implements the SCM interface.
+func (s *FakeSCM) DeleteRepository(context.Context, uint64) error {
+	return nil
+}

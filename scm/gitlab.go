@@ -115,6 +115,12 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) (
 	return repositories, nil
 }
 
+// DeleteRepository implements the SCM interface.
+func (s *GitlabSCM) DeleteRepository(ctx context.Context, id uint64) (err error) {
+	_, err = s.client.Projects.DeleteProject(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
+	return
+}
+
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)

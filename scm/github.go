@@ -110,3 +110,15 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, directory *Directory) (
 
 	return repositories, nil
 }
+
+// DeleteRepository implements the SCM interface.
+func (s *GithubSCM) DeleteRepository(ctx context.Context, id uint64) error {
+	repo, _, err := s.client.Repositories.GetByID(ctx, int(id))
+	if err != nil {
+		return err
+	}
+	if _, err := s.client.Repositories.Delete(ctx, repo.Owner.GetLogin(), repo.GetName()); err != nil {
+		return err
+	}
+	return nil
+}
