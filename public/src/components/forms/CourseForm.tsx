@@ -172,11 +172,10 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         });
     }
 
-    private handleOrgClick(e: any) {
-        const target = e.target;
-        if (target.hasAttribute("data-directoryid")) {
+    private handleOrgClick(dirId: number) {
+        if (dirId) {
             this.setState({
-                directoryid: parseInt(target.getAttribute("data-directoryid"), 10),
+                directoryid: dirId,
             });
         }
     }
@@ -199,8 +198,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         for (let i: number = 0; i < orgs.length; i++) {
             organisationDetails.push(
                 <button key={i} className="btn organisation"
-                        data-directoryid={orgs[i].id}
-                        onClick={(e) => this.handleOrgClick(e)}>
+                        onClick={() => this.handleOrgClick(orgs[i].id)}>
 
                     <div className="organisationInfo">
                         <img src={orgs[i].avatar}

@@ -1587,11 +1587,10 @@ class CourseForm extends React.Component {
             [name]: value,
         });
     }
-    handleOrgClick(e) {
-        const target = e.target;
-        if (target.hasAttribute("data-directoryid")) {
+    handleOrgClick(dirId) {
+        if (dirId) {
             this.setState({
-                directoryid: parseInt(target.getAttribute("data-directoryid"), 10),
+                directoryid: dirId,
             });
         }
     }
@@ -1608,7 +1607,7 @@ class CourseForm extends React.Component {
     updateOrganisationDivs(orgs) {
         const organisationDetails = [];
         for (let i = 0; i < orgs.length; i++) {
-            organisationDetails.push(React.createElement("button", { key: i, className: "btn organisation", "data-directoryid": orgs[i].id, onClick: (e) => this.handleOrgClick(e) },
+            organisationDetails.push(React.createElement("button", { key: i, className: "btn organisation", onClick: () => this.handleOrgClick(orgs[i].id) },
                 React.createElement("div", { className: "organisationInfo" },
                     React.createElement("img", { src: orgs[i].avatar, className: "img-rounded", width: 80, height: 80 }),
                     React.createElement("div", { className: "caption" }, orgs[i].path)),
