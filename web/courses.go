@@ -47,6 +47,14 @@ func ListCourses(db database.Database) echo.HandlerFunc {
 	}
 }
 
+// Default repository names.
+const (
+	InfoRepo       = "course-info"
+	AssignmentRepo = "assignments"
+	TestsRepo      = "tests"
+	SolutionsRepo  = "solutions"
+)
+
 // NewCourse creates a new course and associates it with an organization.
 func NewCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -71,6 +79,18 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
+		var paths = []string{InfoRepo, AssignmentRepo, TestsRepo, SolutionsRepo}
+		for _, path := range paths {
+			repo, err := s.CreateRepository(
+				ctx,
+				&scm.CreateRepositoryOptions{
+					Path:      path,
+					Directory: directory},
+			)
+			if err != nil {
+				return err
+			}
+		}
 
 		course := models.Course{
 			Name:        cr.Name,
