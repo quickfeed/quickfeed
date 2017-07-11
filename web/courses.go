@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
@@ -56,7 +57,7 @@ const (
 )
 
 // NewCourse creates a new course and associates it with an organization.
-func NewCourse(db database.Database) echo.HandlerFunc {
+func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var cr NewCourseRequest
 		if err := c.Bind(&cr); err != nil {
@@ -90,6 +91,7 @@ func NewCourse(db database.Database) echo.HandlerFunc {
 			if err != nil {
 				return err
 			}
+			logger.WithField("repo", repo).Println("Created new repository")
 		}
 
 		course := models.Course{
