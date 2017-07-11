@@ -4,6 +4,8 @@ package models
 type User struct {
 	ID uint64 `json:"id"`
 
+	IsAdmin bool `json:"isadmin"`
+
 	RemoteIdentities []RemoteIdentity `json:"remoteidentities,omitempty"`
 
 	Courses []Course `gorm:"many2many:user_courses;" json:"courses"`

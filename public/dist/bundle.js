@@ -3872,7 +3872,7 @@ class ServerProvider {
         return {
             firstname: "No name",
             lastname: "names",
-            isadmin: true,
+            isadmin: data.isadmin,
             id: data.id,
             personid: 1000,
             email: "no@name.com",
