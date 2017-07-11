@@ -60,3 +60,20 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 		Avatar: org.GetAvatarURL(),
 	}, nil
 }
+
+// CreateRepository implements the SCM interface.
+func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	repo, _, err := s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{Name: &opt.Path})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Repository{
+		ID:          uint64(repo.GetID()),
+		Path:        repo.GetName(),
+		WebURL:      repo.GetHTMLURL(),
+		SSHURL:      repo.GetSSHURL(),
+		HTTPURL:     repo.GetCloneURL(),
+		DirectoryID: opt.Directory.ID,
+	}, nil
+}

@@ -69,6 +69,30 @@ func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 	}, nil
 }
 
+// CreateRepository implements the SCM interface.
+func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
+	directoryID := int(opt.Directory.ID)
+	repo, _, err := s.client.Projects.CreateProject(
+		&gitlab.CreateProjectOptions{
+			Path:        &opt.Path,
+			NamespaceID: &directoryID,
+		},
+		gitlab.WithContext(ctx),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Repository{
+		ID:          uint64(repo.ID),
+		Path:        repo.Path,
+		WebURL:      repo.WebURL,
+		SSHURL:      repo.SSHURLToRepo,
+		HTTPURL:     repo.HTTPURLToRepo,
+		DirectoryID: opt.Directory.ID,
+	}, nil
+}
+
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)
