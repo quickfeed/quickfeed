@@ -17,7 +17,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = "scm"
-	app.Usage = "SCM-agnostic CLI tool"
+	app.Usage = "SCM-agnostic CLI tool."
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "provider",
