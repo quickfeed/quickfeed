@@ -1,5 +1,14 @@
 import * as Models from "../models";
-import { CourseUserState, IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
+import {
+    CourseUserState,
+    IAssignment,
+    ICourse,
+    ICourseUserLink,
+    ILabInfo,
+    IOrganization,
+    IUser,
+    IUserRelation,
+} from "../models";
 import { ICourseProvider } from "./CourseManager";
 
 import { IMap, MapHelper, mapify } from "../map";
@@ -92,9 +101,50 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.localCourseStudent.push({
             courseId: course.id,
             personId: user.id,
-            state: Models.CourseUserState.pending,
+            state: Models.CourseUserState.student,
         });
         return true;
+    }
+
+    /**
+     * Get all userlinks for a single course
+     * @param course The course userlinks should be retrived from
+     * @param state Optinal. The state of the relation, all if not present
+     */
+    public async getUserLinksForCourse(course: ICourse, state?: CourseUserState): Promise<ICourseUserLink[]> {
+        const users: ICourseUserLink[] = [];
+        for (const c of await this.getCoursesStudent()) {
+            if (course.id === c.courseId && (state === undefined || c.state === CourseUserState.student)) {
+                users.push(c);
+            }
+        }
+        return users;
+    }
+
+    public async getUsersAsMap(ids: number[]): Promise<IMap<IUser>> {
+        const returnUsers: IMap<IUser> = {};
+        const allUsers = await this.getAllUser();
+        ids.forEach((ele) => {
+            const temp = allUsers[ele];
+            if (temp) {
+                returnUsers[ele] = temp;
+            }
+        });
+        return returnUsers;
+    }
+
+    public async getUsersForCourse(course: Models.ICourse, state?: Models.CourseUserState): Promise<IUser[]> {
+        const courseStds: ICourseUserLink[] =
+            await this.getUserLinksForCourse(course, state);
+        const users = await this.getUsersAsMap(courseStds.map((e) => e.personId));
+        return courseStds.map<IUser>((link) => {
+            const user = users[link.personId];
+            if (!user) {
+                // TODO: See if we should have an error here or not
+                throw new Error("Link exist witout a user object");
+            }
+            return user;
+        });
     }
 
     public async createNewCourse(course: any): Promise<boolean> {

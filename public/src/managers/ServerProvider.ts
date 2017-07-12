@@ -49,6 +49,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
+    public async getUsersForCourse(course: ICourse, state?: CourseUserState | undefined): Promise<IUser[]> {
+        throw new Error("Method not implemented.");
+    }
+
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
         const result = await this.helper.get<any>("assignments?course=" + courseId.toString());
 

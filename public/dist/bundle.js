@@ -339,6 +339,29 @@ exports.NavigationHelper = NavigationHelper;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+function isCourse(value) {
+    return value
+        && typeof value.id === "number"
+        && typeof value.name === "string"
+        && typeof value.tag === "string";
+}
+exports.isCourse = isCourse;
+var CourseUserState;
+(function (CourseUserState) {
+    CourseUserState[CourseUserState["pending"] = 0] = "pending";
+    CourseUserState[CourseUserState["student"] = 1] = "student";
+    CourseUserState[CourseUserState["rejected"] = 2] = "rejected";
+    CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
+})(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -388,29 +411,6 @@ class ViewPage {
     }
 }
 exports.ViewPage = ViewPage;
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function isCourse(value) {
-    return value
-        && typeof value.id === "number"
-        && typeof value.name === "string"
-        && typeof value.tag === "string";
-}
-exports.isCourse = isCourse;
-var CourseUserState;
-(function (CourseUserState) {
-    CourseUserState[CourseUserState["pending"] = 0] = "pending";
-    CourseUserState[CourseUserState["student"] = 1] = "student";
-    CourseUserState[CourseUserState["rejected"] = 2] = "rejected";
-    CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
-})(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
 
 
 /***/ }),
@@ -1795,7 +1795,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const map_1 = __webpack_require__(5);
-const models_1 = __webpack_require__(4);
+const models_1 = __webpack_require__(3);
 class CourseManager {
     constructor(courseProvider) {
         this.courseProvider = courseProvider;
@@ -1819,20 +1819,26 @@ class CourseManager {
             return map_1.MapHelper.toArray(yield this.courseProvider.getCourses());
         });
     }
+    getCoursesWithState(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userCourses = yield this.getCoursesFor(user);
+            const allCourses = yield this.getCourses();
+            const newMap = allCourses.map((ele) => {
+                const link = userCourses.find((sub) => sub.id === ele.id) ? {
+                    courseId: ele.id, personId: user.id, state: models_1.CourseUserState.student,
+                } : undefined;
+                return {
+                    assignments: [],
+                    course: ele,
+                    link,
+                };
+            });
+            return newMap;
+        });
+    }
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.courseProvider.getCoursesFor(user, state);
-        });
-    }
-    getUserLinksForCourse(course, state) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const users = [];
-            for (const c of yield this.courseProvider.getCoursesStudent()) {
-                if (course.id === c.courseId && (state === undefined || c.state === models_1.CourseUserState.student)) {
-                    users.push(c);
-                }
-            }
-            return users;
         });
     }
     getAssignment(course, assignmentId) {
@@ -1875,19 +1881,13 @@ class CourseManager {
     }
     getStudentCourse(student, course) {
         return __awaiter(this, void 0, void 0, function* () {
-            const link = (yield this.courseProvider.getCoursesStudent())
-                .find((val) => val.courseId === course.id && val.personId === student.id);
-            if (link) {
-                const assignments = this.courseProvider.getAssignments(course.id);
-                const returnTemp = {
-                    link,
-                    course,
-                    assignments: [],
-                };
-                yield this.fillLinks(student, returnTemp);
-                return returnTemp;
-            }
-            return null;
+            const returnTemp = {
+                link: { personId: student.id, courseId: course.id, state: models_1.CourseUserState.student },
+                assignments: [],
+                course,
+            };
+            yield this.fillLinks(student, returnTemp);
+            return returnTemp;
         });
     }
     getUserSubmittions(student, assignment) {
@@ -1907,17 +1907,15 @@ class CourseManager {
     }
     getStudentCourses(student) {
         return __awaiter(this, void 0, void 0, function* () {
-            const allLinks = yield this.courseProvider.getCoursesStudent();
-            const allCourses = this.courseProvider.getCourses();
             const links = [];
-            map_1.MapHelper.forEach(yield allCourses, (course) => {
-                const curLink = allLinks.find((link) => link.courseId === course.id && link.personId === student.id);
+            const userCourses = yield this.courseProvider.getCoursesFor(student);
+            for (const course of userCourses) {
                 links.push({
                     assignments: [],
                     course,
-                    link: curLink,
+                    link: { courseId: course.id, personId: student.id, state: models_1.CourseUserState.student },
                 });
-            });
+            }
             for (const link of links) {
                 yield this.fillLinks(student, link);
             }
@@ -1926,15 +1924,9 @@ class CourseManager {
     }
     getUsersForCourse(course, userMan, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            const courseStds = yield this.getUserLinksForCourse(course, state);
-            const users = yield userMan.getUsersAsMap(courseStds.map((e) => e.personId));
-            return courseStds.map((link) => {
-                const user = users[link.personId];
-                if (!user) {
-                    throw new Error("Link exist witout a user object");
-                }
+            return (yield this.courseProvider.getUsersForCourse(course, state)).map((user) => {
                 return {
-                    link,
+                    link: { courseId: course.id, personId: user.id, state: models_1.CourseUserState.student },
                     user,
                 };
             });
@@ -1981,7 +1973,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const event_1 = __webpack_require__(7);
 const NavigationHelper_1 = __webpack_require__(2);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 function isILinkCollection(item) {
     if (item.item) {
         return true;
@@ -2152,8 +2144,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Models = __webpack_require__(4);
-const models_1 = __webpack_require__(4);
+const Models = __webpack_require__(3);
+const models_1 = __webpack_require__(3);
 const map_1 = __webpack_require__(5);
 class TempDataProvider {
     constructor() {
@@ -2230,9 +2222,46 @@ class TempDataProvider {
             this.localCourseStudent.push({
                 courseId: course.id,
                 personId: user.id,
-                state: Models.CourseUserState.pending,
+                state: Models.CourseUserState.student,
             });
             return true;
+        });
+    }
+    getUserLinksForCourse(course, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const users = [];
+            for (const c of yield this.getCoursesStudent()) {
+                if (course.id === c.courseId && (state === undefined || c.state === models_1.CourseUserState.student)) {
+                    users.push(c);
+                }
+            }
+            return users;
+        });
+    }
+    getUsersAsMap(ids) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const returnUsers = {};
+            const allUsers = yield this.getAllUser();
+            ids.forEach((ele) => {
+                const temp = allUsers[ele];
+                if (temp) {
+                    returnUsers[ele] = temp;
+                }
+            });
+            return returnUsers;
+        });
+    }
+    getUsersForCourse(course, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courseStds = yield this.getUserLinksForCourse(course, state);
+            const users = yield this.getUsersAsMap(courseStds.map((e) => e.personId));
+            return courseStds.map((link) => {
+                const user = users[link.personId];
+                if (!user) {
+                    throw new Error("Link exist witout a user object");
+                }
+                return user;
+            });
         });
     }
     createNewCourse(course) {
@@ -2720,7 +2749,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 class ErrorPage extends ViewPage_1.ViewPage {
     constructor() {
         super();
@@ -2764,7 +2793,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 const HelpView_1 = __webpack_require__(38);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
@@ -2855,7 +2884,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 class HomePage extends ViewPage_1.ViewPage {
     constructor() {
         super();
@@ -2886,8 +2915,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const models_1 = __webpack_require__(4);
-const ViewPage_1 = __webpack_require__(3);
+const models_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 const HelloView_1 = __webpack_require__(41);
 const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(11);
@@ -2943,7 +2972,7 @@ class StudentPage extends ViewPage_1.ViewPage {
             }
             return React.createElement("div", null,
                 React.createElement("h1", null, "Enrollment page"),
-                React.createElement(EnrollmentView_1.EnrollmentView, { courses: this.courses, onEnrollmentClick: (course) => {
+                React.createElement(EnrollmentView_1.EnrollmentView, { courses: yield this.courseMan.getCoursesWithState(curUser), onEnrollmentClick: (course) => {
                         this.courseMan.addUserToCourse(curUser, course);
                         this.navMan.refresh();
                     } }));
@@ -3088,7 +3117,7 @@ exports.HelloView = HelloView;
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const models_1 = __webpack_require__(4);
+const models_1 = __webpack_require__(3);
 class EnrollmentView extends React.Component {
     render() {
         return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
@@ -3134,10 +3163,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(11);
-const models_1 = __webpack_require__(4);
+const models_1 = __webpack_require__(3);
 const MemberView_1 = __webpack_require__(44);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
@@ -3296,7 +3325,7 @@ exports.TeacherPage = TeacherPage;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const models_1 = __webpack_require__(4);
+const models_1 = __webpack_require__(3);
 const components_1 = __webpack_require__(1);
 const UserView_1 = __webpack_require__(6);
 exports.UserView = UserView_1.UserView;
@@ -3353,7 +3382,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 const CourseView_1 = __webpack_require__(46);
 const UserView_1 = __webpack_require__(6);
 class AdminPage extends ViewPage_1.ViewPage {
@@ -3663,7 +3692,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 class LoginPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan) {
         super();
@@ -3720,7 +3749,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const map_1 = __webpack_require__(5);
-const models_1 = __webpack_require__(4);
+const models_1 = __webpack_require__(3);
 function request(url) {
     return __awaiter(this, void 0, void 0, function* () {
         const req = new XMLHttpRequest();
@@ -3761,6 +3790,11 @@ class ServerProvider {
                 return [];
             }
             return result.data;
+        });
+    }
+    getUsersForCourse(course, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
         });
     }
     getAssignments(courseId) {
