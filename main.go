@@ -12,6 +12,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
+	log "github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
@@ -41,6 +42,7 @@ func main() {
 
 	e := echo.New()
 	logger := logrus.New()
+	logger.Formatter = log.NewDevFormatter(logger.Formatter)
 	e.Logger = web.EchoLogger{Logger: logger}
 
 	entryPoint := filepath.Join(*public, "index.html")

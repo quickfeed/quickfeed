@@ -11,6 +11,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
+	log "github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/web"
 	"github.com/labstack/echo"
@@ -200,8 +201,10 @@ func assertCode(t *testing.T, haveCode, wantCode int) {
 }
 
 func envSet(env string) database.GormLogger {
+	logger := logrus.New()
+	logger.Formatter = log.NewDevFormatter(logger.Formatter)
 	if os.Getenv(env) != "" {
-		return database.Logger{Logger: logrus.New()}
+		return database.Logger{Logger: logger}
 	}
 	return nil
 }
