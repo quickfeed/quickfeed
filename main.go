@@ -25,6 +25,10 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
+
+	webhooks "gopkg.in/go-playground/webhooks.v3"
+	whgithub "gopkg.in/go-playground/webhooks.v3/github"
+	whgitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
 func main() {
@@ -83,6 +87,26 @@ func main() {
 
 	e.GET("/logout", auth.OAuth2Logout())
 
+	ghHook := whgithub.New(&whgithub.Config{Secret: os.Getenv("GITHUB_HOOK_SECRET")})
+	ghHook.RegisterEvents(web.GithubHook, whgithub.PushEvent)
+
+	glHook := whgitlab.New(&whgitlab.Config{Secret: os.Getenv("GITLAB_HOOK_SECRET")})
+	glHook.RegisterEvents(web.GitlabHook, whgitlab.PushEvents)
+
+	e.POST("/hook/:provider/events", func(c echo.Context) error {
+		var hook webhooks.Webhook
+		switch c.Param("provider") {
+		case "github":
+			hook = ghHook
+		case "gitlab":
+			hook = glHook
+		default:
+			return echo.ErrNotFound
+		}
+		webhooks.Handler(hook).ServeHTTP(c.Response(), c.Request())
+		return nil
+	})
+
 	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(db))
 	oauth2.GET("", auth.OAuth2Login(db))
 	oauth2.GET("/callback", auth.OAuth2Callback(db))
@@ -98,6 +122,7 @@ func main() {
 	api.GET("/users", web.GetUsers(db))
 
 	api.GET("/courses", web.ListCourses(db))
+	// TODO: Pass in webhook URLs and secrets for each registered provider.
 	api.POST("/courses", web.NewCourse(logger, db))
 	api.POST("/directories", web.ListDirectories())
 
