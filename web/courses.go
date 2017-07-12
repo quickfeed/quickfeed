@@ -71,13 +71,7 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 			return err
 		}
 		var assignments *[]models.Assignment
-		if id > 0 {
-			assignments, err = db.GetAssignmentsForCourse(id)
-		} else {
-			// TODO: This method is probobly not needed, for it
-			// does not make sence to request all assignemtns
-			assignments, err = db.GetAssignments()
-		}
+		assignments, err = db.GetAssignments(id)
 		if err != nil {
 			return err
 		}

@@ -16,7 +16,6 @@ type Database interface {
 	GetCoursesForUser(id uint64) (*[]models.Course, error)
 	EnrollUserInCourse(userID, courseID uint64) error
 
-	GetAssignments() (*[]models.Assignment, error)
-	GetAssignmentsForCourse(id uint64) (*[]models.Assignment, error)
+	GetAssignments(id uint64) (*[]models.Assignment, error)
 	CreateAssignment(assignment *models.Assignment) error
 }
