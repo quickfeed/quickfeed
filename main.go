@@ -154,7 +154,7 @@ func withProvider(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func getCallbackURL(baseURL string, provider string) string {
+func getCallbackURL(baseURL, provider string) string {
 	return "https://" + baseURL + "/auth/" + provider + "/callback"
 }
 
