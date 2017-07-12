@@ -107,3 +107,6 @@ func newRepository(id uint64, dir *Directory) *Repository {
 func (s *FakeSCM) DeleteRepository(context.Context, uint64) error {
 	return nil
 }
+
+// CreateHook implements the SCM interface.
+func (s *FakeSCM) CreateHook(context.Context, *CreateHookOptions) (err error) { return }

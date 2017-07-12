@@ -128,6 +128,15 @@ func (s *GitlabSCM) DeleteRepository(ctx context.Context, id uint64) (err error)
 	return
 }
 
+// CreateHook implements the SCM interface.
+func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
+	_, _, err = s.client.Projects.AddProjectHook(strconv.FormatUint(opt.Repository.ID, 10), &gitlab.AddProjectHookOptions{
+		URL:   &opt.URL,
+		Token: &opt.Secret,
+	}, gitlab.WithContext(ctx))
+	return
+}
+
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)

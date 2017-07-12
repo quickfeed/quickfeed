@@ -20,6 +20,8 @@ type SCM interface {
 	GetRepositories(context.Context, *Directory) ([]*Repository, error)
 	// Delete repository.
 	DeleteRepository(context.Context, uint64) error
+	// Creates a new webhook.
+	CreateHook(context.Context, *CreateHookOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -73,6 +75,14 @@ type Repository struct {
 type CreateRepositoryOptions struct {
 	Path      string
 	Directory *Directory
+}
+
+// CreateHookOptions contains information on how to create a webhook.
+type CreateHookOptions struct {
+	URL    string
+	Secret string
+
+	Repository *Repository
 }
 
 // ErrNotSupported is returned when the source code management solution used

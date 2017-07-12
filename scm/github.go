@@ -124,3 +124,18 @@ func (s *GithubSCM) DeleteRepository(ctx context.Context, id uint64) error {
 	}
 	return nil
 }
+
+// CreateHook implements the SCM interface.
+func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
+	name := "web"
+	_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, &github.Hook{
+		Name: &name,
+		Config: map[string]interface{}{
+			"url":          opt.URL,
+			"secret":       opt.Secret,
+			"content_type": "json",
+			"insecure_ssl": "0",
+		},
+	})
+	return
+}
