@@ -71,6 +71,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	return &Repository{
 		ID:          uint64(repo.GetID()),
 		Path:        repo.GetName(),
+		Owner:       repo.Owner.GetLogin(), // TODO: Guard against Owner = nil.
 		WebURL:      repo.GetHTMLURL(),
 		SSHURL:      repo.GetSSHURL(),
 		HTTPURL:     repo.GetCloneURL(),
@@ -101,6 +102,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, directory *Directory) (
 		repositories = append(repositories, &Repository{
 			ID:          uint64(repo.GetID()),
 			Path:        repo.GetName(),
+			Owner:       repo.Owner.GetLogin(), // TODO: Guard against Owner = nil.
 			WebURL:      repo.GetHTMLURL(),
 			SSHURL:      repo.GetSSHURL(),
 			HTTPURL:     repo.GetCloneURL(),

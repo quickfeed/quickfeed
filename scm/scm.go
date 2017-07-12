@@ -55,6 +55,9 @@ type Repository struct {
 	ID   uint64
 	Path string
 
+	// Only used by GitHub.
+	Owner string
+
 	// Repository website.
 	WebURL string
 	// SSH clone URL.
