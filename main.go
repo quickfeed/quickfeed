@@ -125,6 +125,7 @@ func main() {
 	// TODO: Pass in webhook URLs and secrets for each registered provider.
 	api.POST("/courses", web.NewCourse(logger, db))
 	api.POST("/directories", web.ListDirectories())
+	api.GET("/assignments", web.ListAssignments(db))
 
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)

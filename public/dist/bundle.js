@@ -1807,7 +1807,7 @@ class CourseManager {
     }
     getCourse(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const a = (yield this.getCourses())[id];
+            const a = (yield this.courseProvider.getCourses())[id];
             if (a) {
                 return a;
             }
@@ -1819,34 +1819,9 @@ class CourseManager {
             return map_1.MapHelper.toArray(yield this.courseProvider.getCourses());
         });
     }
-    getRelationsFor(user, state) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const cLinks = [];
-            for (const c of yield this.courseProvider.getCoursesStudent()) {
-                if (user.id === c.personId && (state === undefined || c.state === models_1.CourseUserState.student)) {
-                    cLinks.push(c);
-                }
-            }
-            return cLinks;
-        });
-    }
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            const cLinks = [];
-            for (const c of yield this.courseProvider.getCoursesStudent()) {
-                if (user.id === c.personId && (state === undefined || c.state === models_1.CourseUserState.student)) {
-                    cLinks.push(c);
-                }
-            }
-            const courses = [];
-            const tempCourses = yield this.getCourses();
-            for (const link of cLinks) {
-                const c = tempCourses[link.courseId];
-                if (c) {
-                    courses.push(c);
-                }
-            }
-            return courses;
+            return this.courseProvider.getCoursesFor(user, state);
         });
     }
     getUserLinksForCourse(course, state) {
@@ -2178,6 +2153,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Models = __webpack_require__(4);
+const models_1 = __webpack_require__(4);
 const map_1 = __webpack_require__(5);
 class TempDataProvider {
     constructor() {
@@ -2311,6 +2287,26 @@ class TempDataProvider {
     getLoggedInUser() {
         return __awaiter(this, void 0, void 0, function* () {
             return this.currentLoggedIn;
+        });
+    }
+    getCoursesFor(user, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const cLinks = [];
+            const temp = yield this.getCoursesStudent();
+            for (const c of temp) {
+                if (user.id === c.personId && (state === undefined || c.state === models_1.CourseUserState.student)) {
+                    cLinks.push(c);
+                }
+            }
+            const courses = [];
+            const tempCourses = yield this.getCourses();
+            for (const link of cLinks) {
+                const c = tempCourses[link.courseId];
+                if (c) {
+                    courses.push(c);
+                }
+            }
+            return courses;
         });
     }
     addLocalUsers() {
@@ -3724,6 +3720,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const map_1 = __webpack_require__(5);
+const models_1 = __webpack_require__(4);
 function request(url) {
     return __awaiter(this, void 0, void 0, function* () {
         const req = new XMLHttpRequest();
@@ -3754,18 +3751,34 @@ class ServerProvider {
             if (result.statusCode !== 200 || !result.data) {
                 return {};
             }
-            const data = JSON.parse(JSON.stringify(result.data).toLowerCase());
-            return map_1.mapify(data, (ele) => ele.id);
+            return map_1.mapify(result.data, (ele) => ele.id);
+        });
+    }
+    getCoursesFor(user, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield this.helper.get("courses?user=" + user.id);
+            if (result.statusCode !== 200 || !result.data) {
+                return [];
+            }
+            return result.data;
         });
     }
     getAssignments(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            const result = yield this.helper.get("assignments?course=" + courseId.toString());
+            if (result.statusCode !== 200 || !result.data) {
+                console.log(result);
+                throw new Error("Problem with the request");
+            }
+            return map_1.mapify(result.data, (ele) => {
+                ele.deadline = new Date(2017, 7, 18);
+                return ele.id;
+            });
         });
     }
     getCoursesStudent() {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            return [{ courseId: 1, personId: 1, state: models_1.CourseUserState.student }];
         });
     }
     addUserToCourse(user, course) {
@@ -3799,7 +3812,7 @@ class ServerProvider {
     }
     getAllLabInfos() {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            return {};
         });
     }
     tryLogin(username, password) {

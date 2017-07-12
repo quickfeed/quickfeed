@@ -14,3 +14,10 @@ type Course struct {
 
 	Users []User `gorm:"many2many:user_courses;"`
 }
+
+// Assignment represents a single assignment
+type Assignment struct {
+	ID       uint64 `json:"id"`
+	CourseID uint64 `json:"courseid"`
+	Name     string `json:"name"`
+}

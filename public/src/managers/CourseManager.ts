@@ -20,6 +20,8 @@ export interface ICourseProvider {
     getCourses(): Promise<IMap<ICourse>>;
     getAssignments(courseId: number): Promise<IMap<IAssignment>>;
     getCoursesStudent(): Promise<ICourseUserLink[]>;
+    getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]>;
+
     addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
     changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean>;
 
@@ -53,7 +55,7 @@ export class CourseManager {
      * @param id The id of the course
      */
     public async getCourse(id: number): Promise<ICourse | null> {
-        const a = (await this.getCourses())[id];
+        const a = (await this.courseProvider.getCourses())[id];
         if (a) {
             return a;
         }
@@ -68,43 +70,12 @@ export class CourseManager {
     }
 
     /**
-     * The all relations for a user to other courses
-     * @param user The users relations
-     * @param state Optional. The state the relations should be in
-     */
-    public async getRelationsFor(user: IUser, state?: CourseUserState): Promise<ICourseUserLink[]> {
-        const cLinks: ICourseUserLink[] = [];
-
-        for (const c of await this.courseProvider.getCoursesStudent()) {
-            if (user.id === c.personId && (state === undefined || c.state === CourseUserState.student)) {
-                cLinks.push(c);
-            }
-        }
-        return cLinks;
-    }
-
-    /**
      * Get all courses related to a user
      * @param user The user to get courses to
      * @param state Optional. The state the relations should be in, all if not present
      */
     public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]> {
-        const cLinks: ICourseUserLink[] = [];
-
-        for (const c of await this.courseProvider.getCoursesStudent()) {
-            if (user.id === c.personId && (state === undefined || c.state === CourseUserState.student)) {
-                cLinks.push(c);
-            }
-        }
-        const courses: ICourse[] = [];
-        const tempCourses = await this.getCourses();
-        for (const link of cLinks) {
-            const c = tempCourses[link.courseId];
-            if (c) {
-                courses.push(c);
-            }
-        }
-        return courses;
+        return this.courseProvider.getCoursesFor(user, state);
     }
 
     /**

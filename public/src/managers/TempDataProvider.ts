@@ -1,5 +1,5 @@
 import * as Models from "../models";
-import { IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
+import { CourseUserState, IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
 import { ICourseProvider } from "./CourseManager";
 
 import { IMap, MapHelper, mapify } from "../map";
@@ -142,6 +142,25 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async getLoggedInUser(): Promise<IUser | null> {
         return this.currentLoggedIn;
+    }
+
+    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]> {
+        const cLinks: ICourseUserLink[] = [];
+        const temp = await this.getCoursesStudent();
+        for (const c of temp) {
+            if (user.id === c.personId && (state === undefined || c.state === CourseUserState.student)) {
+                cLinks.push(c);
+            }
+        }
+        const courses: ICourse[] = [];
+        const tempCourses = await this.getCourses();
+        for (const link of cLinks) {
+            const c = tempCourses[link.courseId];
+            if (c) {
+                courses.push(c);
+            }
+        }
+        return courses;
     }
 
     private addLocalUsers() {

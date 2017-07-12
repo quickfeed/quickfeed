@@ -35,17 +35,35 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         if (result.statusCode !== 200 || !result.data) {
             return {};
         }
-        const data = JSON.parse(JSON.stringify(result.data).toLowerCase()) as ICourse[];
-        return mapify(data, (ele) => ele.id);
+        // const data = JSON.parse(JSON.stringify(result.data).toLowerCase()) as ICourse[];
+        return mapify(result.data, (ele) => ele.id);
         // throw new Error("Method not implemented.");
     }
 
+    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]> {
+        const result = await this.helper.get<any>("courses?user=" + user.id);
+        if (result.statusCode !== 200 || !result.data) {
+            return [];
+        }
+        // const data = JSON.parse(JSON.stringify(result.data).toLowerCase()) as ICourse[];
+        return result.data;
+    }
+
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
-        throw new Error("Method not implemented.");
+        const result = await this.helper.get<any>("assignments?course=" + courseId.toString());
+
+        if (result.statusCode !== 200 || !result.data) {
+            console.log(result);
+            throw new Error("Problem with the request");
+        }
+        return mapify(result.data as IAssignment[], (ele) => {
+            ele.deadline = new Date(2017, 7, 18);
+            return ele.id;
+        });
     }
 
     public async getCoursesStudent(): Promise<ICourseUserLink[]> {
-        throw new Error("Method not implemented.");
+        return [{ courseId: 1, personId: 1, state: CourseUserState.student }];
     }
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
@@ -74,7 +92,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getAllLabInfos(): Promise<IMap<ILabInfo>> {
-        throw new Error("Method not implemented.");
+        return {};
     }
 
     public async tryLogin(username: string, password: string): Promise<IUser | null> {

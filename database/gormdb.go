@@ -28,6 +28,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&models.User{},
 		&models.RemoteIdentity{},
 		&models.Course{},
+		&models.Assignment{},
 	)
 
 	return &GormDB{conn}, nil
@@ -153,6 +154,15 @@ func (db *GormDB) GetCoursesForUser(userID uint64) (*[]models.Course, error) {
 		return nil, err
 	}
 	return &user.Courses, nil
+}
+
+// GetAssignments implements the Database interface
+func (db *GormDB) GetAssignments() (*[]models.Assignment, error) {
+	var assignments []models.Assignment
+	if err := db.conn.Find(&assignments).Error; err != nil {
+		return nil, err
+	}
+	return &assignments, nil
 }
 
 // EnrollUserInCourse implements the Database interface.

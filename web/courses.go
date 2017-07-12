@@ -61,6 +61,18 @@ func ListCourses(db database.Database) echo.HandlerFunc {
 	}
 }
 
+// ListAssignments lists all the assignment found in a place
+func ListAssignments(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		assignments, err := db.GetAssignments()
+		if err != nil {
+			return err
+		}
+
+		return c.JSONPretty(http.StatusOK, assignments, "\t")
+	}
+}
+
 // Default repository names.
 const (
 	InfoRepo       = "course-info"
