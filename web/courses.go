@@ -52,18 +52,21 @@ func (eur *EnrollUserRequest) valid() bool {
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// TODO check if user has rights to view other course ;
-		// make tests and ensure that a user only gets its own courses and nobody elses
-		id, err := strconv.ParseUint(c.QueryParam("user"), 10, 64)
+		userID := c.QueryParam("user")
+		if len(userID) == 0 {
+			courses, err := db.GetCourses()
+			if err != nil {
+				return err
+			}
+			return c.JSONPretty(http.StatusOK, courses, "\t")
+		}
+
+		id, err := strconv.ParseUint(userID, 10, 64)
 		if err != nil {
 			return err
 		}
 
-		var courses *[]models.Course
-		if id > 0 {
-			courses, err = db.GetCoursesForUser(id)
-		} else {
-			courses, err = db.GetCourses()
-		}
+		courses, err := db.GetCoursesForUser(id)
 		if err != nil {
 			return err
 		}

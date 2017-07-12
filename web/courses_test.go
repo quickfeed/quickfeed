@@ -1,7 +1,7 @@
 package web_test
 
 import (
-	"fmt"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -19,131 +19,85 @@ import (
 )
 
 const (
-	listCoursesURL = "/courses?user=1"
+	listCoursesURL        = "/courses"
+	listCoursesForUserURL = "/courses?user=1"
 )
 
-func TestListCourses(t *testing.T) {
-	const (
-		uID  = 1
-		rID1 = 1
-		rID2 = 2
+const (
+	uID  = 1
+	rID1 = 1
 
-		secret1   = "123"
-		provider1 = "github"
-		remoteID1 = 10
+	secret1   = "123"
+	provider1 = "github"
+	remoteID1 = 10
+)
 
-		cID1  = 100
-		name1 = "Distributed Systems"
-		code1 = "DAT520"
-		y1    = 2018
-		tag1  = "Spring"
+const (
+	cID1  = 100
+	name1 = "Distributed Systems"
+	code1 = "DAT520"
+	y1    = 2018
+	tag1  = "Spring"
 
-		cID2  = 101
-		name2 = "Operating Systems"
-		code2 = "DAT320"
-		y2    = 2017
-		tag2  = "Fall"
+	cID2  = 101
+	name2 = "Operating Systems"
+	code2 = "DAT320"
+	y2    = 2017
+	tag2  = "Fall"
 
-		cID3  = 102
-		name3 = "New Systems"
-		code3 = "DATx20"
-		y3    = 2019
-		tag3  = "Fall"
-	)
-	var (
-		wantUser1 = &models.User{
-			ID: uID,
-			RemoteIdentities: []models.RemoteIdentity{{
-				ID:          rID1,
-				Provider:    provider1,
-				RemoteID:    remoteID1,
-				AccessToken: secret1,
-				UserID:      uID,
-			}},
-		}
+	cID3  = 102
+	name3 = "New Systems"
+	code3 = "DATx20"
+	y3    = 2019
+	tag3  = "Fall"
+)
 
-		wantCourse1 = &models.Course{
+var (
+	allCourses = []*models.Course{
+		&models.Course{
 			ID:   cID1,
 			Name: name1,
 			Code: code1,
 			Year: y1,
 			Tag:  tag1,
-		}
-
-		wantCourse2 = &models.Course{
+		},
+		&models.Course{
 			ID:   cID2,
 			Name: name2,
 			Code: code2,
 			Year: y2,
 			Tag:  tag2,
-		}
-
-		wantCourse3 = &models.Course{
+		}, &models.Course{
 			ID:   cID3,
 			Name: name3,
 			Code: code3,
 			Year: y3,
 			Tag:  tag3,
-		}
-	)
+		},
+	}
+)
 
+// Run with LOGDB=true go test -v to see database statements
+
+func TestListCoursesInSystem(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(user1, wantUser1) {
-		t.Errorf("have user %+v want %+v", user1, wantUser1)
-	}
-
-	err = db.CreateCourse(wantCourse1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = db.CreateCourse(wantCourse2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = db.CreateCourse(wantCourse3)
-	if err != nil {
-		t.Fatal(err)
+	for _, course := range allCourses {
+		err := db.CreateCourse(course)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 	courses, err := db.GetCourses()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("courses: %v \n", courses)
-
-	courseForUser, err := db.GetCoursesForUser(uID)
-	if err != nil {
-		t.Fatal(err)
+	for i, c := range *courses {
+		if !reflect.DeepEqual(c, *allCourses[i]) {
+			t.Errorf("have course %+v want %+v", c, *allCourses[i])
+		}
 	}
-	fmt.Printf("courseForUser: %v \n", courseForUser)
-
-	err = db.EnrollUserInCourse(uID, cID1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	courseForUser, err = db.GetCoursesForUser(uID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("courseForUser: %v \n", courseForUser)
-	err = db.EnrollUserInCourse(uID, cID2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	courseForUser, err = db.GetCoursesForUser(uID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("courseForUser: %v \n", courseForUser)
-
-	// if !reflect.DeepEqual(course1, wantCourse1) {
-	// 	t.Errorf("have course %+v want %+v", course1, wantCourse1)
-	// }
 
 	r := httptest.NewRequest(http.MethodGet, listCoursesURL, nil)
 	w := httptest.NewRecorder()
@@ -154,12 +108,113 @@ func TestListCourses(t *testing.T) {
 	if err := coursesHandler(c); err != nil {
 		t.Error(err)
 	}
-	fmt.Printf("list courses: %v %v\n", w.Body, w.Header())
+	var gotCourses []*models.Course
+	json.Unmarshal(w.Body.Bytes(), &gotCourses)
+	for i, c := range gotCourses {
+		if !reflect.DeepEqual(c, allCourses[i]) {
+			t.Errorf("have course %+v want %+v", c, allCourses[i])
+		}
+	}
+	assertCode(t, w.Code, http.StatusOK)
+}
 
-	// location := w.Header().Get("Location")
-	// if location != loginRedirect {
-	// 	t.Errorf("have Location '%v' want '%v'", location, loginRedirect)
-	// }
+func TestListCoursesForUserNoEnrolledCourses(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	_, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, course := range allCourses {
+		err = db.CreateCourse(course)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	courses, err := db.GetCourses()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, c := range *courses {
+		if !reflect.DeepEqual(c, *allCourses[i]) {
+			t.Errorf("have course %+v want %+v", c, *allCourses[i])
+		}
+	}
+
+	coursesForUser, err := db.GetCoursesForUser(uID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(*coursesForUser) > 0 {
+		t.Errorf("got %d courses, want 0", len(*coursesForUser))
+	}
+
+	r := httptest.NewRequest(http.MethodGet, listCoursesForUserURL, nil)
+	w := httptest.NewRecorder()
+	e := echo.New()
+	c := e.NewContext(r, w)
+
+	coursesHandler := web.ListCourses(db)
+	if err := coursesHandler(c); err != nil {
+		t.Error(err)
+	}
+	var gotCourses []*models.Course
+	json.Unmarshal(w.Body.Bytes(), &gotCourses)
+	if len(gotCourses) > 0 {
+		t.Errorf("got %d courses, want 0", len(gotCourses))
+	}
+	assertCode(t, w.Code, http.StatusOK)
+}
+
+func TestListCoursesForUserWithTwoEnrolledCourses(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	_, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, course := range allCourses {
+		err = db.CreateCourse(course)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// enroll user in two of the three courses
+	wantCourses := []*models.Course{allCourses[0], allCourses[1]}
+	for _, c := range wantCourses {
+		err = db.EnrollUserInCourse(uID, c.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	// check that database returns exectly two of three courses for user
+	coursesForUser, err := db.GetCoursesForUser(uID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(*coursesForUser) != len(wantCourses) {
+		t.Errorf("got %d courses, want %d", len(*coursesForUser), len(wantCourses))
+	}
+
+	r := httptest.NewRequest(http.MethodGet, listCoursesForUserURL, nil)
+	w := httptest.NewRecorder()
+	e := echo.New()
+	c := e.NewContext(r, w)
+
+	coursesHandler := web.ListCourses(db)
+	if err := coursesHandler(c); err != nil {
+		t.Error(err)
+	}
+	var gotCourses []*models.Course
+	json.Unmarshal(w.Body.Bytes(), &gotCourses)
+	for i, c := range gotCourses {
+		if !reflect.DeepEqual(c, wantCourses[i]) {
+			t.Errorf("have course %+v want %+v", c, wantCourses[i])
+		}
+	}
 	assertCode(t, w.Code, http.StatusOK)
 }
 
