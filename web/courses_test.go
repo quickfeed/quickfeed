@@ -1,4 +1,4 @@
-package web
+package web_test
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
+	"github.com/autograde/aguis/web"
 	"github.com/labstack/echo"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -148,7 +149,7 @@ func TestListCourses(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	coursesHandler := ListCourses(db)
+	coursesHandler := web.ListCourses(db)
 	if err := coursesHandler(c); err != nil {
 		t.Error(err)
 	}
