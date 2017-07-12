@@ -64,11 +64,23 @@ func ListCourses(db database.Database) echo.HandlerFunc {
 // ListAssignments lists all the assignment found in a place
 func ListAssignments(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		assignments, err := db.GetAssignments()
+		// TODO check if the user has right to show the assignments.
+		// same as courses above, should not return to unauthorised users
+		id, err := strconv.ParseUint(c.QueryParam("course"), 10, 64)
 		if err != nil {
 			return err
 		}
-
+		var assignments *[]models.Assignment
+		if id > 0 {
+			assignments, err = db.GetAssignmentsForCourse(id)
+		} else {
+			// TODO: This method is probobly not needed, for it
+			// does not make sence to request all assignemtns
+			assignments, err = db.GetAssignments()
+		}
+		if err != nil {
+			return err
+		}
 		return c.JSONPretty(http.StatusOK, assignments, "\t")
 	}
 }

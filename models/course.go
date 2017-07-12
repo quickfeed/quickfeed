@@ -13,6 +13,8 @@ type Course struct {
 	DirectoryID uint64 `json:"directoryid"`
 
 	Users []User `gorm:"many2many:user_courses;"`
+
+	Assignments []Assignment `json:"assignments,omitempty"`
 }
 
 // Assignment represents a single assignment

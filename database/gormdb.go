@@ -165,6 +165,20 @@ func (db *GormDB) GetAssignments() (*[]models.Assignment, error) {
 	return &assignments, nil
 }
 
+// GetAssignmentsForCourse implements the Database interface
+func (db *GormDB) GetAssignmentsForCourse(id uint64) (*[]models.Assignment, error) {
+	var course models.Course
+	if err := db.conn.Preload("Assignments").First(&course, id).Error; err != nil {
+		return nil, err
+	}
+	return &(course.Assignments), nil
+}
+
+// CreateAssignment implements the Database interface
+func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
+	return db.conn.Create(assignment).Error
+}
+
 // EnrollUserInCourse implements the Database interface.
 func (db *GormDB) EnrollUserInCourse(userID, courseID uint64) error {
 	return db.conn.Model(models.Course{ID: courseID}).Association("Users").Append(models.User{ID: userID}).Error
