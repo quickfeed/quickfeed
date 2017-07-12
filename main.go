@@ -126,6 +126,7 @@ func main() {
 	api.POST("/courses", web.NewCourse(logger, db))
 	api.POST("/directories", web.ListDirectories())
 	api.GET("/assignments", web.ListAssignments(db))
+	api.POST("/enrolluser", web.EnrollUser(db))
 
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)

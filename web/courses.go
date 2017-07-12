@@ -38,6 +38,16 @@ func (cr *NewCourseRequest) valid() bool {
 		cr.Tag != ""
 }
 
+// EnrollUserRequest represent a request for enrolling a user to a course
+type EnrollUserRequest struct {
+	UserID   uint64 `json:"userid"`
+	CourseID uint64 `json:"courseid"`
+}
+
+func (eur *EnrollUserRequest) valid() bool {
+	return eur.CourseID != 0 && eur.UserID != 0
+}
+
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -139,5 +149,24 @@ func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 		}
 
 		return c.JSONPretty(http.StatusCreated, &course, "\t")
+	}
+}
+
+// EnrollUser enrolls a user to a course
+func EnrollUser(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		var eur EnrollUserRequest
+		if err := c.Bind(&eur); err != nil {
+			return err
+		}
+
+		if !eur.valid() {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+
+		if err := db.EnrollUserInCourse(eur.UserID, eur.CourseID); err != nil {
+			return nil
+		}
+		return c.NoContent(http.StatusCreated)
 	}
 }

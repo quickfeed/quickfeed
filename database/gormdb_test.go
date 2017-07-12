@@ -71,6 +71,17 @@ func TestGormDBGetAssignment(t *testing.T) {
 	}
 }
 
+func TestGormDBEnrollUser(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	// TODO: this should in teory fail because user with
+	// userid=1 and courseid=1 does not exist
+	if err := db.EnrollUserInCourse(1, 1); err != nil {
+		t.Errorf("have error '%v' wanted '%v'", err, nil)
+	}
+}
+
 func TestGormDBDuplicateIdentity(t *testing.T) {
 	const (
 		uID  = 1

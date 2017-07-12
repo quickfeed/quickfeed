@@ -71,7 +71,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
-        throw new Error("Method not implemented.");
+        const resp = await this.helper.post<{ courseid: number, userid: number }, undefined>
+            ("/enrolluser", { courseid: course.id, userid: user.id });
+        if (resp.statusCode === 201) {
+            return true;
+        }
+        return false;
     }
 
     public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {

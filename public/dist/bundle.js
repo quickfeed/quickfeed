@@ -3817,7 +3817,11 @@ class ServerProvider {
     }
     addUserToCourse(user, course) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            const resp = yield this.helper.post("/enrolluser", { courseid: course.id, userid: user.id });
+            if (resp.statusCode === 201) {
+                return true;
+            }
+            return false;
         });
     }
     changeUserState(link, state) {
