@@ -32,7 +32,7 @@ func Logger(l logrus.FieldLogger) echo.MiddlewareFunc {
 				bytesIn = "0"
 			}
 
-			logrus.WithFields(map[string]interface{}{
+			l.WithFields(map[string]interface{}{
 				"time_rfc3339":  time.Now().Format(time.RFC3339),
 				"remote_ip":     c.RealIP(),
 				"host":          r.Host,
