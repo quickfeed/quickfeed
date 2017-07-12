@@ -17,13 +17,13 @@
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "6a1fa9404c0aebf36c879bc50152edcc953910d2"
+  revision = "0a4f71a498b7c4812f64969510bcb4eca251e33a"
 
 [[projects]]
   branch = "master"
   name = "github.com/google/go-github"
   packages = ["github"]
-  revision = "e42c33570031cfbf2d76867b7f83ae2d21fcf168"
+  revision = "00874eae3fbfc6750bfff364b1897101684d2f30"
 
 [[projects]]
   branch = "master"
@@ -143,7 +143,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp"]
-  revision = "054b33e6527139ad5b1ec2f6232c3b175bd9a30c"
+  revision = "f01ecb60fe3835d80d9a0b7b2bf24b228c89260e"
 
 [[projects]]
   branch = "master"
@@ -166,6 +166,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "561209f6dc0dbc4d13d9b1f33f180c1e54637f3d5a66da797b612515748ad2dc"
+  inputs-digest = "f9a5d8b74309cb854c90b51241afb427ff70fb3b228eb2212c9bb1f51fea97f4"
   solver-name = "gps-cdcl"
   solver-version = 1
