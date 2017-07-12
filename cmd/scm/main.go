@@ -82,6 +82,39 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:  "create",
+			Usage: "Create commands.",
+			Subcommands: cli.Commands{
+				{
+					Name:  "hook",
+					Usage: "Create webhook.",
+					Flags: []cli.Flag{
+						cli.Uint64Flag{
+							Name:  "id",
+							Usage: "Repository id. [required by GitLab]",
+						},
+						cli.StringFlag{
+							Name:  "owner",
+							Usage: "Repository owner [required by GitHub]",
+						},
+						cli.StringFlag{
+							Name:  "repo",
+							Usage: "Repository name. [required by GitHub]",
+						},
+						cli.StringFlag{
+							Name:  "secret",
+							Usage: "Webhook secret",
+						},
+						cli.StringFlag{
+							Name:  "url",
+							Usage: "Webhook endpoint URL [required]",
+						},
+					},
+					Action: createHook(&client),
+				},
+			},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -168,6 +201,24 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 		return cli.NewExitError("not implemented", 9)
 	}
 }
+
+// TODO: Validate input.
+func createHook(client *scm.SCM) cli.ActionFunc {
+	ctx := context.Background()
+
+	return func(c *cli.Context) error {
+		return (*client).CreateHook(ctx, &scm.CreateHookOptions{
+			URL:    c.String("url"),
+			Secret: c.String("secret"),
+			Repository: &scm.Repository{
+				ID:    c.Uint64("id"),
+				Path:  c.String("repo"),
+				Owner: c.String("owner"),
+			},
+		})
+	}
+}
+
 func toJSON(v interface{}) (string, error) {
 	b, err := json.MarshalIndent(v, "", "\t")
 	if err != nil {
