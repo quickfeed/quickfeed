@@ -62,6 +62,15 @@ func TestGormDBGetUsers(t *testing.T) {
 	}
 }
 
+func TestGormDBGetAssignment(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	if _, err := db.GetAssignments(10); err != gorm.ErrRecordNotFound {
+		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
+}
+
 func TestGormDBDuplicateIdentity(t *testing.T) {
 	const (
 		uID  = 1
