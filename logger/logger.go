@@ -23,6 +23,6 @@ func (f IgnoreFieldsFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 func NewDevFormatter(formatter logrus.Formatter) IgnoreFieldsFormatter {
 	return IgnoreFieldsFormatter{
 		Formatter: formatter,
-		Ignore:    []string{"latency", "latency_human"},
+		Ignore:    []string{"latency", "latency_human", "bytes_in", "bytes_out", "referer"},
 	}
 }
