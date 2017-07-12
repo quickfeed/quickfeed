@@ -95,7 +95,14 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 
 // GetRepositories implements the SCM interface.
 func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
-	repos, _, err := s.client.Groups.ListGroupProjects(directory.ID, nil, gitlab.WithContext(ctx))
+	var gid interface{}
+	if directory.Path != "" {
+		gid = directory.Path
+	} else {
+		gid = strconv.FormatUint(directory.ID, 10)
+	}
+
+	repos, _, err := s.client.Groups.ListGroupProjects(gid, nil, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
