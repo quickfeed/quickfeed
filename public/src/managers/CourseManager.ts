@@ -201,19 +201,15 @@ export class CourseManager {
      * @param student The student to load the information for
      */
     public async getStudentCourses(student: IUser): Promise<IUserCourse[]> {
-        const allLinks = await this.courseProvider.getCoursesStudent();
-        const allCourses = this.courseProvider.getCourses();
         const links: IUserCourse[] = [];
-
-        MapHelper.forEach(await allCourses, (course) => {
-            const curLink = allLinks.find((link) =>
-                link.courseId === course.id && link.personId === student.id);
+        const userCourses = await this.courseProvider.getCoursesFor(student);
+        for (const course of userCourses) {
             links.push({
                 assignments: [],
                 course,
-                link: curLink,
+                link: { courseId: course.id, personId: student.id, state: CourseUserState.student },
             });
-        });
+        }
 
         for (const link of links) {
             await this.fillLinks(student, link);
