@@ -24,6 +24,3 @@ type RemoteIdentity struct {
 
 	UserID uint64 `json:"userid"`
 }
-
-// db.Model(&course).Related(&users)
-//// SELECT * FROM "users" INNER JOIN "user_courses" ON "user_courses"."user_id" = "users"."id" WHERE ("user_courses"."course_id" IN ('111'))
