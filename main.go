@@ -154,8 +154,16 @@ func withProvider(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func getEventsURL(baseURL, provider string) string {
+	return getURL(baseURL, "hook", provider, "/events")
+}
+
 func getCallbackURL(baseURL, provider string) string {
-	return "https://" + baseURL + "/auth/" + provider + "/callback"
+	return getURL(baseURL, "auth", provider, "/callback")
+}
+
+func getURL(baseURL, route, provider, endpoint string) string {
+	return "https://" + baseURL + "/" + route + "/" + provider + "/" + endpoint
 }
 
 func envString(env, fallback string) string {
