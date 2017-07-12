@@ -91,7 +91,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, directory *Directory) (
 		path = directory.Path
 	}
 
-	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, &github.RepositoryListByOrgOptions{})
+	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, nil)
 	if err != nil {
 		return nil, err
 	}

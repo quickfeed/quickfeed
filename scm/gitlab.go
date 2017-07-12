@@ -21,7 +21,7 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 
 // ListDirectories implements the SCM interface.
 func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
-	groups, _, err := s.client.Groups.ListGroups(&gitlab.ListGroupsOptions{}, gitlab.WithContext(ctx))
+	groups, _, err := s.client.Groups.ListGroups(nil, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 
 // GetRepositories implements the SCM interface.
 func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
-	repos, _, err := s.client.Groups.ListGroupProjects(directory.ID, &gitlab.ListGroupProjectsOptions{}, gitlab.WithContext(ctx))
+	repos, _, err := s.client.Groups.ListGroupProjects(directory.ID, nil, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
