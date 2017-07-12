@@ -163,9 +163,15 @@
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
   version = "v1.0.0"
 
+[[projects]]
+  name = "gopkg.in/go-playground/webhooks.v3"
+  packages = [".","github","gitlab"]
+  revision = "9a8b92d028c1d3cc75fd2fdfcafdb5bcdba6e026"
+  version = "v3.1.1"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f9a5d8b74309cb854c90b51241afb427ff70fb3b228eb2212c9bb1f51fea97f4"
+  inputs-digest = "c7821e7e7330daa0cc0cc3af3871b087650206d4588dead521ebff33deca26f2"
   solver-name = "gps-cdcl"
   solver-version = 1
