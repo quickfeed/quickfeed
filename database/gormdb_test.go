@@ -65,16 +65,31 @@ func TestGormDBGetUsers(t *testing.T) {
 func TestGormDBGetCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-	errCreate := db.CreateCourse(&models.Course{Code: "", DirectoryID: 1, Name: "Test", Provider: "Test", Tag: "", Year: 2017})
-	if errCreate != nil {
-		t.Fatal(errCreate)
+
+	course := models.Course{
+		Name:        "Test",
+		Code:        "T100",
+		Year:        2017,
+		Tag:         "something",
+		Provider:    "github",
+		DirectoryID: 1,
 	}
+
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+
 	courses, err := db.GetCourses()
 	if err != nil {
-		t.Errorf("have error '%v' wanted '%v'", err, nil)
+		t.Fatal(err)
 	}
-	if len(*courses) == 0 {
+
+	if len(*courses) != 1 {
 		t.Errorf("have size %v wanted %v", len(*courses), 1)
+	}
+
+	if !reflect.DeepEqual((*courses)[0], course) {
+		t.Fatalf("want %v have %v", (*courses)[0], course)
 	}
 }
 
