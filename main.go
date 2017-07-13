@@ -12,7 +12,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
-	log "github.com/autograde/aguis/logger"
+	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
@@ -45,13 +45,13 @@ func main() {
 	setDefaultMimeTypes()
 
 	e := echo.New()
-	logger := logrus.New()
-	logger.Formatter = log.NewDevFormatter(logger.Formatter)
-	e.Logger = web.EchoLogger{Logger: logger}
+	l := logrus.New()
+	l.Formatter = logger.NewDevFormatter(l.Formatter)
+	e.Logger = web.EchoLogger{Logger: l}
 
 	entryPoint := filepath.Join(*public, "index.html")
 	if !fileExists(entryPoint) {
-		logger.WithField("path", entryPoint).Warn("could not find file")
+		l.WithField("path", entryPoint).Warn("could not find file")
 	}
 
 	store := sessions.NewCookieStore([]byte("secret"))
@@ -66,23 +66,23 @@ func main() {
 	)
 
 	if *fake {
-		logger.Warn("fake provider enabled")
+		l.Warn("fake provider enabled")
 		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(*baseURL, "fake")})
 	}
 
 	e.HideBanner = true
 	e.Use(
 		middleware.Recover(),
-		web.Logger(logger),
+		web.Logger(l),
 		middleware.Secure(),
 		session.Middleware(store),
 	)
 
-	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: logger})
+	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: l})
 	defer db.Close()
 
 	if err != nil {
-		logger.WithError(err).Fatal("could not connect to db")
+		l.WithError(err).Fatal("could not connect to db")
 	}
 
 	e.GET("/logout", auth.OAuth2Logout())
@@ -123,7 +123,7 @@ func main() {
 
 	api.GET("/courses", web.ListCourses(db))
 	// TODO: Pass in webhook URLs and secrets for each registered provider.
-	api.POST("/courses", web.NewCourse(logger, db))
+	api.POST("/courses", web.NewCourse(l, db))
 	api.GET("/courses/:id", web.GetCourse(db))
 	api.PUT("/courses/:id", web.UpdateCourse(db))
 	api.POST("/directories", web.ListDirectories())
@@ -141,10 +141,10 @@ func main() {
 
 	go func() {
 		if err := e.Start(*httpAddr); err == http.ErrServerClosed {
-			logger.Warn("shutting down theserver")
+			l.Warn("shutting down theserver")
 			return
 		}
-		logger.WithError(err).Fatal("could not start server")
+		l.WithError(err).Fatal("could not start server")
 	}()
 
 	quit := make(chan os.Signal)
@@ -154,7 +154,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
-		logger.WithError(err).Fatal("failure during server shutdown")
+		l.WithError(err).Fatal("failure during server shutdown")
 	}
 }
 
