@@ -182,7 +182,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		user, err = db.GetUserByRemoteIdentity(externalUser.Provider, remoteID, externalUser.AccessToken)
 		if err == gorm.ErrRecordNotFound {
 			// Create new user.
-			user, err = db.NewUserFromRemoteIdentity(
+			user, err = db.CreateUserFromRemoteIdentity(
 				externalUser.Provider, remoteID, externalUser.AccessToken,
 			)
 			if err != nil {

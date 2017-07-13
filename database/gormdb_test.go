@@ -108,7 +108,7 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	user1, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 		t.Errorf("have user %+v want %+v", user1, wantUser1)
 	}
 
-	if _, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1); err == nil {
+	if _, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1); err == nil {
 		t.Errorf("expected error '%v'", database.ErrDuplicateIdentity)
 	}
 }
@@ -175,7 +175,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	user1, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -249,7 +249,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}

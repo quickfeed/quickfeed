@@ -117,7 +117,7 @@ func TestListCoursesForUserNoEnrolledCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	_, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	_, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,7 +166,7 @@ func TestListCoursesForUserWithTwoEnrolledCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	_, err := db.NewUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	_, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}

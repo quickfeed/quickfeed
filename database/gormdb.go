@@ -94,8 +94,8 @@ func (db *GormDB) SetAdmin(id uint64) error {
 	return db.conn.Save(&user).Error
 }
 
-// NewUserFromRemoteIdentity implements the Database interface.
-func (db *GormDB) NewUserFromRemoteIdentity(provider string, remoteID uint64, accessToken string) (*models.User, error) {
+// CreateUserFromRemoteIdentity implements the Database interface.
+func (db *GormDB) CreateUserFromRemoteIdentity(provider string, remoteID uint64, accessToken string) (*models.User, error) {
 	var count int64
 	if err := db.conn.
 		Model(&models.RemoteIdentity{}).

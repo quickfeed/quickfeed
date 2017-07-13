@@ -167,7 +167,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 	defer cleanup()
 
 	if existingUser {
-		if _, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
+		if _, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
 			t.Fatal(err)
 		}
 		c.SetParamNames("provider")
@@ -294,7 +294,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	defer cleanup()
 
 	if existingUser {
-		if _, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
+		if _, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -333,7 +333,7 @@ func TestAccessControl(t *testing.T) {
 	defer cleanup()
 
 	// Create a new user.
-	if _, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
+	if _, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret); err != nil {
 		t.Error(err)
 	}
 

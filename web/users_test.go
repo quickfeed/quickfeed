@@ -50,7 +50,7 @@ func TestGetUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	dbuser, err := db.NewUserFromRemoteIdentity(provider1, rID1, secret1)
+	dbuser, err := db.CreateUserFromRemoteIdentity(provider1, rID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,11 +101,11 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.NewUserFromRemoteIdentity(provider1, rID1, secret1)
+	user1, err := db.CreateUserFromRemoteIdentity(provider1, rID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	user2, err := db.NewUserFromRemoteIdentity(provider2, rID2, secret2)
+	user2, err := db.CreateUserFromRemoteIdentity(provider2, rID2, secret2)
 	if err != nil {
 		t.Fatal(err)
 	}
