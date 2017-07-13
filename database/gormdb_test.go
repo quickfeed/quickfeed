@@ -62,12 +62,54 @@ func TestGormDBGetUsers(t *testing.T) {
 	}
 }
 
+func TestGormDBGetCourses(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+	errCreate := db.CreateCourse(&models.Course{Code: "", DirectoryID: 1, Name: "Test", Provider: "Test", Tag: "", Year: 2017})
+	if errCreate != nil {
+		t.Fatal(errCreate)
+	}
+	courses, err := db.GetCourses()
+	if err != nil {
+		t.Errorf("have error '%v' wanted '%v'", err, nil)
+	}
+	if len(*courses) == 0 {
+		t.Errorf("have size %v wanted %v", len(*courses), 1)
+	}
+}
+
 func TestGormDBGetAssignment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	if _, err := db.GetAssignments(10); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
+}
+
+func TestGormDBCreateAssignment(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	if err := db.CreateAssignment(&models.Assignment{CourseID: 1, Name: "Lab 1"}); err != nil {
+		t.Errorf("have error '%v' wanted '%v'", err, nil)
+	}
+}
+
+func TestGormDBGetAssignmentExists(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+	errCreate := db.CreateCourse(&models.Course{Code: "", DirectoryID: 1, Name: "Test", Provider: "Test", Tag: "", Year: 2017})
+	if errCreate != nil {
+		t.Fatal(errCreate)
+	}
+	errCreate = db.CreateAssignment(&models.Assignment{CourseID: 1, Name: "Lab 1"})
+	if errCreate != nil {
+		t.Fatal(errCreate)
+	}
+
+	if _, err := db.GetAssignments(1); err != nil {
+		t.Errorf("have error '%v' wanted '%v'", err, nil)
 	}
 }
 
@@ -326,6 +368,15 @@ func TestGormDBGetCourse(t *testing.T) {
 
 }
 
+func TestGormDBGetCourseNonExist(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	if _, err := db.GetCourse(20); err != gorm.ErrRecordNotFound {
+		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
+
+}
 func TestGormDBUpdateCourse(t *testing.T) {
 	var (
 		course = &models.Course{
