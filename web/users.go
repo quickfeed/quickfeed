@@ -69,7 +69,7 @@ func GetUsers(db database.Database) echo.HandlerFunc {
 func PatchUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		id, err := ParseUintParam(c.Param("id"))
+		id, err := ParseUintParam(c.Param("uid"))
 		if err != nil || id == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
 		}

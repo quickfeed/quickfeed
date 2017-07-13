@@ -122,7 +122,7 @@ func main() {
 	users := api.Group("/users")
 	users.GET("", web.GetUsers(db))
 	users.GET("/:uid", web.GetUser(db))
-	users.PATCH("/:id", web.PatchUser(db))
+	users.PATCH("/:uid", web.PatchUser(db))
 	// TODO: List user courses.
 	users.GET("/:uid/courses", echo.NotFoundHandler)
 
