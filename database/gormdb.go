@@ -158,17 +158,6 @@ func (db *GormDB) GetCourses() (*[]models.Course, error) {
 	return &courses, nil
 }
 
-// GetCoursesForUser implements the Database interface.
-func (db *GormDB) GetCoursesForUser(userID uint64) ([]*models.Enrollment, error) {
-	var enrollments []*models.Enrollment
-	if err := db.conn.Where(&models.Enrollment{
-		UserID: userID,
-	}).Find(&enrollments).Error; err != nil {
-		return nil, err
-	}
-	return enrollments, nil
-}
-
 // GetAssignments implements the Database interface
 func (db *GormDB) GetAssignments(id uint64) (*[]models.Assignment, error) {
 	var course models.Course
