@@ -12,7 +12,7 @@ type Course struct {
 	Provider    string `json:"provider"`
 	DirectoryID uint64 `json:"directoryid"`
 
-	Users []User `gorm:"many2many:user_courses;" json:"users,omitempty"`
+	Enrollments []*Enrollment
 
 	Assignments []Assignment `json:"assignments,omitempty"`
 }

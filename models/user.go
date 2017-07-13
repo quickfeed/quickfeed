@@ -8,7 +8,7 @@ type User struct {
 
 	RemoteIdentities []RemoteIdentity `json:"remoteidentities,omitempty"`
 
-	Courses []Course `gorm:"many2many:user_courses;" json:"courses"`
+	Enrollments []*Enrollment
 }
 
 // RemoteIdentity represents a third-party identity which can be attached to a
