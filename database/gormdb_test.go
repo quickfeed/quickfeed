@@ -113,14 +113,42 @@ func TestGormDBGetAssignmentExists(t *testing.T) {
 	}
 }
 
-func TestGormDBEnrollUser(t *testing.T) {
+func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
+	const (
+		userID   = 1
+		courseID = 1
+	)
+
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// TODO: this should in teory fail because user with
-	// userid=1 and courseid=1 does not exist
-	if err := db.CreateEnrollment(1, 1); err != nil {
-		t.Errorf("have error '%v' wanted '%v'", err, nil)
+	if err := db.CreateEnrollment(userID, courseID); err != gorm.ErrRecordNotFound {
+		t.Errorf("expected error '%v' have '%v'", gorm.ErrRecordNotFound, err)
+	}
+}
+
+func TestGormDBCreateEnrollment(t *testing.T) {
+	const (
+		secret   = "123"
+		provider = "github"
+		remoteID = 10
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var course models.Course
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.CreateEnrollment(user.ID, course.ID); err != nil {
+		t.Error(err)
 	}
 }
 
