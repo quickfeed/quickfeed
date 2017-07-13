@@ -156,16 +156,17 @@ func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 // EnrollUser enrolls a user to a course
 func EnrollUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var eur EnrollUserRequest
-		if err := c.Bind(&eur); err != nil {
-			return err
+		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		if err != nil || id == 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
+		}
+		var userID uint64
+		userID, err = strconv.ParseUint(c.Param("userid"), 10, 64)
+		if err != nil || userID == 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
 		}
 
-		if !eur.valid() {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-
-		if err := db.EnrollUserInCourse(eur.UserID, eur.CourseID); err != nil {
+		if err := db.EnrollUserInCourse(userID, id); err != nil {
 			return nil
 		}
 		return c.NoContent(http.StatusCreated)

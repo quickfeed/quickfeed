@@ -71,8 +71,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
-        const resp = await this.helper.post<{ courseid: number, userid: number }, undefined>
-        ("/enrolluser", { courseid: course.id, userid: user.id });
+        const resp = await this.helper.put<{}, undefined>
+            ("/courses/" + course.id + "/users/" + user.id, {});
         if (resp.statusCode === 201) {
             return true;
         }
