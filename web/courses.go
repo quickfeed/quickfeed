@@ -53,24 +53,8 @@ func (eur *EnrollUserRequest) valid() bool {
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// TODO check that the user requesting "/courses?user=x" has sufficent privileges to access this page.
-		// The session user should either be the same as "x" or a teacher.
-		id, err := ParseUintParam(c.QueryParam("user"))
-		if err != nil {
-			return err
-		}
-
-		if id > 0 {
-			var enrollments []*models.Enrollment
-			enrollments, err = db.GetCoursesForUser(id)
-			if err != nil {
-				return err
-			}
-			return c.JSONPretty(http.StatusOK, enrollments, "\t")
-		}
-
 		var courses *[]models.Course
-		courses, err = db.GetCourses()
+		courses, err := db.GetCourses()
 		if err != nil {
 			return err
 		}

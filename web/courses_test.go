@@ -73,7 +73,7 @@ var (
 	}
 )
 
-func TestListCoursesInSystem(t *testing.T) {
+func TestListCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
