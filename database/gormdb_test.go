@@ -297,36 +297,31 @@ func TestGormDBCreateCourse(t *testing.T) {
 }
 
 func TestGormDBGetCourse(t *testing.T) {
-	const ID = 1
-	var (
-		newCourse = &models.Course{
-			Name:        "Test Course",
-			Code:        "DAT100",
-			Year:        2017,
-			Tag:         "Spring",
-			Provider:    "github",
-			DirectoryID: 1234,
-		}
-	)
+	course := &models.Course{
+		Name:        "Test Course",
+		Code:        "DAT100",
+		Year:        2017,
+		Tag:         "Spring",
+		Provider:    "github",
+		DirectoryID: 1234,
+	}
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	err := db.CreateCourse(newCourse)
+	err := db.CreateCourse(course)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if newCourse.ID != ID {
-		t.Errorf("have course ID %d, want %d", newCourse.ID, ID)
-	}
-
-	course, err := db.GetCourse(ID)
+	// Get the created course.
+	createdCourse, err := db.GetCourse(course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(course, newCourse) {
-		t.Errorf("have course %+v want %+v", course, newCourse)
+
+	if !reflect.DeepEqual(createdCourse, course) {
+		t.Errorf("have course %+v want %+v", createdCourse, course)
 	}
 
 }
