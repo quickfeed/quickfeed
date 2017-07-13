@@ -169,6 +169,16 @@ func (db *GormDB) GetAssignmentsByCourse(id uint64) ([]*models.Assignment, error
 
 // CreateAssignment implements the Database interface
 func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
+	var course uint64
+	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
+		ID: assignment.CourseID,
+	}).Count(&course).Error; err != nil {
+		return err
+	}
+
+	if course != 1 {
+		return gorm.ErrRecordNotFound
+	}
 	return db.conn.Create(assignment).Error
 }
 

@@ -102,29 +102,49 @@ func TestGormDBGetAssignment(t *testing.T) {
 	}
 }
 
+func TestGormDBCreateAssignmentNoRecord(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	assignment := models.Assignment{
+		CourseID: 1,
+		Name:     "Lab 1",
+	}
+
+	// Should fail as course 1 does not exist.
+	if err := db.CreateAssignment(&assignment); err != gorm.ErrRecordNotFound {
+		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
+}
+
 func TestGormDBCreateAssignment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if err := db.CreateAssignment(&models.Assignment{CourseID: 1, Name: "Lab 1"}); err != nil {
-		t.Errorf("have error '%v' wanted '%v'", err, nil)
-	}
-}
-
-func TestGormDBGetAssignmentExists(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-	errCreate := db.CreateCourse(&models.Course{Code: "", DirectoryID: 1, Name: "Test", Provider: "Test", Tag: "", Year: 2017})
-	if errCreate != nil {
-		t.Fatal(errCreate)
-	}
-	errCreate = db.CreateAssignment(&models.Assignment{CourseID: 1, Name: "Lab 1"})
-	if errCreate != nil {
-		t.Fatal(errCreate)
+	if err := db.CreateCourse(&models.Course{}); err != nil {
+		t.Fatal(err)
 	}
 
-	if _, err := db.GetAssignmentsByCourse(1); err != nil {
+	assignment := models.Assignment{
+		CourseID: 1,
+		Name:     "Lab 1",
+	}
+
+	if err := db.CreateAssignment(&assignment); err != nil {
 		t.Errorf("have error '%v' wanted '%v'", err, nil)
+	}
+
+	assignments, err := db.GetAssignmentsByCourse(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(assignments) != 1 {
+		t.Errorf("have size %v wanted %v", len(assignments), 1)
+	}
+
+	if !reflect.DeepEqual(assignments[0], &assignment) {
+		t.Fatalf("want %v have %v", assignments[0], &assignment)
 	}
 }
 
