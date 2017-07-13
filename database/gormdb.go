@@ -185,7 +185,6 @@ func (db *GormDB) EnrollUserInCourse(userID, courseID uint64) error {
 	return db.conn.Model(models.Course{ID: courseID}).Association("Users").Append(models.User{ID: userID}).Error
 }
 
-
 // GetCourse implements the Database interface
 func (db *GormDB) GetCourse(id uint64) (*models.Course, error) {
 	var course models.Course

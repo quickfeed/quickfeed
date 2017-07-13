@@ -49,20 +49,20 @@ const (
 
 var (
 	allCourses = []*models.Course{
-		&models.Course{
+		{
 			ID:   cID1,
 			Name: name1,
 			Code: code1,
 			Year: y1,
 			Tag:  tag1,
 		},
-		&models.Course{
+		{
 			ID:   cID2,
 			Name: name2,
 			Code: code2,
 			Year: y2,
 			Tag:  tag2,
-		}, &models.Course{
+		}, {
 			ID:   cID3,
 			Name: name3,
 			Code: code3,

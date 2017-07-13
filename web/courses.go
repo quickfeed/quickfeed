@@ -10,8 +10,8 @@ import (
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
-	"github.com/labstack/echo"
 	"github.com/jinzhu/gorm"
+	"github.com/labstack/echo"
 )
 
 // MaxWait is the maximum time a request is allowed to stay open before
@@ -172,7 +172,6 @@ func EnrollUser(db database.Database) echo.HandlerFunc {
 	}
 }
 
-
 // GetCourse find course by id and return JSON object.
 func GetCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -193,7 +192,6 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 		return c.JSONPretty(http.StatusOK, course, "\t")
 	}
 }
-
 
 // UpdateCourse updates an existing course
 func UpdateCourse(db database.Database) echo.HandlerFunc {
@@ -254,4 +252,3 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 
 	}
 }
-
