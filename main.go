@@ -118,9 +118,13 @@ func main() {
 	api.Use(auth.AccessControl(db, scms))
 
 	api.GET("/user", web.GetSelf())
-	api.GET("/users/:id", web.GetUser(db))
-	api.GET("/users", web.GetUsers(db))
-	api.PATCH("/users/:id", web.PatchUser(db))
+
+	users := api.Group("/users")
+	users.GET("", web.GetUsers(db))
+	users.GET("/:uid", web.GetUser(db))
+	users.PATCH("/:id", web.PatchUser(db))
+	// TODO: List user courses.
+	users.GET("/:uid/courses", echo.NotFoundHandler)
 
 	courses := api.Group("/courses")
 	courses.GET("", web.ListCourses(db))

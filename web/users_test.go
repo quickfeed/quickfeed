@@ -59,7 +59,7 @@ func TestGetUser(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodGet, "/users/:id", web.GetUser(db))
+	router.Add(http.MethodGet, "/users/:uid", web.GetUser(db))
 
 	r := httptest.NewRequest(http.MethodGet, user1URL, nil)
 	w := httptest.NewRecorder()

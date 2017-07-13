@@ -31,7 +31,7 @@ func GetSelf() echo.HandlerFunc {
 // GetUser returns information about the user associated with the id query.
 func GetUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		id, err := strconv.ParseUint(c.Param("uid"), 10, 64)
 		if err != nil || id == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
 		}
