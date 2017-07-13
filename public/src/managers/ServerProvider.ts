@@ -30,13 +30,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         this.helper = helper;
     }
 
-    public async getCourses(): Promise<IMap<ICourse>> {
+    public async getCourses(): Promise<ICourse[]> {
         const result = await this.helper.get<any>("courses?user=0");
         if (result.statusCode !== 200 || !result.data) {
-            return {};
+            return [];
         }
+        return result.data;
         // const data = JSON.parse(JSON.stringify(result.data).toLowerCase()) as ICourse[];
-        return mapify(result.data, (ele) => ele.id);
+        // return mapify(result.data, (ele) => ele.id);
         // throw new Error("Method not implemented.");
     }
 

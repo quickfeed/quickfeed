@@ -39,8 +39,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localUsers;
     }
 
-    public async getCourses(): Promise<IMap<ICourse>> {
-        return this.localCourses;
+    public async getCourses(): Promise<ICourse[]> {
+        // return this.localCourses;
+        return MapHelper.toArray(this.localCourses);
     }
 
     public async getCoursesStudent(): Promise<ICourseUserLink[]> {

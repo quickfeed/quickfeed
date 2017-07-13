@@ -17,7 +17,7 @@ import {
 import { UserManager } from "../managers";
 
 export interface ICourseProvider {
-    getCourses(): Promise<IMap<ICourse>>;
+    getCourses(): Promise<ICourse[]>;
     getAssignments(courseId: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
     getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]>;
@@ -69,7 +69,8 @@ export class CourseManager {
      * Get all the courses available at the server
      */
     public async getCourses(): Promise<ICourse[]> {
-        return MapHelper.toArray(await this.courseProvider.getCourses());
+        // return MapHelper.toArray(await this.courseProvider.getCourses());
+        return await this.courseProvider.getCourses();
     }
 
     public async getCoursesWithState(user: IUser): Promise<IUserCourse[]> {

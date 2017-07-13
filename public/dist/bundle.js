@@ -1812,7 +1812,7 @@ class CourseManager {
     }
     getCourses() {
         return __awaiter(this, void 0, void 0, function* () {
-            return map_1.MapHelper.toArray(yield this.courseProvider.getCourses());
+            return yield this.courseProvider.getCourses();
         });
     }
     getCoursesWithState(user) {
@@ -2159,7 +2159,7 @@ class TempDataProvider {
     }
     getCourses() {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.localCourses;
+            return map_1.MapHelper.toArray(this.localCourses);
         });
     }
     getCoursesStudent() {
@@ -3760,9 +3760,9 @@ class ServerProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.helper.get("courses?user=0");
             if (result.statusCode !== 200 || !result.data) {
-                return {};
+                return [];
             }
-            return map_1.mapify(result.data, (ele) => ele.id);
+            return result.data;
         });
     }
     getCoursesFor(user, state) {
