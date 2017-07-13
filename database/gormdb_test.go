@@ -158,6 +158,108 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 	}
 }
 
+func TestGormDBAcceptRejectEnrollment(t *testing.T) {
+	const (
+		secret   = "123"
+		provider = "github"
+		remoteID = 10
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var course models.Course
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Get user's pending enrollments.
+	userEnrollments, err := db.GetEnrollmentsByUser(user.ID, models.Pending)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(userEnrollments) != 1 {
+		t.Fatal("there should be 1 pending enrollment")
+	}
+
+	// Get course's pending enrollments.
+	courseEnrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Pending)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Ensure that GetEnrollmentsForCourse returns the same enrollments.
+	if !reflect.DeepEqual(userEnrollments, courseEnrollments) {
+		t.Fatalf("want %v have %v", userEnrollments, courseEnrollments)
+	}
+
+	enrollmentID := userEnrollments[0].ID
+	// Accept enrollment.
+	if err := db.AcceptEnrollment(enrollmentID); err != nil {
+		t.Fatal(err)
+	}
+
+	// Get user's accepted enrollments.
+	userEnrollments, err = db.GetEnrollmentsByUser(user.ID, models.Accepted)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(userEnrollments) != 1 {
+		t.Fatal("there should be 1 accepted enrollment")
+	}
+
+	// Get course's accepted enrollments.
+	courseEnrollments, err = db.GetEnrollmentsByCourse(course.ID, models.Accepted)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Ensure that GetEnrollmentsForCourse returns the same enrollments.
+	if !reflect.DeepEqual(userEnrollments, courseEnrollments) {
+		t.Fatalf("want %v have %v", userEnrollments, courseEnrollments)
+	}
+
+	// Reject enrollment.
+	if err := db.RejectEnrollment(enrollmentID); err != nil {
+		t.Fatal(err)
+	}
+
+	// Get user's rejected enrollments.
+	userEnrollments, err = db.GetEnrollmentsByUser(user.ID, models.Rejected)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(userEnrollments) != 1 {
+		t.Fatal("there should be 1 rejected enrollment")
+	}
+
+	// Get course's rejected enrollments.
+	courseEnrollments, err = db.GetEnrollmentsByCourse(course.ID, models.Rejected)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Ensure that GetEnrollmentsForCourse returns the same enrollments.
+	if !reflect.DeepEqual(userEnrollments, courseEnrollments) {
+		t.Fatalf("want %v have %v", userEnrollments, courseEnrollments)
+	}
+}
+
 func TestGormDBDuplicateIdentity(t *testing.T) {
 	const (
 		uID  = 1

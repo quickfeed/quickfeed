@@ -195,6 +195,45 @@ func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 
 	return db.conn.Create(enrollment).Error
 }
+
+// AcceptEnrollment implements the Database interface.
+func (db *GormDB) AcceptEnrollment(id uint64) error {
+	return db.setEnrollment(id, models.Accepted)
+}
+
+// RejectEnrollment implements the Database interface.
+func (db *GormDB) RejectEnrollment(id uint64) error {
+	return db.setEnrollment(id, models.Rejected)
+}
+
+// GetEnrollmentsByUser implements the Database interface.
+func (db *GormDB) GetEnrollmentsByUser(id uint64, statuses ...uint) ([]*models.Enrollment, error) {
+	return db.getEnrollments(&models.User{ID: id}, statuses...)
+}
+
+// GetEnrollmentsByCourse implements the Database interface.
+func (db *GormDB) GetEnrollmentsByCourse(id uint64, statuses ...uint) ([]*models.Enrollment, error) {
+	return db.getEnrollments(&models.Course{ID: id}, statuses...)
+}
+
+func (db *GormDB) getEnrollments(model interface{}, statuses ...uint) ([]*models.Enrollment, error) {
+	if statuses == nil {
+		statuses = []uint{models.Pending, models.Rejected, models.Accepted}
+	}
+	var enrollments []*models.Enrollment
+	if err := db.conn.Model(model).Where("status in (?)", statuses).Association("Enrollments").Find(&enrollments).Error; err != nil {
+		return nil, err
+	}
+
+	return enrollments, nil
+}
+
+func (db *GormDB) setEnrollment(id uint64, status uint) error {
+	if status > models.Accepted {
+		panic("invalid status")
+	}
+	return db.conn.Model(&models.Enrollment{}).Where(&models.Enrollment{ID: id}).Update(&models.Enrollment{
+		Status: status,
 	}).Error
 }
 
