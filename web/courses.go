@@ -59,12 +59,17 @@ func ListCourses(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		var courses *[]models.Course
 		if id > 0 {
-			courses, err = db.GetCoursesForUser(id)
-		} else {
-			courses, err = db.GetCourses()
+			var enrollments []*models.Enrollment
+			enrollments, err = db.GetCoursesForUser(id)
+			if err != nil {
+				return err
+			}
+			return c.JSONPretty(http.StatusOK, enrollments, "\t")
 		}
+
+		var courses *[]models.Course
+		courses, err = db.GetCourses()
 		if err != nil {
 			return err
 		}
