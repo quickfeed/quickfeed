@@ -193,7 +193,7 @@ func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	return db.conn.Create(enrollment).Error
+	return db.conn.Where(enrollment).FirstOrCreate(enrollment).Error
 }
 
 // AcceptEnrollment implements the Database interface.
