@@ -519,11 +519,11 @@ func TestGormDBGetCourse(t *testing.T) {
 
 }
 
-func TestGormDBGetCourseNonExist(t *testing.T) {
+func TestGormDBGetCourseNoRecord(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.GetCourse(20); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetCourse(10); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 
