@@ -28,7 +28,7 @@ export interface ICourseProvider {
 
     createNewCourse(courseData: ICourse): Promise<boolean>;
     updateCourse(courseData: ICourse): Promise<boolean>;
-    deleteCourse(id: number): Promise<boolean>;
+    // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(): Promise<IMap<ILabInfo>>;
     getDirectories(provider: string): Promise<IOrganization[]>;
@@ -159,15 +159,6 @@ export class CourseManager {
      */
     public async updateCourse(courseData: ICourse): Promise<boolean> {
         return this.courseProvider.updateCourse(courseData);
-    }
-
-    /**
-     * Delete a course
-     * @param id The id of the course to delete
-     */
-    public async deleteCourse(id: number): Promise<boolean> {
-        // TODO: Should it be possible to delete a course
-        return this.courseProvider.deleteCourse(id);
     }
 
     /**

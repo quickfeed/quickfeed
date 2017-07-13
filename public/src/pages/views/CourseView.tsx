@@ -5,7 +5,6 @@ import {ICourse} from "../../models";
 interface ICourseViewProp {
     courses: ICourse[];
     onEditClick: (id: number) => void;
-    onDeleteClick: (id: number) => void;
 }
 
 interface ICourseViewState {
@@ -38,8 +37,6 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
                         <span>
                             <button className="btn btn-primary"
                                     onClick={() => this.props.onEditClick(e.id)}>Edit</button>
-                            <button className="btn btn-danger"
-                                    onClick={() => this.props.onDeleteClick(e.id)}>Delete</button>
                         </span>,
                     ]}
                 >

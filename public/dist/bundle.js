@@ -1874,11 +1874,6 @@ class CourseManager {
             return this.courseProvider.updateCourse(courseData);
         });
     }
-    deleteCourse(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.courseProvider.deleteCourse(id);
-        });
-    }
     getStudentCourse(student, course) {
         return __awaiter(this, void 0, void 0, function* () {
             const returnTemp = {
@@ -2279,18 +2274,6 @@ class TempDataProvider {
             const course = this.localCourses[courseData.id];
             if (course) {
                 this.localCourses[courseData.id] = courseData;
-                return true;
-            }
-            return false;
-        });
-    }
-    deleteCourse(id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const course = this.localCourses[id];
-            if (course) {
-                const courses = map_1.MapHelper.toArray(this.localCourses);
-                courses.splice(id, 1);
-                this.localCourses = map_1.mapify(courses, (ele) => ele.id);
                 return true;
             }
             return false;
@@ -3413,7 +3396,7 @@ class AdminPage extends ViewPage_1.ViewPage {
             return React.createElement("div", null,
                 React.createElement(components_1.Button, { className: "btn btn-primary pull-right", text: "+Create New", onClick: () => this.handleNewCourse() }),
                 React.createElement("h1", null, "All Courses"),
-                React.createElement(CourseView_1.CourseView, { courses: allCourses, onEditClick: (id) => this.handleEditCourseClick(id), onDeleteClick: (id) => this.handleDeleteCourseClick(id) }));
+                React.createElement(CourseView_1.CourseView, { courses: allCourses, onEditClick: (id) => this.handleEditCourseClick(id) }));
         });
     }
     labs(info) {
@@ -3527,12 +3510,6 @@ class AdminPage extends ViewPage_1.ViewPage {
     handleEditCourseClick(id) {
         this.navMan.navigateTo(this.pagePath + "/courses/" + id + "/edit");
     }
-    handleDeleteCourseClick(id) {
-        if (confirm("Are you sure?")) {
-            this.courseMan.deleteCourse(id);
-        }
-        this.navMan.navigateTo(this.pagePath + "/courses");
-    }
     updateCourse(fd, errors) {
         if (errors.length === 0) {
             this.courseMan.updateCourse(fd);
@@ -3571,8 +3548,7 @@ class CourseView extends React.Component {
             React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for courses", onChange: (query) => this.handleSearch(query) }),
             React.createElement(components_1.DynamicTable, { header: ["ID", "Name", "Course Code", "Year", "Semester", "Action"], data: this.state.courses, selector: (e) => [e.id.toString(), e.name, e.code, e.year.toString(), e.tag,
                     React.createElement("span", null,
-                        React.createElement("button", { className: "btn btn-primary", onClick: () => this.props.onEditClick(e.id) }, "Edit"),
-                        React.createElement("button", { className: "btn btn-danger", onClick: () => this.props.onDeleteClick(e.id) }, "Delete")),
+                        React.createElement("button", { className: "btn btn-primary", onClick: () => this.props.onEditClick(e.id) }, "Edit")),
                 ] })));
     }
     handleSearch(query) {
@@ -3839,11 +3815,6 @@ class ServerProvider {
         });
     }
     updateCourse(courseData) {
-        return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented");
-        });
-    }
-    deleteCourse(id) {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error("Method not implemented");
         });

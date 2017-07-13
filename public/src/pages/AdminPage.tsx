@@ -36,7 +36,7 @@ export class AdminPage extends ViewPage {
         const allUsers = await this.userMan.getAllUser();
         return <div>
             <h1>All Users</h1>
-            <UserView users={allUsers} userMan={this.userMan} navMan={this.navMan} addSearchOption={true} />
+            <UserView users={allUsers} userMan={this.userMan} navMan={this.navMan} addSearchOption={true}/>
         </div>;
     }
 
@@ -44,12 +44,11 @@ export class AdminPage extends ViewPage {
         const allCourses = await this.courseMan.getCourses();
         return <div>
             <Button className="btn btn-primary pull-right" text="+Create New"
-                onClick={() => this.handleNewCourse()}
+                    onClick={() => this.handleNewCourse()}
             />
             <h1>All Courses</h1>
             <CourseView courses={allCourses}
-                onEditClick={(id: number) => this.handleEditCourseClick(id)}
-                onDeleteClick={(id: number) => this.handleDeleteCourseClick(id)}
+                        onEditClick={(id: number) => this.handleEditCourseClick(id)}
             />
         </div>;
     }
@@ -101,8 +100,8 @@ export class AdminPage extends ViewPage {
             <div>
                 {flashHolder}
                 <CourseForm className="form-horizontal"
-                    courseMan={this.courseMan}
-                    onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
+                            courseMan={this.courseMan}
+                            onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
                 />
             </div>
         );
@@ -130,9 +129,9 @@ export class AdminPage extends ViewPage {
                 <div>
                     {flashHolder}
                     <CourseForm className="form-horizontal"
-                        courseMan={this.courseMan}
-                        onSubmit={(formData, errors) => this.updateCourse(formData, errors)}
-                        courseData={course}
+                                courseMan={this.courseMan}
+                                onSubmit={(formData, errors) => this.updateCourse(formData, errors)}
+                                courseData={course}
                     />
                 </div>
             );
@@ -190,13 +189,6 @@ export class AdminPage extends ViewPage {
 
     private handleEditCourseClick(id: number): void {
         this.navMan.navigateTo(this.pagePath + "/courses/" + id + "/edit");
-    }
-
-    private handleDeleteCourseClick(id: number): void {
-        if (confirm("Are you sure?")) {
-            this.courseMan.deleteCourse(id);
-        }
-        this.navMan.navigateTo(this.pagePath + "/courses");
     }
 
     private updateCourse(fd: any, errors: string[]): void {

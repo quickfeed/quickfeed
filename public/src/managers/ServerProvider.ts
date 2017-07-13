@@ -72,7 +72,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
         const resp = await this.helper.post<{ courseid: number, userid: number }, undefined>
-            ("/enrolluser", { courseid: course.id, userid: user.id });
+        ("/enrolluser", { courseid: course.id, userid: user.id });
         if (resp.statusCode === 201) {
             return true;
         }
@@ -93,10 +93,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async updateCourse(courseData: ICourse): Promise<boolean> {
-        throw new Error("Method not implemented");
-    }
-
-    public async deleteCourse(id: number): Promise<boolean> {
         throw new Error("Method not implemented");
     }
 
@@ -175,16 +171,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     /*
-    {
-  "ID": 1,
-  "remoteidentities": [
-    {
-      "ID": 1,
-      "Provider": "github",
-      "RemoteID": 1964338,
-      "UserID": 1
-    }
-  ]
-}
+     {
+     "ID": 1,
+     "remoteidentities": [
+     {
+     "ID": 1,
+     "Provider": "github",
+     "RemoteID": 1964338,
+     "UserID": 1
+     }
+     ]
+     }
      */
 }
