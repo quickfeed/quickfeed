@@ -13,6 +13,9 @@ type Database interface {
 	GetUserByRemoteIdentity(provider string, id uint64, accessToken string) (*models.User, error)
 	GetUsers() (*[]models.User, error)
 
+	// SetAdmin makes an existing user an administrator.
+	SetAdmin(uint64) error
+
 	CreateCourse(*models.Course) error
 	GetCourses() (*[]models.Course, error)
 	GetCoursesForUser(id uint64) (*[]models.Course, error)

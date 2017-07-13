@@ -212,6 +212,67 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	}
 }
 
+func TestGormDBSetAdminNoRecord(t *testing.T) {
+	const id = 1
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	if err := db.SetAdmin(id); err != gorm.ErrRecordNotFound {
+		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
+}
+
+func TestGormDBSetAdmin(t *testing.T) {
+	const (
+		uID = 1
+		rID = 1
+
+		secret   = "123"
+		provider = "github"
+		remoteID = 10
+	)
+
+	var (
+		wantUser = &models.User{
+			ID: uID,
+			RemoteIdentities: []models.RemoteIdentity{{
+				ID:          rID,
+				Provider:    provider,
+				RemoteID:    remoteID,
+				AccessToken: secret,
+				UserID:      uID,
+			}},
+		}
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	user, err := db.NewUserFromRemoteIdentity(provider, remoteID, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(user, wantUser) {
+		t.Errorf("have user %+v want %+v", user, wantUser)
+	}
+
+	if err := db.SetAdmin(user.ID); err != nil {
+		t.Error(err)
+	}
+
+	admin, err := db.GetUser(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantUser.IsAdmin = true
+	if !reflect.DeepEqual(admin, wantUser) {
+		t.Errorf("have user %+v want %+v", admin, wantUser)
+	}
+}
+
 func envSet(env string) database.GormLogger {
 	if os.Getenv(env) != "" {
 		return database.Logger{Logger: logrus.New()}
