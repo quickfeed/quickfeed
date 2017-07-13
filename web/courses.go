@@ -77,7 +77,7 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// TODO check if the user has right to show the assignments.
 		// same as courses above, should not return to unauthorised users
-		id, err := strconv.ParseUint(c.QueryParam("course"), 10, 64)
+		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 		if err != nil {
 			return err
 		}

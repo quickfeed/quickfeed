@@ -128,7 +128,7 @@ func main() {
 	api.GET("/courses/:id", web.GetCourse(db))
 	api.PUT("/courses/:id", web.UpdateCourse(db))
 	api.POST("/directories", web.ListDirectories())
-	api.GET("/assignments", web.ListAssignments(db))
+	api.GET("/courses/:id/assignments", web.ListAssignments(db))
 	api.PUT("/courses/:id/users/:userid", web.EnrollUser(db))
 
 	index := func(c echo.Context) error {

@@ -3781,7 +3781,7 @@ class ServerProvider {
     }
     getAssignments(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.helper.get("assignments?course=" + courseId.toString());
+            const result = yield this.helper.get("courses/" + courseId.toString() + "/assignments");
             if (result.statusCode !== 200 || !result.data) {
                 console.log(result);
                 throw new Error("Problem with the request");

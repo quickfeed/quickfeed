@@ -54,7 +54,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
-        const result = await this.helper.get<any>("assignments?course=" + courseId.toString());
+        const result = await this.helper.get<any>("courses/" + courseId.toString() + "/assignments");
 
         if (result.statusCode !== 200 || !result.data) {
             console.log(result);
