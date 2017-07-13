@@ -273,6 +273,87 @@ func TestGormDBSetAdmin(t *testing.T) {
 	}
 }
 
+
+func TestGormDBGetCourse(t *testing.T) {
+	const ID = 1
+	var (
+		newCourse = &models.Course{
+			Name:        "Test Course",
+			Code:        "DAT100",
+			Year:        2017,
+			Tag:         "Spring",
+			Provider:    "github",
+			DirectoryID: 1234,
+		}
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	err := db.CreateCourse(newCourse)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if newCourse.ID != ID {
+		t.Errorf("have course ID %d, want %d", newCourse.ID, ID)
+	}
+
+	course, err := db.GetCourse(ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(course, newCourse) {
+		t.Errorf("have course %+v want %+v", course, newCourse)
+	}
+
+}
+
+func TestGormDBUpdateCourse(t *testing.T) {
+	const ID = 1
+	var (
+		newCourse = &models.Course{
+			Name:        "Test Course",
+			Code:        "DAT100",
+			Year:        2017,
+			Tag:         "Spring",
+			Provider:    "github",
+			DirectoryID: 1234,
+		}
+		updateCourse1 = &models.Course{
+			ID:          ID,
+			Name:        "Test Course Edit",
+			Code:        "DAT100",
+			Year:        2017,
+			Tag:         "Spring",
+			Provider:    "github",
+			DirectoryID: 1234,
+		}
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	err := db.CreateCourse(newCourse)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if newCourse.ID != ID {
+		t.Errorf("have course ID %d, want %d", newCourse.ID, ID)
+	}
+
+	err = db.UpdateCourse(updateCourse1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if newCourse.Name == updateCourse1.Name {
+		t.Errorf("have course name %s want %s", newCourse.Name, updateCourse1.Name)
+	}
+
+}
+
 func envSet(env string) database.GormLogger {
 	if os.Getenv(env) != "" {
 		return database.Logger{Logger: logrus.New()}

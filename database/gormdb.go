@@ -185,6 +185,21 @@ func (db *GormDB) EnrollUserInCourse(userID, courseID uint64) error {
 	return db.conn.Model(models.Course{ID: courseID}).Association("Users").Append(models.User{ID: userID}).Error
 }
 
+
+// GetCourse implements the Database interface
+func (db *GormDB) GetCourse(id uint64) (*models.Course, error) {
+	var course models.Course
+	if err := db.conn.First(&course, id).Error; err != nil {
+		return nil, err
+	}
+	return &course, nil
+}
+
+// UpdateCourse implements the Database interface
+func (db *GormDB) UpdateCourse(course *models.Course) error {
+	return db.conn.Model(course).Updates(course).Error
+}
+
 // Close closes the gorm database.
 func (db *GormDB) Close() error {
 	return db.conn.Close()

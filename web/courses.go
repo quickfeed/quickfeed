@@ -11,6 +11,7 @@ import (
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/labstack/echo"
+	"github.com/jinzhu/gorm"
 )
 
 // MaxWait is the maximum time a request is allowed to stay open before
@@ -170,3 +171,87 @@ func EnrollUser(db database.Database) echo.HandlerFunc {
 		return c.NoContent(http.StatusCreated)
 	}
 }
+
+
+// GetCourse find course by id and return JSON object.
+func GetCourse(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		if err != nil || id == 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
+		}
+
+		course, err := db.GetCourse(id)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return err
+
+		}
+
+		return c.JSONPretty(http.StatusOK, course, "\t")
+	}
+}
+
+
+// UpdateCourse updates an existing course
+func UpdateCourse(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		if err != nil || id == 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
+		}
+
+		oldcr, err := db.GetCourse(id)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return err
+
+		}
+
+		var newcr NewCourseRequest
+
+		if err := c.Bind(&newcr); err != nil {
+			return err
+		}
+
+		if !newcr.valid() {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+
+		if c.Get(newcr.Provider) == nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "provider "+newcr.Provider+" not registered")
+		}
+		s := c.Get(newcr.Provider).(scm.SCM)
+
+		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
+		defer cancel()
+
+		// Check that the directory exists.
+		_, err = s.GetDirectory(ctx, newcr.DirectoryID)
+		if err != nil {
+			return err
+		}
+
+		course := models.Course{
+			ID:          oldcr.ID,
+			Name:        newcr.Name,
+			Code:        newcr.Code,
+			Year:        newcr.Year,
+			Tag:         newcr.Tag,
+			Provider:    newcr.Provider,
+			DirectoryID: newcr.DirectoryID,
+		}
+
+		if err := db.UpdateCourse(&course); err != nil {
+			return err
+		}
+
+		return c.NoContent(http.StatusOK)
+
+	}
+}
+

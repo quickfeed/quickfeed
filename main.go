@@ -124,6 +124,8 @@ func main() {
 	api.GET("/courses", web.ListCourses(db))
 	// TODO: Pass in webhook URLs and secrets for each registered provider.
 	api.POST("/courses", web.NewCourse(logger, db))
+	api.GET("/courses/:id", web.GetCourse(db))
+	api.PUT("/courses/:id", web.UpdateCourse(db))
 	api.POST("/directories", web.ListDirectories())
 	api.GET("/assignments", web.ListAssignments(db))
 	api.POST("/enrolluser", web.EnrollUser(db))

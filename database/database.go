@@ -18,6 +18,8 @@ type Database interface {
 
 	CreateCourse(*models.Course) error
 	GetCourses() (*[]models.Course, error)
+	GetCourse(id uint64) (*models.Course, error)
+	UpdateCourse(*models.Course) error
 	GetCoursesForUser(id uint64) (*[]models.Course, error)
 	EnrollUserInCourse(userID, courseID uint64) error
 
