@@ -130,7 +130,7 @@ export class AdminPage extends ViewPage {
                     {flashHolder}
                     <CourseForm className="form-horizontal"
                                 courseMan={this.courseMan}
-                                onSubmit={(formData, errors) => this.updateCourse(formData, errors)}
+                                onSubmit={(formData, errors) => this.updateCourse(courseId, formData, errors)}
                                 courseData={course}
                     />
                 </div>
@@ -191,15 +191,15 @@ export class AdminPage extends ViewPage {
         this.navMan.navigateTo(this.pagePath + "/courses/" + id + "/edit");
     }
 
-    private updateCourse(fd: any, errors: string[]): void {
+    private async updateCourse(courseId: number, data: any, errors: string[]): Promise<void> {
         if (errors.length === 0) {
             // TODO: check returned value from backend and take appropriate action
-            this.courseMan.updateCourse(fd);
+            await this.courseMan.updateCourse(courseId, data);
             this.flashMessages = null;
             this.navMan.navigateTo(this.pagePath + "/courses");
         } else {
             this.flashMessages = errors;
-            this.navMan.navigateTo(this.pagePath + "/courses/" + fd.id + "/edit");
+            this.navMan.navigateTo(this.pagePath + "/courses/" + courseId + "/edit");
         }
     }
 

@@ -1,4 +1,4 @@
-import { combineAbsPath, combinePath } from "./NavigationHelper";
+import { combinePath } from "./NavigationHelper";
 
 export interface IHTTPResult<T> {
     statusCode: number;
@@ -7,6 +7,7 @@ export interface IHTTPResult<T> {
 
 export class HttpHelper {
     private PATH_PREFIX = "";
+
     get pathPrefix() {
         return this.PATH_PREFIX;
     }
@@ -23,6 +24,14 @@ export class HttpHelper {
         return this.send("POST", uri, sendData);
     }
 
+    public put<TSend, TReceive>(uri: string, sendData: TSend): Promise<IHTTPResult<TReceive>> {
+        return this.send("PUT", uri, sendData);
+    }
+
+    public delete<T>(uri: string): Promise<IHTTPResult<T>> {
+        return this.send("DELETE", uri);
+    }
+
     private send<TSend, TReceive>(method: string, uri: string, sendData?: TSend): Promise<IHTTPResult<TReceive>> {
         const request = new XMLHttpRequest();
         const requestPromise = new Promise<IHTTPResult<TReceive>>((resolve, reject) => {
@@ -36,7 +45,7 @@ export class HttpHelper {
                         console.log("Non JSON respons detected");
                     } else {
                         try {
-                            console.log(request.responseText);
+                            // console.log(request.responseText);
                             data = JSON.parse(request.responseText) as TReceive;
                         } catch (e) {
                             console.error("Could not parse response from server", e, request.responseText);

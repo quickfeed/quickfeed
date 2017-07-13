@@ -92,8 +92,26 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async updateCourse(courseData: ICourse): Promise<boolean> {
-        throw new Error("Method not implemented");
+    public async getCourse(id: number): Promise<ICourse | null> {
+        const result = await this.helper.get<any>("courses/" + id);
+        if (result.statusCode !== 200 || !result.data) {
+            console.log("Error =>", result);
+            return null;
+        }
+        const data = JSON.parse(JSON.stringify(result.data)) as ICourse;
+        return data;
+    }
+
+    public async updateCourse(courseId: number, courseData: ICourse): Promise<boolean> {
+        const uri: string = "courses/" + courseId;
+        const resp = await this.helper.put<ICourse, ICourse>(uri, courseData);
+        if (resp.statusCode !== 200) {
+            console.log("Error =>", resp);
+            return false;
+        }
+        console.log("Success => ", resp);
+        // const course = JSON.parse(JSON.stringify(resp.data)) as ICourse;
+        return true;
     }
 
     public async getAllLabInfos(): Promise<IMap<ILabInfo>> {

@@ -1807,11 +1807,7 @@ class CourseManager {
     }
     getCourse(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const a = (yield this.courseProvider.getCourses())[id];
-            if (a) {
-                return a;
-            }
-            return null;
+            return yield this.courseProvider.getCourse(id);
         });
     }
     getCourses() {
@@ -1869,9 +1865,9 @@ class CourseManager {
             return this.courseProvider.createNewCourse(courseData);
         });
     }
-    updateCourse(courseData) {
+    updateCourse(courseId, courseData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.courseProvider.updateCourse(courseData);
+            return yield this.courseProvider.updateCourse(courseId, courseData);
         });
     }
     getStudentCourse(student, course) {
@@ -2269,9 +2265,18 @@ class TempDataProvider {
             return true;
         });
     }
-    updateCourse(courseData) {
+    getCourse(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const course = this.localCourses[courseData.id];
+            const course = this.localCourses[id];
+            if (course) {
+                return course;
+            }
+            return null;
+        });
+    }
+    updateCourse(courseId, courseData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const course = this.localCourses[courseId];
             if (course) {
                 this.localCourses[courseData.id] = courseData;
                 return true;
@@ -3460,7 +3465,7 @@ class AdminPage extends ViewPage_1.ViewPage {
                 }
                 return (React.createElement("div", null,
                     flashHolder,
-                    React.createElement(components_1.CourseForm, { className: "form-horizontal", courseMan: this.courseMan, onSubmit: (formData, errors) => this.updateCourse(formData, errors), courseData: course })));
+                    React.createElement(components_1.CourseForm, { className: "form-horizontal", courseMan: this.courseMan, onSubmit: (formData, errors) => this.updateCourse(courseId, formData, errors), courseData: course })));
             }
             return React.createElement("h1", null, "Page not found");
         });
@@ -3510,16 +3515,18 @@ class AdminPage extends ViewPage_1.ViewPage {
     handleEditCourseClick(id) {
         this.navMan.navigateTo(this.pagePath + "/courses/" + id + "/edit");
     }
-    updateCourse(fd, errors) {
-        if (errors.length === 0) {
-            this.courseMan.updateCourse(fd);
-            this.flashMessages = null;
-            this.navMan.navigateTo(this.pagePath + "/courses");
-        }
-        else {
-            this.flashMessages = errors;
-            this.navMan.navigateTo(this.pagePath + "/courses/" + fd.id + "/edit");
-        }
+    updateCourse(courseId, data, errors) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (errors.length === 0) {
+                yield this.courseMan.updateCourse(courseId, data);
+                this.flashMessages = null;
+                this.navMan.navigateTo(this.pagePath + "/courses");
+            }
+            else {
+                this.flashMessages = errors;
+                this.navMan.navigateTo(this.pagePath + "/courses/" + courseId + "/edit");
+            }
+        });
     }
 }
 exports.AdminPage = AdminPage;
@@ -3814,9 +3821,27 @@ class ServerProvider {
             return true;
         });
     }
-    updateCourse(courseData) {
+    getCourse(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented");
+            const result = yield this.helper.get("courses/" + id);
+            if (result.statusCode !== 200 || !result.data) {
+                console.log("Error =>", result);
+                return null;
+            }
+            const data = JSON.parse(JSON.stringify(result.data));
+            return data;
+        });
+    }
+    updateCourse(courseId, courseData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const uri = "courses/" + courseId;
+            const resp = yield this.helper.put(uri, courseData);
+            if (resp.statusCode !== 200) {
+                console.log("Error =>", resp);
+                return false;
+            }
+            console.log("Success => ", resp);
+            return true;
         });
     }
     getAllLabInfos() {
@@ -3926,6 +3951,12 @@ class HttpHelper {
     post(uri, sendData) {
         return this.send("POST", uri, sendData);
     }
+    put(uri, sendData) {
+        return this.send("PUT", uri, sendData);
+    }
+    delete(uri) {
+        return this.send("DELETE", uri);
+    }
     send(method, uri, sendData) {
         const request = new XMLHttpRequest();
         const requestPromise = new Promise((resolve, reject) => {
@@ -3941,7 +3972,6 @@ class HttpHelper {
                     }
                     else {
                         try {
-                            console.log(request.responseText);
                             data = JSON.parse(request.responseText);
                         }
                         catch (e) {
