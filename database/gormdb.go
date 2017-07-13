@@ -184,18 +184,17 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 }
 
 // CreateEnrollment implements the Database interface.
-func (db *GormDB) CreateEnrollment(userID, courseID uint64) error {
+func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 	var user, course uint64
-	db.conn.Model(&models.User{}).Where(&models.User{ID: userID}).Count(&user)
-	db.conn.Model(&models.Course{}).Where(&models.Course{ID: courseID}).Count(&course)
+	db.conn.Model(&models.User{}).Where(&models.User{ID: enrollment.UserID}).Count(&user)
+	db.conn.Model(&models.Course{}).Where(&models.Course{ID: enrollment.CourseID}).Count(&course)
 
 	if user+course != 2 {
 		return gorm.ErrRecordNotFound
 	}
 
-	return db.conn.Create(&models.Enrollment{
-		UserID:   userID,
-		CourseID: courseID,
+	return db.conn.Create(enrollment).Error
+}
 	}).Error
 }
 

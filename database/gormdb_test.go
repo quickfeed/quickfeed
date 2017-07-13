@@ -122,7 +122,10 @@ func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if err := db.CreateEnrollment(userID, courseID); err != gorm.ErrRecordNotFound {
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID:   userID,
+		CourseID: courseID,
+	}); err != gorm.ErrRecordNotFound {
 		t.Errorf("expected error '%v' have '%v'", gorm.ErrRecordNotFound, err)
 	}
 }
@@ -147,7 +150,10 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := db.CreateEnrollment(user.ID, course.ID); err != nil {
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+	}); err != nil {
 		t.Error(err)
 	}
 }

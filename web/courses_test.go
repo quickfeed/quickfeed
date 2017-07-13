@@ -181,7 +181,7 @@ func TestListCoursesForUserWithTwoEnrolledCourses(t *testing.T) {
 	// enroll user in two of the three courses
 	wantCourses := []*models.Course{allCourses[0], allCourses[1]}
 	for _, c := range wantCourses {
-		err = db.CreateEnrollment(uID, c.ID)
+		err = db.CreateEnrollment(&models.Enrollment{UserID: uID, CourseID: c.ID})
 		if err != nil {
 			t.Fatal(err)
 		}
