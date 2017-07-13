@@ -120,6 +120,7 @@ func main() {
 	api.GET("/user", web.GetSelf())
 	api.GET("/users/:id", web.GetUser(db))
 	api.GET("/users", web.GetUsers(db))
+	api.PATCH("/users/:id", web.PatchUser(db))
 
 	api.GET("/courses", web.ListCourses(db))
 	// TODO: Pass in webhook URLs and secrets for each registered provider.
