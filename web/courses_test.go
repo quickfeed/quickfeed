@@ -83,15 +83,6 @@ func TestListCourses(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	courses, err := db.GetCourses()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i, c := range *courses {
-		if !reflect.DeepEqual(c, *allCourses[i]) {
-			t.Errorf("have course %+v want %+v", c, *allCourses[i])
-		}
-	}
 
 	r := httptest.NewRequest(http.MethodGet, listCoursesURL, nil)
 	w := httptest.NewRecorder()
@@ -113,8 +104,6 @@ func TestListCourses(t *testing.T) {
 }
 
 func TestGetCourse(t *testing.T) {
-	const invalidID = 1000
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -123,22 +112,6 @@ func TestGetCourse(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-	}
-
-	for i, course := range allCourses {
-		c, err := db.GetCourse(course.ID)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !reflect.DeepEqual(c, allCourses[i]) {
-			t.Errorf("have course %+v want %+v", c, allCourses[i])
-		}
-	}
-
-	// fetching none existing course
-	_, err := db.GetCourse(invalidID)
-	if err == nil {
-		t.Errorf("expecting error but got nil")
 	}
 
 	e := echo.New()
