@@ -66,10 +66,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    public async getCoursesStudent(): Promise<ICourseUserLink[]> {
-        return [{ courseId: 1, personId: 1, state: CourseUserState.student }];
-    }
-
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
         const resp = await this.helper.put<{}, undefined>
             ("/courses/" + course.id + "/users/" + user.id, {});
@@ -119,7 +115,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async tryLogin(username: string, password: string): Promise<IUser | null> {
-        throw new Error("Method not implemented.");
+        throw new Error("tryLogin This could be removed since there is no normal login.");
     }
 
     public async logout(user: IUser): Promise<boolean> {
