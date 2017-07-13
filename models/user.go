@@ -6,7 +6,7 @@ type User struct {
 
 	IsAdmin bool `json:"isadmin"`
 
-	RemoteIdentities []RemoteIdentity `json:"remoteidentities,omitempty"`
+	RemoteIdentities []*RemoteIdentity `json:"remoteidentities,omitempty"`
 
 	Enrollments []*Enrollment
 }

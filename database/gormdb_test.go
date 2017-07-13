@@ -84,12 +84,12 @@ func TestGormDBGetCourses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(*courses) != 1 {
-		t.Errorf("have size %v wanted %v", len(*courses), 1)
+	if len(courses) != 1 {
+		t.Errorf("have size %v wanted %v", len(courses), 1)
 	}
 
-	if !reflect.DeepEqual((*courses)[0], course) {
-		t.Fatalf("want %v have %v", (*courses)[0], course)
+	if !reflect.DeepEqual(courses[0], &course) {
+		t.Fatalf("want %v have %v", courses[0], &course)
 	}
 }
 
@@ -288,7 +288,7 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 	var (
 		wantUser1 = &models.User{
 			ID: uID,
-			RemoteIdentities: []models.RemoteIdentity{{
+			RemoteIdentities: []*models.RemoteIdentity{{
 				ID:          rID1,
 				Provider:    provider1,
 				RemoteID:    remoteID1,
@@ -335,7 +335,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	var (
 		wantUser1 = &models.User{
 			ID: uID,
-			RemoteIdentities: []models.RemoteIdentity{{
+			RemoteIdentities: []*models.RemoteIdentity{{
 				ID:          rID1,
 				Provider:    provider1,
 				RemoteID:    remoteID1,
@@ -346,7 +346,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 
 		wantUser2 = &models.User{
 			ID: uID,
-			RemoteIdentities: []models.RemoteIdentity{
+			RemoteIdentities: []*models.RemoteIdentity{
 				{
 					ID:          rID1,
 					Provider:    provider1,
@@ -429,7 +429,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 	var (
 		wantUser = &models.User{
 			ID: uID,
-			RemoteIdentities: []models.RemoteIdentity{{
+			RemoteIdentities: []*models.RemoteIdentity{{
 				ID:          rID,
 				Provider:    provider,
 				RemoteID:    remoteID,

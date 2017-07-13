@@ -53,7 +53,7 @@ func (eur *EnrollUserRequest) valid() bool {
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var courses *[]models.Course
+		var courses []*models.Course
 		courses, err := db.GetCourses()
 		if err != nil {
 			return err
@@ -71,7 +71,7 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		var assignments *[]models.Assignment
+		var assignments []*models.Assignment
 		assignments, err = db.GetAssignmentsByCourse(id)
 		if err != nil {
 			return err

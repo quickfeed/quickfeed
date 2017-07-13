@@ -14,7 +14,7 @@ type Course struct {
 
 	Enrollments []*Enrollment
 
-	Assignments []Assignment `json:"assignments,omitempty"`
+	Assignments []*Assignment `json:"assignments,omitempty"`
 }
 
 // Assignment represents a single assignment

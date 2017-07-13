@@ -76,12 +76,12 @@ func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToke
 }
 
 // GetUsers implements the Database interface.
-func (db *GormDB) GetUsers() (*[]models.User, error) {
-	var users []models.User
+func (db *GormDB) GetUsers() ([]*models.User, error) {
+	var users []*models.User
 	if err := db.conn.Find(&users).Error; err != nil {
 		return nil, err
 	}
-	return &users, nil
+	return users, nil
 }
 
 // SetAdmin implements the Database interface.
@@ -108,7 +108,7 @@ func (db *GormDB) CreateUserFromRemoteIdentity(provider string, remoteID uint64,
 	}
 
 	user := models.User{
-		RemoteIdentities: []models.RemoteIdentity{{
+		RemoteIdentities: []*models.RemoteIdentity{{
 			Provider:    provider,
 			RemoteID:    remoteID,
 			AccessToken: accessToken,
@@ -150,21 +150,21 @@ func (db *GormDB) CreateCourse(course *models.Course) error {
 }
 
 // GetCourses implements the Database interface.
-func (db *GormDB) GetCourses() (*[]models.Course, error) {
-	var courses []models.Course
+func (db *GormDB) GetCourses() ([]*models.Course, error) {
+	var courses []*models.Course
 	if err := db.conn.Find(&courses).Error; err != nil {
 		return nil, err
 	}
-	return &courses, nil
+	return courses, nil
 }
 
 // GetAssignmentsByCourse implements the Database interface
-func (db *GormDB) GetAssignmentsByCourse(id uint64) (*[]models.Assignment, error) {
+func (db *GormDB) GetAssignmentsByCourse(id uint64) ([]*models.Assignment, error) {
 	var course models.Course
 	if err := db.conn.Preload("Assignments").First(&course, id).Error; err != nil {
 		return nil, err
 	}
-	return &(course.Assignments), nil
+	return course.Assignments, nil
 }
 
 // CreateAssignment implements the Database interface
