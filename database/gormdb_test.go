@@ -327,9 +327,8 @@ func TestGormDBGetCourse(t *testing.T) {
 }
 
 func TestGormDBUpdateCourse(t *testing.T) {
-	const ID = 1
 	var (
-		newCourse = &models.Course{
+		course = &models.Course{
 			Name:        "Test Course",
 			Code:        "DAT100",
 			Year:        2017,
@@ -337,38 +336,39 @@ func TestGormDBUpdateCourse(t *testing.T) {
 			Provider:    "github",
 			DirectoryID: 1234,
 		}
-		updateCourse1 = &models.Course{
-			ID:          ID,
+		updates = &models.Course{
 			Name:        "Test Course Edit",
-			Code:        "DAT100",
-			Year:        2017,
-			Tag:         "Spring",
-			Provider:    "github",
-			DirectoryID: 1234,
+			Code:        "DAT100-1",
+			Year:        2018,
+			Tag:         "Autumn",
+			Provider:    "gitlab",
+			DirectoryID: 12345,
 		}
 	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	err := db.CreateCourse(newCourse)
+	err := db.CreateCourse(course)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if newCourse.ID != ID {
-		t.Errorf("have course ID %d, want %d", newCourse.ID, ID)
-	}
-
-	err = db.UpdateCourse(updateCourse1)
+	updates.ID = course.ID
+	err = db.UpdateCourse(updates)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if newCourse.Name == updateCourse1.Name {
-		t.Errorf("have course name %s want %s", newCourse.Name, updateCourse1.Name)
+	// Get the updated course.
+	updatedCourse, err := db.GetCourse(course.ID)
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	if !reflect.DeepEqual(updatedCourse, updates) {
+		t.Errorf("have course %+v want %+v", updatedCourse, course)
+	}
 }
 
 func envSet(env string) database.GormLogger {
