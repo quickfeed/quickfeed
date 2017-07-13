@@ -171,7 +171,7 @@ func EnrollUser(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
 		}
 
-		if err := db.EnrollUserInCourse(userID, id); err != nil {
+		if err := db.CreateEnrollment(userID, id); err != nil {
 			return nil
 		}
 		return c.NoContent(http.StatusCreated)

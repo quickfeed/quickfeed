@@ -183,9 +183,9 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 	return db.conn.Create(assignment).Error
 }
 
-// EnrollUserInCourse implements the Database interface.
-func (db *GormDB) EnrollUserInCourse(userID, courseID uint64) error {
 	return db.conn.Create(&models.Enrollment{UserID: userID, CourseID: courseID}).Error
+// CreateEnrollment implements the Database interface.
+func (db *GormDB) CreateEnrollment(userID, courseID uint64) error {
 }
 
 // GetCourse implements the Database interface
