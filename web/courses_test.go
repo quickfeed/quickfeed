@@ -73,8 +73,6 @@ var (
 	}
 )
 
-// Run with LOGDB=true go test -v to see database statements
-
 func TestListCoursesInSystem(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
