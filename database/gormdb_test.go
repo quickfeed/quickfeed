@@ -273,6 +273,28 @@ func TestGormDBSetAdmin(t *testing.T) {
 	}
 }
 
+func TestGormDBCreateCourse(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	course := models.Course{
+		Name: "name",
+		Code: "code",
+		Year: 2017,
+		Tag:  "tag",
+
+		Provider:    "github",
+		DirectoryID: 1,
+	}
+
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+
+	if course.ID == 0 {
+		t.Error("expected id to be set")
+	}
+}
 
 func TestGormDBGetCourse(t *testing.T) {
 	const ID = 1
