@@ -28,7 +28,6 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&models.User{},
 		&models.RemoteIdentity{},
 		&models.Course{},
-		&models.Enrollment{},
 		&models.Assignment{},
 	)
 
@@ -159,14 +158,12 @@ func (db *GormDB) GetCourses() (*[]models.Course, error) {
 }
 
 // GetCoursesForUser implements the Database interface.
-func (db *GormDB) GetCoursesForUser(userID uint64) ([]*models.Enrollment, error) {
-	var enrollments []*models.Enrollment
-	if err := db.conn.Where(&models.Enrollment{
-		UserID: userID,
-	}).Find(&enrollments).Error; err != nil {
+func (db *GormDB) GetCoursesForUser(userID uint64) (*[]models.Course, error) {
+	var user models.User
+	if err := db.conn.Preload("Courses").First(&user, userID).Error; err != nil {
 		return nil, err
 	}
-	return enrollments, nil
+	return &user.Courses, nil
 }
 
 // GetAssignments implements the Database interface
@@ -185,7 +182,7 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 
 // EnrollUserInCourse implements the Database interface.
 func (db *GormDB) EnrollUserInCourse(userID, courseID uint64) error {
-	return db.conn.Create(&models.Enrollment{UserID: userID, CourseID: courseID}).Error
+	return db.conn.Model(models.Course{ID: courseID}).Association("Users").Append(models.User{ID: userID}).Error
 }
 
 // GetCourse implements the Database interface

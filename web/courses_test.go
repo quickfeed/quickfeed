@@ -141,8 +141,8 @@ func TestListCoursesForUserNoEnrolledCourses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(coursesForUser) > 0 {
-		t.Errorf("got %d courses, want 0", len(coursesForUser))
+	if len(*coursesForUser) > 0 {
+		t.Errorf("got %d courses, want 0", len(*coursesForUser))
 	}
 
 	r := httptest.NewRequest(http.MethodGet, listCoursesForUserURL, nil)
@@ -190,8 +190,8 @@ func TestListCoursesForUserWithTwoEnrolledCourses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(coursesForUser) != len(wantCourses) {
-		t.Errorf("got %d courses, want %d", len(coursesForUser), len(wantCourses))
+	if len(*coursesForUser) != len(wantCourses) {
+		t.Errorf("got %d courses, want %d", len(*coursesForUser), len(wantCourses))
 	}
 
 	r := httptest.NewRequest(http.MethodGet, listCoursesForUserURL, nil)
@@ -203,10 +203,12 @@ func TestListCoursesForUserWithTwoEnrolledCourses(t *testing.T) {
 	if err := coursesHandler(c); err != nil {
 		t.Error(err)
 	}
-	var gotCourses []*models.Enrollment
+	var gotCourses []*models.Course
 	json.Unmarshal(w.Body.Bytes(), &gotCourses)
-	if len(gotCourses) != len(wantCourses) {
-		t.Errorf("have %d enrollments want %d", len(gotCourses), len(wantCourses))
+	for i, c := range gotCourses {
+		if !reflect.DeepEqual(c, wantCourses[i]) {
+			t.Errorf("have course %+v want %+v", c, wantCourses[i])
+		}
 	}
 	assertCode(t, w.Code, http.StatusOK)
 }
