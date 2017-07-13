@@ -10,5 +10,5 @@ type Enrollment struct {
 	User   *User
 	UserID uint64
 
-	Status int
+	Status uint
 }
