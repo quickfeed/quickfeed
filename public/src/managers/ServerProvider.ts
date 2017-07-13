@@ -31,7 +31,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getCourses(): Promise<ICourse[]> {
-        const result = await this.helper.get<any>("courses?user=0");
+        const result = await this.helper.get<any>("courses");
         if (result.statusCode !== 200 || !result.data) {
             return [];
         }
@@ -42,7 +42,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]> {
-        const result = await this.helper.get<any>("courses?user=" + user.id);
+        // TODO: Fix to use correct url request
+        const result = await this.helper.get<any>("courses");
         if (result.statusCode !== 200 || !result.data) {
             return [];
         }

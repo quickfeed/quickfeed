@@ -3758,7 +3758,7 @@ class ServerProvider {
     }
     getCourses() {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.helper.get("courses?user=0");
+            const result = yield this.helper.get("courses");
             if (result.statusCode !== 200 || !result.data) {
                 return [];
             }
@@ -3767,7 +3767,7 @@ class ServerProvider {
     }
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.helper.get("courses?user=" + user.id);
+            const result = yield this.helper.get("courses");
             if (result.statusCode !== 200 || !result.data) {
                 return [];
             }
