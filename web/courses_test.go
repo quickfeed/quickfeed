@@ -245,7 +245,7 @@ func TestGetCourse(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodGet, "/courses/:id", web.GetCourse(db))
+	router.Add(http.MethodGet, "/courses/:cid", web.GetCourse(db))
 
 	r := httptest.NewRequest(http.MethodGet, getCourseURL, nil)
 	w := httptest.NewRecorder()

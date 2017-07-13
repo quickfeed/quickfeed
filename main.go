@@ -122,11 +122,19 @@ func main() {
 	api.GET("/users", web.GetUsers(db))
 	api.PATCH("/users/:id", web.PatchUser(db))
 
-	api.GET("/courses", web.ListCourses(db))
+	courses := api.Group("/courses")
+	courses.GET("", web.ListCourses(db))
 	// TODO: Pass in webhook URLs and secrets for each registered provider.
-	api.POST("/courses", web.NewCourse(l, db))
-	api.GET("/courses/:id", web.GetCourse(db))
-	api.PUT("/courses/:id", web.UpdateCourse(db))
+	courses.POST("", web.NewCourse(l, db))
+	courses.GET("/:cid", web.GetCourse(db))
+	// TODO: Pass in webhook URLs and secrets for each registered provider.
+	// TODO: Check if webhook exists and if not create a new one.
+	courses.PUT("/:cid", web.UpdateCourse(db))
+	// TODO: List users in course.
+	courses.GET("/:cid/users", echo.NotFoundHandler)
+	// TODO: Check if user is a member of a course, returns 404 or enrollment status.
+	courses.GET("/:cid/users/:uid", echo.NotFoundHandler)
+
 	api.POST("/directories", web.ListDirectories())
 	api.GET("/courses/:id/assignments", web.ListAssignments(db))
 	api.PUT("/courses/:id/users/:userid", web.EnrollUser(db))

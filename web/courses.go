@@ -184,7 +184,7 @@ func EnrollUser(db database.Database) echo.HandlerFunc {
 // GetCourse find course by id and return JSON object.
 func GetCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		id, err := strconv.ParseUint(c.Param("cid"), 10, 64)
 		if err != nil || id == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
 		}
@@ -205,7 +205,7 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 // UpdateCourse updates an existing course
 func UpdateCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+		id, err := strconv.ParseUint(c.Param("cid"), 10, 64)
 		if err != nil || id == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
 		}
