@@ -43,10 +43,11 @@ func (cr *NewCourseRequest) valid() bool {
 type EnrollUserRequest struct {
 	UserID   uint64 `json:"userid"`
 	CourseID uint64 `json:"courseid"`
+	Status   uint   `json:"status"`
 }
 
 func (eur *EnrollUserRequest) valid() bool {
-	return eur.CourseID != 0 && eur.UserID != 0
+	return eur.CourseID != 0 && eur.UserID != 0 && eur.Status <= models.Accepted
 }
 
 // ListCourses returns a JSON object containing all the courses in the database.
@@ -158,26 +159,56 @@ func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 	}
 }
 
-// EnrollUser enrolls a user to a course
-func EnrollUser(db database.Database) echo.HandlerFunc {
+// SetEnrollment sets the enrollment for a user in a course.
+func SetEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-		if err != nil || id == 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
+		courseID, err := strconv.ParseUint(c.Param("cid"), 10, 64)
+		if err != nil || courseID == 0 {
+			return c.NoContent(http.StatusNotFound)
 		}
 		var userID uint64
-		userID, err = strconv.ParseUint(c.Param("userid"), 10, 64)
+		userID, err = strconv.ParseUint(c.Param("uid"), 10, 64)
 		if err != nil || userID == 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
+			return c.NoContent(http.StatusNotFound)
 		}
 
-		if err := db.CreateEnrollment(&models.Enrollment{
-			UserID:   userID,
-			CourseID: id,
-		}); err != nil {
+		var eur EnrollUserRequest
+		if err := c.Bind(&eur); err != nil {
 			return err
 		}
-		return c.NoContent(http.StatusCreated)
+		if !eur.valid() || eur.UserID != userID || eur.CourseID != courseID {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+
+		enrollment := models.Enrollment{
+			UserID:   eur.UserID,
+			CourseID: eur.CourseID,
+		}
+		if err := db.CreateEnrollment(&enrollment); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return err
+		}
+
+		user := c.Get("user").(*models.User)
+		if !user.IsAdmin {
+			// This means that the request has been accepted for processing, i.e., we need to wait for a teacher to accept the enrollment.
+			// TODO: Rename Accepted to Approved to avoid this confusion.
+			return c.NoContent(http.StatusAccepted)
+		}
+
+		switch eur.Status {
+		case models.Accepted:
+			if err := db.AcceptEnrollment(enrollment.ID); err != nil {
+				return err
+			}
+		case models.Rejected:
+			if err := db.RejectEnrollment(enrollment.ID); err != nil {
+				return err
+			}
+		}
+		return c.NoContent(http.StatusOK)
 	}
 }
 
