@@ -16,6 +16,7 @@ import (
 const (
 	listCoursesURL        = "/courses"
 	listCoursesForUserURL = "/courses?user=1"
+	getCourseURL          = "/courses/100"
 )
 
 const (
@@ -209,6 +210,63 @@ func TestListCoursesForUserWithTwoEnrolledCourses(t *testing.T) {
 		if !reflect.DeepEqual(c, wantCourses[i]) {
 			t.Errorf("have course %+v want %+v", c, wantCourses[i])
 		}
+	}
+	assertCode(t, w.Code, http.StatusOK)
+}
+
+func TestGetCourse(t *testing.T) {
+	const invalidID = 1000
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	for _, course := range allCourses {
+		err := db.CreateCourse(course)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for i, course := range allCourses {
+		c, err := db.GetCourse(course.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(c, allCourses[i]) {
+			t.Errorf("have course %+v want %+v", c, allCourses[i])
+		}
+	}
+
+	// fetching none existing course
+	_, err := db.GetCourse(invalidID)
+	if err == nil {
+		t.Errorf("expecting error but got nil")
+	}
+
+	e := echo.New()
+	router := echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodGet, "/courses/:id", web.GetCourse(db))
+
+	r := httptest.NewRequest(http.MethodGet, getCourseURL, nil)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+	// Prepare context with course request.
+	router.Find(http.MethodGet, getCourseURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+
+	var foundCourse *models.Course
+	if err := json.Unmarshal(w.Body.Bytes(), &foundCourse); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(foundCourse, allCourses[0]) {
+		t.Errorf("have course %+v want %+v", foundCourse, allCourses[0])
 	}
 	assertCode(t, w.Code, http.StatusOK)
 }
