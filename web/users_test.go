@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/autograde/aguis/models"
@@ -13,44 +14,46 @@ import (
 	"github.com/labstack/echo"
 )
 
-const (
-	userURL   = "/user"
-	usersURL  = "/users"
-	user1URL  = "/users/1"
-	apiPrefix = "/api/v1"
-)
-
 func TestGetSelf(t *testing.T) {
-	r := httptest.NewRequest(http.MethodGet, userURL, nil)
+	const (
+		selfURL   = "/user"
+		apiPrefix = "/api/v1"
+	)
+
+	r := httptest.NewRequest(http.MethodGet, selfURL, nil)
 	w := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(r, w)
-	c.Set(auth.UserKey, &models.User{ID: 1})
+
+	user := &models.User{ID: 1}
+	c.Set(auth.UserKey, user)
 
 	userHandler := web.GetSelf()
 	if err := userHandler(c); err != nil {
 		t.Error(err)
 	}
 
+	userURL := "/users/" + strconv.FormatUint(user.ID, 10)
 	location := w.Header().Get("Location")
-	if location != apiPrefix+user1URL {
-		t.Errorf("have Location '%v' want '%v'", location, apiPrefix+user1URL)
+	if location != apiPrefix+userURL {
+		t.Errorf("have Location '%v' want '%v'", location, apiPrefix+userURL)
 	}
 	assertCode(t, w.Code, http.StatusFound)
 }
 
 func TestGetUser(t *testing.T) {
 	const (
-		rID1      = 1
-		secret1   = "123"
-		provider1 = "github"
-		remoteID1 = 10
+		getUserRoute = "/users/:uid"
+
+		secret   = "123"
+		provider = "github"
+		remoteID = 10
 	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	dbuser, err := db.CreateUserFromRemoteIdentity(provider1, rID1, secret1)
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,13 +62,14 @@ func TestGetUser(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodGet, "/users/:uid", web.GetUser(db))
+	router.Add(http.MethodGet, getUserRoute, web.GetUser(db))
 
-	r := httptest.NewRequest(http.MethodGet, user1URL, nil)
+	userURL := "/users/" + strconv.FormatUint(user.ID, 10)
+	r := httptest.NewRequest(http.MethodGet, userURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	router.Find(http.MethodGet, user1URL, c)
+	router.Find(http.MethodGet, userURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
@@ -78,34 +82,34 @@ func TestGetUser(t *testing.T) {
 	}
 
 	// Access token should be stripped.
-	dbuser.RemoteIdentities[0].AccessToken = ""
-	if !reflect.DeepEqual(foundUser, dbuser) {
-		t.Errorf("have user %+v want %+v", foundUser, dbuser)
+	user.RemoteIdentities[0].AccessToken = ""
+	if !reflect.DeepEqual(foundUser, user) {
+		t.Errorf("have user %+v want %+v", foundUser, user)
 	}
 	assertCode(t, w.Code, http.StatusFound)
 }
 
 func TestGetUsers(t *testing.T) {
 	const (
-		rID1      = 1
+		usersURL = "/users"
+
+		remoteID1 = 1
 		secret1   = "123"
 		provider1 = "github"
-		remoteID1 = 10
 
-		rID2      = 2
+		remoteID2 = 2
 		secret2   = "456"
 		provider2 = "gitlab"
-		remoteID2 = 20
 	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.CreateUserFromRemoteIdentity(provider1, rID1, secret1)
+	user1, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	user2, err := db.CreateUserFromRemoteIdentity(provider2, rID2, secret2)
+	user2, err := db.CreateUserFromRemoteIdentity(provider2, remoteID2, secret2)
 	if err != nil {
 		t.Fatal(err)
 	}
