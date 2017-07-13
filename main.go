@@ -139,9 +139,9 @@ func main() {
 	// TODO: Check if user is a member of a course, returns 404 or enrollment status.
 	courses.GET("/:cid/users/:uid", echo.NotFoundHandler)
 	courses.PUT("/:cid/users/:uid", web.SetEnrollment(db))
+	courses.GET("/:cid/assignments", web.ListAssignments(db))
 
 	api.POST("/directories", web.ListDirectories())
-	api.GET("/courses/:id/assignments", web.ListAssignments(db))
 
 	index := func(c echo.Context) error {
 		return c.File(entryPoint)
