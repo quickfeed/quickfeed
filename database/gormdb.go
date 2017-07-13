@@ -185,8 +185,16 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 // CreateEnrollment implements the Database interface.
 func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 	var user, course uint64
-	db.conn.Model(&models.User{}).Where(&models.User{ID: enrollment.UserID}).Count(&user)
-	db.conn.Model(&models.Course{}).Where(&models.Course{ID: enrollment.CourseID}).Count(&course)
+	if err := db.conn.Model(&models.User{}).Where(&models.User{
+		ID: enrollment.UserID,
+	}).Count(&user).Error; err != nil {
+		return err
+	}
+	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
+		ID: enrollment.CourseID,
+	}).Count(&course).Error; err != nil {
+		return err
+	}
 
 	if user+course != 2 {
 		return gorm.ErrRecordNotFound
