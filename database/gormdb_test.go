@@ -82,7 +82,7 @@ func TestGormDBGetAssignment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.GetAssignments(10); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetAssignmentsByCourse(10); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
@@ -108,7 +108,7 @@ func TestGormDBGetAssignmentExists(t *testing.T) {
 		t.Fatal(errCreate)
 	}
 
-	if _, err := db.GetAssignments(1); err != nil {
+	if _, err := db.GetAssignmentsByCourse(1); err != nil {
 		t.Errorf("have error '%v' wanted '%v'", err, nil)
 	}
 }

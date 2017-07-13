@@ -158,8 +158,8 @@ func (db *GormDB) GetCourses() (*[]models.Course, error) {
 	return &courses, nil
 }
 
-// GetAssignments implements the Database interface
-func (db *GormDB) GetAssignments(id uint64) (*[]models.Assignment, error) {
+// GetAssignmentsByCourse implements the Database interface
+func (db *GormDB) GetAssignmentsByCourse(id uint64) (*[]models.Assignment, error) {
 	var course models.Course
 	if err := db.conn.Preload("Assignments").First(&course, id).Error; err != nil {
 		return nil, err

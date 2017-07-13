@@ -72,7 +72,7 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 			return err
 		}
 		var assignments *[]models.Assignment
-		assignments, err = db.GetAssignments(id)
+		assignments, err = db.GetAssignmentsByCourse(id)
 		if err != nil {
 			return err
 		}
