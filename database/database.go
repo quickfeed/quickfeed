@@ -18,11 +18,11 @@ type Database interface {
 
 	CreateCourse(*models.Course) error
 	GetCourses() (*[]models.Course, error)
-	GetCourse(id uint64) (*models.Course, error)
+	GetCourse(uint64) (*models.Course, error)
 	UpdateCourse(*models.Course) error
-	GetCoursesForUser(id uint64) (*[]models.Course, error)
+	GetCoursesForUser(uint64) (*[]models.Course, error)
 	EnrollUserInCourse(userID, courseID uint64) error
 
-	GetAssignments(id uint64) (*[]models.Assignment, error)
-	CreateAssignment(assignment *models.Assignment) error
+	GetAssignments(uint64) (*[]models.Assignment, error)
+	CreateAssignment(*models.Assignment) error
 }
