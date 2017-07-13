@@ -151,7 +151,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeAdminRole(user: IUser): Promise<boolean> {
-        throw new Error("Method not implemented");
+        const result = await this.helper.put<{ setadmin: boolean }, {}>("/users/" + user.id + "", { setadmin: true });
+        if (result.statusCode !== 200) {
+            return false;
+        }
+        return true;
     }
 
     // TODO: check if resp.status contain correct status

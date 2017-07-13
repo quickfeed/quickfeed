@@ -339,29 +339,6 @@ exports.NavigationHelper = NavigationHelper;
 
 "use strict";
 
-Object.defineProperty(exports, "__esModule", { value: true });
-function isCourse(value) {
-    return value
-        && typeof value.id === "number"
-        && typeof value.name === "string"
-        && typeof value.tag === "string";
-}
-exports.isCourse = isCourse;
-var CourseUserState;
-(function (CourseUserState) {
-    CourseUserState[CourseUserState["pending"] = 0] = "pending";
-    CourseUserState[CourseUserState["student"] = 1] = "student";
-    CourseUserState[CourseUserState["rejected"] = 2] = "rejected";
-    CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
-})(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -411,6 +388,29 @@ class ViewPage {
     }
 }
 exports.ViewPage = ViewPage;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function isCourse(value) {
+    return value
+        && typeof value.id === "number"
+        && typeof value.name === "string"
+        && typeof value.tag === "string";
+}
+exports.isCourse = isCourse;
+var CourseUserState;
+(function (CourseUserState) {
+    CourseUserState[CourseUserState["pending"] = 0] = "pending";
+    CourseUserState[CourseUserState["student"] = 1] = "student";
+    CourseUserState[CourseUserState["rejected"] = 2] = "rejected";
+    CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
+})(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
 
 
 /***/ }),
@@ -1795,7 +1795,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const map_1 = __webpack_require__(5);
-const models_1 = __webpack_require__(3);
+const models_1 = __webpack_require__(4);
 class CourseManager {
     constructor(courseProvider) {
         this.courseProvider = courseProvider;
@@ -1964,7 +1964,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const event_1 = __webpack_require__(7);
 const NavigationHelper_1 = __webpack_require__(2);
-const ViewPage_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(3);
 function isILinkCollection(item) {
     if (item.item) {
         return true;
@@ -2135,8 +2135,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Models = __webpack_require__(3);
-const models_1 = __webpack_require__(3);
+const Models = __webpack_require__(4);
+const models_1 = __webpack_require__(4);
 const map_1 = __webpack_require__(5);
 class TempDataProvider {
     constructor() {
@@ -2737,7 +2737,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(3);
 class ErrorPage extends ViewPage_1.ViewPage {
     constructor() {
         super();
@@ -2781,7 +2781,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(3);
 const HelpView_1 = __webpack_require__(38);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
@@ -2872,7 +2872,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(3);
 class HomePage extends ViewPage_1.ViewPage {
     constructor() {
         super();
@@ -2903,8 +2903,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const models_1 = __webpack_require__(3);
-const ViewPage_1 = __webpack_require__(4);
+const models_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(3);
 const HelloView_1 = __webpack_require__(41);
 const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(11);
@@ -3105,7 +3105,7 @@ exports.HelloView = HelloView;
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const models_1 = __webpack_require__(3);
+const models_1 = __webpack_require__(4);
 class EnrollmentView extends React.Component {
     render() {
         return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
@@ -3151,10 +3151,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const ViewPage_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(3);
 const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(11);
-const models_1 = __webpack_require__(3);
+const models_1 = __webpack_require__(4);
 const MemberView_1 = __webpack_require__(44);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
@@ -3313,7 +3313,7 @@ exports.TeacherPage = TeacherPage;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const models_1 = __webpack_require__(3);
+const models_1 = __webpack_require__(4);
 const components_1 = __webpack_require__(1);
 const UserView_1 = __webpack_require__(6);
 exports.UserView = UserView_1.UserView;
@@ -3370,7 +3370,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const ViewPage_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(3);
 const CourseView_1 = __webpack_require__(46);
 const UserView_1 = __webpack_require__(6);
 class AdminPage extends ViewPage_1.ViewPage {
@@ -3675,7 +3675,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(3);
 class LoginPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan) {
         super();
@@ -3732,7 +3732,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const map_1 = __webpack_require__(5);
-const models_1 = __webpack_require__(3);
 function request(url) {
     return __awaiter(this, void 0, void 0, function* () {
         const req = new XMLHttpRequest();
@@ -3793,11 +3792,6 @@ class ServerProvider {
             });
         });
     }
-    getCoursesStudent() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return [{ courseId: 1, personId: 1, state: models_1.CourseUserState.student }];
-        });
-    }
     addUserToCourse(user, course) {
         return __awaiter(this, void 0, void 0, function* () {
             const resp = yield this.helper.put("/courses/" + course.id + "/users/" + user.id, {});
@@ -3851,7 +3845,7 @@ class ServerProvider {
     }
     tryLogin(username, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            throw new Error("tryLogin This could be removed since there is no normal login.");
         });
     }
     logout(user) {
@@ -3892,7 +3886,11 @@ class ServerProvider {
     }
     changeAdminRole(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented");
+            const result = yield this.helper.put("/users/" + user.id + "", { setadmin: true });
+            if (result.statusCode !== 200) {
+                return false;
+            }
+            return true;
         });
     }
     getDirectories(provider) {
