@@ -285,7 +285,11 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 		if err != nil || id == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
 		}
-		statuses := parseAllStatuses(c.QueryParam("status"))
+
+		statuses, ok := parseStatuses(c.QueryParam("status"))
+		if !ok {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid status query")
+		}
 
 		courses, err := db.GetEnrollmentsByCourse(id, statuses...)
 		if err != nil {
@@ -310,7 +314,11 @@ func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
 		if err != nil || id == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
 		}
-		statuses := parseAllStatuses(c.QueryParam("status"))
+
+		statuses, ok := parseStatuses(c.QueryParam("status"))
+		if !ok {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid status query")
+		}
 
 		users, err := db.GetEnrollmentsByUser(id, statuses...)
 		if err != nil {
@@ -328,36 +336,25 @@ func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
 	}
 }
 
-func parseAllStatuses(status string) []uint {
-	var statusCodes []uint
-	if status != "" {
-		for _, part := range strings.Split(status, ",") {
-			code, err := parseStatus(part)
-			if err == nil {
-				statusCodes = append(statusCodes, code)
-			}
+// parseStatuses takes a string of comma separated statuses and returns a slice
+// of the corresponding status constants.
+func parseStatuses(s string) ([]uint, bool) {
+	ss := strings.Split(s, ",")
+	if len(ss) > 3 {
+		return []uint{}, false
+	}
+	var statuses []uint
+	for _, s := range ss {
+		switch s {
+		case "pending":
+			statuses = append(statuses, models.Pending)
+		case "rejected":
+			statuses = append(statuses, models.Rejected)
+		case "accepted":
+			statuses = append(statuses, models.Accepted)
+		default:
+			return []uint{}, false
 		}
 	}
-	return statusCodes
-}
-
-func parseStatus(status string) (uint, error) {
-	switch status {
-	case "pending":
-		return models.Pending, nil
-	case "rejected":
-		return models.Rejected, nil
-	case "accepted":
-		return models.Accepted, nil
-	default:
-		return 0, &(statusParseError{err: "Error parsing status"})
-	}
-}
-
-type statusParseError struct {
-	err string
-}
-
-func (e *statusParseError) Error() string {
-	return e.err
+	return statuses, true
 }
