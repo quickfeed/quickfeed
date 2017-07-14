@@ -120,9 +120,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
         const resp = await this.helper.put<{ courseid: number, userid: number, status: CourseUserState }, undefined>
-            ("/courses/" + link.courseId + "/users/" + link.personId, {
+            ("/courses/" + link.courseId + "/users/" + link.userid, {
                 courseid: link.courseId,
-                userid: link.personId,
+                userid: link.userid,
                 status: state,
             });
         if (resp.statusCode === 201) {

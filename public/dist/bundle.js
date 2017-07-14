@@ -1859,7 +1859,7 @@ class CourseManager {
                 return {
                     assignments: [],
                     course: ele.course,
-                    link: { courseId: ele.courseid, personId: ele.userid, state: ele.status },
+                    link: { courseId: ele.courseid, userid: ele.userid, state: ele.status },
                 };
             });
             return newMap;
@@ -1909,7 +1909,7 @@ class CourseManager {
             for (const crs of courses) {
                 if (crs.courseid === course.id) {
                     const returnTemp = {
-                        link: { personId: student.id, courseId: course.id, state: crs.status },
+                        link: { userid: student.id, courseId: course.id, state: crs.status },
                         assignments: [],
                         course,
                     };
@@ -1943,7 +1943,7 @@ class CourseManager {
                 links.push({
                     assignments: [],
                     course: course.course,
-                    link: { courseId: course.courseid, personId: student.id, state: course.status },
+                    link: { courseId: course.courseid, userid: student.id, state: course.status },
                 });
             }
             for (const link of links) {
@@ -1956,7 +1956,7 @@ class CourseManager {
         return __awaiter(this, void 0, void 0, function* () {
             return (yield this.courseProvider.getUsersForCourse(course, state)).map((user) => {
                 return {
-                    link: { courseId: course.id, personId: user.userid, state: user.status },
+                    link: { courseId: course.id, userid: user.userid, state: user.status },
                     user: user.user,
                 };
             });
@@ -2252,7 +2252,7 @@ class TempDataProvider {
         return __awaiter(this, void 0, void 0, function* () {
             this.localCourseStudent.push({
                 courseId: course.id,
-                personId: user.id,
+                userid: user.id,
                 state: Models.CourseUserState.pending,
             });
             return true;
@@ -2285,13 +2285,13 @@ class TempDataProvider {
     getUsersForCourse(course, state) {
         return __awaiter(this, void 0, void 0, function* () {
             const courseStds = yield this.getUserLinksForCourse(course, state);
-            const users = yield this.getUsersAsMap(courseStds.map((e) => e.personId));
+            const users = yield this.getUsersAsMap(courseStds.map((e) => e.userid));
             return courseStds.map((link) => {
-                const user = users[link.personId];
+                const user = users[link.userid];
                 if (!user) {
                     throw new Error("Link exist witout a user object");
                 }
-                return { courseid: link.courseId, userid: link.personId, user, status: link.state };
+                return { courseid: link.courseId, userid: link.userid, user, status: link.state };
             });
         });
     }
@@ -2351,7 +2351,7 @@ class TempDataProvider {
             const cLinks = [];
             const temp = yield this.getCoursesStudent();
             for (const c of temp) {
-                if (user.id === c.personId && (state === undefined || c.state === models_1.CourseUserState.student)) {
+                if (user.id === c.userid && (state === undefined || c.state === models_1.CourseUserState.student)) {
                     cLinks.push(c);
                 }
             }
@@ -2360,7 +2360,7 @@ class TempDataProvider {
             for (const link of cLinks) {
                 const c = tempCourses[link.courseId];
                 if (c) {
-                    courses.push({ course: c, courseid: link.courseId, userid: link.personId, status: link.state });
+                    courses.push({ course: c, courseid: link.courseId, userid: link.userid, status: link.state });
                 }
             }
             return courses;
@@ -2536,10 +2536,10 @@ class TempDataProvider {
     }
     addLocalCourseStudent() {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999, state: 2 },
-            { courseId: 1, personId: 999, state: 2 },
-            { courseId: 0, personId: 1, state: 0 },
-            { courseId: 0, personId: 2, state: 0 },
+            { courseId: 0, userid: 999, state: 2 },
+            { courseId: 1, userid: 999, state: 2 },
+            { courseId: 0, userid: 1, state: 0 },
+            { courseId: 0, userid: 2, state: 0 },
         ];
     }
     addLocalLabInfo() {
@@ -3849,9 +3849,9 @@ class ServerProvider {
     }
     changeUserState(link, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.helper.put("/courses/" + link.courseId + "/users/" + link.personId, {
+            const resp = yield this.helper.put("/courses/" + link.courseId + "/users/" + link.userid, {
                 courseid: link.courseId,
-                userid: link.personId,
+                userid: link.userid,
                 status: state,
             });
             if (resp.statusCode === 201) {

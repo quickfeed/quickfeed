@@ -94,7 +94,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
         this.localCourseStudent.push({
             courseId: course.id,
-            personId: user.id,
+            userid: user.id,
             state: Models.CourseUserState.pending,
         });
         return true;
@@ -130,14 +130,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async getUsersForCourse(course: Models.ICourse, state?: Models.CourseUserState): Promise<IUserEnrollment[]> {
         const courseStds: ICourseUserLink[] =
             await this.getUserLinksForCourse(course, state);
-        const users = await this.getUsersAsMap(courseStds.map((e) => e.personId));
+        const users = await this.getUsersAsMap(courseStds.map((e) => e.userid));
         return courseStds.map<IUserEnrollment>((link) => {
-            const user = users[link.personId];
+            const user = users[link.userid];
             if (!user) {
                 // TODO: See if we should have an error here or not
                 throw new Error("Link exist witout a user object");
             }
-            return { courseid: link.courseId, userid: link.personId, user, status: link.state };
+            return { courseid: link.courseId, userid: link.userid, user, status: link.state };
         });
     }
 
@@ -189,7 +189,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         const cLinks: ICourseUserLink[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
-            if (user.id === c.personId && (state === undefined || c.state === CourseUserState.student)) {
+            if (user.id === c.userid && (state === undefined || c.state === CourseUserState.student)) {
                 cLinks.push(c);
             }
         }
@@ -198,7 +198,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         for (const link of cLinks) {
             const c = tempCourses[link.courseId];
             if (c) {
-                courses.push({ course: c, courseid: link.courseId, userid: link.personId, status: link.state });
+                courses.push({ course: c, courseid: link.courseId, userid: link.userid, status: link.state });
             }
         }
         return courses;
@@ -400,10 +400,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private addLocalCourseStudent() {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999, state: 2 },
-            { courseId: 1, personId: 999, state: 2 },
-            { courseId: 0, personId: 1, state: 0 },
-            { courseId: 0, personId: 2, state: 0 },
+            { courseId: 0, userid: 999, state: 2 },
+            { courseId: 1, userid: 999, state: 2 },
+            { courseId: 0, userid: 1, state: 0 },
+            { courseId: 0, userid: 2, state: 0 },
         ] as ICourseUserLink[];
     }
 

@@ -118,7 +118,7 @@ export class CourseManager {
             return {
                 assignments: [],
                 course: ele.course,
-                link: { courseId: ele.courseid, personId: ele.userid, state: ele.status },
+                link: { courseId: ele.courseid, userid: ele.userid, state: ele.status },
             };
         });
         return newMap;
@@ -193,7 +193,7 @@ export class CourseManager {
         for (const crs of courses) {
             if (crs.courseid === course.id) {
                 const returnTemp: IUserCourse = {
-                    link: { personId: student.id, courseId: course.id, state: crs.status },
+                    link: { userid: student.id, courseId: course.id, state: crs.status },
                     assignments: [],
                     course,
                 };
@@ -238,7 +238,7 @@ export class CourseManager {
             links.push({
                 assignments: [],
                 course: course.course,
-                link: { courseId: course.courseid, personId: student.id, state: course.status },
+                link: { courseId: course.courseid, userid: student.id, state: course.status },
             });
         }
 
@@ -261,7 +261,7 @@ export class CourseManager {
 
         return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
             return {
-                link: { courseId: course.id, personId: user.userid, state: user.status },
+                link: { courseId: course.id, userid: user.userid, state: user.status },
                 user: user.user,
             };
         });

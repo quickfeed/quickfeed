@@ -140,7 +140,7 @@ export function courseUserStateToString(state: CourseUserState): string {
  * The relation description between a user and course
  */
 export interface ICourseUserLink {
-    personId: number;
+    userid: number;
     courseId: number;
     state: CourseUserState;
 }
