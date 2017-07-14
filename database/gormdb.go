@@ -244,6 +244,31 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 	}).Error
 }
 
+// GetCoursesByUser returns all courses with the users enrollment status
+// included.
+func (db *GormDB) GetCoursesByUser(id uint64) ([]*models.Course, error) {
+	courses, err := db.GetCourses()
+	if err != nil {
+		return nil, err
+	}
+
+	enrollments, err := db.GetEnrollmentsByUser(id)
+	if err != nil {
+		return nil, err
+	}
+
+	m := make(map[uint64]*models.Enrollment)
+	for _, enrollment := range enrollments {
+		m[enrollment.CourseID] = enrollment
+	}
+
+	for _, course := range courses {
+		course.Enrolled = m[course.ID].Status
+	}
+
+	return courses, nil
+}
+
 // GetCourse implements the Database interface
 func (db *GormDB) GetCourse(id uint64) (*models.Course, error) {
 	var course models.Course

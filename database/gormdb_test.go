@@ -295,6 +295,75 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	}
 }
 
+func TestGormDBGetCoursesByUser(t *testing.T) {
+	const (
+		secret   = "123"
+		provider = "github"
+		remoteID = 11
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var course1 models.Course
+	if err := db.CreateCourse(&course1); err != nil {
+		t.Fatal(err)
+	}
+
+	var course2 models.Course
+	if err := db.CreateCourse(&course2); err != nil {
+		t.Fatal(err)
+	}
+
+	var course3 models.Course
+	if err := db.CreateCourse(&course3); err != nil {
+		t.Fatal(err)
+	}
+
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	enrollment1 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course1.ID,
+	}
+	enrollment2 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course2.ID,
+	}
+	enrollment3 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course3.ID,
+	}
+	if err := db.CreateEnrollment(&enrollment1); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&enrollment2); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&enrollment3); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AcceptEnrollment(enrollment3.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	courses, err := db.GetCoursesByUser(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantCourses := []*models.Course{{ID: course1.ID}, {ID: course2.ID, Enrolled: 1}, {ID: course3.ID, Enrolled: 2}}
+	if !reflect.DeepEqual(courses, wantCourses) {
+		t.Errorf("have course %+v want %+v", courses, wantCourses)
+	}
+}
+
 func TestGormDBDuplicateIdentity(t *testing.T) {
 	const (
 		uID  = 1
