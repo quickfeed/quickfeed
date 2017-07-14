@@ -137,7 +137,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 // TODO: See if we should have an error here or not
                 throw new Error("Link exist witout a user object");
             }
-            return { courseid: link.courseId, userid: link.personId, id: 0, user, status: link.state };
+            return { courseid: link.courseId, userid: link.personId, user, status: link.state };
         });
     }
 
@@ -198,7 +198,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         for (const link of cLinks) {
             const c = tempCourses[link.courseId];
             if (c) {
-                courses.push({ course: c, courseid: link.courseId, id: 0, userid: link.personId, status: link.state });
+                courses.push({ course: c, courseid: link.courseId, userid: link.personId, status: link.state });
             }
         }
         return courses;

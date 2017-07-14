@@ -94,8 +94,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
-        const resp = await this.helper.put<{}, undefined>
-        ("/courses/" + course.id + "/users/" + user.id, {});
+        const resp = await this.helper.put<{ courseid: number, userid: number, status: CourseUserState }, undefined>
+            ("/courses/" + course.id + "/users/" + user.id, {
+                courseid: course.id,
+                userid: user.id,
+                status: CourseUserState.pending,
+            });
         if (resp.statusCode === 201) {
             return true;
         }
@@ -103,7 +107,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
-        throw new Error("Method not implemented.");
+        const resp = await this.helper.put<{ courseid: number, userid: number, status: CourseUserState }, undefined>
+            ("/courses/" + link.courseId + "/users/" + link.personId, {
+                courseid: link.courseId,
+                userid: link.personId,
+                status: state,
+            });
+        if (resp.statusCode === 201) {
+            return true;
+        }
+        return false;
     }
 
     public async createNewCourse(courseData: ICourse): Promise<boolean> {
@@ -207,12 +220,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     private makeUserInfo(data: { id: number, isadmin: boolean }): IUser {
         return {
-            firstname: "No name",
-            lastname: "names",
+            firstname: "Agent 00" + data.id,
+            lastname: "NR" + data.id,
             isadmin: data.isadmin,
             id: data.id,
             personid: 1000,
-            email: "no@name.com",
+            email: "00" + data.id + "@secretorganization.com",
         };
     }
 

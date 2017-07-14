@@ -50,7 +50,6 @@ export function isCourseEnrollment(enroll: IEnrollment): enroll is IUserEnrollme
 }
 
 export interface ICourseEnrollemtnt extends IEnrollment {
-    id: number;
     userid: number;
     courseid: number;
     status: CourseUserState;
@@ -59,7 +58,6 @@ export interface ICourseEnrollemtnt extends IEnrollment {
 }
 
 export interface IUserEnrollment extends IEnrollment {
-    id: number;
     userid: number;
     courseid: number;
     status: CourseUserState;
@@ -68,7 +66,6 @@ export interface IUserEnrollment extends IEnrollment {
 }
 
 export interface IEnrollment {
-    id: number;
     userid: number;
     courseid: number;
     status: CourseUserState;
@@ -264,7 +261,7 @@ export class CourseManager {
 
         return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
             return {
-                link: { courseId: course.id, personId: user.id, state: user.status },
+                link: { courseId: course.id, personId: user.userid, state: user.status },
                 user: user.user,
             };
         });

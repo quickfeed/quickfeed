@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,16 +79,15 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(14));
+__export(__webpack_require__(15));
 __export(__webpack_require__(8));
 __export(__webpack_require__(9));
-__export(__webpack_require__(15));
 __export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
-__export(__webpack_require__(20));
-__export(__webpack_require__(10));
+__export(__webpack_require__(19));
 __export(__webpack_require__(21));
+__export(__webpack_require__(10));
 __export(__webpack_require__(22));
 __export(__webpack_require__(23));
 __export(__webpack_require__(24));
@@ -98,6 +97,7 @@ __export(__webpack_require__(27));
 __export(__webpack_require__(28));
 __export(__webpack_require__(29));
 __export(__webpack_require__(30));
+__export(__webpack_require__(31));
 
 
 /***/ }),
@@ -115,7 +115,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(7);
+const event_1 = __webpack_require__(6);
 function trimChars(str, char) {
     if (str.length === 0) {
         return "";
@@ -339,6 +339,29 @@ exports.NavigationHelper = NavigationHelper;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+function isCourse(value) {
+    return value
+        && typeof value.id === "number"
+        && typeof value.name === "string"
+        && typeof value.tag === "string";
+}
+exports.isCourse = isCourse;
+var CourseUserState;
+(function (CourseUserState) {
+    CourseUserState[CourseUserState["pending"] = 0] = "pending";
+    CourseUserState[CourseUserState["rejected"] = 1] = "rejected";
+    CourseUserState[CourseUserState["student"] = 2] = "student";
+    CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
+})(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -391,95 +414,7 @@ exports.ViewPage = ViewPage;
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function isCourse(value) {
-    return value
-        && typeof value.id === "number"
-        && typeof value.name === "string"
-        && typeof value.tag === "string";
-}
-exports.isCourse = isCourse;
-var CourseUserState;
-(function (CourseUserState) {
-    CourseUserState[CourseUserState["pending"] = 0] = "pending";
-    CourseUserState[CourseUserState["student"] = 1] = "student";
-    CourseUserState[CourseUserState["rejected"] = 2] = "rejected";
-    CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
-})(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
-
-
-/***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-class MapHelper {
-    static mapTo(map, callback) {
-        const returnArray = [];
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            const temp = map[index];
-            if (temp) {
-                returnArray.push(callback(temp, index, map));
-            }
-        }
-        return returnArray;
-    }
-    static forEach(map, callback) {
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            const temp = map[index];
-            if (temp) {
-                callback(temp, index, map);
-            }
-        }
-    }
-    static find(map, callback) {
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            const temp = map[index];
-            if (temp && callback(temp, index, map)) {
-                return temp;
-            }
-        }
-        return null;
-    }
-    static toArray(map) {
-        const returnArray = [];
-        const keys = Object.keys(map);
-        for (const a of keys) {
-            const index = parseInt(a, 10);
-            const temp = map[index];
-            if (temp) {
-                returnArray.push(temp);
-            }
-        }
-        return returnArray;
-    }
-}
-exports.MapHelper = MapHelper;
-function mapify(obj, callback) {
-    const newObj = {};
-    obj.forEach((ele, index, array) => {
-        newObj[callback(ele, index, obj)] = ele;
-    });
-    return newObj;
-}
-exports.mapify = mapify;
-
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -571,7 +506,7 @@ exports.UserView = UserView;
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -597,6 +532,71 @@ function newEvent(info) {
     return handler;
 }
 exports.newEvent = newEvent;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class MapHelper {
+    static mapTo(map, callback) {
+        const returnArray = [];
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            const temp = map[index];
+            if (temp) {
+                returnArray.push(callback(temp, index, map));
+            }
+        }
+        return returnArray;
+    }
+    static forEach(map, callback) {
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            const temp = map[index];
+            if (temp) {
+                callback(temp, index, map);
+            }
+        }
+    }
+    static find(map, callback) {
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            const temp = map[index];
+            if (temp && callback(temp, index, map)) {
+                return temp;
+            }
+        }
+        return null;
+    }
+    static toArray(map) {
+        const returnArray = [];
+        const keys = Object.keys(map);
+        for (const a of keys) {
+            const index = parseInt(a, 10);
+            const temp = map[index];
+            if (temp) {
+                returnArray.push(temp);
+            }
+        }
+        return returnArray;
+    }
+}
+exports.MapHelper = MapHelper;
+function mapify(obj, callback) {
+    const newObj = {};
+    obj.forEach((ele, index, array) => {
+        newObj[callback(ele, index, obj)] = ele;
+    });
+    return newObj;
+}
+exports.mapify = mapify;
 
 
 /***/ }),
@@ -694,6 +694,22 @@ exports.ProgressBar = ProgressBar;
 
 /***/ }),
 /* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+__export(__webpack_require__(32));
+__export(__webpack_require__(33));
+__export(__webpack_require__(34));
+__export(__webpack_require__(35));
+
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -815,7 +831,7 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -830,9 +846,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(13);
+const ReactDOM = __webpack_require__(14);
 const components_1 = __webpack_require__(1);
-const managers_1 = __webpack_require__(31);
+const managers_1 = __webpack_require__(11);
 const ErrorPage_1 = __webpack_require__(36);
 const HelpPage_1 = __webpack_require__(37);
 const HomePage_1 = __webpack_require__(39);
@@ -1024,13 +1040,13 @@ main();
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1072,7 +1088,7 @@ exports.NavBar = NavBar;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1103,7 +1119,7 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1145,7 +1161,7 @@ exports.DynamicTable = DynamicTable;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1159,14 +1175,14 @@ exports.Row = Row;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const LabResultView_1 = __webpack_require__(19);
+const LabResultView_1 = __webpack_require__(20);
 class StudentLab extends React.Component {
     render() {
         return React.createElement(LabResultView_1.LabResultView, { course: this.props.course, labInfo: this.props.assignment });
@@ -1176,7 +1192,7 @@ exports.StudentLab = StudentLab;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1205,7 +1221,7 @@ exports.LabResultView = LabResultView;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1263,7 +1279,7 @@ exports.NavDropdown = NavDropdown;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1304,7 +1320,7 @@ exports.LabResult = LabResult;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1324,7 +1340,7 @@ exports.LastBuild = LastBuild;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1367,7 +1383,7 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1404,7 +1420,7 @@ exports.CoursesOverview = CoursesOverview;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1442,7 +1458,7 @@ exports.CoursePanel = CoursePanel;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1489,7 +1505,7 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1510,7 +1526,7 @@ exports.Button = Button;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1661,7 +1677,7 @@ exports.CourseForm = CourseForm;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1672,14 +1688,22 @@ const components_1 = __webpack_require__(1);
 class Results extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            assignment: this.props.students[0].course.assignments[0],
-            students: this.props.students,
-        };
+        if (this.props.students[0] && this.props.students[0].course.assignments[0]) {
+            this.state = {
+                assignment: this.props.students[0].course.assignments[0],
+                students: this.props.students,
+            };
+        }
+        else {
+            this.state = {
+                assignment: undefined,
+                students: this.props.students,
+            };
+        }
     }
     render() {
         let studentLab = null;
-        if (this.props.students.length > 0) {
+        if (this.props.students.length > 0 && this.state.assignment) {
             studentLab = React.createElement(components_1.StudentLab, { course: this.props.course, assignment: this.state.assignment });
         }
         const searchIcon = React.createElement("span", { className: "input-group-addon" },
@@ -1728,7 +1752,7 @@ exports.Results = Results;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1764,22 +1788,6 @@ exports.Search = Search;
 
 
 /***/ }),
-/* 31 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(32));
-__export(__webpack_require__(33));
-__export(__webpack_require__(34));
-__export(__webpack_require__(35));
-
-
-/***/ }),
 /* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1794,8 +1802,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const map_1 = __webpack_require__(5);
-const models_1 = __webpack_require__(4);
+const map_1 = __webpack_require__(7);
+const models_1 = __webpack_require__(3);
+function isUserEnrollment(enroll) {
+    if (enroll.course) {
+        return true;
+    }
+    return false;
+}
+exports.isUserEnrollment = isUserEnrollment;
+function isCourseEnrollment(enroll) {
+    if (enroll.user) {
+        return true;
+    }
+    return false;
+}
+exports.isCourseEnrollment = isCourseEnrollment;
 class CourseManager {
     constructor(courseProvider) {
         this.courseProvider = courseProvider;
@@ -1817,16 +1839,12 @@ class CourseManager {
     }
     getCoursesWithState(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            const userCourses = yield this.getCoursesFor(user);
-            const allCourses = yield this.getCourses();
-            const newMap = allCourses.map((ele) => {
-                const link = userCourses.find((sub) => sub.id === ele.id) ? {
-                    courseId: ele.id, personId: user.id, state: models_1.CourseUserState.student,
-                } : undefined;
+            const userCourses = yield this.courseProvider.getCoursesFor(user);
+            const newMap = userCourses.map((ele) => {
                 return {
                     assignments: [],
-                    course: ele,
-                    link,
+                    course: ele.course,
+                    link: { courseId: ele.courseid, personId: ele.userid, state: ele.status },
                 };
             });
             return newMap;
@@ -1834,7 +1852,7 @@ class CourseManager {
     }
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.courseProvider.getCoursesFor(user, state);
+            return (yield this.courseProvider.getCoursesFor(user, state)).map((ele) => ele.course);
         });
     }
     getAssignment(course, assignmentId) {
@@ -1872,13 +1890,19 @@ class CourseManager {
     }
     getStudentCourse(student, course) {
         return __awaiter(this, void 0, void 0, function* () {
-            const returnTemp = {
-                link: { personId: student.id, courseId: course.id, state: models_1.CourseUserState.student },
-                assignments: [],
-                course,
-            };
-            yield this.fillLinks(student, returnTemp);
-            return returnTemp;
+            const courses = yield this.courseProvider.getCoursesFor(student);
+            for (const crs of courses) {
+                if (crs.courseid === course.id) {
+                    const returnTemp = {
+                        link: { personId: student.id, courseId: course.id, state: crs.status },
+                        assignments: [],
+                        course,
+                    };
+                    yield this.fillLinks(student, returnTemp);
+                    return returnTemp;
+                }
+            }
+            return null;
         });
     }
     getUserSubmittions(student, assignment) {
@@ -1903,8 +1927,8 @@ class CourseManager {
             for (const course of userCourses) {
                 links.push({
                     assignments: [],
-                    course,
-                    link: { courseId: course.id, personId: student.id, state: models_1.CourseUserState.student },
+                    course: course.course,
+                    link: { courseId: course.courseid, personId: student.id, state: course.status },
                 });
             }
             for (const link of links) {
@@ -1917,8 +1941,8 @@ class CourseManager {
         return __awaiter(this, void 0, void 0, function* () {
             return (yield this.courseProvider.getUsersForCourse(course, state)).map((user) => {
                 return {
-                    link: { courseId: course.id, personId: user.id, state: models_1.CourseUserState.student },
-                    user,
+                    link: { courseId: course.id, personId: user.userid, state: user.status },
+                    user: user.user,
                 };
             });
         });
@@ -1930,6 +1954,7 @@ class CourseManager {
     }
     fillLinks(student, studentCourse) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log(student, studentCourse);
             if (!studentCourse.link) {
                 return;
             }
@@ -1962,9 +1987,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(7);
+const event_1 = __webpack_require__(6);
 const NavigationHelper_1 = __webpack_require__(2);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 function isILinkCollection(item) {
     if (item.item) {
         return true;
@@ -2135,9 +2160,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Models = __webpack_require__(4);
-const models_1 = __webpack_require__(4);
-const map_1 = __webpack_require__(5);
+const Models = __webpack_require__(3);
+const models_1 = __webpack_require__(3);
+const map_1 = __webpack_require__(7);
 class TempDataProvider {
     constructor() {
         this.currentLoggedIn = null;
@@ -2213,7 +2238,7 @@ class TempDataProvider {
             this.localCourseStudent.push({
                 courseId: course.id,
                 personId: user.id,
-                state: Models.CourseUserState.student,
+                state: Models.CourseUserState.pending,
             });
             return true;
         });
@@ -2251,7 +2276,7 @@ class TempDataProvider {
                 if (!user) {
                     throw new Error("Link exist witout a user object");
                 }
-                return user;
+                return { courseid: link.courseId, userid: link.personId, user, status: link.state };
             });
         });
     }
@@ -2320,7 +2345,7 @@ class TempDataProvider {
             for (const link of cLinks) {
                 const c = tempCourses[link.courseId];
                 if (c) {
-                    courses.push(c);
+                    courses.push({ course: c, courseid: link.courseId, userid: link.personId, status: link.state });
                 }
             }
             return courses;
@@ -2496,8 +2521,8 @@ class TempDataProvider {
     }
     addLocalCourseStudent() {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999, state: 1 },
-            { courseId: 1, personId: 999, state: 1 },
+            { courseId: 0, personId: 999, state: 2 },
+            { courseId: 1, personId: 999, state: 2 },
             { courseId: 0, personId: 1, state: 0 },
             { courseId: 0, personId: 2, state: 0 },
         ];
@@ -2626,8 +2651,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(7);
-const map_1 = __webpack_require__(5);
+const event_1 = __webpack_require__(6);
 class UserManager {
     constructor(userProvider) {
         this.onLogin = event_1.newEvent("UserManager.onLogin");
@@ -2676,25 +2700,7 @@ class UserManager {
     }
     getAllUser() {
         return __awaiter(this, void 0, void 0, function* () {
-            return map_1.MapHelper.toArray(yield this.userProvider.getAllUser());
-        });
-    }
-    getUsers(ids) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return map_1.MapHelper.toArray(yield this.getUsersAsMap(ids));
-        });
-    }
-    getUsersAsMap(ids) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const returnUsers = {};
-            const allUsers = yield this.userProvider.getAllUser();
-            ids.forEach((ele) => {
-                const temp = allUsers[ele];
-                if (temp) {
-                    returnUsers[ele] = temp;
-                }
-            });
-            return returnUsers;
+            return yield this.userProvider.getAllUser();
         });
     }
     getUser(id) {
@@ -2737,7 +2743,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 class ErrorPage extends ViewPage_1.ViewPage {
     constructor() {
         super();
@@ -2781,7 +2787,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 const HelpView_1 = __webpack_require__(38);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
@@ -2872,7 +2878,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 class HomePage extends ViewPage_1.ViewPage {
     constructor() {
         super();
@@ -2903,11 +2909,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const models_1 = __webpack_require__(4);
-const ViewPage_1 = __webpack_require__(3);
+const models_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 const HelloView_1 = __webpack_require__(41);
-const UserView_1 = __webpack_require__(6);
-const CollapsableNavMenu_1 = __webpack_require__(11);
+const UserView_1 = __webpack_require__(5);
+const CollapsableNavMenu_1 = __webpack_require__(12);
 const EnrollmentView_1 = __webpack_require__(42);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
@@ -3105,7 +3111,7 @@ exports.HelloView = HelloView;
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const models_1 = __webpack_require__(4);
+const models_1 = __webpack_require__(3);
 class EnrollmentView extends React.Component {
     render() {
         return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
@@ -3151,10 +3157,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const ViewPage_1 = __webpack_require__(3);
-const UserView_1 = __webpack_require__(6);
-const CollapsableNavMenu_1 = __webpack_require__(11);
-const models_1 = __webpack_require__(4);
+const ViewPage_1 = __webpack_require__(4);
+const UserView_1 = __webpack_require__(5);
+const CollapsableNavMenu_1 = __webpack_require__(12);
+const models_1 = __webpack_require__(3);
 const MemberView_1 = __webpack_require__(44);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
@@ -3313,9 +3319,9 @@ exports.TeacherPage = TeacherPage;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const models_1 = __webpack_require__(4);
+const models_1 = __webpack_require__(3);
 const components_1 = __webpack_require__(1);
-const UserView_1 = __webpack_require__(6);
+const UserView_1 = __webpack_require__(5);
 exports.UserView = UserView_1.UserView;
 class MemberView extends React.Component {
     render() {
@@ -3370,9 +3376,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 const CourseView_1 = __webpack_require__(46);
-const UserView_1 = __webpack_require__(6);
+const UserView_1 = __webpack_require__(5);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
         super();
@@ -3675,7 +3681,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ViewPage_1 = __webpack_require__(3);
+const ViewPage_1 = __webpack_require__(4);
 class LoginPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan) {
         super();
@@ -3731,7 +3737,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const map_1 = __webpack_require__(5);
+const managers_1 = __webpack_require__(11);
+const map_1 = __webpack_require__(7);
+const models_1 = __webpack_require__(3);
 function request(url) {
     return __awaiter(this, void 0, void 0, function* () {
         const req = new XMLHttpRequest();
@@ -3767,16 +3775,33 @@ class ServerProvider {
     }
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.helper.get("courses");
+            const result = yield this.helper.get("/users/" + user.id + "/courses");
             if (result.statusCode !== 200 || !result.data) {
                 return [];
             }
-            return result.data;
+            const arr = [];
+            result.data.forEach((ele) => {
+                if (managers_1.isUserEnrollment(ele)) {
+                    arr.push(ele);
+                }
+            });
+            return arr;
         });
     }
     getUsersForCourse(course, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            const result = yield this.helper.get("/courses/" + course.id + "/users");
+            if (result.statusCode !== 200 || !result.data) {
+                return [];
+            }
+            const arr = [];
+            result.data.forEach((ele) => {
+                if (managers_1.isCourseEnrollment(ele)) {
+                    ele.user = this.makeUserInfo(ele.user);
+                    arr.push(ele);
+                }
+            });
+            return arr;
         });
     }
     getAssignments(courseId) {
@@ -3794,7 +3819,11 @@ class ServerProvider {
     }
     addUserToCourse(user, course) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.helper.put("/courses/" + course.id + "/users/" + user.id, {});
+            const resp = yield this.helper.put("/courses/" + course.id + "/users/" + user.id, {
+                courseid: course.id,
+                userid: user.id,
+                status: models_1.CourseUserState.pending,
+            });
             if (resp.statusCode === 201) {
                 return true;
             }
@@ -3803,7 +3832,15 @@ class ServerProvider {
     }
     changeUserState(link, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented.");
+            const resp = yield this.helper.put("/courses/" + link.courseId + "/users/" + link.personId, {
+                courseid: link.courseId,
+                userid: link.personId,
+                status: state,
+            });
+            if (resp.statusCode === 201) {
+                return true;
+            }
+            return false;
         });
     }
     createNewCourse(courseData) {
@@ -3886,8 +3923,8 @@ class ServerProvider {
     }
     changeAdminRole(user) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.helper.put("/users/" + user.id + "", { setadmin: true });
-            if (result.statusCode !== 200) {
+            const result = yield this.helper.patch("/users/" + user.id + "", { isadmin: true });
+            if (result.statusCode < 400) {
                 return false;
             }
             return true;
@@ -3915,12 +3952,12 @@ class ServerProvider {
     }
     makeUserInfo(data) {
         return {
-            firstname: "No name",
-            lastname: "names",
+            firstname: "Agent 00" + data.id,
+            lastname: "NR" + data.id,
             isadmin: data.isadmin,
             id: data.id,
             personid: 1000,
-            email: "no@name.com",
+            email: "00" + data.id + "@secretorganization.com",
         };
     }
 }
@@ -3944,7 +3981,7 @@ class HttpHelper {
         return this.PATH_PREFIX;
     }
     get(uri) {
-        return this.send("get", uri);
+        return this.send("GET", uri);
     }
     post(uri, sendData) {
         return this.send("POST", uri, sendData);
@@ -3954,6 +3991,9 @@ class HttpHelper {
     }
     delete(uri) {
         return this.send("DELETE", uri);
+    }
+    patch(uri, sendData) {
+        return this.send("PATCH", uri, sendData);
     }
     send(method, uri, sendData) {
         const request = new XMLHttpRequest();
