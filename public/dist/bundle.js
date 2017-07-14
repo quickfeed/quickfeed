@@ -354,6 +354,21 @@ var CourseUserState;
     CourseUserState[CourseUserState["student"] = 2] = "student";
     CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
 })(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
+function courseUserStateToString(state) {
+    switch (state) {
+        case CourseUserState.pending:
+            return "pending";
+        case CourseUserState.rejected:
+            return "rejected";
+        case CourseUserState.student:
+            return "accepted";
+        case CourseUserState.teacher:
+            return "accepted";
+        default:
+            return "";
+    }
+}
+exports.courseUserStateToString = courseUserStateToString;
 
 
 /***/ }),
@@ -3737,9 +3752,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const models_1 = __webpack_require__(3);
 const managers_1 = __webpack_require__(11);
 const map_1 = __webpack_require__(7);
-const models_1 = __webpack_require__(3);
 function request(url) {
     return __awaiter(this, void 0, void 0, function* () {
         const req = new XMLHttpRequest();
@@ -3775,7 +3790,8 @@ class ServerProvider {
     }
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.helper.get("/users/" + user.id + "/courses");
+            const status = state ? "?status=" + models_1.courseUserStateToString(state) : "";
+            const result = yield this.helper.get("/users/" + user.id + "/courses" + status);
             if (result.statusCode !== 200 || !result.data) {
                 return [];
             }
@@ -3790,7 +3806,8 @@ class ServerProvider {
     }
     getUsersForCourse(course, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.helper.get("/courses/" + course.id + "/users");
+            const status = state ? "?status=" + models_1.courseUserStateToString(state) : "";
+            const result = yield this.helper.get("/courses/" + course.id + "/users" + status);
             if (result.statusCode !== 200 || !result.data) {
                 return [];
             }

@@ -1,4 +1,18 @@
 import {
+    CourseUserState,
+    courseUserStateToString,
+    IAssignment,
+    ICourse,
+    ICourseUserLink,
+    ILabInfo,
+    IOrganization,
+    IUser,
+} from "../models";
+
+import { HttpHelper } from "../HttpHelper";
+import { ICourseProvider } from "./CourseManager";
+
+import {
     ICourseEnrollemtnt,
     IEnrollment,
     isCourseEnrollment,
@@ -7,10 +21,6 @@ import {
     IUserProvider,
 } from "../managers";
 import { IMap, mapify } from "../map";
-import { CourseUserState, IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
-import { ICourseProvider } from "./CourseManager";
-
-import { HttpHelper } from "../HttpHelper";
 
 async function request(url: string): Promise<string> {
     const req = new XMLHttpRequest();
@@ -50,7 +60,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]> {
         // TODO: Fix to use correct url request
-        const result = await this.helper.get<IEnrollment[]>("/users/" + user.id + "/courses");
+        const status = state ? "?status=" + courseUserStateToString(state) : "";
+        const result = await this.helper.get<IEnrollment[]>("/users/" + user.id + "/courses" + status);
         if (result.statusCode !== 200 || !result.data) {
             return [];
         }
@@ -65,7 +76,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getUsersForCourse(course: ICourse, state?: CourseUserState | undefined): Promise<IUserEnrollment[]> {
-        const result = await this.helper.get<IEnrollment[]>("/courses/" + course.id + "/users");
+        const status = state ? "?status=" + courseUserStateToString(state) : "";
+        const result = await this.helper.get<IEnrollment[]>("/courses/" + course.id + "/users" + status);
         if (result.statusCode !== 200 || !result.data) {
             return [];
         }
