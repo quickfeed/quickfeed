@@ -287,13 +287,7 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 		}
 		statuses := parseAllStatuses(c.QueryParam("status"))
 
-		var courses []*models.Enrollment
-		if len(statuses) == 0 {
-			courses, err = db.GetEnrollmentsByCourse(id)
-		} else {
-			courses, err = db.GetEnrollmentsByCourse(id, statuses...)
-		}
-
+		courses, err := db.GetEnrollmentsByCourse(id, statuses...)
 		if err != nil {
 			return err
 		}
@@ -319,13 +313,7 @@ func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
 		//statuses := c.QueryParam("status")
 		statuses := parseAllStatuses(c.QueryParam("status"))
 
-		var users []*models.Enrollment
-		if len(statuses) == 0 {
-			users, err = db.GetEnrollmentsByUser(id)
-		} else {
-			users, err = db.GetEnrollmentsByUser(id, statuses...)
-		}
-
+		users, err := db.GetEnrollmentsByUser(id, statuses...)
 		if err != nil {
 			return err
 		}
