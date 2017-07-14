@@ -70,7 +70,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
         const resp = await this.helper.put<{}, undefined>
-            ("/courses/" + course.id + "/users/" + user.id, {});
+        ("/courses/" + course.id + "/users/" + user.id, {});
         if (resp.statusCode === 201) {
             return true;
         }
@@ -125,13 +125,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getAllUser(): Promise<IMap<IUser>> {
+    public async getAllUser(): Promise<IUser[]> {
         const result = await this.helper.get<Array<{ id: number, isadmin: boolean }>>("users");
         if (result.statusCode !== 302 || !result.data) {
-            return {};
+            return [];
         }
         const newArray = result.data.map<IUser>((ele) => this.makeUserInfo(ele));
-        return mapify(newArray, (ele) => ele.id);
+        // return mapify(newArray, (ele) => ele.id);
+        return newArray;
     }
 
     public async tryRemoteLogin(provider: string): Promise<IUser | null> {

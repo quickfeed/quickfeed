@@ -1,13 +1,11 @@
 import { IEventData, newEvent } from "../event";
-import { IUser } from "../models";
-
-import { ArrayHelper } from "../helper";
 import { IMap, MapHelper } from "../map";
+import { IUser } from "../models";
 
 export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<IUser | null>;
     logout(user: IUser): Promise<boolean>;
-    getAllUser(): Promise<IMap<IUser>>;
+    getAllUser(): Promise<IUser[]>;
     tryRemoteLogin(provider: string): Promise<IUser | null>;
     changeAdminRole(user: IUser): Promise<boolean>;
     getLoggedInUser(): Promise<IUser | null>;

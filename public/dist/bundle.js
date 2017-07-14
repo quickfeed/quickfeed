@@ -2154,7 +2154,7 @@ class TempDataProvider {
     }
     getAllUser() {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.localUsers;
+            return map_1.MapHelper.toArray(this.localUsers);
         });
     }
     getCourses() {
@@ -3858,10 +3858,10 @@ class ServerProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.helper.get("users");
             if (result.statusCode !== 302 || !result.data) {
-                return {};
+                return [];
             }
             const newArray = result.data.map((ele) => this.makeUserInfo(ele));
-            return map_1.mapify(newArray, (ele) => ele.id);
+            return newArray;
         });
     }
     tryRemoteLogin(provider) {

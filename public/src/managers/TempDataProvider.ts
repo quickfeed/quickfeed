@@ -35,8 +35,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Not implemented");
     }
 
-    public async getAllUser(): Promise<IMap<IUser>> {
-        return this.localUsers;
+    public async getAllUser(): Promise<IUser[]> {
+        return MapHelper.toArray(this.localUsers);
     }
 
     public async getCourses(): Promise<ICourse[]> {
