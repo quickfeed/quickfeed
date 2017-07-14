@@ -13,11 +13,11 @@ import (
 
 // UpdateUserRequest updates a user object at the database
 type UpdateUserRequest struct {
-	IsAdmin bool `json:"isadmin"`
+	IsAdmin *bool `json:"isadmin"`
 }
 
-func (uur *UpdateUserRequest) valid() bool {
-	return true
+func (uur *UpdateUserRequest) isSetIsAdmin() bool {
+	return uur.IsAdmin != nil
 }
 
 // GetSelf redirects to GetUser with the current user's id.
@@ -76,16 +76,14 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 		if err := c.Bind(&uur); err != nil {
 			return err
 		}
-		if !uur.valid() {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
 
-		if uur.IsAdmin {
+		status := http.StatusNotModified
+		if uur.isSetIsAdmin() && *uur.IsAdmin {
 			if err := db.SetAdmin(id); err != nil {
 				return err
 			}
+			status = http.StatusOK
 		}
-
-		return c.NoContent(http.StatusOK)
+		return c.NoContent(status)
 	}
 }

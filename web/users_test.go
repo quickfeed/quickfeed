@@ -1,6 +1,7 @@
 package web_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -138,4 +139,79 @@ func TestGetUsers(t *testing.T) {
 	}
 
 	assertCode(t, w.Code, http.StatusFound)
+}
+
+func TestPatchUser(t *testing.T) {
+	const (
+		getUserRoute = "/users/:uid"
+
+		secret   = "123"
+		provider = "github"
+		remoteID = 10
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	e := echo.New()
+	router := echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodPatch, getUserRoute, web.PatchUser(db))
+
+	// Send empty request, the user should not be modified.
+	emptyRequest := web.UpdateUserRequest{}
+	emptyJSON, err := json.Marshal(&emptyRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	userURL := "/users/" + strconv.FormatUint(user.ID, 10)
+	r := httptest.NewRequest(http.MethodPatch, userURL, bytes.NewBuffer(emptyJSON))
+	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+	// Prepare context with user request.
+	router.Find(http.MethodPatch, userURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+	assertCode(t, w.Code, http.StatusNotModified)
+
+	tmp := true
+	// Send request with IsAdmin set to true, the user should become admin.
+	trueRequest := web.UpdateUserRequest{IsAdmin: &tmp}
+	trueJSON, err := json.Marshal(&trueRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r = httptest.NewRequest(http.MethodPatch, userURL, bytes.NewBuffer(trueJSON))
+	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	w = httptest.NewRecorder()
+	c = e.NewContext(r, w)
+	// Prepare context with user request.
+	router.Find(http.MethodPatch, userURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+	assertCode(t, w.Code, http.StatusOK)
+
+	admin, err := db.GetUser(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !admin.IsAdmin {
+		t.Error("expected user to have become admin")
+	}
 }
