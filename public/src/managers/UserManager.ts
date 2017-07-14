@@ -109,33 +109,7 @@ export class UserManager {
      * @returns All users at the backend
      */
     public async getAllUser(): Promise<IUser[]> {
-        return MapHelper.toArray(await this.userProvider.getAllUser());
-    }
-
-    /**
-     * Get an array of users from an array of users ids
-     * @param ids The users id that should be return from the backend
-     * @returns A array of users which matches the ids. No included if it does not exist
-     */
-    public async getUsers(ids: number[]): Promise<IUser[]> {
-        return MapHelper.toArray(await this.getUsersAsMap(ids));
-    }
-
-    /**
-     * * Get an map of users from an array of users ids
-     * @param ids The users id that should be return from the backend
-     * @returns A map of users which matches the ids. No included if it does not exist
-     */
-    public async getUsersAsMap(ids: number[]): Promise<IMap<IUser>> {
-        const returnUsers: IMap<IUser> = {};
-        const allUsers = await this.userProvider.getAllUser();
-        ids.forEach((ele) => {
-            const temp = allUsers[ele];
-            if (temp) {
-                returnUsers[ele] = temp;
-            }
-        });
-        return returnUsers;
+        return await this.userProvider.getAllUser();
     }
 
     /**
