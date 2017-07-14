@@ -5,6 +5,8 @@ import { ICourseProvider } from "./CourseManager";
 import { IMap, MapHelper, mapify } from "../map";
 import { IUserProvider } from "./UserManager";
 
+import { ICourseEnrollemtnt, IUserEnrollment } from "../managers";
+
 interface IDummyUser extends IUser {
     password: string;
 }
@@ -60,7 +62,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async tryLogin(username: string, password: string): Promise<IUser | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
-        u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
             this.currentLoggedIn = user;
             return user;
@@ -74,7 +76,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             lookup = "bob@bobsen.no";
         }
         const user = MapHelper.find(this.localUsers, (u) =>
-        u.email.toLocaleLowerCase() === lookup);
+            u.email.toLocaleLowerCase() === lookup);
 
         return new Promise<IUser | null>((resolve, reject) => {
             // Simulate async callback
@@ -93,7 +95,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.localCourseStudent.push({
             courseId: course.id,
             personId: user.id,
-            state: Models.CourseUserState.student,
+            state: Models.CourseUserState.pending,
         });
         return true;
     }
@@ -125,17 +127,17 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Models.ICourse, state?: Models.CourseUserState): Promise<IUser[]> {
+    public async getUsersForCourse(course: Models.ICourse, state?: Models.CourseUserState): Promise<IUserEnrollment[]> {
         const courseStds: ICourseUserLink[] =
             await this.getUserLinksForCourse(course, state);
         const users = await this.getUsersAsMap(courseStds.map((e) => e.personId));
-        return courseStds.map<IUser>((link) => {
+        return courseStds.map<IUserEnrollment>((link) => {
             const user = users[link.personId];
             if (!user) {
                 // TODO: See if we should have an error here or not
                 throw new Error("Link exist witout a user object");
             }
-            return user;
+            return { courseid: link.courseId, userid: link.personId, id: 0, user, status: link.state };
         });
     }
 
@@ -183,7 +185,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]> {
         const cLinks: ICourseUserLink[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
@@ -191,12 +193,12 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 cLinks.push(c);
             }
         }
-        const courses: ICourse[] = [];
+        const courses: ICourseEnrollemtnt[] = [];
         const tempCourses = await this.getCourses();
         for (const link of cLinks) {
             const c = tempCourses[link.courseId];
             if (c) {
-                courses.push(c);
+                courses.push({ course: c, courseid: link.courseId, id: 0, userid: link.personId, status: link.state });
             }
         }
         return courses;
@@ -398,8 +400,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private addLocalCourseStudent() {
         this.localCourseStudent = [
-            { courseId: 0, personId: 999, state: 1 },
-            { courseId: 1, personId: 999, state: 1 },
+            { courseId: 0, personId: 999, state: 2 },
+            { courseId: 1, personId: 999, state: 2 },
             { courseId: 0, personId: 1, state: 0 },
             { courseId: 0, personId: 2, state: 0 },
         ] as ICourseUserLink[];

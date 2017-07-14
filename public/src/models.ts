@@ -116,8 +116,8 @@ export interface IAssignmentGroup {
  */
 export enum CourseUserState {
     pending = 0,
-    student = 1,
-    rejected = 2,
+    rejected = 1,
+    student = 2,
     teacher = 3,
 }
 

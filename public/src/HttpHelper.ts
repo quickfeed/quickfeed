@@ -17,7 +17,7 @@ export class HttpHelper {
     }
 
     public get<T>(uri: string): Promise<IHTTPResult<T>> {
-        return this.send("get", uri);
+        return this.send("GET", uri);
     }
 
     public post<TSend, TReceive>(uri: string, sendData: TSend): Promise<IHTTPResult<TReceive>> {
@@ -30,6 +30,10 @@ export class HttpHelper {
 
     public delete<T>(uri: string): Promise<IHTTPResult<T>> {
         return this.send("DELETE", uri);
+    }
+
+    public patch<TSend, TReceive>(uri: string, sendData: TSend): Promise<IHTTPResult<TReceive>> {
+        return this.send("PATCH", uri, sendData);
     }
 
     private send<TSend, TReceive>(method: string, uri: string, sendData?: TSend): Promise<IHTTPResult<TReceive>> {

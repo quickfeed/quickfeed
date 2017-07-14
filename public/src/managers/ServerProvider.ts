@@ -1,4 +1,11 @@
-import { IUserProvider } from "../managers";
+import {
+    ICourseEnrollemtnt,
+    IEnrollment,
+    isCourseEnrollment,
+    isUserEnrollment,
+    IUserEnrollment,
+    IUserProvider,
+} from "../managers";
 import { IMap, mapify } from "../map";
 import { CourseUserState, IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
 import { ICourseProvider } from "./CourseManager";
@@ -41,18 +48,36 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         // throw new Error("Method not implemented.");
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]> {
         // TODO: Fix to use correct url request
-        const result = await this.helper.get<any>("courses");
+        const result = await this.helper.get<IEnrollment[]>("/users/" + user.id + "/courses");
         if (result.statusCode !== 200 || !result.data) {
             return [];
         }
-        // const data = JSON.parse(JSON.stringify(result.data).toLowerCase()) as ICourse[];
-        return result.data;
+
+        const arr: ICourseEnrollemtnt[] = [];
+        result.data.forEach((ele) => {
+            if (isUserEnrollment(ele)) {
+                arr.push(ele);
+            }
+        });
+        return arr;
     }
 
-    public async getUsersForCourse(course: ICourse, state?: CourseUserState | undefined): Promise<IUser[]> {
-        throw new Error("Method not implemented.");
+    public async getUsersForCourse(course: ICourse, state?: CourseUserState | undefined): Promise<IUserEnrollment[]> {
+        const result = await this.helper.get<IEnrollment[]>("/courses/" + course.id + "/users");
+        if (result.statusCode !== 200 || !result.data) {
+            return [];
+        }
+
+        const arr: IUserEnrollment[] = [];
+        result.data.forEach((ele) => {
+            if (isCourseEnrollment(ele)) {
+                ele.user = this.makeUserInfo(ele.user);
+                arr.push(ele);
+            }
+        });
+        return arr;
     }
 
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
@@ -154,8 +179,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeAdminRole(user: IUser): Promise<boolean> {
-        const result = await this.helper.put<{ setadmin: boolean }, {}>("/users/" + user.id + "", { setadmin: true });
-        if (result.statusCode !== 200) {
+        const result = await this.helper.patch<{ isadmin: boolean }, {}>("/users/" + user.id + "", { isadmin: true });
+        if (result.statusCode < 400) {
             return false;
         }
         return true;

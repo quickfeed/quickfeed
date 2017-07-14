@@ -9,21 +9,29 @@ interface IResultsProp {
     labs: IAssignment[];
 }
 interface IResultsState {
-    assignment: IStudentSubmission;
+    assignment?: IStudentSubmission;
     students: IUserCourseWithUser[];
 }
 class Results extends React.Component<IResultsProp, IResultsState> {
     constructor(props: IResultsProp) {
         super(props);
-        this.state = {
-            assignment: this.props.students[0].course.assignments[0],
-            students: this.props.students,
-        };
+
+        if (this.props.students[0] && this.props.students[0].course.assignments[0]) {
+            this.state = {
+                assignment: this.props.students[0].course.assignments[0],
+                students: this.props.students,
+            };
+        } else {
+            this.state = {
+                assignment: undefined,
+                students: this.props.students,
+            };
+        }
     }
 
     public render() {
         let studentLab: JSX.Element | null = null;
-        if (this.props.students.length > 0) {
+        if (this.props.students.length > 0 && this.state.assignment) {
             studentLab = <StudentLab
                 course={this.props.course}
                 assignment={this.state.assignment}
