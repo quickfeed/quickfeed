@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -275,4 +276,101 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 		return c.NoContent(http.StatusOK)
 
 	}
+}
+
+// GetEnrollmentsByCourse get all enrollments related to a course
+func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id, err := ParseUintParam(c.Param("cid"))
+		if err != nil || id == 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
+		}
+		statuses := parseAllStatuses(c.QueryParam("status"))
+
+		var courses []*models.Enrollment
+		if len(statuses) == 0 {
+			courses, err = db.GetEnrollmentsByCourse(id)
+		} else {
+			courses, err = db.GetEnrollmentsByCourse(id, statuses...)
+		}
+
+		if err != nil {
+			return err
+		}
+
+		for _, enrollment := range courses {
+			enrollment.User, err = db.GetUser(enrollment.UserID)
+			if err != nil {
+				return err
+			}
+		}
+
+		return c.JSONPretty(http.StatusOK, courses, "\t")
+	}
+}
+
+// GetEnrollmentsByUser get all enrollments related to a user
+func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id, err := ParseUintParam(c.Param("uid"))
+		if err != nil || id == 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
+		}
+		//statuses := c.QueryParam("status")
+		statuses := parseAllStatuses(c.QueryParam("status"))
+
+		var users []*models.Enrollment
+		if len(statuses) == 0 {
+			users, err = db.GetEnrollmentsByUser(id)
+		} else {
+			users, err = db.GetEnrollmentsByUser(id, statuses...)
+		}
+
+		if err != nil {
+			return err
+		}
+
+		for _, enrollment := range users {
+			enrollment.Course, err = db.GetCourse(enrollment.CourseID)
+			if err != nil {
+				return err
+			}
+		}
+
+		return c.JSONPretty(http.StatusOK, users, "\t")
+	}
+}
+
+func parseAllStatuses(status string) []uint {
+	var statusCodes []uint
+	if status != "" {
+		for _, part := range strings.Split(status, ",") {
+			code, err := parseStatus(part)
+			if err == nil {
+				statusCodes = append(statusCodes, code)
+			}
+		}
+	}
+	return statusCodes
+}
+
+func parseStatus(status string) (uint, error) {
+	switch status {
+	case "pending":
+		return models.Pending, nil
+	case "rejected":
+		return models.Rejected, nil
+	case "accepted":
+		return models.Accepted, nil
+	default:
+		return 0, &(statusParseError{err: "Error parsing status"})
+	}
+}
+
+type statusParseError struct {
+	err string
+}
+
+func (e *statusParseError) Error() string {
+	return e.err
 }

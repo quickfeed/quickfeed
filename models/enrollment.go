@@ -9,13 +9,13 @@ const (
 
 // Enrollment represents the status of a users enrollment into a course.
 type Enrollment struct {
-	ID uint64
+	ID uint64 `json:"id"`
 
-	Course   *Course
-	CourseID uint64
+	Course   *Course `json:"course,omitempty"`
+	CourseID uint64  `json:"courseid"`
 
-	User   *User
-	UserID uint64
+	User   *User  `json:"user,omitempty"`
+	UserID uint64 `json:"userid"`
 
 	Status uint
 }

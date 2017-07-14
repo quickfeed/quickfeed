@@ -124,7 +124,7 @@ func main() {
 	users.GET("/:uid", web.GetUser(db))
 	users.PATCH("/:uid", web.PatchUser(db))
 	// TODO: List user courses.
-	users.GET("/:uid/courses", echo.NotFoundHandler)
+	users.GET("/:uid/courses", web.GetEnrollmentsByUser(db))
 
 	courses := api.Group("/courses")
 	courses.GET("", web.ListCourses(db))
@@ -135,7 +135,7 @@ func main() {
 	// TODO: Check if webhook exists and if not create a new one.
 	courses.PUT("/:cid", web.UpdateCourse(db))
 	// TODO: List users in course.
-	courses.GET("/:cid/users", echo.NotFoundHandler)
+	courses.GET("/:cid/users", web.GetEnrollmentsByCourse(db))
 	// TODO: Check if user is a member of a course, returns 404 or enrollment status.
 	courses.GET("/:cid/users/:uid", echo.NotFoundHandler)
 	courses.PUT("/:cid/users/:uid", web.SetEnrollment(db))
