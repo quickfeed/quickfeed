@@ -339,6 +339,10 @@ func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
 // parseStatuses takes a string of comma separated statuses and returns a slice
 // of the corresponding status constants.
 func parseStatuses(s string) ([]uint, bool) {
+	if s == "" {
+		return []uint{}, true
+	}
+
 	ss := strings.Split(s, ",")
 	if len(ss) > 3 {
 		return []uint{}, false
