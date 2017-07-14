@@ -224,7 +224,7 @@ func (db *GormDB) GetEnrollmentsByCourse(id uint64, statuses ...uint) ([]*models
 }
 
 func (db *GormDB) getEnrollments(model interface{}, statuses ...uint) ([]*models.Enrollment, error) {
-	if statuses == nil {
+	if len(statuses) == 0 {
 		statuses = []uint{models.Pending, models.Rejected, models.Accepted}
 	}
 	var enrollments []*models.Enrollment
