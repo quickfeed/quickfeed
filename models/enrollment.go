@@ -17,5 +17,5 @@ type Enrollment struct {
 	User   *User  `json:"user,omitempty"`
 	UserID uint64 `json:"userid"`
 
-	Status uint
+	Status uint `json:"status"`
 }
