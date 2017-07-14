@@ -68,7 +68,6 @@ func GetUsers(db database.Database) echo.HandlerFunc {
 // PatchUser promotes a user to an administrator
 func PatchUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		id, err := ParseUintParam(c.Param("uid"))
 		if err != nil || id == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
@@ -82,21 +81,11 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 		}
 
 		if uur.IsAdmin {
-			user := c.Get("user").(*models.User)
-			// Checks if current user is admin
-			if user.ID == 0 {
-				return echo.NewHTTPError(http.StatusBadRequest, "invalid loged in user id")
-			}
-			if !user.IsAdmin {
-				return echo.NewHTTPError(http.StatusBadRequest, "user is not an administrator")
-			}
-
-			err = db.SetAdmin(id)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "failed to set admin")
+			if err := db.SetAdmin(id); err != nil {
+				return err
 			}
 		}
 
-		return c.NoContent(200)
+		return c.NoContent(http.StatusOK)
 	}
 }
