@@ -310,7 +310,6 @@ func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
 		if err != nil || id == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
 		}
-		//statuses := c.QueryParam("status")
 		statuses := parseAllStatuses(c.QueryParam("status"))
 
 		users, err := db.GetEnrollmentsByUser(id, statuses...)
