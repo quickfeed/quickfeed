@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -68,7 +67,7 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// TODO check if the user has right to show the assignments.
 		// same as courses above, should not return to unauthorised users
-		id, err := strconv.ParseUint(c.Param("cid"), 10, 64)
+		id, err := ParseUintParam(c.Param("cid"))
 		if err != nil {
 			return err
 		}
@@ -147,14 +146,13 @@ func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 // SetEnrollment sets the enrollment for a user in a course.
 func SetEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		courseID, err := strconv.ParseUint(c.Param("cid"), 10, 64)
-		if err != nil || courseID == 0 {
-			return c.NoContent(http.StatusNotFound)
+		courseID, err := ParseUintParam(c.Param("cid"))
+		if err != nil {
+			return err
 		}
-		var userID uint64
-		userID, err = strconv.ParseUint(c.Param("uid"), 10, 64)
-		if err != nil || userID == 0 {
-			return c.NoContent(http.StatusNotFound)
+		userID, err := ParseUintParam(c.Param("uid"))
+		if err != nil {
+			return err
 		}
 
 		var eur EnrollUserRequest
@@ -200,9 +198,9 @@ func SetEnrollment(db database.Database) echo.HandlerFunc {
 // GetCourse find course by id and return JSON object.
 func GetCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.ParseUint(c.Param("cid"), 10, 64)
-		if err != nil || id == 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
+		id, err := ParseUintParam(c.Param("cid"))
+		if err != nil {
+			return err
 		}
 
 		course, err := db.GetCourse(id)
@@ -221,9 +219,9 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 // UpdateCourse updates an existing course
 func UpdateCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.ParseUint(c.Param("cid"), 10, 64)
-		if err != nil || id == 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
+		id, err := ParseUintParam(c.Param("cid"))
+		if err != nil {
+			return err
 		}
 
 		oldcr, err := db.GetCourse(id)
@@ -282,8 +280,8 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := ParseUintParam(c.Param("cid"))
-		if err != nil || id == 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid course id")
+		if err != nil {
+			return err
 		}
 
 		statuses, ok := parseStatuses(c.QueryParam("status"))

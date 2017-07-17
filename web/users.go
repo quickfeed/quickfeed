@@ -3,7 +3,6 @@ package web
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
@@ -31,9 +30,9 @@ func GetSelf() echo.HandlerFunc {
 // GetUser returns information about the user associated with the id query.
 func GetUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := strconv.ParseUint(c.Param("uid"), 10, 64)
-		if err != nil || id == 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
+		id, err := ParseUintParam(c.Param("uid"))
+		if err != nil {
+			return err
 		}
 
 		user, err := db.GetUser(id)
@@ -69,8 +68,8 @@ func GetUsers(db database.Database) echo.HandlerFunc {
 func PatchUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := ParseUintParam(c.Param("uid"))
-		if err != nil || id == 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
+		if err != nil {
+			return err
 		}
 		var uur UpdateUserRequest
 		if err := c.Bind(&uur); err != nil {
