@@ -123,7 +123,7 @@ func main() {
 	users.GET("", web.GetUsers(db))
 	users.GET("/:uid", web.GetUser(db))
 	users.PATCH("/:uid", web.PatchUser(db))
-	users.GET("/:uid/courses", web.GetEnrollmentsByUser(db))
+	users.GET("/:uid/courses", web.ListCoursesWithEnrollment(db))
 
 	courses := api.Group("/courses")
 	courses.GET("", web.ListCourses(db))

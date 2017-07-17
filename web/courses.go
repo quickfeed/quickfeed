@@ -61,6 +61,24 @@ func ListCourses(db database.Database) echo.HandlerFunc {
 	}
 }
 
+// ListCoursesWithEnrollment lists all existing courses with the provided users
+// enrollment status.
+func ListCoursesWithEnrollment(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id, err := parseUint(c.Param("uid"))
+		if err != nil {
+			return err
+		}
+
+		courses, err := db.GetCoursesByUser(id)
+		if err != nil {
+			return err
+		}
+
+		return c.JSONPretty(http.StatusOK, courses, "\t")
+	}
+}
+
 // ListAssignments lists all the assignment found in a place
 func ListAssignments(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {

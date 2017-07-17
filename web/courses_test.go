@@ -74,6 +74,106 @@ func TestListCourses(t *testing.T) {
 	assertCode(t, w.Code, http.StatusOK)
 }
 
+func TestListCoursesWithEnrollment(t *testing.T) {
+	const (
+		userCoursesRoute = "/users/:uid/courses"
+
+		secret   = "123"
+		provider = "github"
+		remoteID = 11
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var course1 models.Course
+	if err := db.CreateCourse(&course1); err != nil {
+		t.Fatal(err)
+	}
+
+	var course2 models.Course
+	if err := db.CreateCourse(&course2); err != nil {
+		t.Fatal(err)
+	}
+
+	var course3 models.Course
+	if err := db.CreateCourse(&course3); err != nil {
+		t.Fatal(err)
+	}
+
+	var course4 models.Course
+	if err := db.CreateCourse(&course4); err != nil {
+		t.Fatal(err)
+	}
+
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	enrollment1 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course1.ID,
+	}
+	enrollment2 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course2.ID,
+	}
+	enrollment3 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course3.ID,
+	}
+	if err := db.CreateEnrollment(&enrollment1); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&enrollment2); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&enrollment3); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AcceptEnrollment(enrollment3.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	e := echo.New()
+	router := echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodGet, userCoursesRoute, web.ListCoursesWithEnrollment(db))
+
+	userCoursesURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses"
+	r := httptest.NewRequest(http.MethodGet, userCoursesURL, nil)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+	// Prepare context with user request.
+	router.Find(http.MethodGet, userCoursesURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+
+	var courses []*models.Course
+	if err := json.Unmarshal(w.Body.Bytes(), &courses); err != nil {
+		t.Fatal(err)
+	}
+
+	assertCode(t, w.Code, http.StatusOK)
+	wantCourses := []*models.Course{
+		{ID: course1.ID, Enrolled: int(models.Pending)},
+		{ID: course2.ID, Enrolled: int(models.Rejected)},
+		{ID: course3.ID, Enrolled: int(models.Accepted)},
+		{ID: course4.ID, Enrolled: models.None},
+	}
+	if !reflect.DeepEqual(courses, wantCourses) {
+		t.Errorf("have course %+v want %+v", courses, wantCourses)
+	}
+}
+
 func TestGetCourse(t *testing.T) {
 	const getCourseRoute = "/courses/:cid"
 	courseURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10)
