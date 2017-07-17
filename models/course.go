@@ -13,7 +13,7 @@ type Course struct {
 	DirectoryID uint64 `json:"directoryid"`
 
 	Enrollments []*Enrollment `json:"-"`
-	Enrolled    uint          `json:"enrolled,omitempty" sql:"-"`
+	Enrolled    int           `json:"enrolled,omitempty" sql:"-"`
 
 	Assignments []*Assignment `json:"assignments,omitempty"`
 }

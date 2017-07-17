@@ -240,7 +240,7 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 		panic("invalid status")
 	}
 	return db.conn.Model(&models.Enrollment{}).Where(&models.Enrollment{ID: id}).Update(&models.Enrollment{
-		Status: status,
+		Status: int(status),
 	}).Error
 }
 
@@ -263,7 +263,10 @@ func (db *GormDB) GetCoursesByUser(id uint64) ([]*models.Course, error) {
 	}
 
 	for _, course := range courses {
-		course.Enrolled = m[course.ID].Status
+		course.Enrolled = models.None
+		if enrollment, ok := m[course.ID]; ok {
+			course.Enrolled = enrollment.Status
+		}
 	}
 
 	return courses, nil

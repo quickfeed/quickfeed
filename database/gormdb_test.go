@@ -320,6 +320,11 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	var course4 models.Course
+	if err := db.CreateCourse(&course4); err != nil {
+		t.Fatal(err)
+	}
+
 	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
@@ -358,7 +363,12 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantCourses := []*models.Course{{ID: course1.ID}, {ID: course2.ID, Enrolled: 1}, {ID: course3.ID, Enrolled: 2}}
+	wantCourses := []*models.Course{
+		{ID: course1.ID, Enrolled: int(models.Pending)},
+		{ID: course2.ID, Enrolled: int(models.Rejected)},
+		{ID: course3.ID, Enrolled: int(models.Accepted)},
+		{ID: course4.ID, Enrolled: models.None},
+	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
 	}

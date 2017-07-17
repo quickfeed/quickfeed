@@ -5,6 +5,7 @@ const (
 	Pending uint = iota
 	Rejected
 	Accepted
+	None = -1
 )
 
 // Enrollment represents the status of a users enrollment into a course.
@@ -17,5 +18,5 @@ type Enrollment struct {
 	User   *User  `json:"user,omitempty"`
 	UserID uint64 `json:"userid"`
 
-	Status uint `json:"status"`
+	Status int `json:"status"`
 }
