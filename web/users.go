@@ -30,7 +30,7 @@ func GetSelf() echo.HandlerFunc {
 // GetUser returns information about the user associated with the id query.
 func GetUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := ParseUintParam(c.Param("uid"))
+		id, err := parseUint(c.Param("uid"))
 		if err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func GetUsers(db database.Database) echo.HandlerFunc {
 // PatchUser promotes a user to an administrator
 func PatchUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := ParseUintParam(c.Param("uid"))
+		id, err := parseUint(c.Param("uid"))
 		if err != nil {
 			return err
 		}
