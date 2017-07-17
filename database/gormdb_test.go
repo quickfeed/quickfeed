@@ -13,7 +13,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-func setup(t *testing.T) (*database.GormDB, func()) {
+func setup(t *testing.T) (database.Database, func()) {
 	const (
 		driver = "sqlite3"
 		prefix = "testdb"
