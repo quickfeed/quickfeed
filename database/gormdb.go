@@ -179,7 +179,14 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 	if course != 1 {
 		return gorm.ErrRecordNotFound
 	}
-	return db.conn.Create(assignment).Error
+	return db.conn.
+		Where(models.Assignment{CourseID: assignment.CourseID, AssignmentID: assignment.AssignmentID}).
+		Assign(models.Assignment{
+			Name:        assignment.Name,
+			Language:    assignment.Language,
+			Deadline:    assignment.Deadline,
+			AutoApprove: assignment.AutoApprove,
+		}).FirstOrCreate(assignment).Error
 }
 
 // CreateEnrollment implements the Database interface.
@@ -276,6 +283,15 @@ func (db *GormDB) GetCoursesByUser(id uint64) ([]*models.Course, error) {
 func (db *GormDB) GetCourse(id uint64) (*models.Course, error) {
 	var course models.Course
 	if err := db.conn.First(&course, id).Error; err != nil {
+		return nil, err
+	}
+	return &course, nil
+}
+
+// GetCourseByCode implements the Database interface
+func (db *GormDB) GetCourseByCode(code string) (*models.Course, error) {
+	var course models.Course
+	if err := db.conn.Where("code = ?", code).First(&course).Error; err != nil {
 		return nil, err
 	}
 	return &course, nil

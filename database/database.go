@@ -20,6 +20,7 @@ type Database interface {
 	GetCourses() ([]*models.Course, error)
 	GetCoursesByUser(uint64) ([]*models.Course, error)
 	GetCourse(uint64) (*models.Course, error)
+	GetCourseByCode(string) (*models.Course, error)
 	UpdateCourse(*models.Course) error
 
 	CreateEnrollment(*models.Enrollment) error

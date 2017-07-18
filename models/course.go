@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // Course represents a course backed by a directory.
 type Course struct {
 	ID uint64 `json:"id"`
@@ -20,7 +22,11 @@ type Course struct {
 
 // Assignment represents a single assignment
 type Assignment struct {
-	ID       uint64 `json:"id"`
-	CourseID uint64 `json:"courseid"`
-	Name     string `json:"name"`
+	ID          uint64 `json:"id"`
+	CourseID    uint64 `json:"courseid"`
+	Name        string `json:"name"`
+	Language    string `json:"language"`
+	Deadline    time.Time `json:"deadline"`
+	AutoApprove bool `json:"autoapprove" sql:"DEFAULT:false"`
+	AssignmentID uint `json:"assignmentid"`
 }

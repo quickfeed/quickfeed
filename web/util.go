@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/autograde/aguis/models"
 	"github.com/labstack/echo"
@@ -44,4 +45,10 @@ func parseStatuses(s string) ([]uint, bool) {
 		}
 	}
 	return statuses, true
+}
+
+// ParseDate parses a string date to time.Time in given layout format
+func ParseDate(layout string, date string) (time.Time, error) {
+	t, err := time.Parse(layout, date)
+	return t, err
 }
