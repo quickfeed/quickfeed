@@ -8,6 +8,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const target = "assignment.yml"
+
 type NewAssignmentRequest struct {
 	AssignmentID uint   `yaml: "assignmentid"`
 	Name         string `yaml: "name"`
@@ -27,7 +29,7 @@ func Parse(dir string) ([]NewAssignmentRequest, error) {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
-			if filename == "assignment.yml" {
+			if filename == target {
 				var assignment NewAssignmentRequest
 				source, err := ioutil.ReadFile(path)
 				if err != nil {
