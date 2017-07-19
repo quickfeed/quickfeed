@@ -5,7 +5,7 @@ import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { CourseUserState, ICourse, IStudentSubmission, IUserCourse } from "../models";
+import { CourseUserState, ICourse, ICourseWithEnrollStatus, IStudentSubmission, IUserCourse } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
@@ -84,10 +84,11 @@ export class StudentPage extends ViewPage {
         if (!curUser) {
             return <h1>404</h1>;
         }
+        const userCourses: ICourseWithEnrollStatus[] = await this.courseMan.getCoursesWithEnrollStatus(curUser);
         return <div>
             <h1>Enrollment page</h1>
             <EnrollmentView
-                courses={await this.courseMan.getCoursesWithState(curUser)}
+                courses={userCourses}
                 onEnrollmentClick={(course: ICourse) => {
                     this.courseMan.addUserToCourse(curUser, course);
                     this.navMan.refresh();

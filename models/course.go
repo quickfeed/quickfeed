@@ -15,18 +15,20 @@ type Course struct {
 	DirectoryID uint64 `json:"directoryid"`
 
 	Enrollments []*Enrollment `json:"-"`
-	Enrolled    int           `json:"enrolled,omitempty" sql:"-"`
+	// 0 is considered empty. So omitempty will ignore Enrolled field for 0 value
+	// Uses a int pointer for Enrolled field to send 0 as a valid value
+	Enrolled *int `json:"enrolled,omitempty" sql:"-"`
 
 	Assignments []*Assignment `json:"assignments,omitempty"`
 }
 
 // Assignment represents a single assignment
 type Assignment struct {
-	ID          uint64 `json:"id"`
-	CourseID    uint64 `json:"courseid"`
-	Name        string `json:"name"`
-	Language    string `json:"language"`
-	Deadline    time.Time `json:"deadline"`
-	AutoApprove bool `json:"autoapprove" sql:"DEFAULT:false"`
-	AssignmentID uint `json:"assignmentid"`
+	ID           uint64    `json:"id"`
+	CourseID     uint64    `json:"courseid"`
+	Name         string    `json:"name"`
+	Language     string    `json:"language"`
+	Deadline     time.Time `json:"deadline"`
+	AutoApprove  bool      `json:"autoapprove" sql:"DEFAULT:false"`
+	AssignmentID uint      `json:"assignmentid"`
 }

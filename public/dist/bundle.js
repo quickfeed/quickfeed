@@ -1865,6 +1865,12 @@ class CourseManager {
             return newMap;
         });
     }
+    getCoursesWithEnrollStatus(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userCourses = yield this.courseProvider.getCoursesWithEnrollStatus(user);
+            return userCourses;
+        });
+    }
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
             return (yield this.courseProvider.getCoursesFor(user, state)).map((ele) => ele.course);
@@ -2364,6 +2370,11 @@ class TempDataProvider {
                 }
             }
             return courses;
+        });
+    }
+    getCoursesWithEnrollStatus(user, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented");
         });
     }
     addLocalUsers() {
@@ -2979,9 +2990,10 @@ class StudentPage extends ViewPage_1.ViewPage {
             if (!curUser) {
                 return React.createElement("h1", null, "404");
             }
+            const userCourses = yield this.courseMan.getCoursesWithEnrollStatus(curUser);
             return React.createElement("div", null,
                 React.createElement("h1", null, "Enrollment page"),
-                React.createElement(EnrollmentView_1.EnrollmentView, { courses: yield this.courseMan.getCoursesWithState(curUser), onEnrollmentClick: (course) => {
+                React.createElement(EnrollmentView_1.EnrollmentView, { courses: userCourses, onEnrollmentClick: (course) => {
                         this.courseMan.addUserToCourse(curUser, course);
                         this.navMan.refresh();
                     } }));
@@ -3132,22 +3144,22 @@ class EnrollmentView extends React.Component {
         return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
     }
     createEnrollmentRow(studentCourses, course) {
-        const base = [course.course.code, course.course.name];
-        if (course.link) {
-            if (course.link.state === models_1.CourseUserState.student) {
+        const base = [course.code, course.name];
+        if (course.enrolled >= 0) {
+            if (course.enrolled === models_1.CourseUserState.student) {
                 base.push("Enrolled");
             }
-            else if (course.link.state === models_1.CourseUserState.pending) {
+            else if (course.enrolled === models_1.CourseUserState.pending) {
                 base.push("Pending");
             }
             else {
                 base.push(React.createElement("div", null,
-                    React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course.course); }, className: "btn btn-primary" }, "Enroll"),
+                    React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course); }, className: "btn btn-primary" }, "Enroll"),
                     React.createElement("span", { style: { padding: "7px", verticalAlign: "middle" }, className: "bg-danger" }, "Rejected")));
             }
         }
         else {
-            base.push(React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course.course); }, className: "btn btn-primary" }, "Enroll"));
+            base.push(React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course); }, className: "btn btn-primary" }, "Enroll"));
         }
         return base;
     }
@@ -3802,6 +3814,16 @@ class ServerProvider {
                 }
             });
             return arr;
+        });
+    }
+    getCoursesWithEnrollStatus(user, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const status = state ? "?status=" + models_1.courseUserStateToString(state) : "";
+            const result = yield this.helper.get("/users/" + user.id + "/courses" + status);
+            if (result.statusCode !== 200 || !result.data) {
+                return [];
+            }
+            return result.data;
         });
     }
     getUsersForCourse(course, state) {

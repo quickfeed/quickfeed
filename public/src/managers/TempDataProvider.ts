@@ -1,5 +1,14 @@
 import * as Models from "../models";
-import { CourseUserState, IAssignment, ICourse, ICourseUserLink, ILabInfo, IOrganization, IUser } from "../models";
+import {
+    CourseUserState,
+    IAssignment,
+    ICourse,
+    ICourseUserLink,
+    ICourseWithEnrollStatus,
+    ILabInfo,
+    IOrganization,
+    IUser,
+} from "../models";
 import { ICourseProvider } from "./CourseManager";
 
 import { IMap, MapHelper, mapify } from "../map";
@@ -62,7 +71,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async tryLogin(username: string, password: string): Promise<IUser | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+        u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
             this.currentLoggedIn = user;
             return user;
@@ -76,7 +85,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             lookup = "bob@bobsen.no";
         }
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === lookup);
+        u.email.toLocaleLowerCase() === lookup);
 
         return new Promise<IUser | null>((resolve, reject) => {
             // Simulate async callback
@@ -202,6 +211,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             }
         }
         return courses;
+    }
+
+    public async getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]> {
+        throw new Error("Method not implemented");
     }
 
     private addLocalUsers() {

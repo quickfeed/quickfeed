@@ -85,6 +85,10 @@ export interface ICourse {
     directoryid: number;
 }
 
+export interface ICourseWithEnrollStatus extends ICourse {
+    enrolled: CourseUserState;
+}
+
 /**
  * Information about a single assignment
  */

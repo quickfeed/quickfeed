@@ -1,11 +1,9 @@
 import * as React from "react";
 import { DynamicTable } from "../../components";
-import { CourseUserState, ICourse, ICourseUserLink, IUser, IUserCourse } from "../../models";
-
-import { ArrayHelper } from "../../helper";
+import { CourseUserState, ICourse, ICourseWithEnrollStatus } from "../../models";
 
 export interface IEnrollmentViewProps {
-    courses: IUserCourse[];
+    courses: ICourseWithEnrollStatus[];
     onEnrollmentClick: (course: ICourse) => void;
 }
 
@@ -14,22 +12,25 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         return <DynamicTable
             data={this.props.courses}
             header={["Course tag", "Course Name", "Action"]}
-            selector={(course: IUserCourse) => this.createEnrollmentRow(this.props.courses, course)}>
+            selector={(course: ICourseWithEnrollStatus) => this.createEnrollmentRow(this.props.courses, course)}>
         </DynamicTable>;
 
     }
 
-    public createEnrollmentRow(studentCourses: IUserCourse[], course: IUserCourse): Array<string | JSX.Element> {
-        const base: Array<string | JSX.Element> = [course.course.code, course.course.name];
-        if (course.link) {
-            if (course.link.state === CourseUserState.student) {
+    public createEnrollmentRow(studentCourses: ICourseWithEnrollStatus[],
+                               course: ICourseWithEnrollStatus): Array<string | JSX.Element> {
+        const base: Array<string | JSX.Element> = [course.code, course.name];
+        if (course.enrolled >= 0) {
+            if (course.enrolled === CourseUserState.student) {
                 base.push("Enrolled");
-            } else if (course.link.state === CourseUserState.pending) {
+            } else if (course.enrolled === CourseUserState.pending) {
                 base.push("Pending");
             } else {
                 base.push(<div>
                     <button
-                        onClick={() => { this.props.onEnrollmentClick(course.course); }}
+                        onClick={() => {
+                            this.props.onEnrollmentClick(course);
+                        }}
                         className="btn btn-primary">
                         Enroll
                     </button>
@@ -41,7 +42,9 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         } else {
             base.push(
                 <button
-                    onClick={() => { this.props.onEnrollmentClick(course.course); }}
+                    onClick={() => {
+                        this.props.onEnrollmentClick(course);
+                    }}
                     className="btn btn-primary">
                     Enroll
                 </button>);

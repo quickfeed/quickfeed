@@ -4,6 +4,7 @@ import {
     IAssignment,
     ICourse,
     ICourseUserLink,
+    ICourseWithEnrollStatus,
     ILabInfo,
     IOrganization,
     isCourse,
@@ -21,6 +22,7 @@ export interface ICourseProvider {
     getAssignments(courseId: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
     getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]>;
+    getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]>;
     getUsersForCourse(course: ICourse, state?: CourseUserState): Promise<IUserEnrollment[]>;
 
     addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
@@ -122,6 +124,18 @@ export class CourseManager {
             };
         });
         return newMap;
+    }
+
+    /**
+     * returns all the courses
+     * if user is enrolled to a course, enrolled field will have a non-negative value
+     * else enrolled field will have -1
+     * @param user
+     * @returns {Promise<ICourseWithEnrollStatus[]>}
+     */
+    public async getCoursesWithEnrollStatus(user: IUser): Promise<ICourseWithEnrollStatus[]> {
+        const userCourses = await this.courseProvider.getCoursesWithEnrollStatus(user);
+        return userCourses;
     }
 
     /**

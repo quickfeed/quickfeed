@@ -4,6 +4,7 @@ import {
     IAssignment,
     ICourse,
     ICourseUserLink,
+    ICourseWithEnrollStatus,
     ILabInfo,
     IOrganization,
     IUser,
@@ -75,6 +76,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return arr;
     }
 
+    public async getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]> {
+        const status = state ? "?status=" + courseUserStateToString(state) : "";
+        const result = await this.helper.get<ICourseWithEnrollStatus[]>("/users/" + user.id + "/courses" + status);
+        if (result.statusCode !== 200 || !result.data) {
+            return [];
+        }
+
+        return result.data;
+    }
+
     public async getUsersForCourse(course: ICourse, state?: CourseUserState | undefined): Promise<IUserEnrollment[]> {
         const status = state ? "?status=" + courseUserStateToString(state) : "";
         const result = await this.helper.get<IEnrollment[]>("/courses/" + course.id + "/users" + status);
@@ -107,11 +118,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
         const resp = await this.helper.put<{ courseid: number, userid: number, status: CourseUserState }, undefined>
-            ("/courses/" + course.id + "/users/" + user.id, {
-                courseid: course.id,
-                userid: user.id,
-                status: CourseUserState.pending,
-            });
+        ("/courses/" + course.id + "/users/" + user.id, {
+            courseid: course.id,
+            userid: user.id,
+            status: CourseUserState.pending,
+        });
         if (resp.statusCode === 201) {
             return true;
         }
@@ -120,11 +131,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
         const resp = await this.helper.put<{ courseid: number, userid: number, status: CourseUserState }, undefined>
-            ("/courses/" + link.courseId + "/users/" + link.userid, {
-                courseid: link.courseId,
-                userid: link.userid,
-                status: state,
-            });
+        ("/courses/" + link.courseId + "/users/" + link.userid, {
+            courseid: link.courseId,
+            userid: link.userid,
+            status: state,
+        });
         if (resp.statusCode === 201) {
             return true;
         }
