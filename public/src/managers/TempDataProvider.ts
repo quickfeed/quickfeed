@@ -217,6 +217,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
+    public async getActiveCoursesFor(user: IUser): Promise<ICourseWithEnrollStatus[]> {
+        throw new Error("Method not implemented");
+    }
+
     private addLocalUsers() {
         this.localUsers = mapify([
             {

@@ -1958,6 +1958,23 @@ class CourseManager {
             return links;
         });
     }
+    getActiveCoursesFor(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const links = [];
+            const userCourses = yield this.courseProvider.getActiveCoursesFor(user);
+            for (const cr of userCourses) {
+                links.push({
+                    assignments: [],
+                    course: cr,
+                    link: { courseId: cr.id, userid: user.id, state: cr.enrolled },
+                });
+            }
+            for (const link of links) {
+                yield this.fillLinks(user, link);
+            }
+            return links;
+        });
+    }
     getUsersForCourse(course, userMan, state) {
         return __awaiter(this, void 0, void 0, function* () {
             return (yield this.courseProvider.getUsersForCourse(course, state)).map((user) => {
@@ -2373,6 +2390,11 @@ class TempDataProvider {
         });
     }
     getCoursesWithEnrollStatus(user, state) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented");
+        });
+    }
+    getActiveCoursesFor(user) {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error("Method not implemented");
         });
@@ -2970,7 +2992,8 @@ class StudentPage extends ViewPage_1.ViewPage {
     getUsers(navInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.setupData();
-            return React.createElement(UserView_1.UserView, { users: yield this.userMan.getAllUser() });
+            const users = yield this.userMan.getAllUser();
+            return React.createElement(UserView_1.UserView, { users: users });
         });
     }
     index(navInfo) {
@@ -3087,8 +3110,7 @@ class StudentPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
-                this.courses = yield this.courseMan.getStudentCourses(curUser);
-                this.activeCourses = this.onlyActiveCourses(this.courses);
+                this.activeCourses = yield this.courseMan.getActiveCoursesFor(curUser);
             }
         });
     }
@@ -3154,12 +3176,16 @@ class EnrollmentView extends React.Component {
             }
             else {
                 base.push(React.createElement("div", null,
-                    React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course); }, className: "btn btn-primary" }, "Enroll"),
+                    React.createElement("button", { onClick: () => {
+                            this.props.onEnrollmentClick(course);
+                        }, className: "btn btn-primary" }, "Enroll"),
                     React.createElement("span", { style: { padding: "7px", verticalAlign: "middle" }, className: "bg-danger" }, "Rejected")));
             }
         }
         else {
-            base.push(React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course); }, className: "btn btn-primary" }, "Enroll"));
+            base.push(React.createElement("button", { onClick: () => {
+                    this.props.onEnrollmentClick(course);
+                }, className: "btn btn-primary" }, "Enroll"));
         }
         return base;
     }
@@ -3814,6 +3840,16 @@ class ServerProvider {
                 }
             });
             return arr;
+        });
+    }
+    getActiveCoursesFor(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const query = "?active=true";
+            const result = yield this.helper.get("/users/" + user.id + "/courses" + query);
+            if (result.statusCode !== 200 || !result.data) {
+                return [];
+            }
+            return result.data;
         });
     }
     getCoursesWithEnrollStatus(user, state) {

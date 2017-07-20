@@ -76,6 +76,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return arr;
     }
 
+    public async getActiveCoursesFor(user: IUser): Promise<ICourseWithEnrollStatus[]> {
+        const query = "?active=true";
+        const result = await this.helper.get<ICourseWithEnrollStatus[]>("/users/" + user.id + "/courses" + query);
+        if (result.statusCode !== 200 || !result.data) {
+            return [];
+        }
+        return result.data;
+    }
+
     public async getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]> {
         const status = state ? "?status=" + courseUserStateToString(state) : "";
         const result = await this.helper.get<ICourseWithEnrollStatus[]>("/users/" + user.id + "/courses" + status);

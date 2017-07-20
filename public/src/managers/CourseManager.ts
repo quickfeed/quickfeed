@@ -22,6 +22,7 @@ export interface ICourseProvider {
     getAssignments(courseId: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
     getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]>;
+    getActiveCoursesFor(user: IUser): Promise<ICourseWithEnrollStatus[]>;
     getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]>;
     getUsersForCourse(course: ICourse, state?: CourseUserState): Promise<IUserEnrollment[]>;
 
@@ -258,6 +259,23 @@ export class CourseManager {
 
         for (const link of links) {
             await this.fillLinks(student, link);
+        }
+        return links;
+    }
+
+    public async getActiveCoursesFor(user: IUser): Promise<IUserCourse[]> {
+        const links: IUserCourse[] = [];
+        const userCourses = await this.courseProvider.getActiveCoursesFor(user);
+        for (const cr of userCourses) {
+            links.push({
+                assignments: [],
+                course: cr,
+                link: { courseId: cr.id, userid: user.id, state: cr.enrolled },
+            });
+        }
+
+        for (const link of links) {
+            await this.fillLinks(user, link);
         }
         return links;
     }

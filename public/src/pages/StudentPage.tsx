@@ -5,7 +5,7 @@ import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { CourseUserState, ICourse, ICourseWithEnrollStatus, IStudentSubmission, IUserCourse } from "../models";
+import { CourseUserState, ICourse, ICourseWithEnrollStatus, IStudentSubmission, IUser, IUserCourse } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
@@ -62,7 +62,8 @@ export class StudentPage extends ViewPage {
 
     public async getUsers(navInfo: INavInfo<any>): View {
         await this.setupData();
-        return <UserView users={await this.userMan.getAllUser()}>
+        const users: IUser[] = await this.userMan.getAllUser();
+        return <UserView users={ users }>
         </UserView>;
     }
 
@@ -188,8 +189,9 @@ export class StudentPage extends ViewPage {
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            this.courses = await this.courseMan.getStudentCourses(curUser);
-            this.activeCourses = this.onlyActiveCourses(this.courses);
+            // this.courses = await this.courseMan.getStudentCourses(curUser);
+            // this.activeCourses = this.onlyActiveCourses(this.courses);
+            this.activeCourses = await this.courseMan.getActiveCoursesFor(curUser);
         }
     }
 

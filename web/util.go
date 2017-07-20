@@ -47,6 +47,11 @@ func parseStatuses(s string) ([]uint, bool) {
 	return statuses, true
 }
 
+// parseBool takes a string ("t" "f" "true" "false" etc) and return corresponding  bool value
+func parseBool(s string) (bool, error) {
+	return strconv.ParseBool(s)
+}
+
 // ParseDate parses a string date to time.Time in given layout format
 func ParseDate(layout string, date string) (time.Time, error) {
 	t, err := time.Parse(layout, date)

@@ -281,6 +281,24 @@ func (db *GormDB) GetCoursesByUser(id uint64) ([]*models.Course, error) {
 	return courses, nil
 }
 
+// GetActiveCoursesByUser returns all active courses of a user
+func (db *GormDB) GetActiveCoursesByUser(id uint64) ([]*models.Course, error) {
+	enrollments, err := db.getEnrollments(&models.User{ID: id}, models.Accepted)
+	if err != nil {
+		return nil, err
+	}
+	courseIDs := []uint64{}
+	for _, enrollment := range enrollments {
+		courseIDs = append(courseIDs, enrollment.CourseID)
+	}
+
+	var courses []*models.Course
+	if err := db.conn.Where(courseIDs).Find(&courses).Error; err != nil {
+		return nil, err
+	}
+	return courses, nil
+}
+
 // GetCourse implements the Database interface
 func (db *GormDB) GetCourse(id uint64) (*models.Course, error) {
 	var course models.Course
