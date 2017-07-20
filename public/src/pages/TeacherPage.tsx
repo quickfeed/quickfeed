@@ -149,13 +149,14 @@ export class TeacherPage extends ViewPage {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
             if (menu === 0) {
-                const courses = await this.courseMan.getCoursesFor(curUser);
+                // const courses = await this.courseMan.getCoursesFor(curUser);
+                const courses = await this.courseMan.getActiveCoursesFor(curUser);
 
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
-                        name: e.code,
-                        uri: this.pagePath + "/course/" + e.id,
+                        name: e.course.code,
+                        uri: this.pagePath + "/course/" + e.course.id,
                     }));
                 });
 

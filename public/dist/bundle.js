@@ -3324,12 +3324,12 @@ class TeacherPage extends ViewPage_1.ViewPage {
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 if (menu === 0) {
-                    const courses = yield this.courseMan.getCoursesFor(curUser);
+                    const courses = yield this.courseMan.getActiveCoursesFor(curUser);
                     const labLinks = [];
                     courses.forEach((e) => {
                         labLinks.push(this.generateCollectionFor({
-                            name: e.code,
-                            uri: this.pagePath + "/course/" + e.id,
+                            name: e.course.code,
+                            uri: this.pagePath + "/course/" + e.course.id,
                         }));
                     });
                     const settings = [];
