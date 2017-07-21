@@ -301,6 +301,12 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		provider = "github"
 		remoteID = 11
 	)
+	var (
+		pending  = int(models.Pending)
+		accepted = int(models.Accepted)
+		rejected = int(models.Rejected)
+		none     = models.None
+	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -364,10 +370,86 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*models.Course{
-		{ID: course1.ID, Enrolled: int(models.Pending)},
-		{ID: course2.ID, Enrolled: int(models.Rejected)},
-		{ID: course3.ID, Enrolled: int(models.Accepted)},
-		{ID: course4.ID, Enrolled: models.None},
+		{ID: course1.ID, Enrolled: &pending},
+		{ID: course2.ID, Enrolled: &rejected},
+		{ID: course3.ID, Enrolled: &accepted},
+		{ID: course4.ID, Enrolled: &none},
+	}
+	if !reflect.DeepEqual(courses, wantCourses) {
+		t.Errorf("have course %+v want %+v", courses, wantCourses)
+	}
+}
+
+func TestGormDBGetActiveCoursesByUser(t *testing.T) {
+	const (
+		secret   = "123"
+		provider = "github"
+		remoteID = 11
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var course1 models.Course
+	if err := db.CreateCourse(&course1); err != nil {
+		t.Fatal(err)
+	}
+
+	var course2 models.Course
+	if err := db.CreateCourse(&course2); err != nil {
+		t.Fatal(err)
+	}
+
+	var course3 models.Course
+	if err := db.CreateCourse(&course3); err != nil {
+		t.Fatal(err)
+	}
+
+	var course4 models.Course
+	if err := db.CreateCourse(&course4); err != nil {
+		t.Fatal(err)
+	}
+
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	enrollment1 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course1.ID,
+	}
+	enrollment2 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course2.ID,
+	}
+	enrollment3 := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course3.ID,
+	}
+	if err := db.CreateEnrollment(&enrollment1); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&enrollment2); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&enrollment3); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AcceptEnrollment(enrollment3.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	courses, err := db.GetActiveCoursesByUser(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantCourses := []*models.Course{
+		{ID: course3.ID},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
