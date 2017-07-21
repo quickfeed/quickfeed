@@ -73,6 +73,7 @@
     box-shadow: none;
     position: relative;
     margin-right: 25px;
+    margin-bottom: 25px;
 }
 
 .organisationWrap .organisationBtnGroup .organisation.active {
