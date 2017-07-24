@@ -120,7 +120,10 @@ func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 		if c.Get(cr.Provider) == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
 		}
-		s := c.Get(cr.Provider).(scm.SCM)
+		s, ok := c.Get(cr.Provider).(scm.SCM)
+		if !ok {
+			return c.NoContent(http.StatusNotFound)
+		}
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -192,9 +195,13 @@ func SetEnrollment(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		user := c.Get("user").(*models.User)
+		user, ok := c.Get("user").(*models.User)
+		if !ok {
+			return c.NoContent(http.StatusNotFound)
+		}
 		if !user.IsAdmin {
-			// This means that the request has been accepted for processing, i.e., we need to wait for a teacher to accept the enrollment.
+			// This means that the request has been accepted for processing,
+			// i.e., we need to wait for a teacher to accept the enrollment.
 			// TODO: Rename Accepted to Approved to avoid this confusion.
 			return c.NoContent(http.StatusAccepted)
 		}
@@ -264,7 +271,10 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 		if c.Get(newcr.Provider) == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+newcr.Provider+" not registered")
 		}
-		s := c.Get(newcr.Provider).(scm.SCM)
+		s, ok := c.Get(newcr.Provider).(scm.SCM)
+		if !ok {
+			return c.NoContent(http.StatusNotFound)
+		}
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
