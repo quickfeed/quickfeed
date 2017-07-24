@@ -263,7 +263,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	w := httptest.NewRecorder()
 
 	qv := r.URL.Query()
-	qv.Set(auth.State, r.URL.Query().Get(auth.Redirect))
+	qv.Set(auth.State, "0"+r.URL.Query().Get(auth.Redirect))
 	r.URL.RawQuery = qv.Encode()
 
 	store := newStore()

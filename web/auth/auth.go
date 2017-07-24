@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
@@ -117,10 +118,20 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 		w := c.Response()
 		r := c.Request()
 
+		provider, err := gothic.GetProviderName(r)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		var teacher int
+		if strings.HasSuffix(provider, TeacherSuffix) {
+			teacher = 1
+		}
+
 		qv := r.URL.Query()
 		redirect := extractRedirectURL(r, Redirect)
 		// TODO: Add a random string to protect against CSRF.
-		qv.Set(State, redirect)
+		qv.Set(State, strconv.Itoa(teacher)+redirect)
 		r.URL.RawQuery = qv.Encode()
 
 		url, err := gothic.GetAuthURL(w, r)
@@ -137,6 +148,18 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		w := c.Response()
 		r := c.Request()
+
+		qv := r.URL.Query()
+		redirect, teacher := extractState(r, State)
+		provider, err := gothic.GetProviderName(r)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+		// Add teacher suffix if upgrading scope.
+		if teacher {
+			qv.Set("provider", provider+TeacherSuffix)
+		}
+		r.URL.RawQuery = qv.Encode()
 
 		// Complete authentication.
 		externalUser, err := gothic.CompleteUserAuth(w, r)
@@ -164,26 +187,26 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 
 			// Associate user with remote identity.
 			if err := db.AssociateUserWithRemoteIdentity(
-				us.ID, externalUser.Provider, remoteID, externalUser.AccessToken,
+				us.ID, provider, remoteID, externalUser.AccessToken,
 			); err != nil {
 				return err
 			}
 
 			// Enable provider in session.
-			us.enableProvider(c.Param("provider"))
+			us.enableProvider(provider)
 			if err := sess.Save(r, w); err != nil {
 				return err
 			}
-			return c.Redirect(http.StatusFound, extractRedirectURL(r, State))
+			return c.Redirect(http.StatusFound, redirect)
 		}
 
 		// Try to get user from database.
 		var user *models.User
-		user, err = db.GetUserByRemoteIdentity(externalUser.Provider, remoteID, externalUser.AccessToken)
+		user, err = db.GetUserByRemoteIdentity(provider, remoteID, externalUser.AccessToken)
 		if err == gorm.ErrRecordNotFound {
 			// Create new user.
 			user, err = db.CreateUserFromRemoteIdentity(
-				externalUser.Provider, remoteID, externalUser.AccessToken,
+				provider, remoteID, externalUser.AccessToken,
 			)
 			if err != nil {
 				return err
@@ -194,13 +217,13 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 
 		// Register user session.
 		us := newUserSession(user.ID)
-		us.enableProvider(c.Param("provider"))
+		us.enableProvider(provider)
 		sess.Values[UserKey] = us
 		if err := sess.Save(r, w); err != nil {
 			return err
 		}
 
-		return c.Redirect(http.StatusFound, extractRedirectURL(r, State))
+		return c.Redirect(http.StatusFound, redirect)
 	}
 }
 
@@ -259,4 +282,15 @@ func extractRedirectURL(r *http.Request, key string) string {
 		url = "/"
 	}
 	return url
+}
+
+func extractState(r *http.Request, key string) (redirect string, teacher bool) {
+	// TODO: Validate redirect URL.
+	url := r.URL.Query().Get(key)
+	teacher = url != "" && url[:1] == "1"
+
+	if url == "" || url[1:] == "" {
+		return "/", teacher
+	}
+	return url[1:], teacher
 }
