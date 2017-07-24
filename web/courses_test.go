@@ -1,6 +1,7 @@
 package web_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -8,32 +9,46 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/web"
+	"github.com/autograde/aguis/web/auth"
+	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/middleware"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var allCourses = []*models.Course{
 	{
-		ID:   100,
-		Name: "Distributed Systems",
-		Code: "DAT520",
-		Year: 2018,
-		Tag:  "Spring",
+		ID:          100,
+		Name:        "Distributed Systems",
+		Code:        "DAT520",
+		Year:        2018,
+		Tag:         "Spring",
+		Provider:    "fake",
+		DirectoryID: 1,
 	},
 	{
-		ID:   101,
-		Name: "Operating Systems",
-		Code: "DAT320",
-		Year: 2017,
-		Tag:  "Fall",
+		ID:          101,
+		Name:        "Operating Systems",
+		Code:        "DAT320",
+		Year:        2017,
+		Tag:         "Fall",
+		Provider:    "fake",
+		DirectoryID: 1,
 	}, {
-		ID:   102,
-		Name: "New Systems",
-		Code: "DATx20",
-		Year: 2019,
-		Tag:  "Fall",
+		ID:          102,
+		Name:        "New Systems",
+		Code:        "DATx20",
+		Year:        2019,
+		Tag:         "Fall",
+		Provider:    "fake",
+		DirectoryID: 1,
 	},
 }
 
@@ -68,6 +83,96 @@ func TestListCourses(t *testing.T) {
 	for i, course := range foundCourses {
 		if !reflect.DeepEqual(course, allCourses[i]) {
 			t.Errorf("have course %+v want %+v", course, allCourses[i])
+		}
+	}
+
+	assertCode(t, w.Code, http.StatusOK)
+}
+
+func getCallbackURL(baseURL, provider string) string {
+	return getURL(baseURL, "auth", provider, "callback")
+}
+
+func getURL(baseURL, route, provider, endpoint string) string {
+	return "https://" + baseURL + "/" + route + "/" + provider + "/" + endpoint
+}
+
+// makes the oauth2 provider available in the request query so that
+// markbates/goth/gothic.GetProviderName can find it.
+func withProvider(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		qv := c.Request().URL.Query()
+		qv.Set("provider", c.Param("provider"))
+		c.Request().URL.RawQuery = qv.Encode()
+		return next(c)
+	}
+}
+
+func TestNewCourse(t *testing.T) {
+	const newCoursesURL = "/courses"
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	store := sessions.NewCookieStore([]byte("secret"))
+	store.Options.HttpOnly = true
+	store.Options.Secure = true
+	gothic.Store = store
+
+	goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL("localhost", "fake")})
+
+	i := 0
+	newCR := &web.NewCourseRequest{
+		Name:        allCourses[i].Name,
+		Code:        allCourses[i].Code,
+		Year:        allCourses[i].Year,
+		Tag:         allCourses[i].Tag,
+		Provider:    allCourses[i].Provider,
+		DirectoryID: allCourses[i].DirectoryID,
+	}
+	b, err := json.Marshal(newCR)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := bytes.NewReader(b)
+	r := httptest.NewRequest(http.MethodPost, newCoursesURL, body)
+	r.Header.Add("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	e := echo.New()
+
+	c := e.NewContext(r, w)
+
+	l := logrus.New()
+	l.Formatter = logger.NewDevFormatter(l.Formatter)
+	e.Logger = web.EchoLogger{Logger: l}
+
+	e.HideBanner = true
+	e.Use(
+		middleware.Recover(),
+		web.Logger(l),
+		middleware.Secure(),
+		session.Middleware(store),
+	)
+
+	newCourseHandler := withProvider(web.NewCourse(l, db))
+	if err := newCourseHandler(c); err != nil {
+		t.Fatal(err)
+	}
+
+	// check that db has the course
+	courses, err := db.GetCourses()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(courses) > 1 {
+		t.Errorf("got %d courses; expected only 1 course", len(courses))
+	}
+
+	for _, course := range courses {
+		if course.Code == allCourses[i].Code {
+			if !reflect.DeepEqual(course, allCourses[i]) {
+				t.Errorf("have course %+v want %+v", course, allCourses[i])
+			}
 		}
 	}
 
