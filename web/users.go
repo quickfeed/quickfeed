@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-// UpdateUserRequest updates a user object at the database
+// UpdateUserRequest updates a user object in the database.
 type UpdateUserRequest struct {
 	IsAdmin *bool `json:"isadmin"`
 }
@@ -22,12 +22,15 @@ func (uur *UpdateUserRequest) isSetIsAdmin() bool {
 // GetSelf redirects to GetUser with the current user's id.
 func GetSelf() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		user := c.Get("user").(*models.User)
+		user, ok := c.Get("user").(*models.User)
+		if !ok {
+			return c.NoContent(http.StatusNotFound)
+		}
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/api/v1/users/%d", user.ID))
 	}
 }
 
-// GetUser returns information about the user associated with the id query.
+// GetUser returns information about the provided user id.
 func GetUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
@@ -41,9 +44,7 @@ func GetUser(db database.Database) echo.HandlerFunc {
 				return c.NoContent(http.StatusNotFound)
 			}
 			return err
-
 		}
-
 		return c.JSONPretty(http.StatusFound, user, "\t")
 	}
 }
@@ -58,7 +59,6 @@ func GetUsers(db database.Database) echo.HandlerFunc {
 				return c.NoContent(http.StatusNotFound)
 			}
 			return err
-
 		}
 		return c.JSONPretty(http.StatusFound, users, "\t")
 	}
