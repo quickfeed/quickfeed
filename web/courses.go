@@ -89,8 +89,7 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		var assignments []*models.Assignment
-		assignments, err = db.GetAssignmentsByCourse(id)
+		assignments, err := db.GetAssignmentsByCourse(id)
 		if err != nil {
 			return err
 		}
@@ -106,7 +105,8 @@ const (
 	SolutionsRepo  = "solutions"
 )
 
-// NewCourse creates a new course and associates it with an organization.
+// NewCourse creates a new course and associates it with a directory (organization in github)
+// and creates the repositories for the course.
 func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var cr NewCourseRequest
@@ -161,7 +161,7 @@ func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 	}
 }
 
-// SetEnrollment sets the enrollment for a user in a course.
+// SetEnrollment enrolls a user in a course.
 func SetEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		courseID, err := parseUint(c.Param("cid"))
