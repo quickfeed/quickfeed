@@ -4,21 +4,25 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
 const target = "assignment.yml"
 
+// NewAssignmentRequest represents a request for a new assignment.
 type NewAssignmentRequest struct {
-	AssignmentID uint   `yaml: "assignmentid"`
-	Name         string `yaml: "name"`
-	Language     string `yaml: "language"`
+	AssignmentID uint   `yaml:"assignmentid"`
+	Name         string `yaml:"name"`
+	Language     string `yaml:"language"`
 	CourseCode   string `yaml:"coursecode"`
 	Deadline     string `yaml:"deadline"`
-	Autoapprove  bool   `yaml: "autoapprove"`
+	AutoApprove  bool   `yaml:"autoapprove"`
 }
 
+// Parse parses .yaml file found in a given directory.
+// and returns an array of NewAssignmentRequest
 func Parse(dir string) ([]NewAssignmentRequest, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -40,6 +44,8 @@ func Parse(dir string) ([]NewAssignmentRequest, error) {
 				if err != nil {
 					return err
 				}
+				// convert to lowercase  to normalize language name
+				assignment.Language = strings.ToLower(assignment.Language)
 				assignments = append(assignments, assignment)
 			}
 		}
