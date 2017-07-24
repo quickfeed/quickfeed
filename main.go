@@ -59,11 +59,36 @@ func main() {
 	store.Options.Secure = true
 	gothic.Store = store
 
-	// TODO: Only register if env set.
-	goth.UseProviders(
-		github.New(os.Getenv("GITHUB_KEY"), os.Getenv("GITHUB_SECRET"), getCallbackURL(*baseURL, "github"), "user", "repo"),
-		gitlab.New(os.Getenv("GITLAB_KEY"), os.Getenv("GITLAB_SECRET"), getCallbackURL(*baseURL, "gitlab"), "api"),
-	)
+	if ok := auth.EnableProvider(&auth.Provider{
+		Name:          "github",
+		KeyEnv:        "GITHUB_KEY",
+		SecretEnv:     "GITHUB_SECRET",
+		CallbackURL:   getCallbackURL(*baseURL, "github"),
+		StudentScopes: []string{},
+		TeacherScopes: []string{"user", "repo"},
+	}, func(key, secret, callback string, scopes ...string) goth.Provider {
+		return github.New(key, secret, callback, scopes...)
+	}); !ok {
+		l.WithFields(logrus.Fields{
+			"provider": "github",
+			"enabled":  false,
+		}).Warn("environment variables not set")
+	}
+	if ok := auth.EnableProvider(&auth.Provider{
+		Name:          "gitlab",
+		KeyEnv:        "GITLAB_KEY",
+		SecretEnv:     "GITLAB_SECRET",
+		CallbackURL:   getCallbackURL(*baseURL, "gitlab"),
+		StudentScopes: []string{"read_user"},
+		TeacherScopes: []string{"api"},
+	}, func(key, secret, callback string, scopes ...string) goth.Provider {
+		return gitlab.New(key, secret, callback, scopes...)
+	}); !ok {
+		l.WithFields(logrus.Fields{
+			"provider": "gitlab",
+			"enabled":  false,
+		}).Warn("environment variables not set")
+	}
 
 	if *fake {
 		l.Warn("fake provider enabled")
