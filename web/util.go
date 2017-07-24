@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/autograde/aguis/models"
 	"github.com/labstack/echo"
@@ -53,9 +52,4 @@ func parseEnrollmentStatus(s string) ([]uint, error) {
 // and returns the corresponding boolean value.
 func parseBool(s string) (bool, error) {
 	return strconv.ParseBool(s)
-}
-
-// ParseDate parses a date string to time.Time in the given layout format.
-func ParseDate(layout, date string) (time.Time, error) {
-	return time.Parse(layout, date)
 }
