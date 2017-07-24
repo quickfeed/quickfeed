@@ -152,7 +152,7 @@ func main() {
 
 	go func() {
 		if err := e.Start(*httpAddr); err == http.ErrServerClosed {
-			l.Warn("shutting down theserver")
+			l.Warn("shutting down the server")
 			return
 		}
 		l.WithError(err).Fatal("could not start server")
