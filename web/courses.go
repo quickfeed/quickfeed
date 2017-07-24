@@ -70,7 +70,7 @@ func ListCoursesWithEnrollment(db database.Database) echo.HandlerFunc {
 			return err
 		}
 		var courses []*models.Course
-		if active, err := parseBool(c.QueryParam("active")); err == nil && active {
+		if parseBool(c.QueryParam("active")) {
 			courses, err = db.GetActiveCoursesByUser(id)
 		} else {
 			courses, err = db.GetCoursesByUser(id)
