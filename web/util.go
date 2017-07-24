@@ -20,16 +20,18 @@ func parseUint(s string) (uint64, error) {
 	return n, nil
 }
 
-// parseStatuses takes a string of comma separated statuses and returns a slice
-// of the corresponding status constants.
-func parseStatuses(s string) ([]uint, bool) {
+var enrollStatusError = echo.NewHTTPError(http.StatusBadRequest, "invalid status query")
+
+// parseEnrollmentStatus takes a string of comma separated status values
+// and returns a slice of the corresponding status constants.
+func parseEnrollmentStatus(s string) ([]uint, error) {
 	if s == "" {
-		return []uint{}, true
+		return []uint{}, nil
 	}
 
 	ss := strings.Split(s, ",")
 	if len(ss) > 3 {
-		return []uint{}, false
+		return []uint{}, enrollStatusError
 	}
 	var statuses []uint
 	for _, s := range ss {
@@ -41,19 +43,19 @@ func parseStatuses(s string) ([]uint, bool) {
 		case "accepted":
 			statuses = append(statuses, models.Accepted)
 		default:
-			return []uint{}, false
+			return []uint{}, enrollStatusError
 		}
 	}
-	return statuses, true
+	return statuses, nil
 }
 
-// parseBool takes a string ("t" "f" "true" "false" etc) and return corresponding  bool value
+// parseBool takes a string ("t" "f" "true" "false" etc)
+// and returns the corresponding boolean value.
 func parseBool(s string) (bool, error) {
 	return strconv.ParseBool(s)
 }
 
-// ParseDate parses a string date to time.Time in given layout format
-func ParseDate(layout string, date string) (time.Time, error) {
-	t, err := time.Parse(layout, date)
-	return t, err
+// ParseDate parses a date string to time.Time in the given layout format.
+func ParseDate(layout, date string) (time.Time, error) {
+	return time.Parse(layout, date)
 }

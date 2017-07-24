@@ -32,7 +32,7 @@ func (cr *NewCourseRequest) valid() bool {
 	return cr != nil &&
 		cr.Name != "" &&
 		cr.Code != "" &&
-		(cr.Provider == "github" || cr.Provider == "gitlab") &&
+		(cr.Provider == "github" || cr.Provider == "gitlab" || cr.Provider == "fake") &&
 		cr.DirectoryID != 0 &&
 		cr.Year != 0 &&
 		cr.Tag != ""
@@ -52,7 +52,6 @@ func (eur *EnrollUserRequest) valid() bool {
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var courses []*models.Course
 		courses, err := db.GetCourses()
 		if err != nil {
 			return err
@@ -63,37 +62,29 @@ func ListCourses(db database.Database) echo.HandlerFunc {
 
 // ListCoursesWithEnrollment lists all existing courses with the provided users
 // enrollment status.
-// if active=true query param is provided, list only enrolled courses of the student
+// If active=true query param is provided, list only enrolled courses of the student.
 func ListCoursesWithEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
 		if err != nil {
 			return err
 		}
-
+		var courses []*models.Course
 		if active, err := parseBool(c.QueryParam("active")); err == nil && active {
-			courses, err := db.GetActiveCoursesByUser(id)
-			if err != nil {
-				return err
-			}
-			return c.JSONPretty(http.StatusOK, courses, "\t")
-
+			courses, err = db.GetActiveCoursesByUser(id)
 		} else {
-			courses, err := db.GetCoursesByUser(id)
-			if err != nil {
-				return err
-			}
-			return c.JSONPretty(http.StatusOK, courses, "\t")
+			courses, err = db.GetCoursesByUser(id)
 		}
-
+		if err != nil {
+			return err
+		}
+		return c.JSONPretty(http.StatusOK, courses, "\t")
 	}
 }
 
-// ListAssignments lists all the assignment found in a place
+// ListAssignments lists the assignments for the provided course.
 func ListAssignments(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// TODO check if the user has right to show the assignments.
-		// same as courses above, should not return to unauthorised users
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
 			return err
@@ -311,9 +302,9 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		statuses, ok := parseStatuses(c.QueryParam("status"))
-		if !ok {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid status query")
+		statuses, err := parseEnrollmentStatus(c.QueryParam("status"))
+		if err != nil {
+			return err
 		}
 
 		courses, err := db.GetEnrollmentsByCourse(id, statuses...)
@@ -336,13 +327,13 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
-		if err != nil || id == 0 {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid user id")
+		if err != nil {
+			return err
 		}
 
-		statuses, ok := parseStatuses(c.QueryParam("status"))
-		if !ok {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid status query")
+		statuses, err := parseEnrollmentStatus(c.QueryParam("status"))
+		if err != nil {
+			return err
 		}
 
 		users, err := db.GetEnrollmentsByUser(id, statuses...)
