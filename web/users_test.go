@@ -141,6 +141,105 @@ func TestGetUsers(t *testing.T) {
 	assertCode(t, w.Code, http.StatusFound)
 }
 
+var allUsers = []struct {
+	provider string
+	remoteID uint64
+	secret   string
+}{
+	{"github", 1, "123"},
+	{"github", 2, "456"},
+	{"gitlab", 3, "789"},
+	{"gitlab", 4, "012"},
+	{"bitlab", 5, "345"},
+	{"gitlab", 6, "678"},
+	{"gitlab", 7, "901"},
+	{"gitlab", 8, "234"},
+}
+
+func TestGetUsersInCourse(t *testing.T) {
+	const (
+		usersURL = "/users?course=DAT520"
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var users []*models.User
+	for _, u := range allUsers {
+		user, err := db.CreateUserFromRemoteIdentity(u.provider, u.remoteID, u.secret)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Remote identities should not be loaded.
+		user.RemoteIdentities = nil
+		users = append(users, user)
+	}
+
+	for _, course := range allCourses {
+		err := db.CreateCourse(course)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// users to enroll in course DAT520 Distributed Systems
+	wantUsers := users[0 : len(allUsers)-3]
+
+	// users to enroll in course DAT320 Operating Systems
+	osUsers := users[3:7]
+
+	for _, u := range wantUsers {
+		enrollment := models.Enrollment{
+			UserID:   u.ID,
+			CourseID: allCourses[0].ID,
+		}
+		if err := db.CreateEnrollment(&enrollment); err != nil {
+			t.Fatal(err)
+		}
+		if err := db.AcceptEnrollment(enrollment.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, u := range osUsers {
+		enrollment := models.Enrollment{
+			UserID:   u.ID,
+			CourseID: allCourses[1].ID,
+		}
+		if err := db.CreateEnrollment(&enrollment); err != nil {
+			t.Fatal(err)
+		}
+		if err := db.AcceptEnrollment(enrollment.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	e := echo.New()
+	r := httptest.NewRequest(http.MethodGet, usersURL, nil)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+
+	h := web.GetUsers(db)
+	if err := h(c); err != nil {
+		t.Error(err)
+	}
+
+	var foundUsers []*models.User
+	if err := json.Unmarshal(w.Body.Bytes(), &foundUsers); err != nil {
+		t.Fatal(err)
+	}
+	for _, u := range foundUsers {
+		// Remote identities should not be loaded.
+		u.RemoteIdentities = nil
+	}
+
+	if !reflect.DeepEqual(foundUsers, wantUsers) {
+		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
+	}
+
+	assertCode(t, w.Code, http.StatusFound)
+}
+
 func TestPatchUser(t *testing.T) {
 	const (
 		getUserRoute = "/users/:uid"

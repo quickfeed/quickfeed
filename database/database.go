@@ -12,6 +12,7 @@ type Database interface {
 	// TODO: The update access token functionality should be split into its own method.
 	GetUserByRemoteIdentity(provider string, id uint64, accessToken string) (*models.User, error)
 	GetUsers() ([]*models.User, error)
+	GetUsersByCourse(string) ([]*models.User, error)
 
 	// SetAdmin makes an existing user an administrator.
 	SetAdmin(uint64) error

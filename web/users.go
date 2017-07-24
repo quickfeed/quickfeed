@@ -50,10 +50,19 @@ func GetUser(db database.Database) echo.HandlerFunc {
 }
 
 // GetUsers returns all the users in the database.
-// TODO: Add filtering, i.e, ?course=A123.
+// This endpoint also supports filtering, i.e, ?course=DAT520.
 func GetUsers(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		users, err := db.GetUsers()
+		var (
+			users []*models.User
+			err   error
+		)
+		courseCode := c.QueryParam("course")
+		if len(courseCode) > 0 {
+			users, err = db.GetUsersByCourse(courseCode)
+		} else {
+			users, err = db.GetUsers()
+		}
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
