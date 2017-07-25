@@ -125,7 +125,7 @@ func newStore(keyPairs ...[]byte) sessions.Store {
 	return store
 }
 
-func enableProviders(l *logrus.Logger, baseURL string, fake bool) map[string]bool {
+func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string]bool {
 	enabled := make(map[string]bool)
 
 	if ok := auth.EnableProvider(&auth.Provider{
@@ -210,7 +210,7 @@ func registerAuth(e *echo.Echo, db database.Database) {
 	oauth2.GET("/callback", auth.OAuth2Callback(db))
 }
 
-func registerAPI(l *logrus.Logger, e *echo.Echo, db database.Database) {
+func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database) {
 	// Source code management clients indexed by access token.
 	scms := make(map[string]scm.SCM)
 
@@ -253,7 +253,7 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 	e.Static("/", public)
 }
 
-func run(l *logrus.Logger, e *echo.Echo, httpAddr string) {
+func run(l logrus.FieldLogger, e *echo.Echo, httpAddr string) {
 	go func() {
 		srvErr := e.Start(httpAddr)
 		if srvErr == http.ErrServerClosed {
