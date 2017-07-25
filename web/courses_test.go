@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,17 +10,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/models"
+	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
-	"github.com/autograde/aguis/web/auth"
-	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/middleware"
-	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -86,94 +80,58 @@ func TestListCourses(t *testing.T) {
 	assertCode(t, w.Code, http.StatusOK)
 }
 
-func getCallbackURL(baseURL, provider string) string {
-	return getURL(baseURL, "auth", provider, "callback")
-}
-
-func getURL(baseURL, route, provider, endpoint string) string {
-	return "https://" + baseURL + "/" + route + "/" + provider + "/" + endpoint
-}
-
-// makes the oauth2 provider available in the request query so that
-// markbates/goth/gothic.GetProviderName can find it.
-func withProvider(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		qv := c.Request().URL.Query()
-		qv.Set("provider", c.Param("provider"))
-		c.Request().URL.RawQuery = qv.Encode()
-		return next(c)
-	}
-}
-
 func TestNewCourse(t *testing.T) {
-	const newCoursesURL = "/courses"
+	const (
+		newCoursesURL = "/courses"
+		provider      = "fake"
+	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	store := sessions.NewCookieStore([]byte("secret"))
-	store.Options.HttpOnly = true
-	store.Options.Secure = true
-	gothic.Store = store
+	testCourse := *allCourses[0]
 
-	goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL("localhost", "fake")})
+	// Convert course to course request, this allows us to verify that the
+	// course we get from the database is correct.
+	cr := courseToRequest(t, &testCourse)
 
-	i := 0
-	newCR := &web.NewCourseRequest{
-		Name:        allCourses[i].Name,
-		Code:        allCourses[i].Code,
-		Year:        allCourses[i].Year,
-		Tag:         allCourses[i].Tag,
-		Provider:    allCourses[i].Provider,
-		DirectoryID: allCourses[i].DirectoryID,
-	}
-	b, err := json.Marshal(newCR)
+	b, err := json.Marshal(cr)
 	if err != nil {
 		t.Fatal(err)
 	}
-	body := bytes.NewReader(b)
-	r := httptest.NewRequest(http.MethodPost, newCoursesURL, body)
-	r.Header.Add("Content-Type", "application/json")
+
+	r := httptest.NewRequest(http.MethodPost, newCoursesURL, bytes.NewReader(b))
+	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	e := echo.New()
-
 	c := e.NewContext(r, w)
+	c.Set(provider, &scm.FakeSCM{})
 
-	l := logrus.New()
-	l.Formatter = logger.NewDevFormatter(l.Formatter)
-	e.Logger = web.EchoLogger{Logger: l}
-
-	e.HideBanner = true
-	e.Use(
-		middleware.Recover(),
-		web.Logger(l),
-		middleware.Secure(),
-		session.Middleware(store),
-	)
-
-	newCourseHandler := withProvider(web.NewCourse(l, db))
-	if err := newCourseHandler(c); err != nil {
+	h := web.NewCourse(nullLogger(), db)
+	if err := h(c); err != nil {
 		t.Fatal(err)
 	}
 
-	// check that db has the course
-	courses, err := db.GetCourses()
+	var respCourse models.Course
+	if err := json.Unmarshal(w.Body.Bytes(), &respCourse); err != nil {
+		t.Fatal(err)
+	}
+
+	course, err := db.GetCourse(respCourse.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(courses) > 1 {
-		t.Errorf("got %d courses; expected only 1 course", len(courses))
+
+	testCourse.ID = respCourse.ID
+	if !reflect.DeepEqual(course, &testCourse) {
+		t.Errorf("have database course %+v want %+v", course, &testCourse)
 	}
 
-	for _, course := range courses {
-		if course.Code == allCourses[i].Code {
-			if !reflect.DeepEqual(course, allCourses[i]) {
-				t.Errorf("have course %+v want %+v", course, allCourses[i])
-			}
-		}
+	if !reflect.DeepEqual(&respCourse, course) {
+		t.Errorf("have response course %+v want %+v", &respCourse, course)
 	}
 
-	assertCode(t, w.Code, http.StatusOK)
+	assertCode(t, w.Code, http.StatusCreated)
 }
 
 func TestListCoursesWithEnrollment(t *testing.T) {
@@ -421,4 +379,17 @@ func TestGetCourse(t *testing.T) {
 	}
 
 	assertCode(t, w.Code, http.StatusOK)
+}
+
+func courseToRequest(t *testing.T, course *models.Course) (cr web.NewCourseRequest) {
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+	if err := enc.Encode(course); err != nil {
+		t.Fatal(err)
+	}
+	dec := gob.NewDecoder(&b)
+	if err := dec.Decode(&cr); err != nil {
+		t.Fatal(err)
+	}
+	return
 }
