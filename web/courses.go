@@ -245,27 +245,24 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		oldcr, err := db.GetCourse(id)
-		if err != nil {
+		if _, err := db.GetCourse(id); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
 			}
 			return err
-
 		}
 
-		var newcr NewCourseRequest
-
-		if err := c.Bind(&newcr); err != nil {
+		// TODO: Might be better to define a Validate method on models.Course and bind to that.
+		var cr NewCourseRequest
+		if err := c.Bind(&cr); err != nil {
 			return err
 		}
-
-		if !newcr.valid() {
+		if !cr.valid() {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		if c.Get(newcr.Provider) == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+newcr.Provider+" not registered")
+		if c.Get(cr.Provider) == nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
 		}
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		s := c.Get(cr.Provider).(scm.SCM)
@@ -274,22 +271,20 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 		defer cancel()
 
 		// Check that the directory exists.
-		_, err = s.GetDirectory(ctx, newcr.DirectoryID)
+		_, err = s.GetDirectory(ctx, cr.DirectoryID)
 		if err != nil {
 			return err
 		}
 
-		course := models.Course{
-			ID:          oldcr.ID,
-			Name:        newcr.Name,
-			Code:        newcr.Code,
-			Year:        newcr.Year,
-			Tag:         newcr.Tag,
-			Provider:    newcr.Provider,
-			DirectoryID: newcr.DirectoryID,
-		}
-
-		if err := db.UpdateCourse(&course); err != nil {
+		if err := db.UpdateCourse(&models.Course{
+			ID:          id,
+			Name:        cr.Name,
+			Code:        cr.Code,
+			Year:        cr.Year,
+			Tag:         cr.Tag,
+			Provider:    cr.Provider,
+			DirectoryID: cr.DirectoryID,
+		}); err != nil {
 			return err
 		}
 
