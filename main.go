@@ -104,11 +104,10 @@ func main() {
 	)
 
 	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: l})
-	defer db.Close()
-
 	if err != nil {
 		l.WithError(err).Fatal("could not connect to db")
 	}
+	defer db.Close()
 
 	e.GET("/logout", auth.OAuth2Logout())
 
