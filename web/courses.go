@@ -62,19 +62,19 @@ func ListCourses(db database.Database) echo.HandlerFunc {
 
 // ListCoursesWithEnrollment lists all existing courses with the provided users
 // enrollment status.
-// If active=true query param is provided, list only enrolled courses of the student.
+// If status query param is provided, lists only courses of the student filtered by the query param.
 func ListCoursesWithEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
 		if err != nil {
 			return err
 		}
-		var courses []*models.Course
-		if parseBool(c.QueryParam("active")) {
-			courses, err = db.GetActiveCoursesByUser(id)
-		} else {
-			courses, err = db.GetCoursesByUser(id)
+		statuses, err := parseEnrollmentStatus(c.QueryParam("status"))
+		if err != nil {
+			return err
 		}
+
+		courses, err := db.GetCoursesByUser(id, statuses...)
 		if err != nil {
 			return err
 		}

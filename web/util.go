@@ -47,14 +47,3 @@ func parseEnrollmentStatus(s string) ([]uint, error) {
 	}
 	return statuses, nil
 }
-
-// parseBool returns the boolean value represented by the string.
-// It accepts the same input as strconv.ParseBool(). In addition, if
-// the string is not one of the accepted values, false is returned.
-func parseBool(s string) bool {
-	b, err := strconv.ParseBool(s)
-	if err != nil {
-		return false
-	}
-	return b
-}

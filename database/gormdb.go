@@ -150,9 +150,18 @@ func (db *GormDB) CreateCourse(course *models.Course) error {
 }
 
 // GetCourses implements the Database interface.
-func (db *GormDB) GetCourses() ([]*models.Course, error) {
+// If ids are given, returns courses with matched ids
+// else returns all courses
+func (db *GormDB) GetCourses(ids ...uint64) ([]*models.Course, error) {
 	var courses []*models.Course
-	if err := db.conn.Find(&courses).Error; err != nil {
+	var err error
+
+	if len(ids) == 0 {
+		err = db.conn.Find(&courses).Error
+	} else {
+		err = db.conn.Where(ids).Find(&courses).Error
+	}
+	if err != nil {
 		return nil, err
 	}
 	return courses, nil
@@ -253,13 +262,12 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 
 // GetCoursesByUser returns all courses with the users enrollment status
 // included.
-func (db *GormDB) GetCoursesByUser(id uint64) ([]*models.Course, error) {
-	courses, err := db.GetCourses()
-	if err != nil {
-		return nil, err
-	}
+// if statuses param is provided, returns courses filtered by statuses
+func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Course, error) {
+	var courses []*models.Course
+	courseIDs := []uint64{}
 
-	enrollments, err := db.GetEnrollmentsByUser(id)
+	enrollments, err := db.GetEnrollmentsByUser(id, statuses...)
 	if err != nil {
 		return nil, err
 	}
@@ -267,6 +275,20 @@ func (db *GormDB) GetCoursesByUser(id uint64) ([]*models.Course, error) {
 	m := make(map[uint64]*models.Enrollment)
 	for _, enrollment := range enrollments {
 		m[enrollment.CourseID] = enrollment
+		courseIDs = append(courseIDs, enrollment.CourseID)
+	}
+
+	if len(statuses) == 0 { // statuses param does not provide
+		courses, err = db.GetCourses()
+	} else if len(courseIDs) > 0 {
+		// statuses param provided and user has enrolled course(s) matched with provided statuses
+		courses, err = db.GetCourses(courseIDs...)
+	} else { // statuses param provided, but user does not have any courses with provided statuses
+		return []*models.Course{}, nil
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	for _, course := range courses {
@@ -278,24 +300,6 @@ func (db *GormDB) GetCoursesByUser(id uint64) ([]*models.Course, error) {
 		}
 	}
 
-	return courses, nil
-}
-
-// GetActiveCoursesByUser returns all active courses of a user
-func (db *GormDB) GetActiveCoursesByUser(id uint64) ([]*models.Course, error) {
-	enrollments, err := db.getEnrollments(&models.User{ID: id}, models.Accepted)
-	if err != nil {
-		return nil, err
-	}
-	courseIDs := []uint64{}
-	for _, enrollment := range enrollments {
-		courseIDs = append(courseIDs, enrollment.CourseID)
-	}
-
-	var courses []*models.Course
-	if err := db.conn.Where(courseIDs).Find(&courses).Error; err != nil {
-		return nil, err
-	}
 	return courses, nil
 }
 

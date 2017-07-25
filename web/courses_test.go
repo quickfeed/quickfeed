@@ -240,13 +240,17 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}
 }
 
-func TestListActiveCoursesWithEnrollment(t *testing.T) {
+func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	const (
-		userCoursesRoute = "/users/:uid/courses?active=true"
-
-		secret   = "123"
-		provider = "github"
-		remoteID = 11
+		query            = "?status=accepted,rejected"
+		userCoursesRoute = "/users/:uid/courses" + query
+		secret           = "123"
+		provider         = "github"
+		remoteID         = 11
+	)
+	var (
+		accepted = int(models.Accepted)
+		rejected = int(models.Rejected)
 	)
 
 	db, cleanup := setup(t)
@@ -311,7 +315,7 @@ func TestListActiveCoursesWithEnrollment(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, userCoursesRoute, web.ListCoursesWithEnrollment(db))
 
-	userCoursesURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses?active=true"
+	userCoursesURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses" + query
 	r := httptest.NewRequest(http.MethodGet, userCoursesURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -330,7 +334,8 @@ func TestListActiveCoursesWithEnrollment(t *testing.T) {
 
 	assertCode(t, w.Code, http.StatusOK)
 	wantCourses := []*models.Course{
-		{ID: course3.ID},
+		{ID: course2.ID, Enrolled: &rejected},
+		{ID: course3.ID, Enrolled: &accepted},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses[0], wantCourses[0])

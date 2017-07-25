@@ -17,9 +17,8 @@ type Database interface {
 	SetAdmin(uint64) error
 
 	CreateCourse(*models.Course) error
-	GetCourses() ([]*models.Course, error)
-	GetCoursesByUser(uint64) ([]*models.Course, error)
-	GetActiveCoursesByUser(uint64) ([]*models.Course, error)
+	GetCourses(ids ...uint64) ([]*models.Course, error)
+	GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Course, error)
 	GetCourse(uint64) (*models.Course, error)
 	GetCourseByCode(string) (*models.Course, error)
 	UpdateCourse(*models.Course) error

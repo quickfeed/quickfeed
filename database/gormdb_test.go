@@ -93,6 +93,38 @@ func TestGormDBGetCourses(t *testing.T) {
 	}
 }
 
+func TestGormDBGetCoursesByIDs(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	course := models.Course{
+		Name:        "Test",
+		Code:        "T100",
+		Year:        2017,
+		Tag:         "something",
+		Provider:    "github",
+		DirectoryID: 1,
+	}
+
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+
+	courses, err := db.GetCourses(course.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(courses) != 1 {
+		t.Errorf("have size %v wanted %v", len(courses), 1)
+	}
+
+	if !reflect.DeepEqual(courses[0], &course) {
+		t.Fatalf("want %v have %v", courses[0], &course)
+	}
+
+}
+
 func TestGormDBGetAssignment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -374,82 +406,6 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		{ID: course2.ID, Enrolled: &rejected},
 		{ID: course3.ID, Enrolled: &accepted},
 		{ID: course4.ID, Enrolled: &none},
-	}
-	if !reflect.DeepEqual(courses, wantCourses) {
-		t.Errorf("have course %+v want %+v", courses, wantCourses)
-	}
-}
-
-func TestGormDBGetActiveCoursesByUser(t *testing.T) {
-	const (
-		secret   = "123"
-		provider = "github"
-		remoteID = 11
-	)
-
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	var course1 models.Course
-	if err := db.CreateCourse(&course1); err != nil {
-		t.Fatal(err)
-	}
-
-	var course2 models.Course
-	if err := db.CreateCourse(&course2); err != nil {
-		t.Fatal(err)
-	}
-
-	var course3 models.Course
-	if err := db.CreateCourse(&course3); err != nil {
-		t.Fatal(err)
-	}
-
-	var course4 models.Course
-	if err := db.CreateCourse(&course4); err != nil {
-		t.Fatal(err)
-	}
-
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	enrollment1 := models.Enrollment{
-		UserID:   user.ID,
-		CourseID: course1.ID,
-	}
-	enrollment2 := models.Enrollment{
-		UserID:   user.ID,
-		CourseID: course2.ID,
-	}
-	enrollment3 := models.Enrollment{
-		UserID:   user.ID,
-		CourseID: course3.ID,
-	}
-	if err := db.CreateEnrollment(&enrollment1); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&enrollment2); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.CreateEnrollment(&enrollment3); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.AcceptEnrollment(enrollment3.ID); err != nil {
-		t.Fatal(err)
-	}
-
-	courses, err := db.GetActiveCoursesByUser(user.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	wantCourses := []*models.Course{
-		{ID: course3.ID},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
