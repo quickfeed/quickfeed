@@ -94,10 +94,11 @@ __export(__webpack_require__(24));
 __export(__webpack_require__(25));
 __export(__webpack_require__(26));
 __export(__webpack_require__(27));
-__export(__webpack_require__(28));
+__export(__webpack_require__(53));
 __export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
+__export(__webpack_require__(32));
 
 
 /***/ }),
@@ -717,10 +718,10 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(32));
 __export(__webpack_require__(33));
 __export(__webpack_require__(34));
 __export(__webpack_require__(35));
+__export(__webpack_require__(36));
 
 
 /***/ }),
@@ -864,17 +865,17 @@ const React = __webpack_require__(0);
 const ReactDOM = __webpack_require__(14);
 const components_1 = __webpack_require__(1);
 const managers_1 = __webpack_require__(11);
-const ErrorPage_1 = __webpack_require__(36);
-const HelpPage_1 = __webpack_require__(37);
-const HomePage_1 = __webpack_require__(39);
-const StudentPage_1 = __webpack_require__(40);
-const TeacherPage_1 = __webpack_require__(43);
-const AdminPage_1 = __webpack_require__(45);
-const NavBarLogin_1 = __webpack_require__(47);
-const NavBarMenu_1 = __webpack_require__(48);
-const LoginPage_1 = __webpack_require__(49);
-const ServerProvider_1 = __webpack_require__(50);
-const HttpHelper_1 = __webpack_require__(51);
+const ErrorPage_1 = __webpack_require__(37);
+const HelpPage_1 = __webpack_require__(38);
+const HomePage_1 = __webpack_require__(40);
+const StudentPage_1 = __webpack_require__(41);
+const TeacherPage_1 = __webpack_require__(44);
+const AdminPage_1 = __webpack_require__(46);
+const NavBarLogin_1 = __webpack_require__(48);
+const NavBarMenu_1 = __webpack_require__(49);
+const LoginPage_1 = __webpack_require__(50);
+const ServerProvider_1 = __webpack_require__(51);
+const HttpHelper_1 = __webpack_require__(52);
 class AutoGrader extends React.Component {
     constructor(props) {
         super();
@@ -1520,7 +1521,8 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 28 */
+/* 28 */,
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1541,7 +1543,7 @@ exports.Button = Button;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1692,7 +1694,7 @@ exports.CourseForm = CourseForm;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1767,7 +1769,7 @@ exports.Results = Results;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1803,7 +1805,7 @@ exports.Search = Search;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2011,7 +2013,7 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2184,7 +2186,7 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2685,7 +2687,7 @@ exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2776,7 +2778,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2820,7 +2822,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2836,7 +2838,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const ViewPage_1 = __webpack_require__(4);
-const HelpView_1 = __webpack_require__(38);
+const HelpView_1 = __webpack_require__(39);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
         super();
@@ -2855,7 +2857,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2911,7 +2913,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2941,7 +2943,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2959,16 +2961,14 @@ const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const models_1 = __webpack_require__(3);
 const ViewPage_1 = __webpack_require__(4);
-const HelloView_1 = __webpack_require__(41);
+const HelloView_1 = __webpack_require__(42);
 const UserView_1 = __webpack_require__(5);
 const CollapsableNavMenu_1 = __webpack_require__(12);
-const EnrollmentView_1 = __webpack_require__(42);
+const EnrollmentView_1 = __webpack_require__(43);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
         super();
-        this.courses = [];
         this.activeCourses = [];
-        this.foundId = -1;
         this.navMan = navMan;
         this.userMan = users;
         this.courseMan = courseMan;
@@ -2977,6 +2977,7 @@ class StudentPage extends ViewPage_1.ViewPage {
         this.navHelper.registerFunction("index", this.index);
         this.navHelper.registerFunction("course/{courseid:number}", this.course);
         this.navHelper.registerFunction("course/{courseid:number}/lab/{labid:number}", this.courseWithLab);
+        this.navHelper.registerFunction("course/{courseid:number}/members", this.members);
         this.navHelper.registerFunction("course/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction("enroll", this.enroll);
         this.navHelper.registerFunction("user", this.getUsers);
@@ -3044,7 +3045,18 @@ class StudentPage extends ViewPage_1.ViewPage {
                     return React.createElement(components_1.StudentLab, { course: this.selectedCourse.course, assignment: this.selectedAssignment });
                 }
             }
-            console.log(navInfo);
+            return React.createElement("div", null, "404 not found");
+        });
+    }
+    members(navInfo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.setupData();
+            const courseId = navInfo.params.courseid;
+            const course = yield this.courseMan.getCourse(courseId);
+            if (course) {
+                const students = yield this.courseMan.getUsersForCourse(course, this.userMan, models_1.CourseUserState.student);
+                return React.createElement(components_1.GroupForm, { className: "form-horizontal", students: students, capacity: 2 });
+            }
             return React.createElement("div", null, "404 not found");
         });
     }
@@ -3136,7 +3148,7 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3152,7 +3164,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3194,7 +3206,7 @@ exports.EnrollmentView = EnrollmentView;
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3214,7 +3226,7 @@ const ViewPage_1 = __webpack_require__(4);
 const UserView_1 = __webpack_require__(5);
 const CollapsableNavMenu_1 = __webpack_require__(12);
 const models_1 = __webpack_require__(3);
-const MemberView_1 = __webpack_require__(44);
+const MemberView_1 = __webpack_require__(45);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
         super();
@@ -3365,7 +3377,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3413,7 +3425,7 @@ exports.MemberView = MemberView;
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3430,7 +3442,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(4);
-const CourseView_1 = __webpack_require__(46);
+const CourseView_1 = __webpack_require__(47);
 const UserView_1 = __webpack_require__(5);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
@@ -3592,7 +3604,7 @@ exports.AdminPage = AdminPage;
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3636,7 +3648,7 @@ exports.CourseView = CourseView;
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3685,7 +3697,7 @@ exports.NavBarLogin = NavBarLogin;
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3719,7 +3731,7 @@ exports.NavBarMenu = NavBarMenu;
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3776,7 +3788,7 @@ exports.LoginPage = LoginPage;
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4040,7 +4052,7 @@ exports.ServerProvider = ServerProvider;
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4111,6 +4123,125 @@ class HttpHelper {
     }
 }
 exports.HttpHelper = HttpHelper;
+
+
+/***/ }),
+/* 53 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class GroupForm extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            name: "",
+            students: this.props.students,
+            selectedStudents: [],
+        };
+    }
+    render() {
+        const searchIcon = React.createElement("span", { className: "input-group-addon" },
+            React.createElement("i", { className: "glyphicon glyphicon-search" }));
+        const studentSearchBar = React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for students", onChange: (query) => this.handleSearch(query) });
+        const selectableStudents = [];
+        for (const student of this.state.students) {
+            selectableStudents.push(React.createElement("li", { key: student.user.id, className: "list-group-item" },
+                student.user.firstname + " " + student.user.lastname,
+                React.createElement("button", { type: "button", className: "btn btn-outline-success", onClick: () => this.handleAddToGroupOnClick(student) },
+                    React.createElement("i", { className: "glyphicon glyphicon-plus-sign" }))));
+        }
+        const selectedStudents = [];
+        for (const student of this.state.selectedStudents) {
+            selectedStudents.push(React.createElement("li", { key: student.user.id, className: "list-group-item" },
+                student.user.firstname + " " + student.user.lastname,
+                React.createElement("button", { className: "btn btn-outline-primary", onClick: () => this.handleRemoveFromGroupOnClick(student) },
+                    React.createElement("i", { className: "glyphicon glyphicon-minus-sign" }))));
+        }
+        return (React.createElement("div", { className: "student-group-container" },
+            React.createElement("h1", null, "Create a Group"),
+            React.createElement("form", { className: this.props.className, onSubmit: (e) => this.handleFormSubmit(e) },
+                React.createElement("div", { className: "form-group row" },
+                    React.createElement("label", { className: "col-sm-1 col-form-label", htmlFor: "tag" }, "Name:"),
+                    React.createElement("div", { className: "col-sm-11" },
+                        React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter group name", name: "name", value: this.state.name, onChange: (e) => this.handleInputChange(e) }))),
+                React.createElement("div", { className: "form-group row" },
+                    React.createElement("div", { className: "col-sm-6" },
+                        React.createElement("fieldset", null,
+                            React.createElement("legend", null,
+                                "Available Students ",
+                                React.createElement("small", { className: "hint" },
+                                    "select ",
+                                    this.props.capacity,
+                                    " students for your group")),
+                            studentSearchBar,
+                            " ",
+                            React.createElement("br", null),
+                            React.createElement("ul", { className: "student-group list-group" }, selectableStudents))),
+                    React.createElement("div", { className: "col-sm-6" },
+                        React.createElement("fieldset", null,
+                            React.createElement("legend", null, "Selected Students"),
+                            React.createElement("ul", { className: "student-group list-group" }, selectedStudents)))),
+                React.createElement("div", { className: "form-group row" },
+                    React.createElement("div", { className: "col-sm-offset-5 col-sm-2" },
+                        React.createElement("button", { className: this.state.selectedStudents.length
+                                === this.props.capacity ? "btn btn-primary active" : "btn btn-primary disabled", type: "submit" }, "Create"))))));
+    }
+    handleFormSubmit(e) {
+        e.preventDefault();
+        if (this.state.selectedStudents.length === this.props.capacity) {
+            console.log("state", this.state);
+            console.log("group ", this.state.name, this.state.selectedStudents);
+        }
+    }
+    handleInputChange(e) {
+        const target = e.target;
+        const value = target.type === "checkbox" ? target.checked : target.value;
+        const name = target.name;
+        this.setState({
+            [name]: value,
+        });
+    }
+    handleAddToGroupOnClick(student) {
+        const index = this.state.students.indexOf(student);
+        if (index >= 0) {
+            const newSelectedArr = this.state.selectedStudents.concat(student);
+            this.setState({
+                students: this.state.students.filter((_, i) => i !== index),
+                selectedStudents: newSelectedArr,
+            });
+        }
+    }
+    handleRemoveFromGroupOnClick(student) {
+        const index = this.state.selectedStudents.indexOf(student);
+        if (index >= 0) {
+            const newStudentsdArr = this.state.students.concat(student);
+            this.setState({
+                students: newStudentsdArr,
+                selectedStudents: this.state.selectedStudents.filter((_, i) => i !== index),
+            });
+        }
+    }
+    handleSearch(query) {
+        query = query.toLowerCase();
+        const filteredData = [];
+        this.props.students.forEach((student) => {
+            if ((student.user.firstname.toLowerCase().indexOf(query) !== -1
+                || student.user.lastname.toLowerCase().indexOf(query) !== -1
+                || student.user.email.toString().indexOf(query) !== -1)
+                && this.state.selectedStudents.indexOf(student) === -1) {
+                filteredData.push(student);
+            }
+        });
+        this.setState({
+            students: filteredData,
+        });
+    }
+}
+exports.GroupForm = GroupForm;
 
 
 /***/ })

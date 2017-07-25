@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CoursesOverview, NavMenu, SingleCourseOverview, StudentLab } from "../components";
+import { CoursesOverview, GroupForm, NavMenu, SingleCourseOverview, StudentLab } from "../components";
 
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
@@ -22,12 +22,9 @@ export class StudentPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
 
-    private courses: IUserCourse[] = [];
     private activeCourses: IUserCourse[] = [];
     private selectedCourse: IUserCourse | undefined;
     private selectedAssignment: IStudentSubmission | undefined;
-
-    private foundId: number = -1;
 
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
@@ -43,6 +40,7 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("index", this.index);
         this.navHelper.registerFunction<any>("course/{courseid:number}", this.course);
         this.navHelper.registerFunction<any>("course/{courseid:number}/lab/{labid:number}", this.courseWithLab);
+        this.navHelper.registerFunction<any>("course/{courseid:number}/members", this.members);
         this.navHelper.registerFunction<any>("course/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
 
@@ -123,7 +121,18 @@ export class StudentPage extends ViewPage {
                 </StudentLab>;
             }
         }
-        console.log(navInfo);
+        return <div>404 not found</div>;
+    }
+
+    public async members(navInfo: INavInfo<{ courseid: number }>): View {
+        await this.setupData();
+        const courseId = navInfo.params.courseid;
+        const course = await this.courseMan.getCourse(courseId);
+        if (course) {
+            const students = await this.courseMan.getUsersForCourse(course, this.userMan, CourseUserState.student);
+            // should not allow to add more students than group capacity
+            return <GroupForm className="form-horizontal" students={students} capacity={2}/>;
+        }
         return <div>404 not found</div>;
     }
 

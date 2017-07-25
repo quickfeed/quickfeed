@@ -1,3 +1,7 @@
+.hint {
+    font-size: medium;
+    color: gray;
+}
 .dropdown-menu {
     top: initial;
     left: initial;
@@ -99,8 +103,12 @@
     transition: all 0.5s;
 }
 
-
 .organisationWrap .organisationBtnGroup .organisation .organisationInfo:hover {
     border-color: #337AB7;
     outline: none !important;
+}
+
+.student-group {
+    max-height: 200px;
+    overflow-y: auto;
 }
