@@ -33,7 +33,7 @@ func ListDirectories() echo.HandlerFunc {
 		if c.Get(dr.Provider) == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+dr.Provider+" not registered")
 		}
-		// if type assertion fails, recover middleware will catch panic and log stack trace
+		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		s := c.Get(dr.Provider).(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)

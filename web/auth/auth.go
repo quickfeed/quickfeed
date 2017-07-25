@@ -65,7 +65,7 @@ func OAuth2Logout() echo.HandlerFunc {
 		}
 
 		if i, ok := sess.Values[UserKey]; ok {
-			// if type assertion fails, recover middleware will catch panic and log stack trace
+			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 			us := i.(*UserSession)
 			// Invalidate gothic user sessions.
 			for provider := range us.Providers {
@@ -102,7 +102,7 @@ func PreAuth(db database.Database) echo.MiddlewareFunc {
 			}
 
 			if i, ok := sess.Values[UserKey]; ok {
-				// if type assertion fails, recover middleware will catch panic and log stack trace
+				// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 				us := i.(*UserSession)
 				if _, err := db.GetUser(us.ID); err != nil {
 					return OAuth2Logout()(c)
@@ -185,7 +185,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			if !ok {
 				return OAuth2Logout()(c)
 			}
-			// if type assertion fails, recover middleware will catch panic and log stack trace
+			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 			us := i.(*UserSession)
 
 			// Associate user with remote identity.
@@ -249,7 +249,7 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				return echo.ErrUnauthorized
 			}
 
-			// if type assertion fails, recover middleware will catch panic and log stack trace
+			// If type assertion fails, the recover middleware will catch the panic and log a stack trace.
 			us := i.(*UserSession)
 			user, err := db.GetUser(us.ID)
 			if err != nil {
