@@ -74,6 +74,7 @@ func main() {
 	}
 
 	enabled := enableProviders(l, *baseURL, *fake)
+	registerWebhooks(e, enabled)
 
 	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: l})
 	if err != nil {
@@ -86,34 +87,6 @@ func main() {
 	}()
 
 	e.GET("/logout", auth.OAuth2Logout())
-
-	ghHook := whgithub.New(&whgithub.Config{Secret: os.Getenv("GITHUB_HOOK_SECRET")})
-	if enabled["github"] {
-		ghHook.RegisterEvents(web.GithubHook, whgithub.PushEvent)
-	}
-	glHook := whgitlab.New(&whgitlab.Config{Secret: os.Getenv("GITLAB_HOOK_SECRET")})
-	if enabled["gitlab"] {
-		glHook.RegisterEvents(web.GitlabHook, whgitlab.PushEvents)
-	}
-
-	e.POST("/hook/:provider/events", func(c echo.Context) error {
-		var hook webhooks.Webhook
-		provider := c.Param("provider")
-		if !enabled[provider] {
-			return echo.ErrNotFound
-		}
-
-		switch provider {
-		case "github":
-			hook = ghHook
-		case "gitlab":
-			hook = glHook
-		default:
-			panic("registered provider is missing corresponding webhook")
-		}
-		webhooks.Handler(hook).ServeHTTP(c.Response(), c.Request())
-		return nil
-	})
 
 	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(db))
 	oauth2.GET("", auth.OAuth2Login(db))
@@ -256,6 +229,36 @@ func enableProviders(l *logrus.Logger, baseURL string, fake bool) map[string]boo
 	}
 
 	return enabled
+}
+
+func registerWebhooks(e *echo.Echo, enabled map[string]bool) {
+	ghHook := whgithub.New(&whgithub.Config{Secret: os.Getenv("GITHUB_HOOK_SECRET")})
+	if enabled["github"] {
+		ghHook.RegisterEvents(web.GithubHook, whgithub.PushEvent)
+	}
+	glHook := whgitlab.New(&whgitlab.Config{Secret: os.Getenv("GITLAB_HOOK_SECRET")})
+	if enabled["gitlab"] {
+		glHook.RegisterEvents(web.GitlabHook, whgitlab.PushEvents)
+	}
+
+	e.POST("/hook/:provider/events", func(c echo.Context) error {
+		var hook webhooks.Webhook
+		provider := c.Param("provider")
+		if !enabled[provider] {
+			return echo.ErrNotFound
+		}
+
+		switch provider {
+		case "github":
+			hook = ghHook
+		case "gitlab":
+			hook = glHook
+		default:
+			panic("registered provider is missing corresponding webhook")
+		}
+		webhooks.Handler(hook).ServeHTTP(c.Response(), c.Request())
+		return nil
+	})
 }
 
 func getCallbackURL(baseURL, provider string) string {
