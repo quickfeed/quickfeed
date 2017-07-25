@@ -31,6 +31,24 @@ import (
 	whgitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
+func init() {
+	mustAddExtensionType := func(ext, typ string) {
+		if err := mime.AddExtensionType(ext, typ); err != nil {
+			panic(err)
+		}
+	}
+
+	// On Windows, mime types are read from the registry, which is often has
+	// outdated content types. This enforces the that the correct mime types
+	// are used on all platforms.
+	mustAddExtensionType(".html", "text/html")
+	mustAddExtensionType(".css", "text/css")
+	mustAddExtensionType(".js", "application/javascript")
+	mustAddExtensionType(".jsx", "application/javascript")
+	mustAddExtensionType(".map", "application/json")
+	mustAddExtensionType(".ts", "application/x-typescript")
+}
+
 func main() {
 	var (
 		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
@@ -41,8 +59,6 @@ func main() {
 		fake = flag.Bool("provider.fake", false, "enable fake provider")
 	)
 	flag.Parse()
-
-	setDefaultMimeTypes()
 
 	e := echo.New()
 	l := logrus.New()
@@ -196,20 +212,6 @@ func main() {
 	if err := e.Shutdown(ctx); err != nil {
 		l.WithError(err).Fatal("failure during server shutdown")
 	}
-}
-
-// In Windows, mime.type loads the file extensions from registry which
-// usually has the wrong content-type associated with the file extension.
-// This will enforce the correct types for the most used mime types
-func setDefaultMimeTypes() {
-	mime.AddExtensionType(".html", "text/html")
-	mime.AddExtensionType(".css", "text/css")
-	mime.AddExtensionType(".js", "application/javascript")
-
-	// Useful for debugging in browser
-	mime.AddExtensionType(".jsx", "application/javascript")
-	mime.AddExtensionType(".map", "application/json")
-	mime.AddExtensionType(".ts", "application/x-typescript")
 }
 
 // makes the oauth2 provider available in the request query so that
