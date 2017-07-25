@@ -89,17 +89,6 @@ func main() {
 	run(l, e, *httpAddr)
 }
 
-// makes the oauth2 provider available in the request query so that
-// markbates/goth/gothic.GetProviderName can find it.
-func withProvider(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		qv := c.Request().URL.Query()
-		qv.Set("provider", c.Param("provider"))
-		c.Request().URL.RawQuery = qv.Encode()
-		return next(c)
-	}
-}
-
 func newServer(l *logrus.Logger, store sessions.Store) *echo.Echo {
 	e := echo.New()
 	e.Logger = web.EchoLogger{Logger: l}
@@ -200,10 +189,21 @@ func registerWebhooks(e *echo.Echo, enabled map[string]bool) {
 }
 
 func registerAuth(e *echo.Echo, db database.Database) {
-	e.GET("/logout", auth.OAuth2Logout())
+	// makes the oauth2 provider available in the request query so that
+	// markbates/goth/gothic.GetProviderName can find it.
+	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			qv := c.Request().URL.Query()
+			qv.Set("provider", c.Param("provider"))
+			c.Request().URL.RawQuery = qv.Encode()
+			return next(c)
+		}
+	}
+
 	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(db))
 	oauth2.GET("", auth.OAuth2Login(db))
 	oauth2.GET("/callback", auth.OAuth2Callback(db))
+	e.GET("/logout", auth.OAuth2Logout())
 }
 
 func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database) {
