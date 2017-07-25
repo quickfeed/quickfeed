@@ -55,3 +55,9 @@ func envSet(env string) database.GormLogger {
 	}
 	return nil
 }
+
+func nullLogger() *logrus.Logger {
+	l := logrus.New()
+	l.Out = ioutil.Discard
+	return l
+}
