@@ -107,7 +107,11 @@ func main() {
 	if err != nil {
 		l.WithError(err).Fatal("could not connect to db")
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			l.WithError(err).Warn("error closing database")
+		}
+	}()
 
 	e.GET("/logout", auth.OAuth2Logout())
 
