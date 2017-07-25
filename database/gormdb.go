@@ -264,9 +264,10 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 		}).Error
 }
 
-// GetCoursesByUser returns all courses with the users enrollment status
-// included.
-// if statuses param is provided, returns courses filtered by statuses
+// GetCoursesByUser returns all courses (including enrollment status)
+// for the given user id.
+// If enrollment statuses is provided, the set of courses returned
+// is filtered according to these enrollment statuses.
 func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Course, error) {
 	var courses []*models.Course
 	courseIDs := []uint64{}
@@ -282,15 +283,16 @@ func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Cours
 		courseIDs = append(courseIDs, enrollment.CourseID)
 	}
 
-	if len(statuses) == 0 { // statuses param does not provide
+	if len(statuses) == 0 {
+		// enrollment statuses not provided
 		courses, err = db.GetCourses()
 	} else if len(courseIDs) > 0 {
-		// statuses param provided and user has enrolled course(s) matched with provided statuses
+		// enrollment statuses provided and user enrolled in course(s) matching the provided statuses
 		courses, err = db.GetCourses(courseIDs...)
-	} else { // statuses param provided, but user does not have any courses with provided statuses
+	} else {
+		// enrollment statuses provided, but user have no courses with matching statuses
 		return []*models.Course{}, nil
 	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +305,6 @@ func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Cours
 			course.Enrolled = &enrollment.Status
 		}
 	}
-
 	return courses, nil
 }
 
