@@ -94,7 +94,7 @@ __export(__webpack_require__(24));
 __export(__webpack_require__(25));
 __export(__webpack_require__(26));
 __export(__webpack_require__(27));
-__export(__webpack_require__(53));
+__export(__webpack_require__(28));
 __export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
@@ -1521,7 +1521,155 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 28 */,
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class GroupForm extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            name: "",
+            students: this.props.students,
+            selectedStudents: [],
+            errorFlash: null,
+        };
+    }
+    render() {
+        const searchIcon = React.createElement("span", { className: "input-group-addon" },
+            React.createElement("i", { className: "glyphicon glyphicon-search" }));
+        const studentSearchBar = React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for students", onChange: (query) => this.handleSearch(query) });
+        const selectableStudents = [];
+        for (const student of this.state.students) {
+            selectableStudents.push(React.createElement("li", { key: student.user.id, className: "list-group-item" },
+                student.user.firstname + " " + student.user.lastname,
+                React.createElement("button", { type: "button", className: "btn btn-outline-success", onClick: () => this.handleAddToGroupOnClick(student) },
+                    React.createElement("i", { className: "glyphicon glyphicon-plus-sign" }))));
+        }
+        const selectedStudents = [];
+        for (const student of this.state.selectedStudents) {
+            selectedStudents.push(React.createElement("li", { key: student.user.id, className: "list-group-item" },
+                student.user.firstname + " " + student.user.lastname,
+                React.createElement("button", { className: "btn btn-outline-primary", onClick: () => this.handleRemoveFromGroupOnClick(student) },
+                    React.createElement("i", { className: "glyphicon glyphicon-minus-sign" }))));
+        }
+        return (React.createElement("div", { className: "student-group-container" },
+            React.createElement("h1", null, "Create a Group"),
+            this.state.errorFlash,
+            React.createElement("form", { className: this.props.className, onSubmit: (e) => this.handleFormSubmit(e) },
+                React.createElement("div", { className: "form-group row" },
+                    React.createElement("label", { className: "col-sm-1 col-form-label", htmlFor: "tag" }, "Name:"),
+                    React.createElement("div", { className: "col-sm-11" },
+                        React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter group name", name: "name", value: this.state.name, onChange: (e) => this.handleInputChange(e) }))),
+                React.createElement("div", { className: "form-group row" },
+                    React.createElement("div", { className: "col-sm-6" },
+                        React.createElement("fieldset", null,
+                            React.createElement("legend", null,
+                                "Available Students ",
+                                React.createElement("small", { className: "hint" },
+                                    "select ",
+                                    this.props.capacity,
+                                    " students for your group")),
+                            studentSearchBar,
+                            " ",
+                            React.createElement("br", null),
+                            React.createElement("ul", { className: "student-group list-group" }, selectableStudents))),
+                    React.createElement("div", { className: "col-sm-6" },
+                        React.createElement("fieldset", null,
+                            React.createElement("legend", null, "Selected Students"),
+                            React.createElement("ul", { className: "student-group list-group" }, selectedStudents)))),
+                React.createElement("div", { className: "form-group row" },
+                    React.createElement("div", { className: "col-sm-offset-5 col-sm-2" },
+                        React.createElement("button", { className: this.state.selectedStudents.length
+                                === this.props.capacity ? "btn btn-primary active" : "btn btn-primary disabled", type: "submit" }, "Create"))))));
+    }
+    handleFormSubmit(e) {
+        e.preventDefault();
+        const errors = this.groupValidate();
+        if (errors.length > 0) {
+            const errorArr = [];
+            for (let i = 0; i < errors.length; i++) {
+                errorArr.push(React.createElement("li", { key: i }, errors[i]));
+            }
+            const flash = React.createElement("div", { className: "alert alert-danger" },
+                React.createElement("h4", null,
+                    errorArr.length,
+                    " errors prohibited Group from being saved: "),
+                React.createElement("ul", null, errorArr));
+            this.setState({
+                errorFlash: flash,
+            });
+        }
+        else {
+            this.setState({
+                errorFlash: null,
+            });
+            console.log("state", this.state);
+            console.log("group ", this.state.name, this.state.selectedStudents);
+        }
+    }
+    handleInputChange(e) {
+        const target = e.target;
+        const value = target.type === "checkbox" ? target.checked : target.value;
+        const name = target.name;
+        this.setState({
+            [name]: value,
+        });
+    }
+    handleAddToGroupOnClick(student) {
+        const index = this.state.students.indexOf(student);
+        if (index >= 0) {
+            const newSelectedArr = this.state.selectedStudents.concat(student);
+            this.setState({
+                students: this.state.students.filter((_, i) => i !== index),
+                selectedStudents: newSelectedArr,
+            });
+        }
+    }
+    handleRemoveFromGroupOnClick(student) {
+        const index = this.state.selectedStudents.indexOf(student);
+        if (index >= 0) {
+            const newStudentsdArr = this.state.students.concat(student);
+            this.setState({
+                students: newStudentsdArr,
+                selectedStudents: this.state.selectedStudents.filter((_, i) => i !== index),
+            });
+        }
+    }
+    handleSearch(query) {
+        query = query.toLowerCase();
+        const filteredData = [];
+        this.props.students.forEach((student) => {
+            if ((student.user.firstname.toLowerCase().indexOf(query) !== -1
+                || student.user.lastname.toLowerCase().indexOf(query) !== -1
+                || student.user.email.toString().indexOf(query) !== -1)
+                && this.state.selectedStudents.indexOf(student) === -1) {
+                filteredData.push(student);
+            }
+        });
+        this.setState({
+            students: filteredData,
+        });
+    }
+    groupValidate() {
+        const errors = [];
+        if (this.state.name === "") {
+            errors.push("Group Name cannot be blank");
+        }
+        if (this.state.selectedStudents.length !== this.props.capacity) {
+            errors.push("Group members must be equal to " + this.props.capacity.toString());
+        }
+        return errors;
+    }
+}
+exports.GroupForm = GroupForm;
+
+
+/***/ }),
 /* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4123,125 +4271,6 @@ class HttpHelper {
     }
 }
 exports.HttpHelper = HttpHelper;
-
-
-/***/ }),
-/* 53 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const React = __webpack_require__(0);
-const components_1 = __webpack_require__(1);
-class GroupForm extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            name: "",
-            students: this.props.students,
-            selectedStudents: [],
-        };
-    }
-    render() {
-        const searchIcon = React.createElement("span", { className: "input-group-addon" },
-            React.createElement("i", { className: "glyphicon glyphicon-search" }));
-        const studentSearchBar = React.createElement(components_1.Search, { className: "input-group", addonBefore: searchIcon, placeholder: "Search for students", onChange: (query) => this.handleSearch(query) });
-        const selectableStudents = [];
-        for (const student of this.state.students) {
-            selectableStudents.push(React.createElement("li", { key: student.user.id, className: "list-group-item" },
-                student.user.firstname + " " + student.user.lastname,
-                React.createElement("button", { type: "button", className: "btn btn-outline-success", onClick: () => this.handleAddToGroupOnClick(student) },
-                    React.createElement("i", { className: "glyphicon glyphicon-plus-sign" }))));
-        }
-        const selectedStudents = [];
-        for (const student of this.state.selectedStudents) {
-            selectedStudents.push(React.createElement("li", { key: student.user.id, className: "list-group-item" },
-                student.user.firstname + " " + student.user.lastname,
-                React.createElement("button", { className: "btn btn-outline-primary", onClick: () => this.handleRemoveFromGroupOnClick(student) },
-                    React.createElement("i", { className: "glyphicon glyphicon-minus-sign" }))));
-        }
-        return (React.createElement("div", { className: "student-group-container" },
-            React.createElement("h1", null, "Create a Group"),
-            React.createElement("form", { className: this.props.className, onSubmit: (e) => this.handleFormSubmit(e) },
-                React.createElement("div", { className: "form-group row" },
-                    React.createElement("label", { className: "col-sm-1 col-form-label", htmlFor: "tag" }, "Name:"),
-                    React.createElement("div", { className: "col-sm-11" },
-                        React.createElement("input", { type: "text", className: "form-control", id: "name", placeholder: "Enter group name", name: "name", value: this.state.name, onChange: (e) => this.handleInputChange(e) }))),
-                React.createElement("div", { className: "form-group row" },
-                    React.createElement("div", { className: "col-sm-6" },
-                        React.createElement("fieldset", null,
-                            React.createElement("legend", null,
-                                "Available Students ",
-                                React.createElement("small", { className: "hint" },
-                                    "select ",
-                                    this.props.capacity,
-                                    " students for your group")),
-                            studentSearchBar,
-                            " ",
-                            React.createElement("br", null),
-                            React.createElement("ul", { className: "student-group list-group" }, selectableStudents))),
-                    React.createElement("div", { className: "col-sm-6" },
-                        React.createElement("fieldset", null,
-                            React.createElement("legend", null, "Selected Students"),
-                            React.createElement("ul", { className: "student-group list-group" }, selectedStudents)))),
-                React.createElement("div", { className: "form-group row" },
-                    React.createElement("div", { className: "col-sm-offset-5 col-sm-2" },
-                        React.createElement("button", { className: this.state.selectedStudents.length
-                                === this.props.capacity ? "btn btn-primary active" : "btn btn-primary disabled", type: "submit" }, "Create"))))));
-    }
-    handleFormSubmit(e) {
-        e.preventDefault();
-        if (this.state.selectedStudents.length === this.props.capacity) {
-            console.log("state", this.state);
-            console.log("group ", this.state.name, this.state.selectedStudents);
-        }
-    }
-    handleInputChange(e) {
-        const target = e.target;
-        const value = target.type === "checkbox" ? target.checked : target.value;
-        const name = target.name;
-        this.setState({
-            [name]: value,
-        });
-    }
-    handleAddToGroupOnClick(student) {
-        const index = this.state.students.indexOf(student);
-        if (index >= 0) {
-            const newSelectedArr = this.state.selectedStudents.concat(student);
-            this.setState({
-                students: this.state.students.filter((_, i) => i !== index),
-                selectedStudents: newSelectedArr,
-            });
-        }
-    }
-    handleRemoveFromGroupOnClick(student) {
-        const index = this.state.selectedStudents.indexOf(student);
-        if (index >= 0) {
-            const newStudentsdArr = this.state.students.concat(student);
-            this.setState({
-                students: newStudentsdArr,
-                selectedStudents: this.state.selectedStudents.filter((_, i) => i !== index),
-            });
-        }
-    }
-    handleSearch(query) {
-        query = query.toLowerCase();
-        const filteredData = [];
-        this.props.students.forEach((student) => {
-            if ((student.user.firstname.toLowerCase().indexOf(query) !== -1
-                || student.user.lastname.toLowerCase().indexOf(query) !== -1
-                || student.user.email.toString().indexOf(query) !== -1)
-                && this.state.selectedStudents.indexOf(student) === -1) {
-                filteredData.push(student);
-            }
-        });
-        this.setState({
-            students: filteredData,
-        });
-    }
-}
-exports.GroupForm = GroupForm;
 
 
 /***/ })

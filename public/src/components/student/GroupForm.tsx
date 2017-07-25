@@ -13,6 +13,7 @@ interface IGroupState {
     name: string;
     students: IUserRelation[];
     selectedStudents: IUserRelation[];
+    errorFlash: JSX.Element | null;
 }
 class GroupForm extends React.Component<IGroupProp, IGroupState> {
     constructor(props: any) {
@@ -21,6 +22,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
             name: "",
             students: this.props.students,
             selectedStudents: [],
+            errorFlash: null,
         };
     }
 
@@ -60,6 +62,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         return (
             <div className="student-group-container">
                 <h1>Create a Group</h1>
+                {this.state.errorFlash}
                 <form className={this.props.className}
                     onSubmit={(e) => this.handleFormSubmit(e)}>
                     <div className="form-group row">
@@ -114,7 +117,26 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
 
     private handleFormSubmit(e: React.FormEvent<any>) {
         e.preventDefault();
-        if (this.state.selectedStudents.length === this.props.capacity) {
+        const errors: string[] = this.groupValidate();
+        if (errors.length > 0) {
+            const errorArr: JSX.Element[] = [];
+            for (let i: number = 0; i < errors.length; i++) {
+                errorArr.push(<li key={i}>{errors[i]}</li>);
+            }
+            const flash: JSX.Element = <div className="alert alert-danger">
+                <h4>{errorArr.length} errors prohibited Group from being saved: </h4>
+                <ul>
+                    {errorArr}
+                </ul>
+            </div>;
+
+            this.setState({
+                errorFlash: flash,
+            });
+        } else {
+            this.setState({
+                errorFlash: null,
+            });
             console.log("state", this.state);
             console.log("group ", this.state.name, this.state.selectedStudents);
         }
@@ -168,6 +190,17 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         this.setState({
             students: filteredData,
         });
+    }
+
+    private groupValidate(): string[] {
+        const errors: string[] = [];
+        if (this.state.name === "") {
+            errors.push("Group Name cannot be blank");
+        }
+        if (this.state.selectedStudents.length !== this.props.capacity) {
+            errors.push("Group members must be equal to " + this.props.capacity.toString());
+        }
+        return errors;
     }
 }
 export { GroupForm };
