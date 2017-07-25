@@ -243,7 +243,10 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...uint) ([]*models
 		statuses = []uint{models.Pending, models.Rejected, models.Accepted}
 	}
 	var enrollments []*models.Enrollment
-	if err := db.conn.Model(model).Where("status in (?)", statuses).Association("Enrollments").Find(&enrollments).Error; err != nil {
+	if err := db.conn.Model(model).
+		Where("status in (?)", statuses).
+		Association("Enrollments").
+		Find(&enrollments).Error; err != nil {
 		return nil, err
 	}
 
@@ -254,9 +257,11 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 	if status > models.Accepted {
 		panic("invalid status")
 	}
-	return db.conn.Model(&models.Enrollment{}).Where(&models.Enrollment{ID: id}).Update(&models.Enrollment{
-		Status: int(status),
-	}).Error
+	return db.conn.Model(&models.Enrollment{}).
+		Where(&models.Enrollment{ID: id}).
+		Update(&models.Enrollment{
+			Status: int(status),
+		}).Error
 }
 
 // GetCoursesByUser returns all courses with the users enrollment status
