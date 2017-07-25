@@ -54,6 +54,8 @@ func main() {
 		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
 		public   = flag.String("http.public", "public", "directory to server static files from")
 
+		dbFile = flag.String("database.file", tempFile("agdb.db"), "database file")
+
 		baseURL = flag.String("service.url", "localhost", "service base url")
 
 		fake = flag.Bool("provider.fake", false, "enable fake provider")
@@ -68,7 +70,7 @@ func main() {
 		l.WithField("path", entryPoint).Warn("could not find file")
 	}
 
-	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: l})
+	db, err := database.NewGormDB("sqlite3", *dbFile, database.Logger{Logger: l})
 	if err != nil {
 		l.WithError(err).Fatal("could not connect to db")
 	}
