@@ -86,69 +86,11 @@ func main() {
 		}
 	}()
 
-	e.GET("/logout", auth.OAuth2Logout())
+	registerAuth(e, db)
+	registerAPI(l, e, db)
+	registerFrontend(e, entryPoint, *public)
 
-	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(db))
-	oauth2.GET("", auth.OAuth2Login(db))
-	oauth2.GET("/callback", auth.OAuth2Callback(db))
-
-	// Source code management clients indexed by access token.
-	scms := make(map[string]scm.SCM)
-
-	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl(db, scms))
-
-	api.GET("/user", web.GetSelf())
-
-	users := api.Group("/users")
-	users.GET("", web.GetUsers(db))
-	users.GET("/:uid", web.GetUser(db))
-	users.PATCH("/:uid", web.PatchUser(db))
-	users.GET("/:uid/courses", web.ListCoursesWithEnrollment(db))
-
-	courses := api.Group("/courses")
-	courses.GET("", web.ListCourses(db))
-	// TODO: Pass in webhook URLs and secrets for each registered provider.
-	courses.POST("", web.NewCourse(l, db))
-	courses.GET("/:cid", web.GetCourse(db))
-	// TODO: Pass in webhook URLs and secrets for each registered provider.
-	// TODO: Check if webhook exists and if not create a new one.
-	courses.PUT("/:cid", web.UpdateCourse(db))
-	courses.GET("/:cid/users", web.GetEnrollmentsByCourse(db))
-	// TODO: Check if user is a member of a course, returns 404 or enrollment status.
-	courses.GET("/:cid/users/:uid", echo.NotFoundHandler)
-	courses.PUT("/:cid/users/:uid", web.SetEnrollment(db))
-	courses.GET("/:cid/assignments", web.ListAssignments(db))
-
-	api.POST("/directories", web.ListDirectories())
-
-	index := func(c echo.Context) error {
-		return c.File(entryPoint)
-	}
-	e.GET("/app", index)
-	e.GET("/app/*", index)
-
-	// TODO: Whitelisted files only.
-	e.Static("/", *public)
-
-	go func() {
-		srvErr := e.Start(*httpAddr)
-		if srvErr == http.ErrServerClosed {
-			l.Warn("shutting down the server")
-			return
-		}
-		l.WithError(srvErr).Fatal("could not start server")
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := e.Shutdown(ctx); err != nil {
-		l.WithError(err).Fatal("failure during server shutdown")
-	}
+	run(l, e, *httpAddr)
 }
 
 // makes the oauth2 provider available in the request query so that
@@ -259,6 +201,77 @@ func registerWebhooks(e *echo.Echo, enabled map[string]bool) {
 		webhooks.Handler(hook).ServeHTTP(c.Response(), c.Request())
 		return nil
 	})
+}
+
+func registerAuth(e *echo.Echo, db database.Database) {
+	e.GET("/logout", auth.OAuth2Logout())
+	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(db))
+	oauth2.GET("", auth.OAuth2Login(db))
+	oauth2.GET("/callback", auth.OAuth2Callback(db))
+}
+
+func registerAPI(l *logrus.Logger, e *echo.Echo, db database.Database) {
+	// Source code management clients indexed by access token.
+	scms := make(map[string]scm.SCM)
+
+	api := e.Group("/api/v1")
+	api.Use(auth.AccessControl(db, scms))
+
+	api.GET("/user", web.GetSelf())
+
+	users := api.Group("/users")
+	users.GET("", web.GetUsers(db))
+	users.GET("/:uid", web.GetUser(db))
+	users.PATCH("/:uid", web.PatchUser(db))
+	users.GET("/:uid/courses", web.ListCoursesWithEnrollment(db))
+
+	courses := api.Group("/courses")
+	courses.GET("", web.ListCourses(db))
+	// TODO: Pass in webhook URLs and secrets for each registered provider.
+	courses.POST("", web.NewCourse(l, db))
+	courses.GET("/:cid", web.GetCourse(db))
+	// TODO: Pass in webhook URLs and secrets for each registered provider.
+	// TODO: Check if webhook exists and if not create a new one.
+	courses.PUT("/:cid", web.UpdateCourse(db))
+	courses.GET("/:cid/users", web.GetEnrollmentsByCourse(db))
+	// TODO: Check if user is a member of a course, returns 404 or enrollment status.
+	courses.GET("/:cid/users/:uid", echo.NotFoundHandler)
+	courses.PUT("/:cid/users/:uid", web.SetEnrollment(db))
+	courses.GET("/:cid/assignments", web.ListAssignments(db))
+
+	api.POST("/directories", web.ListDirectories())
+}
+
+func registerFrontend(e *echo.Echo, entryPoint, public string) {
+	index := func(c echo.Context) error {
+		return c.File(entryPoint)
+	}
+	e.GET("/app", index)
+	e.GET("/app/*", index)
+
+	// TODO: Whitelisted files only.
+	e.Static("/", public)
+}
+
+func run(l *logrus.Logger, e *echo.Echo, httpAddr string) {
+	go func() {
+		srvErr := e.Start(httpAddr)
+		if srvErr == http.ErrServerClosed {
+			l.Warn("shutting down the server")
+			return
+		}
+		l.WithError(srvErr).Fatal("could not start server")
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		l.WithError(err).Fatal("failure during server shutdown")
+	}
 }
 
 func getCallbackURL(baseURL, provider string) string {
