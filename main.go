@@ -38,8 +38,8 @@ func init() {
 		}
 	}
 
-	// On Windows, mime types are read from the registry, which is often has
-	// outdated content types. This enforces the that the correct mime types
+	// On Windows, mime types are read from the registry, which often has
+	// outdated content types. This enforces that the correct mime types
 	// are used on all platforms.
 	mustAddExtensionType(".html", "text/html")
 	mustAddExtensionType(".css", "text/css")
