@@ -298,7 +298,7 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// GetEnrollmentsByCourse get all enrollments related to a course
+// GetEnrollmentsByCourse get all enrollments for a course.
 func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
@@ -327,7 +327,7 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// GetEnrollmentsByUser get all enrollments related to a user
+// GetEnrollmentsByUser get all enrollments for a user.
 func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))

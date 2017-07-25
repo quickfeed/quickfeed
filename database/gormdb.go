@@ -84,30 +84,6 @@ func (db *GormDB) GetUsers() ([]*models.User, error) {
 	return users, nil
 }
 
-// GetUsersByCourse implements the Database interface.
-func (db *GormDB) GetUsersByCourse(courseCode string) ([]*models.User, error) {
-	course, err := db.GetCourseByCode(courseCode)
-	if err != nil {
-		return nil, err
-	}
-
-	enrollments, err := db.GetEnrollmentsByCourse(course.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	var users []*models.User
-	for _, enrollment := range enrollments {
-		user, err := db.GetUser(enrollment.UserID)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, user)
-	}
-
-	return users, nil
-}
-
 // SetAdmin implements the Database interface.
 func (db *GormDB) SetAdmin(id uint64) error {
 	var user models.User

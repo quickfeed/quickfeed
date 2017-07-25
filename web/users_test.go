@@ -156,9 +156,9 @@ var allUsers = []struct {
 	{"gitlab", 8, "234"},
 }
 
-func TestGetUsersInCourse(t *testing.T) {
+func TestGetEnrollmentsByCourse(t *testing.T) {
 	const (
-		usersURL = "/users?course=DAT520"
+		usersInCourseRoute = "/courses/:cid/users"
 	)
 
 	db, cleanup := setup(t)
@@ -215,12 +215,19 @@ func TestGetUsersInCourse(t *testing.T) {
 	}
 
 	e := echo.New()
-	r := httptest.NewRequest(http.MethodGet, usersURL, nil)
+	router := echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodGet, usersInCourseRoute, web.GetEnrollmentsByCourse(db))
+	usersInCourseURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users"
+	r := httptest.NewRequest(http.MethodGet, usersInCourseURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
+	// Prepare context with user request.
+	router.Find(http.MethodGet, usersInCourseURL, c)
 
-	h := web.GetUsers(db)
-	if err := h(c); err != nil {
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
 
@@ -237,7 +244,7 @@ func TestGetUsersInCourse(t *testing.T) {
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
 	}
 
-	assertCode(t, w.Code, http.StatusFound)
+	assertCode(t, w.Code, http.StatusOK)
 }
 
 func TestPatchUser(t *testing.T) {
