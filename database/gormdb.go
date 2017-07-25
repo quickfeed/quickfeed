@@ -150,12 +150,11 @@ func (db *GormDB) CreateCourse(course *models.Course) error {
 }
 
 // GetCourses implements the Database interface.
-// If ids are given, returns courses with matched ids
-// else returns all courses
+// If one or more course ids are provided, the corresponding courses
+// are returned. Otherwise, all courses are returned.
 func (db *GormDB) GetCourses(ids ...uint64) ([]*models.Course, error) {
 	var courses []*models.Course
 	var err error
-
 	if len(ids) == 0 {
 		err = db.conn.Find(&courses).Error
 	} else {
