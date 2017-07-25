@@ -73,7 +73,7 @@ func main() {
 		l.WithField("path", entryPoint).Warn("could not find file")
 	}
 
-	enableProviders(l, *baseURL, *fake)
+	enabled := enableProviders(l, *baseURL, *fake)
 
 	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: l})
 	if err != nil {
@@ -88,20 +88,28 @@ func main() {
 	e.GET("/logout", auth.OAuth2Logout())
 
 	ghHook := whgithub.New(&whgithub.Config{Secret: os.Getenv("GITHUB_HOOK_SECRET")})
-	ghHook.RegisterEvents(web.GithubHook, whgithub.PushEvent)
-
+	if enabled["github"] {
+		ghHook.RegisterEvents(web.GithubHook, whgithub.PushEvent)
+	}
 	glHook := whgitlab.New(&whgitlab.Config{Secret: os.Getenv("GITLAB_HOOK_SECRET")})
-	glHook.RegisterEvents(web.GitlabHook, whgitlab.PushEvents)
+	if enabled["gitlab"] {
+		glHook.RegisterEvents(web.GitlabHook, whgitlab.PushEvents)
+	}
 
 	e.POST("/hook/:provider/events", func(c echo.Context) error {
 		var hook webhooks.Webhook
-		switch c.Param("provider") {
+		provider := c.Param("provider")
+		if !enabled[provider] {
+			return echo.ErrNotFound
+		}
+
+		switch provider {
 		case "github":
 			hook = ghHook
 		case "gitlab":
 			hook = glHook
 		default:
-			return echo.ErrNotFound
+			panic("registered provider is missing corresponding webhook")
 		}
 		webhooks.Handler(hook).ServeHTTP(c.Response(), c.Request())
 		return nil
@@ -202,7 +210,9 @@ func newStore(keyPairs ...[]byte) sessions.Store {
 	return store
 }
 
-func enableProviders(l *logrus.Logger, baseURL string, fake bool) {
+func enableProviders(l *logrus.Logger, baseURL string, fake bool) map[string]bool {
+	enabled := make(map[string]bool)
+
 	if ok := auth.EnableProvider(&auth.Provider{
 		Name:          "github",
 		KeyEnv:        "GITHUB_KEY",
@@ -212,12 +222,15 @@ func enableProviders(l *logrus.Logger, baseURL string, fake bool) {
 		TeacherScopes: []string{"user", "repo"},
 	}, func(key, secret, callback string, scopes ...string) goth.Provider {
 		return github.New(key, secret, callback, scopes...)
-	}); !ok {
+	}); ok {
+		enabled["github"] = true
+	} else {
 		l.WithFields(logrus.Fields{
 			"provider": "github",
 			"enabled":  false,
 		}).Warn("environment variables not set")
 	}
+
 	if ok := auth.EnableProvider(&auth.Provider{
 		Name:          "gitlab",
 		KeyEnv:        "GITLAB_KEY",
@@ -227,7 +240,9 @@ func enableProviders(l *logrus.Logger, baseURL string, fake bool) {
 		TeacherScopes: []string{"api"},
 	}, func(key, secret, callback string, scopes ...string) goth.Provider {
 		return gitlab.New(key, secret, callback, scopes...)
-	}); !ok {
+	}); ok {
+		enabled["gitlab"] = true
+	} else {
 		l.WithFields(logrus.Fields{
 			"provider": "gitlab",
 			"enabled":  false,
@@ -237,7 +252,10 @@ func enableProviders(l *logrus.Logger, baseURL string, fake bool) {
 	if fake {
 		l.Warn("fake provider enabled")
 		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(baseURL, "fake")})
+		enabled["fake"] = true
 	}
+
+	return enabled
 }
 
 func getCallbackURL(baseURL, provider string) string {
