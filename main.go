@@ -108,8 +108,8 @@ func main() {
 		l.WithError(err).Fatal("could not connect to db")
 	}
 	defer func() {
-		if err := db.Close(); err != nil {
-			l.WithError(err).Warn("error closing database")
+		if dbErr := db.Close(); dbErr != nil {
+			l.WithError(dbErr).Warn("error closing database")
 		}
 	}()
 
@@ -179,11 +179,12 @@ func main() {
 	e.Static("/", *public)
 
 	go func() {
-		if err := e.Start(*httpAddr); err == http.ErrServerClosed {
+		srvErr := e.Start(*httpAddr)
+		if srvErr == http.ErrServerClosed {
 			l.Warn("shutting down the server")
 			return
 		}
-		l.WithError(err).Fatal("could not start server")
+		l.WithError(srvErr).Fatal("could not start server")
 	}()
 
 	quit := make(chan os.Signal, 1)
