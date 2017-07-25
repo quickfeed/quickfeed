@@ -22,10 +22,8 @@ func (uur *UpdateUserRequest) isSetIsAdmin() bool {
 // GetSelf redirects to GetUser with the current user's id.
 func GetSelf() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		user, ok := c.Get("user").(*models.User)
-		if !ok {
-			return c.NoContent(http.StatusNotFound)
-		}
+		// if type assertion fails, recover middleware will catch panic and log stack trace
+		user := c.Get("user").(*models.User)
 		return c.Redirect(http.StatusFound, fmt.Sprintf("/api/v1/users/%d", user.ID))
 	}
 }

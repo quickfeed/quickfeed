@@ -120,10 +120,8 @@ func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
 		if c.Get(cr.Provider) == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
 		}
-		s, ok := c.Get(cr.Provider).(scm.SCM)
-		if !ok {
-			return c.NoContent(http.StatusNotFound)
-		}
+		// if type assertion fails, recover middleware will catch panic and log stack trace
+		s := c.Get(cr.Provider).(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -195,10 +193,8 @@ func SetEnrollment(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		user, ok := c.Get("user").(*models.User)
-		if !ok {
-			return c.NoContent(http.StatusNotFound)
-		}
+		// if type assertion fails, recover middleware will catch panic and log stack trace
+		user := c.Get("user").(*models.User)
 		if !user.IsAdmin {
 			// This means that the request has been accepted for processing,
 			// i.e., we need to wait for a teacher to accept the enrollment.
@@ -271,10 +267,8 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 		if c.Get(newcr.Provider) == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+newcr.Provider+" not registered")
 		}
-		s, ok := c.Get(newcr.Provider).(scm.SCM)
-		if !ok {
-			return c.NoContent(http.StatusNotFound)
-		}
+		// if type assertion fails, recover middleware will catch panic and log stack trace
+		s := c.Get(newcr.Provider).(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
