@@ -63,18 +63,10 @@ func main() {
 	l := logrus.New()
 	l.Formatter = logger.NewDevFormatter(l.Formatter)
 
-	store := newStore([]byte("secret"))
-	gothic.Store = store
-
-	e := newServer(l, store)
-
 	entryPoint := filepath.Join(*public, "index.html")
 	if !fileExists(entryPoint) {
 		l.WithField("path", entryPoint).Warn("could not find file")
 	}
-
-	enabled := enableProviders(l, *baseURL, *fake)
-	registerWebhooks(e, enabled)
 
 	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: l})
 	if err != nil {
@@ -86,10 +78,14 @@ func main() {
 		}
 	}()
 
+	store := newStore([]byte("secret"))
+	gothic.Store = store
+	e := newServer(l, store)
+	enabled := enableProviders(l, *baseURL, *fake)
+	registerWebhooks(e, enabled)
 	registerAuth(e, db)
 	registerAPI(l, e, db)
 	registerFrontend(e, entryPoint, *public)
-
 	run(l, e, *httpAddr)
 }
 
