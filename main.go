@@ -60,20 +60,18 @@ func main() {
 	)
 	flag.Parse()
 
-	e := echo.New()
 	l := logrus.New()
 	l.Formatter = logger.NewDevFormatter(l.Formatter)
-	e.Logger = web.EchoLogger{Logger: l}
+
+	store := newStore([]byte("secret"))
+	gothic.Store = store
+
+	e := newServer(l, store)
 
 	entryPoint := filepath.Join(*public, "index.html")
 	if !fileExists(entryPoint) {
 		l.WithField("path", entryPoint).Warn("could not find file")
 	}
-
-	store := sessions.NewCookieStore([]byte("secret"))
-	store.Options.HttpOnly = true
-	store.Options.Secure = true
-	gothic.Store = store
 
 	if ok := auth.EnableProvider(&auth.Provider{
 		Name:          "github",
@@ -110,14 +108,6 @@ func main() {
 		l.Warn("fake provider enabled")
 		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(*baseURL, "fake")})
 	}
-
-	e.HideBanner = true
-	e.Use(
-		middleware.Recover(),
-		web.Logger(l),
-		middleware.Secure(),
-		session.Middleware(store),
-	)
 
 	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: l})
 	if err != nil {
@@ -223,6 +213,27 @@ func withProvider(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Request().URL.RawQuery = qv.Encode()
 		return next(c)
 	}
+}
+
+func newServer(l *logrus.Logger, store sessions.Store) *echo.Echo {
+	e := echo.New()
+	e.Logger = web.EchoLogger{Logger: l}
+	e.HideBanner = true
+	e.Use(
+		middleware.Recover(),
+		web.Logger(l),
+		middleware.Secure(),
+		session.Middleware(store),
+	)
+
+	return e
+}
+
+func newStore(keyPairs ...[]byte) sessions.Store {
+	store := sessions.NewCookieStore(keyPairs...)
+	store.Options.HttpOnly = true
+	store.Options.Secure = true
+	return store
 }
 
 func getCallbackURL(baseURL, provider string) string {
