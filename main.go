@@ -73,41 +73,7 @@ func main() {
 		l.WithField("path", entryPoint).Warn("could not find file")
 	}
 
-	if ok := auth.EnableProvider(&auth.Provider{
-		Name:          "github",
-		KeyEnv:        "GITHUB_KEY",
-		SecretEnv:     "GITHUB_SECRET",
-		CallbackURL:   getCallbackURL(*baseURL, "github"),
-		StudentScopes: []string{},
-		TeacherScopes: []string{"user", "repo"},
-	}, func(key, secret, callback string, scopes ...string) goth.Provider {
-		return github.New(key, secret, callback, scopes...)
-	}); !ok {
-		l.WithFields(logrus.Fields{
-			"provider": "github",
-			"enabled":  false,
-		}).Warn("environment variables not set")
-	}
-	if ok := auth.EnableProvider(&auth.Provider{
-		Name:          "gitlab",
-		KeyEnv:        "GITLAB_KEY",
-		SecretEnv:     "GITLAB_SECRET",
-		CallbackURL:   getCallbackURL(*baseURL, "gitlab"),
-		StudentScopes: []string{"read_user"},
-		TeacherScopes: []string{"api"},
-	}, func(key, secret, callback string, scopes ...string) goth.Provider {
-		return gitlab.New(key, secret, callback, scopes...)
-	}); !ok {
-		l.WithFields(logrus.Fields{
-			"provider": "gitlab",
-			"enabled":  false,
-		}).Warn("environment variables not set")
-	}
-
-	if *fake {
-		l.Warn("fake provider enabled")
-		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(*baseURL, "fake")})
-	}
+	enableProviders(l, *baseURL, *fake)
 
 	db, err := database.NewGormDB("sqlite3", tempFile("agdb.db"), database.Logger{Logger: l})
 	if err != nil {
@@ -234,6 +200,44 @@ func newStore(keyPairs ...[]byte) sessions.Store {
 	store.Options.HttpOnly = true
 	store.Options.Secure = true
 	return store
+}
+
+func enableProviders(l *logrus.Logger, baseURL string, fake bool) {
+	if ok := auth.EnableProvider(&auth.Provider{
+		Name:          "github",
+		KeyEnv:        "GITHUB_KEY",
+		SecretEnv:     "GITHUB_SECRET",
+		CallbackURL:   getCallbackURL(baseURL, "github"),
+		StudentScopes: []string{},
+		TeacherScopes: []string{"user", "repo"},
+	}, func(key, secret, callback string, scopes ...string) goth.Provider {
+		return github.New(key, secret, callback, scopes...)
+	}); !ok {
+		l.WithFields(logrus.Fields{
+			"provider": "github",
+			"enabled":  false,
+		}).Warn("environment variables not set")
+	}
+	if ok := auth.EnableProvider(&auth.Provider{
+		Name:          "gitlab",
+		KeyEnv:        "GITLAB_KEY",
+		SecretEnv:     "GITLAB_SECRET",
+		CallbackURL:   getCallbackURL(baseURL, "gitlab"),
+		StudentScopes: []string{"read_user"},
+		TeacherScopes: []string{"api"},
+	}, func(key, secret, callback string, scopes ...string) goth.Provider {
+		return gitlab.New(key, secret, callback, scopes...)
+	}); !ok {
+		l.WithFields(logrus.Fields{
+			"provider": "gitlab",
+			"enabled":  false,
+		}).Warn("environment variables not set")
+	}
+
+	if fake {
+		l.Warn("fake provider enabled")
+		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(baseURL, "fake")})
+	}
 }
 
 func getCallbackURL(baseURL, provider string) string {
