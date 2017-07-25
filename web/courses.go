@@ -107,7 +107,7 @@ const (
 
 // NewCourse creates a new course and associates it with a directory (organization in github)
 // and creates the repositories for the course.
-func NewCourse(logger *logrus.Logger, db database.Database) echo.HandlerFunc {
+func NewCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var cr NewCourseRequest
 		if err := c.Bind(&cr); err != nil {
