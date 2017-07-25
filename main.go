@@ -54,7 +54,7 @@ func main() {
 		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
 		public   = flag.String("http.public", "public", "directory to server static files from")
 
-		dbFile = flag.String("database.file", tempFile("agdb.db"), "database file")
+		dbFile = flag.String("database.file", tempFile("ag.db"), "database file")
 
 		baseURL = flag.String("service.url", "localhost", "service base url")
 
