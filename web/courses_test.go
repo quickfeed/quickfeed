@@ -25,7 +25,6 @@ import (
 
 var allCourses = []*models.Course{
 	{
-		ID:          100,
 		Name:        "Distributed Systems",
 		Code:        "DAT520",
 		Year:        2018,
@@ -34,7 +33,6 @@ var allCourses = []*models.Course{
 		DirectoryID: 1,
 	},
 	{
-		ID:          101,
 		Name:        "Operating Systems",
 		Code:        "DAT320",
 		Year:        2017,
@@ -42,7 +40,6 @@ var allCourses = []*models.Course{
 		Provider:    "fake",
 		DirectoryID: 1,
 	}, {
-		ID:          102,
 		Name:        "New Systems",
 		Code:        "DATx20",
 		Year:        2019,
