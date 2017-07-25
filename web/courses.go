@@ -317,19 +317,19 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		courses, err := db.GetEnrollmentsByCourse(id, statuses...)
+		enrollments, err := db.GetEnrollmentsByCourse(id, statuses...)
 		if err != nil {
 			return err
 		}
 
-		for _, enrollment := range courses {
+		for _, enrollment := range enrollments {
 			enrollment.User, err = db.GetUser(enrollment.UserID)
 			if err != nil {
 				return err
 			}
 		}
 
-		return c.JSONPretty(http.StatusOK, courses, "\t")
+		return c.JSONPretty(http.StatusOK, enrollments, "\t")
 	}
 }
 
@@ -346,18 +346,18 @@ func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		users, err := db.GetEnrollmentsByUser(id, statuses...)
+		enrollments, err := db.GetEnrollmentsByUser(id, statuses...)
 		if err != nil {
 			return err
 		}
 
-		for _, enrollment := range users {
+		for _, enrollment := range enrollments {
 			enrollment.Course, err = db.GetCourse(enrollment.CourseID)
 			if err != nil {
 				return err
 			}
 		}
 
-		return c.JSONPretty(http.StatusOK, users, "\t")
+		return c.JSONPretty(http.StatusOK, enrollments, "\t")
 	}
 }
