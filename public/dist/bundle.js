@@ -3693,9 +3693,9 @@ class AdminPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             if (index === 0) {
                 const links = [
-                    { name: "All Users", uri: this.pagePath + "/users" },
-                    { name: "All Courses", uri: this.pagePath + "/courses" },
-                    { name: "All Labs", uri: this.pagePath + "/labs" },
+                    { name: "Users", uri: this.pagePath + "/users" },
+                    { name: "Courses", uri: this.pagePath + "/courses" },
+                    { name: "Labs", uri: this.pagePath + "/labs" },
                 ];
                 this.navMan.checkLinks(links, this);
                 return [

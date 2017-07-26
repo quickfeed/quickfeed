@@ -1,6 +1,8 @@
 node_modules
 .vs
-.vscode
+.vscode/*
+*/.vscode/*
+!public/.vscode/tasks.json
 .idea
 debug
 github-meling.sh

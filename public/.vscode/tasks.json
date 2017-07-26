@@ -1,0 +1,53 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "0.1.0",
+    "tasks": [
+        {
+            "taskName": "Build Webpack",
+            "isBuildCommand": true,
+            "command": "webpack",
+            "isShellCommand": true,
+            "isBackground": true,
+            "args": [
+                "--watch",
+                "--hide-modules"
+            ],
+            "showOutput": "silent",
+            "problemMatcher": {
+                "owner": "typescript",
+                "severity": "error",
+                "fileLocation": "relative",
+                "pattern": [
+                    {
+                        "regexp": "^ERROR in \\[[\\w\\-]+\\] ([\\w\\d.\\/\\\\]+):(\\d+):(\\d+)\\s+$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3
+                    },
+                    {
+                        "regexp": "^\\s+(.*)$",
+                        "message": 1
+                    }
+                ],
+                "applyTo": "allDocuments",
+                "background": {
+                    "activeOnStart": false,
+                    "beginsPattern": "^\\[at-loader\\] Checking started in a separate (.*)$",
+                    "endsPattern": "^\\[at-loader\\] (Ok|Checking finished)(.*)$"
+                }
+            }
+        },
+        {
+            "taskName": "linter",
+            "command": "tslint",
+            "args": [
+                "-p",
+                "."
+            ],
+            "isShellCommand": true,
+            "showOutput": "silent",
+            "problemMatcher": "$tslint5"
+        }
+    ]
+}
