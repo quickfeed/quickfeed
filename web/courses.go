@@ -321,32 +321,3 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 		return c.JSONPretty(http.StatusOK, enrollments, "\t")
 	}
 }
-
-// GetEnrollmentsByUser get all enrollments for a user.
-func GetEnrollmentsByUser(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		id, err := parseUint(c.Param("uid"))
-		if err != nil {
-			return err
-		}
-
-		statuses, err := parseEnrollmentStatus(c.QueryParam("status"))
-		if err != nil {
-			return err
-		}
-
-		enrollments, err := db.GetEnrollmentsByUser(id, statuses...)
-		if err != nil {
-			return err
-		}
-
-		for _, enrollment := range enrollments {
-			enrollment.Course, err = db.GetCourse(enrollment.CourseID)
-			if err != nil {
-				return err
-			}
-		}
-
-		return c.JSONPretty(http.StatusOK, enrollments, "\t")
-	}
-}

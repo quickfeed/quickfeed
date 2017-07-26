@@ -252,52 +252,30 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Get user's pending enrollments.
-	userEnrollments, err := db.GetEnrollmentsByUser(user.ID, models.Pending)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(userEnrollments) != 1 {
-		t.Fatal("there should be 1 pending enrollment")
-	}
-
 	// Get course's pending enrollments.
-	courseEnrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Pending)
+	pendingEnrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Pending)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Ensure that GetEnrollmentsForCourse returns the same enrollments.
-	if !reflect.DeepEqual(userEnrollments, courseEnrollments) {
-		t.Fatalf("want %v have %v", userEnrollments, courseEnrollments)
+	if len(pendingEnrollments) != 1 && pendingEnrollments[0].Status == int(models.Pending) {
+		t.Fatalf("have %v want 1 pending enrollment", pendingEnrollments)
 	}
 
-	enrollmentID := userEnrollments[0].ID
+	enrollmentID := pendingEnrollments[0].ID
 	// Accept enrollment.
 	if err := db.AcceptEnrollment(enrollmentID); err != nil {
 		t.Fatal(err)
 	}
 
-	// Get user's accepted enrollments.
-	userEnrollments, err = db.GetEnrollmentsByUser(user.ID, models.Accepted)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(userEnrollments) != 1 {
-		t.Fatal("there should be 1 accepted enrollment")
-	}
-
 	// Get course's accepted enrollments.
-	courseEnrollments, err = db.GetEnrollmentsByCourse(course.ID, models.Accepted)
+	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Accepted)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Ensure that GetEnrollmentsForCourse returns the same enrollments.
-	if !reflect.DeepEqual(userEnrollments, courseEnrollments) {
-		t.Fatalf("want %v have %v", userEnrollments, courseEnrollments)
+	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == int(models.Accepted) {
+		t.Fatalf("have %v want 1 accepted enrollment", acceptedEnrollments)
 	}
 
 	// Reject enrollment.
@@ -305,25 +283,14 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Get user's rejected enrollments.
-	userEnrollments, err = db.GetEnrollmentsByUser(user.ID, models.Rejected)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(userEnrollments) != 1 {
-		t.Fatal("there should be 1 rejected enrollment")
-	}
-
 	// Get course's rejected enrollments.
-	courseEnrollments, err = db.GetEnrollmentsByCourse(course.ID, models.Rejected)
+	rejectedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Rejected)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Ensure that GetEnrollmentsForCourse returns the same enrollments.
-	if !reflect.DeepEqual(userEnrollments, courseEnrollments) {
-		t.Fatalf("want %v have %v", userEnrollments, courseEnrollments)
+	if len(rejectedEnrollments) != 1 && rejectedEnrollments[0].Status == int(models.Rejected) {
+		t.Fatalf("have %v want 1 rejected enrollment", rejectedEnrollments)
 	}
 }
 

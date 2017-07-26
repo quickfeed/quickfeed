@@ -226,11 +226,6 @@ func (db *GormDB) RejectEnrollment(id uint64) error {
 	return db.setEnrollment(id, models.Rejected)
 }
 
-// GetEnrollmentsByUser implements the Database interface.
-func (db *GormDB) GetEnrollmentsByUser(id uint64, statuses ...uint) ([]*models.Enrollment, error) {
-	return db.getEnrollments(&models.User{ID: id}, statuses...)
-}
-
 // GetEnrollmentsByCourse implements the Database interface.
 func (db *GormDB) GetEnrollmentsByCourse(id uint64, statuses ...uint) ([]*models.Enrollment, error) {
 	return db.getEnrollments(&models.Course{ID: id}, statuses...)
@@ -267,7 +262,7 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 // If enrollment statuses is provided, the set of courses returned
 // is filtered according to these enrollment statuses.
 func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Course, error) {
-	enrollments, err := db.GetEnrollmentsByUser(id, statuses...)
+	enrollments, err := db.getEnrollments(&models.User{ID: id}, statuses...)
 	if err != nil {
 		return nil, err
 	}
