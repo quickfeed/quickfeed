@@ -66,16 +66,18 @@ func TestGormDBGetCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	course := models.Course{
-		Name:        "Test",
-		Code:        "T100",
-		Year:        2017,
-		Tag:         "something",
-		Provider:    "github",
-		DirectoryID: 1,
+	c1 := models.Course{}
+	if err := db.CreateCourse(&c1); err != nil {
+		t.Fatal(err)
 	}
 
-	if err := db.CreateCourse(&course); err != nil {
+	c2 := models.Course{}
+	if err := db.CreateCourse(&c2); err != nil {
+		t.Fatal(err)
+	}
+
+	c3 := models.Course{}
+	if err := db.CreateCourse(&c3); err != nil {
 		t.Fatal(err)
 	}
 
@@ -83,46 +85,37 @@ func TestGormDBGetCourses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if len(courses) != 1 {
-		t.Fatalf("have size %v wanted %v", len(courses), 1)
+	wantCourses := []*models.Course{&c1, &c2, &c3}
+	if !reflect.DeepEqual(courses, wantCourses) {
+		t.Errorf("have %v want %v", courses, wantCourses)
 	}
-
-	if !reflect.DeepEqual(courses[0], &course) {
-		t.Fatalf("want %v have %v", courses[0], &course)
-	}
-}
-
-func TestGormDBGetCoursesByIDs(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	course := models.Course{
-		Name:        "Test",
-		Code:        "T100",
-		Year:        2017,
-		Tag:         "something",
-		Provider:    "github",
-		DirectoryID: 1,
-	}
-
-	if err := db.CreateCourse(&course); err != nil {
-		t.Fatal(err)
-	}
-
-	courses, err := db.GetCourses(course.ID)
+	// An empty list should return the same as no argument, it makes no
+	// sense to ask the database to return no courses.
+	coursesNoArg, err := db.GetCourses([]uint64{}...)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if len(courses) != 1 {
-		t.Fatalf("have size %v wanted %v", len(courses), 1)
+	if !reflect.DeepEqual(coursesNoArg, wantCourses) {
+		t.Errorf("have %v want %v", coursesNoArg, wantCourses)
 	}
 
-	if !reflect.DeepEqual(courses[0], &course) {
-		t.Fatalf("want %v have %v", courses[0], &course)
+	course1, err := db.GetCourses(c1.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantCourse1 := []*models.Course{&c1}
+	if !reflect.DeepEqual(course1, wantCourse1) {
+		t.Errorf("have %v want %v", course1, wantCourse1)
 	}
 
+	course1and2, err := db.GetCourses(c1.ID, c2.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantCourse1and2 := []*models.Course{&c1, &c2}
+	if !reflect.DeepEqual(course1and2, wantCourse1and2) {
+		t.Errorf("have %v want %v", course1and2, wantCourse1and2)
+	}
 }
 
 func TestGormDBGetAssignment(t *testing.T) {
