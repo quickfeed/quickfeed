@@ -85,7 +85,7 @@ func TestGormDBGetCourses(t *testing.T) {
 	}
 
 	if len(courses) != 1 {
-		t.Errorf("have size %v wanted %v", len(courses), 1)
+		t.Fatalf("have size %v wanted %v", len(courses), 1)
 	}
 
 	if !reflect.DeepEqual(courses[0], &course) {
@@ -116,7 +116,7 @@ func TestGormDBGetCoursesByIDs(t *testing.T) {
 	}
 
 	if len(courses) != 1 {
-		t.Errorf("have size %v wanted %v", len(courses), 1)
+		t.Fatalf("have size %v wanted %v", len(courses), 1)
 	}
 
 	if !reflect.DeepEqual(courses[0], &course) {
@@ -163,7 +163,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	}
 
 	if err := db.CreateAssignment(&assignment); err != nil {
-		t.Errorf("have error '%v' wanted '%v'", err, nil)
+		t.Fatal(err)
 	}
 
 	assignments, err := db.GetAssignmentsByCourse(1)
@@ -172,7 +172,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	}
 
 	if len(assignments) != 1 {
-		t.Errorf("have size %v wanted %v", len(assignments), 1)
+		t.Fatalf("have size %v wanted %v", len(assignments), 1)
 	}
 
 	if !reflect.DeepEqual(assignments[0], &assignment) {
