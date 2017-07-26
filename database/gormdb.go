@@ -181,10 +181,10 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 	}).Count(&course).Error; err != nil {
 		return err
 	}
-
 	if course != 1 {
 		return gorm.ErrRecordNotFound
 	}
+
 	return db.conn.
 		Where(models.Assignment{CourseID: assignment.CourseID, AssignmentID: assignment.AssignmentID}).
 		Assign(models.Assignment{
@@ -208,7 +208,6 @@ func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 	}).Count(&course).Error; err != nil {
 		return err
 	}
-
 	if user+course != 2 {
 		return gorm.ErrRecordNotFound
 	}
@@ -257,7 +256,7 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 		}).Error
 }
 
-// GetCoursesByUser returns all courses (including enrollment status)
+// GetCoursesByUser returns all courses (with enrollment status)
 // for the given user id.
 // If enrollment statuses is provided, the set of courses returned
 // is filtered according to these enrollment statuses.
@@ -277,8 +276,7 @@ func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Cours
 	if len(statuses) == 0 {
 		courseIDs = nil
 	} else if len(courseIDs) == 0 {
-		// do not need to make further database call
-		// as user have no enrolled courses
+		// No need to query database since user have no enrolled courses.
 		return []*models.Course{}, nil
 	}
 	courses, err := db.GetCourses(courseIDs...)
