@@ -1,8 +1,8 @@
 import * as React from "react";
-import {Button} from "../../components";
-import {ICourse, IOrganization} from "../../models";
+import { Button } from "../../components";
+import { ICourse, IOrganization } from "../../models";
 
-import {CourseManager} from "../../managers/CourseManager";
+import { CourseManager } from "../../managers/CourseManager";
 
 interface ICourseFormProps<T> {
     className?: string;
@@ -51,26 +51,26 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             <div>
                 <h1>{getTitleText}</h1>
                 <form className={this.props.className ? this.props.className : ""}
-                      onSubmit={(e) => this.handleFormSubmit(e)}>
+                    onSubmit={(e) => this.handleFormSubmit(e)}>
                     <div className="form-group">
                         <label className="control-label col-sm-2">Provider:</label>
                         <div className="col-sm-10">
                             <label className="radio-inline">
                                 <input type="radio"
-                                       name="provider"
-                                       value="github"
-                                       defaultChecked={this.props.courseData
-                                       && this.props.courseData.provider === "github" ? true : false}
-                                       onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
+                                    name="provider"
+                                    value="github"
+                                    defaultChecked={this.props.courseData
+                                        && this.props.courseData.provider === "github" ? true : false}
+                                    onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
                                 />Github
                             </label>
                             <label className="radio-inline">
                                 <input type="radio"
-                                       name="provider"
-                                       defaultChecked={this.props.courseData
-                                       && this.props.courseData.provider === "gitlab" ? true : false}
-                                       value="gitlab"
-                                       onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
+                                    name="provider"
+                                    defaultChecked={this.props.courseData
+                                        && this.props.courseData.provider === "gitlab" ? true : false}
+                                    value="gitlab"
+                                    onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
                                 />Gitlab
                             </label>
                         </div>
@@ -83,11 +83,11 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                         <label className="control-label col-sm-2" htmlFor="name">Course Name:</label>
                         <div className="col-sm-10">
                             <input type="text" className="form-control"
-                                   id="name"
-                                   placeholder="Enter course name"
-                                   name="name"
-                                   value={this.state.name}
-                                   onChange={(e) => this.handleInputChange(e)}
+                                id="name"
+                                placeholder="Enter course name"
+                                name="name"
+                                value={this.state.name}
+                                onChange={(e) => this.handleInputChange(e)}
                             />
                         </div>
                     </div>
@@ -95,12 +95,12 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                         <label className="control-label col-sm-2" htmlFor="code">Course Code:</label>
                         <div className="col-sm-10">
                             <input type="text"
-                                   className="form-control"
-                                   id="code"
-                                   placeholder="Enter course code"
-                                   name="code"
-                                   value={this.state.code}
-                                   onChange={(e) => this.handleInputChange(e)}
+                                className="form-control"
+                                id="code"
+                                placeholder="Enter course code"
+                                name="code"
+                                value={this.state.code}
+                                onChange={(e) => this.handleInputChange(e)}
                             />
                         </div>
                     </div>
@@ -109,12 +109,12 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                         <label className="control-label col-sm-2" htmlFor="year">Year:</label>
                         <div className="col-sm-10">
                             <input type="text"
-                                   className="form-control"
-                                   id="year"
-                                   placeholder="Enter year"
-                                   name="year"
-                                   value={this.state.year}
-                                   onChange={(e) => this.handleInputChange(e)}
+                                className="form-control"
+                                id="year"
+                                placeholder="Enter year"
+                                name="year"
+                                value={this.state.year}
+                                onChange={(e) => this.handleInputChange(e)}
                             />
                         </div>
                     </div>
@@ -122,12 +122,12 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                         <label className="control-label col-sm-2" htmlFor="tag">Semester:</label>
                         <div className="col-sm-10">
                             <input type="text"
-                                   className="form-control"
-                                   id="tag"
-                                   placeholder="Enter semester"
-                                   name="tag"
-                                   value={this.state.tag}
-                                   onChange={(e) => this.handleInputChange(e)}
+                                className="form-control"
+                                id="tag"
+                                placeholder="Enter semester"
+                                name="tag"
+                                value={this.state.tag}
+                                onChange={(e) => this.handleInputChange(e)}
                             />
                         </div>
                     </div>
@@ -135,8 +135,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                     <div className="form-group">
                         <div className="col-sm-offset-2 col-sm-10">
                             <Button className="btn btn-primary"
-                                    text={this.props.courseData ? "Update" : "Create"}
-                                    type="submit"/>
+                                text={this.props.courseData ? "Update" : "Create"}
+                                type="submit" />
                         </div>
                     </div>
                 </form>
@@ -198,25 +198,36 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         for (let i: number = 0; i < orgs.length; i++) {
             organisationDetails.push(
                 <button key={i} className="btn organisation"
-                        onClick={() => this.handleOrgClick(orgs[i].id)}>
+                    onClick={() => this.handleOrgClick(orgs[i].id)}>
 
                     <div className="organisationInfo">
                         <img src={orgs[i].avatar}
-                             className="img-rounded"
-                             width={80}
-                             height={80}/>
+                            className="img-rounded"
+                            width={80}
+                            height={80} />
                         <div className="caption">{orgs[i].path}</div>
                     </div>
-                    <input type="radio"/>
+                    <input type="radio" />
                 </button>,
             );
 
         }
 
+        let orgMsg: JSX.Element;
+        if (this.state.provider === "github") {
+            orgMsg = <p>Select a GitHub organization for your course.
+                (Don't see your organization below? Autograder needs access to your organization.
+                Grant access <a href="https://github.com/settings/applications" target="_blank"> here</a>.)
+            </p>;
+        } else {
+            orgMsg = <p>Select a GitLab group.</p>;
+        }
+
         const orgDivs: JSX.Element = <div>
-            <label className="control-label col-sm-2">Organisation:</label>
+            <label className="control-label col-sm-2">Organization:</label>
             <div className="organisationWrap col-sm-10">
-                <p> Select an Organisation</p>
+                {orgMsg}
+
                 <div className="btn-group organisationBtnGroup" data-toggle="buttons">
                     {organisationDetails}
                 </div>
@@ -257,4 +268,4 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     }
 
 }
-export {CourseForm};
+export { CourseForm };

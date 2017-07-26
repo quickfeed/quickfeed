@@ -1801,10 +1801,20 @@ class CourseForm extends React.Component {
                     React.createElement("div", { className: "caption" }, orgs[i].path)),
                 React.createElement("input", { type: "radio" })));
         }
+        let orgMsg;
+        if (this.state.provider === "github") {
+            orgMsg = React.createElement("p", null,
+                "Select a GitHub organization for your course. (Don't see your organization below? Autograder needs access to your organization. Grant access ",
+                React.createElement("a", { href: "https://github.com/settings/applications", target: "_blank" }, " here"),
+                ".)");
+        }
+        else {
+            orgMsg = React.createElement("p", null, "Select a GitLab group.");
+        }
         const orgDivs = React.createElement("div", null,
-            React.createElement("label", { className: "control-label col-sm-2" }, "Organisation:"),
+            React.createElement("label", { className: "control-label col-sm-2" }, "Organization:"),
             React.createElement("div", { className: "organisationWrap col-sm-10" },
-                React.createElement("p", null, " Select an Organisation"),
+                orgMsg,
                 React.createElement("div", { className: "btn-group organisationBtnGroup", "data-toggle": "buttons" }, organisationDetails)));
         this.setState({
             organisations: orgDivs,
