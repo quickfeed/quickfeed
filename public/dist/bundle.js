@@ -2009,16 +2009,10 @@ class CourseManager {
                 return {
                     assignments: [],
                     course: ele.course,
-                    link: { courseId: ele.courseid, userid: ele.userid, state: ele.status },
+                    link: ele.status ? { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
                 };
             });
             return newMap;
-        });
-    }
-    getCoursesWithEnrollStatus(user) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const userCourses = yield this.courseProvider.getCoursesWithEnrollStatus(user);
-            return userCourses;
         });
     }
     getCoursesFor(user, state) {
@@ -2065,7 +2059,7 @@ class CourseManager {
             for (const crs of courses) {
                 if (crs.courseid === course.id) {
                     const returnTemp = {
-                        link: { userid: student.id, courseId: course.id, state: crs.status },
+                        link: crs.status ? { userid: student.id, courseId: course.id, state: crs.status } : undefined,
                         assignments: [],
                         course,
                     };
@@ -2091,36 +2085,20 @@ class CourseManager {
             };
         });
     }
-    getStudentCourses(student) {
+    getStudentCourses(student, state) {
         return __awaiter(this, void 0, void 0, function* () {
             const links = [];
-            const userCourses = yield this.courseProvider.getCoursesFor(student);
+            const userCourses = yield this.courseProvider.getCoursesFor(student, state);
             for (const course of userCourses) {
                 links.push({
                     assignments: [],
                     course: course.course,
-                    link: { courseId: course.courseid, userid: student.id, state: course.status },
+                    link: course.status ?
+                        { courseId: course.courseid, userid: student.id, state: course.status } : undefined,
                 });
             }
             for (const link of links) {
                 yield this.fillLinks(student, link);
-            }
-            return links;
-        });
-    }
-    getActiveCoursesFor(user) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const links = [];
-            const userCourses = yield this.courseProvider.getActiveCoursesFor(user);
-            for (const cr of userCourses) {
-                links.push({
-                    assignments: [],
-                    course: cr,
-                    link: { courseId: cr.id, userid: user.id, state: cr.enrolled },
-                });
-            }
-            for (const link of links) {
-                yield this.fillLinks(user, link);
             }
             return links;
         });
@@ -3116,6 +3094,7 @@ const EnrollmentView_1 = __webpack_require__(43);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
         super();
+        this.courses = [];
         this.activeCourses = [];
         this.navMan = navMan;
         this.userMan = users;
@@ -3162,10 +3141,9 @@ class StudentPage extends ViewPage_1.ViewPage {
             if (!curUser) {
                 return React.createElement("h1", null, "404");
             }
-            const userCourses = yield this.courseMan.getCoursesWithEnrollStatus(curUser);
             return React.createElement("div", null,
                 React.createElement("h1", null, "Enrollment page"),
-                React.createElement(EnrollmentView_1.EnrollmentView, { courses: userCourses, onEnrollmentClick: (course) => {
+                React.createElement(EnrollmentView_1.EnrollmentView, { courses: yield this.courseMan.getCoursesWithState(curUser), onEnrollmentClick: (course) => {
                         this.courseMan.addUserToCourse(curUser, course);
                         this.navMan.refresh();
                     } }));
@@ -3270,7 +3248,8 @@ class StudentPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
-                this.activeCourses = yield this.courseMan.getActiveCoursesFor(curUser);
+                this.courses = yield this.courseMan.getStudentCourses(curUser, models_1.CourseUserState.student);
+                this.activeCourses = this.onlyActiveCourses(this.courses);
             }
         });
     }
@@ -3326,26 +3305,22 @@ class EnrollmentView extends React.Component {
         return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
     }
     createEnrollmentRow(studentCourses, course) {
-        const base = [course.code, course.name];
-        if (course.enrolled >= 0) {
-            if (course.enrolled === models_1.CourseUserState.student) {
+        const base = [course.course.code, course.course.name];
+        if (course.link) {
+            if (course.link.state === models_1.CourseUserState.student) {
                 base.push("Enrolled");
             }
-            else if (course.enrolled === models_1.CourseUserState.pending) {
+            else if (course.link.state === models_1.CourseUserState.pending) {
                 base.push("Pending");
             }
             else {
                 base.push(React.createElement("div", null,
-                    React.createElement("button", { onClick: () => {
-                            this.props.onEnrollmentClick(course);
-                        }, className: "btn btn-primary" }, "Enroll"),
+                    React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course.course); }, className: "btn btn-primary" }, "Enroll"),
                     React.createElement("span", { style: { padding: "7px", verticalAlign: "middle" }, className: "bg-danger" }, "Rejected")));
             }
         }
         else {
-            base.push(React.createElement("button", { onClick: () => {
-                    this.props.onEnrollmentClick(course);
-                }, className: "btn btn-primary" }, "Enroll"));
+            base.push(React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course.course); }, className: "btn btn-primary" }, "Enroll"));
         }
         return base;
     }
@@ -3484,12 +3459,12 @@ class TeacherPage extends ViewPage_1.ViewPage {
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 if (menu === 0) {
-                    const courses = yield this.courseMan.getActiveCoursesFor(curUser);
+                    const courses = yield this.courseMan.getCoursesFor(curUser, models_1.CourseUserState.teacher);
                     const labLinks = [];
                     courses.forEach((e) => {
                         labLinks.push(this.generateCollectionFor({
-                            name: e.course.code,
-                            uri: this.pagePath + "/course/" + e.course.id,
+                            name: e.code,
+                            uri: this.pagePath + "/course/" + e.id,
                         }));
                     });
                     const settings = [];
@@ -3989,37 +3964,23 @@ class ServerProvider {
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
             const status = state ? "?status=" + models_1.courseUserStateToString(state) : "";
+            console.log(status);
             const result = yield this.helper.get("/users/" + user.id + "/courses" + status);
             if (result.statusCode !== 200 || !result.data) {
                 return [];
             }
             const arr = [];
             result.data.forEach((ele) => {
-                if (managers_1.isUserEnrollment(ele)) {
-                    arr.push(ele);
-                }
+                const enroll = ele.enrolled >= 0 ? ele.enrolled : undefined;
+                arr.push({
+                    course: ele,
+                    status: enroll,
+                    courseid: ele.id,
+                    userid: user.id,
+                    user,
+                });
             });
             return arr;
-        });
-    }
-    getActiveCoursesFor(user) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const query = "?active=true";
-            const result = yield this.helper.get("/users/" + user.id + "/courses" + query);
-            if (result.statusCode !== 200 || !result.data) {
-                return [];
-            }
-            return result.data;
-        });
-    }
-    getCoursesWithEnrollStatus(user, state) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const status = state ? "?status=" + models_1.courseUserStateToString(state) : "";
-            const result = yield this.helper.get("/users/" + user.id + "/courses" + status);
-            if (result.statusCode !== 200 || !result.data) {
-                return [];
-            }
-            return result.data;
         });
     }
     getUsersForCourse(course, state) {

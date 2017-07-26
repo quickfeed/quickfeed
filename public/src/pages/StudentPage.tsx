@@ -5,7 +5,7 @@ import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { CourseUserState, ICourse, ICourseWithEnrollStatus, IStudentSubmission, IUser, IUserCourse } from "../models";
+import { CourseUserState, ICourse, IStudentSubmission, IUser, IUserCourse } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
@@ -22,6 +22,7 @@ export class StudentPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
 
+    private courses: IUserCourse[] = [];
     private activeCourses: IUserCourse[] = [];
     private selectedCourse: IUserCourse | undefined;
     private selectedAssignment: IStudentSubmission | undefined;
@@ -61,7 +62,7 @@ export class StudentPage extends ViewPage {
     public async getUsers(navInfo: INavInfo<any>): View {
         await this.setupData();
         const users: IUser[] = await this.userMan.getAllUser();
-        return <UserView users={ users }>
+        return <UserView users={users}>
         </UserView>;
     }
 
@@ -83,11 +84,10 @@ export class StudentPage extends ViewPage {
         if (!curUser) {
             return <h1>404</h1>;
         }
-        const userCourses: ICourseWithEnrollStatus[] = await this.courseMan.getCoursesWithEnrollStatus(curUser);
         return <div>
             <h1>Enrollment page</h1>
             <EnrollmentView
-                courses={userCourses}
+                courses={await this.courseMan.getCoursesWithState(curUser)}
                 onEnrollmentClick={(course: ICourse) => {
                     this.courseMan.addUserToCourse(curUser, course);
                     this.navMan.refresh();
@@ -131,7 +131,7 @@ export class StudentPage extends ViewPage {
         if (course) {
             const students = await this.courseMan.getUsersForCourse(course, this.userMan, CourseUserState.student);
             // should not allow to add more students than group capacity
-            return <GroupForm className="form-horizontal" students={students} capacity={2}/>;
+            return <GroupForm className="form-horizontal" students={students} capacity={2} />;
         }
         return <div>404 not found</div>;
     }
@@ -198,9 +198,8 @@ export class StudentPage extends ViewPage {
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            // this.courses = await this.courseMan.getStudentCourses(curUser);
-            // this.activeCourses = this.onlyActiveCourses(this.courses);
-            this.activeCourses = await this.courseMan.getActiveCoursesFor(curUser);
+            this.courses = await this.courseMan.getStudentCourses(curUser, CourseUserState.student);
+            this.activeCourses = this.onlyActiveCourses(this.courses);
         }
     }
 

@@ -22,8 +22,8 @@ export interface ICourseProvider {
     getAssignments(courseId: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
     getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]>;
-    getActiveCoursesFor(user: IUser): Promise<ICourseWithEnrollStatus[]>;
-    getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]>;
+    // getActiveCoursesFor(user: IUser): Promise<ICourseWithEnrollStatus[]>;
+    // getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]>;
     getUsersForCourse(course: ICourse, state?: CourseUserState): Promise<IUserEnrollment[]>;
 
     addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
@@ -53,25 +53,18 @@ export function isCourseEnrollment(enroll: IEnrollment): enroll is IUserEnrollme
 }
 
 export interface ICourseEnrollemtnt extends IEnrollment {
-    userid: number;
-    courseid: number;
-    status: CourseUserState;
-
     course: ICourse;
 }
 
 export interface IUserEnrollment extends IEnrollment {
-    userid: number;
-    courseid: number;
-    status: CourseUserState;
-
     user: IUser;
+    status: CourseUserState;
 }
 
 export interface IEnrollment {
     userid: number;
     courseid: number;
-    status: CourseUserState;
+    status?: CourseUserState;
 
     course?: ICourse;
     user?: IUser;
@@ -121,7 +114,7 @@ export class CourseManager {
             return {
                 assignments: [],
                 course: ele.course,
-                link: { courseId: ele.courseid, userid: ele.userid, state: ele.status },
+                link: ele.status ? { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
             };
         });
         return newMap;
@@ -134,10 +127,10 @@ export class CourseManager {
      * @param user
      * @returns {Promise<ICourseWithEnrollStatus[]>}
      */
-    public async getCoursesWithEnrollStatus(user: IUser): Promise<ICourseWithEnrollStatus[]> {
+    /*public async getCoursesWithEnrollStatus(user: IUser): Promise<ICourseWithEnrollStatus[]> {
         const userCourses = await this.courseProvider.getCoursesWithEnrollStatus(user);
         return userCourses;
-    }
+    }*/
 
     /**
      * Get all courses related to a user
@@ -208,7 +201,7 @@ export class CourseManager {
         for (const crs of courses) {
             if (crs.courseid === course.id) {
                 const returnTemp: IUserCourse = {
-                    link: { userid: student.id, courseId: course.id, state: crs.status },
+                    link: crs.status ? { userid: student.id, courseId: course.id, state: crs.status } : undefined,
                     assignments: [],
                     course,
                 };
@@ -246,14 +239,15 @@ export class CourseManager {
      * a single student
      * @param student The student to load the information for
      */
-    public async getStudentCourses(student: IUser): Promise<IUserCourse[]> {
+    public async getStudentCourses(student: IUser, state?: CourseUserState): Promise<IUserCourse[]> {
         const links: IUserCourse[] = [];
-        const userCourses = await this.courseProvider.getCoursesFor(student);
+        const userCourses = await this.courseProvider.getCoursesFor(student, state);
         for (const course of userCourses) {
             links.push({
                 assignments: [],
                 course: course.course,
-                link: { courseId: course.courseid, userid: student.id, state: course.status },
+                link: course.status ?
+                    { courseId: course.courseid, userid: student.id, state: course.status } : undefined,
             });
         }
 
@@ -263,7 +257,7 @@ export class CourseManager {
         return links;
     }
 
-    public async getActiveCoursesFor(user: IUser): Promise<IUserCourse[]> {
+    /*public async getActiveCoursesFor(user: IUser): Promise<IUserCourse[]> {
         const links: IUserCourse[] = [];
         const userCourses = await this.courseProvider.getActiveCoursesFor(user);
         for (const cr of userCourses) {
@@ -278,7 +272,7 @@ export class CourseManager {
             await this.fillLinks(user, link);
         }
         return links;
-    }
+    }*/
 
     /**
      * Retrives all users related to a single course
