@@ -16,12 +16,12 @@ func main() {
 	var db database.GormDB
 
 	app := cli.NewApp()
-	app.Name = "aguisctl"
-	app.Usage = "CLI tool for interacting with a running aguis instance."
+	app.Name = "agctl"
+	app.Usage = "CLI tool for interacting with a running autograder instance."
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "database",
-			Usage: "Path to aguis database",
+			Usage: "Path to the autograder database",
 			Value: tempFile("ag.db"),
 		},
 	}
