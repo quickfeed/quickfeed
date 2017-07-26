@@ -276,6 +276,10 @@ func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Cours
 
 	if len(statuses) == 0 {
 		courseIDs = nil
+	} else if len(courseIDs) == 0 {
+		// do not need to make further database call
+		// as user have no enrolled courses
+		return []*models.Course{}, nil
 	}
 	courses, err := db.GetCourses(courseIDs...)
 	if err != nil {
