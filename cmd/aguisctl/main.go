@@ -22,7 +22,7 @@ func main() {
 		cli.StringFlag{
 			Name:  "database",
 			Usage: "Path to aguis database",
-			Value: tempFile("agdb.db"),
+			Value: tempFile("ag.db"),
 		},
 	}
 	app.Before = setup(&db)
