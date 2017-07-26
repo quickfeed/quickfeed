@@ -142,12 +142,6 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 		provider = "github"
 		remoteID = 11
 	)
-	var (
-		pending  = int(models.Pending)
-		accepted = int(models.Accepted)
-		rejected = int(models.Rejected)
-		none     = models.None
-	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -230,10 +224,10 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 	assertCode(t, w.Code, http.StatusOK)
 	wantCourses := []*models.Course{
-		{ID: course1.ID, Enrolled: &pending},
-		{ID: course2.ID, Enrolled: &rejected},
-		{ID: course3.ID, Enrolled: &accepted},
-		{ID: course4.ID, Enrolled: &none},
+		{ID: course1.ID, Enrolled: int(models.Pending)},
+		{ID: course2.ID, Enrolled: int(models.Rejected)},
+		{ID: course3.ID, Enrolled: int(models.Accepted)},
+		{ID: course4.ID, Enrolled: models.None},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
@@ -247,10 +241,6 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 		secret           = "123"
 		provider         = "github"
 		remoteID         = 11
-	)
-	var (
-		accepted = int(models.Accepted)
-		rejected = int(models.Rejected)
 	)
 
 	db, cleanup := setup(t)
@@ -334,8 +324,8 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	assertCode(t, w.Code, http.StatusOK)
 	wantCourses := []*models.Course{
-		{ID: course2.ID, Enrolled: &rejected},
-		{ID: course3.ID, Enrolled: &accepted},
+		{ID: course2.ID, Enrolled: int(models.Rejected)},
+		{ID: course3.ID, Enrolled: int(models.Accepted)},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)

@@ -288,11 +288,9 @@ func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Cours
 	}
 
 	for _, course := range courses {
-		// cannot take address of a constant, so variable none is used instead for passing address of models.None
-		none := models.None
-		course.Enrolled = &none
+		course.Enrolled = models.None
 		if enrollment, ok := m[course.ID]; ok {
-			course.Enrolled = &enrollment.Status
+			course.Enrolled = enrollment.Status
 		}
 	}
 	return courses, nil

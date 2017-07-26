@@ -15,9 +15,7 @@ type Course struct {
 	DirectoryID uint64 `json:"directoryid"`
 
 	Enrollments []*Enrollment `json:"-"`
-	// 0 is considered empty. So omitempty will ignore Enrolled field for 0 value
-	// Uses a int pointer for Enrolled field to send 0 as a valid value
-	Enrolled *int `json:"enrolled,omitempty" sql:"-"`
+	Enrolled    int           `json:"enrolled" sql:"-"`
 
 	Assignments []*Assignment `json:"assignments,omitempty"`
 }
