@@ -71,7 +71,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async tryLogin(username: string, password: string): Promise<IUser | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
-        u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
             this.currentLoggedIn = user;
             return user;
@@ -85,7 +85,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             lookup = "bob@bobsen.no";
         }
         const user = MapHelper.find(this.localUsers, (u) =>
-        u.email.toLocaleLowerCase() === lookup);
+            u.email.toLocaleLowerCase() === lookup);
 
         return new Promise<IUser | null>((resolve, reject) => {
             // Simulate async callback
@@ -114,7 +114,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
      * @param course The course userlinks should be retrived from
      * @param state Optinal. The state of the relation, all if not present
      */
-    public async getUserLinksForCourse(course: ICourse, state?: CourseUserState): Promise<ICourseUserLink[]> {
+    public async getUserLinksForCourse(course: ICourse, state?: CourseUserState[]): Promise<ICourseUserLink[]> {
         const users: ICourseUserLink[] = [];
         for (const c of await this.getCoursesStudent()) {
             if (course.id === c.courseId && (state === undefined || c.state === CourseUserState.student)) {
@@ -136,7 +136,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Models.ICourse, state?: Models.CourseUserState): Promise<IUserEnrollment[]> {
+    public async getUsersForCourse(course: Models.ICourse, state?: CourseUserState[])
+        : Promise<IUserEnrollment[]> {
         const courseStds: ICourseUserLink[] =
             await this.getUserLinksForCourse(course, state);
         const users = await this.getUsersAsMap(courseStds.map((e) => e.userid));
@@ -194,7 +195,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]> {
         const cLinks: ICourseUserLink[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
@@ -211,14 +212,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             }
         }
         return courses;
-    }
-
-    public async getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]> {
-        throw new Error("Method not implemented");
-    }
-
-    public async getActiveCoursesFor(user: IUser): Promise<ICourseWithEnrollStatus[]> {
-        throw new Error("Method not implemented");
     }
 
     private addLocalUsers() {

@@ -356,18 +356,20 @@ var CourseUserState;
     CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
 })(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
 function courseUserStateToString(state) {
-    switch (state) {
-        case CourseUserState.pending:
-            return "pending";
-        case CourseUserState.rejected:
-            return "rejected";
-        case CourseUserState.student:
-            return "accepted";
-        case CourseUserState.teacher:
-            return "accepted";
-        default:
-            return "";
-    }
+    return state.map((sta) => {
+        switch (sta) {
+            case CourseUserState.pending:
+                return "pending";
+            case CourseUserState.rejected:
+                return "rejected";
+            case CourseUserState.student:
+                return "accepted";
+            case CourseUserState.teacher:
+                return "accepted";
+            default:
+                return "";
+        }
+    }).join(",");
 }
 exports.courseUserStateToString = courseUserStateToString;
 
@@ -2009,7 +2011,8 @@ class CourseManager {
                 return {
                     assignments: [],
                     course: ele.course,
-                    link: ele.status ? { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
+                    link: ele.status !== undefined ?
+                        { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
                 };
             });
             return newMap;
@@ -2059,7 +2062,8 @@ class CourseManager {
             for (const crs of courses) {
                 if (crs.courseid === course.id) {
                     const returnTemp = {
-                        link: crs.status ? { userid: student.id, courseId: course.id, state: crs.status } : undefined,
+                        link: crs.status !== undefined ?
+                            { userid: student.id, courseId: course.id, state: crs.status } : undefined,
                         assignments: [],
                         course,
                     };
@@ -2093,7 +2097,7 @@ class CourseManager {
                 links.push({
                     assignments: [],
                     course: course.course,
-                    link: course.status ?
+                    link: course.status !== undefined ?
                         { courseId: course.courseid, userid: student.id, state: course.status } : undefined,
                 });
             }
@@ -2515,16 +2519,6 @@ class TempDataProvider {
                 }
             }
             return courses;
-        });
-    }
-    getCoursesWithEnrollStatus(user, state) {
-        return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented");
-        });
-    }
-    getActiveCoursesFor(user) {
-        return __awaiter(this, void 0, void 0, function* () {
-            throw new Error("Method not implemented");
         });
     }
     addLocalUsers() {
@@ -3180,7 +3174,7 @@ class StudentPage extends ViewPage_1.ViewPage {
             const courseId = navInfo.params.courseid;
             const course = yield this.courseMan.getCourse(courseId);
             if (course) {
-                const students = yield this.courseMan.getUsersForCourse(course, this.userMan, models_1.CourseUserState.student);
+                const students = yield this.courseMan.getUsersForCourse(course, this.userMan, [models_1.CourseUserState.student]);
                 return React.createElement(components_1.GroupForm, { className: "form-horizontal", students: students, capacity: 2 });
             }
             return React.createElement("div", null, "404 not found");
@@ -3248,7 +3242,7 @@ class StudentPage extends ViewPage_1.ViewPage {
         return __awaiter(this, void 0, void 0, function* () {
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
-                this.courses = yield this.courseMan.getStudentCourses(curUser, models_1.CourseUserState.student);
+                this.courses = yield this.courseMan.getStudentCourses(curUser, [models_1.CourseUserState.student]);
                 this.activeCourses = this.onlyActiveCourses(this.courses);
             }
         });
@@ -3314,9 +3308,7 @@ class EnrollmentView extends React.Component {
                 base.push("Pending");
             }
             else {
-                base.push(React.createElement("div", null,
-                    React.createElement("button", { onClick: () => { this.props.onEnrollmentClick(course.course); }, className: "btn btn-primary" }, "Enroll"),
-                    React.createElement("span", { style: { padding: "7px", verticalAlign: "middle" }, className: "bg-danger" }, "Rejected")));
+                base.push(React.createElement("span", { style: { padding: "7px", verticalAlign: "middle" }, className: "bg-danger" }, "Rejected"));
             }
         }
         else {
@@ -3406,7 +3398,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
             const courseId = parseInt(info.params.course, 10);
             const course = yield this.courseMan.getCourse(courseId);
             if (course) {
-                const students = yield this.courseMan.getUsersForCourse(course, this.userMan, models_1.CourseUserState.student);
+                const students = yield this.courseMan.getUsersForCourse(course, this.userMan, [models_1.CourseUserState.student]);
                 const linkedStudents = [];
                 for (const student of students) {
                     const temp = yield this.courseMan.getStudentCourse(student.user, course);
@@ -3459,7 +3451,11 @@ class TeacherPage extends ViewPage_1.ViewPage {
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 if (menu === 0) {
-                    const courses = yield this.courseMan.getCoursesFor(curUser, models_1.CourseUserState.teacher);
+                    const states = [models_1.CourseUserState.teacher];
+                    if (this.userMan.isAdmin(curUser)) {
+                        states.push(models_1.CourseUserState.pending);
+                    }
+                    const courses = yield this.courseMan.getCoursesFor(curUser, states);
                     const labLinks = [];
                     courses.forEach((e) => {
                         labLinks.push(this.generateCollectionFor({
@@ -3980,6 +3976,7 @@ class ServerProvider {
                     user,
                 });
             });
+            console.log(arr);
             return arr;
         });
     }

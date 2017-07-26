@@ -129,7 +129,7 @@ export class StudentPage extends ViewPage {
         const courseId = navInfo.params.courseid;
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const students = await this.courseMan.getUsersForCourse(course, this.userMan, CourseUserState.student);
+            const students = await this.courseMan.getUsersForCourse(course, this.userMan, [CourseUserState.student]);
             // should not allow to add more students than group capacity
             return <GroupForm className="form-horizontal" students={students} capacity={2} />;
         }
@@ -198,7 +198,7 @@ export class StudentPage extends ViewPage {
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            this.courses = await this.courseMan.getStudentCourses(curUser, CourseUserState.student);
+            this.courses = await this.courseMan.getStudentCourses(curUser, [CourseUserState.student]);
             this.activeCourses = this.onlyActiveCourses(this.courses);
         }
     }

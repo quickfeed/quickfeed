@@ -25,6 +25,12 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
             } else if (course.link.state === CourseUserState.pending) {
                 base.push("Pending");
             } else {
+                base.push(
+                    <span style={{ padding: "7px", verticalAlign: "middle" }} className="bg-danger">
+                        Rejected
+                    </span>);
+            }
+            /*} else {
                 base.push(<div>
                     <button
                         onClick={() => { this.props.onEnrollmentClick(course.course); }}
@@ -35,7 +41,7 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
                         Rejected
                     </span>
                 </div>);
-            }
+            }*/
         } else {
             base.push(
                 <button

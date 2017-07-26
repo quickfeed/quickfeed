@@ -21,10 +21,8 @@ export interface ICourseProvider {
     getCourses(): Promise<ICourse[]>;
     getAssignments(courseId: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
-    getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]>;
-    // getActiveCoursesFor(user: IUser): Promise<ICourseWithEnrollStatus[]>;
-    // getCoursesWithEnrollStatus(user: IUser, state?: CourseUserState): Promise<ICourseWithEnrollStatus[]>;
-    getUsersForCourse(course: ICourse, state?: CourseUserState): Promise<IUserEnrollment[]>;
+    getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]>;
+    getUsersForCourse(course: ICourse, state?: CourseUserState[]): Promise<IUserEnrollment[]>;
 
     addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
     changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean>;
@@ -114,7 +112,8 @@ export class CourseManager {
             return {
                 assignments: [],
                 course: ele.course,
-                link: ele.status ? { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
+                link: ele.status !== undefined ?
+                    { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
             };
         });
         return newMap;
@@ -137,7 +136,7 @@ export class CourseManager {
      * @param user The user to get courses to
      * @param state Optional. The state the relations should be in, all if not present
      */
-    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourse[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourse[]> {
         return (await this.courseProvider.getCoursesFor(user, state)).map((ele) => ele.course);
     }
 
@@ -201,7 +200,8 @@ export class CourseManager {
         for (const crs of courses) {
             if (crs.courseid === course.id) {
                 const returnTemp: IUserCourse = {
-                    link: crs.status ? { userid: student.id, courseId: course.id, state: crs.status } : undefined,
+                    link: crs.status !== undefined ?
+                        { userid: student.id, courseId: course.id, state: crs.status } : undefined,
                     assignments: [],
                     course,
                 };
@@ -239,14 +239,14 @@ export class CourseManager {
      * a single student
      * @param student The student to load the information for
      */
-    public async getStudentCourses(student: IUser, state?: CourseUserState): Promise<IUserCourse[]> {
+    public async getStudentCourses(student: IUser, state?: CourseUserState[]): Promise<IUserCourse[]> {
         const links: IUserCourse[] = [];
         const userCourses = await this.courseProvider.getCoursesFor(student, state);
         for (const course of userCourses) {
             links.push({
                 assignments: [],
                 course: course.course,
-                link: course.status ?
+                link: course.status !== undefined ?
                     { courseId: course.courseid, userid: student.id, state: course.status } : undefined,
             });
         }
@@ -257,23 +257,6 @@ export class CourseManager {
         return links;
     }
 
-    /*public async getActiveCoursesFor(user: IUser): Promise<IUserCourse[]> {
-        const links: IUserCourse[] = [];
-        const userCourses = await this.courseProvider.getActiveCoursesFor(user);
-        for (const cr of userCourses) {
-            links.push({
-                assignments: [],
-                course: cr,
-                link: { courseId: cr.id, userid: user.id, state: cr.enrolled },
-            });
-        }
-
-        for (const link of links) {
-            await this.fillLinks(user, link);
-        }
-        return links;
-    }*/
-
     /**
      * Retrives all users related to a single course
      * @param course The course to retrive userinformation to
@@ -283,7 +266,7 @@ export class CourseManager {
     public async getUsersForCourse(
         course: ICourse,
         userMan: UserManager,
-        state?: CourseUserState): Promise<IUserRelation[]> {
+        state?: CourseUserState[]): Promise<IUserRelation[]> {
 
         return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
             return {

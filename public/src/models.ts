@@ -125,19 +125,21 @@ export enum CourseUserState {
     teacher = 3,
 }
 
-export function courseUserStateToString(state: CourseUserState): string {
-    switch (state) {
-        case CourseUserState.pending:
-            return "pending";
-        case CourseUserState.rejected:
-            return "rejected";
-        case CourseUserState.student:
-            return "accepted";
-        case CourseUserState.teacher:
-            return "accepted";
-        default:
-            return "";
-    }
+export function courseUserStateToString(state: CourseUserState[]): string {
+    return state.map((sta) => {
+        switch (sta) {
+            case CourseUserState.pending:
+                return "pending";
+            case CourseUserState.rejected:
+                return "rejected";
+            case CourseUserState.student:
+                return "accepted";
+            case CourseUserState.teacher:
+                return "accepted";
+            default:
+                return "";
+        }
+    }).join(",");
 }
 
 /**

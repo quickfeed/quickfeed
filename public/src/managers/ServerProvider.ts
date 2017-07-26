@@ -59,7 +59,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         // throw new Error("Method not implemented.");
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState): Promise<ICourseEnrollemtnt[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]> {
         // TODO: Fix to use correct url request
         const status = state ? "?status=" + courseUserStateToString(state) : "";
         console.log(status);
@@ -70,7 +70,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
         const arr: ICourseEnrollemtnt[] = [];
         result.data.forEach((ele) => {
-            const enroll = ele.enrolled >= 0 ? ele.enrolled : undefined;
+            const enroll = ele.enrolled as number >= 0 ? ele.enrolled : undefined;
             arr.push({
                 course: ele as ICourse,
                 status: enroll,
@@ -79,6 +79,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 user,
             });
         });
+        console.log(arr);
         return arr;
     }
 
@@ -102,7 +103,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     //     return result.data;
     // }
 
-    public async getUsersForCourse(course: ICourse, state?: CourseUserState | undefined): Promise<IUserEnrollment[]> {
+    public async getUsersForCourse(course: ICourse, state?: CourseUserState[]): Promise<IUserEnrollment[]> {
         const status = state ? "?status=" + courseUserStateToString(state) : "";
         const result = await this.helper.get<IEnrollment[]>("/courses/" + course.id + "/users" + status);
         if (result.statusCode !== 200 || !result.data) {

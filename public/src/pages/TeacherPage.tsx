@@ -84,7 +84,7 @@ export class TeacherPage extends ViewPage {
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const students = await this.courseMan.getUsersForCourse(course, this.userMan, CourseUserState.student);
+            const students = await this.courseMan.getUsersForCourse(course, this.userMan, [CourseUserState.student]);
             const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
                 const temp = await this.courseMan.getStudentCourse(student.user, course);
@@ -149,7 +149,11 @@ export class TeacherPage extends ViewPage {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
             if (menu === 0) {
-                const courses = await this.courseMan.getCoursesFor(curUser, CourseUserState.teacher);
+                const states = [CourseUserState.teacher];
+                if (this.userMan.isAdmin(curUser)) {
+                    states.push(CourseUserState.pending);
+                }
+                const courses = await this.courseMan.getCoursesFor(curUser, states);
                 // const courses = await this.courseMan.getActiveCoursesFor(curUser);
 
                 const labLinks: ILinkCollection[] = [];
