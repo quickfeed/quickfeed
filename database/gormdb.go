@@ -153,14 +153,12 @@ func (db *GormDB) CreateCourse(course *models.Course) error {
 // If one or more course ids are provided, the corresponding courses
 // are returned. Otherwise, all courses are returned.
 func (db *GormDB) GetCourses(ids ...uint64) ([]*models.Course, error) {
-	var courses []*models.Course
-	var err error
-	if len(ids) == 0 {
-		err = db.conn.Find(&courses).Error
-	} else {
-		err = db.conn.Where(ids).Find(&courses).Error
+	m := db.conn
+	if len(ids) > 0 {
+		m = m.Where(ids)
 	}
-	if err != nil {
+	var courses []*models.Course
+	if err := m.Find(&courses).Error; err != nil {
 		return nil, err
 	}
 	return courses, nil
@@ -269,14 +267,12 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 // If enrollment statuses is provided, the set of courses returned
 // is filtered according to these enrollment statuses.
 func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Course, error) {
-	var courses []*models.Course
-	courseIDs := []uint64{}
-
 	enrollments, err := db.GetEnrollmentsByUser(id, statuses...)
 	if err != nil {
 		return nil, err
 	}
 
+	var courseIDs []uint64
 	m := make(map[uint64]*models.Enrollment)
 	for _, enrollment := range enrollments {
 		m[enrollment.CourseID] = enrollment
@@ -284,15 +280,9 @@ func (db *GormDB) GetCoursesByUser(id uint64, statuses ...uint) ([]*models.Cours
 	}
 
 	if len(statuses) == 0 {
-		// enrollment statuses not provided
-		courses, err = db.GetCourses()
-	} else if len(courseIDs) > 0 {
-		// enrollment statuses provided and user enrolled in course(s) matching the provided statuses
-		courses, err = db.GetCourses(courseIDs...)
-	} else {
-		// enrollment statuses provided, but user have no courses with matching statuses
-		return []*models.Course{}, nil
+		courseIDs = nil
 	}
+	courses, err := db.GetCourses(courseIDs...)
 	if err != nil {
 		return nil, err
 	}
