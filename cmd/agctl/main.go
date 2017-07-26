@@ -26,6 +26,7 @@ func main() {
 		},
 	}
 	app.Before = setup(&db)
+	app.After = close(&db)
 	app.Commands = []cli.Command{
 		{
 			Name:  "set",
@@ -62,7 +63,6 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
-	db.Close()
 }
 
 func setup(db *database.GormDB) cli.BeforeFunc {
@@ -74,6 +74,15 @@ func setup(db *database.GormDB) cli.BeforeFunc {
 			return err
 		}
 		*db = *tdb
+		return nil
+	}
+}
+
+func close(db *database.GormDB) cli.AfterFunc {
+	return func(c *cli.Context) error {
+		if db != nil {
+			return db.Close()
+		}
 		return nil
 	}
 }
