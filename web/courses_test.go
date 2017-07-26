@@ -338,7 +338,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 		{ID: course3.ID, Enrolled: &accepted},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
-		t.Errorf("have course %+v want %+v", courses[0], wantCourses[0])
+		t.Errorf("have course %+v want %+v", courses, wantCourses)
 	}
 
 }
