@@ -154,7 +154,6 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 	if fake {
 		l.Warn("fake provider enabled")
 		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(baseURL, "fake")})
-		enabled["fake"] = true
 		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(baseURL, "fake-teacher")})
 	}
 
