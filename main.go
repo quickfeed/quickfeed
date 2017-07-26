@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -214,6 +215,16 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database) {
 
 	api := e.Group("/api/v1")
 	api.Use(auth.AccessControl(db, scms))
+
+	var providers []string
+	for _, provider := range goth.GetProviders() {
+		if !strings.HasSuffix(provider.Name(), auth.TeacherSuffix) {
+			providers = append(providers, provider.Name())
+		}
+	}
+	api.GET("/providers", func(c echo.Context) error {
+		return c.JSONPretty(http.StatusOK, &providers, "\t")
+	})
 
 	api.GET("/user", web.GetSelf())
 
