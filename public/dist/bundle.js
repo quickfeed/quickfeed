@@ -1120,7 +1120,7 @@ function main() {
             const user = yield userMan.tryLogin("test@testersen.no", "1234");
         }
         yield userMan.checkUserLoggedIn();
-        window.debugData = { tempData, userMan, courseMan, navMan };
+        window.debugData = { tempData, userMan, courseMan, navMan, logMan };
         navMan.setDefaultPath("app/home");
         const all = [];
         all.push(navMan.registerPage("app/home", new HomePage_1.HomePage()));

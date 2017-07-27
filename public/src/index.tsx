@@ -263,7 +263,7 @@ async function main(): Promise<void> {
 
     await userMan.checkUserLoggedIn();
 
-    (window as any).debugData = { tempData, userMan, courseMan, navMan };
+    (window as any).debugData = { tempData, userMan, courseMan, navMan, logMan };
 
     navMan.setDefaultPath("app/home");
     const all: Array<Promise<void>> = [];
