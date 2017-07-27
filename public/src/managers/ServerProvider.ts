@@ -3,6 +3,7 @@ import {
     courseUserStateToString,
     IAssignment,
     ICourse,
+    ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
     ILabInfo,
@@ -160,6 +161,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         console.log("Success => ", result);
         return true;
+    }
+
+    public async getCourseGroups(courseId: number): Promise<ICourseGroup[]> {
+        const uri: string = "courses/" + courseId + "/groups";
+        const result = await this.helper.get<ICourseGroup>(uri);
+        if (result.statusCode !== 200 || !result.data) {
+            console.log("Error =>", result);
+            return [];
+        }
+        const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup[];
+        return data;
     }
 
     public async getAllLabInfos(): Promise<IMap<ILabInfo>> {

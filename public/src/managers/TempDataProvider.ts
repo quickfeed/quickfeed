@@ -1,8 +1,10 @@
 import * as Models from "../models";
 import {
+    CourseGroupStatus,
     CourseUserState,
     IAssignment,
     ICourse,
+    ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
     ILabInfo,
@@ -31,6 +33,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     private localCourses: IMap<ICourse>;
     private localCourseStudent: ICourseUserLink[];
     private localLabInfo: IMap<ILabInfo>;
+    private localCourseGroups: ICourseGroup[];
 
     private currentLoggedIn: IUser | null = null;
 
@@ -40,6 +43,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalCourseStudent();
         this.addLocalUsers();
         this.addLocalLabInfo();
+        this.addLocalCourseGroups();
     }
 
     public async getDirectories(provider: string): Promise<IOrganization[]> {
@@ -212,6 +216,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             }
         }
         return courses;
+    }
+
+    public async getCourseGroups(courseId: number): Promise<ICourseGroup[]> {
+        return this.localCourseGroups;
     }
 
     private addLocalUsers() {
@@ -534,6 +542,59 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 },
             ]
         );
+    }
+
+    private addLocalCourseGroups(): void {
+        this.localCourseGroups = [
+            {
+                id: 1,
+                name: "Group1",
+                status: CourseGroupStatus.approved,
+                courseid: 1,
+                users: [
+                    {
+                        id: 1,
+                        email: "test@example.com",
+                        firstname: "Student",
+                        lastname: "1",
+                        isadmin: false,
+                        personid: 12345,
+                    },
+                    {
+                        id: 2,
+                        email: "test2@example.com",
+                        firstname: "Student",
+                        lastname: "2",
+                        isadmin: false,
+                        personid: 12346,
+                    },
+                ],
+            },
+            {
+                id: 2,
+                name: "Group2",
+                status: CourseGroupStatus.pending,
+                courseid: 1,
+                users: [
+                    {
+                        id: 3,
+                        email: "tes3t@example.com",
+                        firstname: "Student",
+                        lastname: "3",
+                        isadmin: false,
+                        personid: 12347,
+                    },
+                    {
+                        id: 4,
+                        email: "test4@example.com",
+                        firstname: "Student",
+                        lastname: "4",
+                        isadmin: false,
+                        personid: 12348,
+                    },
+                ],
+            },
+        ];
     }
 
 }

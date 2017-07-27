@@ -3,6 +3,7 @@ import {
     CourseUserState,
     IAssignment,
     ICourse,
+    ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
     ILabInfo,
@@ -31,6 +32,7 @@ export interface ICourseProvider {
     createNewCourse(courseData: ICourse): Promise<boolean>;
     getCourse(id: number): Promise<ICourse | null>;
     updateCourse(courseId: number, courseData: ICourse): Promise<boolean>;
+    getCourseGroups(courseId: number): Promise<ICourseGroup[]>;
     // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(): Promise<IMap<ILabInfo>>;
@@ -275,6 +277,14 @@ export class CourseManager {
                 user: user.user,
             };
         });
+    }
+
+    /**
+     * getCourseGroup returns all the groups under a course
+     * @param courseid course id of a course
+     */
+    public async getCourseGroups(courseid: number): Promise<ICourseGroup[]> {
+        return await this.courseProvider.getCourseGroups(courseid);
     }
 
     /**

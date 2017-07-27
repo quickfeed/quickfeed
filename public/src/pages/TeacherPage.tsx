@@ -1,5 +1,5 @@
 import * as React from "react";
-import { DynamicTable, NavMenu, Results } from "../components";
+import { CourseGroup, DynamicTable, NavMenu, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { View, ViewPage } from "./ViewPage";
@@ -10,9 +10,11 @@ import { INavInfo } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
+    CourseGroupStatus,
     CourseUserState,
     IAssignment,
     ICourse,
+    ICourseGroup,
     ICourseUserLink,
     IUser,
     IUserCourseWithUser,
@@ -44,7 +46,8 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("course/{course}", this.course);
         this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("course/{course}/results", this.results);
-        this.navHelper.registerFunction("course/{course}/{page}", this.course);
+        this.navHelper.registerFunction("course/{course}/groups", this.groups);
+        // this.navHelper.registerFunction("course/{course}/{page}", this.course);
         this.navHelper.registerFunction("user", async (navInfo) => {
             return <UserView users={await userMan.getAllUser()}></UserView>;
         });
@@ -94,6 +97,34 @@ export class TeacherPage extends ViewPage {
             }
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
             return <Results course={course} labs={labs} students={linkedStudents}></Results>;
+        }
+        return <div>404 Page not found</div>;
+    }
+
+    public async groups(info: INavInfo<{ course: string }>): View {
+        const courseId = parseInt(info.params.course, 10);
+        const course = await this.courseMan.getCourse(courseId);
+        if (course) {
+            const groups = await this.courseMan.getCourseGroups(courseId);
+            const approvedGroups: ICourseGroup[] = [];
+            const pendingGroups: ICourseGroup[] = [];
+            for (const grp of groups) {
+                switch (grp.status) {
+                    case CourseGroupStatus.approved:
+                        approvedGroups.push(grp);
+                        break;
+                    case CourseGroupStatus.pending:
+                        pendingGroups.push(grp);
+                        break;
+                }
+            }
+            return <CourseGroup
+                approvedGroups={approvedGroups}
+                pendingGroups={pendingGroups}
+                course={course}
+                navMan={this.navMan}
+                courseMan={this.courseMan}
+            />;
         }
         return <div>404 Page not found</div>;
     }

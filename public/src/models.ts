@@ -125,6 +125,15 @@ export enum CourseUserState {
     teacher = 3,
 }
 
+/**
+ * Status of a course group
+ */
+export enum CourseGroupStatus {
+    pending = 0,
+    rejected = 1,
+    approved = 2,
+}
+
 export function courseUserStateToString(state: CourseUserState[]): string {
     return state.map((sta) => {
         switch (sta) {
@@ -197,4 +206,14 @@ export interface IOrganization {
     id: number;
     path: string;
     avatar: string;
+}
+/**
+ * ICourseGroup represents a student group in a course
+ */
+export interface ICourseGroup {
+    id: number;
+    name: string;
+    status: CourseGroupStatus;
+    courseid: number;
+    users: IUser[];
 }

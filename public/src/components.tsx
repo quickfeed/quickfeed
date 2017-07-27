@@ -17,4 +17,5 @@ export * from "./components/student/GroupForm";
 export * from "./components/bootstrap/Button";
 export * from "./components/forms/CourseForm";
 export * from "./components/teacher/Results";
+export * from "./components/teacher/CourseGroup";
 export * from "./components/data/Search";

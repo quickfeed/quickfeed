@@ -99,6 +99,7 @@ __export(__webpack_require__(30));
 __export(__webpack_require__(31));
 __export(__webpack_require__(32));
 __export(__webpack_require__(33));
+__export(__webpack_require__(34));
 
 
 /***/ }),
@@ -355,6 +356,12 @@ var CourseUserState;
     CourseUserState[CourseUserState["student"] = 2] = "student";
     CourseUserState[CourseUserState["teacher"] = 3] = "teacher";
 })(CourseUserState = exports.CourseUserState || (exports.CourseUserState = {}));
+var CourseGroupStatus;
+(function (CourseGroupStatus) {
+    CourseGroupStatus[CourseGroupStatus["pending"] = 0] = "pending";
+    CourseGroupStatus[CourseGroupStatus["rejected"] = 1] = "rejected";
+    CourseGroupStatus[CourseGroupStatus["approved"] = 2] = "approved";
+})(CourseGroupStatus = exports.CourseGroupStatus || (exports.CourseGroupStatus = {}));
 function courseUserStateToString(state) {
     return state.map((sta) => {
         switch (sta) {
@@ -720,10 +727,10 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(34));
 __export(__webpack_require__(35));
 __export(__webpack_require__(36));
 __export(__webpack_require__(37));
+__export(__webpack_require__(38));
 
 
 /***/ }),
@@ -928,19 +935,19 @@ const React = __webpack_require__(0);
 const ReactDOM = __webpack_require__(15);
 const components_1 = __webpack_require__(1);
 const managers_1 = __webpack_require__(11);
-const ErrorPage_1 = __webpack_require__(38);
-const HelpPage_1 = __webpack_require__(39);
-const HomePage_1 = __webpack_require__(41);
-const StudentPage_1 = __webpack_require__(42);
-const TeacherPage_1 = __webpack_require__(45);
-const AdminPage_1 = __webpack_require__(47);
-const NavBarLogin_1 = __webpack_require__(49);
-const NavBarMenu_1 = __webpack_require__(50);
-const LoginPage_1 = __webpack_require__(51);
-const ServerProvider_1 = __webpack_require__(52);
-const HttpHelper_1 = __webpack_require__(53);
+const ErrorPage_1 = __webpack_require__(39);
+const HelpPage_1 = __webpack_require__(40);
+const HomePage_1 = __webpack_require__(42);
+const StudentPage_1 = __webpack_require__(43);
+const TeacherPage_1 = __webpack_require__(46);
+const AdminPage_1 = __webpack_require__(48);
+const NavBarLogin_1 = __webpack_require__(50);
+const NavBarMenu_1 = __webpack_require__(51);
+const LoginPage_1 = __webpack_require__(52);
+const ServerProvider_1 = __webpack_require__(53);
+const HttpHelper_1 = __webpack_require__(54);
 const LogManager_1 = __webpack_require__(13);
-const PageInfo_1 = __webpack_require__(54);
+const PageInfo_1 = __webpack_require__(55);
 class AutoGrader extends React.Component {
     constructor(props) {
         super();
@@ -2020,6 +2027,63 @@ exports.Results = Results;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
+const components_1 = __webpack_require__(1);
+class CourseGroup extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            approvedGroups: this.props.approvedGroups,
+            pendingGroups: this.props.pendingGroups,
+        };
+    }
+    render() {
+        const approvedGroups = this.createApproveGroupView();
+        const pendingGroups = this.createPendingGroupView();
+        return (React.createElement("div", { className: "group-container" },
+            React.createElement("h1", null, this.props.course.name),
+            React.createElement("div", { className: "approved-groups" },
+                React.createElement("h3", null, "Approved Groups"),
+                approvedGroups),
+            React.createElement("div", { className: "pending-groups" },
+                React.createElement("h3", null, "Pending Groups"),
+                pendingGroups)));
+    }
+    createApproveGroupView() {
+        return (React.createElement(components_1.DynamicTable, { header: ["Name", "Members"], data: this.state.approvedGroups, selector: (group) => [
+                group.name,
+                this.getMembers(group.users),
+            ] }));
+    }
+    createPendingGroupView() {
+        return (React.createElement(components_1.DynamicTable, { header: ["Name", "Members", "Action"], data: this.state.pendingGroups, selector: (group) => [
+                group.name,
+                this.getMembers(group.users),
+                React.createElement("span", null,
+                    React.createElement("button", { onClick: (e) => {
+                        }, className: "btn btn-primary" }, "Approve"),
+                    React.createElement("button", { onClick: (e) => {
+                        }, className: "btn btn-danger" }, "Reject")),
+            ] }));
+    }
+    getMembers(users) {
+        const names = [];
+        for (const user of users) {
+            names.push(user.firstname + " " + user.lastname);
+        }
+        return names.toString();
+    }
+}
+exports.CourseGroup = CourseGroup;
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
 class Search extends React.Component {
     constructor(props) {
         super(props);
@@ -2049,7 +2113,7 @@ exports.Search = Search;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2211,6 +2275,11 @@ class CourseManager {
             });
         });
     }
+    getCourseGroups(courseid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.courseProvider.getCourseGroups(courseid);
+        });
+    }
     getDirectories(provider) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.courseProvider.getDirectories(provider);
@@ -2237,7 +2306,7 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2411,7 +2480,7 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2436,6 +2505,7 @@ class TempDataProvider {
         this.addLocalCourseStudent();
         this.addLocalUsers();
         this.addLocalLabInfo();
+        this.addLocalCourseGroups();
     }
     getDirectories(provider) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -2614,6 +2684,11 @@ class TempDataProvider {
                 }
             }
             return courses;
+        });
+    }
+    getCourseGroups(courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.localCourseGroups;
         });
     }
     addLocalUsers() {
@@ -2897,12 +2972,64 @@ class TempDataProvider {
             },
         ]);
     }
+    addLocalCourseGroups() {
+        this.localCourseGroups = [
+            {
+                id: 1,
+                name: "Group1",
+                status: models_1.CourseGroupStatus.approved,
+                courseid: 1,
+                users: [
+                    {
+                        id: 1,
+                        email: "test@example.com",
+                        firstname: "Student",
+                        lastname: "1",
+                        isadmin: false,
+                        personid: 12345,
+                    },
+                    {
+                        id: 2,
+                        email: "test2@example.com",
+                        firstname: "Student",
+                        lastname: "2",
+                        isadmin: false,
+                        personid: 12346,
+                    },
+                ],
+            },
+            {
+                id: 2,
+                name: "Group2",
+                status: models_1.CourseGroupStatus.pending,
+                courseid: 1,
+                users: [
+                    {
+                        id: 3,
+                        email: "tes3t@example.com",
+                        firstname: "Student",
+                        lastname: "3",
+                        isadmin: false,
+                        personid: 12347,
+                    },
+                    {
+                        id: 4,
+                        email: "test4@example.com",
+                        firstname: "Student",
+                        lastname: "4",
+                        isadmin: false,
+                        personid: 12348,
+                    },
+                ],
+            },
+        ];
+    }
 }
 exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2993,7 +3120,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3037,7 +3164,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3053,7 +3180,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const ViewPage_1 = __webpack_require__(4);
-const HelpView_1 = __webpack_require__(40);
+const HelpView_1 = __webpack_require__(41);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
         super();
@@ -3072,7 +3199,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3128,7 +3255,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3158,7 +3285,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3176,10 +3303,10 @@ const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const models_1 = __webpack_require__(3);
 const ViewPage_1 = __webpack_require__(4);
-const HelloView_1 = __webpack_require__(43);
+const HelloView_1 = __webpack_require__(44);
 const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(12);
-const EnrollmentView_1 = __webpack_require__(44);
+const EnrollmentView_1 = __webpack_require__(45);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
         super();
@@ -3364,7 +3491,7 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3380,7 +3507,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3416,7 +3543,7 @@ exports.EnrollmentView = EnrollmentView;
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3436,7 +3563,7 @@ const ViewPage_1 = __webpack_require__(4);
 const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(12);
 const models_1 = __webpack_require__(3);
-const MemberView_1 = __webpack_require__(46);
+const MemberView_1 = __webpack_require__(47);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
         super();
@@ -3450,7 +3577,7 @@ class TeacherPage extends ViewPage_1.ViewPage {
         this.navHelper.registerFunction("course/{course}", this.course);
         this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("course/{course}/results", this.results);
-        this.navHelper.registerFunction("course/{course}/{page}", this.course);
+        this.navHelper.registerFunction("course/{course}/groups", this.groups);
         this.navHelper.registerFunction("user", (navInfo) => __awaiter(this, void 0, void 0, function* () {
             return React.createElement(UserView_1.UserView, { users: yield userMan.getAllUser() });
         }));
@@ -3503,6 +3630,29 @@ class TeacherPage extends ViewPage_1.ViewPage {
                 }
                 const labs = yield this.courseMan.getAssignments(courseId);
                 return React.createElement(components_1.Results, { course: course, labs: labs, students: linkedStudents });
+            }
+            return React.createElement("div", null, "404 Page not found");
+        });
+    }
+    groups(info) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const courseId = parseInt(info.params.course, 10);
+            const course = yield this.courseMan.getCourse(courseId);
+            if (course) {
+                const groups = yield this.courseMan.getCourseGroups(courseId);
+                const approvedGroups = [];
+                const pendingGroups = [];
+                for (const grp of groups) {
+                    switch (grp.status) {
+                        case models_1.CourseGroupStatus.approved:
+                            approvedGroups.push(grp);
+                            break;
+                        case models_1.CourseGroupStatus.pending:
+                            pendingGroups.push(grp);
+                            break;
+                    }
+                }
+                return React.createElement(components_1.CourseGroup, { approvedGroups: approvedGroups, pendingGroups: pendingGroups, course: course, navMan: this.navMan, courseMan: this.courseMan });
             }
             return React.createElement("div", null, "404 Page not found");
         });
@@ -3591,7 +3741,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3639,7 +3789,7 @@ exports.MemberView = MemberView;
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3656,7 +3806,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(4);
-const CourseView_1 = __webpack_require__(48);
+const CourseView_1 = __webpack_require__(49);
 const UserView_1 = __webpack_require__(6);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
@@ -3818,7 +3968,7 @@ exports.AdminPage = AdminPage;
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3862,7 +4012,7 @@ exports.CourseView = CourseView;
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3911,7 +4061,7 @@ exports.NavBarLogin = NavBarLogin;
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3945,7 +4095,7 @@ exports.NavBarMenu = NavBarMenu;
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4002,7 +4152,7 @@ exports.LoginPage = LoginPage;
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4155,6 +4305,18 @@ class ServerProvider {
             return true;
         });
     }
+    getCourseGroups(courseId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const uri = "courses/" + courseId + "/groups";
+            const result = yield this.helper.get(uri);
+            if (result.statusCode !== 200 || !result.data) {
+                console.log("Error =>", result);
+                return [];
+            }
+            const data = JSON.parse(JSON.stringify(result.data));
+            return data;
+        });
+    }
     getAllLabInfos() {
         return __awaiter(this, void 0, void 0, function* () {
             return {};
@@ -4258,7 +4420,7 @@ exports.ServerProvider = ServerProvider;
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4332,7 +4494,7 @@ exports.HttpHelper = HttpHelper;
 
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
