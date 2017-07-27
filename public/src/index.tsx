@@ -245,8 +245,6 @@ async function main(): Promise<void> {
     const logMan = new LogManager();
     const navMan: NavigationManager = new NavigationManager(history, logMan.createLogger("NavigationManager"));
 
-    setTimeout(() => { logMan.log("Hello World", true); }, 2000);
-
     if (curRunning === DEBUG_SERVER) {
         const httpHelper = new HttpHelper("/api/v1");
         const serverData = new ServerProvider(httpHelper, logMan.createLogger("ServerProvider"));

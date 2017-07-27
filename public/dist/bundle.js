@@ -1105,7 +1105,6 @@ function main() {
         let courseMan;
         const logMan = new LogManager_1.LogManager();
         const navMan = new managers_1.NavigationManager(history, logMan.createLogger("NavigationManager"));
-        setTimeout(() => { logMan.log("Hello World", true); }, 2000);
         if (curRunning === DEBUG_SERVER) {
             const httpHelper = new HttpHelper_1.HttpHelper("/api/v1");
             const serverData = new ServerProvider_1.ServerProvider(httpHelper, logMan.createLogger("ServerProvider"));
