@@ -3,6 +3,7 @@ import { ILogEntry, LogLevel } from "../../managers/LogManager";
 
 export interface IPageInfoProps {
     entry?: ILogEntry;
+    onclose: () => void;
 }
 
 export class PageInfo extends React.Component<IPageInfoProps, {}> {
@@ -13,12 +14,32 @@ export class PageInfo extends React.Component<IPageInfoProps, {}> {
         if (!e) {
             return <div></div>;
         }
+        // [{e.date.toLocaleDateString()}]
         return <div className={"topinfo alert " + this.getLevel(e)}>
-            This is a message: "{e.message}"
-                date: {e.date.toLocaleDateString()}
-            sender: {e.sender}
-            level: {e.logLevel}
-        </div>;
+            <button
+                type="button"
+                className="close"
+                onClick={() => this.props.onclose()}>
+                <span aria-hidden="true">
+                    &times;
+                </span>
+            </button>
+            <strong>{this.getName(e)}</strong>: {e.message}
+        </div >;
+    }
+
+    private getName(entry: ILogEntry): string {
+        switch (entry.logLevel) {
+            default:
+            case LogLevel.verbose:
+            case LogLevel.info:
+                return "Info";
+            case LogLevel.warning:
+                return "Warning!";
+            case LogLevel.error:
+            case LogLevel.critical:
+                return "Error!";
+        }
     }
 
     private getLevel(entry: ILogEntry): string {

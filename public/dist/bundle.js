@@ -1085,7 +1085,10 @@ class AutoGrader extends React.Component {
                 React.createElement(components_1.NavBar, { id: "top-bar", isFluid: false, isInverse: true, onClick: (link) => this.handleClick(link), brandName: "Auto Grader" },
                     React.createElement(NavBarMenu_1.NavBarMenu, { links: this.state.topLinks, onClick: (link) => this.handleClick(link) }),
                     React.createElement(NavBarLogin_1.NavBarLogin, { user: this.state.curUser, links: loginLink, onClick: (link) => this.handleClick(link) })),
-                React.createElement(PageInfo_1.PageInfo, { entry: this.state.curMessage }),
+                React.createElement(PageInfo_1.PageInfo, { entry: this.state.curMessage, onclose: () => __awaiter(this, void 0, void 0, function* () {
+                        this.setState({ curMessage: undefined });
+                        this.setState({ currentContent: yield this.refreshActivePage() });
+                    }) }),
                 body));
         });
     }
@@ -4346,14 +4349,24 @@ class PageInfo extends React.Component {
             return React.createElement("div", null);
         }
         return React.createElement("div", { className: "topinfo alert " + this.getLevel(e) },
-            "This is a message: \"",
-            e.message,
-            "\" date: ",
-            e.date.toLocaleDateString(),
-            "sender: ",
-            e.sender,
-            "level: ",
-            e.logLevel);
+            React.createElement("button", { type: "button", className: "close", onClick: () => this.props.onclose() },
+                React.createElement("span", { "aria-hidden": "true" }, "\u00D7")),
+            React.createElement("strong", null, this.getName(e)),
+            ": ",
+            e.message);
+    }
+    getName(entry) {
+        switch (entry.logLevel) {
+            default:
+            case LogManager_1.LogLevel.verbose:
+            case LogManager_1.LogLevel.info:
+                return "Info";
+            case LogManager_1.LogLevel.warning:
+                return "Warning!";
+            case LogManager_1.LogLevel.error:
+            case LogManager_1.LogLevel.critical:
+                return "Error!";
+        }
     }
     getLevel(entry) {
         switch (entry.logLevel) {

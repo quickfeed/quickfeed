@@ -217,7 +217,10 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                         onClick={(link) => this.handleClick(link)}>
                     </NavBarLogin>
                 </NavBar>
-                <PageInfo entry={this.state.curMessage} />
+                <PageInfo entry={this.state.curMessage} onclose={async () => {
+                    this.setState({ curMessage: undefined });
+                    this.setState({ currentContent: await this.refreshActivePage() });
+                }} />
                 {body}
             </div>);
     }
