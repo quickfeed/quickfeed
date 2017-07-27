@@ -302,15 +302,6 @@ func (db *GormDB) GetCourse(id uint64) (*models.Course, error) {
 	return &course, nil
 }
 
-// GetCourseByCode implements the Database interface
-func (db *GormDB) GetCourseByCode(code string) (*models.Course, error) {
-	var course models.Course
-	if err := db.conn.Where("code = ?", code).First(&course).Error; err != nil {
-		return nil, err
-	}
-	return &course, nil
-}
-
 // UpdateCourse implements the Database interface
 func (db *GormDB) UpdateCourse(course *models.Course) error {
 	return db.conn.Model(course).Updates(course).Error

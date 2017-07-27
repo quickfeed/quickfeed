@@ -665,35 +665,6 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	}
 }
 
-func TestGormDBGetCourseByCode(t *testing.T) {
-	const code = "DAT100"
-	var (
-		course = &models.Course{
-			Name:        "Test Course",
-			Code:        code,
-			Year:        2017,
-			Tag:         "Spring",
-			Provider:    "github",
-			DirectoryID: 1234,
-		}
-	)
-
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	err := db.CreateCourse(course)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cr, err := db.GetCourseByCode(code)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(cr, course) {
-		t.Errorf("have course %+v want %+v", cr, course)
-	}
-}
-
 func envSet(env string) database.GormLogger {
 	if os.Getenv(env) != "" {
 		return database.Logger{Logger: logrus.New()}
