@@ -4016,26 +4016,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const models_1 = __webpack_require__(3);
 const managers_1 = __webpack_require__(11);
 const map_1 = __webpack_require__(7);
-function request(url) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const req = new XMLHttpRequest();
-        return new Promise((resolve, reject) => {
-            req.onreadystatechange = () => {
-                if (req.readyState === 4) {
-                    if (req.status === 200) {
-                        console.log(req);
-                        resolve(req.responseText);
-                    }
-                    else {
-                        reject(req);
-                    }
-                }
-            };
-            req.open("GET", url, true);
-            req.send();
-        });
-    });
-}
 class ServerProvider {
     constructor(helper, logger) {
         this.helper = helper;
@@ -4045,6 +4025,7 @@ class ServerProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.helper.get("courses");
             if (result.statusCode !== 200 || !result.data) {
+                this.handleError(result);
                 return [];
             }
             return result.data;
@@ -4055,6 +4036,7 @@ class ServerProvider {
             const status = state ? "?status=" + models_1.courseUserStateToString(state) : "";
             const result = yield this.helper.get("/users/" + user.id + "/courses" + status);
             if (result.statusCode !== 200 || !result.data) {
+                this.handleError(result);
                 return [];
             }
             const arr = [];
@@ -4077,6 +4059,7 @@ class ServerProvider {
             const status = state ? "?status=" + models_1.courseUserStateToString(state) : "";
             const result = yield this.helper.get("/courses/" + course.id + "/users" + status);
             if (result.statusCode !== 200 || !result.data) {
+                this.handleError(result);
                 return [];
             }
             const arr = [];
@@ -4094,6 +4077,7 @@ class ServerProvider {
             const result = yield this.helper.get("courses/" + courseId.toString() + "/assignments");
             if (result.statusCode !== 200 || !result.data) {
                 console.log(result);
+                this.handleError(result);
                 throw new Error("Problem with the request");
             }
             return map_1.mapify(result.data, (ele) => {
@@ -4104,26 +4088,32 @@ class ServerProvider {
     }
     addUserToCourse(user, course) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.helper.put("/courses/" + course.id + "/users/" + user.id, {
+            const result = yield this.helper.put("/courses/" + course.id + "/users/" + user.id, {
                 courseid: course.id,
                 userid: user.id,
                 status: models_1.CourseUserState.pending,
             });
-            if (resp.statusCode === 201) {
+            if (result.statusCode === 201) {
                 return true;
+            }
+            else {
+                this.handleError(result);
             }
             return false;
         });
     }
     changeUserState(link, state) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.helper.put("/courses/" + link.courseId + "/users/" + link.userid, {
+            const result = yield this.helper.put("/courses/" + link.courseId + "/users/" + link.userid, {
                 courseid: link.courseId,
                 userid: link.userid,
                 status: state,
             });
-            if (resp.statusCode === 201) {
+            if (result.statusCode === 201) {
                 return true;
+            }
+            else {
+                this.handleError(result);
             }
             return false;
         });
@@ -4132,8 +4122,8 @@ class ServerProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const uri = "courses";
             const data = courseData;
-            const resp = yield this.helper.post(uri, data);
-            console.log("res = ", resp);
+            const result = yield this.helper.post(uri, data);
+            console.log("res = ", result);
             return true;
         });
     }
@@ -4142,6 +4132,7 @@ class ServerProvider {
             const result = yield this.helper.get("courses/" + id);
             if (result.statusCode !== 200 || !result.data) {
                 console.log("Error =>", result);
+                this.handleError(result);
                 return null;
             }
             const data = JSON.parse(JSON.stringify(result.data));
@@ -4151,12 +4142,13 @@ class ServerProvider {
     updateCourse(courseId, courseData) {
         return __awaiter(this, void 0, void 0, function* () {
             const uri = "courses/" + courseId;
-            const resp = yield this.helper.put(uri, courseData);
-            if (resp.statusCode !== 200) {
-                console.log("Error =>", resp);
+            const result = yield this.helper.put(uri, courseData);
+            if (result.statusCode !== 200) {
+                console.log("Error =>", result);
+                this.handleError(result);
                 return false;
             }
-            console.log("Success => ", resp);
+            console.log("Success => ", result);
             return true;
         });
     }
@@ -4180,6 +4172,7 @@ class ServerProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.helper.get("users");
             if (result.statusCode !== 302 || !result.data) {
+                this.handleError(result);
                 return [];
             }
             const newArray = result.data.map((ele) => this.makeUserInfo(ele));
@@ -4212,6 +4205,9 @@ class ServerProvider {
             if (result.statusCode < 400) {
                 return false;
             }
+            else {
+                this.handleError(result);
+            }
             return true;
         });
     }
@@ -4219,9 +4215,12 @@ class ServerProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const uri = "directories";
             const data = { provider };
-            const resp = yield this.helper.post(uri, data);
-            if (resp.data) {
-                return resp.data;
+            const result = yield this.helper.post(uri, data);
+            if (result.data) {
+                return result.data;
+            }
+            else {
+                this.handleError(result);
             }
             return [];
         });
@@ -4231,6 +4230,9 @@ class ServerProvider {
             const result = yield this.helper.get("user");
             if (result.statusCode !== 302 || !result.data) {
                 return null;
+            }
+            else {
+                this.handleError(result);
             }
             return this.makeUserInfo(result.data);
         });
@@ -4244,6 +4246,9 @@ class ServerProvider {
             personid: 1000,
             email: "00" + data.id + "@secretorganization.com",
         };
+    }
+    handleError(result) {
+        this.logger.warn("Request to server failed with status code: " + result.statusCode, true);
     }
 }
 exports.ServerProvider = ServerProvider;
