@@ -28,6 +28,28 @@
     <div id="root">
 
     </div>
+    <div id="overlay" class="overlay hidden">
+
+        <div class="correcter"></div>
+        <div>
+            <svg width="200" height="200" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" version="1.1">
+                <style>
+                    .fill {
+                        fill: white;
+                    }
+                </style>
+                <symbol id="part" viewbox="0 0 50 50">
+                    <!--<polygon points="40,10 40,25 25,40 10,40" style="fill: black;" />-->
+                    <path d="M 20,40 A 30,30 0,0,1 40,20" style="stroke: black; stroke-width: 6px; stroke-linecap: round; fill:none" />
+                </symbol>
+                <use href="#part" width="50" height="50" />
+                <use href="#part" width="50" height="50" transform="rotate(90 50 50)" />
+                <use href="#part" width="50" height="50" transform="rotate(270 50 50)" />
+                <use href="#part" width="50" height="50" transform="rotate(180 50 50)" />
+            </svg>
+        </div>
+        <div class="correcter"></div>
+    </div>
 
     <!--Bootstrap javascript start-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
