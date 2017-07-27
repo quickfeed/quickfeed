@@ -1,6 +1,7 @@
 import { IEventData, newEvent } from "../event";
 import { NavigationHelper } from "../NavigationHelper";
 import { isViewPage, ViewPage } from "../pages/ViewPage";
+import { ILogger, ILoggerServer } from "./LogManager";
 
 export interface IPageContainer {
     [name: string]: IPageContainer | ViewPage;
@@ -39,9 +40,11 @@ export class NavigationManager {
     private defaultPath: string = "";
     private currentPath: string = "";
     private browserHistory: History;
+    private logger: ILogger;
 
-    constructor(history: History) {
+    constructor(history: History, logger: ILogger) {
         this.browserHistory = history;
+        this.logger = logger;
         window.addEventListener("popstate", (e: PopStateEvent) => {
             this.navigateTo(location.pathname, true);
         });

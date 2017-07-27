@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 13);
+/******/ 	return __webpack_require__(__webpack_require__.s = 14);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -79,16 +79,15 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(15));
+__export(__webpack_require__(16));
 __export(__webpack_require__(8));
 __export(__webpack_require__(9));
-__export(__webpack_require__(16));
 __export(__webpack_require__(17));
 __export(__webpack_require__(18));
 __export(__webpack_require__(19));
-__export(__webpack_require__(21));
-__export(__webpack_require__(10));
+__export(__webpack_require__(20));
 __export(__webpack_require__(22));
+__export(__webpack_require__(10));
 __export(__webpack_require__(23));
 __export(__webpack_require__(24));
 __export(__webpack_require__(25));
@@ -99,6 +98,7 @@ __export(__webpack_require__(29));
 __export(__webpack_require__(30));
 __export(__webpack_require__(31));
 __export(__webpack_require__(32));
+__export(__webpack_require__(33));
 
 
 /***/ }),
@@ -116,7 +116,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(6);
+const event_1 = __webpack_require__(5);
 function trimChars(str, char) {
     if (str.length === 0) {
         return "";
@@ -437,6 +437,35 @@ exports.ViewPage = ViewPage;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+function newEvent(info) {
+    const callbacks = [];
+    const handler = function EventHandler(event) {
+        callbacks.map(((v) => v(event)));
+    };
+    handler.info = info;
+    handler.addEventListener = (callback) => {
+        callbacks.push(callback);
+    };
+    handler.removeEventListener = (callback) => {
+        const index = callbacks.indexOf(callback);
+        if (index < 0) {
+            console.error(callback);
+            throw Error("Event does noe exist");
+        }
+        callbacks.splice(index, 1);
+    };
+    return handler;
+}
+exports.newEvent = newEvent;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -521,35 +550,6 @@ class UserView extends React.Component {
     }
 }
 exports.UserView = UserView;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function newEvent(info) {
-    const callbacks = [];
-    const handler = function EventHandler(event) {
-        callbacks.map(((v) => v(event)));
-    };
-    handler.info = info;
-    handler.addEventListener = (callback) => {
-        callbacks.push(callback);
-    };
-    handler.removeEventListener = (callback) => {
-        const index = callbacks.indexOf(callback);
-        if (index < 0) {
-            console.log(callback);
-            throw Error("Event does noe exist");
-        }
-        callbacks.splice(index, 1);
-    };
-    return handler;
-}
-exports.newEvent = newEvent;
 
 
 /***/ }),
@@ -720,10 +720,10 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", { value: true });
-__export(__webpack_require__(33));
 __export(__webpack_require__(34));
 __export(__webpack_require__(35));
 __export(__webpack_require__(36));
+__export(__webpack_require__(37));
 
 
 /***/ }),
@@ -854,6 +854,67 @@ exports.CollapsableNavMenu = CollapsableNavMenu;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+const event_1 = __webpack_require__(5);
+var LogLevel;
+(function (LogLevel) {
+    LogLevel[LogLevel["verbose"] = 0] = "verbose";
+    LogLevel[LogLevel["info"] = 1] = "info";
+    LogLevel[LogLevel["warning"] = 2] = "warning";
+    LogLevel[LogLevel["error"] = 3] = "error";
+    LogLevel[LogLevel["critical"] = 4] = "critical";
+})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
+class LogClient {
+    constructor(name, logger) {
+        this.name = name;
+        this.logger = logger;
+    }
+    log(message, showUser = false) {
+        this.logger.pushEntry(message, LogLevel.info, this.name, showUser);
+    }
+    warn(message, showUser = false) {
+        this.logger.pushEntry(message, LogLevel.warning, this.name, showUser);
+    }
+    error(message, showUser = false) {
+        this.logger.pushEntry(message, LogLevel.error, this.name, showUser);
+    }
+}
+exports.LogClient = LogClient;
+class LogManager {
+    constructor() {
+        this.onshowuser = event_1.newEvent("LogManager.onshowuser");
+        this.name = "LogManager";
+        this.allLog = [];
+    }
+    log(message, showUser = false) {
+        this.pushEntry(message, LogLevel.info, this.name, showUser);
+    }
+    warn(message, showUser = false) {
+        this.pushEntry(message, LogLevel.warning, this.name, showUser);
+    }
+    error(message, showUser = false) {
+        this.pushEntry(message, LogLevel.error, this.name, showUser);
+    }
+    createLogger(name) {
+        return new LogClient(name, this);
+    }
+    pushEntry(message, logLevel, sender, showUser = false) {
+        const entry = { date: new Date(), message, logLevel, sender };
+        this.allLog.push(entry);
+        if (showUser) {
+            this.onshowuser({ target: this, entry });
+        }
+    }
+}
+exports.LogManager = LogManager;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -864,25 +925,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(14);
+const ReactDOM = __webpack_require__(15);
 const components_1 = __webpack_require__(1);
 const managers_1 = __webpack_require__(11);
-const ErrorPage_1 = __webpack_require__(37);
-const HelpPage_1 = __webpack_require__(38);
-const HomePage_1 = __webpack_require__(40);
-const StudentPage_1 = __webpack_require__(41);
-const TeacherPage_1 = __webpack_require__(44);
-const AdminPage_1 = __webpack_require__(46);
-const NavBarLogin_1 = __webpack_require__(48);
-const NavBarMenu_1 = __webpack_require__(49);
-const LoginPage_1 = __webpack_require__(50);
-const ServerProvider_1 = __webpack_require__(51);
-const HttpHelper_1 = __webpack_require__(52);
+const ErrorPage_1 = __webpack_require__(38);
+const HelpPage_1 = __webpack_require__(39);
+const HomePage_1 = __webpack_require__(41);
+const StudentPage_1 = __webpack_require__(42);
+const TeacherPage_1 = __webpack_require__(45);
+const AdminPage_1 = __webpack_require__(47);
+const NavBarLogin_1 = __webpack_require__(49);
+const NavBarMenu_1 = __webpack_require__(50);
+const LoginPage_1 = __webpack_require__(51);
+const ServerProvider_1 = __webpack_require__(52);
+const HttpHelper_1 = __webpack_require__(53);
+const LogManager_1 = __webpack_require__(13);
+const PageInfo_1 = __webpack_require__(54);
 class AutoGrader extends React.Component {
     constructor(props) {
         super();
         this.userMan = props.userManager;
         this.navMan = props.navigationManager;
+        this.logMan = props.logManager;
+        this.logMan.onshowuser.addEventListener((e) => __awaiter(this, void 0, void 0, function* () {
+            console.log("OnShowUser Event: ", e);
+            this.setState({ curMessage: e.entry });
+            this.setState({ currentContent: yield this.refreshActivePage() });
+            console.log("State: ", this.state);
+        }));
         const curUser = this.userMan.getCurrentUser();
         this.state = {
             activePage: undefined,
@@ -950,12 +1020,21 @@ class AutoGrader extends React.Component {
         }
     }
     render() {
+        console.log("Log from index.tsx");
         if (this.state.activePage) {
             return this.state.currentContent;
         }
         else {
             return React.createElement("h1", null, "404 not found");
         }
+    }
+    refreshActivePage() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.state.activePage) {
+                return yield this.renderTemplate(this.state.activePage, this.state.activePage.template);
+            }
+            return React.createElement("div", null, "404 Error");
+        });
     }
     handleClick(link) {
         if (link.uri) {
@@ -986,6 +1065,7 @@ class AutoGrader extends React.Component {
     }
     renderTemplate(page, name) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log("render");
             let body;
             const content = yield this.renderActivePage(page, this.subPage);
             const loginLink = [
@@ -1005,6 +1085,7 @@ class AutoGrader extends React.Component {
                 React.createElement(components_1.NavBar, { id: "top-bar", isFluid: false, isInverse: true, onClick: (link) => this.handleClick(link), brandName: "Auto Grader" },
                     React.createElement(NavBarMenu_1.NavBarMenu, { links: this.state.topLinks, onClick: (link) => this.handleClick(link) }),
                     React.createElement(NavBarLogin_1.NavBarLogin, { user: this.state.curUser, links: loginLink, onClick: (link) => this.handleClick(link) })),
+                React.createElement(PageInfo_1.PageInfo, { entry: this.state.curMessage }),
                 body));
         });
     }
@@ -1022,18 +1103,18 @@ function main() {
         const tempData = new managers_1.TempDataProvider();
         let userMan;
         let courseMan;
-        let navMan;
+        const logMan = new LogManager_1.LogManager();
+        const navMan = new managers_1.NavigationManager(history, logMan.createLogger("NavigationManager"));
+        setTimeout(() => { logMan.log("Hello World", true); }, 2000);
         if (curRunning === DEBUG_SERVER) {
             const httpHelper = new HttpHelper_1.HttpHelper("/api/v1");
-            const serverData = new ServerProvider_1.ServerProvider(httpHelper);
-            userMan = new managers_1.UserManager(serverData);
-            courseMan = new managers_1.CourseManager(serverData);
-            navMan = new managers_1.NavigationManager(history);
+            const serverData = new ServerProvider_1.ServerProvider(httpHelper, logMan.createLogger("ServerProvider"));
+            userMan = new managers_1.UserManager(serverData, logMan.createLogger("UserManager"));
+            courseMan = new managers_1.CourseManager(serverData, logMan.createLogger("CourseManager"));
         }
         else {
-            userMan = new managers_1.UserManager(tempData);
-            courseMan = new managers_1.CourseManager(tempData);
-            navMan = new managers_1.NavigationManager(history);
+            userMan = new managers_1.UserManager(tempData, logMan.createLogger("UserManager"));
+            courseMan = new managers_1.CourseManager(tempData, logMan.createLogger("CourseManager"));
             const user = yield userMan.tryLogin("test@testersen.no", "1234");
         }
         yield userMan.checkUserLoggedIn();
@@ -1051,20 +1132,20 @@ function main() {
         navMan.onNavigate.addEventListener((e) => {
             console.log(e);
         });
-        ReactDOM.render(React.createElement(AutoGrader, { userManager: userMan, navigationManager: navMan }), document.getElementById("root"));
+        ReactDOM.render(React.createElement(AutoGrader, { userManager: userMan, navigationManager: navMan, logManager: logMan }), document.getElementById("root"));
     });
 }
 main();
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1106,7 +1187,7 @@ exports.NavBar = NavBar;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1137,7 +1218,7 @@ exports.NavMenuFormatable = NavMenuFormatable;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1179,7 +1260,7 @@ exports.DynamicTable = DynamicTable;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1193,14 +1274,14 @@ exports.Row = Row;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
-const LabResultView_1 = __webpack_require__(20);
+const LabResultView_1 = __webpack_require__(21);
 class StudentLab extends React.Component {
     render() {
         return React.createElement(LabResultView_1.LabResultView, { course: this.props.course, labInfo: this.props.assignment });
@@ -1210,7 +1291,7 @@ exports.StudentLab = StudentLab;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1239,7 +1320,7 @@ exports.LabResultView = LabResultView;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1297,7 +1378,7 @@ exports.NavDropdown = NavDropdown;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1338,7 +1419,7 @@ exports.LabResult = LabResult;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1358,7 +1439,7 @@ exports.LastBuild = LastBuild;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1401,7 +1482,7 @@ exports.LastBuildInfo = LastBuildInfo;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1438,7 +1519,7 @@ exports.CoursesOverview = CoursesOverview;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1476,7 +1557,7 @@ exports.CoursePanel = CoursePanel;
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1523,7 +1604,7 @@ exports.SingleCourseOverview = SingleCourseOverview;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1672,7 +1753,7 @@ exports.GroupForm = GroupForm;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1693,7 +1774,7 @@ exports.Button = Button;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1855,7 +1936,7 @@ exports.CourseForm = CourseForm;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1930,7 +2011,7 @@ exports.Results = Results;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1966,7 +2047,7 @@ exports.Search = Search;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1997,7 +2078,7 @@ function isCourseEnrollment(enroll) {
 }
 exports.isCourseEnrollment = isCourseEnrollment;
 class CourseManager {
-    constructor(courseProvider) {
+    constructor(courseProvider, logger) {
         this.courseProvider = courseProvider;
     }
     addUserToCourse(user, course) {
@@ -2154,7 +2235,7 @@ exports.CourseManager = CourseManager;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2168,7 +2249,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(6);
+const event_1 = __webpack_require__(5);
 const NavigationHelper_1 = __webpack_require__(2);
 const ViewPage_1 = __webpack_require__(4);
 function isILinkCollection(item) {
@@ -2179,13 +2260,14 @@ function isILinkCollection(item) {
 }
 exports.isILinkCollection = isILinkCollection;
 class NavigationManager {
-    constructor(history) {
+    constructor(history, logger) {
         this.onNavigate = event_1.newEvent("NavigationManager.onNavigate");
         this.pages = {};
         this.errorPages = [];
         this.defaultPath = "";
         this.currentPath = "";
         this.browserHistory = history;
+        this.logger = logger;
         window.addEventListener("popstate", (e) => {
             this.navigateTo(location.pathname, true);
         });
@@ -2327,7 +2409,7 @@ exports.NavigationManager = NavigationManager;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2818,7 +2900,7 @@ exports.TempDataProvider = TempDataProvider;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2832,9 +2914,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = __webpack_require__(6);
+const event_1 = __webpack_require__(5);
 class UserManager {
-    constructor(userProvider) {
+    constructor(userProvider, logger) {
         this.onLogin = event_1.newEvent("UserManager.onLogin");
         this.onLogout = event_1.newEvent("UserManager.onLogout");
         this.userProvider = userProvider;
@@ -2909,7 +2991,7 @@ exports.UserManager = UserManager;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2953,7 +3035,7 @@ exports.ErrorPage = ErrorPage;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2969,7 +3051,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const ViewPage_1 = __webpack_require__(4);
-const HelpView_1 = __webpack_require__(39);
+const HelpView_1 = __webpack_require__(40);
 class HelpPage extends ViewPage_1.ViewPage {
     constructor(navMan) {
         super();
@@ -2988,7 +3070,7 @@ exports.HelpPage = HelpPage;
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3044,7 +3126,7 @@ exports.HelpView = HelpView;
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3074,7 +3156,7 @@ exports.HomePage = HomePage;
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3092,10 +3174,10 @@ const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const models_1 = __webpack_require__(3);
 const ViewPage_1 = __webpack_require__(4);
-const HelloView_1 = __webpack_require__(42);
-const UserView_1 = __webpack_require__(5);
+const HelloView_1 = __webpack_require__(43);
+const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(12);
-const EnrollmentView_1 = __webpack_require__(43);
+const EnrollmentView_1 = __webpack_require__(44);
 class StudentPage extends ViewPage_1.ViewPage {
     constructor(users, navMan, courseMan) {
         super();
@@ -3280,7 +3362,7 @@ exports.StudentPage = StudentPage;
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3296,7 +3378,7 @@ exports.HelloView = HelloView;
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3332,7 +3414,7 @@ exports.EnrollmentView = EnrollmentView;
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3349,10 +3431,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(4);
-const UserView_1 = __webpack_require__(5);
+const UserView_1 = __webpack_require__(6);
 const CollapsableNavMenu_1 = __webpack_require__(12);
 const models_1 = __webpack_require__(3);
-const MemberView_1 = __webpack_require__(45);
+const MemberView_1 = __webpack_require__(46);
 class TeacherPage extends ViewPage_1.ViewPage {
     constructor(userMan, navMan, courseMan) {
         super();
@@ -3507,7 +3589,7 @@ exports.TeacherPage = TeacherPage;
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3516,7 +3598,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const models_1 = __webpack_require__(3);
 const components_1 = __webpack_require__(1);
-const UserView_1 = __webpack_require__(5);
+const UserView_1 = __webpack_require__(6);
 exports.UserView = UserView_1.UserView;
 class MemberView extends React.Component {
     render() {
@@ -3555,7 +3637,7 @@ exports.MemberView = MemberView;
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3572,8 +3654,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const React = __webpack_require__(0);
 const components_1 = __webpack_require__(1);
 const ViewPage_1 = __webpack_require__(4);
-const CourseView_1 = __webpack_require__(47);
-const UserView_1 = __webpack_require__(5);
+const CourseView_1 = __webpack_require__(48);
+const UserView_1 = __webpack_require__(6);
 class AdminPage extends ViewPage_1.ViewPage {
     constructor(navMan, userMan, courseMan) {
         super();
@@ -3734,7 +3816,7 @@ exports.AdminPage = AdminPage;
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3778,7 +3860,7 @@ exports.CourseView = CourseView;
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3827,7 +3909,7 @@ exports.NavBarLogin = NavBarLogin;
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3861,7 +3943,7 @@ exports.NavBarMenu = NavBarMenu;
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3918,7 +4000,7 @@ exports.LoginPage = LoginPage;
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3956,8 +4038,9 @@ function request(url) {
     });
 }
 class ServerProvider {
-    constructor(helper) {
+    constructor(helper, logger) {
         this.helper = helper;
+        this.logger = logger;
     }
     getCourses() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -3971,7 +4054,6 @@ class ServerProvider {
     getCoursesFor(user, state) {
         return __awaiter(this, void 0, void 0, function* () {
             const status = state ? "?status=" + models_1.courseUserStateToString(state) : "";
-            console.log(status);
             const result = yield this.helper.get("/users/" + user.id + "/courses" + status);
             if (result.statusCode !== 200 || !result.data) {
                 return [];
@@ -4169,7 +4251,7 @@ exports.ServerProvider = ServerProvider;
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4240,6 +4322,50 @@ class HttpHelper {
     }
 }
 exports.HttpHelper = HttpHelper;
+
+
+/***/ }),
+/* 54 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const React = __webpack_require__(0);
+const LogManager_1 = __webpack_require__(13);
+class PageInfo extends React.Component {
+    render() {
+        console.log("PageInfoUpdate");
+        console.log(this.props);
+        const e = this.props.entry;
+        if (!e) {
+            return React.createElement("div", null);
+        }
+        return React.createElement("div", { className: "topinfo alert " + this.getLevel(e) },
+            "This is a message: \"",
+            e.message,
+            "\" date: ",
+            e.date.toLocaleDateString(),
+            "sender: ",
+            e.sender,
+            "level: ",
+            e.logLevel);
+    }
+    getLevel(entry) {
+        switch (entry.logLevel) {
+            default:
+            case LogManager_1.LogLevel.verbose:
+            case LogManager_1.LogLevel.info:
+                return "alert-info";
+            case LogManager_1.LogLevel.warning:
+                return "alert-warning";
+            case LogManager_1.LogLevel.error:
+            case LogManager_1.LogLevel.critical:
+                return "alert-danger";
+        }
+    }
+}
+exports.PageInfo = PageInfo;
 
 
 /***/ })

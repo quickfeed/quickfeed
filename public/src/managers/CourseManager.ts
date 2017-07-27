@@ -16,6 +16,7 @@ import {
 } from "../models";
 
 import { UserManager } from "../managers";
+import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
     getCourses(): Promise<ICourse[]>;
@@ -71,7 +72,7 @@ export interface IEnrollment {
 export class CourseManager {
     private courseProvider: ICourseProvider;
 
-    constructor(courseProvider: ICourseProvider) {
+    constructor(courseProvider: ICourseProvider, logger: ILogger) {
         this.courseProvider = courseProvider;
     }
 

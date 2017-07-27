@@ -30,7 +30,7 @@ export function newEvent<T extends IEventData>(info: string): INewEvent<T> {
     handler.removeEventListener = (callback) => {
         const index = callbacks.indexOf(callback);
         if (index < 0) {
-            console.log(callback);
+            console.error(callback);
             throw Error("Event does noe exist");
         }
         callbacks.splice(index, 1);

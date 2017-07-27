@@ -1,6 +1,7 @@
 import { IEventData, newEvent } from "../event";
 import { IMap, MapHelper } from "../map";
 import { IUser } from "../models";
+import { ILogger } from "./LogManager";
 
 export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<IUser | null>;
@@ -32,7 +33,7 @@ export class UserManager {
      * Creates a new instance of the UserManager
      * @param userProvider A user provider to get user information from
      */
-    constructor(userProvider: IUserProvider) {
+    constructor(userProvider: IUserProvider, logger: ILogger) {
         this.userProvider = userProvider;
     }
 

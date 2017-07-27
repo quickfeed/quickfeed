@@ -22,6 +22,7 @@ import {
     IUserProvider,
 } from "../managers";
 import { IMap, mapify } from "../map";
+import { ILogger } from "./LogManager";
 
 async function request(url: string): Promise<string> {
     const req = new XMLHttpRequest();
@@ -43,9 +44,11 @@ async function request(url: string): Promise<string> {
 
 export class ServerProvider implements IUserProvider, ICourseProvider {
     private helper: HttpHelper;
+    private logger: ILogger;
 
-    constructor(helper: HttpHelper) {
+    constructor(helper: HttpHelper, logger: ILogger) {
         this.helper = helper;
+        this.logger = logger;
     }
 
     public async getCourses(): Promise<ICourse[]> {
@@ -62,7 +65,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]> {
         // TODO: Fix to use correct url request
         const status = state ? "?status=" + courseUserStateToString(state) : "";
-        console.log(status);
         const result = await this.helper.get<ICourseWithEnrollStatus[]>("/users/" + user.id + "/courses" + status);
         if (result.statusCode !== 200 || !result.data) {
             return [];

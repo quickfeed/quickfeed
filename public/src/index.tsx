@@ -21,29 +21,42 @@ import { LoginPage } from "./pages/LoginPage";
 import { ServerProvider } from "./managers/ServerProvider";
 
 import { HttpHelper } from "./HttpHelper";
+import { ILogEntry, LogManager } from "./managers/LogManager";
+
+import { PageInfo } from "./components/information/PageInfo";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
     currentContent: JSX.Element;
     topLinks: ILink[];
     curUser: IUser | null;
+    curMessage?: ILogEntry;
 }
 
 interface IAutoGraderProps {
     userManager: UserManager;
     navigationManager: NavigationManager;
+    logManager: LogManager;
 }
 
 class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     private userMan: UserManager;
     private navMan: NavigationManager;
+    private logMan: LogManager;
     private subPage: string;
 
-    constructor(props: any) {
+    constructor(props: IAutoGraderProps) {
         super();
 
         this.userMan = props.userManager;
         this.navMan = props.navigationManager;
+        this.logMan = props.logManager;
+        this.logMan.onshowuser.addEventListener(async (e) => {
+            console.log("OnShowUser Event: ", e);
+            this.setState({ curMessage: e.entry });
+            this.setState({ currentContent: await this.refreshActivePage() });
+            console.log("State: ", this.state);
+        });
 
         const curUser = this.userMan.getCurrentUser();
 
@@ -117,11 +130,20 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     public render() {
+        console.log("Log from index.tsx");
+
         if (this.state.activePage) {
             return this.state.currentContent;
         } else {
             return <h1>404 not found</h1>;
         }
+    }
+
+    private async refreshActivePage(): Promise<JSX.Element> {
+        if (this.state.activePage) {
+            return await this.renderTemplate(this.state.activePage, this.state.activePage.template);
+        }
+        return <div>404 Error</div>;
     }
 
     private handleClick(link: ILink) {
@@ -151,6 +173,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     private async renderTemplate(page: ViewPage, name: string | null): Promise<JSX.Element> {
+        console.log("render");
         let body: JSX.Element;
         const content = await this.renderActivePage(page, this.subPage);
         const loginLink: ILink[] = [
@@ -194,6 +217,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                         onClick={(link) => this.handleClick(link)}>
                     </NavBarLogin>
                 </NavBar>
+                <PageInfo entry={this.state.curMessage} />
                 {body}
             </div>);
     }
@@ -218,19 +242,20 @@ async function main(): Promise<void> {
 
     let userMan: UserManager;
     let courseMan: CourseManager;
-    let navMan: NavigationManager;
+    const logMan = new LogManager();
+    const navMan: NavigationManager = new NavigationManager(history, logMan.createLogger("NavigationManager"));
+
+    setTimeout(() => { logMan.log("Hello World", true); }, 2000);
 
     if (curRunning === DEBUG_SERVER) {
         const httpHelper = new HttpHelper("/api/v1");
-        const serverData = new ServerProvider(httpHelper);
+        const serverData = new ServerProvider(httpHelper, logMan.createLogger("ServerProvider"));
 
-        userMan = new UserManager(serverData);
-        courseMan = new CourseManager(serverData);
-        navMan = new NavigationManager(history);
+        userMan = new UserManager(serverData, logMan.createLogger("UserManager"));
+        courseMan = new CourseManager(serverData, logMan.createLogger("CourseManager"));
     } else {
-        userMan = new UserManager(tempData);
-        courseMan = new CourseManager(tempData);
-        navMan = new NavigationManager(history);
+        userMan = new UserManager(tempData, logMan.createLogger("UserManager"));
+        courseMan = new CourseManager(tempData, logMan.createLogger("CourseManager"));
 
         const user = await userMan.tryLogin("test@testersen.no", "1234");
     }
@@ -256,7 +281,7 @@ async function main(): Promise<void> {
     });
 
     ReactDOM.render(
-        <AutoGrader userManager={userMan} navigationManager={navMan}>
+        <AutoGrader userManager={userMan} navigationManager={navMan} logManager={logMan}>
 
         </AutoGrader>,
         document.getElementById("root"),
