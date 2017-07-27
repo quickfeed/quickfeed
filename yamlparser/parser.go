@@ -16,13 +16,12 @@ type NewAssignmentRequest struct {
 	AssignmentID uint   `yaml:"assignmentid"`
 	Name         string `yaml:"name"`
 	Language     string `yaml:"language"`
-	CourseCode   string `yaml:"coursecode"`
 	Deadline     string `yaml:"deadline"`
 	AutoApprove  bool   `yaml:"autoapprove"`
 }
 
-// Parse parses .yaml file found in a given directory.
-// and returns an array of NewAssignmentRequest
+// Parse recursively walks the given directory and parses any yaml files found
+// and returns an array of assignment requests.
 func Parse(dir string) ([]NewAssignmentRequest, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -39,12 +38,11 @@ func Parse(dir string) ([]NewAssignmentRequest, error) {
 				if err != nil {
 					return err
 				}
-
 				err = yaml.Unmarshal(source, &assignment)
 				if err != nil {
 					return err
 				}
-				// convert to lowercase  to normalize language name
+				// convert to lowercase to normalize language name
 				assignment.Language = strings.ToLower(assignment.Language)
 				assignments = append(assignments, assignment)
 			}

@@ -22,7 +22,6 @@ func TestParse(t *testing.T) {
 			AssignmentID: 2,
 			Name:         "Lab1",
 			Language:     "java",
-			CourseCode:   "DAT100",
 			Deadline:     "27-08-2018 12:00",
 			AutoApprove:  false,
 		}
