@@ -3306,7 +3306,7 @@ const components_1 = __webpack_require__(1);
 const models_1 = __webpack_require__(3);
 class EnrollmentView extends React.Component {
     render() {
-        return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course tag", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
+        return React.createElement(components_1.DynamicTable, { data: this.props.courses, header: ["Course code", "Course Name", "Action"], selector: (course) => this.createEnrollmentRow(this.props.courses, course) });
     }
     createEnrollmentRow(studentCourses, course) {
         const base = [course.course.code, course.course.name];

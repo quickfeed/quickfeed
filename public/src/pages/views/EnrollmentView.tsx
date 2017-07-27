@@ -11,7 +11,7 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     public render() {
         return <DynamicTable
             data={this.props.courses}
-            header={["Course tag", "Course Name", "Action"]}
+            header={["Course code", "Course Name", "Action"]}
             selector={(course: IUserCourse) => this.createEnrollmentRow(this.props.courses, course)}>
         </DynamicTable>;
 
