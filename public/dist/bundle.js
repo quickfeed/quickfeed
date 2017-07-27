@@ -1795,7 +1795,7 @@ class CourseForm extends React.Component {
     updateOrganisationDivs(orgs) {
         const organisationDetails = [];
         for (let i = 0; i < orgs.length; i++) {
-            organisationDetails.push(React.createElement("button", { key: i, className: "btn organisation", onClick: () => this.handleOrgClick(orgs[i].id) },
+            organisationDetails.push(React.createElement("button", { key: i, className: "btn organisation", onClick: () => this.handleOrgClick(orgs[i].id), title: orgs[i].path },
                 React.createElement("div", { className: "organisationInfo" },
                     React.createElement("img", { src: orgs[i].avatar, className: "img-rounded", width: 80, height: 80 }),
                     React.createElement("div", { className: "caption" }, orgs[i].path)),

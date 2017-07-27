@@ -62,7 +62,7 @@
 .hidden {
     display: none;
 }
-
+/* Organization styles */
 .organisationWrap {
     padding: 15px;
 }
@@ -84,7 +84,7 @@
     outline: none !important;
 }
 
-.organisationWrap .organisationBtnGroup .organisation.active .organisationInfo {
+.organisationWrap .organisationBtnGroup .organisation.active {
     border-color: #337AB7;
     outline: none !important;
     box-shadow: 0px 3px 22px 0px #7b7b7b;
@@ -102,11 +102,16 @@
     border: 2px solid transparent;
     transition: all 0.5s;
 }
+.organisationWrap .organisationBtnGroup .organisation .organisationInfo .caption {
+    padding-top: 5px;
+    overflow: hidden;
+}
 
-.organisationWrap .organisationBtnGroup .organisation .organisationInfo:hover {
+.organisationWrap .organisationBtnGroup .organisation:hover {
     border-color: #337AB7;
     outline: none !important;
 }
+/* Organization styles END */
 
 .student-group {
     max-height: 200px;
