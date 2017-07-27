@@ -237,6 +237,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
         this.setState({
             organisations: orgDivs,
+            directoryid: 0,
         });
     }
 

@@ -1818,6 +1818,7 @@ class CourseForm extends React.Component {
                 React.createElement("div", { className: "btn-group organisationBtnGroup", "data-toggle": "buttons" }, organisationDetails)));
         this.setState({
             organisations: orgDivs,
+            directoryid: 0,
         });
     }
     courseValidate() {
