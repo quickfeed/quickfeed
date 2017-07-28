@@ -21,3 +21,7 @@
    cd public
    npm install
    ```
+
+## Here we will provide scripts and tools
+
+Voila!
