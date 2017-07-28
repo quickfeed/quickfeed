@@ -110,7 +110,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 userid: user.id,
                 status: CourseUserState.pending,
             });
-        if (result.statusCode === 201) {
+        if (result.statusCode <= 202) {
             return true;
         } else {
             this.handleError(result);
@@ -125,7 +125,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 userid: link.userid,
                 status: state,
             });
-        if (result.statusCode === 201) {
+        if (result.statusCode <= 202) {
             return true;
         } else {
             this.handleError(result);
