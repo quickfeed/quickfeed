@@ -106,7 +106,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             if (await this.userMan.isTeacher(user)) {
                 basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
             }
-            basis.push({ name: "Student", uri: "app/student/", active: false });
+            basis.push({ name: "Courses", uri: "app/student/", active: false });
             if (this.userMan.isAdmin(user)) {
                 basis.push({ name: "Admin", uri: "app/admin", active: false });
             }
