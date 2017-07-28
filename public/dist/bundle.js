@@ -4261,7 +4261,7 @@ class ServerProvider {
                 userid: user.id,
                 status: models_1.CourseUserState.pending,
             });
-            if (result.statusCode === 201) {
+            if (result.statusCode <= 202) {
                 return true;
             }
             else {
@@ -4277,7 +4277,7 @@ class ServerProvider {
                 userid: link.userid,
                 status: state,
             });
-            if (result.statusCode === 201) {
+            if (result.statusCode <= 202) {
                 return true;
             }
             else {
