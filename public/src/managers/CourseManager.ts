@@ -1,5 +1,6 @@
 import { IMap, MapHelper } from "../map";
 import {
+    CourseGroupStatus,
     CourseUserState,
     IAssignment,
     ICourse,
@@ -33,6 +34,7 @@ export interface ICourseProvider {
     getCourse(id: number): Promise<ICourse | null>;
     updateCourse(courseId: number, courseData: ICourse): Promise<boolean>;
     getCourseGroups(courseId: number): Promise<ICourseGroup[]>;
+    updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean>;
     // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(): Promise<IMap<ILabInfo>>;
@@ -285,6 +287,10 @@ export class CourseManager {
      */
     public async getCourseGroups(courseid: number): Promise<ICourseGroup[]> {
         return await this.courseProvider.getCourseGroups(courseid);
+    }
+
+    public async updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean> {
+        return await this.courseProvider.updateGroupStatus(groupId, status);
     }
 
     /**

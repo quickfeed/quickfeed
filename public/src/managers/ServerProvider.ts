@@ -1,4 +1,5 @@
 import {
+    CourseGroupStatus,
     CourseUserState,
     courseUserStateToString,
     IAssignment,
@@ -172,6 +173,19 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup[];
         return data;
+    }
+
+    public async updateGroupStatus(groupId: number, st: CourseGroupStatus): Promise<boolean> {
+        const uri: string = "groups/" + groupId;
+        const data = { status: st };
+
+        const result = await this.helper.patch<{ status: CourseGroupStatus }, {}>(uri, data);
+        if (result.statusCode < 400) {
+            return false;
+        } else {
+            this.handleError(result);
+        }
+        return true;
     }
 
     public async getAllLabInfos(): Promise<IMap<ILabInfo>> {

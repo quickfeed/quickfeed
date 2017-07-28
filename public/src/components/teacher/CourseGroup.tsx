@@ -68,15 +68,15 @@ class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupState> {
                         this.getMembers(group.users),
                         <span>
                             <button onClick={(e) => {
-                                // this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.approved);
-                                // this.props.navMan.refresh();
+                                this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.approved);
+                                this.props.navMan.refresh();
                             }}
                                 className="btn btn-primary">
                                 Approve
                         </button>
                             <button onClick={(e) => {
-                                // this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.rejected);
-                                // this.props.navMan.refresh();
+                                this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.rejected);
+                                this.props.navMan.refresh();
                             }} className="btn btn-danger">
                                 Reject
                     </button>

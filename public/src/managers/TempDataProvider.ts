@@ -222,6 +222,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourseGroups;
     }
 
+    public async updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean> {
+        throw new Error("Method not implemented");
+    }
+
     private addLocalUsers() {
         this.localUsers = mapify([
             {
