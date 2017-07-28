@@ -4,16 +4,27 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/urfave/cli"
 )
 
+// Example usage if you have an organization on github called autograder-test:
+// % scm --provider github get repository --all --namespace autograder-test
+// OR
+// % scm get repository --all --namespace autograder-test
+
 func main() {
 	var client scm.SCM
+	var db database.GormDB
 
 	app := cli.NewApp()
 	app.Name = "scm"
@@ -25,12 +36,13 @@ func main() {
 			Value: "github",
 		},
 		cli.StringFlag{
-			Name:   "accesstoken",
-			EnvVar: "SCMAccessToken",
-			Usage:  "Provider access token.",
+			Name:  "database",
+			Usage: "Path to the autograder database",
+			Value: tempFile("ag.db"),
 		},
 	}
-	app.Before = setup(&client)
+	app.Before = setup(&client, &db)
+	app.After = close(&db)
 	app.Commands = []cli.Command{
 		{
 			Name:  "delete",
@@ -122,17 +134,48 @@ func main() {
 	}
 }
 
-func setup(client *scm.SCM) cli.BeforeFunc {
+func setup(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
-		if !c.IsSet("provider") {
-			return cli.NewExitError("provider must be provided", 3)
+		l := logrus.New()
+		l.Out = ioutil.Discard
+		tdb, err := database.NewGormDB("sqlite3", c.String("database"), database.Logger{Logger: l})
+		if err != nil {
+			return err
 		}
-		if !c.IsSet("accesstoken") {
-			return cli.NewExitError("accesstoken must be provided", 3)
+		*db = *tdb
+		// this is the admin user (by assumption; works for sqlite3 at least)
+		u, err := db.GetUser(1)
+		if err != nil {
+			return err
 		}
-		*client, err = scm.NewSCMClient(c.String("provider"), c.String("accesstoken"))
+		provider := c.String("provider")
+		var accessToken string
+		for _, ri := range u.RemoteIdentities {
+			if ri.Provider == provider {
+				accessToken = ri.AccessToken
+			}
+		}
+		if accessToken == "" {
+			// this means that the database has no access token for the admin user
+			// (you may need to restart the server and login)
+			return fmt.Errorf("access token not found in database for provider %s", provider)
+		}
+		*client, err = scm.NewSCMClient(provider, accessToken)
 		return
 	}
+}
+
+func close(db *database.GormDB) cli.AfterFunc {
+	return func(c *cli.Context) error {
+		if db != nil {
+			return db.Close()
+		}
+		return nil
+	}
+}
+
+func tempFile(name string) string {
+	return filepath.Join(os.TempDir(), name)
 }
 
 func deleteRepositories(client *scm.SCM) cli.ActionFunc {
