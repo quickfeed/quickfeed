@@ -30,6 +30,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&models.Course{},
 		&models.Enrollment{},
 		&models.Assignment{},
+		&models.Submission{},
 	)
 
 	return &GormDB{conn}, nil
@@ -173,6 +174,34 @@ func (db *GormDB) GetAssignmentsByCourse(id uint64) ([]*models.Assignment, error
 	return course.Assignments, nil
 }
 
+// GetSubmissionForUser implements the Database interface
+func (db *GormDB) GetSubmissionForUser(assignmentID uint64, userID uint64) (*models.Submission, error) {
+	var submission models.Submission
+	if err := db.conn.Where(&models.Submission{AssignmentID: assignmentID, UserID: userID}).Last(&submission).Error; err != nil {
+		return nil, err
+	}
+	return &submission, nil
+}
+
+// GetSubmissions implements the Database interface
+func (db *GormDB) GetSubmissions(courseID uint64, userID uint64) ([]*models.Submission, error) {
+	var course models.Course
+	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
+		return nil, err
+	}
+
+	latestSubs := make([]*models.Submission, 0)
+	for _, v := range course.Assignments {
+		temp, err := db.GetSubmissionForUser(v.ID, userID)
+		if err == nil {
+			latestSubs = append(latestSubs, temp)
+		} else if err != gorm.ErrRecordNotFound {
+			return nil, err
+		}
+	}
+	return latestSubs, nil
+}
+
 // CreateAssignment implements the Database interface
 func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 	var course uint64
@@ -186,7 +215,7 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 	}
 
 	return db.conn.
-		Where(models.Assignment{CourseID: assignment.CourseID, AssignmentID: assignment.AssignmentID}).
+		Where(models.Assignment{CourseID: assignment.CourseID, Order: assignment.Order}).
 		Assign(models.Assignment{
 			Name:        assignment.Name,
 			Language:    assignment.Language,

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
-import { ICourse, ILabInfo, IStudentSubmission } from "../../models";
+import { ICourse, IStudentSubmission, ISubmission } from "../../models";
 
 interface ILabInfoProps {
     course: ICourse;
@@ -23,7 +23,7 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                             <LastBuild
                                 test_cases={this.props.labInfo.latest.testCases}
                                 score={this.props.labInfo.latest.score}
-                                weight={this.props.labInfo.latest.weight}
+                                weight={100}
                             />
                             <LastBuildInfo
                                 pass_tests={this.props.labInfo.latest.passedTests}

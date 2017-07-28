@@ -237,6 +237,53 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 	}
 }
 
+// GetSubmission returns a single submission for a assignment and a user
+func GetSubmission(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		_, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return err
+		}
+		assignmentID, err := parseUint(c.Param("aid"))
+		if err != nil {
+			return err
+		}
+
+		user := c.Get("user").(*models.User)
+
+		submission, err := db.GetSubmissionForUser(assignmentID, user.ID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return err
+		}
+
+		return c.JSONPretty(http.StatusOK, submission, "\t")
+	}
+}
+
+// ListSubmissions returns all the latests submissions for a user to a course
+func ListSubmissions(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		courseID, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return err
+		}
+
+		user := c.Get("user").(*models.User)
+		submission, err := db.GetSubmissions(courseID, user.ID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return err
+		}
+
+		return c.JSONPretty(http.StatusOK, submission, "\t")
+	}
+}
+
 // UpdateCourse updates an existing course
 func UpdateCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {

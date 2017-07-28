@@ -247,6 +247,8 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database) {
 	courses.GET("/:cid/users/:uid", echo.NotFoundHandler)
 	courses.PUT("/:cid/users/:uid", web.SetEnrollment(db))
 	courses.GET("/:cid/assignments", web.ListAssignments(db))
+	courses.GET("/:cid/assignments/:aid/submission", web.GetSubmission(db))
+	courses.GET("/:cid/submissions", web.ListSubmissions(db))
 
 	api.POST("/directories", web.ListDirectories())
 }

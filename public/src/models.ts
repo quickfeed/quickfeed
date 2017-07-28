@@ -58,7 +58,7 @@ export interface IUserCourseWithUser {
  */
 export interface IStudentSubmission {
     assignment: IAssignment;
-    latest?: ILabInfo;
+    latest?: ISubmission;
 }
 
 /**
@@ -83,6 +83,13 @@ export interface ICourse {
     year: number;
     provider: string;
     directoryid: number;
+}
+
+export interface IBuildInfo {
+    buildid: number;
+    builddate: Date;
+    buildlog: string;
+    exectime: number;
 }
 
 export interface ICourseWithEnrollStatus extends ICourse {
@@ -173,15 +180,15 @@ export interface ITestCases {
 /**
  * A description of a single user submission
  */
-export interface ILabInfo {
+export interface ISubmission {
     id: number;
-    studentId: number;
-    assignmentId: number;
+    userid: number;
+    groupid: number;
+    assignmentid: number;
 
     passedTests: number;
     failedTests: number;
     score: number;
-    weight: number;
 
     buildId: number;
     buildDate: Date;

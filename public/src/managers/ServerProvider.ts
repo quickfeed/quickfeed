@@ -3,13 +3,15 @@ import {
     CourseUserState,
     courseUserStateToString,
     IAssignment,
+    IBuildInfo,
     ICourse,
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
-    ILabInfo,
     IOrganization,
+    ISubmission,
     IUser,
+    ITestCases,
 } from "../models";
 
 import { HttpHelper, IHTTPResult } from "../HttpHelper";
@@ -25,6 +27,8 @@ import {
 } from "../managers";
 import { IMap, mapify } from "../map";
 import { ILogger } from "./LogManager";
+
+import { combinePath } from "../NavigationHelper";
 
 export class ServerProvider implements IUserProvider, ICourseProvider {
     private helper: HttpHelper;
@@ -188,8 +192,49 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getAllLabInfos(): Promise<IMap<ILabInfo>> {
-        return {};
+    // TODO change to use course id instead of getting all of them
+    public async getAllLabInfos(courseId: number): Promise<IMap<ISubmission>> {
+        const result = await this.helper.get<ISubmission[]>(("courses/" + courseId.toString() + "/submissions"));
+        if (!result.data) {
+            this.handleError(result);
+            return {};
+        }
+        return mapify(result.data, (e) => {
+            let a = "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}";
+            let b = "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]";
+            if ((e as any).buildinfo && ((e as any).buildinfo as string).trim().length > 2) {
+                a = (e as any).buildinfo as string;
+            }
+            if ((e as any).scoreobjects && ((e as any).scoreobjects as string).trim().length > 2) {
+                b = (e as any).scoreobjects;
+            }
+            console.log(a);
+            let tempInfo: IBuildInfo;
+            let scoreObj: ITestCases[];
+            try {
+                tempInfo = JSON.parse(a);
+            } catch (e) {
+                tempInfo = JSON.parse(
+                    "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
+                );
+            }
+            try {
+                scoreObj = JSON.parse(b);
+            } catch (e) {
+                scoreObj = JSON.parse(
+                    "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
+                );
+            }
+
+            e.buildDate = tempInfo.builddate;
+            e.buildId = tempInfo.buildid;
+            e.buildLog = tempInfo.buildlog;
+            e.executetionTime = tempInfo.exectime;
+            e.failedTests = 0;
+            e.passedTests = 1;
+            e.testCases = scoreObj;
+            return e.id;
+        });
     }
 
     public async tryLogin(username: string, password: string): Promise<IUser | null> {

@@ -7,10 +7,10 @@ import {
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
-    ILabInfo,
     IOrganization,
     isCourse,
     IStudentSubmission,
+    ISubmission,
     IUser,
     IUserCourse,
     IUserRelation,
@@ -37,7 +37,7 @@ export interface ICourseProvider {
     updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean>;
     // deleteCourse(id: number): Promise<boolean>;
 
-    getAllLabInfos(): Promise<IMap<ILabInfo>>;
+    getAllLabInfos(courseId: number): Promise<IMap<ISubmission>>;
     getDirectories(provider: string): Promise<IOrganization[]>;
 }
 
@@ -225,8 +225,8 @@ export class CourseManager {
      * @param assignment The assignment the data should be loaded for
      */
     public async getUserSubmittions(student: IUser, assignment: IAssignment): Promise<IStudentSubmission> {
-        const temp = MapHelper.find(await this.courseProvider.getAllLabInfos(),
-            (ele) => ele.studentId === student.id && ele.assignmentId === assignment.id);
+        const temp = MapHelper.find(await this.courseProvider.getAllLabInfos(assignment.courseid),
+            (ele) => ele.userid === student.id && ele.assignmentid === assignment.id);
         if (temp) {
             return {
                 assignment,
@@ -307,17 +307,23 @@ export class CourseManager {
      * @param studentCourse The student course
      */
     private async fillLinks(student: IUser, studentCourse: IUserCourse): Promise<void> {
-        console.log(student, studentCourse);
         if (!studentCourse.link) {
             return;
         }
         const allSubmissions: IStudentSubmission[] = [];
         const assigns = await this.getAssignments(studentCourse.course.id);
-        for (const assign of assigns) {
+        const submissions = MapHelper.toArray(await this.courseProvider.getAllLabInfos(studentCourse.course.id));
+
+        for (const a of assigns) {
+            const temp = submissions.find((sub) => sub.assignmentid === a.id);
+            studentCourse.assignments.push({ assignment: a, latest: temp });
+        }
+        console.log("data", assigns, submissions, studentCourse);
+        /*for (const assign of assigns) {
             const submission = await this.getUserSubmittions(student, assign);
             if (submission) {
                 studentCourse.assignments.push(submission);
             }
-        }
+        }*/
     }
 }

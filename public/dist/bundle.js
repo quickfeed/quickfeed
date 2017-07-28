@@ -1002,7 +1002,7 @@ class AutoGrader extends React.Component {
                 if (yield this.userMan.isTeacher(user)) {
                     basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
                 }
-                basis.push({ name: "Student", uri: "app/student/", active: false });
+                basis.push({ name: "Courses", uri: "app/student/", active: false });
                 if (this.userMan.isAdmin(user)) {
                     basis.push({ name: "Admin", uri: "app/admin", active: false });
                 }
@@ -1315,7 +1315,7 @@ class LabResultView extends React.Component {
                 React.createElement("div", { className: "result-content", id: "resultview" },
                     React.createElement("section", { id: "result" },
                         React.createElement(components_1.LabResult, { course_name: this.props.course.name, lab: this.props.labInfo.assignment.name, progress: this.props.labInfo.latest.score }),
-                        React.createElement(components_1.LastBuild, { test_cases: this.props.labInfo.latest.testCases, score: this.props.labInfo.latest.score, weight: this.props.labInfo.latest.weight }),
+                        React.createElement(components_1.LastBuild, { test_cases: this.props.labInfo.latest.testCases, score: this.props.labInfo.latest.score, weight: 100 }),
                         React.createElement(components_1.LastBuildInfo, { pass_tests: this.props.labInfo.latest.passedTests, fail_tests: this.props.labInfo.latest.failedTests, exec_time: this.props.labInfo.latest.executetionTime, build_time: this.props.labInfo.latest.buildDate, build_id: this.props.labInfo.latest.buildId }),
                         React.createElement(components_1.Row, null,
                             React.createElement("div", { className: "col-lg-12" },
@@ -2239,7 +2239,7 @@ class CourseManager {
     }
     getUserSubmittions(student, assignment) {
         return __awaiter(this, void 0, void 0, function* () {
-            const temp = map_1.MapHelper.find(yield this.courseProvider.getAllLabInfos(), (ele) => ele.studentId === student.id && ele.assignmentId === assignment.id);
+            const temp = map_1.MapHelper.find(yield this.courseProvider.getAllLabInfos(assignment.courseid), (ele) => ele.userid === student.id && ele.assignmentid === assignment.id);
             if (temp) {
                 return {
                     assignment,
@@ -2297,18 +2297,17 @@ class CourseManager {
     }
     fillLinks(student, studentCourse) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(student, studentCourse);
             if (!studentCourse.link) {
                 return;
             }
             const allSubmissions = [];
             const assigns = yield this.getAssignments(studentCourse.course.id);
-            for (const assign of assigns) {
-                const submission = yield this.getUserSubmittions(student, assign);
-                if (submission) {
-                    studentCourse.assignments.push(submission);
-                }
+            const submissions = map_1.MapHelper.toArray(yield this.courseProvider.getAllLabInfos(studentCourse.course.id));
+            for (const a of assigns) {
+                const temp = submissions.find((sub) => sub.assignmentid === a.id);
+                studentCourse.assignments.push({ assignment: a, latest: temp });
             }
+            console.log("data", assigns, submissions, studentCourse);
         });
     }
 }
@@ -2666,9 +2665,16 @@ class TempDataProvider {
             return true;
         });
     }
-    getAllLabInfos() {
+    getAllLabInfos(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.localLabInfo;
+            const temp = {};
+            const assignments = yield this.getAssignments(courseId);
+            map_1.MapHelper.forEach(this.localLabInfo, (ele) => {
+                if (assignments[ele.assignmentid]) {
+                    temp[ele.id] = ele;
+                }
+            });
+            return temp;
         });
     }
     getLoggedInUser() {
@@ -2886,14 +2892,13 @@ class TempDataProvider {
         this.localLabInfo = map_1.mapify([
             {
                 id: 1,
-                assignmentId: 0,
-                studentId: 999,
+                assignmentid: 0,
+                userid: 999,
                 buildId: 1,
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 1",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
@@ -2904,14 +2909,13 @@ class TempDataProvider {
             },
             {
                 id: 2,
-                assignmentId: 1,
-                studentId: 999,
+                assignmentid: 1,
+                userid: 999,
                 buildId: 2,
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 2",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
@@ -2922,14 +2926,13 @@ class TempDataProvider {
             },
             {
                 id: 3,
-                assignmentId: 2,
-                studentId: 999,
+                assignmentid: 2,
+                userid: 999,
                 buildId: 3,
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 3",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
@@ -2940,14 +2943,13 @@ class TempDataProvider {
             },
             {
                 id: 4,
-                assignmentId: 3,
-                studentId: 999,
+                assignmentid: 3,
+                userid: 999,
                 buildId: 4,
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 4",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
@@ -2958,14 +2960,13 @@ class TempDataProvider {
             },
             {
                 id: 5,
-                assignmentId: 4,
-                studentId: 999,
+                assignmentid: 4,
+                userid: 999,
                 buildId: 5,
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 5",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
@@ -4346,9 +4347,46 @@ class ServerProvider {
             return true;
         });
     }
-    getAllLabInfos() {
+    getAllLabInfos(courseId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return {};
+            const result = yield this.helper.get(("courses/" + courseId.toString() + "/submissions"));
+            if (!result.data) {
+                this.handleError(result);
+                return {};
+            }
+            return map_1.mapify(result.data, (e) => {
+                let a = "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}";
+                let b = "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]";
+                if (e.buildinfo && e.buildinfo.trim().length > 2) {
+                    a = e.buildinfo;
+                }
+                if (e.scoreobjects && e.scoreobjects.trim().length > 2) {
+                    b = e.scoreobjects;
+                }
+                console.log(a);
+                let tempInfo;
+                let scoreObj;
+                try {
+                    tempInfo = JSON.parse(a);
+                }
+                catch (e) {
+                    tempInfo = JSON.parse("{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}");
+                }
+                try {
+                    scoreObj = JSON.parse(b);
+                }
+                catch (e) {
+                    scoreObj = JSON.parse("[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]");
+                }
+                e.buildDate = tempInfo.builddate;
+                e.buildId = tempInfo.buildid;
+                e.buildLog = tempInfo.buildlog;
+                e.executetionTime = tempInfo.exectime;
+                e.failedTests = 0;
+                e.passedTests = 1;
+                e.testCases = scoreObj;
+                return e.id;
+            });
         });
     }
     tryLogin(username, password) {

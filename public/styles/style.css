@@ -90,7 +90,7 @@
 
 .overlay div {
     display: inline-block;
-    animation: rotation 2s linear infinite;
+    animation: rotation 1s linear infinite;
 }
 
 .overlay.hidden {
@@ -109,7 +109,7 @@
         transform: rotate(0deg);
     }
     to {
-        transform: rotate(90deg);
+        transform: rotate(360deg);
     }
 }
 

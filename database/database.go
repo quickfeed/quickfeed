@@ -29,4 +29,6 @@ type Database interface {
 
 	GetAssignmentsByCourse(uint64) ([]*models.Assignment, error)
 	CreateAssignment(*models.Assignment) error
+	GetSubmissionForUser(assignmentID uint64, userID uint64) (*models.Submission, error)
+	GetSubmissions(courseID uint64, userID uint64) ([]*models.Submission, error)
 }

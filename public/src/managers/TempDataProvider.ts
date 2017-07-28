@@ -7,8 +7,8 @@ import {
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
-    ILabInfo,
     IOrganization,
+    ISubmission,
     IUser,
 } from "../models";
 import { ICourseProvider } from "./CourseManager";
@@ -32,7 +32,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     private localAssignments: IMap<IAssignment>;
     private localCourses: IMap<ICourse>;
     private localCourseStudent: ICourseUserLink[];
-    private localLabInfo: IMap<ILabInfo>;
+    private localLabInfo: IMap<ISubmission>;
     private localCourseGroups: ICourseGroup[];
 
     private currentLoggedIn: IUser | null = null;
@@ -191,8 +191,15 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getAllLabInfos(): Promise<IMap<ILabInfo>> {
-        return this.localLabInfo;
+    public async getAllLabInfos(courseId: number): Promise<IMap<ISubmission>> {
+        const temp: IMap<ISubmission> = {};
+        const assignments = await this.getAssignments(courseId);
+        MapHelper.forEach(this.localLabInfo, (ele) => {
+            if (assignments[ele.assignmentid]) {
+                temp[ele.id] = ele;
+            }
+        });
+        return temp;
     }
 
     public async getLoggedInUser(): Promise<IUser | null> {
@@ -430,18 +437,17 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalLabInfo() {
-        this.localLabInfo = mapify<ILabInfo>([
+        this.localLabInfo = mapify<ISubmission>([
             {
                 id: 1,
-                assignmentId: 0,
-                studentId: 999,
+                assignmentid: 0,
+                userid: 999,
                 buildId: 1,
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 1",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
 
                 failedTests: 2,
                 passedTests: 6,
@@ -453,15 +459,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 2,
-                assignmentId: 1,
-                studentId: 999,
+                assignmentid: 1,
+                userid: 999,
                 buildId: 2,
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 2",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
 
                 failedTests: 2,
                 passedTests: 6,
@@ -473,15 +478,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 3,
-                assignmentId: 2,
-                studentId: 999,
+                assignmentid: 2,
+                userid: 999,
                 buildId: 3,
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 3",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
 
                 failedTests: 2,
                 passedTests: 6,
@@ -493,15 +497,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 4,
-                assignmentId: 3,
-                studentId: 999,
+                assignmentid: 3,
+                userid: 999,
                 buildId: 4,
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 4",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
 
                 failedTests: 2,
                 passedTests: 6,
@@ -513,15 +516,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 5,
-                assignmentId: 4,
-                studentId: 999,
+                assignmentid: 4,
+                userid: 999,
                 buildId: 5,
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 5",
                 executetionTime: 1,
                 score: 75,
-                weight: 1,
 
                 failedTests: 2,
                 passedTests: 6,
@@ -531,7 +533,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     { name: "Test 3", score: 3, points: 3, weight: 40 },
                 ],
             },
-        ] as ILabInfo[], (ele: ILabInfo) => {
+        ] as ISubmission[], (ele: ISubmission) => {
             return ele.id;
         });
     }
