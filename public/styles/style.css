@@ -159,6 +159,7 @@
 .organisationWrap .organisationBtnGroup .organisation .organisationInfo .caption {
     padding-top: 5px;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .organisationWrap .organisationBtnGroup .organisation:hover {
