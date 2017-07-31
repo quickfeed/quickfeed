@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/docker/docker/pkg/integration/checker"
 	"github.com/go-check/check"
@@ -966,7 +967,7 @@ func (s *DockerSwarmSuite) TestAPISwarmInvalidAddress(c *check.C) {
 	}
 	status, _, err := d.SockRequest("POST", "/swarm/init", req)
 	c.Assert(err, checker.IsNil)
-	c.Assert(status, checker.Equals, http.StatusInternalServerError)
+	c.Assert(status, checker.Equals, http.StatusBadRequest)
 
 	req2 := swarm.JoinRequest{
 		ListenAddr:  "0.0.0.0:2377",
@@ -974,7 +975,7 @@ func (s *DockerSwarmSuite) TestAPISwarmInvalidAddress(c *check.C) {
 	}
 	status, _, err = d.SockRequest("POST", "/swarm/join", req2)
 	c.Assert(err, checker.IsNil)
-	c.Assert(status, checker.Equals, http.StatusInternalServerError)
+	c.Assert(status, checker.Equals, http.StatusBadRequest)
 }
 
 func (s *DockerSwarmSuite) TestAPISwarmForceNewCluster(c *check.C) {
@@ -1364,4 +1365,27 @@ func (s *DockerSwarmSuite) TestAPIDuplicateNetworks(c *check.C) {
 	c.Assert(json.Unmarshal(out, &r2), checker.IsNil)
 
 	c.Assert(r2.Scope, checker.Equals, "swarm")
+}
+
+// Test case for 30178
+func (s *DockerSwarmSuite) TestAPISwarmHealthcheckNone(c *check.C) {
+	d := s.AddDaemon(c, true, true)
+
+	out, err := d.Cmd("network", "create", "-d", "overlay", "lb")
+	c.Assert(err, checker.IsNil, check.Commentf(out))
+
+	instances := 1
+	d.createService(c, simpleTestService, setInstances(instances), func(s *swarm.Service) {
+		s.Spec.TaskTemplate.ContainerSpec.Healthcheck = &container.HealthConfig{}
+		s.Spec.TaskTemplate.Networks = []swarm.NetworkAttachmentConfig{
+			{Target: "lb"},
+		}
+	})
+
+	waitAndAssert(c, defaultReconciliationTimeout, d.checkActiveContainerCount, checker.Equals, instances)
+
+	containers := d.activeContainers()
+
+	out, err = d.Cmd("exec", containers[0], "ping", "-c1", "-W3", "top")
+	c.Assert(err, checker.IsNil, check.Commentf(out))
 }

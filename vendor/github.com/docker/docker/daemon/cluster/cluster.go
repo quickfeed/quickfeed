@@ -419,7 +419,7 @@ func (c *Cluster) Init(req types.InitRequest) (string, error) {
 
 	if err := validateAndSanitizeInitRequest(&req); err != nil {
 		c.Unlock()
-		return "", err
+		return "", apierrors.NewBadRequestError(err)
 	}
 
 	listenHost, listenPort, err := resolveListenAddr(req.ListenAddr)
@@ -506,7 +506,7 @@ func (c *Cluster) Join(req types.JoinRequest) error {
 	}
 	if err := validateAndSanitizeJoinRequest(&req); err != nil {
 		c.Unlock()
-		return err
+		return apierrors.NewBadRequestError(err)
 	}
 
 	listenHost, listenPort, err := resolveListenAddr(req.ListenAddr)
@@ -803,7 +803,7 @@ func (c *Cluster) Update(version uint64, spec types.Spec, flags types.UpdateFlag
 	// will be used to swarmkit.
 	clusterSpec, err := convert.SwarmSpecToGRPC(spec)
 	if err != nil {
-		return err
+		return apierrors.NewBadRequestError(err)
 	}
 
 	_, err = c.client.UpdateCluster(
@@ -1085,7 +1085,7 @@ func (c *Cluster) CreateService(s types.ServiceSpec, encodedAuth string) (*apity
 
 	serviceSpec, err := convert.ServiceSpecToGRPC(s)
 	if err != nil {
-		return nil, err
+		return nil, apierrors.NewBadRequestError(err)
 	}
 
 	ctnr := serviceSpec.Task.GetContainer()
@@ -1119,6 +1119,16 @@ func (c *Cluster) CreateService(s types.ServiceSpec, encodedAuth string) (*apity
 		} else {
 			logrus.Debugf("creating service using supplied digest reference %s", ctnr.Image)
 		}
+
+		// Replace the context with a fresh one.
+		// If we timed out while communicating with the
+		// registry, then "ctx" will already be expired, which
+		// would cause UpdateService below to fail. Reusing
+		// "ctx" could make it impossible to create a service
+		// if the registry is slow or unresponsive.
+		var newCancel func()
+		ctx, newCancel = c.getRequestContext()
+		defer newCancel()
 	}
 
 	r, err := c.client.CreateService(ctx, &swarmapi.CreateServiceRequest{Spec: &serviceSpec})
@@ -1168,7 +1178,7 @@ func (c *Cluster) UpdateService(serviceIDOrName string, version uint64, spec typ
 
 	serviceSpec, err := convert.ServiceSpecToGRPC(spec)
 	if err != nil {
-		return nil, err
+		return nil, apierrors.NewBadRequestError(err)
 	}
 
 	currentService, err := getService(ctx, c.client, serviceIDOrName)
@@ -1230,6 +1240,16 @@ func (c *Cluster) UpdateService(serviceIDOrName string, version uint64, spec typ
 		} else {
 			logrus.Debugf("updating service using supplied digest reference %s", newCtnr.Image)
 		}
+
+		// Replace the context with a fresh one.
+		// If we timed out while communicating with the
+		// registry, then "ctx" will already be expired, which
+		// would cause UpdateService below to fail. Reusing
+		// "ctx" could make it impossible to create a service
+		// if the registry is slow or unresponsive.
+		var newCancel func()
+		ctx, newCancel = c.getRequestContext()
+		defer newCancel()
 	}
 
 	_, err = c.client.UpdateService(
@@ -1383,7 +1403,7 @@ func (c *Cluster) GetNodes(options apitypes.NodeListOptions) ([]types.Node, erro
 	return nodes, nil
 }
 
-// GetNode returns a node based on an ID or name.
+// GetNode returns a node based on an ID.
 func (c *Cluster) GetNode(input string) (types.Node, error) {
 	c.RLock()
 	defer c.RUnlock()
@@ -1413,7 +1433,7 @@ func (c *Cluster) UpdateNode(input string, version uint64, spec types.NodeSpec) 
 
 	nodeSpec, err := convert.NodeSpecToGRPC(spec)
 	if err != nil {
-		return err
+		return apierrors.NewBadRequestError(err)
 	}
 
 	ctx, cancel := c.getRequestContext()
@@ -1697,18 +1717,31 @@ func (c *Cluster) AttachNetwork(target string, containerID string, addresses []s
 	close(attachCompleteCh)
 	c.Unlock()
 
-	logrus.Debugf("Successfully attached to network %s with tid %s", target, taskID)
+	logrus.Debugf("Successfully attached to network %s with task id %s", target, taskID)
+
+	release := func() {
+		ctx, cancel := c.getRequestContext()
+		defer cancel()
+		if err := agent.ResourceAllocator().DetachNetwork(ctx, taskID); err != nil {
+			logrus.Errorf("Failed remove network attachment %s to network %s on allocation failure: %v",
+				taskID, target, err)
+		}
+	}
 
 	var config *network.NetworkingConfig
 	select {
 	case config = <-attachWaitCh:
 	case <-ctx.Done():
+		release()
 		return nil, fmt.Errorf("attaching to network failed, make sure your network options are correct and check manager logs: %v", ctx.Err())
 	}
 
 	c.Lock()
 	c.attachers[aKey].config = config
 	c.Unlock()
+
+	logrus.Debugf("Successfully allocated resources on network %s for task id %s", target, taskID)
+
 	return config, nil
 }
 

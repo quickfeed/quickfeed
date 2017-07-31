@@ -17,6 +17,8 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
+const defaultNetwork = "default"
+
 // Services from compose-file types to engine API types
 // TODO: fix secrets API so that SecretAPIClient is not required here
 func Services(
@@ -157,18 +159,15 @@ func convertServiceNetworks(
 	name string,
 ) ([]swarm.NetworkAttachmentConfig, error) {
 	if len(networks) == 0 {
-		return []swarm.NetworkAttachmentConfig{
-			{
-				Target:  namespace.Scope("default"),
-				Aliases: []string{name},
-			},
-		}, nil
+		networks = map[string]*composetypes.ServiceNetworkConfig{
+			defaultNetwork: {},
+		}
 	}
 
 	nets := []swarm.NetworkAttachmentConfig{}
 	for networkName, network := range networks {
 		networkConfig, ok := networkConfigs[networkName]
-		if !ok {
+		if !ok && networkName != defaultNetwork {
 			return []swarm.NetworkAttachmentConfig{}, fmt.Errorf(
 				"service %q references network %q, which is not declared", name, networkName)
 		}
@@ -219,17 +218,25 @@ func convertServiceSecrets(
 		if gid == "" {
 			gid = "0"
 		}
+		mode := secret.Mode
+		if mode == nil {
+			mode = uint32Ptr(0444)
+		}
 
 		opts = append(opts, &types.SecretRequestOption{
 			Source: source,
 			Target: target,
 			UID:    uid,
 			GID:    gid,
-			Mode:   os.FileMode(secret.Mode),
+			Mode:   os.FileMode(*mode),
 		})
 	}
 
 	return servicecli.ParseSecrets(client, opts)
+}
+
+func uint32Ptr(value uint32) *uint32 {
+	return &value
 }
 
 func convertExtraHosts(extraHosts map[string]string) []string {

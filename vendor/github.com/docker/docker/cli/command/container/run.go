@@ -74,9 +74,8 @@ func runRun(dockerCli *command.DockerCli, flags *pflag.FlagSet, opts *runOptions
 	cmdPath := "run"
 
 	var (
-		flAttach                              *opttypes.ListOpts
-		ErrConflictAttachDetach               = fmt.Errorf("Conflicting options: -a and -d")
-		ErrConflictRestartPolicyAndAutoRemove = fmt.Errorf("Conflicting options: --restart and --rm")
+		flAttach                *opttypes.ListOpts
+		ErrConflictAttachDetach = fmt.Errorf("Conflicting options: -a and -d")
 	)
 
 	config, hostConfig, networkingConfig, err := runconfigopts.Parse(flags, copts)
@@ -87,9 +86,6 @@ func runRun(dockerCli *command.DockerCli, flags *pflag.FlagSet, opts *runOptions
 		return cli.StatusError{StatusCode: 125}
 	}
 
-	if hostConfig.AutoRemove && !hostConfig.RestartPolicy.IsNone() {
-		return ErrConflictRestartPolicyAndAutoRemove
-	}
 	if hostConfig.OomKillDisable != nil && *hostConfig.OomKillDisable && hostConfig.Memory == 0 {
 		fmt.Fprintf(stderr, "WARNING: Disabling the OOM killer on containers without setting a '-m/--memory' limit may be dangerous.\n")
 	}
@@ -139,6 +135,9 @@ func runRun(dockerCli *command.DockerCli, flags *pflag.FlagSet, opts *runOptions
 	}
 
 	ctx, cancelFun := context.WithCancel(context.Background())
+
+	// preserve AutoRemove state. createContainer() / ContainerCreate() disables daemon-side auto-remove on API < 1.25
+	autoRemove := hostConfig.AutoRemove
 
 	createResponse, err := createContainer(ctx, dockerCli, config, hostConfig, networkingConfig, hostConfig.ContainerIDFile, opts.name)
 	if err != nil {
@@ -211,7 +210,7 @@ func runRun(dockerCli *command.DockerCli, flags *pflag.FlagSet, opts *runOptions
 		})
 	}
 
-	statusChan := waitExitOrRemoved(ctx, dockerCli, createResponse.ID, hostConfig.AutoRemove)
+	statusChan := waitExitOrRemoved(ctx, dockerCli, createResponse.ID, autoRemove)
 
 	//start the container
 	if err := client.ContainerStart(ctx, createResponse.ID, types.ContainerStartOptions{}); err != nil {
@@ -224,7 +223,7 @@ func runRun(dockerCli *command.DockerCli, flags *pflag.FlagSet, opts *runOptions
 		}
 
 		reportError(stderr, cmdPath, err.Error(), false)
-		if hostConfig.AutoRemove {
+		if autoRemove {
 			// wait container to be removed
 			<-statusChan
 		}

@@ -458,10 +458,6 @@ If a container is connected to the default bridge network and `linked`
 with other containers, then the container's `/etc/hosts` file is updated
 with the linked container's name.
 
-If the container is connected to user-defined network, the container's
-`/etc/hosts` file is updated with names of all other containers in that
-user-defined network.
-
 > **Note** Since Docker may live update the container’s `/etc/hosts` file, there
 may be situations when processes inside the container can end up reading an
 empty or incomplete `/etc/hosts` file. In most cases, retrying the read again
@@ -667,7 +663,18 @@ It also causes any seccomp filters to be applied later, after privileges have be
 which may mean you can have a more restrictive set of filters.
 For more details, see the [kernel documentation](https://www.kernel.org/doc/Documentation/prctl/no_new_privs.txt).
 
-## Specifying custom cgroups
+## Specify an init process
+
+You can use the `--init` flag to indicate that an init process should be used as
+the PID 1 in the container. Specifying an init process ensures the usual
+responsibilities of an init system, such as reaping zombie processes, are
+performed inside the created container.
+
+The default init process used is the first `docker-init` executable found in the
+system path of the Docker daemon process. This `docker-init` binary, included in
+the default installation, is backed by [tini](https://github.com/krallin/tini).
+
+## Specify custom cgroups
 
 Using the `--cgroup-parent` flag, you can pass a specific cgroup to run a
 container in. This allows you to create and manage cgroups on their own. You can
@@ -836,7 +843,7 @@ The container has unlimited memory which can cause the host to run out memory
 and require killing system processes to free memory. The `--oom-score-adj`
 parameter can be changed to select the priority of which containers will
 be killed when the system is out of memory, with negative scores making them
-less likely to be killed an positive more likely.
+less likely to be killed, and positive scores more likely.
 
 ### Kernel memory constraints
 
@@ -1116,7 +1123,7 @@ by default a container is not allowed to access any devices, but a
 the documentation on [cgroups devices](https://www.kernel.org/doc/Documentation/cgroup-v1/devices.txt)).
 
 When the operator executes `docker run --privileged`, Docker will enable
-to access to all devices on the host as well as set some configuration
+access to all devices on the host as well as set some configuration
 in AppArmor or SELinux to allow the container nearly all the same access to the
 host as processes running outside containers on the host. Additional
 information about running with `--privileged` is available on the

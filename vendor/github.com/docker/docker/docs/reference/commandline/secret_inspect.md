@@ -25,6 +25,7 @@ Options:
       --help            Print usage
 ```
 
+## Description
 
 Inspects the specified secret. This command has to be run targeting a manager
 node.
@@ -35,9 +36,11 @@ the given template will be executed for each result.
 Go's [text/template](http://golang.org/pkg/text/template/) package
 describes all the details of the format.
 
+For detailed information about using secrets, refer to [manage sensitive data with Docker secrets](https://docs.docker.com/engine/swarm/secrets/).
+
 ## Examples
 
-### Inspecting a secret by name or ID
+### Inspect a secret by name or ID
 
 You can inspect a secret, either by its *name*, or *ID*
 
@@ -49,8 +52,9 @@ ID                          NAME                    CREATED                     
 mhv17xfe3gh6xc4rij5orpfds   secret.json             2016-10-27 23:25:43.909181089 +0000 UTC   2016-10-27 23:25:43.909181089 +0000 UTC
 ```
 
-```bash
+```none
 $ docker secret inspect secret.json
+
 [
     {
         "ID": "mhv17xfe3gh6xc4rij5orpfds",
@@ -66,19 +70,20 @@ $ docker secret inspect secret.json
 ]
 ```
 
-### Formatting secret output
+### Formatting
 
 You can use the --format option to obtain specific information about a
 secret. The following example command outputs the creation time of the
 secret.
 
-```bash{% raw %}
+```bash
 $ docker secret inspect --format='{{.CreatedAt}}' mhv17xfe3gh6xc4rij5orpfds
+
 2016-10-27 23:25:43.909181089 +0000 UTC
-{% endraw %}```
+```
 
 
-## Related information
+## Related commands
 
 * [secret create](secret_create.md)
 * [secret ls](secret_ls.md)

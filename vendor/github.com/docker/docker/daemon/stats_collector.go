@@ -115,16 +115,30 @@ func (s *statsCollector) run() {
 			continue
 		}
 
+		onlineCPUs, err := s.getNumberOnlineCPUs()
+		if err != nil {
+			logrus.Errorf("collecting system online cpu count: %v", err)
+			continue
+		}
+
 		for _, pair := range pairs {
 			stats, err := s.supervisor.GetContainerStats(pair.container)
 			if err != nil {
 				if _, ok := err.(errNotRunning); !ok {
 					logrus.Errorf("collecting stats for %s: %v", pair.container.ID, err)
+					continue
 				}
+
+				// publish empty stats containing only name and ID if not running
+				pair.publisher.Publish(types.StatsJSON{
+					Name: pair.container.Name,
+					ID:   pair.container.ID,
+				})
 				continue
 			}
 			// FIXME: move to containerd on Linux (not Windows)
 			stats.CPUStats.SystemUsage = systemUsage
+			stats.CPUStats.OnlineCPUs = onlineCPUs
 
 			pair.publisher.Publish(*stats)
 		}
