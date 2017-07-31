@@ -18,5 +18,8 @@ type Enrollment struct {
 	User   *User  `json:"user,omitempty"`
 	UserID uint64 `json:"userid"`
 
+	Group   *Group `json:"group,omitempty"`
+	GroupID uint64 `json:"groupid"`
+
 	Status int `json:"status"`
 }

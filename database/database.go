@@ -11,7 +11,7 @@ type Database interface {
 	// GetUserByRemoteIdentity gets an user by a remote identity and updates the access token.
 	// TODO: The update access token functionality should be split into its own method.
 	GetUserByRemoteIdentity(provider string, id uint64, accessToken string) (*models.User, error)
-	GetUsers() ([]*models.User, error)
+	GetUsers(ids ...uint64) ([]*models.User, error)
 
 	// SetAdmin makes an existing user an administrator.
 	SetAdmin(uint64) error
@@ -33,4 +33,6 @@ type Database interface {
 	CreateSubmission(*models.Submission) error
 	GetSubmissionForUser(assignmentID uint64, userID uint64) (*models.Submission, error)
 	GetSubmissions(courseID uint64, userID uint64) ([]*models.Submission, error)
+
+	CreateGroup(*models.Group) error
 }

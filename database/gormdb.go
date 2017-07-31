@@ -31,6 +31,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&models.Enrollment{},
 		&models.Assignment{},
 		&models.Submission{},
+		&models.Group{},
 	)
 
 	return &GormDB{conn}, nil
@@ -77,9 +78,14 @@ func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToke
 }
 
 // GetUsers implements the Database interface.
-func (db *GormDB) GetUsers() ([]*models.User, error) {
+func (db *GormDB) GetUsers(ids ...uint64) ([]*models.User, error) {
+	m := db.conn
+	if len(ids) > 0 {
+		m = m.Where(ids)
+	}
+
 	var users []*models.User
-	if err := db.conn.Find(&users).Error; err != nil {
+	if err := m.Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil
@@ -362,6 +368,35 @@ func (db *GormDB) GetCourse(id uint64) (*models.Course, error) {
 // UpdateCourse implements the Database interface
 func (db *GormDB) UpdateCourse(course *models.Course) error {
 	return db.conn.Model(course).Updates(course).Error
+}
+
+// CreateGroup creates a new group
+// and assign users to newly created group
+func (db *GormDB) CreateGroup(group *models.Group) error {
+	// Uses transaction to update more than one db tables
+	// Failure in one table rollbacks all
+	tx := db.conn.Begin()
+	if err := tx.Model(group).Create(group).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	var userids []uint64
+	for _, u := range group.Users {
+		userids = append(userids, u.ID)
+	}
+	// Batch update
+	err := tx.Model(&models.Enrollment{}).
+		Where("user_id IN (?) AND course_id = ?", userids, group.CourseID).
+		Updates(&models.Enrollment{
+			GroupID: group.ID,
+		}).Error
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
 }
 
 // Close closes the gorm database.

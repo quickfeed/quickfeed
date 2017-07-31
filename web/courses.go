@@ -49,6 +49,19 @@ func (eur *EnrollUserRequest) valid() bool {
 	return eur.CourseID != 0 && eur.UserID != 0 && eur.Status <= models.Accepted
 }
 
+// NewGroupRequest represents a new group
+type NewGroupRequest struct {
+	Name     string   `json:"name"`
+	CourseID uint64   `json:"courseid"`
+	UserIDs  []uint64 `json:"userids"`
+}
+
+func (grp *NewGroupRequest) valid() bool {
+	return grp != nil &&
+		grp.Name != "" &&
+		len(grp.UserIDs) > 0
+}
+
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -366,5 +379,52 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 		}
 
 		return c.JSONPretty(http.StatusOK, enrollments, "\t")
+	}
+}
+
+// NewGroup creates a new group under a course
+func NewGroup(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return err
+		}
+
+		if _, err := db.GetCourse(cid); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return echo.NewHTTPError(http.StatusNotFound, "course not found")
+			}
+			return err
+		}
+
+		var grp NewGroupRequest
+		if err := c.Bind(&grp); err != nil {
+			return err
+		}
+		if !grp.valid() {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+
+		users, err := db.GetUsers(grp.UserIDs...)
+		if err != nil {
+			return err
+		}
+		// check if provided user ids are valid
+		if len(users) != len(grp.UserIDs) {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+
+		group := models.Group{
+			Name:     grp.Name,
+			Status:   models.Pending,
+			CourseID: cid,
+			Users:    users,
+		}
+		// CreateGroup creates a new group and update group_id in enrollment table
+		if err := db.CreateGroup(&group); err != nil {
+			return err
+		}
+
+		return c.JSONPretty(http.StatusCreated, &group, "\t")
 	}
 }

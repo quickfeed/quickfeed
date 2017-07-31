@@ -16,4 +16,5 @@ type Course struct {
 	Enrolled    int           `json:"enrolled" sql:"-"`
 
 	Assignments []*Assignment `json:"assignments,omitempty"`
+	Groups      []*Group      `json:"groups,omitempty"`
 }
