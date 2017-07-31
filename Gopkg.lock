@@ -20,16 +20,16 @@
   version = "v3.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/docker/distribution"
-  packages = ["digest","reference"]
-  revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
-  version = "v2.6.2"
+  packages = ["digestset","reference"]
+  revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
 
 [[projects]]
+  branch = "master"
   name = "github.com/docker/docker"
-  packages = ["api/types","api/types/blkiodev","api/types/container","api/types/events","api/types/filters","api/types/mount","api/types/network","api/types/reference","api/types/registry","api/types/strslice","api/types/swarm","api/types/time","api/types/versions","api/types/volume","client","pkg/stdcopy","pkg/tlsconfig"]
-  revision = "eef6495eddab52828327aade186443681ed71a4e"
-  version = "v17.03.2-ce-rc1"
+  packages = ["api","api/types","api/types/blkiodev","api/types/container","api/types/events","api/types/filters","api/types/image","api/types/mount","api/types/network","api/types/registry","api/types/strslice","api/types/swarm","api/types/swarm/runtime","api/types/time","api/types/versions","api/types/volume","client","pkg/ioutils","pkg/longpath","pkg/mount","pkg/stdcopy","pkg/system","pkg/tlsconfig"]
+  revision = "115f5781c6aceb4e0ed1c6cbf05301c1aee0ee4a"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -42,6 +42,18 @@
   packages = ["."]
   revision = "f2d77a61e3c169b43402a0a1e84f06daf29b8190"
   version = "v0.3.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/docker/libtrust"
+  packages = ["."]
+  revision = "aabc10ec26b754e797f9028f4589c5b7bd90dc20"
+
+[[projects]]
+  name = "github.com/gogo/protobuf"
+  packages = ["proto"]
+  revision = "100ba4e885062801d56799d78530b73b178a78f3"
+  version = "v0.4"
 
 [[projects]]
   branch = "master"
@@ -140,6 +152,18 @@
   version = "v1.2.0"
 
 [[projects]]
+  name = "github.com/opencontainers/go-digest"
+  packages = ["."]
+  revision = "aa2ec055abd10d26d539eb630a92241b781ce4bc"
+  version = "v1.0.0-rc0"
+
+[[projects]]
+  name = "github.com/opencontainers/image-spec"
+  packages = ["specs-go","specs-go/v1"]
+  revision = "ab7389ef9f50030c9b245bc16b981c7ddf192882"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/opencontainers/runc"
   packages = ["libcontainer/user"]
   revision = "baf6536d6259209c3edfa2b22237af82942d3dfa"
@@ -220,6 +244,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9422992de22b7fa289ca12994e5309e29db0782f91be27f42a6405e54bc55fac"
+  inputs-digest = "acae10ac2c92e7bd9f106619f4794e160a3fda6b542a2027f30d404dfb4369d8"
   solver-name = "gps-cdcl"
   solver-version = 1

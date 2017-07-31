@@ -16,9 +16,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/docker/docker/api"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/mount"
-	"github.com/docker/docker/utils"
 	"github.com/docker/docker/volume"
 )
 
@@ -36,7 +36,7 @@ var (
 	// volumeNameRegex ensures the name assigned for the volume is valid.
 	// This name is used to create the bind directory, so we need to avoid characters that
 	// would make the path to escape the root directory.
-	volumeNameRegex = utils.RestrictedNamePattern
+	volumeNameRegex = api.RestrictedNamePattern
 )
 
 type validationError struct {
@@ -55,10 +55,10 @@ type activeMount struct {
 // New instantiates a new Root instance with the provided scope. Scope
 // is the base path that the Root instance uses to store its
 // volumes. The base path is created here if it does not exist.
-func New(scope string, rootUID, rootGID int) (*Root, error) {
+func New(scope string, rootIDs idtools.IDPair) (*Root, error) {
 	rootDirectory := filepath.Join(scope, volumesPathName)
 
-	if err := idtools.MkdirAllAs(rootDirectory, 0700, rootUID, rootGID); err != nil {
+	if err := idtools.MkdirAllAndChown(rootDirectory, 0700, rootIDs); err != nil {
 		return nil, err
 	}
 
@@ -66,8 +66,7 @@ func New(scope string, rootUID, rootGID int) (*Root, error) {
 		scope:   scope,
 		path:    rootDirectory,
 		volumes: make(map[string]*localVolume),
-		rootUID: rootUID,
-		rootGID: rootGID,
+		rootIDs: rootIDs,
 	}
 
 	dirs, err := ioutil.ReadDir(rootDirectory)
@@ -125,8 +124,7 @@ type Root struct {
 	scope   string
 	path    string
 	volumes map[string]*localVolume
-	rootUID int
-	rootGID int
+	rootIDs idtools.IDPair
 }
 
 // List lists all the volumes
@@ -167,7 +165,7 @@ func (r *Root) Create(name string, opts map[string]string) (volume.Volume, error
 	}
 
 	path := r.DataPath(name)
-	if err := idtools.MkdirAllAs(path, 0755, r.rootUID, r.rootGID); err != nil {
+	if err := idtools.MkdirAllAndChown(path, 0755, r.rootIDs); err != nil {
 		if os.IsExist(err) {
 			return nil, fmt.Errorf("volume already exists under %s", filepath.Dir(path))
 		}
@@ -277,7 +275,7 @@ func (r *Root) validateName(name string) error {
 		return validationError{fmt.Errorf("volume name is too short, names should be at least two alphanumeric characters")}
 	}
 	if !volumeNameRegex.MatchString(name) {
-		return validationError{fmt.Errorf("%q includes invalid characters for a local volume name, only %q are allowed. If you intented to pass a host directory, use absolute path", name, utils.RestrictedNameChars)}
+		return validationError{fmt.Errorf("%q includes invalid characters for a local volume name, only %q are allowed. If you intended to pass a host directory, use absolute path", name, api.RestrictedNameChars)}
 	}
 	return nil
 }
@@ -353,7 +351,7 @@ func (v *localVolume) Unmount(id string) error {
 
 func (v *localVolume) unmount() error {
 	if v.opts != nil {
-		if err := unmount(v.path); err != nil {
+		if err := mount.Unmount(v.path); err != nil {
 			if mounted, mErr := mount.Mounted(v.path); mounted || mErr != nil {
 				return errors.Wrapf(err, "error while unmounting volume path '%s'", v.path)
 			}

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	dockererrors "github.com/docker/docker/api/errors"
@@ -28,9 +29,11 @@ type mounts []container.Mount
 
 // volumeToAPIType converts a volume.Volume to the type used by the Engine API
 func volumeToAPIType(v volume.Volume) *types.Volume {
+	createdAt, _ := v.CreatedAt()
 	tv := &types.Volume{
-		Name:   v.Name(),
-		Driver: v.DriverName(),
+		Name:      v.Name(),
+		Driver:    v.DriverName(),
+		CreatedAt: createdAt.Format(time.RFC3339),
 	}
 	if v, ok := v.(volume.DetailedVolume); ok {
 		tv.Labels = v.Labels()
@@ -374,9 +377,12 @@ func (daemon *Daemon) traverseLocalVolumes(fn func(volume.Volume) error) error {
 
 	for _, v := range vols {
 		name := v.Name()
-		_, err := daemon.volumes.Get(name)
+		vol, err := daemon.volumes.Get(name)
 		if err != nil {
 			logrus.Warnf("failed to retrieve volume %s from store: %v", name, err)
+		} else {
+			// daemon.volumes.Get will return DetailedVolume
+			v = vol
 		}
 
 		err = fn(v)
