@@ -22,6 +22,9 @@ import (
 // OR
 // % scm get repository --all --namespace autograder-test
 
+// Another example usage to delete all repos in organzation on github
+// % scm delete repository --all --namespace autograder-test
+
 func main() {
 	var client scm.SCM
 	var db database.GormDB
@@ -39,6 +42,11 @@ func main() {
 			Name:  "database",
 			Usage: "Path to the autograder database",
 			Value: tempFile("ag.db"),
+		},
+		cli.Uint64Flag{
+			Name:  "admin",
+			Usage: "Admin user id",
+			Value: 1,
 		},
 	}
 	app.Before = before(&client, &db)
@@ -144,8 +152,7 @@ func before(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
 		}
 		*db = *tdb
 
-		// TODO: Change to flag with default value 1.
-		u, err := db.GetUser(1)
+		u, err := db.GetUser(c.Uint64("admin"))
 		if err != nil {
 			return err
 		}
