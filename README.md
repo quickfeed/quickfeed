@@ -27,7 +27,7 @@
 To ensure that webpack bundle files are updated when you pull in changes or rebase from the repository you can add the following script to the files `post-merge` (invoked on git pull) and `post-rewrite` (invoked on git rebase) in the `.git/hooks/` folder.
    ```sh
    #!/bin/sh
-   cd $PWD/../../public
+   cd $GOPATH/github.com/autograde/aguis/public
    webpack
    ```
 If you don't want to run `webpack` to create the bundle files on git pull/rebase, you will need to manually run `webpack` in the `public` folder.
