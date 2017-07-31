@@ -416,7 +416,6 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 
 		group := models.Group{
 			Name:     grp.Name,
-			Status:   models.Pending,
 			CourseID: cid,
 			Users:    users,
 		}
