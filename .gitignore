@@ -6,4 +6,6 @@ node_modules
 .idea
 debug
 github-meling.sh
+public/dist/bundle.js
+public/dist/bundle.js.map
 
