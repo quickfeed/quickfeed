@@ -174,10 +174,6 @@ func after(db *database.GormDB) cli.AfterFunc {
 	}
 }
 
-func tempFile(name string) string {
-	return filepath.Join(os.TempDir(), name)
-}
-
 func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 	ctx := context.Background()
 
@@ -284,4 +280,8 @@ func confirm(msg string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func tempFile(name string) string {
+	return filepath.Join(os.TempDir(), name)
 }
