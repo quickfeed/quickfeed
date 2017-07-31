@@ -143,11 +143,13 @@ func before(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
 			return err
 		}
 		*db = *tdb
-		// this is the admin user (by assumption; works for sqlite3 at least)
+
+		// TODO: Change to flag with default value 1.
 		u, err := db.GetUser(1)
 		if err != nil {
 			return err
 		}
+
 		provider := c.String("provider")
 		var accessToken string
 		for _, ri := range u.RemoteIdentities {
@@ -156,8 +158,6 @@ func before(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
 			}
 		}
 		if accessToken == "" {
-			// this means that the database has no access token for the admin user
-			// (you may need to restart the server and login)
 			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
 		*client, err = scm.NewSCMClient(provider, accessToken)
