@@ -174,6 +174,34 @@ func (db *GormDB) GetAssignmentsByCourse(id uint64) ([]*models.Assignment, error
 	return course.Assignments, nil
 }
 
+// CreateSubmission implements the Database interface
+// TODO: Also check enrollment to see if the user is
+// enrolled in the course the assignment belongs to
+func (db *GormDB) CreateSubmission(submission *models.Submission) error {
+	// Checks that the course exists
+	var course uint64
+	if err := db.conn.Model(&models.Assignment{}).Where(&models.Assignment{
+		ID: submission.AssignmentID,
+	}).Count(&course).Error; err != nil {
+		return err
+	}
+	if course != 1 {
+		return gorm.ErrRecordNotFound
+	}
+	// Checks that the user exists
+	var user uint64
+	if err := db.conn.Model(&models.User{}).Where(&models.User{
+		ID: submission.UserID,
+	}).Count(&user).Error; err != nil {
+		return err
+	}
+	if user != 1 {
+		return gorm.ErrRecordNotFound
+	}
+	// Should append the lates submission to the list of all the submissions
+	return db.conn.Create(&submission).Error
+}
+
 // GetSubmissionForUser implements the Database interface
 func (db *GormDB) GetSubmissionForUser(assignmentID uint64, userID uint64) (*models.Submission, error) {
 	var submission models.Submission
