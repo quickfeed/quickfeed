@@ -399,6 +399,21 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 	return nil
 }
 
+// GetGroup returns a group specified by id
+// return error if does not exits
+func (db *GormDB) GetGroup(id uint64) (*models.Group, error) {
+	var group models.Group
+	if err := db.conn.First(&group, id).Error; err != nil {
+		return nil, err
+	}
+	return &group, nil
+}
+
+// UpdateGroupStatus updates status field of a group
+func (db *GormDB) UpdateGroupStatus(group *models.Group) error {
+	return db.conn.Model(group).Update("status", group.Status).Error
+}
+
 // Close closes the gorm database.
 func (db *GormDB) Close() error {
 	return db.conn.Close()

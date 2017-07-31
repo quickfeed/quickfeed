@@ -251,6 +251,8 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database) {
 	courses.GET("/:cid/submissions", web.ListSubmissions(db))
 	courses.POST("/:cid/groups", web.NewGroup(db))
 
+	api.PATCH("/groups/:gid", web.PatchGroup(db))
+
 	api.POST("/directories", web.ListDirectories())
 }
 

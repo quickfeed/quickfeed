@@ -62,6 +62,11 @@ func (grp *NewGroupRequest) valid() bool {
 		len(grp.UserIDs) > 0
 }
 
+// UpdateGroupRequest updates group
+type UpdateGroupRequest struct {
+	Status uint `json:"status"`
+}
+
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -425,5 +430,43 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		}
 
 		return c.JSONPretty(http.StatusCreated, &group, "\t")
+	}
+}
+
+// PatchGroup updates status of a group
+func PatchGroup(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id, err := parseUint(c.Param("gid"))
+		if err != nil {
+			return err
+		}
+		oldgrp, err := db.GetGroup(id)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return echo.NewHTTPError(http.StatusNotFound, "group not found")
+			}
+			return err
+		}
+		var ngrp UpdateGroupRequest
+		if err := c.Bind(&ngrp); err != nil {
+			return err
+		}
+		if ngrp.Status > models.Accepted {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+
+		user := c.Get("user").(*models.User)
+		if !user.IsAdmin {
+			// Ony Admin i.e Teacher can update status of a group
+			return c.NoContent(http.StatusForbidden)
+		}
+
+		if err := db.UpdateGroupStatus(&models.Group{
+			ID:     oldgrp.ID,
+			Status: ngrp.Status,
+		}); err != nil {
+			return err
+		}
+		return c.NoContent(http.StatusOK)
 	}
 }

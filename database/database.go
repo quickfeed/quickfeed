@@ -35,4 +35,6 @@ type Database interface {
 	GetSubmissions(courseID uint64, userID uint64) ([]*models.Submission, error)
 
 	CreateGroup(*models.Group) error
+	GetGroup(id uint64) (*models.Group, error)
+	UpdateGroupStatus(*models.Group) error
 }
