@@ -41,8 +41,8 @@ func main() {
 			Value: tempFile("ag.db"),
 		},
 	}
-	app.Before = setup(&client, &db)
-	app.After = close(&db)
+	app.Before = before(&client, &db)
+	app.After = after(&db)
 	app.Commands = []cli.Command{
 		{
 			Name:  "delete",
@@ -134,7 +134,7 @@ func main() {
 	}
 }
 
-func setup(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
+func before(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
 		l := logrus.New()
 		l.Out = ioutil.Discard
@@ -165,7 +165,7 @@ func setup(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
 	}
 }
 
-func close(db *database.GormDB) cli.AfterFunc {
+func after(db *database.GormDB) cli.AfterFunc {
 	return func(c *cli.Context) error {
 		if db != nil {
 			return db.Close()

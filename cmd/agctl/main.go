@@ -25,8 +25,8 @@ func main() {
 			Value: tempFile("ag.db"),
 		},
 	}
-	app.Before = setup(&db)
-	app.After = close(&db)
+	app.Before = before(&db)
+	app.After = after(&db)
 	app.Commands = []cli.Command{
 		{
 			Name:  "set",
@@ -65,7 +65,7 @@ func main() {
 	}
 }
 
-func setup(db *database.GormDB) cli.BeforeFunc {
+func before(db *database.GormDB) cli.BeforeFunc {
 	return func(c *cli.Context) error {
 		l := logrus.New()
 		l.Formatter = logger.NewDevFormatter(l.Formatter)
@@ -78,7 +78,7 @@ func setup(db *database.GormDB) cli.BeforeFunc {
 	}
 }
 
-func close(db *database.GormDB) cli.AfterFunc {
+func after(db *database.GormDB) cli.AfterFunc {
 	return func(c *cli.Context) error {
 		if db != nil {
 			return db.Close()
