@@ -12,6 +12,9 @@ import (
 	"github.com/urfave/cli"
 )
 
+// Example usage (to set admin user to the first user registered):
+// agctl set admin -id 1
+
 func main() {
 	var db database.GormDB
 
