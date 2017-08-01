@@ -163,6 +163,7 @@ func NewCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc
 			logger.WithField("repo", repo).Println("Created new repository")
 		}
 
+		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
 		course := models.Course{
 			Name:        cr.Name,
 			Code:        cr.Code,
@@ -171,8 +172,21 @@ func NewCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc
 			Provider:    cr.Provider,
 			DirectoryID: directory.ID,
 		}
-
 		if err := db.CreateCourse(&course); err != nil {
+			return err
+		}
+
+		// Automatically enroll the teacher creating the course
+		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+		user := c.Get("user").(*models.User)
+		if err := db.CreateEnrollment(&models.Enrollment{
+			UserID:   user.ID,
+			CourseID: course.ID,
+			Status:   int(models.Accepted),
+		}); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
 			return err
 		}
 
