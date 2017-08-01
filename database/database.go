@@ -26,6 +26,7 @@ type Database interface {
 	AcceptEnrollment(uint64) error
 	RejectEnrollment(uint64) error
 	GetEnrollmentsByCourse(id uint64, statuses ...uint) ([]*models.Enrollment, error)
+	GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.Enrollment, error)
 
 	CreateAssignment(*models.Assignment) error
 	GetAssignmentsByCourse(uint64) ([]*models.Assignment, error)

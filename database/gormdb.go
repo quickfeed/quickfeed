@@ -308,6 +308,17 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...uint) ([]*models
 	return enrollments, nil
 }
 
+// GetEnrollmentByCourseAndUser return a record of Enrollment
+func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.Enrollment, error) {
+	var enrollment models.Enrollment
+	if err := db.conn.
+		Where("course_id = ? AND user_id = ?", cid, uid).
+		First(&enrollment).Error; err != nil {
+		return nil, err
+	}
+	return &enrollment, nil
+}
+
 func (db *GormDB) setEnrollment(id uint64, status uint) error {
 	if status > models.Accepted {
 		panic("invalid status")
