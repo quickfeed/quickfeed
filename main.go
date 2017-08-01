@@ -122,7 +122,7 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 		SecretEnv:     "GITHUB_SECRET",
 		CallbackURL:   getCallbackURL(baseURL, "github"),
 		StudentScopes: []string{},
-		TeacherScopes: []string{"user", "repo"},
+		TeacherScopes: []string{"user", "repo", "delete_repo"},
 	}, func(key, secret, callback string, scopes ...string) goth.Provider {
 		return github.New(key, secret, callback, scopes...)
 	}); ok {
