@@ -414,6 +414,33 @@ func (db *GormDB) UpdateGroupStatus(group *models.Group) error {
 	return db.conn.Model(group).Update("status", group.Status).Error
 }
 
+// GetGroups returns a list of groups
+func (db *GormDB) GetGroups(cid uint64) ([]*models.Group, error) {
+	var groups []*models.Group
+	if err := db.conn.
+		Where("course_id = ?", cid).
+		Preload("Enrollments").
+		Find(&groups).Error; err != nil {
+		return nil, err
+	}
+
+	for _, grp := range groups {
+		var userIDs []uint64
+		for _, enrollment := range grp.Enrollments {
+			userIDs = append(userIDs, enrollment.UserID)
+		}
+		if len(userIDs) > 0 {
+			users, err := db.GetUsers(userIDs...)
+			if err != nil {
+				return nil, err
+			}
+			grp.Users = users
+		}
+
+	}
+	return groups, nil
+}
+
 // Close closes the gorm database.
 func (db *GormDB) Close() error {
 	return db.conn.Close()

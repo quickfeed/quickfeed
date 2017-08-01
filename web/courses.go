@@ -470,3 +470,24 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		return c.NoContent(http.StatusOK)
 	}
 }
+
+// GetGroups returns all groups under a course
+func GetGroups(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return err
+		}
+		if _, err := db.GetCourse(cid); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return echo.NewHTTPError(http.StatusNotFound, "course not found")
+			}
+			return err
+		}
+		groups, err := db.GetGroups(cid)
+		if err != nil {
+			return err
+		}
+		return c.JSONPretty(http.StatusOK, groups, "\t")
+	}
+}
