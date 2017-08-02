@@ -239,7 +239,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                     isFluid={false}
                     isInverse={true}
                     onClick={(link) => this.handleClick(link)}
-                    brandName="Auto Grader">
+                    brandName="Autograder">
                     <NavBarMenu links={this.state.topLinks}
                         onClick={(link) => this.handleClick(link)}>
                     </NavBarMenu>
