@@ -124,6 +124,12 @@ func (db *GormDB) CreateUserFromRemoteIdentity(provider string, remoteID uint64,
 	if err := db.conn.Create(&user).Error; err != nil {
 		return nil, err
 	}
+	// The first user defaults to admin user.
+	if user.ID == 1 {
+		if err := db.SetAdmin(1); err != nil {
+			return nil, err
+		}
+	}
 	return &user, nil
 }
 
