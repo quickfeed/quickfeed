@@ -233,6 +233,7 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database) {
 	users.GET("/:uid", web.GetUser(db))
 	users.PATCH("/:uid", web.PatchUser(db))
 	users.GET("/:uid/courses", web.ListCoursesWithEnrollment(db))
+	users.GET("/:uid/courses/:cid/group", web.GetGroupByUserAndCourse(db))
 
 	courses := api.Group("/courses")
 	courses.GET("", web.ListCourses(db))

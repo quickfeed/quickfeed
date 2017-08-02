@@ -414,8 +414,19 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 // return error if does not exits
 func (db *GormDB) GetGroup(id uint64) (*models.Group, error) {
 	var group models.Group
-	if err := db.conn.First(&group, id).Error; err != nil {
+	if err := db.conn.Preload("Enrollments").First(&group, id).Error; err != nil {
 		return nil, err
+	}
+	var userIDs []uint64
+	for _, enrollment := range group.Enrollments {
+		userIDs = append(userIDs, enrollment.UserID)
+	}
+	if len(userIDs) > 0 {
+		users, err := db.GetUsers(userIDs...)
+		if err != nil {
+			return nil, err
+		}
+		group.Users = users
 	}
 	return &group, nil
 }
