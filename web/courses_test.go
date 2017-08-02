@@ -122,7 +122,7 @@ func TestNewCourse(t *testing.T) {
 	c.Set(provider, f)
 	c.Set(auth.UserKey, &models.User{ID: user.ID})
 
-	h := web.NewCourse(nullLogger(), db)
+	h := web.NewCourse(nullLogger(), db, &web.BaseHookOptions{})
 	if err := h(c); err != nil {
 		t.Fatal(err)
 	}
@@ -144,6 +144,10 @@ func TestNewCourse(t *testing.T) {
 
 	if !reflect.DeepEqual(&respCourse, course) {
 		t.Errorf("have response course %+v want %+v", &respCourse, course)
+	}
+
+	if len(f.Hooks) != 4 {
+		t.Errorf("have %d hooks want %d", len(f.Hooks), 4)
 	}
 
 	assertCode(t, w.Code, http.StatusCreated)

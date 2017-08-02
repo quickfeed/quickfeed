@@ -10,6 +10,7 @@ import (
 type FakeSCM struct {
 	Repositories map[uint64]*Repository
 	Directories  map[uint64]*Directory
+	Hooks        map[uint64]int
 }
 
 // NewFakeSCMClient returns a new Fake client implementing the SCM interface.
@@ -17,6 +18,7 @@ func NewFakeSCMClient() *FakeSCM {
 	return &FakeSCM{
 		Repositories: make(map[uint64]*Repository),
 		Directories:  make(map[uint64]*Directory),
+		Hooks:        make(map[uint64]int),
 	}
 }
 
@@ -87,4 +89,10 @@ func (s *FakeSCM) DeleteRepository(ctx context.Context, id uint64) error {
 }
 
 // CreateHook implements the SCM interface.
-func (s *FakeSCM) CreateHook(context.Context, *CreateHookOptions) (err error) { return }
+func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
+	if _, ok := s.Repositories[opt.Repository.ID]; !ok {
+		return errors.New("repository not found")
+	}
+	s.Hooks[opt.Repository.ID]++
+	return nil
+}

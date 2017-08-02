@@ -81,13 +81,18 @@ func main() {
 		}
 	}()
 
+	bh := web.BaseHookOptions{
+		BaseURL: *baseURL,
+		Secret:  os.Getenv("WEBHOOK_SECRET"),
+	}
+
 	store := newStore([]byte("secret"))
 	gothic.Store = store
 	e := newServer(l, store)
 	enabled := enableProviders(l, *baseURL, *fake)
-	registerWebhooks(e, enabled)
+	registerWebhooks(e, bh.Secret, enabled)
 	registerAuth(e, db)
-	registerAPI(l, e, db)
+	registerAPI(l, e, db, &bh)
 	registerFrontend(e, entryPoint, *public)
 	run(l, e, *httpAddr)
 }
@@ -165,12 +170,12 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 	return enabled
 }
 
-func registerWebhooks(e *echo.Echo, enabled map[string]bool) {
-	ghHook := whgithub.New(&whgithub.Config{Secret: os.Getenv("GITHUB_HOOK_SECRET")})
+func registerWebhooks(e *echo.Echo, secret string, enabled map[string]bool) {
+	ghHook := whgithub.New(&whgithub.Config{Secret: secret})
 	if enabled["github"] {
 		ghHook.RegisterEvents(web.GithubHook, whgithub.PushEvent)
 	}
-	glHook := whgitlab.New(&whgitlab.Config{Secret: os.Getenv("GITLAB_HOOK_SECRET")})
+	glHook := whgitlab.New(&whgitlab.Config{Secret: secret})
 	if enabled["gitlab"] {
 		glHook.RegisterEvents(web.GitlabHook, whgitlab.PushEvents)
 	}
@@ -213,7 +218,7 @@ func registerAuth(e *echo.Echo, db database.Database) {
 	e.GET("/logout", auth.OAuth2Logout())
 }
 
-func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database) {
+func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database, bh *web.BaseHookOptions) {
 	// Source code management clients indexed by access token.
 	scms := make(map[string]scm.SCM)
 
@@ -241,8 +246,7 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database) {
 
 	courses := api.Group("/courses")
 	courses.GET("", web.ListCourses(db))
-	// TODO: Pass in webhook URLs and secrets for each registered provider.
-	courses.POST("", web.NewCourse(l, db))
+	courses.POST("", web.NewCourse(l, db, bh))
 	courses.GET("/:cid", web.GetCourse(db))
 	// TODO: Pass in webhook URLs and secrets for each registered provider.
 	// TODO: Check if webhook exists and if not create a new one.

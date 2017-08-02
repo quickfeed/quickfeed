@@ -123,9 +123,19 @@ const (
 	SolutionsRepo  = "solutions"
 )
 
+// BaseHookOptions contains options shared among all webhooks.
+type BaseHookOptions struct {
+	BaseURL string
+	// Secret is used to verify that the event received is legit. GitHub
+	// sends back a signature of the payload, while GitLab just sends back
+	// the secret. This is all handled by the
+	// gopkg.in/go-playground/webhooks.v3 package.
+	Secret string
+}
+
 // NewCourse creates a new course and associates it with a directory (organization in github)
 // and creates the repositories for the course.
-func NewCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
+func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOptions) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var cr NewCourseRequest
 		if err := c.Bind(&cr); err != nil {
@@ -161,6 +171,15 @@ func NewCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc
 				return err
 			}
 			logger.WithField("repo", repo).Println("Created new repository")
+
+			if err := s.CreateHook(ctx, &scm.CreateHookOptions{
+				URL:        GetEventsURL(bh.BaseURL, cr.Provider),
+				Secret:     bh.Secret,
+				Repository: repo,
+			}); err != nil {
+				return err
+			}
+			logger.WithField("repo", repo).Println("Created new webhook for repository")
 		}
 
 		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
