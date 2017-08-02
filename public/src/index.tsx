@@ -25,6 +25,8 @@ import { ILogEntry, LogManager } from "./managers/LogManager";
 
 import { PageInfo } from "./components/information/PageInfo";
 
+import { UserProfile } from "./components/forms/UserProfile";
+
 interface IAutoGraderState {
     activePage?: ViewPage;
     currentContent: JSX.Element;
@@ -126,6 +128,14 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         }
     }
 
+    public checkloggedInUser(): boolean {
+        const cur = this.userMan.getCurrentUser();
+        if (cur) {
+            return this.userMan.isValidUser(cur);
+        }
+        return true;
+    }
+
     public render() {
         console.log("Log from index.tsx");
 
@@ -172,7 +182,16 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     private async renderTemplate(page: ViewPage, name: string | null): Promise<JSX.Element> {
         console.log("render");
         let body: JSX.Element;
-        const content = await this.renderActivePage(page, this.subPage);
+        let content: JSX.Element;
+        let menu: JSX.Element[] | null | string = null;
+        if (!this.checkloggedInUser()) {
+            name = "frontpage";
+            content = <UserProfile userMan={this.userMan}>missing information!</UserProfile>;
+        } else {
+            content = await this.renderActivePage(page, this.subPage);
+            menu = await this.renderActiveMenu(page, 0);
+        }
+
         const loginLink: ILink[] = [
             { name: "Github", uri: "app/login/login/github" },
             { name: "Gitlab", uri: "app/login/login/gitlab" },
@@ -190,7 +209,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 body = (
                     <Row className="container-fluid">
                         <div className="col-md-2 col-sm-3 col-xs-12">
-                            {await this.renderActiveMenu(page, 0)}
+                            {menu}
                         </div>
                         <div className="col-md-10 col-sm-9 col-xs-12">
                             {content}

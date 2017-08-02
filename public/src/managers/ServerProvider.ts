@@ -344,12 +344,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     private makeUserInfo(data: { id: number, isadmin: boolean }): IUser {
         return {
-            firstname: "Agent 00" + data.id,
-            lastname: "NR" + data.id,
+            firstname: "",
+            lastname: "",
             isadmin: data.isadmin,
             id: data.id,
-            studentnr: 1000,
-            email: "00" + data.id + "@secretorganization.com",
+            studentnr: "",
+            email: "",
         };
     }
 

@@ -45,6 +45,13 @@ export class UserManager {
         return this.currentUser;
     }
 
+    public isValidUser(user: IUser): boolean {
+        return user.email.length > 0
+            && user.firstname.length > 0
+            && user.lastname.length > 0
+            && user.studentnr.length > 0;
+    }
+
     /**
      * Trys to login to the service with username and password
      * This is only used for testing
