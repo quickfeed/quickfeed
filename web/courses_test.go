@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/gob"
 	"encoding/json"
 	"net/http"
@@ -111,7 +112,14 @@ func TestNewCourse(t *testing.T) {
 	w := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(r, w)
-	c.Set(provider, &scm.FakeSCM{})
+	f := scm.NewFakeSCMClient()
+	if _, err := f.CreateDirectory(context.Background(), &scm.CreateDirectoryOptions{
+		Name: testCourse.Code,
+		Path: testCourse.Code,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	c.Set(provider, f)
 	c.Set(auth.UserKey, &models.User{ID: user.ID})
 
 	h := web.NewCourse(nullLogger(), db)
