@@ -64,7 +64,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         let selector: Array<string | JSX.Element> = [
             user.firstname + " " + user.lastname,
             <a href={"mailto:" + user.email}>{user.email}</a>,
-            user.personid.toString(),
+            user.studentnr.toString(),
         ];
         if (this.props.userMan) {
             if (this.props.userMan.isAdmin(user)) {
@@ -102,7 +102,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             if (user.firstname.toLowerCase().indexOf(query) !== -1
                 || user.lastname.toLowerCase().indexOf(query) !== -1
                 || user.email.toLowerCase().indexOf(query) !== -1
-                || user.personid.toString().indexOf(query) !== -1
+                || user.studentnr.toString().indexOf(query) !== -1
             ) {
                 filteredData.push(user);
             }

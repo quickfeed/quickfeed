@@ -6,6 +6,11 @@ type User struct {
 
 	IsAdmin bool `json:"isadmin"`
 
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	StudentNr string `json:"studentnr"`
+	Email     string `json:"email"`
+
 	RemoteIdentities []*RemoteIdentity `json:"remoteidentities,omitempty"`
 
 	Enrollments []*Enrollment

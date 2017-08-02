@@ -348,7 +348,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             lastname: "NR" + data.id,
             isadmin: data.isadmin,
             id: data.id,
-            personid: 1000,
+            studentnr: 1000,
             email: "00" + data.id + "@secretorganization.com",
         };
     }
