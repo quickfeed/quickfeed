@@ -7,6 +7,7 @@ import {
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
+    INewGroup,
     IOrganization,
     isCourse,
     IStudentSubmission,
@@ -33,8 +34,10 @@ export interface ICourseProvider {
     createNewCourse(courseData: ICourse): Promise<boolean>;
     getCourse(id: number): Promise<ICourse | null>;
     updateCourse(courseId: number, courseData: ICourse): Promise<boolean>;
+
     getCourseGroups(courseId: number): Promise<ICourseGroup[]>;
     updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean>;
+    createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup>;
     // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(courseId: number): Promise<IMap<ISubmission>>;
@@ -279,6 +282,10 @@ export class CourseManager {
                 user: user.user,
             };
         });
+    }
+
+    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup> {
+        return await this.courseProvider.createGroup(groupData, courseId);
     }
 
     /**

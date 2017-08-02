@@ -1,13 +1,14 @@
 import * as React from "react";
 
-import { IUserRelation } from "../../models";
+import { INewGroup, IUserRelation } from "../../models";
 
 import { Search } from "../../components";
 
 interface IGroupProp {
     className: string;
     students: IUserRelation[];
-    capacity: number;
+    onSubmit: (formData: object) => void;
+    // capacity: number;
 }
 interface IGroupState {
     name: string;
@@ -15,6 +16,7 @@ interface IGroupState {
     selectedStudents: IUserRelation[];
     errorFlash: JSX.Element | null;
 }
+
 class GroupForm extends React.Component<IGroupProp, IGroupState> {
     constructor(props: any) {
         super(props);
@@ -81,8 +83,9 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                     <div className="form-group row">
                         <div className="col-sm-6">
                             <fieldset>
-                                <legend>Available Students <small className="hint">
-                                    select {this.props.capacity} students for your group</small>
+                                <legend>Available Students
+                                    {/* <small className="hint">
+                                    select {this.props.capacity} students for your group</small> */}
                                 </legend>
                                 {studentSearchBar} <br />
                                 <ul className="student-group list-group">
@@ -104,8 +107,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                     <div className="form-group row">
                         <div className="col-sm-offset-5 col-sm-2">
                             <button
-                                className={this.state.selectedStudents.length
-                                    === this.props.capacity ? "btn btn-primary active" : "btn btn-primary disabled"}
+                                className="btn btn-primary active"
                                 type="submit">Create
                             </button>
                         </div>
@@ -137,8 +139,11 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
             this.setState({
                 errorFlash: null,
             });
-            console.log("state", this.state);
-            console.log("group ", this.state.name, this.state.selectedStudents);
+            const formData: INewGroup = {
+                name: this.state.name,
+                userids: this.state.selectedStudents.map((u, i) => u.user.id),
+            };
+            this.props.onSubmit(formData);
         }
     }
 
@@ -197,8 +202,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         if (this.state.name === "") {
             errors.push("Group Name cannot be blank");
         }
-        if (this.state.selectedStudents.length !== this.props.capacity) {
-            errors.push("Group members must be equal to " + this.props.capacity.toString());
+        if (this.state.selectedStudents.length === 0) {
+            errors.push("Group mush have members.");
         }
         return errors;
     }

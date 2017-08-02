@@ -8,10 +8,11 @@ import {
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
+    INewGroup,
     IOrganization,
     ISubmission,
-    IUser,
     ITestCases,
+    IUser,
 } from "../models";
 
 import { HttpHelper, IHTTPResult } from "../HttpHelper";
@@ -168,6 +169,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup> {
+        const uri: string = "courses/" + courseId + "/groups";
+        const result = await this.helper.post<INewGroup, ICourseGroup>(uri, groupData);
+        if (result.statusCode !== 201 || !result.data) {
+            this.handleError(result);
+        }
+        const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
+        return data;
+    }
+
     public async getCourseGroups(courseId: number): Promise<ICourseGroup[]> {
         const uri: string = "courses/" + courseId + "/groups";
         const result = await this.helper.get<ICourseGroup>(uri);
@@ -183,13 +194,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const uri: string = "groups/" + groupId;
         const data = { status: st };
 
-        const result = await this.helper.patch<{ status: CourseGroupStatus }, {}>(uri, data);
-        if (result.statusCode < 400) {
-            return false;
+        const result = await this.helper.patch<{ status: CourseGroupStatus }, undefined>(uri, data);
+        if (result.statusCode === 200) {
+            return true;
         } else {
             this.handleError(result);
         }
-        return true;
+        return false;
     }
 
     // TODO change to use course id instead of getting all of them

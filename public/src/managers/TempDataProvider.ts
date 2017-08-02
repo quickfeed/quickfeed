@@ -7,6 +7,7 @@ import {
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
+    INewGroup,
     IOrganization,
     ISubmission,
     IUser,
@@ -224,7 +225,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         }
         return courses;
     }
-
+    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup> {
+        throw new Error("Method not implemented");
+    }
     public async getCourseGroups(courseId: number): Promise<ICourseGroup[]> {
         return this.localCourseGroups;
     }

@@ -129,9 +129,11 @@ export class StudentPage extends ViewPage {
         const courseId = navInfo.params.courseid;
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const students = await this.courseMan.getUsersForCourse(course, this.userMan, [CourseUserState.student]);
-            // should not allow to add more students than group capacity
-            return <GroupForm className="form-horizontal" students={students} capacity={2} />;
+            const students = await this.courseMan
+                .getUsersForCourse(course, this.userMan, [CourseUserState.student]);
+            return <GroupForm className="form-horizontal"
+                students={students} onSubmit={(formData) => this.createGroup(formData, courseId)} />;
+
         }
         return <div>404 not found</div>;
     }
@@ -226,5 +228,9 @@ export class StudentPage extends ViewPage {
 
     private handleLabClick(courseId: number, labId: number): void {
         this.navMan.navigateTo(this.pagePath + "/course/" + courseId + "/lab/" + labId);
+    }
+
+    private async createGroup(fd: any, courseId: number): Promise<void> {
+        const result = this.courseMan.createGroup(fd, courseId);
     }
 }
