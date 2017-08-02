@@ -9,6 +9,11 @@ import (
 	"github.com/labstack/echo"
 )
 
+// GetProviderURL returns a URL endpoint given a base URL and a provider.
+func GetProviderURL(baseURL, route, provider, endpoint string) string {
+	return "https://" + baseURL + "/" + route + "/" + provider + "/" + endpoint
+}
+
 // parseUint takes a string and returns the corresponding uint64. If the string
 // parses to 0 or an error occurs, an error is returned.
 func parseUint(s string) (uint64, error) {

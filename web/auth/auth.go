@@ -9,6 +9,7 @@ import (
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
+	"github.com/autograde/aguis/web"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
@@ -17,6 +18,11 @@ import (
 
 func init() {
 	gob.Register(&UserSession{})
+}
+
+// GetCallbackURL returns the callback URL for a given base URL and a provider.
+func GetCallbackURL(baseURL, provider string) string {
+	return web.GetProviderURL(baseURL, "auth", provider, "callback")
 }
 
 // Session keys.

@@ -120,7 +120,7 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 		Name:          "github",
 		KeyEnv:        "GITHUB_KEY",
 		SecretEnv:     "GITHUB_SECRET",
-		CallbackURL:   getCallbackURL(baseURL, "github"),
+		CallbackURL:   auth.GetCallbackURL(baseURL, "github"),
 		StudentScopes: []string{},
 		TeacherScopes: []string{"user", "repo", "delete_repo"},
 	}, func(key, secret, callback string, scopes ...string) goth.Provider {
@@ -138,7 +138,7 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 		Name:          "gitlab",
 		KeyEnv:        "GITLAB_KEY",
 		SecretEnv:     "GITLAB_SECRET",
-		CallbackURL:   getCallbackURL(baseURL, "gitlab"),
+		CallbackURL:   auth.GetCallbackURL(baseURL, "gitlab"),
 		StudentScopes: []string{"read_user"},
 		TeacherScopes: []string{"api"},
 	}, func(key, secret, callback string, scopes ...string) goth.Provider {
@@ -154,8 +154,12 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 
 	if fake {
 		l.Warn("fake provider enabled")
-		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(baseURL, "fake")})
-		goth.UseProviders(&auth.FakeProvider{Callback: getCallbackURL(baseURL, "fake-teacher")})
+		goth.UseProviders(&auth.FakeProvider{
+			Callback: auth.GetCallbackURL(baseURL, "fake"),
+		})
+		goth.UseProviders(&auth.FakeProvider{
+			Callback: auth.GetCallbackURL(baseURL, "fake-teacher"),
+		})
 	}
 
 	return enabled
@@ -288,14 +292,6 @@ func run(l logrus.FieldLogger, e *echo.Echo, httpAddr string) {
 	if err := e.Shutdown(ctx); err != nil {
 		l.WithError(err).Fatal("failure during server shutdown")
 	}
-}
-
-func getCallbackURL(baseURL, provider string) string {
-	return getURL(baseURL, "auth", provider, "callback")
-}
-
-func getURL(baseURL, route, provider, endpoint string) string {
-	return "https://" + baseURL + "/" + route + "/" + provider + "/" + endpoint
 }
 
 func tempFile(name string) string {
