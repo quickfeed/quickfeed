@@ -90,7 +90,7 @@ func main() {
 	gothic.Store = store
 	e := newServer(l, store)
 	enabled := enableProviders(l, *baseURL, *fake)
-	registerWebhooks(e, bh.Secret, enabled)
+	registerWebhooks(l, e, bh.Secret, enabled)
 	registerAuth(e, db)
 	registerAPI(l, e, db, &bh)
 	registerFrontend(e, entryPoint, *public)
@@ -170,14 +170,14 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 	return enabled
 }
 
-func registerWebhooks(e *echo.Echo, secret string, enabled map[string]bool) {
+func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, secret string, enabled map[string]bool) {
 	ghHook := whgithub.New(&whgithub.Config{Secret: secret})
 	if enabled["github"] {
-		ghHook.RegisterEvents(web.GithubHook, whgithub.PushEvent)
+		ghHook.RegisterEvents(web.GithubHook(logger), whgithub.PushEvent)
 	}
 	glHook := whgitlab.New(&whgitlab.Config{Secret: secret})
 	if enabled["gitlab"] {
-		glHook.RegisterEvents(web.GitlabHook, whgitlab.PushEvents)
+		glHook.RegisterEvents(web.GitlabHook(logger), whgitlab.PushEvents)
 	}
 
 	e.POST("/hook/:provider/events", func(c echo.Context) error {
