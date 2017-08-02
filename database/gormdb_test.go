@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/sirupsen/logrus"
 )
 
 func setup(t *testing.T) (database.Database, func()) {

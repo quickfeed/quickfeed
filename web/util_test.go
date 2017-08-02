@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/logger"
+	"github.com/sirupsen/logrus"
 )
 
 func setup(t *testing.T) (*database.GormDB, func()) {

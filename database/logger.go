@@ -9,7 +9,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 var sqlRegexp = regexp.MustCompile(`(\$\d+)|\?`)

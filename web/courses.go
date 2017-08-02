@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
+	"github.com/sirupsen/logrus"
 )
 
 // MaxWait is the maximum time a request is allowed to stay open before

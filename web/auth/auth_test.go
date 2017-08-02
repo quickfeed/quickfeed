@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web/auth"
@@ -18,6 +17,7 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
+	"github.com/sirupsen/logrus"
 )
 
 const (

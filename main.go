@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/scm"
@@ -26,6 +25,7 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
+	"github.com/sirupsen/logrus"
 
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 	whgithub "gopkg.in/go-playground/webhooks.v3/github"

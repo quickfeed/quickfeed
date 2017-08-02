@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
+	"github.com/sirupsen/logrus"
 )
 
 // Logger returns a logrus logger middleware.
