@@ -8,6 +8,12 @@
   version = "v0.4.4"
 
 [[projects]]
+  name = "github.com/Sirupsen/logrus"
+  packages = ["."]
+  revision = "a3f95b5c423586578a4e099b11a46c2479628cac"
+  version = "1.0.2"
+
+[[projects]]
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   revision = "d2709f9f1f31ebcda9651b03077758c1f3a0018c"
@@ -244,6 +250,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "490a2bedb46ef40e2094a8949eec33140805226538d729e5fbdd30bb4bf396a2"
+  inputs-digest = "2b32229ec460c9ba2ad52476e07789c6f6e8783940765c317946e6f67e176a78"
   solver-name = "gps-cdcl"
   solver-version = 1
