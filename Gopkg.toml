@@ -18,6 +18,10 @@
   branch = "master"
   name = "golang.org/x/oauth2"
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/docker/docker"
+
 [[override]]
   branch = "master"
   name = "github.com/docker/distribution"
