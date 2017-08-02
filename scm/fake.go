@@ -6,8 +6,7 @@ import (
 )
 
 // FakeSCM implements the SCM interface.
-type FakeSCM struct {
-}
+type FakeSCM struct{}
 
 // ListDirectories implements the SCM interface.
 func (s *FakeSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
@@ -104,9 +103,7 @@ func newRepository(id uint64, dir *Directory) *Repository {
 }
 
 // DeleteRepository implements the SCM interface.
-func (s *FakeSCM) DeleteRepository(context.Context, uint64) error {
-	return nil
-}
+func (s *FakeSCM) DeleteRepository(context.Context, uint64) (err error) { return }
 
 // CreateHook implements the SCM interface.
 func (s *FakeSCM) CreateHook(context.Context, *CreateHookOptions) (err error) { return }
