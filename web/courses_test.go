@@ -13,6 +13,7 @@ import (
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
+	"github.com/autograde/aguis/web/auth"
 	"github.com/labstack/echo"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -89,6 +90,11 @@ func TestNewCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	user, err := db.CreateUserFromRemoteIdentity(provider, 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	testCourse := *allCourses[0]
 
 	// Convert course to course request, this allows us to verify that the
@@ -106,6 +112,7 @@ func TestNewCourse(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 	c.Set(provider, &scm.FakeSCM{})
+	c.Set(auth.UserKey, &models.User{ID: user.ID})
 
 	h := web.NewCourse(nullLogger(), db)
 	if err := h(c); err != nil {
