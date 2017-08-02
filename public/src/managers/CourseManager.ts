@@ -42,6 +42,7 @@ export interface ICourseProvider {
 
     getAllLabInfos(courseId: number): Promise<IMap<ISubmission>>;
     getDirectories(provider: string): Promise<IOrganization[]>;
+    getProviders(): Promise<string[]>;
 }
 
 export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollemtnt {
@@ -304,8 +305,12 @@ export class CourseManager {
      * Get all available directories or organisations for a single provider
      * @param provider The provider to load information from, for instance github og gitlab
      */
-    public async  getDirectories(provider: string): Promise<IOrganization[]> {
+    public async getDirectories(provider: string): Promise<IOrganization[]> {
         return await this.courseProvider.getDirectories(provider);
+    }
+
+    public async getProviders(): Promise<string[]> {
+        return await this.courseProvider.getProviders();
     }
 
     /**

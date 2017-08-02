@@ -309,6 +309,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return [];
     }
 
+    public async getProviders(): Promise<string[]> {
+        // https://nicolasf.itest.run/api/v1/providers
+        const result = await this.helper.get<string[]>("providers");
+        if (result.data) {
+            return result.data;
+        } else {
+            this.handleError(result);
+        }
+        return [];
+    }
+
     public async getLoggedInUser(): Promise<IUser | null> {
         const result = await this.helper.get<{ id: number, isadmin: boolean }>("user");
         if (result.statusCode !== 302 || !result.data) {

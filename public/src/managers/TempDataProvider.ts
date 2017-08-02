@@ -203,6 +203,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
+    public async getProviders(): Promise<string[]> {
+        return ["github"];
+    }
+
     public async getLoggedInUser(): Promise<IUser | null> {
         return this.currentLoggedIn;
     }

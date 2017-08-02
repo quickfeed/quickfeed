@@ -96,11 +96,14 @@ export class AdminPage extends ViewPage {
             </div>;
         }
 
+        const providers = await this.courseMan.getProviders();
+
         return (
             <div>
                 {flashHolder}
                 <CourseForm className="form-horizontal"
                     courseMan={this.courseMan}
+                    providers={providers}
                     onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
                 />
             </div>
@@ -125,10 +128,12 @@ export class AdminPage extends ViewPage {
                     </ul>
                 </div>;
             }
+            const providers = await this.courseMan.getProviders();
             return (
                 <div>
                     {flashHolder}
                     <CourseForm className="form-horizontal"
+                        providers={providers}
                         courseMan={this.courseMan}
                         onSubmit={(formData, errors) => this.updateCourse(courseId, formData, errors)}
                         courseData={course}

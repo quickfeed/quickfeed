@@ -9,6 +9,7 @@ interface ICourseFormProps<T> {
     courseMan: CourseManager;
     onSubmit: (formData: object, errors: string[]) => void;
     courseData?: ICourse; // for editing an existing course
+    providers: string[];
 }
 
 interface ICourseFormStates {
@@ -47,6 +48,17 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
     public render() {
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
+        const providers = this.props.providers.map((provider) => {
+            return <label className="radio-inline">
+                <input type="radio"
+                    name="provider"
+                    value={provider}
+                    defaultChecked={this.props.courseData
+                        && this.props.courseData.provider === "github" ? true : false}
+                    onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
+                />{provider}
+            </label>;
+        });
         return (
             <div>
                 <h1>{getTitleText}</h1>
@@ -55,24 +67,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                     <div className="form-group">
                         <label className="control-label col-sm-2">Provider:</label>
                         <div className="col-sm-10">
-                            <label className="radio-inline">
-                                <input type="radio"
-                                    name="provider"
-                                    value="github"
-                                    defaultChecked={this.props.courseData
-                                        && this.props.courseData.provider === "github" ? true : false}
-                                    onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
-                                />Github
-                            </label>
-                            <label className="radio-inline">
-                                <input type="radio"
-                                    name="provider"
-                                    defaultChecked={this.props.courseData
-                                        && this.props.courseData.provider === "gitlab" ? true : false}
-                                    value="gitlab"
-                                    onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
-                                />Gitlab
-                            </label>
+                            {providers}
                         </div>
                     </div>
                     <div className="form-group" id="organisation-container">
