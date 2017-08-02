@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/autograde/aguis/database"
@@ -475,6 +476,14 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		}
 		// CreateGroup creates a new group and update group_id in enrollment table
 		if err := db.CreateGroup(&group); err != nil {
+			// TODO: UNIQUE constrain violation error differs from db to db.
+			// It seems GORM does not have built in support fo this error type.
+			// this error handling implementation will only work for SQlite.
+			// may be we should have a separate utility function to handle unique constrains
+			// violation error for different db.
+			if strings.Contains(err.Error(), "UNIQUE constraint failed: groups.name, groups.course_id") {
+				return echo.NewHTTPError(http.StatusBadRequest, "name already exists")
+			}
 			return err
 		}
 
