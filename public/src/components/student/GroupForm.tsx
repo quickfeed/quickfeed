@@ -1,14 +1,18 @@
 import * as React from "react";
 
-import { INewGroup, IUserRelation } from "../../models";
+import { CourseManager } from "../../managers/CourseManager";
+import { NavigationManager } from "../../managers/NavigationManager";
+import { ICourse, INewGroup, isError, IUserRelation } from "../../models";
 
 import { Search } from "../../components";
 
 interface IGroupProp {
     className: string;
     students: IUserRelation[];
-    onSubmit: (formData: object) => void;
-    // capacity: number;
+    courseMan: CourseManager;
+    navMan: NavigationManager;
+    pagePath: string;
+    course: ICourse;
 }
 interface IGroupState {
     name: string;
@@ -117,33 +121,36 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         );
     }
 
-    private handleFormSubmit(e: React.FormEvent<any>) {
+    private async handleFormSubmit(e: React.FormEvent<any>) {
         e.preventDefault();
         const errors: string[] = this.groupValidate();
         if (errors.length > 0) {
-            const errorArr: JSX.Element[] = [];
-            for (let i: number = 0; i < errors.length; i++) {
-                errorArr.push(<li key={i}>{errors[i]}</li>);
-            }
-            const flash: JSX.Element = <div className="alert alert-danger">
-                <h4>{errorArr.length} errors prohibited Group from being saved: </h4>
-                <ul>
-                    {errorArr}
-                </ul>
-            </div>;
-
+            const flashErrors = this.getFlashErrors(errors);
             this.setState({
-                errorFlash: flash,
+                errorFlash: flashErrors,
             });
         } else {
-            this.setState({
-                errorFlash: null,
-            });
             const formData: INewGroup = {
                 name: this.state.name,
                 userids: this.state.selectedStudents.map((u, i) => u.user.id),
             };
-            this.props.onSubmit(formData);
+            const result = await this.props.courseMan.createGroup(formData, this.props.course.id);
+            if (isError(result) && result.data) {
+                const errMsg = result.data.message;
+                let serverErrors: string[] = [];
+                if (errMsg instanceof Array) {
+                    serverErrors = errMsg;
+                } else {
+                    serverErrors.push(errMsg);
+                }
+                const flashErrors = this.getFlashErrors(serverErrors);
+                this.setState({
+                    errorFlash: flashErrors,
+                });
+            } else {
+                const redirectTo: string = this.props.pagePath + "/course/" + this.props.course.id + "/members";
+                this.props.navMan.navigateTo(redirectTo);
+            }
         }
     }
 
@@ -206,6 +213,21 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
             errors.push("Group mush have members.");
         }
         return errors;
+    }
+
+    private getFlashErrors(errors: string[]): JSX.Element {
+        const errorArr: JSX.Element[] = [];
+        for (let i: number = 0; i < errors.length; i++) {
+            errorArr.push(<li key={i}>{errors[i]}</li>);
+        }
+        const flash: JSX.Element =
+            <div className="alert alert-danger">
+                <h4>{errorArr.length} errors prohibited Group from being saved: </h4>
+                <ul>
+                    {errorArr}
+                </ul>
+            </div>;
+        return flash;
     }
 }
 export { GroupForm };

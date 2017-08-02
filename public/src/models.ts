@@ -232,3 +232,17 @@ export interface INewGroup {
     name: string;
     userids: number[];
 }
+/**
+ * IError represents server side error object
+ */
+export interface IError {
+    statusCode: number;
+    data?: any;
+}
+/**
+ * Checks if value is compatible with the IError interface
+ * @param item A value to check if it is an IError
+ */
+export function isError(item: any): item is IError {
+    return item && typeof item.statusCode === "number";
+}

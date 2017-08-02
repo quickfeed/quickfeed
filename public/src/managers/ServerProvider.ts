@@ -8,6 +8,7 @@ import {
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
+    IError,
     INewGroup,
     IOrganization,
     ISubmission,
@@ -169,11 +170,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup> {
+    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError> {
         const uri: string = "courses/" + courseId + "/groups";
         const result = await this.helper.post<INewGroup, ICourseGroup>(uri, groupData);
         if (result.statusCode !== 201 || !result.data) {
             this.handleError(result);
+            return this.parseError(result);
         }
         const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
         return data;
@@ -187,6 +189,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return [];
         }
         const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup[];
+        return data;
+    }
+
+    public async getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
+        const uri: string = "users/" + userid + "/courses/" + courseid + "/group";
+        const result = await this.helper.get<ICourseGroup>(uri);
+        if (result.statusCode !== 302 || !result.data) {
+            return null;
+        }
+        const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
         return data;
     }
 
@@ -343,6 +355,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     private handleError(result: IHTTPResult<any>): void {
         this.logger.warn("Request to server failed with status code: " + result.statusCode, true);
+    }
+
+    private parseError(result: IHTTPResult<any>): IError {
+        const error: IError = {
+            statusCode: result.statusCode,
+        };
+        if (result.data) {
+            error.data = JSON.parse(JSON.stringify(result.data)) as any;
+        }
+        return error;
     }
 
     /*

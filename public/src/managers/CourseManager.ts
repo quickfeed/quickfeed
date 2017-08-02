@@ -7,6 +7,7 @@ import {
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
+    IError,
     INewGroup,
     IOrganization,
     isCourse,
@@ -37,7 +38,8 @@ export interface ICourseProvider {
 
     getCourseGroups(courseId: number): Promise<ICourseGroup[]>;
     updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean>;
-    createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup>;
+    createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError>;
+    getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
     // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(courseId: number): Promise<IMap<ISubmission>>;
@@ -285,7 +287,7 @@ export class CourseManager {
         });
     }
 
-    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup> {
+    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError> {
         return await this.courseProvider.createGroup(groupData, courseId);
     }
 
@@ -295,6 +297,10 @@ export class CourseManager {
      */
     public async getCourseGroups(courseid: number): Promise<ICourseGroup[]> {
         return await this.courseProvider.getCourseGroups(courseid);
+    }
+
+    public async getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
+        return await this.courseProvider.getCourseByUserAndCourse(userid, courseid);
     }
 
     public async updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean> {

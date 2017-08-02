@@ -1,11 +1,11 @@
 import * as React from "react";
-import { CoursesOverview, GroupForm, NavMenu, SingleCourseOverview, StudentLab } from "../components";
+import { CoursesOverview, GroupForm, GroupInfo, NavMenu, SingleCourseOverview, StudentLab } from "../components";
 
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { CourseUserState, ICourse, IStudentSubmission, IUser, IUserCourse } from "../models";
+import { CourseUserState, ICourse, ICourseGroup, isError, IStudentSubmission, IUser, IUserCourse } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
 import { HelloView } from "./views/HelloView";
@@ -128,11 +128,21 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         const courseId = navInfo.params.courseid;
         const course = await this.courseMan.getCourse(courseId);
-        if (course) {
-            const students = await this.courseMan
-                .getUsersForCourse(course, this.userMan, [CourseUserState.student]);
-            return <GroupForm className="form-horizontal"
-                students={students} onSubmit={(formData) => this.createGroup(formData, courseId)} />;
+        const curUser = this.userMan.getCurrentUser();
+        if (course && curUser) {
+            const grp: ICourseGroup | null = await this.courseMan.getCourseByUserAndCourse(curUser.id, course.id);
+            if (grp) {
+                return <GroupInfo group={grp} course={course}/>;
+            } else {
+                const students = await this.courseMan
+                    .getUsersForCourse(course, this.userMan, [CourseUserState.student]);
+                return <GroupForm className="form-horizontal"
+                    students={students}
+                    course={course}
+                    courseMan={this.courseMan}
+                    navMan={this.navMan}
+                    pagePath={this.pagePath} />;
+            }
 
         }
         return <div>404 not found</div>;
@@ -228,9 +238,5 @@ export class StudentPage extends ViewPage {
 
     private handleLabClick(courseId: number, labId: number): void {
         this.navMan.navigateTo(this.pagePath + "/course/" + courseId + "/lab/" + labId);
-    }
-
-    private async createGroup(fd: any, courseId: number): Promise<void> {
-        const result = this.courseMan.createGroup(fd, courseId);
     }
 }
