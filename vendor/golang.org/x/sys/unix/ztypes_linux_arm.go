@@ -289,13 +289,6 @@ type IPv6Mreq struct {
 	Interface uint32
 }
 
-type PacketMreq struct {
-	Ifindex int32
-	Type    uint16
-	Alen    uint16
-	Address [8]uint8
-}
-
 type Msghdr struct {
 	Name       *byte
 	Namelen    uint32
@@ -384,11 +377,9 @@ const (
 	SizeofSockaddrALG       = 0x58
 	SizeofSockaddrVM        = 0x10
 	SizeofLinger            = 0x8
-	SizeofIovec             = 0x8
 	SizeofIPMreq            = 0x8
 	SizeofIPMreqn           = 0xc
 	SizeofIPv6Mreq          = 0x14
-	SizeofPacketMreq        = 0x10
 	SizeofMsghdr            = 0x1c
 	SizeofCmsghdr           = 0xc
 	SizeofInet4Pktinfo      = 0xc
@@ -673,11 +664,4 @@ type Termios struct {
 	Cc     [19]uint8
 	Ispeed uint32
 	Ospeed uint32
-}
-
-type Winsize struct {
-	Row    uint16
-	Col    uint16
-	Xpixel uint16
-	Ypixel uint16
 }

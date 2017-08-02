@@ -2,7 +2,6 @@ package bitbucket
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -70,46 +69,38 @@ func (hook Webhook) RegisterEvents(fn webhooks.ProcessPayloadFunc, events ...Eve
 
 // ParsePayload parses and verifies the payload and fires off the mapped function, if it exists.
 func (hook Webhook) ParsePayload(w http.ResponseWriter, r *http.Request) {
-	webhooks.DefaultLog.Info("Parsing Payload...")
 
 	uuid := r.Header.Get("X-Hook-UUID")
 	if uuid == "" {
-		webhooks.DefaultLog.Error("Missing X-Hook-UUID Header")
 		http.Error(w, "400 Bad Request - Missing X-Hook-UUID Header", http.StatusBadRequest)
 		return
 	}
-	webhooks.DefaultLog.Debug(fmt.Sprintf("X-Hook-UUID:%s", uuid))
 
 	if uuid != hook.uuid {
-		webhooks.DefaultLog.Error(fmt.Sprintf("X-Hook-UUID does not match configured uuid of %s", hook.uuid))
-		http.Error(w, "403 Forbidden - X-Hook-UUID does not match", http.StatusForbidden)
+		http.Error(w, "403 Forbidden - Missing X-Hook-UUID does not match", http.StatusForbidden)
 		return
 	}
 
 	event := r.Header.Get("X-Event-Key")
 	if event == "" {
-		webhooks.DefaultLog.Error("Missing X-Event-Key Header")
 		http.Error(w, "400 Bad Request - Missing X-Event-Key Header", http.StatusBadRequest)
 		return
 	}
-	webhooks.DefaultLog.Debug(fmt.Sprintf("X-Event-Key:%s", event))
 
 	bitbucketEvent := Event(event)
 
 	fn, ok := hook.eventFuncs[bitbucketEvent]
 	// if no event registered
 	if !ok {
-		webhooks.DefaultLog.Info(fmt.Sprintf("Webhook Event %s not registered, it is recommended to setup only events in bitbucket that will be registered in the webhook to avoid unnecessary traffic and reduce potential attack vectors.", event))
 		return
 	}
 
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil || len(payload) == 0 {
-		webhooks.DefaultLog.Error("Issue reading Payload")
-		http.Error(w, "Issue reading Payload", http.StatusInternalServerError)
+		http.Error(w, "Error reading Body", http.StatusInternalServerError)
 		return
 	}
-	webhooks.DefaultLog.Debug(fmt.Sprintf("Payload:%s", string(payload)))
+
 	hd := webhooks.Header(r.Header)
 
 	switch bitbucketEvent {

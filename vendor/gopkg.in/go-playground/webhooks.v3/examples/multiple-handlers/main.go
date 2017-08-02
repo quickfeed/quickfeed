@@ -14,6 +14,7 @@ const (
 )
 
 func main() {
+
 	hook := github.New(&github.Config{Secret: "MyGitHubSuperSecretSecrect...?"})
 	hook.RegisterEvents(HandleRelease, github.ReleaseEvent)
 	hook.RegisterEvents(HandlePullRequest, github.PullRequestEvent)
@@ -26,6 +27,7 @@ func main() {
 
 // HandleRelease handles GitHub release events
 func HandleRelease(payload interface{}, header webhooks.Header) {
+
 	fmt.Println("Handling Release")
 
 	pl := payload.(github.ReleasePayload)
