@@ -50,7 +50,7 @@ export class UserManager {
         return user.email.length > 0
             && user.firstname.length > 0
             && user.lastname.length > 0
-            && user.studentnr.length > 0;
+            && user.studentid.length > 0;
     }
 
     /**

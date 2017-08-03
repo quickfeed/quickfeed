@@ -252,7 +252,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             tempUser.firstname = user.firstname;
             tempUser.lastname = user.lastname;
             tempUser.email = user.email;
-            tempUser.studentnr = user.studentnr;
+            tempUser.studentid = user.studentid;
             tempUser.isadmin = user.isadmin;
         }
 
@@ -266,7 +266,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 firstname: "Test",
                 lastname: "Testersen",
                 email: "test@testersen.no",
-                studentnr: "9999",
+                studentid: "9999",
                 password: "1234",
                 isadmin: true,
             },
@@ -275,7 +275,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 firstname: "Admin",
                 lastname: "Admin",
                 email: "admin@admin",
-                studentnr: "1000",
+                studentid: "1000",
                 password: "1234",
                 isadmin: true,
             },
@@ -284,7 +284,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 firstname: "Per",
                 lastname: "Pettersen",
                 email: "per@pettersen.no",
-                studentnr: "1234",
+                studentid: "1234",
                 password: "1234",
                 isadmin: false,
             },
@@ -293,7 +293,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 firstname: "Bob",
                 lastname: "Bobsen",
                 email: "bob@bobsen.no",
-                studentnr: "1234",
+                studentid: "1234",
                 password: "1234",
                 isadmin: false,
             },
@@ -302,7 +302,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 firstname: "Petter",
                 lastname: "Pan",
                 email: "petter@pan.no",
-                studentnr: "1234",
+                studentid: "1234",
                 password: "1234",
                 isadmin: false,
             },
@@ -590,7 +590,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                         firstname: "Student",
                         lastname: "1",
                         isadmin: false,
-                        studentnr: "12345",
+                        studentid: "12345",
                     },
                     {
                         id: 2,
@@ -598,7 +598,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                         firstname: "Student",
                         lastname: "2",
                         isadmin: false,
-                        studentnr: "12346",
+                        studentid: "12346",
                     },
                 ],
             },
@@ -614,7 +614,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                         firstname: "Student",
                         lastname: "3",
                         isadmin: false,
-                        studentnr: "12347",
+                        studentid: "12347",
                     },
                     {
                         id: 4,
@@ -622,7 +622,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                         firstname: "Student",
                         lastname: "4",
                         isadmin: false,
-                        studentnr: "12348",
+                        studentid: "12348",
                     },
                 ],
             },

@@ -8,7 +8,7 @@ type User struct {
 
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
-	StudentNr string `json:"studentnr"`
+	StudentID string `json:"studentid"`
 	Email     string `json:"email"`
 
 	RemoteIdentities []*RemoteIdentity `json:"remoteidentities,omitempty"`
