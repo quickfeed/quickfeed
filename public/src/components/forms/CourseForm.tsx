@@ -54,7 +54,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                     name="provider"
                     value={provider}
                     defaultChecked={this.props.courseData
-                        && this.props.courseData.provider === "github" ? true : false}
+                        && this.props.courseData.provider === provider ? true : false}
                     onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
                 />{provider}
             </label>;
