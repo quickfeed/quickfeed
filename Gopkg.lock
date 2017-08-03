@@ -8,12 +8,6 @@
   version = "v0.4.4"
 
 [[projects]]
-  name = "github.com/Sirupsen/logrus"
-  packages = ["."]
-  revision = "a3f95b5c423586578a4e099b11a46c2479628cac"
-  version = "1.0.2"
-
-[[projects]]
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
   revision = "d2709f9f1f31ebcda9651b03077758c1f3a0018c"
@@ -32,10 +26,10 @@
   revision = "115f5781c6aceb4e0ed1c6cbf05301c1aee0ee4a"
 
 [[projects]]
+  branch = "master"
   name = "github.com/docker/go-connections"
   packages = ["nat","sockets","tlsconfig"]
-  revision = "990a1a1a70b0da4c4cb70e117971a4f0babfbf1a"
-  version = "v0.2.1"
+  revision = "3ede32e2033de7505e6500d6c868c2b9ed9f169d"
 
 [[projects]]
   name = "github.com/docker/go-units"
@@ -164,12 +158,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/opencontainers/runc"
-  packages = ["libcontainer/user"]
-  revision = "baf6536d6259209c3edfa2b22237af82942d3dfa"
-  version = "v0.1.1"
-
-[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -250,6 +238,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2b32229ec460c9ba2ad52476e07789c6f6e8783940765c317946e6f67e176a78"
+  inputs-digest = "18680a48f6c007d721c881bea3260012c4142c00bb94614c31217d89a3bca532"
   solver-name = "gps-cdcl"
   solver-version = 1
