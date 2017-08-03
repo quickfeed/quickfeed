@@ -245,6 +245,20 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
+    public async updateUser(user: IUser): Promise<boolean> {
+
+        const tempUser = this.localUsers[user.id];
+        if (tempUser) {
+            tempUser.firstname = user.firstname;
+            tempUser.lastname = user.lastname;
+            tempUser.email = user.email;
+            tempUser.studentnr = user.studentnr;
+            tempUser.isadmin = user.isadmin;
+        }
+
+        return Promise.resolve(true);
+    }
+
     private addLocalUsers() {
         this.localUsers = mapify([
             {

@@ -10,6 +10,7 @@ export interface IUserProvider {
     tryRemoteLogin(provider: string): Promise<IUser | null>;
     changeAdminRole(user: IUser): Promise<boolean>;
     getLoggedInUser(): Promise<IUser | null>;
+    updateUser(user: IUser): Promise<boolean>;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -134,6 +135,14 @@ export class UserManager {
      */
     public async changeAdminRole(user: IUser): Promise<boolean> {
         return this.userProvider.changeAdminRole(user);
+    }
+
+    /**
+     * Updates a user
+     * @param user The user to update with the new information
+     */
+    public updateUser(user: IUser): Promise<boolean> {
+        return this.userProvider.updateUser(user);
     }
 
     /**

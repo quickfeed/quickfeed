@@ -4,6 +4,7 @@ import { IUser } from "../../models";
 
 interface IUserProfileProps {
     userMan: UserManager;
+    onEditStop: () => void;
 }
 
 interface IUserProfileState {
@@ -65,11 +66,19 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         </div>;
     }
 
-    public stopEditing() {
-        if (this.state.curUser && this.props.userMan.isValidUser(this.state.curUser)) {
-            this.setState({ editMode: false });
-        }
+    public async stopEditing() {
 
+        if (this.state.curUser && this.props.userMan.isValidUser(this.state.curUser)) {
+            await this.props.userMan.updateUser(this.state.curUser);
+            await this.props.userMan.checkUserLoggedIn();
+            const curUser = this.props.userMan.getCurrentUser();
+            if (curUser) {
+                this.setState({ editMode: false, curUser });
+            } else {
+                this.setState({ editMode: false });
+            }
+            this.props.onEditStop();
+        }
     }
 
     public renderValue(obj: any, field: string) {

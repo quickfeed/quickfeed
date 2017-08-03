@@ -308,6 +308,19 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async updateUser(user: IUser): Promise<boolean> {
+        // TODO: make actuall implementation
+        /*const result = await this.helper.patch<{ isadmin: boolean }, {}>("/users/" + user.id + "", user);
+        if (result.statusCode < 400) {
+            return false;
+        } else {
+            this.handleError(result);
+        }
+        return true;*/
+        localStorage.setItem("user:" + user.id.toString(), JSON.stringify(user));
+        return Promise.resolve(true);
+    }
+
     // TODO: check if resp.status contain correct status
     public async getDirectories(provider: string): Promise<IOrganization[]> {
         const uri: string = "directories";
@@ -335,14 +348,20 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getLoggedInUser(): Promise<IUser | null> {
         const result = await this.helper.get<{ id: number, isadmin: boolean }>("user");
         if (result.statusCode !== 302 || !result.data) {
-            return null;
-        } else {
             this.handleError(result);
+            return null;
         }
         return this.makeUserInfo(result.data);
     }
 
     private makeUserInfo(data: { id: number, isadmin: boolean }): IUser {
+        const storedData = localStorage.getItem("user:" + data.id.toString());
+        if (storedData) {
+            const temp = JSON.parse(storedData) as IUser;
+            temp.id = data.id;
+            temp.isadmin = data.isadmin;
+            return temp;
+        }
         return {
             firstname: "",
             lastname: "",

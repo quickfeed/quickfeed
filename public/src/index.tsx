@@ -46,6 +46,9 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     private navMan: NavigationManager;
     private logMan: LogManager;
     private subPage: string;
+    private currentBodyContent?: JSX.Element;
+    private currentMenuContent: JSX.Element[][] = [];
+    private lastUri: string;
 
     constructor(props: IAutoGraderProps) {
         super();
@@ -87,19 +90,26 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             console.log("Sign out");
             this.setState({
                 curUser: null,
-                topLinks: await this.generateTopLinksFor(null),
+                topLinks: [],
             });
         });
     }
 
     public async handleNavigation(e: INavEvent) {
+        const topLinks = await this.generateTopLinksFor(this.state.curUser);
+        this.checkLinks(topLinks);
+        this.setState({ topLinks });
+
+        if (this.lastUri !== e.uri) {
+            this.currentBodyContent = undefined;
+            this.currentMenuContent = [];
+        }
         this.subPage = e.subPage;
+
         const newContent = await this.renderTemplate(e.page, e.page.template);
 
-        const tempLink = this.state.topLinks.slice();
-        this.checkLinks(tempLink);
-
-        this.setState({ activePage: e.page, topLinks: tempLink, currentContent: newContent });
+        this.setState({ activePage: e.page, currentContent: newContent });
+        this.lastUri = e.uri;
     }
 
     public async generateTopLinksFor(user: IUser | null): Promise<ILink[]> {
@@ -162,15 +172,21 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     private async renderActiveMenu(page: ViewPage, menu: number): Promise<JSX.Element[] | string> {
-        if (page) {
-            return await page.renderMenu(menu);
+        if (this.currentMenuContent[menu]) {
+            return this.currentMenuContent[menu];
+        } else if (page) {
+            this.currentMenuContent[menu] = await page.renderMenu(menu);
+            return this.currentMenuContent[menu];
         }
         return "";
     }
 
     private async renderActivePage(page: ViewPage, subPage: string): Promise<JSX.Element> {
-        if (page) {
-            return await page.renderContent(subPage);
+        if (this.currentBodyContent) {
+            return this.currentBodyContent;
+        } else if (page) {
+            this.currentBodyContent = await page.renderContent(subPage);
+            return this.currentBodyContent;
         }
         return <h1>404 Page not found</h1>;
     }
@@ -186,7 +202,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         let menu: JSX.Element[] | null | string = null;
         if (!this.checkloggedInUser()) {
             name = "frontpage";
-            content = <UserProfile userMan={this.userMan}>missing information!</UserProfile>;
+            content = <UserProfile userMan={this.userMan} onEditStop={() => { this.navMan.refresh(); }} />;
         } else {
             content = await this.renderActivePage(page, this.subPage);
             menu = await this.renderActiveMenu(page, 0);
