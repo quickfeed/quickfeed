@@ -46,7 +46,7 @@ export class AdminPage extends ViewPage {
             <BootstrapButton classType="primary"
                 className="pull-right"
                 onClick={() => this.handleNewCourse()}>
-                +Create New
+                New Course
             </BootstrapButton>
             <h1>All Courses</h1>
             <CourseView courses={allCourses}
