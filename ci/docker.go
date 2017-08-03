@@ -21,7 +21,7 @@ type Docker struct {
 
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
-func (d *Docker) Run(ctx context.Context, job Job) (string, error) {
+func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	cli, err := client.NewClient(d.Endpoint, d.Version, nil, nil)
 	if err != nil {
 		return "", err

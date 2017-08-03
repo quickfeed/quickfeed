@@ -10,7 +10,7 @@ type Local struct{}
 
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
-func (l *Local) Run(ctx context.Context, job Job) (string, error) {
+func (l *Local) Run(ctx context.Context, job *Job) (string, error) {
 	// TODO: Execute tests in something like ioutil.TempDir(os.TempDir(), "local-ci").
 	cmd := exec.Command("/bin/sh", "-c", job.Script)
 	b, err := cmd.Output()

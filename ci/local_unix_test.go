@@ -11,7 +11,7 @@ func TestLocal(t *testing.T) {
 	const wantOut = "hello world"
 
 	local := ci.Local{}
-	out, err := local.Run(context.Background(), ci.Job{
+	out, err := local.Run(context.Background(), &ci.Job{
 		Script: "echo -n " + wantOut,
 	})
 	if err != nil {
