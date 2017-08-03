@@ -12,7 +12,7 @@ func TestLocal(t *testing.T) {
 
 	local := ci.Local{}
 	out, err := local.Run(context.Background(), &ci.Job{
-		Script: "echo -n " + wantOut,
+		Commands: []string{"echo -n " + wantOut},
 	})
 	if err != nil {
 		t.Fatal(err)

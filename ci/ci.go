@@ -4,8 +4,8 @@ import "context"
 
 // Job describes how to execute a CI job.
 type Job struct {
-	Image  string
-	Script string
+	Image    string
+	Commands []string
 }
 
 // CI contains methods for running user provided code in isolation.

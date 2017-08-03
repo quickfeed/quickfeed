@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -33,7 +34,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: job.Image,
-		Cmd:   []string{"/bin/sh", "-c", job.Script},
+		Cmd:   []string{"/bin/sh", "-c", strings.Join(job.Commands, "\n")},
 	}, nil, nil, "")
 	if err != nil {
 		return "", err
