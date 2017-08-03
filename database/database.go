@@ -4,6 +4,8 @@ import "github.com/autograde/aguis/models"
 
 // Database contains methods for manipulating the database.
 type Database interface {
+	GetRemoteIdentity(provider string, id uint64) (*models.RemoteIdentity, error)
+
 	CreateUserFromRemoteIdentity(provider string, remoteID uint64, accessToken string) (*models.User, error)
 	AssociateUserWithRemoteIdentity(userID uint64, provider string, remoteID uint64, accessToken string) error
 

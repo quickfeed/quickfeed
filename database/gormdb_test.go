@@ -366,6 +366,34 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 }
 
+func TestGetRemoteIdentity(t *testing.T) {
+	const (
+		secret   = "123"
+		provider = "github"
+		remoteID = 10
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(user.RemoteIdentities) != 1 {
+		t.Fatalf("have %d remote identites want %d", len(user.RemoteIdentities), 1)
+	}
+
+	remoteIdentity, err := db.GetRemoteIdentity(provider, remoteID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(remoteIdentity, user.RemoteIdentities[0]) {
+		t.Errorf("have remote identity %+v want %+v", remoteIdentity, user.RemoteIdentities[0])
+	}
+}
+
 func TestGormDBDuplicateIdentity(t *testing.T) {
 	const (
 		uID  = 1

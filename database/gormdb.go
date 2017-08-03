@@ -101,6 +101,19 @@ func (db *GormDB) SetAdmin(id uint64) error {
 	return db.conn.Save(&user).Error
 }
 
+// GetRemoteIdentity implements the Database interface.
+func (db *GormDB) GetRemoteIdentity(provider string, remoteID uint64) (*models.RemoteIdentity, error) {
+	var remoteIdentity models.RemoteIdentity
+	if err := db.conn.Model(&models.RemoteIdentity{}).
+		Where(&models.RemoteIdentity{
+			Provider: provider,
+			RemoteID: remoteID,
+		}).First(&remoteIdentity).Error; err != nil {
+		return nil, err
+	}
+	return &remoteIdentity, nil
+}
+
 // CreateUserFromRemoteIdentity implements the Database interface.
 func (db *GormDB) CreateUserFromRemoteIdentity(provider string, remoteID uint64, accessToken string) (*models.User, error) {
 	var count int64
