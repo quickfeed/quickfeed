@@ -408,9 +408,9 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 
 func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	const (
-		uID  = 1
-		rID1 = 1
-		rID2 = 2
+		uID  = 2
+		rID1 = 2
+		rID2 = 3
 
 		secret1   = "123"
 		provider1 = "github"
@@ -458,6 +458,11 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 
 	db, cleanup := setup(t)
 	defer cleanup()
+
+	// Create first user (the admin).
+	if _, err := db.CreateUserFromRemoteIdentity("", 0, ""); err != nil {
+		t.Fatal(err)
+	}
 
 	user1, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
 	if err != nil {

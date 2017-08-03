@@ -54,6 +54,11 @@ func TestGetUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	// Create first user (the admin).
+	if _, err := db.CreateUserFromRemoteIdentity("", 0, ""); err != nil {
+		t.Fatal(err)
+	}
+
 	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
@@ -133,6 +138,8 @@ func TestGetUsers(t *testing.T) {
 	// Remote identities should not be loaded.
 	user1.RemoteIdentities = nil
 	user2.RemoteIdentities = nil
+	// First user should be admin.
+	user1.IsAdmin = true
 	wantUsers := []*models.User{user1, user2}
 	if !reflect.DeepEqual(foundUsers, wantUsers) {
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
