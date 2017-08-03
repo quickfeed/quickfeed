@@ -8,8 +8,8 @@ type Job struct {
 	Commands []string
 }
 
-// CI contains methods for running user provided code in isolation.
-type CI interface {
+// Runner contains methods for running user provided code in isolation.
+type Runner interface {
 	// Run should synchronously execute the described job and return the output.
 	Run(context.Context, *Job) (string, error)
 }
