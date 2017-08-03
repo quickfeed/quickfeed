@@ -3,6 +3,7 @@ package web
 import (
 	"net/http"
 
+	"github.com/autograde/aguis/database"
 	"github.com/sirupsen/logrus"
 
 	webhooks "gopkg.in/go-playground/webhooks.v3"
@@ -11,7 +12,7 @@ import (
 )
 
 // GithubHook handles events from GitHub.
-func GithubHook(logger logrus.FieldLogger) webhooks.ProcessPayloadFunc {
+func GithubHook(logger logrus.FieldLogger, db database.Database) webhooks.ProcessPayloadFunc {
 	return func(payload interface{}, header webhooks.Header) {
 		h := http.Header(header)
 		event := github.Event(h.Get("X-GitHub-Event"))
