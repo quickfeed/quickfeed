@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/scm"
@@ -173,9 +174,14 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, db database.Database, secret string, enabled map[string]bool) {
 	webhooks.DefaultLog = web.WebhookLogger{FieldLogger: logger}
 
+	docker := ci.Docker{
+		Endpoint: envString("DOCKER_HOST", "http://localhost:4243"),
+		Version:  envString("DOCKER_VERSION", "1.30"),
+	}
+
 	ghHook := whgithub.New(&whgithub.Config{Secret: secret})
 	if enabled["github"] {
-		ghHook.RegisterEvents(web.GithubHook(logger, db), whgithub.PushEvent)
+		ghHook.RegisterEvents(web.GithubHook(logger, db, &docker), whgithub.PushEvent)
 	}
 	glHook := whgitlab.New(&whgitlab.Config{Secret: secret})
 	if enabled["gitlab"] {
@@ -307,4 +313,12 @@ func tempFile(name string) string {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func envString(env, fallback string) string {
+	e := os.Getenv(env)
+	if e == "" {
+		return fallback
+	}
+	return e
 }
