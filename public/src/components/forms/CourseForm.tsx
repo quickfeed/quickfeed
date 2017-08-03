@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button } from "../../components";
+import { BootstrapButton } from "../../components";
 import { ICourse, IOrganization } from "../../models";
 
 import { CourseManager } from "../../managers/CourseManager";
@@ -129,9 +129,9 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
                     <div className="form-group">
                         <div className="col-sm-offset-2 col-sm-10">
-                            <Button className="btn btn-primary"
-                                text={this.props.courseData ? "Update" : "Create"}
-                                type="submit" />
+                            <BootstrapButton classType="primary" type="submit">
+                                {this.props.courseData ? "Update" : "Create"}
+                            </BootstrapButton>
                         </div>
                     </div>
                 </form>

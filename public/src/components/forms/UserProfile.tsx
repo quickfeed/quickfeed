@@ -2,6 +2,10 @@ import * as React from "react";
 import { UserManager } from "../../managers";
 import { IUser } from "../../models";
 
+import { bindFunc, copy, RProp } from "../../helper";
+
+import { BootstrapButton } from "../../components";
+
 interface IUserProfileProps {
     userMan: UserManager;
     onEditStop: () => void;
@@ -11,6 +15,8 @@ interface IUserProfileState {
     curUser?: IUser;
     editMode: boolean;
 }
+
+type RWrap<T> = (props: T) => JSX.Element;
 
 export class UserProfile extends React.Component<IUserProfileProps, IUserProfileState> {
     constructor(props: IUserProfileProps, context: any) {
@@ -29,6 +35,14 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
             return <h1>User not logged in</h1>;
         }
         const curUser = this.state.curUser;
+        return <div className="row">
+            <div className="col-md-3">
+                {this.renderUserInfoBox(curUser)}
+            </div>
+        </div>;
+    }
+
+    public renderUserInfoBox(curUser: IUser): JSX.Element {
         let message: JSX.Element | undefined;
         if (!this.props.userMan.isValidUser(curUser)) {
             message = <div>
@@ -36,33 +50,38 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
                 </div>;
         }
 
-        const button = this.state.editMode ?
-            <button
-                className="btn btn-primary"
-                disabled={message ? true : false}
-                onClick={() => { this.stopEditing(); }}>
-                Save
-            </button>
-            : <button className="btn btn-primary" onClick={() => { this.setState({ editMode: true }); }}>Edit</button>;
         return <div>
             {message}
-            <div>
-                <div className="profileElement">Firstname:</div>
-                {this.renderValue(curUser, "firstname")}
-            </div>
-            <div>
-                <div className="profileElement">Lastname:</div>
-                {this.renderValue(curUser, "lastname")}
-            </div>
-            <div>
-                <div className="profileElement">Email:</div>
-                {this.renderValue(curUser, "email")}
-            </div>
-            <div>
-                <div className="profileElement">StudentNumber:</div>
-                {this.renderValue(curUser, "studentnr")}
-            </div>
-            {button}
+            {this.renderField("firstname", curUser, "Firstname")}
+            {this.renderField("lastname", curUser, "Lastname")}
+            {this.renderField("email", curUser, "Email")}
+            {this.renderField("studentnr", curUser, "Student id")}
+            {this.renderSaveButton(message !== undefined, this.state.editMode)}
+        </div>;
+    }
+
+    public renderSaveButton(disabled: boolean, editMode: boolean) {
+
+        if (editMode) {
+            return <BootstrapButton
+                classType="primary"
+                disabled={disabled}
+                onClick={() => { this.stopEditing(); }}>
+                Save
+            </BootstrapButton>;
+        } else {
+            return <BootstrapButton
+                classType="primary"
+                onClick={() => { this.setState({ editMode: true }); }}>
+                Edit
+            </BootstrapButton>;
+        }
+    }
+
+    public renderField(value: string, obj: any, children?: JSX.Element | string): JSX.Element {
+        return <div>
+            <div>{children}:</div>
+            {this.renderValue(value, obj)}
         </div>;
     }
 
@@ -81,27 +100,24 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         }
     }
 
-    public renderValue(obj: any, field: string) {
+    public renderValue(field: string, obj: any) {
         if (this.state.editMode) {
-            return <input name={field} type="text" value={obj[field]} onChange={(e) => this.handleChange(e)} />;
+            return <input
+                className="form-control"
+                name={field}
+                type="text"
+                value={obj[field]}
+                onChange={(e) => this.handleChange(e)} />;
         } else {
             return <span>{obj[field]}</span>;
         }
-    }
-
-    private copy<T extends {}>(val: T): T {
-        const newEle: any = {};
-        for (const a of Object.keys(val)) {
-            newEle[a] = (val as any)[a];
-        }
-        return newEle;
     }
 
     private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         const name = event.target.name;
         const curUser = this.state.curUser;
         if (curUser) {
-            const newUser: IUser = this.copy(curUser);
+            const newUser: IUser = copy(curUser);
             (newUser as any)[name] = event.target.value;
             this.setState({
                 curUser: newUser,

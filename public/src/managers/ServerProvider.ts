@@ -270,7 +270,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getAllUser(): Promise<IUser[]> {
-        const result = await this.helper.get<Array<{ id: number, isadmin: boolean }>>("users");
+        const result = await this.helper.get<IUser[]>("users");
         if (result.statusCode !== 302 || !result.data) {
             this.handleError(result);
             return [];
@@ -346,7 +346,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getLoggedInUser(): Promise<IUser | null> {
-        const result = await this.helper.get<{ id: number, isadmin: boolean }>("user");
+        const result = await this.helper.get<IUser>("user");
         if (result.statusCode !== 302 || !result.data) {
             this.handleError(result);
             return null;
@@ -354,7 +354,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.makeUserInfo(result.data);
     }
 
-    private makeUserInfo(data: { id: number, isadmin: boolean }): IUser {
+    private makeUserInfo(data: IUser): IUser {
         const storedData = localStorage.getItem("user:" + data.id.toString());
         if (storedData) {
             const temp = JSON.parse(storedData) as IUser;
@@ -362,14 +362,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             temp.isadmin = data.isadmin;
             return temp;
         }
-        return {
-            firstname: "",
-            lastname: "",
-            isadmin: data.isadmin,
-            id: data.id,
-            studentnr: "",
-            email: "",
-        };
+        return data;
     }
 
     private handleError(result: IHTTPResult<any>): void {

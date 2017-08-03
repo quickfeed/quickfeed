@@ -25,7 +25,7 @@ export class PageInfo extends React.Component<IPageInfoProps, {}> {
                 </span>
             </button>
             <strong>{this.getName(e)}</strong>: {e.message}
-        </div >;
+        </div>;
     }
 
     private getName(entry: ILogEntry): string {

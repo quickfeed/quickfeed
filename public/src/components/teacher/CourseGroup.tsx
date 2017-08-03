@@ -1,8 +1,11 @@
 import * as React from "react";
 
-import { DynamicTable } from "../../components";
+import { BootstrapButton, DynamicTable } from "../../components";
 import { CourseManager, NavigationManager } from "../../managers";
 import { CourseGroupStatus, ICourse, ICourseGroup, IUser } from "../../models";
+
+import { bindFunc, RProp } from "../../helper";
+import { BootstrapClass } from "../bootstrap/BootstrapButton";
 
 interface ICourseGroupProp {
     approvedGroups: ICourseGroup[];
@@ -49,6 +52,7 @@ class CourseGroup extends React.Component<ICourseGroupProp, any> {
     }
 
     private createPendingGroupView(): JSX.Element {
+        const UpdateButton = bindFunc(this, this.updateButton);
         return (
             <div className="pending-groups">
                 <h3>Pending Groups</h3>
@@ -60,20 +64,30 @@ class CourseGroup extends React.Component<ICourseGroupProp, any> {
                             group.name,
                             this.getMembers(group.users),
                             <span>
-                                <button
-                                    onClick={(e) => this.handleUpdateStatus(group.id, CourseGroupStatus.approved)}
-                                    className="btn btn-primary">
+                                <UpdateButton type="primary" group={group} status={CourseGroupStatus.approved}>
                                     Approve
-                        </button>
-                                <button
-                                    onClick={(e) => this.handleUpdateStatus(group.id, CourseGroupStatus.rejected)}
-                                    className="btn btn-danger"> Reject
-                    </button>
+                                </UpdateButton>
+                                <UpdateButton type="danger" group={group} status={CourseGroupStatus.rejected}>
+                                    Reject
+                                </UpdateButton>
                             </span>,
                         ]}
                 />
             </div>
         );
+    }
+
+    private updateButton(props: RProp<{
+        type: BootstrapClass,
+        group: ICourseGroup,
+        status: CourseGroupStatus,
+    }>) {
+        console.log(props);
+        return <BootstrapButton
+            onClick={(e) => this.handleUpdateStatus(props.group.id, props.status)}
+            classType={props.type}>>
+            {props.children}
+        </BootstrapButton>;
     }
 
     private getMembers(users: IUser[]): string {

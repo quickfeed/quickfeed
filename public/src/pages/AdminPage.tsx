@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Button, CourseForm, DynamicTable, NavMenu } from "../components";
+import { BootstrapButton, CourseForm, DynamicTable, NavMenu } from "../components";
 
 import { CourseManager, ILink, NavigationManager, UserManager } from "../managers";
 import { INavInfo } from "../NavigationHelper";
@@ -43,9 +43,11 @@ export class AdminPage extends ViewPage {
     public async courses(info: INavInfo<{}>): View {
         const allCourses = await this.courseMan.getCourses();
         return <div>
-            <Button className="btn btn-primary pull-right" text="+Create New"
-                onClick={() => this.handleNewCourse()}
-            />
+            <BootstrapButton classType="primary"
+                className="pull-right"
+                onClick={() => this.handleNewCourse()}>
+                +Create New
+            </BootstrapButton>
             <h1>All Courses</h1>
             <CourseView courses={allCourses}
                 onEditClick={(id: number) => this.handleEditCourseClick(id)}

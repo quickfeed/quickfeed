@@ -21,7 +21,6 @@ import {
     IUserRelation,
 } from "../models";
 
-import { ArrayHelper } from "../helper";
 import { MemberView } from "./views/MemberView";
 
 export class TeacherPage extends ViewPage {
