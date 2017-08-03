@@ -103,19 +103,16 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     public async generateTopLinksFor(user: IUser | null): Promise<ILink[]> {
         if (user) {
             const basis: ILink[] = [];
-            if (await this.userMan.isTeacher(user)) {
-                basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
-            }
-            basis.push({ name: "Courses", uri: "app/student/", active: false });
             if (this.userMan.isAdmin(user)) {
+                basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
                 basis.push({ name: "Admin", uri: "app/admin", active: false });
             }
+            basis.push({ name: "Courses", uri: "app/student/", active: false });
             basis.push({ name: "Help", uri: "app/help", active: false });
             return basis;
         } else {
             return [
                 { name: "Help", uri: "app/help", active: false },
-                { name: "New Course", uri: "app/admin/courses/new", active: false },
             ];
         }
     }
