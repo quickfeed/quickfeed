@@ -3,7 +3,6 @@ import { CourseGroup, DynamicTable, NavMenu, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { View, ViewPage } from "./ViewPage";
-import { HelloView } from "./views/HelloView";
 import { UserView } from "./views/UserView";
 
 import { INavInfo } from "../NavigationHelper";
@@ -50,10 +49,6 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("user", async (navInfo) => {
             return <UserView users={await userMan.getAllUser()}></UserView>;
         });
-        // TODO remove the following code; it does not appear to be in use since the above endpoint is equal.
-        // this.navHelper.registerFunction("user", async (navInfo) => {
-        //     return <HelloView></HelloView>;
-        // });
     }
 
     public checkAuthentication(): boolean {

@@ -8,7 +8,6 @@ import { UserManager } from "../managers/UserManager";
 import { CourseUserState, ICourse, ICourseGroup, isError, IStudentSubmission, IUser, IUserCourse } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
-import { HelloView } from "./views/HelloView";
 import { UserView } from "./views/UserView";
 
 import { INavInfo } from "../NavigationHelper";
@@ -47,7 +46,6 @@ export class StudentPage extends ViewPage {
 
         // Only for testing purposes
         this.navHelper.registerFunction<any>("user", this.getUsers);
-        this.navHelper.registerFunction<any>("hello", (navInfo) => Promise.resolve(<HelloView></HelloView>));
     }
 
     public checkAuthentication(): boolean {
@@ -132,7 +130,7 @@ export class StudentPage extends ViewPage {
         if (course && curUser) {
             const grp: ICourseGroup | null = await this.courseMan.getCourseByUserAndCourse(curUser.id, course.id);
             if (grp) {
-                return <GroupInfo group={grp} course={course}/>;
+                return <GroupInfo group={grp} course={course} />;
             } else {
                 const students = await this.courseMan
                     .getUsersForCourse(course, this.userMan, [CourseUserState.student]);
