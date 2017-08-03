@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
@@ -25,6 +24,7 @@ import (
 	"github.com/docker/docker/dockerversion"
 	"github.com/docker/docker/pkg/templates"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -384,15 +384,18 @@ func (l *logStream) collectBatch() {
 				eventBufferNegative := eventBufferAge < 0
 				if eventBufferExpired || eventBufferNegative {
 					events = l.processEvent(events, eventBuffer, eventBufferTimestamp)
+					eventBuffer = eventBuffer[:0]
 				}
 			}
 			l.publishBatch(events)
 			events = events[:0]
 		case msg, more := <-l.messages:
 			if !more {
-				// Flush event buffer
+				// Flush event buffer and release resources
 				events = l.processEvent(events, eventBuffer, eventBufferTimestamp)
+				eventBuffer = eventBuffer[:0]
 				l.publishBatch(events)
+				events = events[:0]
 				return
 			}
 			if eventBufferTimestamp == 0 {
@@ -400,15 +403,11 @@ func (l *logStream) collectBatch() {
 			}
 			unprocessedLine := msg.Line
 			if l.multilinePattern != nil {
-				if l.multilinePattern.Match(unprocessedLine) {
-					// This is a new log event so flush the current eventBuffer to events
+				if l.multilinePattern.Match(unprocessedLine) || len(eventBuffer)+len(unprocessedLine) > maximumBytesPerEvent {
+					// This is a new log event or we will exceed max bytes per event
+					// so flush the current eventBuffer to events and reset timestamp
 					events = l.processEvent(events, eventBuffer, eventBufferTimestamp)
 					eventBufferTimestamp = msg.Timestamp.UnixNano() / int64(time.Millisecond)
-					eventBuffer = eventBuffer[:0]
-				}
-				// If we will exceed max bytes per event flush the current event buffer before appending
-				if len(eventBuffer)+len(unprocessedLine) > maximumBytesPerEvent {
-					events = l.processEvent(events, eventBuffer, eventBufferTimestamp)
 					eventBuffer = eventBuffer[:0]
 				}
 				// Append new line

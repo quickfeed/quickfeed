@@ -18,7 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/dockerversion"
 	"github.com/docker/docker/pkg/devicemapper"
@@ -29,6 +28,7 @@ import (
 	units "github.com/docker/go-units"
 	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
 
@@ -1479,12 +1479,9 @@ func (devices *DeviceSet) closeTransaction() error {
 }
 
 func determineDriverCapabilities(version string) error {
-	/*
-	 * Driver version 4.27.0 and greater support deferred activation
-	 * feature.
-	 */
+	// Kernel driver version >= 4.27.0 support deferred removal
 
-	logrus.Debugf("devicemapper: driver version is %s", version)
+	logrus.Debugf("devicemapper: kernel dm driver version is %s", version)
 
 	versionSplit := strings.Split(version, ".")
 	major, err := strconv.Atoi(versionSplit[0])

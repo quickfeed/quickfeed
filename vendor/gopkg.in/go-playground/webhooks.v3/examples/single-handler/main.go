@@ -14,7 +14,6 @@ const (
 )
 
 func main() {
-
 	hook := github.New(&github.Config{Secret: "MyGitHubSuperSecretSecrect...?"})
 	hook.RegisterEvents(HandleMultiple, github.ReleaseEvent, github.PullRequestEvent) // Add as many as you want
 
@@ -26,7 +25,6 @@ func main() {
 
 // HandleMultiple handles multiple GitHub events
 func HandleMultiple(payload interface{}, header webhooks.Header) {
-
 	fmt.Println("Handling Payload..")
 
 	switch payload.(type) {
