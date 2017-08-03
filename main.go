@@ -171,6 +171,8 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 }
 
 func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, secret string, enabled map[string]bool) {
+	webhooks.DefaultLog = web.WebhookLogger{FieldLogger: logger}
+
 	ghHook := whgithub.New(&whgithub.Config{Secret: secret})
 	if enabled["github"] {
 		ghHook.RegisterEvents(web.GithubHook(logger), whgithub.PushEvent)

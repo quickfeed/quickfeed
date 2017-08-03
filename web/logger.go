@@ -120,3 +120,24 @@ func (l EchoLogger) Fatalj(json log.JSON) {
 func (l EchoLogger) Panicj(json log.JSON) {
 	l.Panicf("%v", json)
 }
+
+// WebhookLogger implements the gopkg.in/go-playground/webhooks.v3.Logger
+// interface using a logrus.FieldLogger.
+type WebhookLogger struct {
+	logrus.FieldLogger
+}
+
+// Info prints basic information.
+func (l WebhookLogger) Info(msg string) {
+	l.FieldLogger.Info(msg)
+}
+
+// Error prints error information.
+func (l WebhookLogger) Error(msg string) {
+	l.FieldLogger.Error(msg)
+}
+
+// Debug prints information useful for debugging.
+func (l WebhookLogger) Debug(msg string) {
+	l.FieldLogger.Debug(msg)
+}
