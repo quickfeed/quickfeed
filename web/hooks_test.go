@@ -25,7 +25,7 @@ func TestGithubHook(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.CreateUserFromRemoteIdentity("github", 0, ""); err != nil {
+	if _, err := db.CreateUserFromRemoteIdentity("", "", "", "", "github", 0, ""); err != nil {
 		t.Fatal(err)
 	}
 

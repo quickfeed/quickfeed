@@ -205,7 +205,7 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,7 +233,7 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -317,7 +317,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -376,7 +376,7 @@ func TestGetRemoteIdentity(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -420,7 +420,7 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	user1, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -429,7 +429,7 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 		t.Errorf("have user %+v want %+v", user1, wantUser1)
 	}
 
-	if _, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1); err == nil {
+	if _, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider1, remoteID1, secret1); err == nil {
 		t.Errorf("expected error '%v'", database.ErrDuplicateIdentity)
 	}
 }
@@ -488,11 +488,12 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	defer cleanup()
 
 	// Create first user (the admin).
-	if _, err := db.CreateUserFromRemoteIdentity("", 0, ""); err != nil {
+	if _, err := db.CreateUserFromRemoteIdentity("", "", "", "",
+		"", 0, ""); err != nil {
 		t.Fatal(err)
 	}
 
-	user1, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	user1, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -566,7 +567,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -757,7 +758,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 
 	// Create the user and enroll him
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -811,7 +812,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 
 	// Create the user
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}

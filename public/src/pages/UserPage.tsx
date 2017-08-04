@@ -19,13 +19,13 @@ export class UserPage extends ViewPage {
         this.navHelper.defaultPage = "profile";
         this.navHelper.registerFunction("profile", this.profile);
         this.curUser = this.userMan.getCurrentUser() || {
-            firstname: "", lastname: "", email: "", isadmin: false, studentid: "", id: 0,
+            firstname: "", lastname: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
         };
     }
 
     public async updateUser() {
         this.curUser = this.userMan.getCurrentUser() || {
-            firstname: "", lastname: "", email: "", isadmin: false, studentid: "", id: 0,
+            firstname: "", lastname: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
         };
         console.log("Cur user;", this.curUser);
         this.navMan.refresh();

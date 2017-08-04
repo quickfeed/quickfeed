@@ -119,8 +119,9 @@ func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*models.Remote
 }
 
 // CreateUserFromRemoteIdentity implements the Database interface.
-func (db *GormDB) CreateUserFromRemoteIdentity(provider string, rid uint64, accessToken string) (*models.User, error) {
-	var count uint64
+func (db *GormDB) CreateUserFromRemoteIdentity(firstname string, lastname string, email string, avatarurl string,
+		provider string, rid uint64, accessToken string) (*models.User, error) {
+	var count int64
 	if err := db.conn.
 		Model(&models.RemoteIdentity{}).
 		Where(&models.RemoteIdentity{
@@ -135,6 +136,10 @@ func (db *GormDB) CreateUserFromRemoteIdentity(provider string, rid uint64, acce
 	}
 
 	user := models.User{
+		FirstName: firstname,
+		LastName:  lastname,
+		Email:     email,
+		AvatarURL: avatarurl,
 		RemoteIdentities: []*models.RemoteIdentity{{
 			Provider:    provider,
 			RemoteID:    rid,

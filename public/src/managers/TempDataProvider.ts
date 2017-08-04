@@ -591,6 +591,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                         lastname: "1",
                         isadmin: false,
                         studentid: "12345",
+                        avatarurl: "",
                     },
                     {
                         id: 2,
@@ -599,6 +600,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                         lastname: "2",
                         isadmin: false,
                         studentid: "12346",
+                        avatarurl: "",
                     },
                 ],
             },
@@ -615,6 +617,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                         lastname: "3",
                         isadmin: false,
                         studentid: "12347",
+                        avatarurl: "",
                     },
                     {
                         id: 4,
@@ -623,6 +626,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                         lastname: "4",
                         isadmin: false,
                         studentid: "12348",
+                        avatarurl: "",
                     },
                 ],
             },

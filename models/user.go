@@ -10,6 +10,7 @@ type User struct {
 	LastName  string `json:"lastname"`
 	StudentID string `json:"studentid"`
 	Email     string `json:"email"`
+	AvatarURL string `json:"avatarurl"`
 
 	RemoteIdentities []*RemoteIdentity `json:"remoteidentities,omitempty"`
 

@@ -55,11 +55,11 @@ func TestGetUser(t *testing.T) {
 	defer cleanup()
 
 	// Create first user (the admin).
-	if _, err := db.CreateUserFromRemoteIdentity("", 0, ""); err != nil {
+	if _, err := db.CreateUserFromRemoteIdentity("", "", "", "", "", 0, ""); err != nil {
 		t.Fatal(err)
 	}
 
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,11 +111,11 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.CreateUserFromRemoteIdentity(provider1, remoteID1, secret1)
+	user1, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider1, remoteID1, secret1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	user2, err := db.CreateUserFromRemoteIdentity(provider2, remoteID2, secret2)
+	user2, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider2, remoteID2, secret2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -173,7 +173,8 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	var users []*models.User
 	for _, u := range allUsers {
-		user, err := db.CreateUserFromRemoteIdentity(u.provider, u.remoteID, u.secret)
+		user, err := db.CreateUserFromRemoteIdentity("", "", "", "",
+			u.provider, u.remoteID, u.secret)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -266,7 +267,8 @@ func TestPatchUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user, err := db.CreateUserFromRemoteIdentity(provider, remoteID, secret)
+	user, err := db.CreateUserFromRemoteIdentity("", "", "", "",
+		provider, remoteID, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
