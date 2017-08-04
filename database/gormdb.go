@@ -47,13 +47,16 @@ func (db *GormDB) GetUser(id uint64) (*models.User, error) {
 }
 
 // GetUserByRemoteIdentity implements the Database interface.
-func (db *GormDB) GetUserByRemoteIdentity(provider string, id uint64, accessToken string) (*models.User, error) {
+func (db *GormDB) GetUserByRemoteIdentity(provider string, remoteID uint64, accessToken string) (*models.User, error) {
 	tx := db.conn.Begin()
 
 	// Get the remote identity.
 	var remoteIdentity models.RemoteIdentity
 	if err := tx.
-		Where("provider = ? AND remote_id = ?", provider, id).
+		Where(&models.RemoteIdentity{
+			Provider: provider,
+			RemoteID: remoteID,
+		}).
 		First(&remoteIdentity).Error; err != nil {
 		tx.Rollback()
 		return nil, err
@@ -108,7 +111,8 @@ func (db *GormDB) GetRemoteIdentity(provider string, remoteID uint64) (*models.R
 		Where(&models.RemoteIdentity{
 			Provider: provider,
 			RemoteID: remoteID,
-		}).First(&remoteIdentity).Error; err != nil {
+		}).
+		First(&remoteIdentity).Error; err != nil {
 		return nil, err
 	}
 	return &remoteIdentity, nil
@@ -116,14 +120,17 @@ func (db *GormDB) GetRemoteIdentity(provider string, remoteID uint64) (*models.R
 
 // CreateUserFromRemoteIdentity implements the Database interface.
 func (db *GormDB) CreateUserFromRemoteIdentity(provider string, remoteID uint64, accessToken string) (*models.User, error) {
-	var count int64
+	var count uint64
 	if err := db.conn.
 		Model(&models.RemoteIdentity{}).
-		Where("provider = ? AND remote_id = ?", provider, remoteID).
+		Where(&models.RemoteIdentity{
+			Provider: provider,
+			RemoteID: remoteID,
+		}).
 		Count(&count).Error; err != nil {
 		return nil, err
 	}
-	if count != 0 {
+	if count > 0 {
 		return nil, ErrDuplicateIdentity
 	}
 
@@ -152,14 +159,20 @@ var ErrDuplicateIdentity = errors.New("remote identity register with another use
 
 // AssociateUserWithRemoteIdentity implements the Database interface.
 func (db *GormDB) AssociateUserWithRemoteIdentity(userID uint64, provider string, remoteID uint64, accessToken string) error {
-	var count int64
+	var count uint64
 	if err := db.conn.
 		Model(&models.RemoteIdentity{}).
-		Where("provider = ? AND remote_id = ? AND NOT user_id = ?", provider, remoteID, userID).
+		Where(&models.RemoteIdentity{
+			Provider: provider,
+			RemoteID: remoteID,
+		}).
+		Not(&models.RemoteIdentity{
+			UserID: userID,
+		}).
 		Count(&count).Error; err != nil {
 		return err
 	}
-	if count != 0 {
+	if count > 0 {
 		return ErrDuplicateIdentity
 	}
 
@@ -203,27 +216,23 @@ func (db *GormDB) GetAssignmentsByCourse(id uint64) ([]*models.Assignment, error
 // TODO: Also check enrollment to see if the user is
 // enrolled in the course the assignment belongs to
 func (db *GormDB) CreateSubmission(submission *models.Submission) error {
-	// Checks that the course exists
 	var course uint64
+	// Checks that the course exists
 	if err := db.conn.Model(&models.Assignment{}).Where(&models.Assignment{
 		ID: submission.AssignmentID,
 	}).Count(&course).Error; err != nil {
 		return err
 	}
-	if course != 1 {
-		return gorm.ErrRecordNotFound
-	}
-	// Checks that the user exists
 	var user uint64
+	// Checks that the user exists
 	if err := db.conn.Model(&models.User{}).Where(&models.User{
 		ID: submission.UserID,
 	}).Count(&user).Error; err != nil {
 		return err
 	}
-	if user != 1 {
+	if course+user != 2 {
 		return gorm.ErrRecordNotFound
 	}
-	// Should append the lates submission to the list of all the submissions
 	return db.conn.Create(&submission).Error
 }
 
@@ -268,7 +277,10 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 	}
 
 	return db.conn.
-		Where(models.Assignment{CourseID: assignment.CourseID, Order: assignment.Order}).
+		Where(models.Assignment{
+			CourseID: assignment.CourseID,
+			Order:    assignment.Order,
+		}).
 		Assign(models.Assignment{
 			Name:        assignment.Name,
 			Language:    assignment.Language,
@@ -331,7 +343,10 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...uint) ([]*models
 func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.Enrollment, error) {
 	var enrollment models.Enrollment
 	if err := db.conn.
-		Where("course_id = ? AND user_id = ?", cid, uid).
+		Where(&models.Enrollment{
+			CourseID: cid,
+			UserID:   uid,
+		}).
 		First(&enrollment).Error; err != nil {
 		return nil, err
 	}
@@ -342,11 +357,10 @@ func (db *GormDB) setEnrollment(id uint64, status uint) error {
 	if status > models.Accepted {
 		panic("invalid status")
 	}
-	return db.conn.Model(&models.Enrollment{}).
+	return db.conn.
+		Model(&models.Enrollment{}).
 		Where(&models.Enrollment{ID: id}).
-		Update(&models.Enrollment{
-			Status: int(status),
-		}).Error
+		Update(&models.Enrollment{Status: int(status)}).Error
 }
 
 // GetCoursesByUser returns all courses (with enrollment status)
@@ -397,16 +411,15 @@ func (db *GormDB) GetCourse(id uint64) (*models.Course, error) {
 
 // UpdateCourse implements the Database interface
 func (db *GormDB) UpdateCourse(course *models.Course) error {
-	return db.conn.Model(course).Updates(course).Error
+	return db.conn.Model(&models.Course{}).Updates(course).Error
 }
 
-// CreateGroup creates a new group
-// and assign users to newly created group
+// CreateGroup creates a new group and assign users to newly created group
 func (db *GormDB) CreateGroup(group *models.Group) error {
 	// Uses transaction to update more than one db tables
 	// Failure in one table rollbacks all
 	tx := db.conn.Begin()
-	if err := tx.Model(group).Create(group).Error; err != nil {
+	if err := tx.Model(&models.Group{}).Create(group).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -415,13 +428,11 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 		userids = append(userids, u.ID)
 	}
 	// Batch update
-	err := tx.Model(&models.Enrollment{}).
+	if err := tx.Model(&models.Enrollment{}).
 		Where("user_id IN (?) AND course_id = ?", userids, group.CourseID).
 		Updates(&models.Enrollment{
 			GroupID: group.ID,
-		}).Error
-
-	if err != nil {
+		}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -429,8 +440,7 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 	return nil
 }
 
-// GetGroup returns a group specified by id
-// return error if does not exits
+// GetGroup returns a group specified by id return error if does not exits
 func (db *GormDB) GetGroup(id uint64) (*models.Group, error) {
 	var group models.Group
 	if err := db.conn.Preload("Enrollments").First(&group, id).Error; err != nil {
@@ -459,15 +469,17 @@ func (db *GormDB) UpdateGroupStatus(group *models.Group) error {
 func (db *GormDB) GetGroups(cid uint64) ([]*models.Group, error) {
 	var groups []*models.Group
 	if err := db.conn.
-		Where("course_id = ?", cid).
 		Preload("Enrollments").
+		Where(&models.Course{
+			ID: cid,
+		}).
 		Find(&groups).Error; err != nil {
 		return nil, err
 	}
 
-	for _, grp := range groups {
+	for _, group := range groups {
 		var userIDs []uint64
-		for _, enrollment := range grp.Enrollments {
+		for _, enrollment := range group.Enrollments {
 			userIDs = append(userIDs, enrollment.UserID)
 		}
 		if len(userIDs) > 0 {
@@ -475,7 +487,7 @@ func (db *GormDB) GetGroups(cid uint64) ([]*models.Group, error) {
 			if err != nil {
 				return nil, err
 			}
-			grp.Users = users
+			group.Users = users
 		}
 
 	}
