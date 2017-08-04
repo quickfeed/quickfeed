@@ -130,17 +130,17 @@ func TestGormDBGetCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	c1 := models.Course{}
+	c1 := models.Course{DirectoryID: 1}
 	if err := db.CreateCourse(&c1); err != nil {
 		t.Fatal(err)
 	}
 
-	c2 := models.Course{}
+	c2 := models.Course{DirectoryID: 2}
 	if err := db.CreateCourse(&c2); err != nil {
 		t.Fatal(err)
 	}
 
-	c3 := models.Course{}
+	c3 := models.Course{DirectoryID: 3}
 	if err := db.CreateCourse(&c3); err != nil {
 		t.Fatal(err)
 	}
@@ -375,23 +375,23 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var course1 models.Course
-	if err := db.CreateCourse(&course1); err != nil {
+	c1 := models.Course{DirectoryID: 1}
+	if err := db.CreateCourse(&c1); err != nil {
 		t.Fatal(err)
 	}
 
-	var course2 models.Course
-	if err := db.CreateCourse(&course2); err != nil {
+	c2 := models.Course{DirectoryID: 2}
+	if err := db.CreateCourse(&c2); err != nil {
 		t.Fatal(err)
 	}
 
-	var course3 models.Course
-	if err := db.CreateCourse(&course3); err != nil {
+	c3 := models.Course{DirectoryID: 3}
+	if err := db.CreateCourse(&c3); err != nil {
 		t.Fatal(err)
 	}
 
-	var course4 models.Course
-	if err := db.CreateCourse(&course4); err != nil {
+	c4 := models.Course{DirectoryID: 4}
+	if err := db.CreateCourse(&c4); err != nil {
 		t.Fatal(err)
 	}
 
@@ -409,15 +409,15 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 
 	enrollment1 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course1.ID,
+		CourseID: c1.ID,
 	}
 	enrollment2 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course2.ID,
+		CourseID: c2.ID,
 	}
 	enrollment3 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course3.ID,
+		CourseID: c3.ID,
 	}
 	if err := db.CreateEnrollment(&enrollment1); err != nil {
 		t.Fatal(err)
@@ -441,10 +441,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*models.Course{
-		{ID: course1.ID, Enrolled: int(models.Pending)},
-		{ID: course2.ID, Enrolled: int(models.Rejected)},
-		{ID: course3.ID, Enrolled: int(models.Accepted)},
-		{ID: course4.ID, Enrolled: models.None},
+		{ID: c1.ID, DirectoryID: 1, Enrolled: int(models.Pending)},
+		{ID: c2.ID, DirectoryID: 2, Enrolled: int(models.Rejected)},
+		{ID: c3.ID, DirectoryID: 3, Enrolled: int(models.Accepted)},
+		{ID: c4.ID, DirectoryID: 4, Enrolled: models.None},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
@@ -883,13 +883,13 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// Create course course1 and course2
-	var course1 models.Course
-	if err := db.CreateCourse(&course1); err != nil {
+	// Create course c1 and c2
+	c1 := models.Course{DirectoryID: 1}
+	if err := db.CreateCourse(&c1); err != nil {
 		t.Fatal(err)
 	}
-	var course2 models.Course
-	if err := db.CreateCourse(&course2); err != nil {
+	c2 := models.Course{DirectoryID: 2}
+	if err := db.CreateCourse(&c2); err != nil {
 		t.Fatal(err)
 	}
 
@@ -909,7 +909,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	// Enroll the user to the course
 	enrollment1 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course1.ID,
+		CourseID: c1.ID,
 	}
 	if err := db.CreateEnrollment(&enrollment1); err != nil {
 		t.Fatal(err)
@@ -920,7 +920,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	// Create some assignments
 	assignment1 := models.Assignment{
-		CourseID: course1.ID,
+		CourseID: c1.ID,
 		Name:     "Assignment 1",
 		Order:    1,
 	}
@@ -928,7 +928,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	assignment2 := models.Assignment{
-		CourseID: course1.ID,
+		CourseID: c1.ID,
 		Name:     "Assignment 2",
 		Order:    2,
 	}
@@ -936,7 +936,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	assignment3 := models.Assignment{
-		CourseID: course2.ID,
+		CourseID: c2.ID,
 		Name:     "Assignment 1",
 		Order:    1,
 	}
@@ -968,14 +968,14 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 
 	// Even if there is three submission, only the latest for each assignment should be returned
-	data, err := db.GetSubmissions(course1.ID, user.ID)
+	data, err := db.GetSubmissions(c1.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetSubmissions(course2.ID, user.ID)
+	data, err = db.GetSubmissions(c2.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {
