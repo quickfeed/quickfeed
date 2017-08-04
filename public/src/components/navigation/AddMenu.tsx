@@ -6,17 +6,17 @@ import { NavigationHelper } from "../../NavigationHelper";
 import { IUser } from "../../models";
 import { NavMenu } from "./NavMenu";
 
-export interface INavBarLoginProps {
+export interface IAddMenuProps {
     links?: ILink[];
     onClick?: (lin: ILink) => void;
     user: IUser | null;
 }
 
-interface INavBarLoginState {
+interface IAddMenuState {
     loginOpen: boolean;
 }
 
-export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLoginState> {
+export class AddMenu extends React.Component<IAddMenuProps, IAddMenuState> {
 
     constructor() {
         super();
@@ -26,13 +26,8 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
     }
 
     public render(): JSX.Element {
-        if (this.props.user) {
-            return <div className="navbar-right">
-                <button className="btn btn-primary navbar-btn"
-                    onClick={() => { this.handleClick({ name: "Sign out", uri: "app/login/logout" }); }}>
-                    Log out
-                </button>
-            </div>;
+        if (!this.props.user) {
+            return <div></div>;
         }
         let links: ILink[] | undefined = this.props.links;
         if (!links) {
@@ -46,15 +41,22 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
         }
 
         return <div className="navbar-right">
-            <button onClick={() => this.toggleMenu()}
-                className="btn btn-primary navbar-btn">
-                Login
-            </button>
-            <div className={"nav-box " + isHidden}>
-                <NavMenu links={links}
-                    onClick={(link) => this.handleClick(link)}>
-                </NavMenu>
-            </div>
+            <ul className="nav navbar-nav ">
+                <li>
+                    <a style={{ padding: "13px 15px 12px 15px" }}
+                        href="#" onClick={(e) => { e.preventDefault(); this.toggleMenu(); }}
+                        className="">
+                        <span style={{ fontSize: "2em", verticalAlign: "middle" }}>+</span>
+                        <span style={{ fontSize: "0.5em", verticalAlign: "sub" }}>&#9660;</span>
+                    </a>
+                    <div className={"nav-box " + isHidden}>
+                        <NavMenu links={links}
+                            onClick={(link) => this.handleClick(link)}>
+                        </NavMenu>
+                    </div>
+                </li>
+            </ul>
+
         </div >;
     }
 

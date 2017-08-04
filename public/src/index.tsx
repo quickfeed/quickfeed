@@ -28,6 +28,8 @@ import { PageInfo } from "./components/information/PageInfo";
 import { UserProfile } from "./components/forms/UserProfile";
 import { UserPage } from "./pages/UserPage";
 
+import { AddMenu } from "./components/navigation/AddMenu";
+
 interface IAutoGraderState {
     activePage?: ViewPage;
     currentContent: JSX.Element;
@@ -254,6 +256,16 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                         links={loginLink}
                         onClick={(link) => this.handleClick(link)}>
                     </NavBarLogin>
+                    <AddMenu
+                        user={this.state.curUser}
+                        links={[
+                            { name: "Join Course", uri: "app/student/enroll" },
+                            { name: "New Course", uri: "app/admin/courses/new" },
+                        ]}
+                        onClick={(link) => this.handleClick(link)}
+                    >
+
+                    </AddMenu>
                 </NavBar>
                 <PageInfo entry={this.state.curMessage} onclose={async () => {
                     this.setState({ curMessage: undefined });
