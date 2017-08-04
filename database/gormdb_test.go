@@ -1041,7 +1041,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			var uids []uint64
 			// Create as many users as the desired number of enrollments.
 			for i := 0; i < len(test.enrollments); i++ {
-				user, err := db.CreateUserFromRemoteIdentity("github", 100+uint64(i), "secret")
+				user, err := db.CreateUserFromRemoteIdentity("", "", "", "", "github", 100+uint64(i), "secret")
 				if err != nil {
 					t.Fatal(err)
 				}
