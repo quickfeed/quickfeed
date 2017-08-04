@@ -416,9 +416,21 @@ func (db *GormDB) UpdateCourse(course *models.Course) error {
 
 // CreateGroup creates a new group and assign users to newly created group
 func (db *GormDB) CreateGroup(group *models.Group) error {
-	// Uses transaction to update more than one db tables
-	// Failure in one table rollbacks all
+	if group.CourseID == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
 	tx := db.conn.Begin()
+	var course uint64
+	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
+		ID: group.CourseID,
+	}).Count(&course).Error; err != nil {
+		return err
+	}
+	if course != 1 {
+		return gorm.ErrRecordNotFound
+	}
+
 	if err := tx.Model(&models.Group{}).Create(group).Error; err != nil {
 		tx.Rollback()
 		return err
@@ -427,15 +439,27 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 	for _, u := range group.Users {
 		userids = append(userids, u.ID)
 	}
-	// Batch update
-	if err := tx.Model(&models.Enrollment{}).
-		Where("user_id IN (?) AND course_id = ?", userids, group.CourseID).
+
+	query := tx.Model(&models.Enrollment{}).
+		Where(&models.Enrollment{
+			CourseID: group.CourseID,
+			Status:   int(models.Accepted),
+		}).
+		Where("user_id IN (?)", userids).
 		Updates(&models.Enrollment{
 			GroupID: group.ID,
-		}).Error; err != nil {
+		})
+
+	if query.Error != nil {
 		tx.Rollback()
-		return err
+		return query.Error
 	}
+
+	if query.RowsAffected != int64(len(userids)) {
+		tx.Rollback()
+		return gorm.ErrRecordNotFound
+	}
+
 	tx.Commit()
 	return nil
 }
