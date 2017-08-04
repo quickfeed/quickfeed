@@ -35,14 +35,21 @@ var allCourses = []*models.Course{
 		Year:        2017,
 		Tag:         "Fall",
 		Provider:    "fake",
-		DirectoryID: 1,
+		DirectoryID: 2,
 	}, {
 		Name:        "New Systems",
 		Code:        "DATx20",
 		Year:        2019,
 		Tag:         "Fall",
 		Provider:    "fake",
-		DirectoryID: 1,
+		DirectoryID: 3,
+	}, {
+		Name:        "Hyped Systems",
+		Code:        "DATx20",
+		Year:        2019,
+		Tag:         "Fall",
+		Provider:    "fake",
+		DirectoryID: 4,
 	},
 }
 
@@ -53,8 +60,8 @@ func TestListCourses(t *testing.T) {
 	defer cleanup()
 
 	var testCourses []*models.Course
-	for range allCourses {
-		var testCourse models.Course
+	for _, course := range allCourses {
+		testCourse := *course
 		err := db.CreateCourse(&testCourse)
 		if err != nil {
 			t.Fatal(err)
@@ -307,24 +314,14 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var course1 models.Course
-	if err := db.CreateCourse(&course1); err != nil {
-		t.Fatal(err)
-	}
-
-	var course2 models.Course
-	if err := db.CreateCourse(&course2); err != nil {
-		t.Fatal(err)
-	}
-
-	var course3 models.Course
-	if err := db.CreateCourse(&course3); err != nil {
-		t.Fatal(err)
-	}
-
-	var course4 models.Course
-	if err := db.CreateCourse(&course4); err != nil {
-		t.Fatal(err)
+	var testCourses []*models.Course
+	for _, course := range allCourses {
+		testCourse := *course
+		err := db.CreateCourse(&testCourse)
+		if err != nil {
+			t.Fatal(err)
+		}
+		testCourses = append(testCourses, &testCourse)
 	}
 
 	var user models.User
@@ -336,15 +333,15 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 	enrollment1 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course1.ID,
+		CourseID: testCourses[0].ID,
 	}
 	enrollment2 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course2.ID,
+		CourseID: testCourses[1].ID,
 	}
 	enrollment3 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course3.ID,
+		CourseID: testCourses[2].ID,
 	}
 	if err := db.CreateEnrollment(&enrollment1); err != nil {
 		t.Fatal(err)
@@ -387,13 +384,18 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 	assertCode(t, w.Code, http.StatusOK)
 	wantCourses := []*models.Course{
-		{ID: course1.ID, Enrolled: int(models.Pending)},
-		{ID: course2.ID, Enrolled: int(models.Rejected)},
-		{ID: course3.ID, Enrolled: int(models.Accepted)},
-		{ID: course4.ID, Enrolled: models.None},
+		{ID: testCourses[0].ID, Enrolled: int(models.Pending)},
+		{ID: testCourses[1].ID, Enrolled: int(models.Rejected)},
+		{ID: testCourses[2].ID, Enrolled: int(models.Accepted)},
+		{ID: testCourses[3].ID, Enrolled: models.None},
 	}
-	if !reflect.DeepEqual(courses, wantCourses) {
-		t.Errorf("have course %+v want %+v", courses, wantCourses)
+	for i := range courses {
+		if courses[i].ID != wantCourses[i].ID {
+			t.Errorf("have course %+v want %+v", courses[i].ID, wantCourses[i].ID)
+		}
+		if courses[i].Enrolled != wantCourses[i].Enrolled {
+			t.Errorf("have course %+v want %+v", courses[i].Enrolled, wantCourses[i].Enrolled)
+		}
 	}
 }
 
@@ -406,24 +408,14 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var course1 models.Course
-	if err := db.CreateCourse(&course1); err != nil {
-		t.Fatal(err)
-	}
-
-	var course2 models.Course
-	if err := db.CreateCourse(&course2); err != nil {
-		t.Fatal(err)
-	}
-
-	var course3 models.Course
-	if err := db.CreateCourse(&course3); err != nil {
-		t.Fatal(err)
-	}
-
-	var course4 models.Course
-	if err := db.CreateCourse(&course4); err != nil {
-		t.Fatal(err)
+	var testCourses []*models.Course
+	for _, course := range allCourses {
+		testCourse := *course
+		err := db.CreateCourse(&testCourse)
+		if err != nil {
+			t.Fatal(err)
+		}
+		testCourses = append(testCourses, &testCourse)
 	}
 
 	var user models.User
@@ -435,15 +427,15 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	enrollment1 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course1.ID,
+		CourseID: testCourses[0].ID,
 	}
 	enrollment2 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course2.ID,
+		CourseID: testCourses[1].ID,
 	}
 	enrollment3 := models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course3.ID,
+		CourseID: testCourses[2].ID,
 	}
 	if err := db.CreateEnrollment(&enrollment1); err != nil {
 		t.Fatal(err)
@@ -485,9 +477,9 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}
 
 	assertCode(t, w.Code, http.StatusOK)
-	wantCourses := []*models.Course{
-		{ID: course2.ID, Enrolled: int(models.Rejected)},
-		{ID: course3.ID, Enrolled: int(models.Accepted)},
+	wantCourses, err := db.GetCoursesByUser(user.ID, models.Rejected, models.Accepted)
+	if err != nil {
+		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
