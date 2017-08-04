@@ -48,11 +48,11 @@ class NavBar extends React.Component<INavBarProps, {}> {
     }
 
     private renderNavBarClass() {
-        let name = "navbar navbar-absolute-top";
+        let name = "navbar navbar-absolute-top spacefix";
         if (this.props.isInverse) {
-            name += " navbar-inverse";
+            name += " navbar-inverse spacefix";
         } else {
-            name += " navbar-default";
+            name += " navbar-default spacefix";
         }
         return name;
     }

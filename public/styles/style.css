@@ -172,3 +172,30 @@
     max-height: 200px;
     overflow-y: auto;
 }
+
+.profileElement {
+    width: 150px;
+    padding: 10px;
+    display: inline-block;
+}
+
+.field-box {
+    padding: 3px;
+}
+
+.field-box b {
+    display: block;
+}
+
+.navbar.spacefix {
+    margin-bottom: 0px;
+}
+
+.container {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.row.spacefix {
+    margin-top: 10px;
+}

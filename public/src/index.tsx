@@ -26,6 +26,7 @@ import { ILogEntry, LogManager } from "./managers/LogManager";
 import { PageInfo } from "./components/information/PageInfo";
 
 import { UserProfile } from "./components/forms/UserProfile";
+import { UserPage } from "./pages/UserPage";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
@@ -48,7 +49,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     private subPage: string;
     private currentBodyContent?: JSX.Element;
     private currentMenuContent: JSX.Element[][] = [];
-    private lastUri: string;
 
     constructor(props: IAutoGraderProps) {
         super();
@@ -96,20 +96,22 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     public async handleNavigation(e: INavEvent) {
+        if (!this.checkloggedInUser() && !e.uri.match(/app\/user/)) {
+            this.navMan.navigateTo("app/user");
+            return;
+        }
         const topLinks = await this.generateTopLinksFor(this.state.curUser);
         this.checkLinks(topLinks);
         this.setState({ topLinks });
 
-        if (this.lastUri !== e.uri) {
-            this.currentBodyContent = undefined;
-            this.currentMenuContent = [];
-        }
+        this.currentBodyContent = undefined;
+        this.currentMenuContent = [];
+
         this.subPage = e.subPage;
 
         const newContent = await this.renderTemplate(e.page, e.page.template);
 
         this.setState({ activePage: e.page, currentContent: newContent });
-        this.lastUri = e.uri;
     }
 
     public async generateTopLinksFor(user: IUser | null): Promise<ILink[]> {
@@ -199,14 +201,16 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         console.log("render");
         let body: JSX.Element;
         let content: JSX.Element;
-        let menu: JSX.Element[] | null | string = null;
-        if (!this.checkloggedInUser()) {
+        let leftMenu: JSX.Element[] | null | string = null;
+        let topArea: JSX.Element[] | null | string = null;
+        /*if (!this.checkloggedInUser()) {
             name = "frontpage";
             content = <UserProfile userMan={this.userMan} onEditStop={() => { this.navMan.refresh(); }} />;
-        } else {
-            content = await this.renderActivePage(page, this.subPage);
-            menu = await this.renderActiveMenu(page, 0);
-        }
+        } else {*/
+        content = await this.renderActivePage(page, this.subPage);
+        leftMenu = await this.renderActiveMenu(page, 0);
+        topArea = await this.renderActiveMenu(page, 1);
+        // }
 
         const loginLink: ILink[] = [
             { name: "Github", uri: "app/login/login/github" },
@@ -215,23 +219,25 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         switch (name) {
             case "frontpage":
                 body = (
-                    <Row className="container-fluid">
+                    <Row className="container-fluid spacefix">
                         <div className="col-xs-12">
                             {content}
                         </div>
                     </Row>
                 );
+                break;
             default:
                 body = (
-                    <Row className="container-fluid">
+                    <Row className="container-fluid spacefix">
                         <div className="col-md-2 col-sm-3 col-xs-12">
-                            {menu}
+                            {leftMenu}
                         </div>
                         <div className="col-md-10 col-sm-9 col-xs-12">
                             {content}
                         </div>
                     </Row>
                 );
+                break;
         }
         return (
             <div>
@@ -253,6 +259,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                     this.setState({ curMessage: undefined });
                     this.setState({ currentContent: await this.refreshActivePage() });
                 }} />
+                {topArea}
                 {body}
             </div>);
     }
@@ -305,6 +312,7 @@ async function main(): Promise<void> {
     all.push(navMan.registerPage("app/admin", new AdminPage(navMan, userMan, courseMan)));
     all.push(navMan.registerPage("app/help", new HelpPage(navMan)));
     all.push(navMan.registerPage("app/login", new LoginPage(navMan, userMan)));
+    all.push(navMan.registerPage("app/user", new UserPage(navMan, userMan)));
 
     Promise.all(all);
 

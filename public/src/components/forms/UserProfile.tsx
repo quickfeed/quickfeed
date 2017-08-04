@@ -35,11 +35,16 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
             return <h1>User not logged in</h1>;
         }
         const curUser = this.state.curUser;
-        return <div className="row">
-            <div className="col-md-3">
-                {this.renderUserInfoBox(curUser)}
+        return <div>
+            <div className="row container center-block">
+                <div className="col-md-3">
+                    {this.renderUserInfoBox(curUser)}
+                </div>
+                <div className="col-md-9">
+                    <h3>There is currently nothing important to note</h3>
+                </div>
             </div>
-        </div>;
+        </div >;
     }
 
     public renderUserInfoBox(curUser: IUser): JSX.Element {
@@ -50,7 +55,8 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
                 </div>;
         }
 
-        return <div>
+        return <div className="well">
+            <h3>Your information</h3>
             {message}
             {this.renderField("firstname", curUser, "Firstname")}
             {this.renderField("lastname", curUser, "Lastname")}
@@ -79,8 +85,8 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
     }
 
     public renderField(value: string, obj: any, children?: JSX.Element | string): JSX.Element {
-        return <div>
-            <div>{children}:</div>
+        return <div className="field-box">
+            <b>{children}</b>
             {this.renderValue(value, obj)}
         </div>;
     }
