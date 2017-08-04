@@ -119,43 +119,32 @@ func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*models.Remote
 }
 
 // CreateUserFromRemoteIdentity implements the Database interface.
-func (db *GormDB) CreateUserFromRemoteIdentity(firstname string, lastname string, email string, avatarurl string,
-		provider string, rid uint64, accessToken string) (*models.User, error) {
+func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity *models.RemoteIdentity) error {
 	var count int64
 	if err := db.conn.
 		Model(&models.RemoteIdentity{}).
 		Where(&models.RemoteIdentity{
-			Provider: provider,
-			RemoteID: rid,
+			Provider: remoteIdentity.Provider,
+			RemoteID: remoteIdentity.RemoteID,
 		}).
 		Count(&count).Error; err != nil {
-		return nil, err
+		return err
 	}
 	if count > 0 {
-		return nil, ErrDuplicateIdentity
+		return ErrDuplicateIdentity
 	}
 
-	user := models.User{
-		FirstName: firstname,
-		LastName:  lastname,
-		Email:     email,
-		AvatarURL: avatarurl,
-		RemoteIdentities: []*models.RemoteIdentity{{
-			Provider:    provider,
-			RemoteID:    rid,
-			AccessToken: accessToken,
-		}},
-	}
+	user.RemoteIdentities = []*models.RemoteIdentity{remoteIdentity}
 	if err := db.conn.Create(&user).Error; err != nil {
-		return nil, err
+		return err
 	}
 	// The first user defaults to admin user.
 	if user.ID == 1 {
 		if err := db.SetAdmin(1); err != nil {
-			return nil, err
+			return err
 		}
 	}
-	return &user, nil
+	return nil
 }
 
 // ErrDuplicateIdentity is returned when trying to associate a remote identity

@@ -55,12 +55,22 @@ func TestGetUser(t *testing.T) {
 	defer cleanup()
 
 	// Create first user (the admin).
-	if _, err := db.CreateUserFromRemoteIdentity("", "", "", "", "", 0, ""); err != nil {
+	if err := db.CreateUserFromRemoteIdentity(
+		&models.User{},
+		&models.RemoteIdentity{},
+	); err != nil {
 		t.Fatal(err)
 	}
 
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -89,8 +99,8 @@ func TestGetUser(t *testing.T) {
 
 	// Access token should be stripped.
 	user.RemoteIdentities[0].AccessToken = ""
-	if !reflect.DeepEqual(foundUser, user) {
-		t.Errorf("have user %+v want %+v", foundUser, user)
+	if !reflect.DeepEqual(foundUser, &user) {
+		t.Errorf("have user %+v want %+v", foundUser, &user)
 	}
 	assertCode(t, w.Code, http.StatusFound)
 }
@@ -111,12 +121,26 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider1, remoteID1, secret1)
-	if err != nil {
+	var user1 models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user1,
+		&models.RemoteIdentity{
+			Provider:    provider1,
+			RemoteID:    remoteID1,
+			AccessToken: secret1,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
-	user2, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider2, remoteID2, secret2)
-	if err != nil {
+	var user2 models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user2,
+		&models.RemoteIdentity{
+			Provider:    provider2,
+			RemoteID:    remoteID2,
+			AccessToken: secret2,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -140,7 +164,7 @@ func TestGetUsers(t *testing.T) {
 	user2.RemoteIdentities = nil
 	// First user should be admin.
 	user1.IsAdmin = true
-	wantUsers := []*models.User{user1, user2}
+	wantUsers := []*models.User{&user1, &user2}
 	if !reflect.DeepEqual(foundUsers, wantUsers) {
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
 	}
@@ -173,14 +197,17 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	var users []*models.User
 	for _, u := range allUsers {
-		user, err := db.CreateUserFromRemoteIdentity("", "", "", "",
-			u.provider, u.remoteID, u.secret)
-		if err != nil {
+		var user models.User
+		if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{
+			Provider:    u.provider,
+			RemoteID:    u.remoteID,
+			AccessToken: u.secret,
+		}); err != nil {
 			t.Fatal(err)
 		}
 		// Remote identities should not be loaded.
 		user.RemoteIdentities = nil
-		users = append(users, user)
+		users = append(users, &user)
 	}
 
 	for _, course := range allCourses {
@@ -267,9 +294,12 @@ func TestPatchUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "",
-		provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{
+		Provider:    provider,
+		RemoteID:    remoteID,
+		AccessToken: secret,
+	}); err != nil {
 		t.Fatal(err)
 	}
 

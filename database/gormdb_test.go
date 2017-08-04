@@ -205,8 +205,15 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -233,8 +240,15 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -317,8 +331,15 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -376,8 +397,15 @@ func TestGetRemoteIdentity(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 	if len(user.RemoteIdentities) != 1 {
@@ -396,22 +424,22 @@ func TestGetRemoteIdentity(t *testing.T) {
 
 func TestGormDBDuplicateIdentity(t *testing.T) {
 	const (
-		uID  = 1
-		rID1 = 1
+		uID = 1
+		rID = 1
 
-		secret1   = "123"
-		provider1 = "github"
-		remoteID1 = 10
+		secret   = "123"
+		provider = "github"
+		remoteID = 10
 	)
 
 	var (
-		wantUser1 = &models.User{
+		wantUser = &models.User{
 			ID: uID,
 			RemoteIdentities: []*models.RemoteIdentity{{
-				ID:          rID1,
-				Provider:    provider1,
-				RemoteID:    remoteID1,
-				AccessToken: secret1,
+				ID:          rID,
+				Provider:    provider,
+				RemoteID:    remoteID,
+				AccessToken: secret,
 				UserID:      uID,
 			}},
 		}
@@ -420,16 +448,30 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider1, remoteID1, secret1)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(user1, wantUser1) {
-		t.Errorf("have user %+v want %+v", user1, wantUser1)
+	if !reflect.DeepEqual(&user, wantUser) {
+		t.Errorf("have user %+v want %+v", &user, wantUser)
 	}
 
-	if _, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider1, remoteID1, secret1); err == nil {
+	if err := db.CreateUserFromRemoteIdentity(
+		&models.User{},
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err == nil {
 		t.Errorf("expected error '%v'", database.ErrDuplicateIdentity)
 	}
 }
@@ -488,18 +530,27 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	defer cleanup()
 
 	// Create first user (the admin).
-	if _, err := db.CreateUserFromRemoteIdentity("", "", "", "",
-		"", 0, ""); err != nil {
+	if err := db.CreateUserFromRemoteIdentity(
+		&models.User{},
+		&models.RemoteIdentity{},
+	); err != nil {
 		t.Fatal(err)
 	}
 
-	user1, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider1, remoteID1, secret1)
-	if err != nil {
+	var user1 models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user1,
+		&models.RemoteIdentity{
+			Provider:    provider1,
+			RemoteID:    remoteID1,
+			AccessToken: secret1,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(user1, wantUser1) {
-		t.Errorf("have user %+v want %+v", user1, wantUser1)
+	if !reflect.DeepEqual(&user1, wantUser1) {
+		t.Errorf("have user %+v want %+v", &user1, wantUser1)
 	}
 
 	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret2); err != nil {
@@ -567,13 +618,20 @@ func TestGormDBSetAdmin(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(user, wantUser) {
-		t.Errorf("have user %+v want %+v", user, wantUser)
+	if !reflect.DeepEqual(&user, wantUser) {
+		t.Errorf("have user %+v want %+v", &user, wantUser)
 	}
 
 	if err := db.SetAdmin(user.ID); err != nil {
@@ -758,8 +816,15 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 
 	// Create the user and enroll him
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 	enrollment1 := models.Enrollment{
@@ -812,8 +877,15 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 
 	// Create the user
-	user, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret)
-	if err != nil {
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1041,8 +1113,15 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			var uids []uint64
 			// Create as many users as the desired number of enrollments.
 			for i := 0; i < len(test.enrollments); i++ {
-				user, err := db.CreateUserFromRemoteIdentity("", "", "", "", "github", 100+uint64(i), "secret")
-				if err != nil {
+				var user models.User
+				if err := db.CreateUserFromRemoteIdentity(
+					&user,
+					&models.RemoteIdentity{
+						Provider:    "github",
+						RemoteID:    100 + uint64(i),
+						AccessToken: "secret",
+					},
+				); err != nil {
 					t.Fatal(err)
 				}
 				uids = append(uids, user.ID)

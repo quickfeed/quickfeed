@@ -6,8 +6,7 @@ import "github.com/autograde/aguis/models"
 type Database interface {
 	GetRemoteIdentity(provider string, rid uint64) (*models.RemoteIdentity, error)
 
-	CreateUserFromRemoteIdentity(firstname string, lastname string,
-		email string, avatarurl string, provider string, rid uint64, accessToken string) (*models.User, error)
+	CreateUserFromRemoteIdentity(*models.User, *models.RemoteIdentity) error
 	AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error
 
 	GetUser(uint64) (*models.User, error)

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
@@ -167,7 +168,11 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 	defer cleanup()
 
 	if existingUser {
-		if _, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret); err != nil {
+		if err := db.CreateUserFromRemoteIdentity(&models.User{}, &models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		}); err != nil {
 			t.Fatal(err)
 		}
 		c.SetParamNames("provider")
@@ -294,7 +299,11 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	defer cleanup()
 
 	if existingUser {
-		if _, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret); err != nil {
+		if err := db.CreateUserFromRemoteIdentity(&models.User{}, &models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -333,8 +342,12 @@ func TestAccessControl(t *testing.T) {
 	defer cleanup()
 
 	// Create a new user.
-	if _, err := db.CreateUserFromRemoteIdentity("", "", "", "", provider, remoteID, secret); err != nil {
-		t.Error(err)
+	if err := db.CreateUserFromRemoteIdentity(&models.User{}, &models.RemoteIdentity{
+		Provider:    provider,
+		RemoteID:    remoteID,
+		AccessToken: secret,
+	}); err != nil {
+		t.Fatal(err)
 	}
 
 	m := auth.AccessControl(db, make(map[string]scm.SCM))
