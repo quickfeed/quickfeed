@@ -893,6 +893,218 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 }
 
+var createGroupTests = []struct {
+	name        string
+	getGroup    func(uint64, ...uint64) *models.Group
+	enrollments []int
+	err         error
+}{
+	// Should fail with ErrRecordNotFound as we cannot create a group that
+	// is not connected to a course.
+	{
+		name: "course id not set",
+		getGroup: func(uint64, ...uint64) *models.Group {
+			return &models.Group{}
+		},
+		err: gorm.ErrRecordNotFound,
+	},
+	// Should fail with ErrRecordNotFound as we cannot create a group that
+	// is not connected to a course.
+	{
+		name: "course not found",
+		getGroup: func(uint64, ...uint64) *models.Group {
+			return &models.Group{CourseID: 999}
+		},
+		err: gorm.ErrRecordNotFound,
+	},
+	// Should pass as long as it's desirable to create a group without any
+	// users.
+	// TODO: This is probably fine, but there needs to be a len(users) > 1
+	// check in the web handler.
+	{
+		name: "course found",
+		getGroup: func(cid uint64, _ ...uint64) *models.Group {
+			return &models.Group{CourseID: cid}
+		},
+	},
+	// Should fail with ErrRecordNotFound as we cannot create a group with
+	// users that doesn't exist.
+	{
+		name: "with non existing users",
+		getGroup: func(cid uint64, _ ...uint64) *models.Group {
+			return &models.Group{
+				CourseID: cid,
+				Users: []*models.User{
+					{ID: 101},
+					{ID: 102},
+				},
+			}
+		},
+		enrollments: []int{models.None, models.None},
+		err:         gorm.ErrRecordNotFound,
+	},
+	// Should fail with ErrRecordNotFound as we cannot create a group with
+	// users that's not enrolled in the course.
+	{
+		name: "with users but without enrollments",
+		getGroup: func(cid uint64, uids ...uint64) *models.Group {
+			var users []*models.User
+			for _, uid := range uids {
+				users = append(users, &models.User{ID: uid})
+			}
+			return &models.Group{
+				CourseID: cid,
+				Users:    users,
+			}
+		},
+		enrollments: []int{models.None, models.None},
+		err:         gorm.ErrRecordNotFound,
+	},
+	// Should fail with ErrRecordNotFound as we cannot create a group with
+	// users that's not enrolled in the course.
+	{
+		name: "with users and pending enrollments",
+		getGroup: func(cid uint64, uids ...uint64) *models.Group {
+			var users []*models.User
+			for _, uid := range uids {
+				users = append(users, &models.User{ID: uid})
+			}
+			return &models.Group{
+				CourseID: cid,
+				Users:    users,
+			}
+		},
+		enrollments: []int{int(models.Pending), int(models.Pending)},
+		err:         gorm.ErrRecordNotFound,
+	},
+	// Should fail with ErrRecordNotFound as we cannot create a group with
+	// users that's not enrolled in the course.
+	{
+		name: "with users and rejected enrollments",
+		getGroup: func(cid uint64, uids ...uint64) *models.Group {
+			var users []*models.User
+			for _, uid := range uids {
+				users = append(users, &models.User{ID: uid})
+			}
+			return &models.Group{
+				CourseID: cid,
+				Users:    users,
+			}
+		},
+		enrollments: []int{int(models.Rejected), int(models.Rejected)},
+		err:         gorm.ErrRecordNotFound,
+	},
+	// Should pass as the user exists and is enrolled in the course.
+	{
+		name: "with user and accepted enrollment",
+		getGroup: func(cid uint64, uids ...uint64) *models.Group {
+			var users []*models.User
+			for _, uid := range uids {
+				users = append(users, &models.User{ID: uid})
+			}
+			return &models.Group{
+				CourseID: cid,
+				Users:    users,
+			}
+		},
+		enrollments: []int{int(models.Accepted)},
+	},
+	// Should pass as the users exists and are enrolled in the course.
+	{
+		name: "with users and accepted enrollments",
+		getGroup: func(cid uint64, uids ...uint64) *models.Group {
+			var users []*models.User
+			for _, uid := range uids {
+				users = append(users, &models.User{ID: uid})
+			}
+			return &models.Group{
+				CourseID: cid,
+				Users:    users,
+			}
+		},
+		enrollments: []int{int(models.Accepted), int(models.Accepted)},
+	},
+}
+
+func TestGormDBCreateAndGetGroup(t *testing.T) {
+	for _, test := range createGroupTests {
+		t.Run(test.name, func(t *testing.T) {
+			// Setup.
+			db, cleanup := setup(t)
+			defer cleanup()
+
+			var course models.Course
+			if err := db.CreateCourse(&course); err != nil {
+				t.Fatal(err)
+			}
+			var uids []uint64
+			// Create as many users as the desired number of enrollments.
+			for i := 0; i < len(test.enrollments); i++ {
+				user, err := db.CreateUserFromRemoteIdentity("github", 100+uint64(i), "secret")
+				if err != nil {
+					t.Fatal(err)
+				}
+				uids = append(uids, user.ID)
+			}
+			// Enroll users in course.
+			for i := 0; i < len(uids); i++ {
+				if test.enrollments[i] == models.None {
+					continue
+				}
+				if err := db.CreateEnrollment(&models.Enrollment{
+					CourseID: course.ID,
+					UserID:   uids[i],
+					Status:   test.enrollments[i],
+				}); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			// Test.
+			group := test.getGroup(course.ID, uids...)
+			if err := db.CreateGroup(group); err != test.err {
+				t.Errorf("have error '%v' want '%v'", err, test.err)
+			}
+			if test.err != nil {
+				return
+			}
+
+			// Verify.
+			enrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Accepted)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(group.Users) > 0 && len(enrollments) != len(group.Users) {
+				t.Errorf("have %d enrollments want %d", len(enrollments), len(group.Users))
+			}
+			sorted := make(map[uint64]*models.Enrollment)
+			for _, enrollment := range enrollments {
+				sorted[enrollment.ID] = enrollment
+			}
+			for _, user := range group.Users {
+				if _, ok := sorted[user.ID]; !ok {
+					t.Errorf("have no enrollment for user %d", user.ID)
+				}
+			}
+
+			have, err := db.GetGroup(group.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(uids) > 0 {
+				group.Users, err = db.GetUsers(uids...)
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			group.Enrollments = enrollments
+			if !reflect.DeepEqual(have, group) {
+				t.Errorf("have %#v want %#v", have, group)
+			}
+		})
+	}
+}
+
 func envSet(env string) database.GormLogger {
 	if os.Getenv(env) != "" {
 		return database.Logger{Logger: logrus.New()}
