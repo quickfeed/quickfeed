@@ -542,7 +542,7 @@ func GetGroups(db database.Database) echo.HandlerFunc {
 			}
 			return err
 		}
-		groups, err := db.GetGroups(cid)
+		groups, err := db.GetGroupsByCourse(cid)
 		if err != nil {
 			return err
 		}

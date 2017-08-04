@@ -465,8 +465,8 @@ func (db *GormDB) UpdateGroupStatus(group *models.Group) error {
 	return db.conn.Model(group).Update("status", group.Status).Error
 }
 
-// GetGroups returns a list of groups
-func (db *GormDB) GetGroups(cid uint64) ([]*models.Group, error) {
+// GetGroupsByCourse returns a list of groups
+func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
 	var groups []*models.Group
 	if err := db.conn.
 		Preload("Enrollments").

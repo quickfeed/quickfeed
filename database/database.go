@@ -40,6 +40,6 @@ type Database interface {
 
 	CreateGroup(*models.Group) error
 	GetGroup(id uint64) (*models.Group, error)
-	GetGroups(cid uint64) ([]*models.Group, error)
+	GetGroupsByCourse(cid uint64) ([]*models.Group, error)
 	UpdateGroupStatus(*models.Group) error
 }
