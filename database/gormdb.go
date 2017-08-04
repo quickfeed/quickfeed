@@ -161,6 +161,9 @@ var (
 	// ErrDuplicateGroup is returned when trying to create a group with the same
 	// name as a previously registered group.
 	ErrDuplicateGroup = errors.New("group name already registered")
+	// ErrCourseExists is returned when trying to create an association in
+	// the database for a DirectoryID that already exists in the database.
+	ErrCourseExists = errors.New("course already exists on git provider")
 )
 
 // AssociateUserWithRemoteIdentity implements the Database interface.
@@ -191,6 +194,15 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 
 // CreateCourse implements the Database interface.
 func (db *GormDB) CreateCourse(course *models.Course) error {
+	var courses uint64
+	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
+		DirectoryID: course.DirectoryID,
+	}).Count(&courses).Error; err != nil {
+		return err
+	}
+	if courses > 0 {
+		return ErrCourseExists
+	}
 	return db.conn.Create(course).Error
 }
 

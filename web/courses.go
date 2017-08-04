@@ -158,6 +158,10 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		if err != nil {
 			return err
 		}
+		repos, err := s.GetRepositories(ctx, directory)
+		if err != nil {
+			return err
+		}
 
 		var paths = []string{InfoRepo, AssignmentRepo, TestsRepo, SolutionsRepo}
 		for _, path := range paths {
@@ -168,18 +172,27 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 					Directory: directory},
 			)
 			if err != nil {
-				return err
+				logger.WithField("repo", path).WithError(err).Println("Failed to create repository")
+				for _, r := range repos {
+					if r.Path == path {
+						// Get existing repository so that we can create webhook below
+						repo = r
+						break
+					}
+				}
+			} else {
+				logger.WithField("repo", repo).Println("Created new repository")
 			}
-			logger.WithField("repo", repo).Println("Created new repository")
 
 			if err := s.CreateHook(ctx, &scm.CreateHookOptions{
 				URL:        GetEventsURL(bh.BaseURL, cr.Provider),
 				Secret:     bh.Secret,
 				Repository: repo,
 			}); err != nil {
-				return err
+				logger.WithField("repo", path).WithError(err).Println("Failed to create webhook for repository")
+			} else {
+				logger.WithField("repo", repo).Println("Created new webhook for repository")
 			}
-			logger.WithField("repo", repo).Println("Created new webhook for repository")
 		}
 
 		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
