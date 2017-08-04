@@ -12,6 +12,7 @@ export class HelpPage extends ViewPage {
 
     constructor(navMan: NavigationManager) {
         super();
+        this.template = "frontpage";
         this.navMan = navMan;
         this.navHelper.defaultPage = "help";
         this.navHelper.registerFunction("help", this.help);
