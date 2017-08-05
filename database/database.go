@@ -14,6 +14,7 @@ type Database interface {
 	// TODO: The update access token functionality should be split into its own method.
 	GetUserByRemoteIdentity(provider string, rid uint64, accessToken string) (*models.User, error)
 	GetUsers(...uint64) ([]*models.User, error)
+	UpdateUser(*models.User) error
 
 	// SetAdmin makes an existing user an administrator. The admin role is allowed to
 	// create courses, so it makes sense that teachers are made admins.

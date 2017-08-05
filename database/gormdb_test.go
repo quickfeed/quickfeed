@@ -62,6 +62,72 @@ func TestGormDBGetUsers(t *testing.T) {
 	}
 }
 
+func TestGormDBUpdateUser(t *testing.T) {
+	const (
+		uID = 1
+		rID = 1
+
+		secret   = "123"
+		provider = "github"
+		remoteID = 10
+	)
+
+	var (
+		wantUser = &models.User{
+			ID:        uID,
+			IsAdmin:   true, // first user is always admin
+			FirstName: "Scrooge",
+			LastName:  "McDuck",
+			StudentID: "22",
+			Email:     "scrooge@mc.duck",
+			AvatarURL: "https://github.com",
+			RemoteIdentities: []*models.RemoteIdentity{{
+				ID:          rID,
+				Provider:    provider,
+				RemoteID:    remoteID,
+				AccessToken: secret,
+				UserID:      uID,
+			}},
+		}
+		updates = &models.User{
+			ID:        uID,
+			FirstName: "Scrooge",
+			LastName:  "McDuck",
+			StudentID: "22",
+			Email:     "scrooge@mc.duck",
+			AvatarURL: "https://github.com",
+		}
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: secret,
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.UpdateUser(updates); err != nil {
+		t.Error(err)
+	}
+
+	updatedUser, err := db.GetUser(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(updatedUser, wantUser) {
+		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
+	}
+}
+
 func TestGormDBGetCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()

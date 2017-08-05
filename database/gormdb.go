@@ -94,6 +94,11 @@ func (db *GormDB) GetUsers(uids ...uint64) ([]*models.User, error) {
 	return users, nil
 }
 
+// UpdateUser implements the Database interface
+func (db *GormDB) UpdateUser(user *models.User) error {
+	return db.conn.Model(&models.User{}).Updates(user).Error
+}
+
 // SetAdmin implements the Database interface.
 func (db *GormDB) SetAdmin(uid uint64) error {
 	var user models.User
