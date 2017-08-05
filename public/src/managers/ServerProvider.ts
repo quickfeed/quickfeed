@@ -154,8 +154,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result);
             return null;
         }
-        const data = JSON.parse(JSON.stringify(result.data)) as ICourse;
-        return data;
+        return JSON.parse(JSON.stringify(result.data)) as ICourse;
     }
 
     public async updateCourse(courseId: number, courseData: ICourse): Promise<boolean> {
@@ -177,8 +176,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result);
             return this.parseError(result);
         }
-        const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
-        return data;
+        return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
     }
 
     public async getCourseGroups(courseId: number): Promise<ICourseGroup[]> {
@@ -188,8 +186,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             console.log("Error =>", result);
             return [];
         }
-        const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup[];
-        return data;
+        return JSON.parse(JSON.stringify(result.data)) as ICourseGroup[];
     }
 
     public async getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
@@ -198,8 +195,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         if (result.statusCode !== 302 || !result.data) {
             return null;
         }
-        const data = JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
-        return data;
+        return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
     }
 
     public async updateGroupStatus(groupId: number, st: CourseGroupStatus): Promise<boolean> {
@@ -281,21 +277,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async tryRemoteLogin(provider: string): Promise<IUser | null> {
-        let requestString: null | string = null;
-        switch (provider) {
-            case "github":
-                requestString = "/auth/github";
-                break;
-            case "gitlab":
-                requestString = "/auth/gitlab";
-                break;
-        }
-        if (requestString) {
+        // TODO this needs to be fixed to return user data from provider
+        if (provider.length > 0) {
+            const requestString = "/auth/" + provider;
             window.location.assign(requestString);
-            return null;
-        } else {
-            return null;
         }
+        return null;
     }
 
     public async changeAdminRole(user: IUser): Promise<boolean> {
@@ -379,17 +366,4 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return error;
     }
 
-    /*
-     {
-     "ID": 1,
-     "remoteidentities": [
-     {
-     "ID": 1,
-     "Provider": "github",
-     "RemoteID": 1964338,
-     "UserID": 1
-     }
-     ]
-     }
-     */
 }
