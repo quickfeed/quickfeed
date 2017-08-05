@@ -12,7 +12,12 @@ import (
 
 // UpdateUserRequest updates a user object in the database.
 type UpdateUserRequest struct {
-	IsAdmin *bool `json:"isadmin"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	StudentID string `json:"studentid"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatarurl"`
+	IsAdmin   *bool  `json:"isadmin"`
 }
 
 func (uur *UpdateUserRequest) isSetIsAdmin() bool {
@@ -80,6 +85,18 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			}
 			status = http.StatusOK
 		}
+
+		updateUser := &models.User{
+			FirstName: uur.FirstName,
+			LastName:  uur.LastName,
+			StudentID: uur.StudentID,
+			Email:     uur.Email,
+			AvatarURL: uur.AvatarURL,
+		}
+		if err := db.UpdateUser(updateUser); err != nil {
+			return err
+		}
+
 		return c.NoContent(status)
 	}
 }
