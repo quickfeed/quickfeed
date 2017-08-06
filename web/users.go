@@ -79,20 +79,38 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 		}
 
 		status := http.StatusNotModified
-		if uur.isSetIsAdmin() && *uur.IsAdmin {
-			if err := db.SetAdmin(id); err != nil {
-				return err
-			}
+
+		// Get user to update
+		updateUser, err := db.GetUser(id)
+		if err != nil {
+			return err
+		}
+
+		if uur.FirstName != "" {
+			updateUser.FirstName = uur.FirstName
+			status = http.StatusOK
+		}
+		if uur.LastName != "" {
+			updateUser.LastName = uur.LastName
+			status = http.StatusOK
+		}
+		if uur.StudentID != "" {
+			updateUser.StudentID = uur.StudentID
+			status = http.StatusOK
+		}
+		if uur.Email != "" {
+			updateUser.Email = uur.Email
+			status = http.StatusOK
+		}
+		if uur.AvatarURL != "" {
+			updateUser.AvatarURL = uur.AvatarURL
+			status = http.StatusOK
+		}
+		if uur.IsAdmin != nil {
+			updateUser.IsAdmin = *uur.IsAdmin
 			status = http.StatusOK
 		}
 
-		updateUser := &models.User{
-			FirstName: uur.FirstName,
-			LastName:  uur.LastName,
-			StudentID: uur.StudentID,
-			Email:     uur.Email,
-			AvatarURL: uur.AvatarURL,
-		}
 		if err := db.UpdateUser(updateUser); err != nil {
 			return err
 		}

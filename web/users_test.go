@@ -295,11 +295,12 @@ func TestPatchUser(t *testing.T) {
 	defer cleanup()
 
 	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{
+	rmIdentities := &models.RemoteIdentity{
 		Provider:    provider,
 		RemoteID:    remoteID,
 		AccessToken: secret,
-	}); err != nil {
+	}
+	if err := db.CreateUserFromRemoteIdentity(&user, rmIdentities); err != nil {
 		t.Fatal(err)
 	}
 
@@ -358,5 +359,41 @@ func TestPatchUser(t *testing.T) {
 
 	if !admin.IsAdmin {
 		t.Error("expected user to have become admin")
+	}
+
+	// Send request with FirstName and LastName.
+	nameChangeRequest := web.UpdateUserRequest{FirstName: "Scrooge", LastName: "McDuck"}
+	nameChangeJSON, err := json.Marshal(&nameChangeRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r = httptest.NewRequest(http.MethodPatch, userURL, bytes.NewBuffer(nameChangeJSON))
+	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	w = httptest.NewRecorder()
+	c = e.NewContext(r, w)
+	// Prepare context with user request.
+	router.Find(http.MethodPatch, userURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+	assertCode(t, w.Code, http.StatusOK)
+
+	withName, err := db.GetUser(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantUser := &models.User{
+		ID:               withName.ID,
+		FirstName:        "Scrooge",
+		LastName:         "McDuck",
+		IsAdmin:          true,
+		RemoteIdentities: []*models.RemoteIdentity{rmIdentities},
+	}
+	if !reflect.DeepEqual(withName, wantUser) {
+		t.Errorf("have users %+v want %+v", withName, wantUser)
 	}
 }
