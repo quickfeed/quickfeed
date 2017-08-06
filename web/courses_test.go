@@ -160,6 +160,134 @@ func TestNewCourse(t *testing.T) {
 	assertCode(t, w.Code, http.StatusCreated)
 }
 
+func TestSetEnrollment(t *testing.T) {
+	const (
+		setEnrollRoute = "/courses/:cid/users/:uid"
+
+		secret   = "123"
+		provider = "github"
+		remoteID = 11
+	)
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	if err := db.CreateCourse(allCourses[0]); err != nil {
+		t.Fatal(err)
+	}
+	var admin models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&admin,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    0,
+			AccessToken: "",
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: "",
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+	admin.IsAdmin = true
+
+	// ------------------------- User Enrolls as user.ID
+
+	eur := &web.EnrollUserRequest{
+		UserID:   user.ID,
+		CourseID: allCourses[0].ID,
+	}
+	b, err := json.Marshal(eur)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	e := echo.New()
+	router := echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodPut, setEnrollRoute, web.SetEnrollment(db))
+	userCoursesURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users/" + strconv.FormatUint(user.ID, 10)
+	r := httptest.NewRequest(http.MethodPut, userCoursesURL, bytes.NewReader(b))
+	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+	// Prepare context with user request.
+	c.Set(auth.UserKey, &user)
+	router.Find(http.MethodPut, userCoursesURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+
+	assertCode(t, w.Code, http.StatusAccepted)
+	enr, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantEnrollment := &models.Enrollment{
+		ID: enr.ID,
+		// Course:   allCourses[0],
+		CourseID: allCourses[0].ID,
+		// User:     &user,
+		UserID: user.ID,
+		Status: int(models.Pending),
+	}
+	if !reflect.DeepEqual(enr, wantEnrollment) {
+		t.Errorf("have enrollment\n %+v\n want\n %+v", enr, wantEnrollment)
+	}
+
+	// ------------------------- Admin Enrolls user.ID
+
+	eur = &web.EnrollUserRequest{
+		UserID:   user.ID,
+		CourseID: allCourses[0].ID,
+		Status:   models.Accepted,
+	}
+	b, err = json.Marshal(eur)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	e = echo.New()
+	router = echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodPut, setEnrollRoute, web.SetEnrollment(db))
+	userCoursesURL = "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users/" + strconv.FormatUint(user.ID, 10)
+	r = httptest.NewRequest(http.MethodPut, userCoursesURL, bytes.NewReader(b))
+	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	w = httptest.NewRecorder()
+	c = e.NewContext(r, w)
+	// Prepare context with user request.
+	c.Set(auth.UserKey, &admin)
+	router.Find(http.MethodPut, userCoursesURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+	assertCode(t, w.Code, http.StatusOK)
+
+	wantEnrollment.Status = int(models.Accepted)
+	enr, err = db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(enr, wantEnrollment) {
+		t.Errorf("have enrollment %+v want %+v", enr, wantEnrollment)
+	}
+}
+
 func TestListCoursesWithEnrollment(t *testing.T) {
 	const (
 		userCoursesRoute = "/users/:uid/courses"
