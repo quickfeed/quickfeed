@@ -369,12 +369,12 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
 
-	userCoursesURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses"
-	r := httptest.NewRequest(http.MethodGet, userCoursesURL, nil)
+	requestURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses"
+	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	router.Find(http.MethodGet, userCoursesURL, c)
+	router.Find(http.MethodGet, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
@@ -468,12 +468,12 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
 
-	userCoursesURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses" + query
-	r := httptest.NewRequest(http.MethodGet, userCoursesURL, nil)
+	requestURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses" + query
+	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	router.Find(http.MethodGet, userCoursesURL, c)
+	router.Find(http.MethodGet, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
