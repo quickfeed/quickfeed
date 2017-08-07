@@ -302,11 +302,10 @@ func TestEnrollmentProcess(t *testing.T) {
 
 func TestListCoursesWithEnrollment(t *testing.T) {
 	const (
-		userCoursesRoute = "/users/:uid/courses"
-
 		secret   = "123"
 		provider = "github"
 		remoteID = 11
+		route = "/users/:uid/courses"
 	)
 
 	db, cleanup := setup(t)
@@ -376,7 +375,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodGet, userCoursesRoute, web.ListCoursesWithEnrollment(db))
+	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
 
 	userCoursesURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses"
 	r := httptest.NewRequest(http.MethodGet, userCoursesURL, nil)
@@ -410,10 +409,10 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	const (
 		query            = "?status=accepted,rejected"
-		userCoursesRoute = "/users/:uid/courses" + query
 		secret           = "123"
 		provider         = "github"
 		remoteID         = 11
+		route = "/users/:uid/courses" + query
 	)
 
 	db, cleanup := setup(t)
@@ -483,7 +482,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodGet, userCoursesRoute, web.ListCoursesWithEnrollment(db))
+	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
 
 	userCoursesURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses" + query
 	r := httptest.NewRequest(http.MethodGet, userCoursesURL, nil)
