@@ -261,7 +261,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	qv.Set("status", "accepted")
 	r.URL.RawQuery = qv.Encode()
 	w = httptest.NewRecorder()
-	c = e.NewContext(r, w)
+	c.Reset(r, w)
 	// Prepare context with user request.
 	c.Set(auth.UserKey, &user)
 	router.Find(http.MethodPatch, requestURL, c)
@@ -273,7 +273,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	assertCode(t, w.Code, http.StatusUnauthorized)
 
 	w = httptest.NewRecorder()
-	c = e.NewContext(r, w)
+	c.Reset(r, w)
 	c.Set(auth.UserKey, &admin)
 	reader.Reset(b)
 	router.Find(http.MethodPatch, requestURL, c)
