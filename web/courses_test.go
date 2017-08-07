@@ -202,6 +202,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	requestBody := bytes.NewReader(b)
 
 	e := echo.New()
 	router := echo.NewRouter(e)
@@ -209,7 +210,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// Add the route to handler.
 	router.Add(http.MethodPut, route, web.SetEnrollment(db))
-	r := httptest.NewRequest(http.MethodPut, requestURL, bytes.NewReader(b))
+	r := httptest.NewRequest(http.MethodPut, requestURL, requestBody)
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -248,14 +249,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	requestBody.Reset(b)
 
 	e = echo.New()
 	router = echo.NewRouter(e)
 
 	// Add the route to handler.
 	router.Add(http.MethodPatch, route, web.UpdateEnrollment(db))
-	reader := bytes.NewReader(b)
-	r = httptest.NewRequest(http.MethodPatch, requestURL, reader)
+	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	qv := r.URL.Query()
 	qv.Set("status", "accepted")
@@ -272,10 +273,10 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	assertCode(t, w.Code, http.StatusUnauthorized)
 
+	requestBody.Reset(b)
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
 	c.Set(auth.UserKey, &admin)
-	reader.Reset(b)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
