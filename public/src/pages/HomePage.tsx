@@ -4,7 +4,7 @@ import { ViewPage } from "./ViewPage";
 export class HomePage extends ViewPage {
     constructor() {
         super();
-        this.template = "frontpage"
+        this.template = "frontpage";
     }
 
     public async renderContent(page: string): Promise<JSX.Element> {
