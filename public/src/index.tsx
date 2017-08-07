@@ -225,7 +225,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         switch (name) {
             case "frontpage":
                 body = (
-                    <Row className="container-fluid spacefix">
+                    <Row>
                         <div className="col-xs-12">
                             {content}
                         </div>
@@ -234,7 +234,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 break;
             default:
                 body = (
-                    <Row className="container-fluid spacefix">
+                    <Row>
                         <div className="col-md-2 col-sm-3 col-xs-12">
                             {leftMenu}
                         </div>
@@ -273,7 +273,9 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                     this.setState({ currentContent: await this.refreshActivePage() });
                 }} />
                 {topArea}
-                {body}
+                <div className="container-fluid spacefix">
+                    {body}
+                </div>
             </div>);
     }
 }
