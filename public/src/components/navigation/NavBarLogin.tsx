@@ -22,7 +22,7 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, any> {
                             data-toggle="dropdown"
                             role="button"
                             aria-haspopup="true" aria-expanded="false">
-                            <img src={this.props.user.avatarurl} width="20" height="20" />
+                            <img className="img-rounded" src={this.props.user.avatarurl} width="20" height="20" />
                             <span className="caret"></span>
                         </a>
                         <ul className="dropdown-menu">
