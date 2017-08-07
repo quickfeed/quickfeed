@@ -297,15 +297,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async updateUser(user: IUser): Promise<boolean> {
         // TODO: make actuall implementation
-        /*const result = await this.helper.patch<{ isadmin: boolean }, {}>("/users/" + user.id + "", user);
+        const result = await this.helper.patch<{ isadmin: boolean }, {}>("/users/" + user.id + "", user);
         if (result.statusCode < 400) {
             return false;
         } else {
             this.handleError(result);
         }
-        return true;*/
-        localStorage.setItem("user:" + user.id.toString(), JSON.stringify(user));
-        return Promise.resolve(true);
+        return true;
     }
 
     // TODO: check if resp.status contain correct status
@@ -342,13 +340,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     private makeUserInfo(data: IUser): IUser {
-        const storedData = localStorage.getItem("user:" + data.id.toString());
-        if (storedData) {
-            const temp = JSON.parse(storedData) as IUser;
-            temp.id = data.id;
-            temp.isadmin = data.isadmin;
-            return temp;
-        }
         return data;
     }
 
