@@ -288,6 +288,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		user := c.Get("user").(*models.User)
+		// TODO: This check should be performed in AccessControl.
 		if !user.IsAdmin {
 			// Only admin users are allowed to enroll or reject users to a course.
 			// TODO we should also allow users of the 'teachers' team to accept/reject users
@@ -554,6 +555,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		}
 
 		user := c.Get("user").(*models.User)
+		// TODO: This check should be performed in AccessControl.
 		if !user.IsAdmin {
 			// Ony Admin i.e Teacher can update status of a group
 			return c.NoContent(http.StatusForbidden)

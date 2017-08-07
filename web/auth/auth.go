@@ -271,7 +271,6 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				return echo.ErrUnauthorized
 			}
 
-			// TODO: Check if the user is allowed to access the endpoint.
 			c.Set(UserKey, user)
 			for _, remoteIdentity := range user.RemoteIdentities {
 				if _, ok := scms[remoteIdentity.AccessToken]; !ok {
@@ -284,6 +283,13 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				c.Set(remoteIdentity.Provider, scms[remoteIdentity.AccessToken])
 			}
 
+			// TODO: Add access control list.
+			// - Extract endpoint.
+			// - Verify whether the user has sufficient rights. This
+			//   can be a simple hash map. A user should be able to
+			//   access /users/:uid if the user's id is uid.
+			//   - Not authorized: return c.NoContent(http.StatusUnauthorized)
+			//   - Authorized: return next(c)
 			return next(c)
 		}
 	}
