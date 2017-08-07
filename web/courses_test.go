@@ -172,9 +172,11 @@ func TestEnrollmentProcess(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	// Create course.
 	if err := db.CreateCourse(allCourses[0]); err != nil {
 		t.Fatal(err)
 	}
+	// Create admin.
 	var admin models.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&admin, &models.RemoteIdentity{
@@ -183,6 +185,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
+	// Create user.
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user, &models.RemoteIdentity{
@@ -192,8 +195,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// ------------------------- User Enrolls as user.ID
-
+	// Prepare request payload.
 	b, err := json.Marshal(&web.EnrollUserRequest{
 		UserID:   user.ID,
 		CourseID: allCourses[0].ID,
@@ -217,12 +219,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	c.Set(auth.UserKey, &user)
 	router.Find(http.MethodPut, requestURL, c)
 
-	// Invoke the prepared handler.
+	// Invoke the prepared handler. This will attempt to create an
+	// enrollment for the user in the chosen course.
 	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
 	assertCode(t, w.Code, http.StatusCreated)
 
+	// Verify that an appropriate enrollment was indeed created.
 	pendingEnrollment, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -236,8 +240,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Errorf("have enrollment\n %+v\n want\n %+v", pendingEnrollment, wantEnrollment)
 	}
 
-	// ------------------------- Admin Enrolls user.ID
-
+	// Prepare request payload.
 	b, err = json.Marshal(&web.EnrollUserRequest{
 		UserID:   user.ID,
 		CourseID: allCourses[0].ID,
@@ -264,7 +267,9 @@ func TestEnrollmentProcess(t *testing.T) {
 	c.Set(auth.UserKey, &user)
 	router.Find(http.MethodPatch, requestURL, c)
 
-	// Invoke the prepared handler.
+	// Invoke the prepared handler. This will attempt to accept the
+	// previously created enrollment. This should fail with a 401
+	// Unauthorized as the user is not an administrator.
 	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
@@ -276,12 +281,15 @@ func TestEnrollmentProcess(t *testing.T) {
 	c.Set(auth.UserKey, &admin)
 	router.Find(http.MethodPatch, requestURL, c)
 
-	// Invoke the prepared handler.
+	// Invoke the prepared handler. This will attempt to accept the
+	// previously created enrollment. This should succeed with a 200 OK as
+	// the current user is an administrator.
 	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
 	assertCode(t, w.Code, http.StatusOK)
 
+	// Verify that the enrollment have been accepted.
 	acceptedEnrollment, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
