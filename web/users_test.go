@@ -44,11 +44,9 @@ func TestGetSelf(t *testing.T) {
 
 func TestGetUser(t *testing.T) {
 	const (
-		getUserRoute = "/users/:uid"
-
-		secret   = "123"
-		provider = "github"
-		remoteID = 10
+		route       = "/users/:uid"
+		provider    = "github"
+		accessToken = "secret"
 	)
 
 	db, cleanup := setup(t)
@@ -67,8 +65,7 @@ func TestGetUser(t *testing.T) {
 		&user,
 		&models.RemoteIdentity{
 			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
+			AccessToken: accessToken,
 		},
 	); err != nil {
 		t.Fatal(err)
@@ -78,14 +75,14 @@ func TestGetUser(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodGet, getUserRoute, web.GetUser(db))
+	router.Add(http.MethodGet, route, web.GetUser(db))
 
-	userURL := "/users/" + strconv.FormatUint(user.ID, 10)
-	r := httptest.NewRequest(http.MethodGet, userURL, nil)
+	requestURL := "/users/" + strconv.FormatUint(user.ID, 10)
+	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	router.Find(http.MethodGet, userURL, c)
+	router.Find(http.MethodGet, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
@@ -107,15 +104,10 @@ func TestGetUser(t *testing.T) {
 
 func TestGetUsers(t *testing.T) {
 	const (
-		usersURL = "/users"
+		route = "/users"
 
-		remoteID1 = 1
-		secret1   = "123"
-		provider1 = "github"
-
-		remoteID2 = 2
-		secret2   = "456"
-		provider2 = "gitlab"
+		github = "github"
+		gitlab = "gitlab"
 	)
 
 	db, cleanup := setup(t)
@@ -125,9 +117,7 @@ func TestGetUsers(t *testing.T) {
 	if err := db.CreateUserFromRemoteIdentity(
 		&user1,
 		&models.RemoteIdentity{
-			Provider:    provider1,
-			RemoteID:    remoteID1,
-			AccessToken: secret1,
+			Provider: github,
 		},
 	); err != nil {
 		t.Fatal(err)
@@ -136,16 +126,14 @@ func TestGetUsers(t *testing.T) {
 	if err := db.CreateUserFromRemoteIdentity(
 		&user2,
 		&models.RemoteIdentity{
-			Provider:    provider2,
-			RemoteID:    remoteID2,
-			AccessToken: secret2,
+			Provider: gitlab,
 		},
 	); err != nil {
 		t.Fatal(err)
 	}
 
 	e := echo.New()
-	r := httptest.NewRequest(http.MethodGet, usersURL, nil)
+	r := httptest.NewRequest(http.MethodGet, route, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 
@@ -188,9 +176,7 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	const (
-		usersInCourseRoute = "/courses/:cid/users"
-	)
+	const route = "/courses/:cid/users"
 
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -253,13 +239,13 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodGet, usersInCourseRoute, web.GetEnrollmentsByCourse(db))
-	usersInCourseURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users"
-	r := httptest.NewRequest(http.MethodGet, usersInCourseURL, nil)
+	router.Add(http.MethodGet, route, web.GetEnrollmentsByCourse(db))
+	requestURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users"
+	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	router.Find(http.MethodGet, usersInCourseURL, c)
+	router.Find(http.MethodGet, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
@@ -285,24 +271,16 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 }
 
 func TestPatchUser(t *testing.T) {
-	const (
-		getUserRoute = "/users/:uid"
-
-		secret   = "123"
-		provider = "github"
-		remoteID = 10
-	)
+	const route = "/users/:uid"
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	var user models.User
-	rmIdentities := &models.RemoteIdentity{
-		Provider:    provider,
-		RemoteID:    remoteID,
-		AccessToken: secret,
-	}
-	if err := db.CreateUserFromRemoteIdentity(&user, rmIdentities); err != nil {
+	var remoteIdentity models.RemoteIdentity
+	if err := db.CreateUserFromRemoteIdentity(
+		&user, &remoteIdentity,
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -310,22 +288,22 @@ func TestPatchUser(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodPatch, getUserRoute, web.PatchUser(db))
+	router.Add(http.MethodPatch, route, web.PatchUser(db))
 
 	// Send empty request, the user should not be modified.
-	emptyRequest := web.UpdateUserRequest{}
-	emptyJSON, err := json.Marshal(&emptyRequest)
+	emptyJSON, err := json.Marshal(&web.UpdateUserRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}
+	requestBody := bytes.NewReader(emptyJSON)
 
-	userURL := "/users/" + strconv.FormatUint(user.ID, 10)
-	r := httptest.NewRequest(http.MethodPatch, userURL, bytes.NewBuffer(emptyJSON))
+	requestURL := "/users/" + strconv.FormatUint(user.ID, 10)
+	r := httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	router.Find(http.MethodPatch, userURL, c)
+	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
@@ -335,18 +313,20 @@ func TestPatchUser(t *testing.T) {
 
 	tmp := true
 	// Send request with IsAdmin set to true, the user should become admin.
-	trueRequest := web.UpdateUserRequest{IsAdmin: &tmp}
-	trueJSON, err := json.Marshal(&trueRequest)
+	trueJSON, err := json.Marshal(&web.UpdateUserRequest{
+		IsAdmin: &tmp,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
+	requestBody.Reset(trueJSON)
 
-	r = httptest.NewRequest(http.MethodPatch, userURL, bytes.NewBuffer(trueJSON))
+	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w = httptest.NewRecorder()
-	c = e.NewContext(r, w)
+	c.Reset(r, w)
 	// Prepare context with user request.
-	router.Find(http.MethodPatch, userURL, c)
+	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
@@ -364,18 +344,20 @@ func TestPatchUser(t *testing.T) {
 	}
 
 	// Send request with Name.
-	nameChangeRequest := web.UpdateUserRequest{Name: "Scrooge McDuck"}
-	nameChangeJSON, err := json.Marshal(&nameChangeRequest)
+	nameChangeJSON, err := json.Marshal(&web.UpdateUserRequest{
+		Name: "Scrooge McDuck",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
+	requestBody.Reset(nameChangeJSON)
 
-	r = httptest.NewRequest(http.MethodPatch, userURL, bytes.NewBuffer(nameChangeJSON))
+	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w = httptest.NewRecorder()
-	c = e.NewContext(r, w)
+	c.Reset(r, w)
 	// Prepare context with user request.
-	router.Find(http.MethodPatch, userURL, c)
+	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
@@ -392,7 +374,7 @@ func TestPatchUser(t *testing.T) {
 		ID:               withName.ID,
 		Name:             "Scrooge McDuck",
 		IsAdmin:          true,
-		RemoteIdentities: []*models.RemoteIdentity{rmIdentities},
+		RemoteIdentities: []*models.RemoteIdentity{&remoteIdentity},
 	}
 	if !reflect.DeepEqual(withName, wantUser) {
 		t.Errorf("have users %+v want %+v", withName, wantUser)

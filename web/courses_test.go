@@ -47,7 +47,7 @@ var allCourses = []*models.Course{
 }
 
 func TestListCourses(t *testing.T) {
-	const listCoursesURL = "/courses"
+	const route = "/courses"
 
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -62,7 +62,7 @@ func TestListCourses(t *testing.T) {
 		testCourses = append(testCourses, &testCourse)
 	}
 
-	r := httptest.NewRequest(http.MethodGet, listCoursesURL, nil)
+	r := httptest.NewRequest(http.MethodGet, route, nil)
 	w := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(r, w)
@@ -88,8 +88,8 @@ func TestListCourses(t *testing.T) {
 
 func TestNewCourse(t *testing.T) {
 	const (
-		newCoursesURL = "/courses"
-		provider      = "fake"
+		route = "/courses"
+		fake  = "fake"
 	)
 
 	db, cleanup := setup(t)
@@ -97,11 +97,8 @@ func TestNewCourse(t *testing.T) {
 
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    0,
-			AccessToken: "",
+		&user, &models.RemoteIdentity{
+			Provider: fake,
 		},
 	); err != nil {
 		t.Fatal(err)
@@ -118,7 +115,7 @@ func TestNewCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r := httptest.NewRequest(http.MethodPost, newCoursesURL, bytes.NewReader(b))
+	r := httptest.NewRequest(http.MethodPost, route, bytes.NewReader(b))
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	e := echo.New()
@@ -130,7 +127,7 @@ func TestNewCourse(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	c.Set(provider, f)
+	c.Set(fake, f)
 	c.Set(auth.UserKey, &models.User{ID: user.ID})
 
 	h := web.NewCourse(nullLogger(), db, &web.BaseHookOptions{})
@@ -305,9 +302,7 @@ func TestEnrollmentProcess(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollment(t *testing.T) {
-	const (
-		route = "/users/:uid/courses"
-	)
+	const route = "/users/:uid/courses"
 
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -501,7 +496,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 }
 
 func TestGetCourse(t *testing.T) {
-	const getCourseRoute = "/courses/:cid"
+	const route = "/courses/:cid"
 
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -516,14 +511,14 @@ func TestGetCourse(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodGet, getCourseRoute, web.GetCourse(db))
+	router.Add(http.MethodGet, route, web.GetCourse(db))
 
-	courseURL := "/courses/" + strconv.FormatUint(course.ID, 10)
-	r := httptest.NewRequest(http.MethodGet, courseURL, nil)
+	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10)
+	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with course request.
-	router.Find(http.MethodGet, courseURL, c)
+	router.Find(http.MethodGet, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
