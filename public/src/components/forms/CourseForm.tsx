@@ -48,17 +48,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
     public render() {
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
-        const providers = this.props.providers.map((provider) => {
-            return <label className="radio-inline">
-                <input type="radio"
-                    name="provider"
-                    value={provider}
-                    defaultChecked={this.props.courseData
-                        && this.props.courseData.provider === provider ? true : false}
-                    onClick={(e) => this.getOrganizations(e, this.updateOrganisationDivs)}
-                />{provider}
-            </label>;
-        });
+
         return (
             <div>
                 <h1>{getTitleText}</h1>
@@ -67,7 +57,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                     <div className="form-group">
                         <label className="control-label col-sm-2">Provider:</label>
                         <div className="col-sm-10">
-                            {providers}
+                            {this.renderProviders()}
                         </div>
                     </div>
                     <div className="form-group" id="organisation-container">
@@ -139,6 +129,35 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         );
     }
 
+    private renderProviders(): JSX.Element | JSX.Element[] {
+        let providers;
+        if (this.props.providers.length > 1) {
+            providers = this.props.providers.map((provider, index: number) => {
+                return <label className="radio-inline" key={index}>
+                    <input type="radio"
+                        name="provider"
+                        value={provider}
+                        defaultChecked={this.props.courseData
+                            && this.props.courseData.provider === provider ? true : false}
+                        onClick={(e) => this.getOrganizations((e.target as HTMLInputElement).value)}
+                    />{provider}
+                </label>;
+            });
+        } else {
+            const curProvider = this.props.providers[0];
+            providers = <label className="radio-inline">
+                <input type="hidden"
+                    name="provider"
+                    value={curProvider}
+                />{curProvider}
+            </label>;
+            if (this.state.provider !== curProvider) {
+                this.getOrganizations(curProvider);
+            }
+        }
+        return providers;
+    }
+
     private handleFormSubmit(e: React.FormEvent<any>) {
         e.preventDefault();
         const errors: string[] = this.courseValidate();
@@ -175,17 +194,12 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         }
     }
 
-    private getOrganizations(e: any, callback: any): void {
-        const pvdr: string = e.target.value;
+    private async getOrganizations(provider: string): Promise<void> {
+        const directories = await this.props.courseMan.getDirectories(provider);
         this.setState({
-            provider: pvdr,
+            provider,
         });
-
-        const pRes = this.props.courseMan.getDirectories(pvdr);
-        pRes.then((orgs: IOrganization[]) => {
-            callback.call(this, orgs);
-        });
-
+        this.updateOrganisationDivs(directories);
     }
 
     private updateOrganisationDivs(orgs: IOrganization[]): void {
