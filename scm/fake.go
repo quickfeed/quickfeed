@@ -96,3 +96,9 @@ func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error 
 	s.Hooks[opt.Repository.ID]++
 	return nil
 }
+
+// CreateTeam implements the SCM interface.
+func (s *FakeSCM) CreateTeam(ctx context.Context, directory *Directory, team string) error {
+	// TODO no implementation provided yet
+	return nil
+}

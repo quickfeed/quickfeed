@@ -22,6 +22,8 @@ type SCM interface {
 	DeleteRepository(context.Context, uint64) error
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
+	// Create team.
+	CreateTeam(context.Context, *Directory, string) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

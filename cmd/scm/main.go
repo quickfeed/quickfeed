@@ -133,6 +133,21 @@ func main() {
 					},
 					Action: createHook(&client),
 				},
+				{
+					Name:  "team",
+					Usage: "Create team.",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "namespace",
+							Usage: "Where to find the repository, i.e., user/group/organization.",
+						},
+						cli.StringFlag{
+							Name:  "team",
+							Usage: "Team name",
+						},
+					},
+					Action: createTeam(&client),
+				},
 			},
 		},
 	}
@@ -262,6 +277,23 @@ func createHook(client *scm.SCM) cli.ActionFunc {
 				Owner: c.String("owner"),
 			},
 		})
+	}
+}
+
+func createTeam(client *scm.SCM) cli.ActionFunc {
+	ctx := context.Background()
+
+	return func(c *cli.Context) error {
+		if !c.IsSet("namespace") {
+			return cli.NewExitError("namespace must be provided", 3)
+		}
+		if !c.IsSet("team") {
+			return cli.NewExitError("team name must be provided", 3)
+		}
+		return (*client).CreateTeam(ctx,
+			&scm.Directory{Path: c.String("namespace")},
+			c.String("team"),
+		)
 	}
 }
 

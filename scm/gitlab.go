@@ -137,6 +137,12 @@ func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 	return
 }
 
+// CreateTeam implements the SCM interface.
+func (s *GitlabSCM) CreateTeam(ctx context.Context, directory *Directory, team string) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)
