@@ -164,9 +164,8 @@ func TestEnrollmentProcess(t *testing.T) {
 	const (
 		route = "/courses/:cid/users/:uid"
 
-		secret   = "123"
-		provider = "github"
-		remoteID = 11
+		github = "github"
+		gitlab = "gitlab"
 	)
 
 	db, cleanup := setup(t)
@@ -177,22 +176,16 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	var admin models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&admin,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    0,
-			AccessToken: "",
+		&admin, &models.RemoteIdentity{
+			Provider: github,
 		},
 	); err != nil {
 		t.Fatal(err)
 	}
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: "",
+		&user, &models.RemoteIdentity{
+			Provider: gitlab,
 		},
 	); err != nil {
 		t.Fatal(err)
