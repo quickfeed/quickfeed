@@ -203,10 +203,9 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestURL := fmt.Sprintf("/courses/%d/users/%d", allCourses[0].ID, user.ID)
-
 	e := echo.New()
 	router := echo.NewRouter(e)
+	requestURL := fmt.Sprintf("/courses/%d/users/%d", allCourses[0].ID, user.ID)
 
 	// Add the route to handler.
 	router.Add(http.MethodPut, route, web.SetEnrollment(db))
