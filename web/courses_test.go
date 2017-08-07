@@ -208,7 +208,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	requestURL := fmt.Sprintf("/courses/%d/users/%d", allCourses[0].ID, user.ID)
 
 	// Add the route to handler.
-	router.Add(http.MethodPut, route, web.SetEnrollment(db))
+	router.Add(http.MethodPut, route, web.CreateEnrollment(db))
 	r := httptest.NewRequest(http.MethodPut, requestURL, requestBody)
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()

@@ -214,8 +214,8 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 	}
 }
 
-// SetEnrollment enrolls a user in a course.
-func SetEnrollment(db database.Database) echo.HandlerFunc {
+// CreateEnrollment enrolls a user in a course.
+func CreateEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		courseID, err := parseUint(c.Param("cid"))
 		if err != nil {
