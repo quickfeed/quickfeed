@@ -160,9 +160,11 @@ func TestNewCourse(t *testing.T) {
 	assertCode(t, w.Code, http.StatusCreated)
 }
 
-func TestSetEnrollment(t *testing.T) {
+func TestEnrollmentProcess(t *testing.T) {
 	const (
-		setEnrollRoute = "/courses/:cid/users/:uid"
+		query             = "?status=accepted"
+		setEnrollRoute    = "/courses/:cid/users/:uid"
+		updateEnrollRoute = setEnrollRoute + query
 
 		secret   = "123"
 		provider = "github"
@@ -229,18 +231,16 @@ func TestSetEnrollment(t *testing.T) {
 		t.Error(err)
 	}
 
-	assertCode(t, w.Code, http.StatusAccepted)
+	assertCode(t, w.Code, http.StatusOK)
 	enr, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantEnrollment := &models.Enrollment{
-		ID: enr.ID,
-		// Course:   allCourses[0],
+		ID:       enr.ID,
 		CourseID: allCourses[0].ID,
-		// User:     &user,
-		UserID: user.ID,
-		Status: int(models.Pending),
+		UserID:   user.ID,
+		Status:   models.Pending,
 	}
 	if !reflect.DeepEqual(enr, wantEnrollment) {
 		t.Errorf("have enrollment\n %+v\n want\n %+v", enr, wantEnrollment)
@@ -262,8 +262,9 @@ func TestSetEnrollment(t *testing.T) {
 	router = echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodPut, setEnrollRoute, web.SetEnrollment(db))
-	userCoursesURL = "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users/" + strconv.FormatUint(user.ID, 10)
+	router.Add(http.MethodPut, updateEnrollRoute, web.UpdateEnrollment(db))
+	userCoursesURL = "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) +
+		"/users/" + strconv.FormatUint(user.ID, 10) + query
 	r = httptest.NewRequest(http.MethodPut, userCoursesURL, bytes.NewReader(b))
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w = httptest.NewRecorder()
@@ -278,7 +279,7 @@ func TestSetEnrollment(t *testing.T) {
 	}
 	assertCode(t, w.Code, http.StatusOK)
 
-	wantEnrollment.Status = int(models.Accepted)
+	wantEnrollment.Status = models.Accepted
 	enr, err = db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
 	if err != nil {
 		t.Fatal(err)

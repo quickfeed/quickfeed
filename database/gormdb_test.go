@@ -329,7 +329,7 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(pendingEnrollments) != 1 && pendingEnrollments[0].Status == int(models.Pending) {
+	if len(pendingEnrollments) != 1 && pendingEnrollments[0].Status == models.Pending {
 		t.Fatalf("have %v want 1 pending enrollment", pendingEnrollments)
 	}
 
@@ -345,7 +345,7 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == int(models.Accepted) {
+	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == models.Accepted {
 		t.Fatalf("have %v want 1 accepted enrollment", acceptedEnrollments)
 	}
 
@@ -360,7 +360,7 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(rejectedEnrollments) != 1 && rejectedEnrollments[0].Status == int(models.Rejected) {
+	if len(rejectedEnrollments) != 1 && rejectedEnrollments[0].Status == models.Rejected {
 		t.Fatalf("have %v want 1 rejected enrollment", rejectedEnrollments)
 	}
 }
@@ -1033,7 +1033,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 var createGroupTests = []struct {
 	name        string
 	getGroup    func(uint64, ...uint64) *models.Group
-	enrollments []int
+	enrollments []uint
 	err         error
 }{
 	// Should fail with ErrRecordNotFound as we cannot create a group that
@@ -1077,7 +1077,7 @@ var createGroupTests = []struct {
 				},
 			}
 		},
-		enrollments: []int{models.None, models.None},
+		enrollments: []uint{models.Pending, models.Pending},
 		err:         gorm.ErrRecordNotFound,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
@@ -1094,7 +1094,7 @@ var createGroupTests = []struct {
 				Users:    users,
 			}
 		},
-		enrollments: []int{models.None, models.None},
+		enrollments: []uint{models.Pending, models.Pending},
 		err:         gorm.ErrRecordNotFound,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
@@ -1111,7 +1111,7 @@ var createGroupTests = []struct {
 				Users:    users,
 			}
 		},
-		enrollments: []int{int(models.Pending), int(models.Pending)},
+		enrollments: []uint{models.Pending, models.Pending},
 		err:         gorm.ErrRecordNotFound,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
@@ -1128,7 +1128,7 @@ var createGroupTests = []struct {
 				Users:    users,
 			}
 		},
-		enrollments: []int{int(models.Rejected), int(models.Rejected)},
+		enrollments: []uint{models.Rejected, models.Rejected},
 		err:         gorm.ErrRecordNotFound,
 	},
 	// Should pass as the user exists and is enrolled in the course.
@@ -1144,7 +1144,7 @@ var createGroupTests = []struct {
 				Users:    users,
 			}
 		},
-		enrollments: []int{int(models.Accepted)},
+		enrollments: []uint{models.Accepted},
 	},
 	// Should pass as the users exists and are enrolled in the course.
 	{
@@ -1159,7 +1159,7 @@ var createGroupTests = []struct {
 				Users:    users,
 			}
 		},
-		enrollments: []int{int(models.Accepted), int(models.Accepted)},
+		enrollments: []uint{models.Accepted, models.Accepted},
 	},
 }
 
@@ -1192,7 +1192,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 			// Enroll users in course.
 			for i := 0; i < len(uids); i++ {
-				if test.enrollments[i] == models.None {
+				if test.enrollments[i] == models.Pending {
 					continue
 				}
 				if err := db.CreateEnrollment(&models.Enrollment{

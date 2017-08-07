@@ -359,7 +359,7 @@ func (db *GormDB) setEnrollment(eid uint64, status uint) error {
 	return db.conn.
 		Model(&models.Enrollment{}).
 		Where(&models.Enrollment{ID: eid}).
-		Update(&models.Enrollment{Status: int(status)}).Error
+		Update(&models.Enrollment{Status: status}).Error
 }
 
 // GetCoursesByUser returns all courses (with enrollment status)
@@ -393,7 +393,7 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...uint) ([]*models.Cour
 	for _, course := range courses {
 		course.Enrolled = models.None
 		if enrollment, ok := m[course.ID]; ok {
-			course.Enrolled = enrollment.Status
+			course.Enrolled = int(enrollment.Status)
 		}
 	}
 	return courses, nil
@@ -442,7 +442,7 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 	query := tx.Model(&models.Enrollment{}).
 		Where(&models.Enrollment{
 			CourseID: group.CourseID,
-			Status:   int(models.Accepted),
+			Status:   models.Accepted,
 		}).
 		Where("user_id IN (?)", userids).
 		Updates(&models.Enrollment{

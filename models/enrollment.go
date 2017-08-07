@@ -21,5 +21,5 @@ type Enrollment struct {
 	Group   *Group `json:"group,omitempty"`
 	GroupID uint64 `json:"groupid"`
 
-	Status int `json:"status"`
+	Status uint `json:"status"`
 }
