@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
@@ -153,9 +154,14 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity
 	return nil
 }
 
-// ErrDuplicateIdentity is returned when trying to associate a remote identity
-// with a user account and the identity is already in use.
-var ErrDuplicateIdentity = errors.New("remote identity register with another user")
+var (
+	// ErrDuplicateIdentity is returned when trying to associate a remote identity
+	// with a user account and the identity is already in use.
+	ErrDuplicateIdentity = errors.New("remote identity register with another user")
+	// ErrDuplicateGroup is returned when trying to create a group with the same
+	// name as a previously registered group.
+	ErrDuplicateGroup = errors.New("group name already registered")
+)
 
 // AssociateUserWithRemoteIdentity implements the Database interface.
 func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error {
@@ -433,6 +439,9 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 
 	if err := tx.Model(&models.Group{}).Create(group).Error; err != nil {
 		tx.Rollback()
+		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
+			return ErrDuplicateGroup
+		}
 		return err
 	}
 	var userids []uint64

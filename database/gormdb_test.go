@@ -1202,6 +1202,67 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 	}
 }
 
+func TestGormDBCreateGroupTwice(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var course models.Course
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+	var users []*models.User
+	enrollments := []uint{models.Accepted, models.Accepted}
+	for i := 0; i < len(enrollments); i++ {
+		var user models.User
+		if err := db.CreateUserFromRemoteIdentity(
+			&user,
+			&models.RemoteIdentity{
+				Provider:    "github",
+				RemoteID:    100 + uint64(i),
+				AccessToken: "secret",
+			},
+		); err != nil {
+			t.Fatal(err)
+		}
+		users = append(users, &user)
+	}
+	// Enroll users in course.
+	for i := 0; i < len(users); i++ {
+		if enrollments[i] == models.Pending {
+			continue
+		}
+		if err := db.CreateEnrollment(&models.Enrollment{
+			CourseID: course.ID,
+			UserID:   users[i].ID,
+			Status:   enrollments[i],
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	group := &models.Group{
+		Name:     "GroupName",
+		CourseID: course.ID,
+		Users:    users,
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Error(err)
+	}
+	group = &models.Group{
+		Name:     "SameNameGroup",
+		CourseID: course.ID,
+		Users:    users,
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Error(err)
+	}
+	if err := db.CreateGroup(group); err != nil {
+		if err != database.ErrDuplicateGroup {
+			t.Fatal(err)
+		}
+	}
+}
+
 func envSet(env string) database.GormLogger {
 	if os.Getenv(env) != "" {
 		return database.Logger{Logger: logrus.New()}
