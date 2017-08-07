@@ -25,6 +25,9 @@ import (
 // Another example usage to delete all repos in organzation on github
 // % scm delete repository --all --namespace autograder-test
 
+// Here is an example usage for creating a team with two members
+// % scm create team --namespace autograder-test --team teachers --users s111,meling
+
 func main() {
 	var client scm.SCM
 	var db database.GormDB
