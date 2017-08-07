@@ -1,10 +1,8 @@
 
 import * as React from "react";
 import { ILink } from "../../managers";
-import { NavigationHelper } from "../../NavigationHelper";
 
 import { IUser } from "../../models";
-import { NavMenu } from "./NavMenu";
 
 export interface INavBarLoginProps {
     links?: ILink[];
@@ -12,20 +10,41 @@ export interface INavBarLoginProps {
     user: IUser | null;
 }
 
-interface INavBarLoginState {
-    loginOpen: boolean;
-}
-
-export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLoginState> {
-
+export class NavBarLogin extends React.Component<INavBarLoginProps, any> {
     public render(): JSX.Element {
         if (this.props.user) {
-            return <div className="navbar-right">
-                <button className="btn btn-primary navbar-btn"
-                    onClick={() => { this.handleClick({ name: "Sign out", uri: "app/login/logout" }); }}>
-                    Log out
-                </button>
-            </div>;
+            return <div className="navbar-login pull-right">
+                <ul className="nav navbar-nav navbar-right">
+                    <li className="dropdown">
+                        <a href="#"
+                            title="View profile and more"
+                            className="dropdown-toggle"
+                            data-toggle="dropdown"
+                            role="button"
+                            aria-haspopup="true" aria-expanded="false">
+                            <img src={this.props.user.avatarurl} width="20" height="20" />
+                            <span className="caret"></span>
+                        </a>
+                        <ul className="dropdown-menu">
+                            <li className="dropdown-header">
+                                Signed in as &nbsp;&nbsp;
+                                <strong>{this.props.user.firstname + " " + this.props.user.lastname}</strong>
+                            </li>
+                            <li role="separator" className="divider"></li>
+                            <li><a href="/app/user" onClick={(e) => {
+                                this.handleClick(e, { name: "Profile", uri: "app/user" });
+                            }}>Your Profile</a></li>
+                            <li role="separator" className="divider"></li>
+                            <li><a href="app/login/logout"
+                                onClick={(e) => {
+                                    this.handleClick(e, { name: "Sign out", uri: "app/login/logout" });
+                                }}>
+                                Sign out</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div >;
         }
         let links: ILink[] | undefined = this.props.links;
         if (!links) {
@@ -37,8 +56,8 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
         const loginLinks = links.map((v: ILink, i: number) => {
             if (v.uri) {
                 return <li key={i}>
-                    <a onClick={() => this.handleClick(v) }
-                       href={"/" + v.uri} title={v.name}>
+                    <a onClick={(e) => this.handleClick(e, v)}
+                        href={"/" + v.uri} title={v.name}>
                         <i className={"fa fa-2x fa-" + v.name.toLowerCase()} ></i>
                     </a>
                 </li>;
@@ -53,8 +72,8 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
         </div >;
     }
 
-    private handleClick(link: ILink) {
-        this.setState({ loginOpen: false });
+    private handleClick(e: any, link: ILink) {
+        e.preventDefault();
         if (this.props.onClick) {
             this.props.onClick(link);
         }
