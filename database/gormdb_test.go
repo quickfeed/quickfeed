@@ -487,55 +487,17 @@ func TestGetRemoteIdentity(t *testing.T) {
 }
 
 func TestGormDBDuplicateIdentity(t *testing.T) {
-	const (
-		uID = 1
-		rID = 1
-
-		secret   = "123"
-		provider = "github"
-		remoteID = 10
-	)
-
-	var (
-		wantUser = &models.User{
-			ID:      uID,
-			IsAdmin: true,
-			RemoteIdentities: []*models.RemoteIdentity{{
-				ID:          rID,
-				Provider:    provider,
-				RemoteID:    remoteID,
-				AccessToken: secret,
-				UserID:      uID,
-			}},
-		}
-	)
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		},
+		&models.User{}, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(&user, wantUser) {
-		t.Errorf("have user %+v want %+v", &user, wantUser)
-	}
-
 	if err := db.CreateUserFromRemoteIdentity(
-		&models.User{},
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		},
+		&models.User{}, &models.RemoteIdentity{},
 	); err == nil {
 		t.Errorf("expected error '%v'", database.ErrDuplicateIdentity)
 	}
