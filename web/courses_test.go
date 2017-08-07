@@ -302,9 +302,6 @@ func TestEnrollmentProcess(t *testing.T) {
 
 func TestListCoursesWithEnrollment(t *testing.T) {
 	const (
-		secret   = "123"
-		provider = "github"
-		remoteID = 11
 		route = "/users/:uid/courses"
 	)
 
@@ -333,12 +330,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    0,
-			AccessToken: "",
-		},
+		&user, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -408,10 +400,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	const (
-		query            = "?status=accepted,rejected"
-		secret           = "123"
-		provider         = "github"
-		remoteID         = 11
+		query = "?status=accepted,rejected"
 		route = "/users/:uid/courses" + query
 	)
 
@@ -440,12 +429,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    0,
-			AccessToken: "",
-		},
+		&user, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
