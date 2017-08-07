@@ -162,9 +162,7 @@ func TestNewCourse(t *testing.T) {
 
 func TestEnrollmentProcess(t *testing.T) {
 	const (
-		query             = "?status=accepted"
-		setEnrollRoute    = "/courses/:cid/users/:uid"
-		updateEnrollRoute = setEnrollRoute + query
+		route = "/courses/:cid/users/:uid"
 
 		secret   = "123"
 		provider = "github"
@@ -216,7 +214,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodPut, setEnrollRoute, web.SetEnrollment(db))
+	router.Add(http.MethodPut, route, web.SetEnrollment(db))
 	userCoursesURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users/" + strconv.FormatUint(user.ID, 10)
 	r := httptest.NewRequest(http.MethodPut, userCoursesURL, bytes.NewReader(b))
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -262,11 +260,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	router = echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodPatch, updateEnrollRoute, web.UpdateEnrollment(db))
+	router.Add(http.MethodPatch, route, web.UpdateEnrollment(db))
 	userCoursesURL = "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) +
-		"/users/" + strconv.FormatUint(user.ID, 10) + query
+		"/users/" + strconv.FormatUint(user.ID, 10)
 	r = httptest.NewRequest(http.MethodPatch, userCoursesURL, bytes.NewReader(b))
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	qv := r.URL.Query()
+	qv.Set("status", "accepted")
+	r.URL.RawQuery = qv.Encode()
 	w = httptest.NewRecorder()
 	c = e.NewContext(r, w)
 	// Prepare context with user request.
