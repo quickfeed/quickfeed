@@ -124,13 +124,11 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 basis.push({ name: "Admin", uri: "app/admin", active: false });
             }
             basis.push({ name: "Courses", uri: "app/student/", active: false });
-            basis.push({ name: "Help", uri: "app/help", active: false });
             return basis;
-        } else {
-            return [
-                { name: "Help", uri: "app/help", active: false },
-            ];
         }
+        return [
+            { name: "Help", uri: "app/help", active: false },
+        ];
     }
 
     public componentDidMount() {
