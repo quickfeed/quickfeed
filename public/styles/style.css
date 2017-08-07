@@ -213,3 +213,16 @@
     background-image: none;
     border-radius: 0px;
 }
+
+.marketing .col-lg-4 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.featurette-divider {
+    margin: 80px 0;
+}
+
+.btn{
+    background-image: none;
+}
