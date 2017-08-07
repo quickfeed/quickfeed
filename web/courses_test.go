@@ -52,11 +52,14 @@ func TestListCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	for _, course := range allCourses {
-		err := db.CreateCourse(course)
+	var testCourses []*models.Course
+	for range allCourses {
+		var testCourse models.Course
+		err := db.CreateCourse(&testCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
+		testCourses = append(testCourses, &testCourse)
 	}
 
 	r := httptest.NewRequest(http.MethodGet, listCoursesURL, nil)
@@ -75,8 +78,8 @@ func TestListCourses(t *testing.T) {
 	}
 
 	for i, course := range foundCourses {
-		if !reflect.DeepEqual(course, allCourses[i]) {
-			t.Errorf("have course %+v want %+v", course, allCourses[i])
+		if !reflect.DeepEqual(course, testCourses[i]) {
+			t.Errorf("have course %+v want %+v", course, testCourses[i])
 		}
 	}
 
@@ -173,7 +176,8 @@ func TestEnrollmentProcess(t *testing.T) {
 	defer cleanup()
 
 	// Create course.
-	if err := db.CreateCourse(allCourses[0]); err != nil {
+	testCourse := *allCourses[0]
+	if err := db.CreateCourse(&testCourse); err != nil {
 		t.Fatal(err)
 	}
 	// Create admin.
@@ -198,7 +202,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// Prepare request payload.
 	b, err := json.Marshal(&web.EnrollUserRequest{
 		UserID:   user.ID,
-		CourseID: allCourses[0].ID,
+		CourseID: testCourse.ID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -207,7 +211,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	e := echo.New()
 	router := echo.NewRouter(e)
-	requestURL := fmt.Sprintf("/courses/%d/users/%d", allCourses[0].ID, user.ID)
+	requestURL := fmt.Sprintf("/courses/%d/users/%d", testCourse.ID, user.ID)
 
 	// Add the route to handler.
 	router.Add(http.MethodPut, route, web.CreateEnrollment(db))
@@ -227,13 +231,13 @@ func TestEnrollmentProcess(t *testing.T) {
 	assertCode(t, w.Code, http.StatusCreated)
 
 	// Verify that an appropriate enrollment was indeed created.
-	pendingEnrollment, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
+	pendingEnrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantEnrollment := &models.Enrollment{
 		ID:       pendingEnrollment.ID,
-		CourseID: allCourses[0].ID,
+		CourseID: testCourse.ID,
 		UserID:   user.ID,
 	}
 	if !reflect.DeepEqual(pendingEnrollment, wantEnrollment) {
@@ -243,7 +247,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// Prepare request payload.
 	b, err = json.Marshal(&web.EnrollUserRequest{
 		UserID:   user.ID,
-		CourseID: allCourses[0].ID,
+		CourseID: testCourse.ID,
 		Status:   models.Accepted,
 	})
 	if err != nil {
@@ -290,7 +294,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	assertCode(t, w.Code, http.StatusOK)
 
 	// Verify that the enrollment have been accepted.
-	acceptedEnrollment, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
+	acceptedEnrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -498,16 +502,14 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 func TestGetCourse(t *testing.T) {
 	const getCourseRoute = "/courses/:cid"
-	courseURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	for _, course := range allCourses {
-		err := db.CreateCourse(course)
-		if err != nil {
-			t.Fatal(err)
-		}
+	var course models.Course
+	err := db.CreateCourse(&course)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	e := echo.New()
@@ -516,6 +518,7 @@ func TestGetCourse(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, getCourseRoute, web.GetCourse(db))
 
+	courseURL := "/courses/" + strconv.FormatUint(course.ID, 10)
 	r := httptest.NewRequest(http.MethodGet, courseURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -527,13 +530,13 @@ func TestGetCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var foundCourse *models.Course
+	var foundCourse models.Course
 	if err := json.Unmarshal(w.Body.Bytes(), &foundCourse); err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(foundCourse, allCourses[0]) {
-		t.Errorf("have course %+v want %+v", foundCourse, allCourses[0])
+	if !reflect.DeepEqual(&foundCourse, &course) {
+		t.Errorf("have course %+v want %+v", &foundCourse, &course)
 	}
 
 	assertCode(t, w.Code, http.StatusOK)
