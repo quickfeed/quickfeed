@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -203,19 +204,20 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	requestURL := fmt.Sprintf("/courses/%d/users/%d", allCourses[0].ID, user.ID)
+
 	e := echo.New()
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
 	router.Add(http.MethodPut, route, web.SetEnrollment(db))
-	userCoursesURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users/" + strconv.FormatUint(user.ID, 10)
-	r := httptest.NewRequest(http.MethodPut, userCoursesURL, bytes.NewReader(b))
+	r := httptest.NewRequest(http.MethodPut, requestURL, bytes.NewReader(b))
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
 	c.Set(auth.UserKey, &user)
-	router.Find(http.MethodPut, userCoursesURL, c)
+	router.Find(http.MethodPut, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
@@ -254,9 +256,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// Add the route to handler.
 	router.Add(http.MethodPatch, route, web.UpdateEnrollment(db))
-	userCoursesURL = "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) +
-		"/users/" + strconv.FormatUint(user.ID, 10)
-	r = httptest.NewRequest(http.MethodPatch, userCoursesURL, bytes.NewReader(b))
+	r = httptest.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(b))
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	qv := r.URL.Query()
 	qv.Set("status", "accepted")
@@ -265,7 +265,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	c = e.NewContext(r, w)
 	// Prepare context with user request.
 	c.Set(auth.UserKey, &admin)
-	router.Find(http.MethodPatch, userCoursesURL, c)
+	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
