@@ -266,13 +266,15 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		t.Error(err)
 	}
 
-	var foundUsers []*models.User
-	if err := json.Unmarshal(w.Body.Bytes(), &foundUsers); err != nil {
+	var foundEnrollments []*models.Enrollment
+	if err := json.Unmarshal(w.Body.Bytes(), &foundEnrollments); err != nil {
 		t.Fatal(err)
 	}
-	for _, u := range foundUsers {
+	var foundUsers []*models.User
+	for _, e := range foundEnrollments {
 		// Remote identities should not be loaded.
-		u.RemoteIdentities = nil
+		e.User.RemoteIdentities = nil
+		foundUsers = append(foundUsers, e.User)
 	}
 
 	if !reflect.DeepEqual(foundUsers, wantUsers) {

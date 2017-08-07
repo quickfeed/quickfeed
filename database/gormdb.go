@@ -148,6 +148,7 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity
 		if err := db.SetAdmin(1); err != nil {
 			return err
 		}
+		user.IsAdmin = true
 	}
 	return nil
 }

@@ -264,7 +264,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	w = httptest.NewRecorder()
 	c = e.NewContext(r, w)
 	// Prepare context with user request.
-	c.Set(auth.UserKey, &admin)
+	c.Set(auth.UserKey, &user)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
@@ -273,7 +273,6 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	assertCode(t, w.Code, http.StatusUnauthorized)
 
-	admin.IsAdmin = true
 	w = httptest.NewRecorder()
 	c = e.NewContext(r, w)
 	c.Set(auth.UserKey, &admin)

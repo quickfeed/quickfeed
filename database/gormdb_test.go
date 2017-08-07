@@ -498,7 +498,8 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 
 	var (
 		wantUser = &models.User{
-			ID: uID,
+			ID:      uID,
+			IsAdmin: true,
 			RemoteIdentities: []*models.RemoteIdentity{{
 				ID:          rID,
 				Provider:    provider,
@@ -658,44 +659,35 @@ func TestGormDBSetAdminNoRecord(t *testing.T) {
 
 func TestGormDBSetAdmin(t *testing.T) {
 	const (
-		uID = 1
-		rID = 1
-
-		secret   = "123"
-		provider = "github"
-		remoteID = 10
-	)
-
-	var (
-		wantUser = &models.User{
-			ID: uID,
-			RemoteIdentities: []*models.RemoteIdentity{{
-				ID:          rID,
-				Provider:    provider,
-				RemoteID:    remoteID,
-				AccessToken: secret,
-				UserID:      uID,
-			}},
-		}
+		github = "github"
+		gitlab = "gitlab"
 	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
+	// Create first user (the admin).
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
+		&models.User{},
 		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
+			Provider: github,
 		},
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(&user, wantUser) {
-		t.Errorf("have user %+v want %+v", &user, wantUser)
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user,
+		&models.RemoteIdentity{
+			Provider: gitlab,
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if user.IsAdmin {
+		t.Error("user should not yet be an administrator")
 	}
 
 	if err := db.SetAdmin(user.ID); err != nil {
@@ -707,9 +699,8 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantUser.IsAdmin = true
-	if !reflect.DeepEqual(admin, wantUser) {
-		t.Errorf("have user %+v want %+v", admin, wantUser)
+	if !admin.IsAdmin {
+		t.Error("user should be an administrator")
 	}
 }
 
