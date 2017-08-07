@@ -221,20 +221,19 @@ func TestEnrollmentProcess(t *testing.T) {
 	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
-
-	enr, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
 	assertCode(t, w.Code, http.StatusCreated)
+
+	pendingEnrollment, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantEnrollment := &models.Enrollment{
-		ID:       enr.ID,
+		ID:       pendingEnrollment.ID,
 		CourseID: allCourses[0].ID,
 		UserID:   user.ID,
-		Status:   models.Pending,
 	}
-	if !reflect.DeepEqual(enr, wantEnrollment) {
-		t.Errorf("have enrollment\n %+v\n want\n %+v", enr, wantEnrollment)
+	if !reflect.DeepEqual(pendingEnrollment, wantEnrollment) {
+		t.Errorf("have enrollment\n %+v\n want\n %+v", pendingEnrollment, wantEnrollment)
 	}
 
 	// ------------------------- Admin Enrolls user.ID
@@ -283,13 +282,13 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	assertCode(t, w.Code, http.StatusOK)
 
-	wantEnrollment.Status = models.Accepted
-	enr, err = db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
+	acceptedEnrollment, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(enr, wantEnrollment) {
-		t.Errorf("have enrollment %+v want %+v", enr, wantEnrollment)
+	wantEnrollment.Status = models.Accepted
+	if !reflect.DeepEqual(acceptedEnrollment, wantEnrollment) {
+		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
 	}
 }
 
