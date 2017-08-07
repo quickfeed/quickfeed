@@ -202,7 +202,7 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,
-			Status:   int(models.Accepted),
+			Status:   models.Accepted,
 		}); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
@@ -237,8 +237,49 @@ func SetEnrollment(db database.Database) echo.HandlerFunc {
 		enrollment := models.Enrollment{
 			UserID:   eur.UserID,
 			CourseID: eur.CourseID,
+			Status:   models.Pending,
 		}
 		if err := db.CreateEnrollment(&enrollment); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return err
+		}
+
+		return c.NoContent(http.StatusOK)
+	}
+}
+
+// UpdateEnrollment accepts or rejects a user to enroll in a course.
+func UpdateEnrollment(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		courseID, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return err
+		}
+		userID, err := parseUint(c.Param("uid"))
+		if err != nil {
+			return err
+		}
+		s := c.QueryParam("status")
+		status := models.Pending
+		switch s {
+		case "accepted":
+			status = models.Accepted
+		case "rejected":
+			status = models.Rejected
+		}
+
+		var eur EnrollUserRequest
+		if err := c.Bind(&eur); err != nil {
+			return err
+		}
+		if !eur.valid() || eur.UserID != userID || eur.CourseID != courseID || status == models.Pending {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+
+		enrollment, err := db.GetEnrollmentByCourseAndUser(eur.CourseID, eur.UserID)
+		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
 			}
@@ -248,13 +289,12 @@ func SetEnrollment(db database.Database) echo.HandlerFunc {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		user := c.Get("user").(*models.User)
 		if !user.IsAdmin {
-			// This means that the request has been accepted for processing,
-			// i.e., we need to wait for a teacher to accept the enrollment.
-			// TODO: Rename Accepted to Approved to avoid this confusion.
-			return c.NoContent(http.StatusAccepted)
+			// Only admin users are allowed to enroll or reject users to a course.
+			// TODO we should also allow users of the 'teachers' team to accept/reject users
+			return c.NoContent(http.StatusUnauthorized)
 		}
 
-		switch eur.Status {
+		switch status {
 		case models.Accepted:
 			if err := db.AcceptEnrollment(enrollment.ID); err != nil {
 				return err
@@ -464,7 +504,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			}
 			if enrollment.GroupID > 0 {
 				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
-			} else if enrollment.Status != int(models.Accepted) {
+			} else if enrollment.Status != models.Accepted {
 				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
 			}
 		}
