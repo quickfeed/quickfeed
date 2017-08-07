@@ -19,10 +19,6 @@ type UpdateUserRequest struct {
 	IsAdmin   *bool  `json:"isadmin"`
 }
 
-func (uur *UpdateUserRequest) isSetIsAdmin() bool {
-	return uur.IsAdmin != nil
-}
-
 // GetSelf redirects to GetUser with the current user's id.
 func GetSelf() echo.HandlerFunc {
 	return func(c echo.Context) error {
