@@ -18,13 +18,6 @@ interface INavBarLoginState {
 
 export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLoginState> {
 
-    constructor() {
-        super();
-        this.state = {
-            loginOpen: false,
-        };
-    }
-
     public render(): JSX.Element {
         if (this.props.user) {
             return <div className="navbar-right">
@@ -40,26 +33,24 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
                 { name: "Missing links" },
             ];
         }
-        let isHidden = "hidden";
-        if (this.state.loginOpen) {
-            isHidden = "";
-        }
 
-        return <div className="navbar-right">
-            <button onClick={() => this.toggleMenu()}
-                className="btn btn-primary navbar-btn">
-                Login
-            </button>
-            <div className={"nav-box " + isHidden}>
-                <NavMenu links={links}
-                    onClick={(link) => this.handleClick(link)}>
-                </NavMenu>
-            </div>
+        const loginLinks = links.map((v: ILink, i: number) => {
+            if (v.uri) {
+                return <li key={i}>
+                    <a onClick={() => this.handleClick(v) }
+                       href={"/" + v.uri} title={v.name}>
+                        <i className={"fa fa-2x fa-" + v.name.toLowerCase()} ></i>
+                    </a>
+                </li>;
+            }
+        });
+
+        return <div className="navbar-login pull-right">
+            <p className="navbar-text">Sign in with</p>
+            <ul className="nav navbar-nav navbar-right social-login">
+                {loginLinks}
+            </ul>
         </div >;
-    }
-
-    private toggleMenu() {
-        this.setState({ loginOpen: !this.state.loginOpen });
     }
 
     private handleClick(link: ILink) {
