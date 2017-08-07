@@ -19,13 +19,13 @@ export class UserPage extends ViewPage {
         this.navHelper.defaultPage = "profile";
         this.navHelper.registerFunction("profile", this.profile);
         this.curUser = this.userMan.getCurrentUser() || {
-            firstname: "", lastname: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
+            name: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
         };
     }
 
     public async updateUser() {
         this.curUser = this.userMan.getCurrentUser() || {
-            firstname: "", lastname: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
+            name: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
         };
         console.log("Cur user;", this.curUser);
         this.navMan.refresh();
@@ -41,7 +41,7 @@ export class UserPage extends ViewPage {
         if (index === 1) {
             return [<div id="0" className="jumbotron">
                 <div className="centerblock container">
-                    <h1>Hi, {this.curUser.firstname} {this.curUser.lastname}</h1>
+                    <h1>Hi, {this.curUser.name}</h1>
                 </div>
             </div>];
         }

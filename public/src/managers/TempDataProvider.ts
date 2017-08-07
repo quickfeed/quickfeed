@@ -249,8 +249,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
         const tempUser = this.localUsers[user.id];
         if (tempUser) {
-            tempUser.firstname = user.firstname;
-            tempUser.lastname = user.lastname;
+            tempUser.name = user.name;
             tempUser.email = user.email;
             tempUser.studentid = user.studentid;
             tempUser.isadmin = user.isadmin;
@@ -263,8 +262,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.localUsers = mapify([
             {
                 id: 999,
-                firstname: "Test",
-                lastname: "Testersen",
+                name: "Test Testersen",
                 email: "test@testersen.no",
                 studentid: "9999",
                 password: "1234",
@@ -272,8 +270,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 1000,
-                firstname: "Admin",
-                lastname: "Admin",
+                name: "Admin Admin",
                 email: "admin@admin",
                 studentid: "1000",
                 password: "1234",
@@ -281,8 +278,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 1,
-                firstname: "Per",
-                lastname: "Pettersen",
+                name: "Per Pettersen",
                 email: "per@pettersen.no",
                 studentid: "1234",
                 password: "1234",
@@ -290,8 +286,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 2,
-                firstname: "Bob",
-                lastname: "Bobsen",
+                name: "Bob Bobsen",
                 email: "bob@bobsen.no",
                 studentid: "1234",
                 password: "1234",
@@ -299,8 +294,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
             {
                 id: 3,
-                firstname: "Petter",
-                lastname: "Pan",
+                name: "Petter Pan",
                 email: "petter@pan.no",
                 studentid: "1234",
                 password: "1234",
@@ -587,8 +581,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     {
                         id: 1,
                         email: "test@example.com",
-                        firstname: "Student",
-                        lastname: "1",
+                        name: "Student 1",
                         isadmin: false,
                         studentid: "12345",
                         avatarurl: "",
@@ -596,8 +589,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     {
                         id: 2,
                         email: "test2@example.com",
-                        firstname: "Student",
-                        lastname: "2",
+                        name: "Student 2",
                         isadmin: false,
                         studentid: "12346",
                         avatarurl: "",
@@ -613,8 +605,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     {
                         id: 3,
                         email: "tes3t@example.com",
-                        firstname: "Student",
-                        lastname: "3",
+                        name: "Student 3",
                         isadmin: false,
                         studentid: "12347",
                         avatarurl: "",
@@ -622,8 +613,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     {
                         id: 4,
                         email: "test4@example.com",
-                        firstname: "Student",
-                        lastname: "4",
+                        name: "Student 4",
                         isadmin: false,
                         studentid: "12348",
                         avatarurl: "",

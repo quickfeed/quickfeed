@@ -45,7 +45,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         for (const student of this.state.students) {
             selectableStudents.push(
                 <li key={student.user.id} className="list-group-item">
-                    {student.user.firstname + " " + student.user.lastname}
+                    {student.user.name}
                     <button type="button"
                         className="btn btn-outline-success" onClick={() => this.handleAddToGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-plus-sign" />
@@ -57,7 +57,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         for (const student of this.state.selectedStudents) {
             selectedStudents.push(
                 <li key={student.user.id} className="list-group-item">
-                    {student.user.firstname + " " + student.user.lastname}
+                    {student.user.name}
                     <button className="btn btn-outline-primary"
                         onClick={() => this.handleRemoveFromGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-minus-sign" />
@@ -190,8 +190,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         query = query.toLowerCase();
         const filteredData: IUserRelation[] = [];
         this.props.students.forEach((student) => {
-            if ((student.user.firstname.toLowerCase().indexOf(query) !== -1
-                || student.user.lastname.toLowerCase().indexOf(query) !== -1
+            if ((student.user.name.toLowerCase().indexOf(query) !== -1
                 || student.user.email.toString().indexOf(query) !== -1)
                 && this.state.selectedStudents.indexOf(student) === -1
             ) {

@@ -13,7 +13,7 @@ class LabResult extends React.Component<ILabResult, any> {
     public render() {
         let labHeading: JSX.Element;
         if (this.props.student) {
-            labHeading = <h3>{this.props.student.firstname + " " + this.props.student.lastname}: {this.props.lab}</h3>;
+            labHeading = <h3>{this.props.student.name}: {this.props.lab}</h3>;
         } else {
             labHeading = <div>
                 <h1>{this.props.course_name}</h1>

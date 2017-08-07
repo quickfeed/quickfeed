@@ -58,8 +58,7 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         return <div className="well">
             <h3>Your information</h3>
             {message}
-            {this.renderField("firstname", curUser, "Firstname")}
-            {this.renderField("lastname", curUser, "Lastname")}
+            {this.renderField("name", curUser, "Name")}
             {this.renderField("email", curUser, "Email")}
             {this.renderField("studentid", curUser, "Student id")}
             {this.renderSaveButton(message !== undefined, this.state.editMode)}

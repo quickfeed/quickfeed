@@ -62,7 +62,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private getTableSelector(user: IUser): Array<string | JSX.Element> {
         let selector: Array<string | JSX.Element> = [
-            user.firstname + " " + user.lastname,
+            user.name,
             <a href={"mailto:" + user.email}>{user.email}</a>,
             user.studentid.toString(),
         ];
@@ -99,8 +99,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         query = query.toLowerCase();
         const filteredData: IUser[] = [];
         this.props.users.forEach((user) => {
-            if (user.firstname.toLowerCase().indexOf(query) !== -1
-                || user.lastname.toLowerCase().indexOf(query) !== -1
+            if (user.name.toLowerCase().indexOf(query) !== -1
                 || user.email.toLowerCase().indexOf(query) !== -1
                 || user.studentid.toString().indexOf(query) !== -1
             ) {

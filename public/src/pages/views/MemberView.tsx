@@ -38,7 +38,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
             header={["Name", "Email", "Student ID", "Action"]}
             selector={
                 (userRel: IUserRelation) => [
-                    userRel.user.firstname + " " + userRel.user.lastname,
+                    userRel.user.name,
                     <a href={"mailto:" + userRel.user.email}>{userRel.user.email}</a>,
                     userRel.user.studentid.toString(),
                     <span>

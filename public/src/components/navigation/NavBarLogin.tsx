@@ -28,7 +28,7 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, any> {
                         <ul className="dropdown-menu">
                             <li className="dropdown-header">
                                 Signed in as &nbsp;&nbsp;
-                                <strong>{this.props.user.firstname + " " + this.props.user.lastname}</strong>
+                                <strong>{this.props.user.name}</strong>
                             </li>
                             <li role="separator" className="divider"></li>
                             <li><a href="/app/user" onClick={(e) => {

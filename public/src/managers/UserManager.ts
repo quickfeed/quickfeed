@@ -48,8 +48,7 @@ export class UserManager {
 
     public isValidUser(user: IUser): boolean {
         return user.email.length > 0
-            && user.firstname.length > 0
-            && user.lastname.length > 0
+            && user.name.length > 0
             && user.studentid.length > 0;
     }
 
