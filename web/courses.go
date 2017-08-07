@@ -299,6 +299,24 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			if err := db.AcceptEnrollment(enrollment.ID); err != nil {
 				return err
 			}
+			// TODO Create user repo here
+
+			// user, err := db.GetUser(userID)
+			// if err != nil {
+			// 	return err
+			// }
+			// repo, err := s.CreateRepository(
+			// 	ctx,
+			// 	&scm.CreateRepositoryOptions{
+			// 		Path:      user.Name,
+			// 		Directory: directory},
+			// )
+			// if err != nil {
+			// 	return err
+			// }
+			// logger.WithField("repo", repo).Println("Created new user repository")
+
+			// TODO do we also need to create a webhook for each user??
 		case models.Rejected:
 			if err := db.RejectEnrollment(enrollment.ID); err != nil {
 				return err
