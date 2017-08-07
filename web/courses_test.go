@@ -191,7 +191,6 @@ func TestEnrollmentProcess(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	admin.IsAdmin = true
 
 	// ------------------------- User Enrolls as user.ID
 
@@ -256,7 +255,8 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// Add the route to handler.
 	router.Add(http.MethodPatch, route, web.UpdateEnrollment(db))
-	r = httptest.NewRequest(http.MethodPatch, requestURL, bytes.NewReader(b))
+	reader := bytes.NewReader(b)
+	r = httptest.NewRequest(http.MethodPatch, requestURL, reader)
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	qv := r.URL.Query()
 	qv.Set("status", "accepted")
@@ -265,6 +265,19 @@ func TestEnrollmentProcess(t *testing.T) {
 	c = e.NewContext(r, w)
 	// Prepare context with user request.
 	c.Set(auth.UserKey, &admin)
+	router.Find(http.MethodPatch, requestURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+	assertCode(t, w.Code, http.StatusUnauthorized)
+
+	admin.IsAdmin = true
+	w = httptest.NewRecorder()
+	c = e.NewContext(r, w)
+	c.Set(auth.UserKey, &admin)
+	reader.Reset(b)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
