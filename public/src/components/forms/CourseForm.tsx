@@ -4,6 +4,8 @@ import { ICourse, IOrganization } from "../../models";
 
 import { CourseManager } from "../../managers/CourseManager";
 
+import { bindFunc, RProp } from "../../helper";
+
 interface ICourseFormProps<T> {
     className?: string;
     courseMan: CourseManager;
@@ -48,7 +50,6 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
     public render() {
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
-
         return (
             <div>
                 <h1>{getTitleText}</h1>
@@ -63,59 +64,26 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                     <div className="form-group" id="organisation-container">
                         {this.state.organisations}
                     </div>
-
-                    <div className="form-group">
-                        <label className="control-label col-sm-2" htmlFor="name">Course Name:</label>
-                        <div className="col-sm-10">
-                            <input type="text" className="form-control"
-                                id="name"
-                                placeholder="Enter course name"
-                                name="name"
-                                value={this.state.name}
-                                onChange={(e) => this.handleInputChange(e)}
-                            />
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label className="control-label col-sm-2" htmlFor="code">Course Code:</label>
-                        <div className="col-sm-10">
-                            <input type="text"
-                                className="form-control"
-                                id="code"
-                                placeholder="Enter course code"
-                                name="code"
-                                value={this.state.code}
-                                onChange={(e) => this.handleInputChange(e)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="control-label col-sm-2" htmlFor="year">Year:</label>
-                        <div className="col-sm-10">
-                            <input type="text"
-                                className="form-control"
-                                id="year"
-                                placeholder="Enter year"
-                                name="year"
-                                value={this.state.year}
-                                onChange={(e) => this.handleInputChange(e)}
-                            />
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label className="control-label col-sm-2" htmlFor="tag">Semester:</label>
-                        <div className="col-sm-10">
-                            <input type="text"
-                                className="form-control"
-                                id="tag"
-                                placeholder="Enter semester"
-                                name="tag"
-                                value={this.state.tag}
-                                onChange={(e) => this.handleInputChange(e)}
-                            />
-                        </div>
-                    </div>
+                    {this.renderFormControler("Course Name:",
+                        "Enter course name",
+                        "name",
+                        this.state.name,
+                        (e) => this.handleInputChange(e))}
+                    {this.renderFormControler("Course code:",
+                        "Enter course code",
+                        "code",
+                        this.state.code,
+                        (e) => this.handleInputChange(e))}
+                    {this.renderFormControler("Course year:",
+                        "Enter year",
+                        "year",
+                        this.state.year,
+                        (e) => this.handleInputChange(e))}
+                    {this.renderFormControler("Semester:",
+                        "Enter semester",
+                        "tag",
+                        this.state.tag,
+                        (e) => this.handleInputChange(e))}
 
                     <div className="form-group">
                         <div className="col-sm-offset-2 col-sm-10">
@@ -156,6 +124,27 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             }
         }
         return providers;
+    }
+
+    private renderFormControler(
+        title: string,
+        placeholder: string,
+        name: string,
+        value: any,
+        onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
+    ) {
+        return <div className="form-group">
+            <label className="control-label col-sm-2" htmlFor="name">{title}</label>
+            <div className="col-sm-10">
+                <input type="text" className="form-control"
+                    id={name}
+                    placeholder={placeholder}
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                />
+            </div>
+        </div>;
     }
 
     private handleFormSubmit(e: React.FormEvent<any>) {
