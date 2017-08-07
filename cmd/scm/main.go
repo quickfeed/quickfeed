@@ -145,6 +145,10 @@ func main() {
 							Name:  "team",
 							Usage: "Team name",
 						},
+						cli.StringFlag{
+							Name:  "users",
+							Usage: "User names to add to team",
+						},
 					},
 					Action: createTeam(&client),
 				},
@@ -290,10 +294,19 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 		if !c.IsSet("team") {
 			return cli.NewExitError("team name must be provided", 3)
 		}
-		return (*client).CreateTeam(ctx,
-			&scm.Directory{Path: c.String("namespace")},
-			c.String("team"),
-		)
+		if !c.IsSet("users") {
+			return cli.NewExitError("team user names must be provided (comma separated)", 3)
+		}
+		users := strings.Split(c.String("users"), ",")
+		if len(users) < 1 {
+			return cli.NewExitError("team user names must be provided (comma separated)", 3)
+		}
+		opt := &scm.CreateTeamOptions{
+			Directory: &scm.Directory{Path: c.String("namespace")},
+			TeamName:  c.String("team"),
+			Users:     users,
+		}
+		return (*client).CreateTeam(ctx, opt)
 	}
 }
 

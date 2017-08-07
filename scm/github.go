@@ -141,12 +141,18 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GithubSCM) CreateTeam(ctx context.Context, directory *Directory, team string) error {
-	_, _, err := s.client.Organizations.CreateTeam(ctx, directory.Path, &github.Team{
-		Name: &team,
+func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) error {
+	t, _, err := s.client.Organizations.CreateTeam(ctx, opt.Directory.Path, &github.Team{
+		Name: &opt.TeamName,
 	})
 	if err != nil {
 		return err
+	}
+	for _, user := range opt.Users {
+		_, _, err = s.client.Organizations.AddTeamMembership(ctx, t.GetID(), user, nil)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

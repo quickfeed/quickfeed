@@ -23,7 +23,7 @@ type SCM interface {
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
-	CreateTeam(context.Context, *Directory, string) error
+	CreateTeam(context.Context, *CreateTeamOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -85,6 +85,13 @@ type CreateHookOptions struct {
 	Secret string
 
 	Repository *Repository
+}
+
+// CreateTeamOptions contains information about the team and the users of the team.
+type CreateTeamOptions struct {
+	Directory *Directory
+	TeamName  string
+	Users     []string
 }
 
 // ErrNotSupported is returned when the source code management solution used
