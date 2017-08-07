@@ -12,8 +12,7 @@ import (
 
 // UpdateUserRequest updates a user object in the database.
 type UpdateUserRequest struct {
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
+	Name      string `json:"name"`
 	StudentID string `json:"studentid"`
 	Email     string `json:"email"`
 	AvatarURL string `json:"avatarurl"`
@@ -86,12 +85,8 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		if uur.FirstName != "" {
-			updateUser.FirstName = uur.FirstName
-			status = http.StatusOK
-		}
-		if uur.LastName != "" {
-			updateUser.LastName = uur.LastName
+		if uur.Name != "" {
+			updateUser.Name = uur.Name
 			status = http.StatusOK
 		}
 		if uur.StudentID != "" {

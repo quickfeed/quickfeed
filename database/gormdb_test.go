@@ -76,8 +76,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 		wantUser = &models.User{
 			ID:        uID,
 			IsAdmin:   true, // first user is always admin
-			FirstName: "Scrooge",
-			LastName:  "McDuck",
+			Name:      "Scrooge McDuck",
 			StudentID: "22",
 			Email:     "scrooge@mc.duck",
 			AvatarURL: "https://github.com",
@@ -91,8 +90,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 		}
 		updates = &models.User{
 			ID:        uID,
-			FirstName: "Scrooge",
-			LastName:  "McDuck",
+			Name:      "Scrooge McDuck",
 			StudentID: "22",
 			Email:     "scrooge@mc.duck",
 			AvatarURL: "https://github.com",

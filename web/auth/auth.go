@@ -214,8 +214,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		if err == gorm.ErrRecordNotFound {
 			// Create new user.
 			user = &models.User{
-				FirstName: externalUser.FirstName,
-				LastName:  externalUser.LastName,
+				Name:      externalUser.FirstName + " " + externalUser.LastName,
 				Email:     externalUser.Email,
 				AvatarURL: externalUser.AvatarURL,
 			}

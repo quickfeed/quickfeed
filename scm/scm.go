@@ -24,6 +24,8 @@ type SCM interface {
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *CreateTeamOptions) error
+	// AddTeamMember as a member to a team.
+	// AddTeamMember(context.Context, *AddMemberOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

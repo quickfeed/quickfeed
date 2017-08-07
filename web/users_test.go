@@ -361,8 +361,8 @@ func TestPatchUser(t *testing.T) {
 		t.Error("expected user to have become admin")
 	}
 
-	// Send request with FirstName and LastName.
-	nameChangeRequest := web.UpdateUserRequest{FirstName: "Scrooge", LastName: "McDuck"}
+	// Send request with Name.
+	nameChangeRequest := web.UpdateUserRequest{Name: "Scrooge McDuck"}
 	nameChangeJSON, err := json.Marshal(&nameChangeRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -388,8 +388,7 @@ func TestPatchUser(t *testing.T) {
 
 	wantUser := &models.User{
 		ID:               withName.ID,
-		FirstName:        "Scrooge",
-		LastName:         "McDuck",
+		Name:             "Scrooge McDuck",
 		IsAdmin:          true,
 		RemoteIdentities: []*models.RemoteIdentity{rmIdentities},
 	}

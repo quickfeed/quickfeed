@@ -6,8 +6,7 @@ type User struct {
 
 	IsAdmin bool `json:"isadmin"`
 
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
+	Name      string `json:"name"`
 	StudentID string `json:"studentid"`
 	Email     string `json:"email"`
 	AvatarURL string `json:"avatarurl"`
