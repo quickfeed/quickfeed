@@ -222,8 +222,8 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Error(err)
 	}
 
-	assertCode(t, w.Code, http.StatusOK)
 	enr, err := db.GetEnrollmentByCourseAndUser(allCourses[0].ID, user.ID)
+	assertCode(t, w.Code, http.StatusCreated)
 	if err != nil {
 		t.Fatal(err)
 	}

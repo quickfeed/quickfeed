@@ -246,7 +246,7 @@ func CreateEnrollment(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		return c.NoContent(http.StatusOK)
+		return c.NoContent(http.StatusCreated)
 	}
 }
 
