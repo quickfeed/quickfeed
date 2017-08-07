@@ -8,11 +8,14 @@ import (
 )
 
 func TestLocal(t *testing.T) {
-	const wantOut = "hello world"
+	const (
+		script  = `printf "hello world"`
+		wantOut = "hello world"
+	)
 
 	local := ci.Local{}
 	out, err := local.Run(context.Background(), &ci.Job{
-		Commands: []string{"echo -n " + wantOut},
+		Commands: []string{script},
 	})
 	if err != nil {
 		t.Fatal(err)
