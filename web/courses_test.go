@@ -262,16 +262,16 @@ func TestEnrollmentProcess(t *testing.T) {
 	router = echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodPut, updateEnrollRoute, web.UpdateEnrollment(db))
+	router.Add(http.MethodPatch, updateEnrollRoute, web.UpdateEnrollment(db))
 	userCoursesURL = "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) +
 		"/users/" + strconv.FormatUint(user.ID, 10) + query
-	r = httptest.NewRequest(http.MethodPut, userCoursesURL, bytes.NewReader(b))
+	r = httptest.NewRequest(http.MethodPatch, userCoursesURL, bytes.NewReader(b))
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w = httptest.NewRecorder()
 	c = e.NewContext(r, w)
 	// Prepare context with user request.
 	c.Set(auth.UserKey, &admin)
-	router.Find(http.MethodPut, userCoursesURL, c)
+	router.Find(http.MethodPatch, userCoursesURL, c)
 
 	// Invoke the prepared handler.
 	if err := c.Handler()(c); err != nil {
