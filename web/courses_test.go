@@ -194,11 +194,10 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// ------------------------- User Enrolls as user.ID
 
-	eur := &web.EnrollUserRequest{
+	b, err := json.Marshal(&web.EnrollUserRequest{
 		UserID:   user.ID,
 		CourseID: allCourses[0].ID,
-	}
-	b, err := json.Marshal(eur)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,12 +239,11 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// ------------------------- Admin Enrolls user.ID
 
-	eur = &web.EnrollUserRequest{
+	b, err = json.Marshal(&web.EnrollUserRequest{
 		UserID:   user.ID,
 		CourseID: allCourses[0].ID,
 		Status:   models.Accepted,
-	}
-	b, err = json.Marshal(eur)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
