@@ -270,7 +270,7 @@ func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, 
 		return nil, err
 	}
 
-	latestSubs := make([]*models.Submission, 0)
+	var latestSubs []*models.Submission
 	for _, v := range course.Assignments {
 		temp, err := db.GetSubmissionForUser(v.ID, uid)
 		if err == nil {
