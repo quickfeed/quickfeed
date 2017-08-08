@@ -273,11 +273,13 @@ func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, 
 	var latestSubs []*models.Submission
 	for _, v := range course.Assignments {
 		temp, err := db.GetSubmissionForUser(v.ID, uid)
-		if err == nil {
-			latestSubs = append(latestSubs, temp)
-		} else if err != gorm.ErrRecordNotFound {
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				continue
+			}
 			return nil, err
 		}
+		latestSubs = append(latestSubs, temp)
 	}
 	return latestSubs, nil
 }
