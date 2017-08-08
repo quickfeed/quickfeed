@@ -329,21 +329,15 @@ export class CourseManager {
         if (!studentCourse.link) {
             return;
         }
-        const allSubmissions: IStudentSubmission[] = [];
         const assigns = await this.getAssignments(studentCourse.course.id);
-        const submissions = MapHelper.toArray(
-            await this.courseProvider.getAllLabInfos(studentCourse.course.id, student.id));
+        if (assigns.length > 0 ) {
+            const submissions = MapHelper.toArray(
+                await this.courseProvider.getAllLabInfos(studentCourse.course.id, student.id));
 
-        for (const a of assigns) {
-            const temp = submissions.find((sub) => sub.assignmentid === a.id);
-            studentCourse.assignments.push({ assignment: a, latest: temp });
-        }
-        console.log("data", assigns, submissions, studentCourse);
-        /*for (const assign of assigns) {
-            const submission = await this.getUserSubmittions(student, assign);
-            if (submission) {
-                studentCourse.assignments.push(submission);
+            for (const a of assigns) {
+                const temp = submissions.find((sub) => sub.assignmentid === a.id);
+                studentCourse.assignments.push({ assignment: a, latest: temp });
             }
-        }*/
+        }
     }
 }

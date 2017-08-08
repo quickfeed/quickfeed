@@ -67,7 +67,6 @@ export class StudentPage extends ViewPage {
     public async index(navInfo: INavInfo<any>): View {
         await this.setupData();
         if (this.activeCourses) {
-            console.log(this.activeCourses);
             return (<CoursesOverview
                 courseOverview={this.activeCourses}
                 navMan={this.navMan}
