@@ -8,9 +8,9 @@ import {
     ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
-    IError,
+    IError, INewCourse,
     INewGroup,
-    IOrganization,
+    IOrganization, IStatusCode,
     ISubmission,
     ITestCases,
     IUser,
@@ -139,12 +139,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return false;
     }
 
-    public async createNewCourse(courseData: ICourse): Promise<boolean> {
+    public async createNewCourse(courseData: INewCourse): Promise<ICourse | IError> {
         const uri: string = "courses";
-        const data: ICourse = courseData;
-        const result = await this.helper.post<ICourse, ICourse>(uri, data);
-        console.log("res = ", result);
-        return true;
+        const result = await this.helper.post<INewCourse, ICourse>(uri, courseData);
+        if (result.statusCode !== 201 || !result.data) {
+            return this.parseError(result);
+        }
+        return JSON.parse(JSON.stringify(result.data)) as ICourse;
     }
 
     public async getCourse(id: number): Promise<ICourse | null> {
@@ -157,16 +158,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.data)) as ICourse;
     }
 
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<boolean> {
+    public async updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError> {
         const uri: string = "courses/" + courseId;
         const result = await this.helper.put<ICourse, ICourse>(uri, courseData);
         if (result.statusCode !== 200) {
-            console.log("Error =>", result);
             this.handleError(result);
-            return false;
+            return this.parseError(result);
         }
-        console.log("Success => ", result);
-        return true;
+        return JSON.parse(JSON.stringify(result.statusCode)) as IStatusCode;
     }
 
     public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError> {

@@ -75,14 +75,17 @@ export interface IUserRelation {
 /**
  * Information about a single course
  */
-export interface ICourse {
-    id: number;
+export interface INewCourse {
     name: string;
     code: string;
     tag: string;
     year: number;
     provider: string;
     directoryid: number;
+}
+
+export interface ICourse extends INewCourse {
+    id: number;
 }
 
 export interface IBuildInfo {
@@ -232,11 +235,17 @@ export interface INewGroup {
     name: string;
     userids: number[];
 }
+
+/**
+ * IStatusCode represent the status code returns from serverside
+ */
+export interface IStatusCode {
+    statusCode: number;
+}
 /**
  * IError represents server side error object
  */
-export interface IError {
-    statusCode: number;
+export interface IError extends IStatusCode {
     data?: any;
 }
 /**

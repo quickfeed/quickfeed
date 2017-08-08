@@ -1,15 +1,16 @@
 import * as React from "react";
 import { BootstrapButton } from "../../components";
-import { ICourse, IOrganization } from "../../models";
+import { ICourse, IError, INewCourse, IOrganization, isError, IStatusCode } from "../../models";
 
 import { CourseManager } from "../../managers/CourseManager";
 
-import { bindFunc, RProp } from "../../helper";
+import { NavigationManager } from "../../managers/NavigationManager";
 
 interface ICourseFormProps<T> {
     className?: string;
     courseMan: CourseManager;
-    onSubmit: (formData: object, errors: string[]) => void;
+    navMan: NavigationManager;
+    pagePath: string;
     courseData?: ICourse; // for editing an existing course
     providers: string[];
 }
@@ -22,6 +23,7 @@ interface ICourseFormStates {
     provider: string;
     directoryid: number;
     organisations: JSX.Element | null;
+    errorFlash: JSX.Element | null;
 }
 
 interface ICourseFormData {
@@ -45,6 +47,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             provider: this.props.courseData ? this.props.courseData.provider : "",
             directoryid: this.props.courseData ? this.props.courseData.directoryid : 0,
             organisations: null,
+            errorFlash: null,
         };
     }
 
@@ -53,6 +56,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         return (
             <div>
                 <h1>{getTitleText}</h1>
+                {this.state.errorFlash}
                 <form className={this.props.className ? this.props.className : ""}
                     onSubmit={(e) => this.handleFormSubmit(e)}>
                     <div className="form-group">
@@ -147,10 +151,40 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         </div>;
     }
 
-    private handleFormSubmit(e: React.FormEvent<any>) {
+    private async handleFormSubmit(e: React.FormEvent<any>) {
         e.preventDefault();
         const errors: string[] = this.courseValidate();
-        const courseData: ICourseFormData = {
+        if (errors.length > 0) {
+            const flashErrors = this.getFlashErrors(errors);
+            this.setState({
+                errorFlash: flashErrors,
+            });
+        } else {
+            const result = this.props.courseData ?
+                await this.updateCourse(this.props.courseData.id) : await this.createNewCourse();
+
+            if (isError(result) && result.data) {
+                const errMsg = result.data.message;
+                let serverErrors: string[] = [];
+                if (errMsg instanceof Array) {
+                    serverErrors = errMsg;
+                } else {
+                    serverErrors.push(errMsg);
+                }
+                const flashErrors = this.getFlashErrors(serverErrors);
+                this.setState({
+                    errorFlash: flashErrors,
+                });
+            } else {
+                const redirectTo: string = this.props.pagePath + "/courses";
+                this.props.navMan.navigateTo(redirectTo);
+            }
+        }
+    }
+
+    private async updateCourse(courseId: number): Promise<IStatusCode | IError> {
+        const courseData: ICourse = {
+            id: courseId,
             name: this.state.name,
             code: this.state.code,
             tag: this.state.tag,
@@ -158,11 +192,21 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             provider: this.state.provider,
             directoryid: this.state.directoryid,
         };
-        if (this.props.courseData) {
-            courseData.id = this.props.courseData.id;
-        }
+        return await this.props.courseMan.updateCourse(courseId, courseData);
 
-        this.props.onSubmit(courseData, errors);
+    }
+
+    private async createNewCourse(): Promise<ICourse | IError> {
+        const courseData: INewCourse = {
+            name: this.state.name,
+            code: this.state.code,
+            tag: this.state.tag,
+            year: parseInt(this.state.year, 10),
+            provider: this.state.provider,
+            directoryid: this.state.directoryid,
+        };
+        return await this.props.courseMan.createNewCourse(courseData);
+
     }
 
     private handleInputChange(e: React.FormEvent<any>) {
@@ -265,6 +309,21 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             errors.push("Year must be greater or equal to current year");
         }
         return errors;
+    }
+
+    private getFlashErrors(errors: string[]): JSX.Element {
+        const errorArr: JSX.Element[] = [];
+        for (let i: number = 0; i < errors.length; i++) {
+            errorArr.push(<li key={i}>{errors[i]}</li>);
+        }
+        const flash: JSX.Element =
+            <div className="alert alert-danger">
+                <h4>{errorArr.length} errors prohibited Group from being saved: </h4>
+                <ul>
+                    {errorArr}
+                </ul>
+            </div>;
+        return flash;
     }
 
 }

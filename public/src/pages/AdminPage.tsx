@@ -15,14 +15,12 @@ export class AdminPage extends ViewPage {
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
-    private flashMessages: string[] | null;
 
     constructor(navMan: NavigationManager, userMan: UserManager, courseMan: CourseManager) {
         super();
         this.navMan = navMan;
         this.userMan = userMan;
         this.courseMan = courseMan;
-        this.flashMessages = null;
 
         this.navHelper.defaultPage = "users";
         this.navHelper.registerFunction("users", this.users);
@@ -82,31 +80,15 @@ export class AdminPage extends ViewPage {
     }
 
     public async newCourse(info: INavInfo<{}>): View {
-
-        let flashHolder: JSX.Element = <div></div>;
-        if (this.flashMessages) {
-            const errors: JSX.Element[] = [];
-            for (let i: number = 0; i < this.flashMessages.length; i++) {
-                errors.push(<li key={i}>{this.flashMessages[i]}</li>);
-            }
-
-            flashHolder = <div className="alert alert-danger">
-                <h4>{errors.length} errors prohibited Course from being saved: </h4>
-                <ul>
-                    {errors}
-                </ul>
-            </div>;
-        }
-
         const providers = await this.courseMan.getProviders();
 
         return (
             <div>
-                {flashHolder}
                 <CourseForm className="form-horizontal"
                     courseMan={this.courseMan}
+                    navMan={this.navMan}
+                    pagePath={this.pagePath}
                     providers={providers}
-                    onSubmit={(formData, errors) => this.createNewCourse(formData, errors)}
                 />
             </div>
         );
@@ -116,31 +98,15 @@ export class AdminPage extends ViewPage {
         const courseId = parseInt(info.params.id, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            let flashHolder: JSX.Element = <div></div>;
-            if (this.flashMessages) {
-                const errors: JSX.Element[] = [];
-                for (let i: number = 0; i < this.flashMessages.length; i++) {
-                    errors.push(<li key={i}>{this.flashMessages[i]}</li>);
-                }
-
-                flashHolder = <div className="alert alert-danger">
-                    <h4>{errors.length} errors prohibited Course from being saved: </h4>
-                    <ul>
-                        {errors}
-                    </ul>
-                </div>;
-            }
             const providers = await this.courseMan.getProviders();
             return (
-                <div>
-                    {flashHolder}
-                    <CourseForm className="form-horizontal"
-                        providers={providers}
-                        courseMan={this.courseMan}
-                        onSubmit={(formData, errors) => this.updateCourse(courseId, formData, errors)}
-                        courseData={course}
-                    />
-                </div>
+                <CourseForm className="form-horizontal"
+                    providers={providers}
+                    courseMan={this.courseMan}
+                    navMan={this.navMan}
+                    pagePath={this.pagePath}
+                    courseData={course}
+                />
             );
         }
         return <h1>Page not found</h1>;
@@ -173,41 +139,12 @@ export class AdminPage extends ViewPage {
         return [];
     }
 
-    private handleNewCourse(flashMessage?: string[]): void {
-        if (flashMessage) {
-            this.flashMessages = flashMessage;
-        }
+    private handleNewCourse(): void {
         this.navMan.navigateTo(this.pagePath + "/courses/new");
-    }
-
-    private async createNewCourse(fd: any, errors: string[]): Promise<void> {
-        if (errors.length === 0) {
-            // TODO: check returned value from backend and take appropriate action
-            const a = await this.courseMan.createNewCourse(fd);
-            if (!a) {
-                console.log("Failed to create course");
-            }
-            this.flashMessages = null;
-            this.navMan.navigateTo(this.pagePath + "/courses");
-        } else {
-            this.handleNewCourse(errors);
-        }
     }
 
     private handleEditCourseClick(id: number): void {
         this.navMan.navigateTo(this.pagePath + "/courses/" + id + "/edit");
-    }
-
-    private async updateCourse(courseId: number, data: any, errors: string[]): Promise<void> {
-        if (errors.length === 0) {
-            // TODO: check returned value from backend and take appropriate action
-            await this.courseMan.updateCourse(courseId, data);
-            this.flashMessages = null;
-            this.navMan.navigateTo(this.pagePath + "/courses");
-        } else {
-            this.flashMessages = errors;
-            this.navMan.navigateTo(this.pagePath + "/courses/" + courseId + "/edit");
-        }
     }
 
 }

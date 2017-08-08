@@ -9,7 +9,7 @@ import {
     ICourseWithEnrollStatus,
     IError,
     INewGroup,
-    IOrganization,
+    IOrganization, IStatusCode,
     ISubmission,
     IUser,
 } from "../models";
@@ -157,13 +157,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    public async createNewCourse(course: any): Promise<boolean> {
-        const courses = MapHelper.toArray(this.localCourses);
-        course.id = courses.length;
-        const courseData: ICourse = course as ICourse;
-        courses.push(courseData);
-        this.localCourses = mapify(courses, (ele) => ele.id);
-        return true;
+    public async createNewCourse(course: any): Promise<ICourse | IError> {
+        throw new Error("Method not implemented");
     }
 
     public async getCourse(id: number): Promise<ICourse | null> {
@@ -174,13 +169,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<boolean> {
-        const course: ICourse | undefined = this.localCourses[courseId];
-        if (course) {
-            this.localCourses[courseData.id] = courseData;
-            return true;
-        }
-        return false;
+    public async updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError> {
+        throw new Error("Method not implemented");
     }
 
     public async changeUserState(link: ICourseUserLink, state: Models.CourseUserState): Promise<boolean> {

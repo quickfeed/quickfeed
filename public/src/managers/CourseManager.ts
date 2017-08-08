@@ -8,9 +8,10 @@ import {
     ICourseUserLink,
     ICourseWithEnrollStatus,
     IError,
+    INewCourse,
     INewGroup,
     IOrganization,
-    isCourse,
+    isCourse, IStatusCode,
     IStudentSubmission,
     ISubmission,
     IUser,
@@ -32,9 +33,9 @@ export interface ICourseProvider {
     addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
     changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean>;
 
-    createNewCourse(courseData: ICourse): Promise<boolean>;
+    createNewCourse(courseData: INewCourse): Promise<ICourse | IError>;
     getCourse(id: number): Promise<ICourse | null>;
-    updateCourse(courseId: number, courseData: ICourse): Promise<boolean>;
+    updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError>;
 
     getCourseGroups(courseId: number): Promise<ICourseGroup[]>;
     updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean>;
@@ -189,7 +190,7 @@ export class CourseManager {
      * Creates a new course in the backend
      * @param courseData The course information to create a course from
      */
-    public async createNewCourse(courseData: ICourse): Promise<boolean> {
+    public async createNewCourse(courseData: INewCourse): Promise<ICourse | IError> {
         return this.courseProvider.createNewCourse(courseData);
     }
 
@@ -197,7 +198,7 @@ export class CourseManager {
      * Updates a course with new information
      * @param courseData The new information for the course
      */
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<boolean> {
+    public async updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError> {
         return await this.courseProvider.updateCourse(courseId, courseData);
     }
 
