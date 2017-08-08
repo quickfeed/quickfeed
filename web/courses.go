@@ -162,37 +162,43 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		if err != nil {
 			return err
 		}
+		existing := make(map[string]*scm.Repository)
+		for _, repo := range repos {
+			existing[repo.Path] = repo
+		}
 
 		var paths = []string{InfoRepo, AssignmentRepo, TestsRepo, SolutionsRepo}
 		for _, path := range paths {
-			repo, err := s.CreateRepository(
-				ctx,
-				&scm.CreateRepositoryOptions{
-					Path:      path,
-					Directory: directory},
-			)
-			if err != nil {
-				logger.WithField("repo", path).WithError(err).Println("Failed to create repository")
-				for _, r := range repos {
-					if r.Path == path {
-						// Get existing repository so that we can create webhook below
-						repo = r
-						break
-					}
+			var repo *scm.Repository
+			var ok bool
+			if repo, ok = existing[path]; !ok {
+				var err error
+				repo, err = s.CreateRepository(
+					ctx,
+					&scm.CreateRepositoryOptions{
+						Path:      path,
+						Directory: directory},
+				)
+				if err != nil {
+					logger.WithField("repo", path).WithError(err).Warn("Failed to create repository")
+					return err
 				}
-			} else {
 				logger.WithField("repo", repo).Println("Created new repository")
 			}
 
+			// TODO: Make sure CreateHook doesn't return an error if
+			// the call fails due to an already existing identical
+			// hook.
 			if err := s.CreateHook(ctx, &scm.CreateHookOptions{
 				URL:        GetEventsURL(bh.BaseURL, cr.Provider),
 				Secret:     bh.Secret,
 				Repository: repo,
 			}); err != nil {
 				logger.WithField("repo", path).WithError(err).Println("Failed to create webhook for repository")
-			} else {
-				logger.WithField("repo", repo).Println("Created new webhook for repository")
+				return err
 			}
+
+			logger.WithField("repo", repo).Println("Created new webhook for repository")
 		}
 
 		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
