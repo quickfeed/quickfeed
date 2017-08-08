@@ -369,10 +369,6 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 // GetSubmission returns a single submission for a assignment and a user
 func GetSubmission(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		_, err := parseUint(c.Param("cid"))
-		if err != nil {
-			return err
-		}
 		assignmentID, err := parseUint(c.Param("aid"))
 		if err != nil {
 			return err

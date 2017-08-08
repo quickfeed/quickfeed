@@ -266,6 +266,7 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database, bh *w
 	courses.PUT("/:cid/users/:uid", web.CreateEnrollment(db))
 	courses.PATCH("/:cid/users/:uid", web.UpdateEnrollment(db))
 	courses.GET("/:cid/assignments", web.ListAssignments(db))
+	// TODO: Endpoints needs to be fixed.
 	courses.GET("/:cid/assignments/:aid/submission", web.GetSubmission(db))
 	courses.GET("/:cid/submissions", web.ListSubmissions(db))
 	courses.POST("/:cid/groups", web.NewGroup(db))
