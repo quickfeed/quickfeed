@@ -125,7 +125,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
-        const result = await this.helper.put<{ courseid: number, userid: number, status: CourseUserState }, undefined>
+        const result = await this.helper.patch<{ courseid: number, userid: number, status: CourseUserState }, undefined>
             ("/courses/" + link.courseId + "/users/" + link.userid, {
                 courseid: link.courseId,
                 userid: link.userid,
