@@ -42,7 +42,7 @@ export interface ICourseProvider {
     getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
     // deleteCourse(id: number): Promise<boolean>;
 
-    getAllLabInfos(courseId: number): Promise<IMap<ISubmission>>;
+    getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>>;
     getDirectories(provider: string): Promise<IOrganization[]>;
     getProviders(): Promise<string[]>;
 }
@@ -231,7 +231,7 @@ export class CourseManager {
      * @param assignment The assignment the data should be loaded for
      */
     public async getUserSubmittions(student: IUser, assignment: IAssignment): Promise<IStudentSubmission> {
-        const temp = MapHelper.find(await this.courseProvider.getAllLabInfos(assignment.courseid),
+        const temp = MapHelper.find(await this.courseProvider.getAllLabInfos(assignment.courseid, student.id),
             (ele) => ele.userid === student.id && ele.assignmentid === assignment.id);
         if (temp) {
             return {
@@ -330,7 +330,8 @@ export class CourseManager {
         }
         const allSubmissions: IStudentSubmission[] = [];
         const assigns = await this.getAssignments(studentCourse.course.id);
-        const submissions = MapHelper.toArray(await this.courseProvider.getAllLabInfos(studentCourse.course.id));
+        const submissions = MapHelper.toArray(
+            await this.courseProvider.getAllLabInfos(studentCourse.course.id, student.id));
 
         for (const a of assigns) {
             const temp = submissions.find((sub) => sub.assignmentid === a.id);

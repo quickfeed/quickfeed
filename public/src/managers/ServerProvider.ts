@@ -212,8 +212,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     // TODO change to use course id instead of getting all of them
-    public async getAllLabInfos(courseId: number): Promise<IMap<ISubmission>> {
-        const result = await this.helper.get<ISubmission[]>(("courses/" + courseId.toString() + "/submissions"));
+    public async getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>> {
+        const result = await this.helper.get<ISubmission[]>(
+            ("courses/" + courseId.toString() + "/users/" + userId + "/submissions"),
+        );
         if (!result.data) {
             this.handleError(result);
             return {};

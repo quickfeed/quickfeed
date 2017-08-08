@@ -381,8 +381,13 @@ func ListSubmissions(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		user := c.Get("user").(*models.User)
-		submission, err := db.GetSubmissions(courseID, user.ID)
+		// Check if a user is provided, else used logged in user
+		userID, err := parseUint(c.Param("uid"))
+		if err != nil {
+			userID = c.Get("user").(*models.User).ID
+		}
+
+		submission, err := db.GetSubmissions(courseID, userID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
