@@ -1,3 +1,8 @@
+/**
+ * Binds a this variable to a function because of how Javascript works.
+ * @param thisVar The this variable to be used
+ * @param func The func to bind this to
+ */
 export function bindFunc<T>(thisVar: any, func: (props: T) => JSX.Element): (props: T) => JSX.Element {
     const temp = {
         [func.name]: (props: T) => func.call(thisVar, props),
@@ -5,8 +10,14 @@ export function bindFunc<T>(thisVar: any, func: (props: T) => JSX.Element): (pro
     return temp[func.name];
 }
 
+/**
+ * Type for be able to use React Props in function
+ */
 export type RProp<T> = { children?: JSX.Element | string } & T;
 
+/**
+ * Performs a shallow copy on an object
+ */
 export function copy<T extends {}>(val: T): T {
     const newEle: any = {};
     for (const a of Object.keys(val)) {

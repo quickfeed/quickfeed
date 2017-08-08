@@ -5,6 +5,9 @@ export interface IHTTPResult<T> {
     data?: T;
 }
 
+/**
+ * Wrapper around the buildt in XMLHttpRequest object
+ */
 export class HttpHelper {
     private PATH_PREFIX = "";
 
