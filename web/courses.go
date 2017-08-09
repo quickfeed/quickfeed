@@ -46,7 +46,7 @@ type EnrollUserRequest struct {
 }
 
 func (eur *EnrollUserRequest) valid() bool {
-	return eur.CourseID != 0 && eur.UserID != 0 && eur.Status <= models.Teacher
+	return eur.Status <= models.Teacher
 }
 
 // NewGroupRequest represents a new group
@@ -248,7 +248,7 @@ func CreateEnrollment(db database.Database) echo.HandlerFunc {
 		if err := c.Bind(&eur); err != nil {
 			return err
 		}
-		if !eur.valid() || eur.UserID != userID || eur.CourseID != courseID {
+		if !eur.valid() || userID == 0 || courseID == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
@@ -284,7 +284,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		if err := c.Bind(&eur); err != nil {
 			return err
 		}
-		if !eur.valid() || eur.UserID != userID || eur.CourseID != courseID {
+		if !eur.valid() || userID == 0 || courseID == 0 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
