@@ -81,7 +81,11 @@ export class TeacherPage extends ViewPage {
         const courseId = parseInt(info.params.course, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            const students = await this.courseMan.getUsersForCourse(course, this.userMan, [CourseUserState.student]);
+            const students = await this.courseMan.getUsersForCourse(course, this.userMan,
+                [
+                    CourseUserState.student,
+                    CourseUserState.teacher,
+                ]);
             const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
                 const temp = await this.courseMan.getStudentCourse(student.user, course);

@@ -132,7 +132,7 @@ export class StudentPage extends ViewPage {
                 return <GroupInfo group={grp} course={course} />;
             } else {
                 const students = await this.courseMan
-                    .getUsersForCourse(course, this.userMan, [CourseUserState.student]);
+                    .getUsersForCourse(course, this.userMan, [CourseUserState.student, CourseUserState.teacher]);
                 return <GroupForm className="form-horizontal"
                     students={students}
                     course={course}
@@ -197,7 +197,7 @@ export class StudentPage extends ViewPage {
     private onlyActiveCourses(studentCourse: IUserCourse[]): IUserCourse[] {
         const temp: IUserCourse[] = [];
         studentCourse.forEach((a) => {
-            if (a.link && a.link.state === CourseUserState.student) {
+            if (a.link && (a.link.state === CourseUserState.student || a.link.state === CourseUserState.teacher)) {
                 temp.push(a);
             }
         });
@@ -207,7 +207,11 @@ export class StudentPage extends ViewPage {
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            this.courses = await this.courseMan.getStudentCourses(curUser, [CourseUserState.student]);
+            this.courses = await this.courseMan.getStudentCourses(curUser,
+                [
+                    CourseUserState.student,
+                    CourseUserState.teacher,
+                ]);
             this.activeCourses = this.onlyActiveCourses(this.courses);
         }
     }
