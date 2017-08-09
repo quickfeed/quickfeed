@@ -39,10 +39,6 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, any> {
                                 this.handleClick(e, { name: "Help", uri: "app/help" });
                             }}> Help</a>
                             </li>
-                            <li><a href="/app/help" onClick={(e) => {
-                                this.handleClick(e, { name: "Help", uri: "app/help" });
-                            }}> Help</a>
-                            </li>
                             <li role="separator" className="divider"></li>
                             <li><a href="/app/admin/courses" onClick={(e) => {
                                 this.handleClick(e, { name: "Manage courses", uri: "app/admin/courses" });
