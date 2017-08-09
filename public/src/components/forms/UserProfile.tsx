@@ -50,7 +50,7 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
     public renderUserInfoBox(curUser: IUser): JSX.Element {
         let message: JSX.Element | undefined;
         if (!this.props.userMan.isValidUser(curUser)) {
-            message = <div>
+            message = <div style={{ color: "red" }}>
                 It looks like your user is missing some information, please fill it out before continuing
                 </div>;
         }
