@@ -5,6 +5,7 @@ const (
 	Pending uint = iota
 	Rejected
 	Accepted
+	Teacher
 	None = -1
 )
 

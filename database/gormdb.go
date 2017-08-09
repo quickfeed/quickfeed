@@ -339,6 +339,11 @@ func (db *GormDB) RejectEnrollment(eid uint64) error {
 	return db.setEnrollment(eid, models.Rejected)
 }
 
+// MakeTeacherEnrollment implements the Database interface.
+func (db *GormDB) MakeTeacherEnrollment(eid uint64) error {
+	return db.setEnrollment(eid, models.Teacher)
+}
+
 // GetEnrollmentsByCourse implements the Database interface.
 func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*models.Enrollment, error) {
 	return db.getEnrollments(&models.Course{ID: cid}, statuses...)
@@ -374,7 +379,7 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.
 }
 
 func (db *GormDB) setEnrollment(eid uint64, status uint) error {
-	if status > models.Accepted {
+	if status > models.Teacher {
 		panic("invalid status")
 	}
 	return db.conn.

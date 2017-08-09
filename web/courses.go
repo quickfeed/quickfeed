@@ -46,7 +46,7 @@ type EnrollUserRequest struct {
 }
 
 func (eur *EnrollUserRequest) valid() bool {
-	return eur.CourseID != 0 && eur.UserID != 0 && eur.Status <= models.Accepted
+	return eur.CourseID != 0 && eur.UserID != 0 && eur.Status <= models.Teacher
 }
 
 // NewGroupRequest represents a new group
@@ -279,20 +279,12 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		s := c.QueryParam("status")
-		status := models.Pending
-		switch s {
-		case "accepted":
-			status = models.Accepted
-		case "rejected":
-			status = models.Rejected
-		}
 
 		var eur EnrollUserRequest
 		if err := c.Bind(&eur); err != nil {
 			return err
 		}
-		if !eur.valid() || eur.UserID != userID || eur.CourseID != courseID || status == models.Pending {
+		if !eur.valid() || eur.UserID != userID || eur.CourseID != courseID {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
@@ -313,29 +305,33 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
-		switch status {
+		switch eur.Status {
 		case models.Accepted:
 			if err := db.AcceptEnrollment(enrollment.ID); err != nil {
 				return err
 			}
-			// TODO Create user repo here
+		// TODO Create user repo here
 
-			// user, err := db.GetUser(userID)
-			// if err != nil {
-			// 	return err
-			// }
-			// repo, err := s.CreateRepository(
-			// 	ctx,
-			// 	&scm.CreateRepositoryOptions{
-			// 		Path:      user.Name,
-			// 		Directory: directory},
-			// )
-			// if err != nil {
-			// 	return err
-			// }
-			// logger.WithField("repo", repo).Println("Created new user repository")
+		// user, err := db.GetUser(userID)
+		// if err != nil {
+		// 	return err
+		// }
+		// repo, err := s.CreateRepository(
+		// 	ctx,
+		// 	&scm.CreateRepositoryOptions{
+		// 		Path:      user.Name,
+		// 		Directory: directory},
+		// )
+		// if err != nil {
+		// 	return err
+		// }
+		// logger.WithField("repo", repo).Println("Created new user repository")
 
-			// TODO do we also need to create a webhook for each user??
+		// TODO do we also need to create a webhook for each user??
+		case models.Teacher:
+			if err := db.MakeTeacherEnrollment(enrollment.ID); err != nil {
+				return err
+			}
 		case models.Rejected:
 			if err := db.RejectEnrollment(enrollment.ID); err != nil {
 				return err

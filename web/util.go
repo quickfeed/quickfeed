@@ -51,6 +51,8 @@ func parseEnrollmentStatus(s string) ([]uint, error) {
 			statuses = append(statuses, models.Rejected)
 		case "accepted":
 			statuses = append(statuses, models.Accepted)
+		case "teacher":
+			statuses = append(statuses, models.Teacher)
 		default:
 			return []uint{}, enrollStatusError
 		}
