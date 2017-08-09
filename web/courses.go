@@ -538,7 +538,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			}
 			if enrollment.GroupID > 0 {
 				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
-			} else if enrollment.Status != models.Accepted {
+			} else if enrollment.Status != models.Accepted && enrollment.Status != models.Teacher {
 				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
 			}
 		}
@@ -578,7 +578,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		if err := c.Bind(&ngrp); err != nil {
 			return err
 		}
-		if ngrp.Status > models.Accepted {
+		if ngrp.Status > models.Teacher {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 

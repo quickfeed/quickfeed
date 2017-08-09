@@ -351,7 +351,7 @@ func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*model
 
 func (db *GormDB) getEnrollments(model interface{}, statuses ...uint) ([]*models.Enrollment, error) {
 	if len(statuses) == 0 {
-		statuses = []uint{models.Pending, models.Rejected, models.Accepted}
+		statuses = []uint{models.Pending, models.Rejected, models.Accepted, models.Teacher}
 	}
 	var enrollments []*models.Enrollment
 	if err := db.conn.Model(model).
@@ -467,13 +467,11 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 	for _, u := range group.Users {
 		userids = append(userids, u.ID)
 	}
-
 	query := tx.Model(&models.Enrollment{}).
 		Where(&models.Enrollment{
 			CourseID: group.CourseID,
-			Status:   models.Accepted,
 		}).
-		Where("user_id IN (?)", userids).
+		Where("user_id IN (?) AND status IN (?)", userids, []uint{models.Accepted, models.Teacher}).
 		Updates(&models.Enrollment{
 			GroupID: group.ID,
 		})
