@@ -520,8 +520,8 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
 	var groups []*models.Group
 	if err := db.conn.
 		Preload("Enrollments").
-		Where(&models.Course{
-			ID: cid,
+		Where(&models.Group{
+			CourseID: cid, 
 		}).
 		Find(&groups).Error; err != nil {
 		return nil, err
