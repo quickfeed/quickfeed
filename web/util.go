@@ -39,7 +39,7 @@ func parseEnrollmentStatus(s string) ([]uint, error) {
 	}
 
 	ss := strings.Split(s, ",")
-	if len(ss) > 3 {
+	if len(ss) > 4 {
 		return []uint{}, enrollStatusError
 	}
 	var statuses []uint
