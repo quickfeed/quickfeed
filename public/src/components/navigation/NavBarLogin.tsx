@@ -39,7 +39,20 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, any> {
                                 this.handleClick(e, { name: "Help", uri: "app/help" });
                             }}> Help</a>
                             </li>
+                            <li><a href="/app/help" onClick={(e) => {
+                                this.handleClick(e, { name: "Help", uri: "app/help" });
+                            }}> Help</a>
+                            </li>
                             <li role="separator" className="divider"></li>
+                            <li><a href="/app/admin/courses" onClick={(e) => {
+                                this.handleClick(e, { name: "Manage courses", uri: "app/admin/courses" });
+                            }}> Manage courses</a>
+                            </li>
+                            <li><a href="/app/admin/users" onClick={(e) => {
+                                this.handleClick(e, { name: "Manage users", uri: "app/admin/users" });
+                            }}> Manage users</a>
+                            </li>
+                            <li role="seperator" className="divider"></li>
                             <li><a href="app/login/logout"
                                 onClick={(e) => {
                                     this.handleClick(e, { name: "Sign out", uri: "app/login/logout" });

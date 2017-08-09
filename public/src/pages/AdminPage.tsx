@@ -21,7 +21,9 @@ export class AdminPage extends ViewPage {
         this.navMan = navMan;
         this.userMan = userMan;
         this.courseMan = courseMan;
-
+        if (!localStorage.getItem("admin")) {
+            this.template = "frontpage";
+        }
         this.navHelper.defaultPage = "users";
         this.navHelper.registerFunction("users", this.users);
         this.navHelper.registerFunction("courses", this.courses);

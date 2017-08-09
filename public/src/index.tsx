@@ -121,9 +121,11 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             const basis: ILink[] = [];
             if (this.userMan.isAdmin(user)) {
                 basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
-                basis.push({ name: "Admin", uri: "app/admin", active: false });
             }
             basis.push({ name: "Courses", uri: "app/student/", active: false });
+            if (this.userMan.isAdmin(user) && localStorage.getItem("admin")) {
+                basis.push({ name: "Admin", uri: "app/admin", active: false });
+            }
             return basis;
         }
         return [
