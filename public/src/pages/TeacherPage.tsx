@@ -186,6 +186,7 @@ export class TeacherPage extends ViewPage {
                 const states = [CourseUserState.teacher];
                 if (this.userMan.isAdmin(curUser)) {
                     states.push(CourseUserState.pending);
+                    states.push(CourseUserState.student);
                 }
                 const courses = await this.courseMan.getCoursesFor(curUser, states);
                 // const courses = await this.courseMan.getActiveCoursesFor(curUser);
