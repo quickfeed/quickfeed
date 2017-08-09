@@ -102,6 +102,7 @@ export class TeacherPage extends ViewPage {
             const groups = await this.courseMan.getCourseGroups(courseId);
             const approvedGroups: ICourseGroup[] = [];
             const pendingGroups: ICourseGroup[] = [];
+            const rejectedGroups: ICourseGroup[] = [];
             for (const grp of groups) {
                 switch (grp.status) {
                     case CourseGroupStatus.approved:
@@ -110,11 +111,15 @@ export class TeacherPage extends ViewPage {
                     case CourseGroupStatus.pending:
                         pendingGroups.push(grp);
                         break;
+                    case CourseGroupStatus.rejected:
+                        rejectedGroups.push(grp);
+                        break;
                 }
             }
             return <CourseGroup
                 approvedGroups={approvedGroups}
                 pendingGroups={pendingGroups}
+                rejectedGroups={rejectedGroups}
                 course={course}
                 navMan={this.navMan}
                 courseMan={this.courseMan}

@@ -210,6 +210,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return false;
     }
 
+    public async deleteGroup(groupId: number): Promise<boolean> {
+        const uri: string = "groups/" + groupId;
+        const result = await this.helper.delete(uri);
+        if (result.statusCode === 200) {
+            return true;
+        } else {
+            this.handleError(result);
+        }
+        return false;
+    }
+
     // TODO change to use course id instead of getting all of them
     public async getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>> {
         const result = await this.helper.get<ISubmission[]>(

@@ -10,7 +10,7 @@ class GroupInfo extends React.Component<IGroupPro, any> {
     public render() {
         const groupMembers: JSX.Element[] = [];
         for (let i: number = 0; i < this.props.group.users.length; i++) {
-            groupMembers.push(<li key={i} className="list-group-item">{this.props.group.users[i].id}</li>);
+            groupMembers.push(<li key={i} className="list-group-item">{this.props.group.users[i].name}</li>);
         }
         return (
             <div className="group-info">

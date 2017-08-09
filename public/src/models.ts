@@ -142,6 +142,7 @@ export enum CourseGroupStatus {
     pending = 0,
     rejected = 1,
     approved = 2,
+    deleted = 3,
 }
 
 export function courseUserStateToString(state: CourseUserState[]): string {

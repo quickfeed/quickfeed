@@ -10,6 +10,7 @@ import { BootstrapClass } from "../bootstrap/BootstrapButton";
 interface ICourseGroupProp {
     approvedGroups: ICourseGroup[];
     pendingGroups: ICourseGroup[];
+    rejectedGroups: ICourseGroup[];
     course: ICourse;
     navMan: NavigationManager;
     courseMan: CourseManager;
@@ -25,11 +26,16 @@ class CourseGroup extends React.Component<ICourseGroupProp, any> {
         if (this.props.pendingGroups.length > 0) {
             pendingGroups = this.createPendingGroupView();
         }
+        let rejectedGroups;
+        if (this.props.rejectedGroups.length > 0) {
+            rejectedGroups = this.createRejectedGroupView();
+        }
         return (
             <div className="group-container">
                 <h1>{this.props.course.name}</h1>
                 {approvedGroups}
                 {pendingGroups}
+                {rejectedGroups}
             </div>
         );
     }
@@ -67,8 +73,34 @@ class CourseGroup extends React.Component<ICourseGroupProp, any> {
                                 <UpdateButton type="primary" group={group} status={CourseGroupStatus.approved}>
                                     Approve
                                 </UpdateButton>
-                                <UpdateButton type="danger" group={group} status={CourseGroupStatus.rejected}>
+                                <UpdateButton type="warning" group={group} status={CourseGroupStatus.rejected}>
                                     Reject
+                                </UpdateButton>
+                                <UpdateButton type="danger" group={group} status={CourseGroupStatus.deleted}>
+                                    Remove
+                                </UpdateButton>
+                            </span>,
+                        ]}
+                />
+            </div>
+        );
+    }
+
+    private createRejectedGroupView(): JSX.Element {
+        const UpdateButton = bindFunc(this, this.updateButton);
+        return (
+            <div className="pending-groups">
+                <h3>Rejected Groups</h3>
+                <DynamicTable
+                    header={["Name", "Members", "Action"]}
+                    data={this.props.rejectedGroups}
+                    selector={
+                        (group: ICourseGroup) => [
+                            group.name,
+                            this.getMembers(group.users),
+                            <span>
+                                <UpdateButton type="danger" group={group} status={CourseGroupStatus.deleted}>
+                                    Remove
                                 </UpdateButton>
                             </span>,
                         ]}
@@ -82,10 +114,9 @@ class CourseGroup extends React.Component<ICourseGroupProp, any> {
         group: ICourseGroup,
         status: CourseGroupStatus,
     }>) {
-        console.log(props);
         return <BootstrapButton
             onClick={(e) => this.handleUpdateStatus(props.group.id, props.status)}
-            classType={props.type}>>
+            classType={props.type}>
             {props.children}
         </BootstrapButton>;
     }
@@ -93,14 +124,15 @@ class CourseGroup extends React.Component<ICourseGroupProp, any> {
     private getMembers(users: IUser[]): string {
         const names: string[] = [];
         for (const user of users) {
-            // names.push(user.firstname + " " + user.lastname);
-            names.push(user.id.toString());
+            names.push(user.name);
         }
         return names.toString();
     }
 
     private async handleUpdateStatus(gid: number, status: CourseGroupStatus): Promise<void> {
-        const result = await this.props.courseMan.updateGroupStatus(gid, status);
+        const result = status === CourseGroupStatus.deleted ?
+            await this.props.courseMan.deleteGroup(gid) :
+            await this.props.courseMan.updateGroupStatus(gid, status);
         if (result) {
             this.props.navMan.refresh();
         }
