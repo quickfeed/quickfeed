@@ -303,13 +303,12 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
+		// TODO If the enrollment is accepted, create repositories with webooks.
 		switch eur.Status {
 		case models.Student:
 			if err := db.EnrollStudent(userID, courseID); err != nil {
 				return err
 			}
-		// TODO Create user repo here
-		// TODO do we also need to create a webhook for each user??
 		case models.Teacher:
 			if err := db.EnrollTeacher(userID, courseID); err != nil {
 				return err
