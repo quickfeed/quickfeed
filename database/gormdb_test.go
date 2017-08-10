@@ -1232,26 +1232,18 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 		}
 	}
 
-	group := &models.Group{
-		Name:     "GroupName",
-		CourseID: course.ID,
-		Users:    users,
-	}
-	if err := db.CreateGroup(group); err != nil {
-		t.Error(err)
-	}
-	group = &models.Group{
+	// Try to create two identical groups. The first should succeed while
+	// further attempts should fail with ErrDuplicateGroup.
+	identical := &models.Group{
 		Name:     "SameNameGroup",
 		CourseID: course.ID,
 		Users:    users,
 	}
-	if err := db.CreateGroup(group); err != nil {
-		t.Error(err)
+	if err := db.CreateGroup(identical); err != nil {
+		t.Fatal(err)
 	}
-	if err := db.CreateGroup(group); err != nil {
-		if err != database.ErrDuplicateGroup {
-			t.Fatal(err)
-		}
+	if err := db.CreateGroup(identical); err != database.ErrDuplicateGroup {
+		t.Fatalf("expected error '%v' have '%v'", database.ErrDuplicateGroup, err)
 	}
 }
 
