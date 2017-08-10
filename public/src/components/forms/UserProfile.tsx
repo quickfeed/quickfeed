@@ -51,7 +51,7 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         let message: JSX.Element | undefined;
         if (!this.props.userMan.isValidUser(curUser)) {
             message = <div style={{ color: "red" }}>
-                It looks like your user is missing some information, please fill it out before continuing
+                To sign up, please complete the form below.
                 </div>;
         }
 
