@@ -319,9 +319,8 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatalf("have %v want 1 pending enrollment", pendingEnrollments)
 	}
 
-	enrollmentID := pendingEnrollments[0].ID
 	// Accept enrollment.
-	if err := db.EnrollStudent(enrollmentID); err != nil {
+	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -336,7 +335,7 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	}
 
 	// Reject enrollment.
-	if err := db.RejectEnrollment(enrollmentID); err != nil {
+	if err := db.RejectEnrollment(user.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -382,31 +381,28 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	enrollment1 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: c1.ID,
+	}); err != nil {
+		t.Fatal(err)
 	}
-	enrollment2 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: c2.ID,
+	}); err != nil {
+		t.Fatal(err)
 	}
-	enrollment3 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: c3.ID,
-	}
-	if err := db.CreateEnrollment(&enrollment1); err != nil {
+	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&enrollment2); err != nil {
+	if err := db.RejectEnrollment(user.ID, c2.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&enrollment3); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollStudent(enrollment3.ID); err != nil {
+	if err := db.EnrollStudent(user.ID, c3.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -817,14 +813,14 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	enrollment1 := models.Enrollment{
+
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: course1.ID,
-	}
-	if err := db.CreateEnrollment(&enrollment1); err != nil {
+	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(enrollment1.ID); err != nil {
+	if err := db.EnrollStudent(user.ID, course1.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -880,14 +876,13 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 
 	// Enroll the user to the course
-	enrollment1 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: c1.ID,
-	}
-	if err := db.CreateEnrollment(&enrollment1); err != nil {
+	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(enrollment1.ID); err != nil {
+	if err := db.EnrollStudent(user.ID, c1.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1117,19 +1112,18 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				if test.enrollments[i] == models.Pending {
 					continue
 				}
-				enrollment := models.Enrollment{
+				if err := db.CreateEnrollment(&models.Enrollment{
 					CourseID: course.ID,
 					UserID:   uids[i],
-				}
-				if err := db.CreateEnrollment(&enrollment); err != nil {
+				}); err != nil {
 					t.Fatal(err)
 				}
 				err := errors.New("enrollment status not implemented")
 				switch test.enrollments[i] {
 				case models.Rejected:
-					err = db.RejectEnrollment(enrollment.ID)
+					err = db.RejectEnrollment(uids[i], course.ID)
 				case models.Student:
-					err = db.EnrollStudent(enrollment.ID)
+					err = db.EnrollStudent(uids[i], course.ID)
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -1155,7 +1149,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 			sorted := make(map[uint64]*models.Enrollment)
 			for _, enrollment := range enrollments {
-				sorted[enrollment.ID] = enrollment
+				sorted[enrollment.UserID] = enrollment
 			}
 			for _, user := range group.Users {
 				if _, ok := sorted[user.ID]; !ok {
@@ -1206,17 +1200,16 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 		if enrollments[i] == models.Pending {
 			continue
 		}
-		enrollment := models.Enrollment{
+		if err := db.CreateEnrollment(&models.Enrollment{
 			CourseID: course.ID,
 			UserID:   users[i].ID,
-		}
-		if err := db.CreateEnrollment(&enrollment); err != nil {
+		}); err != nil {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
 		case models.Student:
-			err = db.EnrollStudent(enrollment.ID)
+			err = db.EnrollStudent(users[i].ID, course.ID)
 		}
 		if err != nil {
 			t.Fatal(err)

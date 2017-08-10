@@ -215,17 +215,16 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		// Automatically enroll the teacher creating the course
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		user := c.Get("user").(*models.User)
-		enrollment := models.Enrollment{
+		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,
-		}
-		if err := db.CreateEnrollment(&enrollment); err != nil {
+		}); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
 			}
 			return err
 		}
-		if err := db.EnrollTeacher(enrollment.ID); err != nil {
+		if err := db.EnrollTeacher(user.ID, course.ID); err != nil {
 			return err
 		}
 
@@ -288,8 +287,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		enrollment, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
-		if err != nil {
+		if _, err := db.GetEnrollmentByCourseAndUser(courseID, userID); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
 			}
@@ -307,7 +305,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 
 		switch eur.Status {
 		case models.Student:
-			if err := db.EnrollStudent(enrollment.ID); err != nil {
+			if err := db.EnrollStudent(userID, courseID); err != nil {
 				return err
 			}
 		// TODO Create user repo here
@@ -329,11 +327,11 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 
 		// TODO do we also need to create a webhook for each user??
 		case models.Teacher:
-			if err := db.EnrollTeacher(enrollment.ID); err != nil {
+			if err := db.EnrollTeacher(userID, courseID); err != nil {
 				return err
 			}
 		case models.Rejected:
-			if err := db.RejectEnrollment(enrollment.ID); err != nil {
+			if err := db.RejectEnrollment(userID, courseID); err != nil {
 				return err
 			}
 		}

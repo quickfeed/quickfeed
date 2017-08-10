@@ -346,18 +346,18 @@ func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 }
 
 // EnrollStudent implements the Database interface.
-func (db *GormDB) EnrollStudent(eid uint64) error {
-	return db.setEnrollment(eid, models.Student)
+func (db *GormDB) EnrollStudent(uid, cid uint64) error {
+	return db.setEnrollment(uid, cid, models.Student)
 }
 
 // RejectEnrollment implements the Database interface.
-func (db *GormDB) RejectEnrollment(eid uint64) error {
-	return db.setEnrollment(eid, models.Rejected)
+func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
+	return db.setEnrollment(uid, cid, models.Rejected)
 }
 
 // EnrollTeacher implements the Database interface.
-func (db *GormDB) EnrollTeacher(eid uint64) error {
-	return db.setEnrollment(eid, models.Teacher)
+func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
+	return db.setEnrollment(uid, cid, models.Teacher)
 }
 
 // GetEnrollmentsByCourse implements the Database interface.
@@ -394,13 +394,13 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.
 	return &enrollment, nil
 }
 
-func (db *GormDB) setEnrollment(eid uint64, status uint) error {
+func (db *GormDB) setEnrollment(uid, cid uint64, status uint) error {
 	if status > models.Teacher {
 		panic("invalid status")
 	}
 	return db.conn.
 		Model(&models.Enrollment{}).
-		Where(&models.Enrollment{ID: eid}).
+		Where(&models.Enrollment{CourseID: cid, UserID: uid}).
 		Update(&models.Enrollment{Status: status}).Error
 }
 

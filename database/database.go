@@ -27,9 +27,9 @@ type Database interface {
 	UpdateCourse(*models.Course) error
 
 	CreateEnrollment(*models.Enrollment) error
-	RejectEnrollment(uint64) error
-	EnrollStudent(uint64) error
-	EnrollTeacher(uint64) error
+	RejectEnrollment(uint64, uint64) error
+	EnrollStudent(uint64, uint64) error
+	EnrollTeacher(uint64, uint64) error
 	GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*models.Enrollment, error)
 	GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.Enrollment, error)
 

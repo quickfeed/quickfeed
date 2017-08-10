@@ -339,31 +339,28 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	enrollment1 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[0].ID,
+	}); err != nil {
+		t.Fatal(err)
 	}
-	enrollment2 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[1].ID,
+	}); err != nil {
+		t.Fatal(err)
 	}
-	enrollment3 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[2].ID,
-	}
-	if err := db.CreateEnrollment(&enrollment1); err != nil {
+	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&enrollment2); err != nil {
+	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&enrollment3); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollStudent(enrollment3.ID); err != nil {
+	if err := db.EnrollStudent(user.ID, testCourses[2].ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -433,31 +430,28 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	enrollment1 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[0].ID,
+	}); err != nil {
+		t.Fatal(err)
 	}
-	enrollment2 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[1].ID,
+	}); err != nil {
+		t.Fatal(err)
 	}
-	enrollment3 := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[2].ID,
-	}
-	if err := db.CreateEnrollment(&enrollment1); err != nil {
+	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&enrollment2); err != nil {
+	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&enrollment3); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollStudent(enrollment3.ID); err != nil {
+	if err := db.EnrollStudent(user.ID, testCourses[2].ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -559,14 +553,13 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	// Create enrollment.
-	enrollment := models.Enrollment{
+	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourse.ID,
-	}
-	if err := db.CreateEnrollment(&enrollment); err != nil {
+	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(enrollment.ID); err != nil {
+	if err := db.EnrollStudent(user.ID, testCourse.ID); err != nil {
 		t.Fatal(err)
 	}
 

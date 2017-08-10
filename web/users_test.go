@@ -210,27 +210,25 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	osUsers := users[3:7]
 
 	for _, u := range wantUsers {
-		enrollment := models.Enrollment{
+		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   u.ID,
 			CourseID: allCourses[0].ID,
-		}
-		if err := db.CreateEnrollment(&enrollment); err != nil {
+		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(enrollment.ID); err != nil {
+		if err := db.EnrollStudent(u.ID, allCourses[0].ID); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	for _, u := range osUsers {
-		enrollment := models.Enrollment{
+		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   u.ID,
 			CourseID: allCourses[1].ID,
-		}
-		if err := db.CreateEnrollment(&enrollment); err != nil {
+		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(enrollment.ID); err != nil {
+		if err := db.EnrollStudent(u.ID, allCourses[1].ID); err != nil {
 			t.Fatal(err)
 		}
 	}
