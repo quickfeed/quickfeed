@@ -2,6 +2,7 @@ package database_test
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -217,7 +218,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 
 	assignment := models.Assignment{
 		CourseID: 1,
-		Name:     "Lab 1",
+		Order:    1,
 	}
 
 	if err := db.CreateAssignment(&assignment); err != nil {
@@ -762,93 +763,82 @@ func TestGormDBGetNonExsistingSubmissions(t *testing.T) {
 }
 
 func TestGormDBInsertSubmissions(t *testing.T) {
-	const (
-		secret   = "123"
-		provider = "github"
-		remoteID = 11
-	)
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	submission1 := models.Submission{
+	if err := db.CreateSubmission(&models.Submission{
 		AssignmentID: 1,
 		UserID:       1,
-	}
-	if err := db.CreateSubmission(&submission1); err != gorm.ErrRecordNotFound {
+	}); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
 	}
 
-	//Create the course and assignemtn
-	var course1 models.Course
-	if err := db.CreateCourse(&course1); err != nil {
+	// Create the course and assignment.
+	var course models.Course
+	if err := db.CreateCourse(&course); err != nil {
 		t.Fatal(err)
 	}
-	assignment1 := models.Assignment{
-		CourseID: course1.ID,
-		Name:     "Assignment 1",
+	assigment := models.Assignment{
+		CourseID: course.ID,
 		Order:    1,
 	}
-	if err := db.CreateAssignment(&assignment1); err != nil {
+	if err := db.CreateAssignment(&assigment); err != nil {
 		t.Fatal(err)
 	}
 
-	// Check that it still gets the error since user is still missing
-	submission2 := models.Submission{
-		AssignmentID: assignment1.ID,
+	if err := db.CreateSubmission(&models.Submission{
+		AssignmentID: assigment.ID,
 		UserID:       1,
-	}
-	if err := db.CreateSubmission(&submission2); err != gorm.ErrRecordNotFound {
+	}); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
 	}
 
 	// Create the user and enroll him
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		},
+		&user, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
 
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
-		CourseID: course1.ID,
+		CourseID: course.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, course1.ID); err != nil {
+	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
 
-	// Now we should sucssed
-	submission3 := models.Submission{
-		AssignmentID: assignment1.ID,
+	// Now we should succeed.
+	if err := db.CreateSubmission(&models.Submission{
+		AssignmentID: assigment.ID,
 		UserID:       user.ID,
-	}
-	if err := db.CreateSubmission(&submission3); err != nil {
+	}); err != nil {
 		t.Fatal(err)
 	}
 
-	// Check that it is acctualy in the database
-	data, err := db.GetSubmissions(course1.ID, user.ID)
+	// Check that the submission is in the database
+	submissions, err := db.GetSubmissions(course.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
-	} else if len(data) != 1 {
-		t.Errorf("Expected '%v' elements in the array, got '%v'", 1, len(data))
+	}
+	if len(submissions) != 1 {
+		t.Fatalf("have %d submissions want %d", len(submissions), 1)
+	}
+	want := &models.Submission{
+		ID:           submissions[0].ID,
+		AssignmentID: assigment.ID,
+		UserID:       user.ID,
+	}
+	if !reflect.DeepEqual(submissions[0], want) {
+		t.Errorf("have %#v want %#v", submissions[0], want)
 	}
 
 }
 
 func TestGormDBGetInsertSubmissions(t *testing.T) {
-	const (
-		secret   = "123"
-		provider = "github"
-		remoteID = 11
-	)
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -865,12 +855,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	// Create the user
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		},
+		&user, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -888,25 +873,22 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	// Create some assignments
 	assignment1 := models.Assignment{
-		CourseID: c1.ID,
-		Name:     "Assignment 1",
 		Order:    1,
+		CourseID: c1.ID,
 	}
 	if err := db.CreateAssignment(&assignment1); err != nil {
 		t.Fatal(err)
 	}
 	assignment2 := models.Assignment{
-		CourseID: c1.ID,
-		Name:     "Assignment 2",
 		Order:    2,
+		CourseID: c1.ID,
 	}
 	if err := db.CreateAssignment(&assignment2); err != nil {
 		t.Fatal(err)
 	}
 	assignment3 := models.Assignment{
-		CourseID: c2.ID,
-		Name:     "Assignment 1",
 		Order:    1,
+		CourseID: c2.ID,
 	}
 	if err := db.CreateAssignment(&assignment3); err != nil {
 		t.Fatal(err)
@@ -936,6 +918,18 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 
 	// Even if there is three submission, only the latest for each assignment should be returned
+
+	submissions, err := db.GetSubmissions(c1.ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []*models.Submission{&submission2, &submission3}
+	if !reflect.DeepEqual(submissions, want) {
+		for _, s := range submissions {
+			fmt.Printf("%+v\n", s)
+		}
+		t.Errorf("have %#v want %#v", submissions, want)
+	}
 	data, err := db.GetSubmissions(c1.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)

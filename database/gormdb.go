@@ -222,24 +222,40 @@ func (db *GormDB) GetAssignmentsByCourse(cid uint64) ([]*models.Assignment, erro
 // TODO: Also check enrollment to see if the user is
 // enrolled in the course the assignment belongs to
 func (db *GormDB) CreateSubmission(submission *models.Submission) error {
-	var course uint64
-	// Checks that the course exists
-	if err := db.conn.Model(&models.Assignment{}).Where(&models.Assignment{
-		ID: submission.AssignmentID,
-	}).Count(&course).Error; err != nil {
-		return err
-	}
-	var user uint64
-	// Checks that the user exists
-	if err := db.conn.Model(&models.User{}).Where(&models.User{
-		ID: submission.UserID,
-	}).Count(&user).Error; err != nil {
-		return err
-	}
-	if course+user != 2 {
+	// Primary key must be greater than 0.
+	if submission.AssignmentID < 1 {
 		return gorm.ErrRecordNotFound
 	}
-	return db.conn.Create(&submission).Error
+
+	// Either user or group id must be set.
+	var m *gorm.DB
+	switch {
+	case submission.UserID > 0:
+		m = db.conn.First(&models.User{ID: submission.UserID})
+	case submission.GroupID > 0:
+		m = db.conn.First(&models.User{ID: submission.UserID})
+	default:
+		return gorm.ErrRecordNotFound
+	}
+
+	// Check that group exists.
+	var group uint64
+	if err := m.Count(&group).Error; err != nil {
+		return err
+	}
+
+	// Checks that the assignment exists.
+	var assignment uint64
+	if err := db.conn.Model(&models.Assignment{}).Where(&models.Assignment{
+		ID: submission.AssignmentID,
+	}).Count(&assignment).Error; err != nil {
+		return err
+	}
+
+	if assignment+group != 2 {
+		return gorm.ErrRecordNotFound
+	}
+	return db.conn.Create(submission).Error
 }
 
 // GetSubmissionForUser implements the Database interface
@@ -259,8 +275,8 @@ func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, 
 	}
 
 	var latestSubs []*models.Submission
-	for _, v := range course.Assignments {
-		temp, err := db.GetSubmissionForUser(v.ID, uid)
+	for _, a := range course.Assignments {
+		temp, err := db.GetSubmissionForUser(a.ID, uid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				continue
@@ -274,6 +290,11 @@ func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, 
 
 // CreateAssignment implements the Database interface
 func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
+	// Course id and assignment order must be given.
+	if assignment.CourseID < 1 || assignment.Order < 1 {
+		return gorm.ErrRecordNotFound
+	}
+
 	var course uint64
 	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
 		ID: assignment.CourseID,
