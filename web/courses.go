@@ -218,7 +218,7 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,
-			Status:   models.Accepted,
+			Status:   models.Student,
 		}); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
@@ -304,8 +304,8 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		}
 
 		switch eur.Status {
-		case models.Accepted:
-			if err := db.AcceptEnrollment(enrollment.ID); err != nil {
+		case models.Student:
+			if err := db.EnrollStudent(enrollment.ID); err != nil {
 				return err
 			}
 		// TODO Create user repo here
@@ -327,7 +327,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 
 		// TODO do we also need to create a webhook for each user??
 		case models.Teacher:
-			if err := db.MakeTeacherEnrollment(enrollment.ID); err != nil {
+			if err := db.EnrollTeacher(enrollment.ID); err != nil {
 				return err
 			}
 		case models.Rejected:
@@ -536,7 +536,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			}
 			if enrollment.GroupID > 0 {
 				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
-			} else if enrollment.Status != models.Accepted && enrollment.Status != models.Teacher {
+			} else if enrollment.Status != models.Student && enrollment.Status != models.Teacher {
 				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
 			}
 		}

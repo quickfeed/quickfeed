@@ -4,7 +4,7 @@ package models
 const (
 	Pending uint = iota
 	Rejected
-	Accepted
+	Student
 	Teacher
 	None = -1
 )

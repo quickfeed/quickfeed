@@ -217,7 +217,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		if err := db.CreateEnrollment(&enrollment); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.AcceptEnrollment(enrollment.ID); err != nil {
+		if err := db.EnrollStudent(enrollment.ID); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -230,7 +230,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		if err := db.CreateEnrollment(&enrollment); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.AcceptEnrollment(enrollment.ID); err != nil {
+		if err := db.EnrollStudent(enrollment.ID); err != nil {
 			t.Fatal(err)
 		}
 	}

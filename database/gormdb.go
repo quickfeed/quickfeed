@@ -329,9 +329,9 @@ func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 	return db.conn.Where(enrollment).FirstOrCreate(enrollment).Error
 }
 
-// AcceptEnrollment implements the Database interface.
-func (db *GormDB) AcceptEnrollment(eid uint64) error {
-	return db.setEnrollment(eid, models.Accepted)
+// EnrollStudent implements the Database interface.
+func (db *GormDB) EnrollStudent(eid uint64) error {
+	return db.setEnrollment(eid, models.Student)
 }
 
 // RejectEnrollment implements the Database interface.
@@ -339,8 +339,8 @@ func (db *GormDB) RejectEnrollment(eid uint64) error {
 	return db.setEnrollment(eid, models.Rejected)
 }
 
-// MakeTeacherEnrollment implements the Database interface.
-func (db *GormDB) MakeTeacherEnrollment(eid uint64) error {
+// EnrollTeacher implements the Database interface.
+func (db *GormDB) EnrollTeacher(eid uint64) error {
 	return db.setEnrollment(eid, models.Teacher)
 }
 
@@ -351,7 +351,7 @@ func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*model
 
 func (db *GormDB) getEnrollments(model interface{}, statuses ...uint) ([]*models.Enrollment, error) {
 	if len(statuses) == 0 {
-		statuses = []uint{models.Pending, models.Rejected, models.Accepted, models.Teacher}
+		statuses = []uint{models.Pending, models.Rejected, models.Student, models.Teacher}
 	}
 	var enrollments []*models.Enrollment
 	if err := db.conn.Model(model).
@@ -471,7 +471,7 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 		Where(&models.Enrollment{
 			CourseID: group.CourseID,
 		}).
-		Where("user_id IN (?) AND status IN (?)", userids, []uint{models.Accepted, models.Teacher}).
+		Where("user_id IN (?) AND status IN (?)", userids, []uint{models.Student, models.Teacher}).
 		Updates(&models.Enrollment{
 			GroupID: group.ID,
 		})
@@ -521,7 +521,7 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
 	if err := db.conn.
 		Preload("Enrollments").
 		Where(&models.Group{
-			CourseID: cid, 
+			CourseID: cid,
 		}).
 		Find(&groups).Error; err != nil {
 		return nil, err

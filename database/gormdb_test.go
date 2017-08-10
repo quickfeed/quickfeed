@@ -335,17 +335,17 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 
 	enrollmentID := pendingEnrollments[0].ID
 	// Accept enrollment.
-	if err := db.AcceptEnrollment(enrollmentID); err != nil {
+	if err := db.EnrollStudent(enrollmentID); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get course's accepted enrollments.
-	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Accepted)
+	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Student)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == models.Accepted {
+	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == models.Student {
 		t.Fatalf("have %v want 1 accepted enrollment", acceptedEnrollments)
 	}
 
@@ -431,7 +431,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AcceptEnrollment(enrollment3.ID); err != nil {
+	if err := db.EnrollStudent(enrollment3.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -443,7 +443,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	wantCourses := []*models.Course{
 		{ID: c1.ID, DirectoryID: 1, Enrolled: int(models.Pending)},
 		{ID: c2.ID, DirectoryID: 2, Enrolled: int(models.Rejected)},
-		{ID: c3.ID, DirectoryID: 3, Enrolled: int(models.Accepted)},
+		{ID: c3.ID, DirectoryID: 3, Enrolled: int(models.Student)},
 		{ID: c4.ID, DirectoryID: 4, Enrolled: models.None},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
@@ -851,7 +851,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if err := db.CreateEnrollment(&enrollment1); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AcceptEnrollment(enrollment1.ID); err != nil {
+	if err := db.EnrollStudent(enrollment1.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -914,7 +914,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	if err := db.CreateEnrollment(&enrollment1); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AcceptEnrollment(enrollment1.ID); err != nil {
+	if err := db.EnrollStudent(enrollment1.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1097,7 +1097,7 @@ var createGroupTests = []struct {
 				Users:    users,
 			}
 		},
-		enrollments: []uint{models.Accepted},
+		enrollments: []uint{models.Student},
 	},
 	// Should pass as the users exists and are enrolled in the course.
 	{
@@ -1112,7 +1112,7 @@ var createGroupTests = []struct {
 				Users:    users,
 			}
 		},
-		enrollments: []uint{models.Accepted, models.Accepted},
+		enrollments: []uint{models.Student, models.Student},
 	},
 }
 
@@ -1163,7 +1163,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 
 			// Verify.
-			enrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Accepted)
+			enrollments, err := db.GetEnrollmentsByCourse(course.ID, models.Student)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1207,7 +1207,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 		t.Fatal(err)
 	}
 	var users []*models.User
-	enrollments := []uint{models.Accepted, models.Accepted}
+	enrollments := []uint{models.Student, models.Student}
 	for i := 0; i < len(enrollments); i++ {
 		var user models.User
 		if err := db.CreateUserFromRemoteIdentity(

@@ -247,7 +247,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// Prepare request payload.
 	b, err = json.Marshal(&web.EnrollUserRequest{
-		Status: models.Accepted,
+		Status: models.Student,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -297,7 +297,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment.Status = models.Accepted
+	wantEnrollment.Status = models.Student
 	if !reflect.DeepEqual(acceptedEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
 	}
@@ -350,7 +350,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AcceptEnrollment(enrollment3.ID); err != nil {
+	if err := db.EnrollStudent(enrollment3.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -381,7 +381,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	wantCourses := []*models.Course{
 		{ID: testCourses[0].ID, Enrolled: int(models.Pending)},
 		{ID: testCourses[1].ID, Enrolled: int(models.Rejected)},
-		{ID: testCourses[2].ID, Enrolled: int(models.Accepted)},
+		{ID: testCourses[2].ID, Enrolled: int(models.Student)},
 		{ID: testCourses[3].ID, Enrolled: models.None},
 	}
 	for i := range courses {
@@ -444,7 +444,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if err := db.RejectEnrollment(enrollment2.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AcceptEnrollment(enrollment3.ID); err != nil {
+	if err := db.EnrollStudent(enrollment3.ID); err != nil {
 		t.Fatal(err)
 	}
 
@@ -472,7 +472,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}
 
 	assertCode(t, w.Code, http.StatusOK)
-	wantCourses, err := db.GetCoursesByUser(user.ID, models.Rejected, models.Accepted)
+	wantCourses, err := db.GetCoursesByUser(user.ID, models.Rejected, models.Student)
 	if err != nil {
 		t.Fatal(err)
 	}
