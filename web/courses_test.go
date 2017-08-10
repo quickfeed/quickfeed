@@ -561,7 +561,7 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create enrollment
+	// Create enrollment.
 	enrollment := models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourse.ID,
@@ -573,13 +573,13 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create group
 	group := models.Group{
 		Name:     "group1",
 		Status:   models.Pending,
 		CourseID: testCourse.ID,
 		// Users:    []*models.User{&user},
 	}
+	// Create group.
 	if err := db.CreateGroup(&group); err != nil {
 		t.Fatal(err)
 	}
