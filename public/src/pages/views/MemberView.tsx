@@ -11,7 +11,6 @@ interface IUserViewerProps {
     acceptedUsers: IUserRelation[];
     pendingUsers: IUserRelation[];
     course: ICourse;
-    actions?: ILink[];
 }
 
 export class MemberView extends React.Component<IUserViewerProps, {}> {
@@ -29,7 +28,22 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
     }
 
     public renderUserView() {
-        return this.renderUsers("Registered users", this.props.acceptedUsers, this.props.actions, ActionType.Menu);
+        return this.renderUsers(
+            "Registered users",
+            this.props.acceptedUsers,
+            [],
+            ActionType.Menu,
+            (user: IUserRelation) => {
+                const links = [];
+                if (user.link.state === CourseUserState.teacher) {
+                    links.push({ name: "This is a teacher", extra: "primary" });
+                } else {
+                    links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });
+                    links.push({ name: "Rejecte", uri: "reject", extra: "danger" });
+                }
+
+                return links;
+            });
     }
 
     public renderPendingView(pendingActions: ILink[]) {
@@ -38,18 +52,20 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
         }
     }
 
-    public renderUsers(title: string, users: IUserRelation[], actions?: ILink[], linkType?: ActionType) {
-        const allUsers: { [id: number]: IUserRelation } = {};
+    public renderUsers(
+        title: string,
+        users: IUserRelation[],
+        actions?: ILink[],
+        linkType?: ActionType,
+        optionalActions?: ((user: IUserRelation) => ILink[])) {
         return <div>
             <h3>{title}</h3>
             <UserView
-                users={users.map((userRel) => {
-                    allUsers[userRel.user.id] = userRel;
-                    return userRel.user;
-                })}
+                users={users}
                 actions={actions}
+                optionalActions={optionalActions}
                 linkType={linkType}
-                actionClick={(user, link) => this.handleAction(allUsers[user.id], link)}
+                actionClick={(user, link) => this.handleAction(user, link)}
             >
             </UserView>
         </div>;
@@ -64,7 +80,14 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
                 this.props.courseMan.changeUserState(userRel.link, CourseUserState.rejected);
                 break;
             case "teacher":
-                this.props.courseMan.changeUserState(userRel.link, CourseUserState.teacher);
+                if (confirm(
+                    `Warning! This action is irreversible!
+
+Do you want to continue assigning:
+${userRel.user.name} as a teacher?`,
+                )) {
+                    this.props.courseMan.changeUserState(userRel.link, CourseUserState.teacher);
+                }
                 break;
         }
         this.props.navMan.refresh();

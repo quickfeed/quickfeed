@@ -45,10 +45,6 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("course/{course}/results", this.results);
         this.navHelper.registerFunction("course/{course}/groups", this.groups);
-        // this.navHelper.registerFunction("course/{course}/{page}", this.course);
-        this.navHelper.registerFunction("user", async (navInfo) => {
-            return <UserView users={await userMan.getAllUser()}></UserView>;
-        });
     }
 
     public checkAuthentication(): boolean {
@@ -160,10 +156,6 @@ export class TeacherPage extends ViewPage {
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
                 courseMan={this.courseMan}
-                actions={[
-                    { name: "Make Teacher", uri: "teacher", extra: "primary" },
-                    { name: "Rejecte", uri: "reject", extra: "danger" },
-                ]}
             >
             </MemberView>;
         }

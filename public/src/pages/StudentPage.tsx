@@ -46,9 +46,6 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("course/{courseid:number}/members", this.members);
         this.navHelper.registerFunction<any>("course/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
-
-        // Only for testing purposes
-        this.navHelper.registerFunction<any>("user", this.getUsers);
     }
 
     public checkAuthentication(): boolean {
@@ -58,13 +55,6 @@ export class StudentPage extends ViewPage {
         }
         return false;
 
-    }
-
-    public async getUsers(navInfo: INavInfo<any>): View {
-        await this.setupData();
-        const users: IUser[] = await this.userMan.getAllUser();
-        return <UserView users={users}>
-        </UserView>;
     }
 
     public async index(navInfo: INavInfo<any>): View {

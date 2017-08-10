@@ -1,18 +1,19 @@
 import * as React from "react";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
-import { IUser } from "../../models";
+import { CourseUserState, IUser, IUserRelation } from "../../models";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 
 interface IUserViewerProps {
-    users: IUser[];
+    users: IUserRelation[];
     userMan?: UserManager;
     navMan?: NavigationManager;
     searchable?: boolean;
     actions?: ILink[];
+    optionalActions?: (user: IUserRelation) => ILink[];
     linkType?: ActionType;
-    actionClick?: (user: IUser, link: ILink) => void;
+    actionClick?: (user: IUserRelation, link: ILink) => void;
 }
 
 export enum ActionType {
@@ -22,7 +23,7 @@ export enum ActionType {
 }
 
 interface IUserViewerState {
-    users: IUser[];
+    users: IUserRelation[];
 }
 
 export class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
@@ -58,7 +59,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
                 <DynamicTable
                     header={this.getTableHeading()}
                     data={this.state.users}
-                    selector={(item: IUser) => this.renderRow(item)}
+                    selector={(item: IUserRelation) => this.renderRow(item)}
                 />
             </div>);
     }
@@ -71,12 +72,17 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         return heading;
     }
 
-    private renderRow(user: IUser): Array<string | JSX.Element> {
-        const selector: Array<string | JSX.Element> = [
-            user.name,
-            <a href={"mailto:" + user.email}>{user.email}</a>,
-            user.studentid.toString(),
-        ];
+    private renderRow(user: IUserRelation): Array<string | JSX.Element> {
+        const selector: Array<string | JSX.Element> = [];
+        if (user.link.state === CourseUserState.teacher) {
+            selector.push(<span className="text-muted">{user.user.name}</span>);
+        } else {
+            selector.push(user.user.name);
+        }
+        selector.push(
+            <a href={"mailto:" + user.user.email}>{user.user.email}</a>,
+            user.user.studentid.toString(),
+        );
         const temp = this.renderActions(user);
         if (Array.isArray(temp) && temp.length > 0) {
             selector.push(<div>{temp}</div>);
@@ -86,19 +92,26 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         return selector;
     }
 
-    private renderActions(user: IUser): JSX.Element[] | JSX.Element {
+    private renderActions(user: IUserRelation): JSX.Element[] | JSX.Element {
         const actionButtons: JSX.Element[] = [];
+        const tempActions: ILink[] = [];
         if (this.props.actions) {
+            tempActions.push(...this.props.actions);
+        }
+        if (this.props.optionalActions) {
+            tempActions.push(...this.props.optionalActions(user));
+        }
+        if (tempActions.length > 0) {
             if (this.props.linkType === ActionType.Menu) {
                 return <ul className="nav nav-pills">
                     <LiDropDownMenu
-                        links={this.props.actions}
+                        links={tempActions}
                         onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, link); } }}>
                         <span className="glyphicon glyphicon-option-vertical" />
                     </LiDropDownMenu>
                 </ul>;
             } else if (this.props.linkType === ActionType.InRow) {
-                actionButtons.push(...this.props.actions.map((v, i) => {
+                actionButtons.push(...tempActions.map((v, i) => {
                     return <BootstrapButton
                         key={i}
                         classType={v.extra ? v.extra as BootstrapClass : "default"}
@@ -110,15 +123,15 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         }
 
         if (this.props.userMan) {
-            if (this.props.userMan.isAdmin(user)) {
+            if (this.props.userMan.isAdmin(user.user)) {
                 actionButtons.push(<button className="btn btn-danger"
-                    onClick={() => this.handleAdminRoleClick(user)}
+                    onClick={() => this.handleAdminRoleClick(user.user)}
                     data-toggle="tooltip"
                     title="Demote from Admin">
                     Demote</button>);
             } else {
                 actionButtons.push(<button className="btn btn-primary"
-                    onClick={() => this.handleAdminRoleClick(user)}
+                    onClick={() => this.handleAdminRoleClick(user.user)}
                     data-toggle="tooltip"
                     title="Promote to Admin">
                     Promote</button>);
@@ -139,11 +152,11 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        const filteredData: IUser[] = [];
+        const filteredData: IUserRelation[] = [];
         this.props.users.forEach((user) => {
-            if (user.name.toLowerCase().indexOf(query) !== -1
-                || user.email.toLowerCase().indexOf(query) !== -1
-                || user.studentid.toString().indexOf(query) !== -1
+            if (user.user.name.toLowerCase().indexOf(query) !== -1
+                || user.user.email.toLowerCase().indexOf(query) !== -1
+                || user.user.studentid.toString().indexOf(query) !== -1
             ) {
                 filteredData.push(user);
             }

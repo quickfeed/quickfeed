@@ -9,7 +9,7 @@ import { View, ViewPage } from "./ViewPage";
 import { CourseView } from "./views/CourseView";
 import { UserView } from "./views/UserView";
 
-import { IAssignment } from "../models";
+import { IAssignment, IUserRelation } from "../models";
 
 export class AdminPage extends ViewPage {
     private navMan: NavigationManager;
@@ -36,7 +36,20 @@ export class AdminPage extends ViewPage {
         const allUsers = await this.userMan.getAllUser();
         return <div>
             <h1>All Users</h1>
-            <UserView users={allUsers} userMan={this.userMan} navMan={this.navMan} searchable={true} />
+            <UserView
+                users={allUsers.map((user) => {
+                    return {
+                        user,
+                        link: {
+                            userid: user.id,
+                            courseId: 0,
+                            state: 0,
+                        },
+                    };
+                })}
+                userMan={this.userMan}
+                navMan={this.navMan}
+                searchable={true} />
         </div>;
     }
 
