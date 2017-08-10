@@ -42,11 +42,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     }
 
     public render() {
-        const searchIcon: JSX.Element = <span className="input-group-addon">
-            <i className="glyphicon glyphicon-search"></i></span>;
-
         const studentSearchBar: JSX.Element = <Search className="input-group"
-            addonBefore={searchIcon}
             placeholder="Search for students"
             onChange={(query) => this.handleSearch(query)} />;
 

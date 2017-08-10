@@ -3,7 +3,6 @@ import * as React from "react";
 interface ISearchProp {
     className?: string;
     placeholder?: string;
-    addonBefore?: JSX.Element;
     onChange?: (val: string) => void;
 }
 interface ISearchState {
@@ -19,13 +18,13 @@ class Search extends React.Component<ISearchProp, ISearchState> {
     }
 
     public render() {
-        let addOn: JSX.Element | null = null;
-        if (this.props.addonBefore) {
-            addOn = this.props.addonBefore;
-        }
+
         return (
             <div className={this.props.className ? this.props.className : ""} >
-                {addOn}
+                <span className="input-group-addon">
+                    <i className="glyphicon glyphicon-search"></i>
+                </span>
+                {this.props.children}
                 <input
                     className="form-control"
                     type="text"

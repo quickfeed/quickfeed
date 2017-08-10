@@ -38,17 +38,12 @@ class Results extends React.Component<IResultsProp, IResultsState> {
             />;
         }
 
-        const searchIcon: JSX.Element = <span className="input-group-addon">
-            <i className="glyphicon glyphicon-search"></i>
-        </span>;
-
         return (
             <div>
                 <h1>Result: {this.props.course.name}</h1>
                 <Row>
                     <div className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
-                            addonBefore={searchIcon}
                             placeholder="Search for students"
                             onChange={(query) => this.handleOnchange(query)}
                         />

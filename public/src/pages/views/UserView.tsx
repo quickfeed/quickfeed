@@ -54,11 +54,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private renderSearch() {
         if (this.props.searchable) {
-            const searchIcon: JSX.Element = <span className="input-group-addon">
-                <i className="glyphicon glyphicon-search"></i>
-            </span>;
             return <Search className="input-group"
-                addonBefore={searchIcon}
                 placeholder="Search for students"
                 onChange={(query) => this.handleOnchange(query)}
             />;
@@ -104,7 +100,6 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
                 case ActionType.InRow:
                     actionButtons.push(...this.renderActionRow(user, tempActions));
                     break;
-
             }
         }
         return actionButtons;

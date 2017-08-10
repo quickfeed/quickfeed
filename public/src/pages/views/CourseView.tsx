@@ -1,6 +1,6 @@
 import * as React from "react";
-import {DynamicTable, Search} from "../../components";
-import {ICourse} from "../../models";
+import { DynamicTable, Search } from "../../components";
+import { ICourse } from "../../models";
 
 interface ICourseViewProp {
     courses: ICourse[];
@@ -20,24 +20,21 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
     }
 
     public render() {
-        const searchIcon: JSX.Element = <span className="input-group-addon">
-            <i className="glyphicon glyphicon-search"></i></span>;
 
         return (
             <div>
                 <Search className="input-group"
-                        addonBefore={searchIcon}
-                        placeholder="Search for courses"
-                        onChange={(query) => this.handleSearch(query)}
+                    placeholder="Search for courses"
+                    onChange={(query) => this.handleSearch(query)}
                 />
                 <DynamicTable
                     header={["ID", "Name", "Course Code", "Year", "Semester", "Action"]}
                     data={this.state.courses}
                     selector={(e: ICourse) => [e.id.toString(), e.name, e.code, e.year.toString(), e.tag,
-                        <span>
-                            <button className="btn btn-primary"
-                                    onClick={() => this.props.onEditClick(e.id)}>Edit</button>
-                        </span>,
+                    <span>
+                        <button className="btn btn-primary"
+                            onClick={() => this.props.onEditClick(e.id)}>Edit</button>
+                    </span>,
                     ]}
                 >
                 </DynamicTable>
