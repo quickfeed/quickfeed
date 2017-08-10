@@ -153,7 +153,7 @@ export function courseUserStateToString(state: CourseUserState[]): string {
             case CourseUserState.rejected:
                 return "rejected";
             case CourseUserState.student:
-                return "accepted";
+                return "student";
             case CourseUserState.teacher:
                 return "teacher";
             default:
