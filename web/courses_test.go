@@ -162,6 +162,20 @@ func TestNewCourse(t *testing.T) {
 		t.Errorf("have response course %+v want %+v", &respCourse, course)
 	}
 
+	enrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantEnrollment := &models.Enrollment{
+		ID:       enrollment.ID,
+		CourseID: testCourse.ID,
+		UserID:   user.ID,
+		Status:   models.Teacher,
+	}
+	if !reflect.DeepEqual(enrollment, wantEnrollment) {
+		t.Errorf("have enrollment %+v want %+v", enrollment, wantEnrollment)
+	}
+
 	if len(f.Hooks) != 4 {
 		t.Errorf("have %d hooks want %d", len(f.Hooks), 4)
 	}

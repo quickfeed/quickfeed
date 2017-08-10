@@ -215,14 +215,17 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		// Automatically enroll the teacher creating the course
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		user := c.Get("user").(*models.User)
-		if err := db.CreateEnrollment(&models.Enrollment{
+		enrollment := models.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,
-			Status:   models.Student,
-		}); err != nil {
+		}
+		if err := db.CreateEnrollment(&enrollment); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
 			}
+			return err
+		}
+		if err := db.EnrollTeacher(enrollment.ID); err != nil {
 			return err
 		}
 
