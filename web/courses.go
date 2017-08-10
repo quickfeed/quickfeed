@@ -38,7 +38,7 @@ func (cr *NewCourseRequest) valid() bool {
 		cr.Tag != ""
 }
 
-// EnrollUserRequest represent a request for enrolling a user to a course
+// EnrollUserRequest represent a request for enrolling a user to a course.
 type EnrollUserRequest struct {
 	UserID   uint64 `json:"userid"`
 	CourseID uint64 `json:"courseid"`
@@ -49,7 +49,7 @@ func (eur *EnrollUserRequest) valid() bool {
 	return eur.Status <= models.Teacher
 }
 
-// NewGroupRequest represents a new group
+// NewGroupRequest represents a new group.
 type NewGroupRequest struct {
 	Name     string   `json:"name"`
 	CourseID uint64   `json:"courseid"`
