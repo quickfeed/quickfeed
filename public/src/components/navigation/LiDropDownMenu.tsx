@@ -59,7 +59,6 @@ export class LiDropDownMenu extends React.Component<ILiDropDownMenuProps, ILiDro
             return;
         }
         this.lastCallback = (ev?: MouseEvent) => {
-            console.log("callback");
             if (ev && ev.target === e.target) {
                 return;
             }
@@ -69,9 +68,7 @@ export class LiDropDownMenu extends React.Component<ILiDropDownMenuProps, ILiDro
             }
             this.setState({ loginOpen: false });
         };
-        console.log("hello");
         window.addEventListener("click", this.lastCallback);
-        console.log("opening");
         this.setState({ loginOpen: true });
     }
 
