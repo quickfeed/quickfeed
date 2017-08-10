@@ -566,12 +566,10 @@ func TestDeleteGroup(t *testing.T) {
 		UserID:   user.ID,
 		CourseID: testCourse.ID,
 	}
-
 	if err := db.CreateEnrollment(&enrollment); err != nil {
 		t.Fatal(err)
 	}
-
-	if err := db.AcceptEnrollment(enrollment.ID); err != nil {
+	if err := db.EnrollStudent(enrollment.ID); err != nil {
 		t.Fatal(err)
 	}
 
