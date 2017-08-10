@@ -566,7 +566,18 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 	if err != nil {
 		return err
 	}
-	return db.conn.Delete(group).Error
+
+	tx := db.conn.Begin()
+	if err := tx.Delete(group).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, gid).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
 }
 
 // Close closes the gorm database.

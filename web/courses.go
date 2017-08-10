@@ -637,9 +637,8 @@ func DeleteGroup(db database.Database) echo.HandlerFunc {
 		if group.Status > models.Rejected {
 			return echo.NewHTTPError(http.StatusForbidden, "accepted group cannot be deleted")
 		}
-		err = db.DeleteGroup(gid)
-		if err != nil {
-			return err
+		if err := db.DeleteGroup(gid); err != nil {
+			return nil
 		}
 		return c.NoContent(http.StatusOK)
 	}
