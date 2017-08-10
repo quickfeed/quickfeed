@@ -25,7 +25,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		conn.SetLogger(logger)
 	}
 
-	conn.AutoMigrate(
+	if err := conn.AutoMigrate(
 		&models.User{},
 		&models.RemoteIdentity{},
 		&models.Course{},
@@ -33,7 +33,9 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&models.Assignment{},
 		&models.Submission{},
 		&models.Group{},
-	)
+	).Error; err != nil {
+		return nil, err
+	}
 
 	return &GormDB{conn}, nil
 }
