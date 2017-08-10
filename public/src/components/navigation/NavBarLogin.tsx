@@ -6,7 +6,8 @@ import { IUser } from "../../models";
 import { NavMenuDropdown } from "./NavMenuDropdown";
 
 export interface INavBarLoginProps {
-    links?: ILink[];
+    loginLinks?: ILink[];
+    userLinks?: ILink[];
     onClick?: (lin: ILink) => void;
     user: IUser | null;
 }
@@ -24,18 +25,7 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
         };
     }
     public render(): JSX.Element {
-        if (this.props.user) {
-            const userMenuLinks: ILink[] = [
-                { name: "Signed in as: " + this.props.user.name },
-                { name: "#separator" },
-                { name: "Your profile", uri: "/app/user" },
-                { name: "Help", uri: "/app/help" },
-                { name: "#separator" },
-                { name: "Manage courses", uri: "app/admin/courses" },
-                { name: "Manage users", uri: "app/admin/users" },
-                { name: "#separator" },
-                { name: "Sign out", uri: "app/login/logout" },
-            ];
+        if (this.props.user && this.props.userLinks) {
             let isOpen = "";
             if (this.state.loginOpen) {
                 isOpen = "open";
@@ -52,14 +42,14 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
                             <img className="img-rounded" src={this.props.user.avatarurl} width="20" height="20" />
                             <span className="caret"></span>
                         </a>
-                        <NavMenuDropdown links={userMenuLinks}
+                        <NavMenuDropdown links={this.props.userLinks}
                             onClick={(e) => { this.handleClick(e); }}>
                         </NavMenuDropdown>
                     </li>
                 </ul>
             </div >;
         }
-        let links: ILink[] | undefined = this.props.links;
+        let links: ILink[] | undefined = this.props.loginLinks;
         if (!links) {
             links = [
                 { name: "Missing links" },

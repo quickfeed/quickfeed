@@ -224,6 +224,17 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         if (this.state.curUser && this.state.curUser.isadmin) {
             dropDownMenuLinks.push({ name: "New Course", uri: "app/admin/courses/new" });
         }
+        const userLinks: ILink[] = [
+            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.name : "") },
+            { name: "#separator" },
+            { name: "Your profile", uri: "/app/user" },
+            { name: "Help", uri: "/app/help" },
+            { name: "#separator" },
+            { name: "Manage courses", uri: "app/admin/courses" },
+            { name: "Manage users", uri: "app/admin/users" },
+            { name: "#separator" },
+            { name: "Sign out", uri: "app/login/logout" },
+        ];
         switch (name) {
             case "frontpage":
                 body = (
@@ -259,7 +270,8 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                     </NavBarMenu>
                     <NavBarLogin
                         user={this.state.curUser}
-                        links={loginLink}
+                        loginLinks={loginLink}
+                        userLinks={userLinks}
                         onClick={(link) => this.handleClick(link)}>
                     </NavBarLogin>
                     <AddMenu
