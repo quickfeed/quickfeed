@@ -42,26 +42,28 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     }
 
     public render() {
-        let searchForm: JSX.Element | null = null;
+        return <div>
+            {this.renderSearch()}
+            <DynamicTable
+                header={this.getTableHeading()}
+                data={this.state.users}
+                selector={(item: IUserRelation) => this.renderRow(item)}
+            />
+        </div>;
+    }
+
+    private renderSearch() {
         if (this.props.searchable) {
             const searchIcon: JSX.Element = <span className="input-group-addon">
                 <i className="glyphicon glyphicon-search"></i>
             </span>;
-            searchForm = <Search className="input-group"
+            return <Search className="input-group"
                 addonBefore={searchIcon}
                 placeholder="Search for students"
                 onChange={(query) => this.handleOnchange(query)}
             />;
         }
-        return (
-            <div>
-                {searchForm}
-                <DynamicTable
-                    header={this.getTableHeading()}
-                    data={this.state.users}
-                    selector={(item: IUserRelation) => this.renderRow(item)}
-                />
-            </div>);
+        return null;
     }
 
     private getTableHeading(): string[] {
@@ -94,6 +96,21 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private renderActions(user: IUserRelation): JSX.Element[] | JSX.Element {
         const actionButtons: JSX.Element[] = [];
+        const tempActions = this.getAllLinks(user);
+        if (tempActions.length > 0) {
+            switch (this.props.linkType) {
+                case ActionType.Menu:
+                    return this.renderDropdownMenu(user, tempActions);
+                case ActionType.InRow:
+                    actionButtons.push(...this.renderActionRow(user, tempActions));
+                    break;
+
+            }
+        }
+        return actionButtons;
+    }
+
+    private getAllLinks(user: IUserRelation) {
         const tempActions: ILink[] = [];
         if (this.props.actions) {
             tempActions.push(...this.props.actions);
@@ -101,53 +118,28 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         if (this.props.optionalActions) {
             tempActions.push(...this.props.optionalActions(user));
         }
-        if (tempActions.length > 0) {
-            if (this.props.linkType === ActionType.Menu) {
-                return <ul className="nav nav-pills">
-                    <LiDropDownMenu
-                        links={tempActions}
-                        onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, link); } }}>
-                        <span className="glyphicon glyphicon-option-vertical" />
-                    </LiDropDownMenu>
-                </ul>;
-            } else if (this.props.linkType === ActionType.InRow) {
-                actionButtons.push(...tempActions.map((v, i) => {
-                    return <BootstrapButton
-                        key={i}
-                        classType={v.extra ? v.extra as BootstrapClass : "default"}
-                        onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, v); } }}
-                    >{v.name}
-                    </BootstrapButton>;
-                }));
-            }
-        }
-
-        if (this.props.userMan) {
-            if (this.props.userMan.isAdmin(user.user)) {
-                actionButtons.push(<button className="btn btn-danger"
-                    onClick={() => this.handleAdminRoleClick(user.user)}
-                    data-toggle="tooltip"
-                    title="Demote from Admin">
-                    Demote</button>);
-            } else {
-                actionButtons.push(<button className="btn btn-primary"
-                    onClick={() => this.handleAdminRoleClick(user.user)}
-                    data-toggle="tooltip"
-                    title="Promote to Admin">
-                    Promote</button>);
-            }
-            return actionButtons;
-        }
-        return actionButtons;
+        return tempActions;
     }
 
-    private async handleAdminRoleClick(user: IUser): Promise<boolean> {
-        if (this.props.userMan && this.props.navMan) {
-            const res = this.props.userMan.changeAdminRole(user);
-            this.props.navMan.refresh();
-            return res;
-        }
-        return false;
+    private renderDropdownMenu(user: IUserRelation, tempActions: ILink[]) {
+        return <ul className="nav nav-pills">
+            <LiDropDownMenu
+                links={tempActions}
+                onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, link); } }}>
+                <span className="glyphicon glyphicon-option-vertical" />
+            </LiDropDownMenu>
+        </ul>;
+    }
+
+    private renderActionRow(user: IUserRelation, tempActions: ILink[]) {
+        return tempActions.map((v, i) => {
+            return <BootstrapButton
+                key={i}
+                classType={v.extra ? v.extra as BootstrapClass : "default"}
+                onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, v); } }}
+            >{v.name}
+            </BootstrapButton>;
+        });
     }
 
     private handleOnchange(query: string): void {

@@ -7,7 +7,7 @@ import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 
 import { CourseView } from "./views/CourseView";
-import { UserView } from "./views/UserView";
+import { ActionType, UserView } from "./views/UserView";
 
 import { IAssignment, IUserRelation } from "../models";
 
@@ -33,24 +33,47 @@ export class AdminPage extends ViewPage {
     }
 
     public async users(info: INavInfo<{}>): View {
-        const allUsers = await this.userMan.getAllUser();
+        const allUsers = (await this.userMan.getAllUser()).map((user) => {
+            return {
+                user,
+                link: {
+                    userid: user.id,
+                    courseId: 0,
+                    state: 0,
+                },
+            };
+        });
+
         return <div>
             <h1>All Users</h1>
             <UserView
-                users={allUsers.map((user) => {
-                    return {
-                        user,
-                        link: {
-                            userid: user.id,
-                            courseId: 0,
-                            state: 0,
-                        },
-                    };
-                })}
+                users={allUsers}
+                optionalActions={(user: IUserRelation) => {
+                    if (this.userMan.isAdmin(user.user)) {
+                        return [{ uri: "demote", name: "Demote", extra: "danger" }];
+                    }
+                    return [{ uri: "promote", name: "Promote", extra: "primary" }];
+
+                }}
+                linkType={ActionType.InRow}
+                actionClick={
+                    (user, link) => {
+                        this.handleAdminRoleClick(user);
+                    }
+                }
                 userMan={this.userMan}
                 navMan={this.navMan}
                 searchable={true} />
         </div>;
+    }
+
+    public async handleAdminRoleClick(user: IUserRelation): Promise<boolean> {
+        if (this.userMan && this.navMan) {
+            const res = this.userMan.changeAdminRole(user.user);
+            this.navMan.refresh();
+            return res;
+        }
+        return false;
     }
 
     public async courses(info: INavInfo<{}>): View {
