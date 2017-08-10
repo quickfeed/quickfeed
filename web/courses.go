@@ -306,17 +306,14 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		// TODO If the enrollment is accepted, create repositories with webooks.
 		switch eur.Status {
 		case models.Student:
-			if err := db.EnrollStudent(userID, courseID); err != nil {
-				return err
-			}
+			err = db.EnrollStudent(userID, courseID)
 		case models.Teacher:
-			if err := db.EnrollTeacher(userID, courseID); err != nil {
-				return err
-			}
+			err = db.EnrollTeacher(userID, courseID)
 		case models.Rejected:
-			if err := db.RejectEnrollment(userID, courseID); err != nil {
-				return err
-			}
+			err = db.RejectEnrollment(userID, courseID)
+		}
+		if err != nil {
+			return err
 		}
 		return c.NoContent(http.StatusOK)
 	}
