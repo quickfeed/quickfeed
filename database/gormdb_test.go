@@ -1,6 +1,7 @@
 package database_test
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -275,6 +276,13 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 		CourseID: course.ID,
 	}); err != nil {
 		t.Error(err)
+	}
+
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+	}); err != database.ErrEnrollmentExists {
+		t.Fatalf("expected error '%v' have '%v'", database.ErrEnrollmentExists, err)
 	}
 }
 
@@ -1109,11 +1117,21 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				if test.enrollments[i] == models.Pending {
 					continue
 				}
-				if err := db.CreateEnrollment(&models.Enrollment{
+				enrollment := models.Enrollment{
 					CourseID: course.ID,
 					UserID:   uids[i],
-					Status:   test.enrollments[i],
-				}); err != nil {
+				}
+				if err := db.CreateEnrollment(&enrollment); err != nil {
+					t.Fatal(err)
+				}
+				err := errors.New("enrollment status not implemented")
+				switch test.enrollments[i] {
+				case models.Rejected:
+					err = db.RejectEnrollment(enrollment.ID)
+				case models.Student:
+					err = db.EnrollStudent(enrollment.ID)
+				}
+				if err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -1188,11 +1206,19 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 		if enrollments[i] == models.Pending {
 			continue
 		}
-		if err := db.CreateEnrollment(&models.Enrollment{
+		enrollment := models.Enrollment{
 			CourseID: course.ID,
 			UserID:   users[i].ID,
-			Status:   enrollments[i],
-		}); err != nil {
+		}
+		if err := db.CreateEnrollment(&enrollment); err != nil {
+			t.Fatal(err)
+		}
+		err := errors.New("enrollment status not implemented")
+		switch enrollments[i] {
+		case models.Student:
+			err = db.EnrollStudent(enrollment.ID)
+		}
+		if err != nil {
 			t.Fatal(err)
 		}
 	}

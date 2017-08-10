@@ -263,7 +263,7 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database, bh *w
 	// TODO: Check if user is a member of a course, returns 404 or enrollment status.
 	courses.GET("/:cid/users/:uid", echo.NotFoundHandler)
 	courses.GET("/:cid/users/:uid/submissions", web.ListSubmissions(db))
-	courses.PUT("/:cid/users/:uid", web.CreateEnrollment(db))
+	courses.POST("/:cid/users/:uid", web.CreateEnrollment(db))
 	courses.PATCH("/:cid/users/:uid", web.UpdateEnrollment(db))
 	courses.GET("/:cid/assignments", web.ListAssignments(db))
 	// TODO: Endpoints needs to be fixed.

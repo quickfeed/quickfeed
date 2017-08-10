@@ -155,6 +155,9 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity
 }
 
 var (
+	// ErrEnrollmentExists is returned when trying to create an enrollment
+	// that already exists.
+	ErrEnrollmentExists = errors.New("enrollment already exists")
 	// ErrDuplicateIdentity is returned when trying to associate a remote identity
 	// with a user account and the identity is already in use.
 	ErrDuplicateIdentity = errors.New("remote identity register with another user")
@@ -310,6 +313,7 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 }
 
 // CreateEnrollment implements the Database interface.
+// This method will overwrite the status field with models.Pending.
 func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 	var user, course uint64
 	if err := db.conn.Model(&models.User{}).Where(&models.User{
@@ -326,7 +330,19 @@ func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	return db.conn.Where(enrollment).FirstOrCreate(enrollment).Error
+	enrollment.Status = models.Pending
+
+	var count uint64
+	if err := db.conn.Model(&models.Enrollment{}).
+		Where(&enrollment).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return ErrEnrollmentExists
+	}
+
+	return db.conn.Create(&enrollment).Error
 }
 
 // EnrollStudent implements the Database interface.
