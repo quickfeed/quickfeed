@@ -262,7 +262,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	qv := r.URL.Query()
-	qv.Set("status", "accepted")
+	qv.Set("status", "student")
 	r.URL.RawQuery = qv.Encode()
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
@@ -396,7 +396,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	const (
-		query = "?status=accepted,rejected"
+		query = "?status=student,rejected"
 		route = "/users/:uid/courses" + query
 	)
 
