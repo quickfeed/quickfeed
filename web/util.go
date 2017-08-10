@@ -29,7 +29,7 @@ func parseUint(s string) (uint64, error) {
 	return n, nil
 }
 
-var enrollStatusError = echo.NewHTTPError(http.StatusBadRequest, "invalid status query")
+var errInvalidStatus = echo.NewHTTPError(http.StatusBadRequest, "invalid status query")
 
 // parseEnrollmentStatus takes a string of comma separated status values
 // and returns a slice of the corresponding status constants.
@@ -40,7 +40,7 @@ func parseEnrollmentStatus(s string) ([]uint, error) {
 
 	ss := strings.Split(s, ",")
 	if len(ss) > 4 {
-		return []uint{}, enrollStatusError
+		return []uint{}, errInvalidStatus
 	}
 	var statuses []uint
 	for _, s := range ss {
@@ -54,7 +54,7 @@ func parseEnrollmentStatus(s string) ([]uint, error) {
 		case "teacher":
 			statuses = append(statuses, models.Teacher)
 		default:
-			return []uint{}, enrollStatusError
+			return []uint{}, errInvalidStatus
 		}
 	}
 	return statuses, nil
