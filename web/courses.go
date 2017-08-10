@@ -508,15 +508,14 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		// prevent group override if a student is already in a group in this course
 		for _, user := range users {
 			enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
-			if err != nil {
-				if err == gorm.ErrRecordNotFound {
-					return echo.NewHTTPError(http.StatusNotFound, "user is not enrolled to this course")
-				}
+			switch {
+			case err == gorm.ErrRecordNotFound:
+				return echo.NewHTTPError(http.StatusNotFound, "user is not enrolled to this course")
+			case err != nil:
 				return err
-			}
-			if enrollment.GroupID > 0 {
+			case enrollment.GroupID > 0:
 				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
-			} else if enrollment.Status < models.Student {
+			case enrollment.Status < models.Student:
 				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
 			}
 		}
