@@ -5,6 +5,7 @@ import { NavigationHelper } from "../../NavigationHelper";
 
 import { IUser } from "../../models";
 import { NavMenu } from "./NavMenu";
+import { NavMenuDropdown } from "./NavMenuDropdown";
 
 export interface IAddMenuProps {
     links?: ILink[];
@@ -17,7 +18,7 @@ interface IAddMenuState {
 }
 
 export class AddMenu extends React.Component<IAddMenuProps, IAddMenuState> {
-
+    private lastCallback?: (e?: MouseEvent) => void;
     constructor() {
         super();
         this.state = {
@@ -35,33 +36,54 @@ export class AddMenu extends React.Component<IAddMenuProps, IAddMenuState> {
                 { name: "Missing links" },
             ];
         }
-        let isHidden = "hidden";
+        let isOpen = "";
         if (this.state.loginOpen) {
-            isHidden = "";
+            isOpen = "open";
         }
 
         return <div className="navbar-right">
             <ul className="nav navbar-nav ">
-                <li>
-                    <a style={{ padding: "13px 15px 12px 15px" }}
-                        href="#" onClick={(e) => { e.preventDefault(); this.toggleMenu(); }}
-                        className="">
+                <li className={"dropdown " + isOpen}>
+                    <a href="#"
+                        style={{ padding: "15px" }}
+                        onClick={(e) => { this.toggleMenu(e); }}
+                        title="View Add options"
+                        aria-haspopup="true"
+                        aria-expanded="false" >
                         <span style={{ fontSize: "2em", verticalAlign: "middle" }}>+</span>
-                        <span style={{ fontSize: "0.5em", verticalAlign: "sub" }}>&#9660;</span>
+                        <span className="caret"></span>
                     </a>
-                    <div className={"nav-box " + isHidden}>
-                        <NavMenu links={links}
-                            onClick={(link) => this.handleClick(link)}>
-                        </NavMenu>
-                    </div>
+                    <NavMenuDropdown links={links}
+                        onClick={(link) => this.handleClick(link)}>
+                    </NavMenuDropdown>
                 </li>
             </ul>
 
         </div >;
     }
 
-    private toggleMenu() {
-        this.setState({ loginOpen: !this.state.loginOpen });
+    private toggleMenu(e: React.MouseEvent<HTMLAnchorElement>) {
+        e.preventDefault();
+        e.persist();
+        if (this.lastCallback) {
+            this.lastCallback();
+            return;
+        }
+        this.lastCallback = (ev?: MouseEvent) => {
+            console.log("callback");
+            if (ev && ev.target === e.target) {
+                return;
+            }
+            if (this.lastCallback) {
+                window.removeEventListener("click", this.lastCallback as (ev: Event) => void);
+                this.lastCallback = undefined;
+            }
+            this.setState({ loginOpen: false });
+        };
+        console.log("hello");
+        window.addEventListener("click", this.lastCallback);
+        console.log("opening");
+        this.setState({ loginOpen: true });
     }
 
     private handleClick(link: ILink) {
