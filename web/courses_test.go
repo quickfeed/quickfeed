@@ -539,8 +539,7 @@ func TestGetCourse(t *testing.T) {
 
 func TestDeleteGroup(t *testing.T) {
 	const (
-		route  = "/groups/:gid"
-		gitlab = "gitlab"
+		route = "/groups/:gid"
 	)
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -554,9 +553,7 @@ func TestDeleteGroup(t *testing.T) {
 	// Create user.
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{
-			Provider: gitlab,
-		},
+		&user, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -573,13 +570,8 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group := models.Group{
-		Name:     "group1",
-		Status:   models.Pending,
-		CourseID: testCourse.ID,
-		// Users:    []*models.User{&user},
-	}
 	// Create group.
+	group := models.Group{CourseID: testCourse.ID}
 	if err := db.CreateGroup(&group); err != nil {
 		t.Fatal(err)
 	}
