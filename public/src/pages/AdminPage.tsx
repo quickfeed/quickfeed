@@ -69,7 +69,7 @@ export class AdminPage extends ViewPage {
 
     public async handleAdminRoleClick(user: IUserRelation): Promise<boolean> {
         if (this.userMan && this.navMan) {
-            const res = this.userMan.changeAdminRole(user.user);
+            const res = await this.userMan.changeAdminRole(user.user);
             this.navMan.refresh();
             return res;
         }

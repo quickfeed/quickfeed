@@ -133,7 +133,7 @@ export class UserManager {
      * @param user The user to premote to admin
      */
     public async changeAdminRole(user: IUser): Promise<boolean> {
-        return this.userProvider.changeAdminRole(user);
+        return await this.userProvider.changeAdminRole(user);
     }
 
     /**
