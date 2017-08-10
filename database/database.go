@@ -44,4 +44,5 @@ type Database interface {
 	GetGroup(uint64) (*models.Group, error)
 	GetGroupsByCourse(cid uint64) ([]*models.Group, error)
 	UpdateGroupStatus(*models.Group) error
+	DeleteGroup(uint64) error
 }

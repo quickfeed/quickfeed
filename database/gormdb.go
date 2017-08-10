@@ -544,6 +544,15 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
 	return groups, nil
 }
 
+// DeleteGroup delete a group
+func (db *GormDB) DeleteGroup(gid uint64) error {
+	group, err := db.GetGroup(gid)
+	if err != nil {
+		return err
+	}
+	return db.conn.Delete(group).Error
+}
+
 // Close closes the gorm database.
 func (db *GormDB) Close() error {
 	return db.conn.Close()

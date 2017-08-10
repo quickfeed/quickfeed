@@ -617,3 +617,28 @@ func GetGroups(db database.Database) echo.HandlerFunc {
 		return c.JSONPretty(http.StatusOK, groups, "\t")
 	}
 }
+
+// DeleteGroup deletes a pending or rejected group
+func DeleteGroup(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		gid, err := parseUint(c.Param("gid"))
+		if err != nil {
+			return err
+		}
+		group, err := db.GetGroup(gid)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return echo.NewHTTPError(http.StatusNotFound, "group not found")
+			}
+			return err
+		}
+		if group.Status == models.Accepted {
+			return echo.NewHTTPError(http.StatusForbidden, "accepted group cannot be deleted")
+		}
+		err = db.DeleteGroup(gid)
+		if err != nil {
+			return err
+		}
+		return c.NoContent(http.StatusOK)
+	}
+}

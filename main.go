@@ -273,6 +273,7 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database, bh *w
 	courses.GET("/:cid/groups", web.GetGroups(db))
 
 	api.PATCH("/groups/:gid", web.PatchGroup(db))
+	api.DELETE("/groups/:gid", web.DeleteGroup(db))
 
 	api.POST("/directories", web.ListDirectories())
 }

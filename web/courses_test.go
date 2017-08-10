@@ -524,6 +524,77 @@ func TestGetCourse(t *testing.T) {
 	assertCode(t, w.Code, http.StatusOK)
 }
 
+func TestDeleteGroup(t *testing.T) {
+	const (
+		route  = "/groups/:gid"
+		gitlab = "gitlab"
+	)
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	// Create course.
+	testCourse := *allCourses[0]
+	if err := db.CreateCourse(&testCourse); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create user.
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user, &models.RemoteIdentity{
+			Provider: gitlab,
+		},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	// create enrollment
+	enrollment := models.Enrollment{
+		UserID:   user.ID,
+		CourseID: testCourse.ID,
+	}
+
+	if err := db.CreateEnrollment(&enrollment); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.AcceptEnrollment(enrollment.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	// create group
+	group := models.Group{
+		Name:     "group1",
+		Status:   models.Pending,
+		CourseID: testCourse.ID,
+		// Users:    []*models.User{&user},
+	}
+	if err := db.CreateGroup(&group); err != nil {
+		t.Fatal(err)
+	}
+
+	e := echo.New()
+	router := echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodDelete, route, web.DeleteGroup(db))
+
+	requestURL := "/groups/" + strconv.FormatUint(group.ID, 10)
+	r := httptest.NewRequest(http.MethodDelete, requestURL, nil)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+	// Prepare context with course request.
+	router.Find(http.MethodDelete, requestURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Fatal(err)
+	}
+
+	assertCode(t, w.Code, http.StatusOK)
+
+}
+
 func courseToRequest(t *testing.T, course *models.Course) (cr web.NewCourseRequest) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
