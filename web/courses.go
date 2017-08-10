@@ -516,7 +516,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			}
 			if enrollment.GroupID > 0 {
 				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
-			} else if enrollment.Status != models.Student && enrollment.Status != models.Teacher {
+			} else if enrollment.Status < models.Student {
 				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
 			}
 		}
