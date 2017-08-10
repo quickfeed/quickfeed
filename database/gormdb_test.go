@@ -255,12 +255,6 @@ func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
 }
 
 func TestGormDBCreateEnrollment(t *testing.T) {
-	const (
-		secret   = "123"
-		provider = "github"
-		remoteID = 10
-	)
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -271,12 +265,7 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		},
+		&user, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -290,12 +279,6 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 }
 
 func TestGormDBAcceptRejectEnrollment(t *testing.T) {
-	const (
-		secret   = "123"
-		provider = "github"
-		remoteID = 10
-	)
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -306,12 +289,7 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		},
+		&user, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -366,12 +344,6 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 }
 
 func TestGormDBGetCoursesByUser(t *testing.T) {
-	const (
-		secret   = "123"
-		provider = "github"
-		remoteID = 11
-	)
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -397,12 +369,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 
 	var user models.User
 	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
-		},
+		&user, &models.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -453,7 +420,6 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 
 func TestGetRemoteIdentity(t *testing.T) {
 	const (
-		secret   = "123"
 		provider = "github"
 		remoteID = 10
 	)
@@ -465,9 +431,8 @@ func TestGetRemoteIdentity(t *testing.T) {
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
 		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteID,
-			AccessToken: secret,
+			Provider: provider,
+			RemoteID: remoteID,
 		},
 	); err != nil {
 		t.Fatal(err)
