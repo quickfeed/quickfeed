@@ -1,9 +1,9 @@
 import * as React from "react";
-import { CourseManager, NavigationManager, UserManager } from "../../managers";
+import { CourseManager, ILink, NavigationManager, UserManager } from "../../managers";
 import { CourseUserState, ICourse, ICourseUserLink, IUser, IUserRelation } from "../../models";
 
 import { DynamicTable } from "../../components";
-import { UserView } from "./UserView";
+import { ActionType, UserView } from "./UserView";
 
 interface IUserViewerProps {
     navMan: NavigationManager;
@@ -11,54 +11,63 @@ interface IUserViewerProps {
     acceptedUsers: IUserRelation[];
     pendingUsers: IUserRelation[];
     course: ICourse;
+    actions?: ILink[];
 }
 
 export class MemberView extends React.Component<IUserViewerProps, {}> {
     public render() {
-        let condPending;
-        if (this.props.pendingUsers.length > 0) {
-            condPending = <div><h3>Pending users</h3>{this.createPendingTable(this.props.pendingUsers)}</div>;
-        }
-        const userView = <div>
-            <h3>Registered users</h3>
-            <UserView users={this.props.acceptedUsers.map((userRel) => userRel.user)}>
+        const pendingActions = [
+            { name: "Accept", uri: "accept", extra: "primary" },
+            { name: "Reject", uri: "reject", extra: "danger" },
+        ];
 
-            </UserView>
-        </div>;
         return <div>
             <h1>{this.props.course.name}</h1>
-            {userView}
-            {condPending}
+            {this.renderUserView()}
+            {this.renderPendingView(pendingActions)}
         </div>;
     }
 
-    public createPendingTable(pendingUsers: IUserRelation[]): JSX.Element {
-        return <DynamicTable
-            data={pendingUsers}
-            header={["Name", "Email", "Student ID", "Action"]}
-            selector={
-                (userRel: IUserRelation) => [
-                    userRel.user.name,
-                    <a href={"mailto:" + userRel.user.email}>{userRel.user.email}</a>,
-                    userRel.user.studentid.toString(),
-                    <span>
-                        <button onClick={(e) => {
-                            this.props.courseMan.changeUserState(userRel.link, CourseUserState.student);
-                            this.props.navMan.refresh();
-                        }}
-                            className="btn btn-primary">
-                            Accept
-                        </button>
-                        <button onClick={(e) => {
-                            this.props.courseMan.changeUserState(userRel.link, CourseUserState.rejected);
-                            this.props.navMan.refresh();
-                        }} className="btn btn-danger">
-                            Reject
-                    </button>
-                    </span>,
-                ]}
-        >
-        </DynamicTable>;
+    public renderUserView() {
+        return this.renderUsers("Registered users", this.props.acceptedUsers, this.props.actions, ActionType.Menu);
+    }
+
+    public renderPendingView(pendingActions: ILink[]) {
+        if (this.props.pendingUsers.length > 0) {
+            return this.renderUsers("Pending users", this.props.pendingUsers, pendingActions, ActionType.InRow);
+        }
+    }
+
+    public renderUsers(title: string, users: IUserRelation[], actions?: ILink[], linkType?: ActionType) {
+        const allUsers: { [id: number]: IUserRelation } = {};
+        return <div>
+            <h3>{title}</h3>
+            <UserView
+                users={users.map((userRel) => {
+                    allUsers[userRel.user.id] = userRel;
+                    return userRel.user;
+                })}
+                actions={actions}
+                linkType={linkType}
+                actionClick={(user, link) => this.handleAction(allUsers[user.id], link)}
+            >
+            </UserView>
+        </div>;
+    }
+
+    public handleAction(userRel: IUserRelation, link: ILink) {
+        switch (link.uri) {
+            case "accept":
+                this.props.courseMan.changeUserState(userRel.link, CourseUserState.student);
+                break;
+            case "reject":
+                this.props.courseMan.changeUserState(userRel.link, CourseUserState.rejected);
+                break;
+            case "teacher":
+                this.props.courseMan.changeUserState(userRel.link, CourseUserState.teacher);
+                break;
+        }
+        this.props.navMan.refresh();
     }
 }
 

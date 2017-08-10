@@ -36,7 +36,7 @@ export class AdminPage extends ViewPage {
         const allUsers = await this.userMan.getAllUser();
         return <div>
             <h1>All Users</h1>
-            <UserView users={allUsers} userMan={this.userMan} navMan={this.navMan} addSearchOption={true} />
+            <UserView users={allUsers} userMan={this.userMan} navMan={this.navMan} searchable={true} />
         </div>;
     }
 

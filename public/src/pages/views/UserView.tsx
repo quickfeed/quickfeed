@@ -1,13 +1,24 @@
 import * as React from "react";
-import { DynamicTable, Search } from "../../components";
-import { NavigationManager, UserManager } from "../../managers";
+import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
+import { ILink, NavigationManager, UserManager } from "../../managers";
 import { IUser } from "../../models";
+
+import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 
 interface IUserViewerProps {
     users: IUser[];
     userMan?: UserManager;
     navMan?: NavigationManager;
-    addSearchOption?: boolean;
+    searchable?: boolean;
+    actions?: ILink[];
+    linkType?: ActionType;
+    actionClick?: (user: IUser, link: ILink) => void;
+}
+
+export enum ActionType {
+    None,
+    Menu,
+    InRow,
 }
 
 interface IUserViewerState {
@@ -31,7 +42,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     public render() {
         let searchForm: JSX.Element | null = null;
-        if (this.props.addSearchOption) {
+        if (this.props.searchable) {
             const searchIcon: JSX.Element = <span className="input-group-addon">
                 <i className="glyphicon glyphicon-search"></i>
             </span>;
@@ -47,43 +58,74 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
                 <DynamicTable
                     header={this.getTableHeading()}
                     data={this.state.users}
-                    selector={(item: IUser) => this.getTableSelector(item)}
+                    selector={(item: IUser) => this.renderRow(item)}
                 />
             </div>);
     }
 
     private getTableHeading(): string[] {
-        let heading: string[] = ["Name", "Email", "Student ID"];
-        if (this.props.userMan) {
-            heading = heading.concat("Action");
+        const heading: string[] = ["Name", "Email", "Student ID"];
+        if (this.props.userMan || this.props.actions) {
+            heading.push("Options");
         }
         return heading;
     }
 
-    private getTableSelector(user: IUser): Array<string | JSX.Element> {
-        let selector: Array<string | JSX.Element> = [
+    private renderRow(user: IUser): Array<string | JSX.Element> {
+        const selector: Array<string | JSX.Element> = [
             user.name,
             <a href={"mailto:" + user.email}>{user.email}</a>,
             user.studentid.toString(),
         ];
-        if (this.props.userMan) {
-            if (this.props.userMan.isAdmin(user)) {
-                selector = selector.concat(
-                    <button className="btn btn-danger"
-                        onClick={() => this.handleAdminRoleClick(user)}
-                        data-toggle="tooltip"
-                        title="Demote from Admin">
-                        Demote</button>);
-            } else {
-                selector = selector.concat(
-                    <button className="btn btn-primary"
-                        onClick={() => this.handleAdminRoleClick(user)}
-                        data-toggle="tooltip"
-                        title="Promote to Admin">
-                        Promote</button>);
-            }
+        const temp = this.renderActions(user);
+        if (Array.isArray(temp) && temp.length > 0) {
+            selector.push(<div>{temp}</div>);
+        } else if (!Array.isArray(temp)) {
+            selector.push(temp);
         }
         return selector;
+    }
+
+    private renderActions(user: IUser): JSX.Element[] | JSX.Element {
+        const actionButtons: JSX.Element[] = [];
+        if (this.props.actions) {
+            if (this.props.linkType === ActionType.Menu) {
+                return <ul className="nav nav-pills">
+                    <LiDropDownMenu
+                        links={this.props.actions}
+                        onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, link); } }}>
+                        <span className="glyphicon glyphicon-option-vertical" />
+                    </LiDropDownMenu>
+                </ul>;
+            } else if (this.props.linkType === ActionType.InRow) {
+                actionButtons.push(...this.props.actions.map((v, i) => {
+                    return <BootstrapButton
+                        key={i}
+                        classType={v.extra ? v.extra as BootstrapClass : "default"}
+                        onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, v); } }}
+                    >{v.name}
+                    </BootstrapButton>;
+                }));
+            }
+        }
+
+        if (this.props.userMan) {
+            if (this.props.userMan.isAdmin(user)) {
+                actionButtons.push(<button className="btn btn-danger"
+                    onClick={() => this.handleAdminRoleClick(user)}
+                    data-toggle="tooltip"
+                    title="Demote from Admin">
+                    Demote</button>);
+            } else {
+                actionButtons.push(<button className="btn btn-primary"
+                    onClick={() => this.handleAdminRoleClick(user)}
+                    data-toggle="tooltip"
+                    title="Promote to Admin">
+                    Promote</button>);
+            }
+            return actionButtons;
+        }
+        return actionButtons;
     }
 
     private async handleAdminRoleClick(user: IUser): Promise<boolean> {

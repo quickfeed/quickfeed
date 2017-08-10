@@ -160,6 +160,10 @@ export class TeacherPage extends ViewPage {
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
                 courseMan={this.courseMan}
+                actions={[
+                    { name: "Make Teacher", uri: "teacher", extra: "primary" },
+                    { name: "Rejecte", uri: "reject", extra: "danger" },
+                ]}
             >
             </MemberView>;
         }

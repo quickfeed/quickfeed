@@ -18,6 +18,7 @@ export interface ILink {
     description?: string;
     uri?: string;
     active?: boolean;
+    extra?: string;
 }
 
 export interface ILinkCollection {
