@@ -1133,11 +1133,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				var user models.User
 				if err := db.CreateUserFromRemoteIdentity(
 					&user,
-					&models.RemoteIdentity{
-						Provider:    "github",
-						RemoteID:    100 + uint64(i),
-						AccessToken: "secret",
-					},
+					&models.RemoteIdentity{RemoteID: uint64(i)},
 				); err != nil {
 					t.Fatal(err)
 				}
@@ -1216,11 +1212,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 		var user models.User
 		if err := db.CreateUserFromRemoteIdentity(
 			&user,
-			&models.RemoteIdentity{
-				Provider:    "github",
-				RemoteID:    100 + uint64(i),
-				AccessToken: "secret",
-			},
+			&models.RemoteIdentity{RemoteID: uint64(i)},
 		); err != nil {
 			t.Fatal(err)
 		}
