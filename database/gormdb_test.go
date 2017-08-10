@@ -281,8 +281,8 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
-	}); err != database.ErrEnrollmentExists {
-		t.Fatalf("expected error '%v' have '%v'", database.ErrEnrollmentExists, err)
+	}); err == nil {
+		t.Fatal("expected duplicate enrollment creation to fail")
 	}
 }
 
