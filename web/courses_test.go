@@ -141,6 +141,7 @@ func TestNewCourse(t *testing.T) {
 	if err := h(c); err != nil {
 		t.Fatal(err)
 	}
+	assertCode(t, w.Code, http.StatusCreated)
 
 	var respCourse models.Course
 	if err := json.Unmarshal(w.Body.Bytes(), &respCourse); err != nil {
@@ -164,8 +165,6 @@ func TestNewCourse(t *testing.T) {
 	if len(f.Hooks) != 4 {
 		t.Errorf("have %d hooks want %d", len(f.Hooks), 4)
 	}
-
-	assertCode(t, w.Code, http.StatusCreated)
 }
 
 func TestEnrollmentProcess(t *testing.T) {
