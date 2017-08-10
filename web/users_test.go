@@ -209,26 +209,26 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	// users to enroll in course DAT320 Operating Systems
 	osUsers := users[3:7]
 
-	for _, u := range wantUsers {
+	for _, user := range wantUsers {
 		if err := db.CreateEnrollment(&models.Enrollment{
-			UserID:   u.ID,
+			UserID:   user.ID,
 			CourseID: allCourses[0].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(u.ID, allCourses[0].ID); err != nil {
+		if err := db.EnrollStudent(user.ID, allCourses[0].ID); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for _, u := range osUsers {
+	for _, user := range osUsers {
 		if err := db.CreateEnrollment(&models.Enrollment{
-			UserID:   u.ID,
+			UserID:   user.ID,
 			CourseID: allCourses[1].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(u.ID, allCourses[1].ID); err != nil {
+		if err := db.EnrollStudent(user.ID, allCourses[1].ID); err != nil {
 			t.Fatal(err)
 		}
 	}
