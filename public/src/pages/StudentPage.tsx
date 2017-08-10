@@ -5,7 +5,10 @@ import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
-import { CourseUserState, ICourse, ICourseGroup, isError, IStudentSubmission, IUser, IUserCourse } from "../models";
+import {
+    CourseUserState, ICourse, ICourseGroup, isError,
+    IStudentSubmission, IUser, IUserCourse, IUserRelation,
+} from "../models";
 
 import { View, ViewPage } from "./ViewPage";
 import { UserView } from "./views/UserView";
@@ -136,6 +139,7 @@ export class StudentPage extends ViewPage {
                 return <GroupForm className="form-horizontal"
                     students={students}
                     course={course}
+                    curUser={curUser}
                     courseMan={this.courseMan}
                     navMan={this.navMan}
                     pagePath={this.pagePath} />;

@@ -192,7 +192,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
         const uri: string = "users/" + userid + "/courses/" + courseid + "/group";
         const result = await this.helper.get<ICourseGroup>(uri);
-        if (result.statusCode >= 300 || !result.data) {
+        if (result.statusCode !== 302 || !result.data) {
             return null;
         }
         return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;

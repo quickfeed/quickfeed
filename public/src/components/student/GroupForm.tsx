@@ -2,13 +2,14 @@ import * as React from "react";
 
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
-import { ICourse, INewGroup, isError, IUserRelation } from "../../models";
+import { CourseUserState, ICourse, INewGroup, isError, IUser, IUserRelation } from "../../models";
 
 import { Search } from "../../components";
 
 interface IGroupProp {
     className: string;
     students: IUserRelation[];
+    curUser: IUser;
     courseMan: CourseManager;
     navMan: NavigationManager;
     pagePath: string;
@@ -18,6 +19,7 @@ interface IGroupState {
     name: string;
     students: IUserRelation[];
     selectedStudents: IUserRelation[];
+    curUser: IUserRelation | undefined;
     errorFlash: JSX.Element | null;
 }
 
@@ -28,8 +30,15 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
             name: "",
             students: this.props.students,
             selectedStudents: [],
+            curUser: this.props.students.find((v) => v.user.id === this.props.curUser.id),
             errorFlash: null,
         };
+    }
+
+    public componentDidMount() {
+        if (this.state.curUser) {
+            this.handleAddToGroupOnClick(this.state.curUser);
+        }
     }
 
     public render() {
@@ -211,6 +220,10 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         if (this.state.selectedStudents.length === 0) {
             errors.push("Group mush have members.");
         }
+        if (this.state.curUser && this.state.curUser.link.state === CourseUserState.student &&
+            !this.isCurrentStudentSelected(this.state.curUser)) {
+            errors.push("You must be a member of the group");
+        }
         return errors;
     }
 
@@ -227,6 +240,11 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 </ul>
             </div>;
         return flash;
+    }
+
+    private isCurrentStudentSelected(student: IUserRelation): boolean {
+        const index = this.state.selectedStudents.indexOf(student);
+        return index >= 0;
     }
 }
 export { GroupForm };
