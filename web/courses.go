@@ -253,7 +253,6 @@ func CreateEnrollment(db database.Database) echo.HandlerFunc {
 		enrollment := models.Enrollment{
 			UserID:   userID,
 			CourseID: courseID,
-			Status:   models.Pending,
 		}
 		if err := db.CreateEnrollment(&enrollment); err != nil {
 			if err == gorm.ErrRecordNotFound {
