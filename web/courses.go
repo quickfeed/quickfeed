@@ -504,6 +504,25 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		if len(users) != len(grp.UserIDs) {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
+		// if logged in user is student, he must need to be member of the group
+		user := c.Get("user").(*models.User)
+		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
+		if err != nil {
+			return err
+		}
+		if enrollment.Status == models.Student {
+			found := false
+			for _, id := range grp.UserIDs {
+				if user.ID == id {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return echo.NewHTTPError(http.StatusBadRequest,
+					"you must need to be a member of the group")
+			}
+		}
 		// only enrolled user i.e accepted to the course can join a group
 		// prevent group override if a student is already in a group in this course
 		for _, user := range users {
