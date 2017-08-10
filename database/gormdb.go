@@ -21,9 +21,9 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 	}
 
 	if logger != nil {
-		conn.LogMode(true)
 		conn.SetLogger(logger)
 	}
+	conn.LogMode(logger != nil)
 
 	if err := conn.AutoMigrate(
 		&models.User{},
