@@ -204,10 +204,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 
 	// Prepare request payload.
-	b, err := json.Marshal(&web.EnrollUserRequest{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-	})
+	b, err := json.Marshal(&web.EnrollUserRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,9 +247,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// Prepare request payload.
 	b, err = json.Marshal(&web.EnrollUserRequest{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-		Status:   models.Accepted,
+		Status: models.Accepted,
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -40,9 +40,7 @@ func (cr *NewCourseRequest) valid() bool {
 
 // EnrollUserRequest represent a request for enrolling a user to a course.
 type EnrollUserRequest struct {
-	UserID   uint64 `json:"userid"`
-	CourseID uint64 `json:"courseid"`
-	Status   uint   `json:"status"`
+	Status uint `json:"status"`
 }
 
 func (eur *EnrollUserRequest) valid() bool {
@@ -253,8 +251,8 @@ func CreateEnrollment(db database.Database) echo.HandlerFunc {
 		}
 
 		enrollment := models.Enrollment{
-			UserID:   eur.UserID,
-			CourseID: eur.CourseID,
+			UserID:   userID,
+			CourseID: courseID,
 			Status:   models.Pending,
 		}
 		if err := db.CreateEnrollment(&enrollment); err != nil {
@@ -288,7 +286,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		enrollment, err := db.GetEnrollmentByCourseAndUser(eur.CourseID, eur.UserID)
+		enrollment, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
