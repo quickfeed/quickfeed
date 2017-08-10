@@ -21,9 +21,8 @@ type User struct {
 type RemoteIdentity struct {
 	ID uint64 `json:"id"`
 
-	// TODO: Provider + RemoteID = key.
-	Provider string `json:"provider"`
-	RemoteID uint64 `json:"remoteid"`
+	Provider string `json:"provider" gorm:"unique_index:uid_provider_remote_id"`
+	RemoteID uint64 `json:"remoteid" gorm:"unique_index:uid_provider_remote_id"`
 
 	AccessToken string `json:"-"`
 

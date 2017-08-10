@@ -128,20 +128,6 @@ func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*models.Remote
 
 // CreateUserFromRemoteIdentity implements the Database interface.
 func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity *models.RemoteIdentity) error {
-	var count int64
-	if err := db.conn.
-		Model(&models.RemoteIdentity{}).
-		Where(&models.RemoteIdentity{
-			Provider: remoteIdentity.Provider,
-			RemoteID: remoteIdentity.RemoteID,
-		}).
-		Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return ErrDuplicateIdentity
-	}
-
 	user.RemoteIdentities = []*models.RemoteIdentity{remoteIdentity}
 	if err := db.conn.Create(&user).Error; err != nil {
 		return err

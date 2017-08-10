@@ -468,7 +468,7 @@ func TestGormDBDuplicateIdentity(t *testing.T) {
 	if err := db.CreateUserFromRemoteIdentity(
 		&models.User{}, &models.RemoteIdentity{},
 	); err == nil {
-		t.Errorf("expected error '%v'", database.ErrDuplicateIdentity)
+		t.Fatal("expected duplicate remote identity creation to fail")
 	}
 }
 
