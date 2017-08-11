@@ -2,7 +2,6 @@ package ci_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/autograde/aguis/ci"
@@ -14,16 +13,20 @@ func TestLocalWindows(t *testing.T) {
 		expected = "Hello World"
 	)
 
-	local := ci.Local{}
+	out := runCmd(t, []string{cmd})
 
+	if expected != out {
+		t.Errorf("Have %#v want %#v", out, expected)
+	}
+}
+
+func runCmd(t *testing.T, cmds []string) string {
+	local := ci.Local{}
 	out, err := local.Run(context.Background(), &ci.Job{
-		Commands: []string{cmd},
+		Commands: cmds,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(out)
-	if expected != out {
-		t.Errorf("Have %#v want %#v", out, expected)
-	}
+	return out
 }
