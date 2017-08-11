@@ -1,5 +1,6 @@
 import * as React from "react";
-import { CourseGroup, DynamicTable, GroupForm, NavMenu, Results } from "../components";
+
+import { BootstrapButton, CourseGroup, DynamicTable, GroupForm, NavMenu, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { View, ViewPage } from "./ViewPage";
@@ -31,6 +32,7 @@ export class TeacherPage extends ViewPage {
 
     private pages: { [name: string]: JSX.Element } = {};
     private curUser: IUser | null;
+    private refreshState = 0;
 
     constructor(userMan: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
@@ -69,7 +71,54 @@ export class TeacherPage extends ViewPage {
             if (info.params.page) {
                 return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
             }
-            return <h1>Teacher Course {info.params.course}</h1>;
+            // return <h1>Teacher Course {info.params.course}</h1>;
+            let button;
+            switch (this.refreshState) {
+                case 0:
+                    button = <BootstrapButton
+                        classType="primary"
+                        onClick={(e) => {
+                            this.refreshState = 1;
+                            this.courseMan.refreshCoursesFor(course.id)
+                                .then((value) => {
+                                    this.refreshState = 2;
+                                    this.navMan.refresh();
+                                });
+                            this.navMan.refresh();
+                        }}
+                    >
+                        Refresh course info
+                </BootstrapButton>;
+                    break;
+                case 1:
+                    button = <BootstrapButton
+                        classType="default"
+                        disabled={true}>
+                        Refreshing Course information
+                </BootstrapButton>;
+                    break;
+                case 2:
+                    button = <BootstrapButton
+                        classType="success"
+                        disabled={false}
+                        onClick={(e) => {
+                            this.refreshState = 1;
+                            this.courseMan.refreshCoursesFor(course.id)
+                                .then((value) => {
+                                    this.refreshState = 2;
+                                    this.navMan.refresh();
+                                });
+                            this.navMan.refresh();
+                        }}
+                    >
+                        Info refreshed
+                </BootstrapButton>;
+                    break;
+            }
+            return <div>
+                <h1>Overview for {course.name}</h1>
+                {button}
+            </div>;
         }
         return <div>404 Page not found</div>;
     }

@@ -360,6 +360,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.makeUserInfo(result.data);
     }
 
+    public async refreshCoursesFor(courseid: number): Promise<any> {
+        const result = await this.helper.post<any, null>("courses/" + courseid + "/refresh", null);
+        if (result.statusCode !== 200 || !result.data) {
+            this.handleError(result, "getLoggedInUser");
+            return null;
+        }
+        return this.makeUserInfo(result.data);
+    }
+
     private makeUserInfo(data: IUser): IUser {
         return data;
     }

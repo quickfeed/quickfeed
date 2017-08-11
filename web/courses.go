@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/autograde/aguis/ci"
+	"github.com/autograde/aguis/yamlparser"
+
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
@@ -355,6 +358,128 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 
 		return c.JSONPretty(http.StatusOK, course, "\t")
 	}
+}
+
+// RefreshCourse refreshes the information to a course
+func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		id, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return err
+		}
+
+		user := c.Get("user").(*models.User)
+
+		course, err := db.GetCourse(id)
+		if err != nil {
+			return err
+		}
+		if c.Get(course.Provider) == nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
+		}
+
+		remoteID, err := getRemoteIDFor(user, course.Provider)
+		if err != nil {
+			return err
+		}
+
+		s := c.Get(course.Provider).(scm.SCM)
+
+		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
+		defer cancel()
+
+		directory, err := s.GetDirectory(ctx, course.DirectoryID)
+		if err != nil {
+			return err
+		}
+
+		path, err := s.CreateCloneURL(ctx, &scm.CreateClonePathOptions{
+			Directory:  directory.Path,
+			Repository: "tests.git",
+			UserToken:  remoteID.AccessToken,
+		})
+		if err != nil {
+			return err
+		}
+
+		runner := ci.Local{}
+
+		// This does not work that well on Windows because the path should be
+		// /mnt/c/Users/{user}/AppData/Local/Temp
+		// cloneDirectory := filepath.Join(os.TempDir(), "agclonepath")
+		cloneDirectory := "agclonepath"
+
+		// Clone all tests from tests repositry
+		_, err = runner.Run(c.Request().Context(), &ci.Job{
+			Commands: []string{
+				"mkdir " + cloneDirectory,
+				"cd " + cloneDirectory,
+				"git clone " + path,
+			},
+		})
+		if err != nil {
+			runner.Run(c.Request().Context(), &ci.Job{
+				Commands: []string{
+					"yes | rm -r " + cloneDirectory,
+				},
+			})
+			return err
+		}
+
+		// Parse assignments in the test directory
+		assignments, err := yamlparser.Parse("agclonepath/tests")
+		if err != nil {
+			return err
+		}
+
+		// Cleanup downloaded
+		runner.Run(c.Request().Context(), &ci.Job{
+			Commands: []string{
+				"yes | rm -r " + cloneDirectory,
+			},
+		})
+
+		for _, v := range assignments {
+			assignment, err := createAssignment(&v, course)
+			if err != nil {
+				return err
+			}
+			if err := db.CreateAssignment(assignment); err != nil {
+				return err
+			}
+		}
+
+		return c.JSONPretty(http.StatusOK, assignments, "\t")
+	}
+}
+
+func getRemoteIDFor(user *models.User, provider string) (*models.RemoteIdentity, error) {
+	var remoteID *models.RemoteIdentity
+	for _, v := range user.RemoteIdentities {
+		if v.Provider == provider {
+			remoteID = v
+			break
+		}
+	}
+	if remoteID == nil {
+		return nil, echo.ErrNotFound
+	}
+	return remoteID, nil
+}
+
+func createAssignment(request *yamlparser.NewAssignmentRequest, course *models.Course) (*models.Assignment, error) {
+	date, err := time.Parse("02-01-2006 15:04", request.Deadline)
+	if err != nil {
+		return nil, err
+	}
+	return &models.Assignment{
+		AutoApprove: request.AutoApprove,
+		CourseID:    course.ID,
+		Deadline:    date,
+		Language:    request.Language,
+		Name:        request.Name,
+		Order:       request.AssignmentID,
+	}, nil
 }
 
 // GetSubmission returns a single submission for a assignment and a user

@@ -48,6 +48,7 @@ export interface ICourseProvider {
     getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>>;
     getDirectories(provider: string): Promise<IOrganization[]>;
     getProviders(): Promise<string[]>;
+    refreshCoursesFor(courseid: number): Promise<any>;
 }
 
 export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollemtnt {
@@ -316,6 +317,10 @@ export class CourseManager {
 
     public async deleteGroup(gid: number): Promise<boolean> {
         return await this.courseProvider.deleteGroup(gid);
+    }
+
+    public async refreshCoursesFor(courseid: number): Promise<any> {
+        return await this.courseProvider.refreshCoursesFor(courseid);
     }
 
     /**

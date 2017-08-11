@@ -256,6 +256,8 @@ func registerAPI(l logrus.FieldLogger, e *echo.Echo, db database.Database, bh *w
 	courses.GET("", web.ListCourses(db))
 	courses.POST("", web.NewCourse(l, db, bh))
 	courses.GET("/:cid", web.GetCourse(db))
+
+	courses.POST("/:cid/refresh", web.RefreshCourse(l, db))
 	// TODO: Pass in webhook URLs and secrets for each registered provider.
 	// TODO: Check if webhook exists and if not create a new one.
 	courses.PUT("/:cid", web.UpdateCourse(db))
