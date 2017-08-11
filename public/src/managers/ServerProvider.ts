@@ -325,7 +325,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const uri: string = "directories";
         const data: { provider: string } = { provider };
         const result = await this.helper.post<{ provider: string }, IOrganization[]>(uri, data);
-        if (result.data) {
+        if (result.statusCode === 200 && result.data) {
             return result.data;
         } else {
             this.handleError(result, "getDirectories");

@@ -111,7 +111,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                         value={provider}
                         defaultChecked={this.props.courseData
                             && this.props.courseData.provider === provider ? true : false}
-                        onClick={(e) => this.getOrganizations((e.target as HTMLInputElement).value)}
+                        onClick={() => this.getOrganizations(provider)}
                     />{provider}
                 </label>;
             });
@@ -219,11 +219,19 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         });
     }
 
-    private handleOrgClick(dirId: number) {
+    private handleOrgClick(e: any, dirId: number) {
+        const elem = e.target;
         if (dirId) {
             this.setState({
                 directoryid: dirId,
             });
+            let sibling = elem.parentNode.firstChild;
+            for (; sibling; sibling = sibling.nextSibling) {
+                if (sibling.nodeType === 1) {
+                    sibling.classList.remove("active");
+                }
+            }
+            elem.classList.add("active");
         }
     }
 
@@ -231,6 +239,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         const directories = await this.props.courseMan.getDirectories(provider);
         this.setState({
             provider,
+            errorFlash: null,
         });
         this.updateOrganisationDivs(directories);
     }
@@ -239,8 +248,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         const organisationDetails: JSX.Element[] = [];
         for (let i: number = 0; i < orgs.length; i++) {
             organisationDetails.push(
-                <button key={i} className="btn organisation"
-                    onClick={() => this.handleOrgClick(orgs[i].id)}
+                <button type="button" key={i} className="btn organisation"
+                    onClick={(e) => this.handleOrgClick(e, orgs[i].id)}
                     title={orgs[i].path}>
 
                     <div className="organisationInfo">
