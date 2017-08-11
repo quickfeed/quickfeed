@@ -1,5 +1,5 @@
 import * as React from "react";
-import { CourseGroup, DynamicTable, NavMenu, Results } from "../components";
+import { CourseGroup, DynamicTable, GroupForm, NavMenu, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { View, ViewPage } from "./ViewPage";
@@ -41,10 +41,11 @@ export class TeacherPage extends ViewPage {
         this.navHelper.defaultPage = "course";
         this.navHelper.checkAuthentication = () => this.checkAuthentication();
 
-        this.navHelper.registerFunction("course/{course}", this.course);
-        this.navHelper.registerFunction("course/{course}/members", this.courseUsers);
-        this.navHelper.registerFunction("course/{course}/results", this.results);
-        this.navHelper.registerFunction("course/{course}/groups", this.groups);
+        this.navHelper.registerFunction("courses/{course}", this.course);
+        this.navHelper.registerFunction("courses/{course}/members", this.courseUsers);
+        this.navHelper.registerFunction("courses/{course}/results", this.results);
+        this.navHelper.registerFunction("courses/{course}/groups", this.groups);
+        this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
     }
 
     public checkAuthentication(): boolean {
@@ -58,7 +59,7 @@ export class TeacherPage extends ViewPage {
 
     public async init(): Promise<void> {
         this.courses = await this.getCourses();
-        this.navHelper.defaultPage = "course/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
+        this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
@@ -123,6 +124,30 @@ export class TeacherPage extends ViewPage {
                 course={course}
                 navMan={this.navMan}
                 courseMan={this.courseMan}
+                pagePath={this.pagePath}
+            />;
+        }
+        return <div>404 Page not found</div>;
+    }
+
+    public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
+        const courseId = parseInt(info.params.cid, 10);
+        const groupId = parseInt(info.params.gid, 10);
+        const course = await this.courseMan.getCourse(courseId);
+        const curUser = this.userMan.getCurrentUser();
+        const group: ICourseGroup | null = await this.courseMan.getGroup(groupId);
+        if (course && curUser && group) {
+            const students = await this.courseMan
+                .getUsersForCourse(course, this.userMan, [CourseUserState.student, CourseUserState.teacher]);
+            return <GroupForm
+                className="form-horizontal"
+                students={students}
+                course={course}
+                curUser={curUser}
+                courseMan={this.courseMan}
+                navMan={this.navMan}
+                pagePath={this.pagePath}
+                groupData={group}
             />;
         }
         return <div>404 Page not found</div>;
@@ -191,7 +216,7 @@ export class TeacherPage extends ViewPage {
                 courses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
                         name: e.code,
-                        uri: this.pagePath + "/course/" + e.id,
+                        uri: this.pagePath + "/courses/" + e.id,
                     }));
                 });
 

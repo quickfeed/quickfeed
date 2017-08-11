@@ -188,6 +188,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const uri: string = "users/" + userid + "/courses/" + courseid + "/group";
         const result = await this.helper.get<ICourseGroup>(uri);
         if (result.statusCode !== 302 || !result.data) {
+            this.handleError(result, "getCourseByUserAndCourse");
             return null;
         }
         return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
@@ -204,6 +205,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result, "updateGroupStatus");
         }
         return false;
+    }
+
+    public async getGroup(gid: number): Promise<ICourseGroup | null> {
+        const uri: string = "groups/" + gid;
+        const result = await this.helper.get<ICourseGroup>(uri);
+        if (result.statusCode !== 302 || !result.data) {
+            this.handleError(result, "getGroup");
+            return null;
+        }
+        return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
     }
 
     public async deleteGroup(groupId: number): Promise<boolean> {

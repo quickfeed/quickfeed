@@ -16,6 +16,7 @@ interface ICourseGroupProp {
     course: ICourse;
     navMan: NavigationManager;
     courseMan: CourseManager;
+    pagePath: string;
 }
 
 export class CourseGroup extends React.Component<ICourseGroupProp, any> {
@@ -156,6 +157,10 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                 break;
             case "reject":
                 await this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.rejected);
+                break;
+            case "edit":
+                this.props.navMan
+                    .navigateTo(this.props.pagePath + "/courses/" + group.courseid + "/groups/" + group.id + "/edit");
                 break;
             case "delete":
                 if (confirm(

@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
-import { CourseUserState, ICourse, INewGroup, isError, IUser, IUserRelation } from "../../models";
+import { CourseUserState, ICourse, ICourseGroup, INewGroup, isError, IUser, IUserRelation } from "../../models";
 
 import { Search } from "../../components";
 
@@ -14,6 +14,7 @@ interface IGroupProp {
     navMan: NavigationManager;
     pagePath: string;
     course: ICourse;
+    groupData?: ICourseGroup;
 }
 interface IGroupState {
     name: string;

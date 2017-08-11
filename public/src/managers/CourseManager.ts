@@ -40,6 +40,7 @@ export interface ICourseProvider {
     getCourseGroups(courseId: number): Promise<ICourseGroup[]>;
     updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean>;
     createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError>;
+    getGroup(gid: number): Promise<ICourseGroup | null>;
     deleteGroup(groupId: number): Promise<boolean>;
     getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
     // deleteCourse(id: number): Promise<boolean>;
@@ -309,6 +310,10 @@ export class CourseManager {
         return await this.courseProvider.updateGroupStatus(groupId, status);
     }
 
+    public async getGroup(gid: number): Promise<ICourseGroup | null> {
+        return await this.courseProvider.getGroup(gid);
+    }
+
     public async deleteGroup(gid: number): Promise<boolean> {
         return await this.courseProvider.deleteGroup(gid);
     }
@@ -335,7 +340,7 @@ export class CourseManager {
             return;
         }
         const assigns = await this.getAssignments(studentCourse.course.id);
-        if (assigns.length > 0 ) {
+        if (assigns.length > 0) {
             const submissions = MapHelper.toArray(
                 await this.courseProvider.getAllLabInfos(studentCourse.course.id, student.id));
 
