@@ -184,19 +184,33 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 				logger.WithField("repo", repo).Println("Created new repository")
 			}
 
-			// TODO: Make sure CreateHook doesn't return an error if
-			// the call fails due to an already existing identical
-			// hook.
-			if err := s.CreateHook(ctx, &scm.CreateHookOptions{
-				URL:        GetEventsURL(bh.BaseURL, cr.Provider),
-				Secret:     bh.Secret,
-				Repository: repo,
-			}); err != nil {
-				logger.WithField("repo", path).WithError(err).Println("Failed to create webhook for repository")
+			hooks, err := s.ListHooks(ctx, repo)
+			if err != nil {
+				logger.WithField("repo", path).WithError(err).Warn("Failed to list hooks for repository")
 				return err
 			}
+			hasAGWebHook := false
+			for _, hook := range hooks {
+				logger.WithField("url", hook.URL).WithField("id", hook.ID).WithField("name", hook.Name).Println("Hook for repository")
+				// TODO this check is specific for the github implementation ; fix this
+				if hook.Name == "web" {
+					hasAGWebHook = true
+					break
+				}
+			}
 
-			logger.WithField("repo", repo).Println("Created new webhook for repository")
+			if !hasAGWebHook {
+				if err := s.CreateHook(ctx, &scm.CreateHookOptions{
+					URL:        GetEventsURL(bh.BaseURL, cr.Provider),
+					Secret:     bh.Secret,
+					Repository: repo,
+				}); err != nil {
+					logger.WithField("repo", path).WithError(err).Println("Failed to create webhook for repository")
+					return err
+				}
+
+				logger.WithField("repo", repo).Println("Created new webhook for repository")
+			}
 		}
 
 		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
@@ -209,6 +223,9 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			DirectoryID: directory.ID,
 		}
 		if err := db.CreateCourse(&course); err != nil {
+			if err == database.ErrCourseExists {
+				return c.JSONPretty(http.StatusBadRequest, err.Error(), "\t")
+			}
 			return err
 		}
 
