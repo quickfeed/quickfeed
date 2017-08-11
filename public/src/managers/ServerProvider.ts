@@ -73,7 +73,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 user,
             });
         });
-        console.log(arr);
         return arr;
     }
 
@@ -149,7 +148,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getCourse(id: number): Promise<ICourse | null> {
         const result = await this.helper.get<any>("courses/" + id);
         if (result.statusCode !== 200 || !result.data) {
-            console.log("Error =>", result);
             this.handleError(result, "getCourse");
             return null;
         }
@@ -180,7 +178,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const uri: string = "courses/" + courseId + "/groups";
         const result = await this.helper.get<ICourseGroup>(uri);
         if (result.statusCode !== 200 || !result.data) {
-            console.log("Error =>", result);
             this.handleError(result, "getCourseGroups");
             return [];
         }
@@ -241,7 +238,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             if ((e as any).scoreobjects && ((e as any).scoreobjects as string).trim().length > 2) {
                 b = (e as any).scoreobjects;
             }
-            console.log(a);
             let tempInfo: IBuildInfo;
             let scoreObj: ITestCases[];
             try {

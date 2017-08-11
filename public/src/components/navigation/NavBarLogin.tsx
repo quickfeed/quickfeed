@@ -83,7 +83,6 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
             return;
         }
         this.lastCallback = (ev?: MouseEvent) => {
-            console.log("callback");
             if (ev && ev.target === e.target) {
                 return;
             }
@@ -93,9 +92,7 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
             }
             this.setState({ loginOpen: false });
         };
-        console.log("hello");
         window.addEventListener("click", this.lastCallback);
-        console.log("opening");
         this.setState({ loginOpen: true });
     }
 

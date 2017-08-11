@@ -8,8 +8,6 @@ export interface IPageInfoProps {
 
 export class PageInfo extends React.Component<IPageInfoProps, {}> {
     public render() {
-        console.log("PageInfoUpdate");
-        console.log(this.props);
         const e = this.props.entry;
         if (!e) {
             return <div></div>;

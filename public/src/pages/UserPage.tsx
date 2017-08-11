@@ -27,7 +27,6 @@ export class UserPage extends ViewPage {
         this.curUser = this.userMan.getCurrentUser() || {
             name: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
         };
-        console.log("Cur user;", this.curUser);
         this.navMan.refresh();
     }
 
@@ -37,7 +36,6 @@ export class UserPage extends ViewPage {
     }
 
     public async renderMenu(index: number): Promise<JSX.Element[]> {
-        console.log("Rendering");
         if (index === 1) {
             return [<div id="0" className="jumbotron">
                 <div className="centerblock container">

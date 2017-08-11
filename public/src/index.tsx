@@ -59,10 +59,8 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         this.navMan = props.navigationManager;
         this.logMan = props.logManager;
         this.logMan.onshowuser.addEventListener(async (e) => {
-            console.log("OnShowUser Event: ", e);
             this.setState({ curMessage: e.entry });
             this.setState({ currentContent: await this.refreshActivePage() });
-            console.log("State: ", this.state);
         });
 
         const curUser = this.userMan.getCurrentUser();
@@ -81,7 +79,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         this.navMan.onNavigate.addEventListener((e: INavEvent) => this.handleNavigation(e));
 
         this.userMan.onLogin.addEventListener(async (e) => {
-            console.log("Sign in");
             this.setState({
                 curUser: e.user,
                 topLinks: await this.generateTopLinksFor(e.user),
@@ -89,7 +86,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         });
 
         this.userMan.onLogout.addEventListener(async (e) => {
-            console.log("Sign out");
             this.setState({
                 curUser: null,
                 topLinks: [],
@@ -151,8 +147,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     public render() {
-        console.log("Log from index.tsx");
-
         if (this.state.activePage) {
             return this.state.currentContent;
         } else {
@@ -200,7 +194,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     private async renderTemplate(page: ViewPage, name: string | null): Promise<JSX.Element> {
-        console.log("render");
         let body: JSX.Element;
         let content: JSX.Element;
         let leftMenu: JSX.Element[] | null | string = null;

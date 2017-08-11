@@ -178,7 +178,6 @@ export class HomePage extends ViewPage {
     }
 
     public async renderMenu(index: number): Promise<JSX.Element[]> {
-        console.log("Rendering");
         if (index === 1) {
             return [<div id="0" className="jumbotron">
                 <div className="centerblock container">

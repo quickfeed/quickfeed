@@ -100,11 +100,9 @@ export class StudentPage extends ViewPage {
     public async courseWithLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
-        console.log("Course with lab", this.selectedCourse);
         if (this.selectedCourse) {
             await this.selectAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
-                console.log("selected!");
                 return <StudentLab
                     course={this.selectedCourse.course}
                     assignment={this.selectedAssignment}>
