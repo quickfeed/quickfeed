@@ -1,11 +1,13 @@
 import * as React from "react";
 
 import { BootstrapButton, DynamicTable } from "../../components";
-import { CourseManager, NavigationManager } from "../../managers";
+import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { CourseGroupStatus, ICourse, ICourseGroup, IUser } from "../../models";
 
 import { bindFunc, RProp } from "../../helper";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
+
+import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 
 interface ICourseGroupProp {
     approvedGroups: ICourseGroup[];
@@ -16,7 +18,7 @@ interface ICourseGroupProp {
     courseMan: CourseManager;
 }
 
-class CourseGroup extends React.Component<ICourseGroupProp, any> {
+export class CourseGroup extends React.Component<ICourseGroupProp, any> {
     public render() {
         let approvedGroups;
         if (this.props.approvedGroups.length > 0) {
@@ -63,27 +65,36 @@ class CourseGroup extends React.Component<ICourseGroupProp, any> {
             <div className="pending-groups">
                 <h3>Pending Groups</h3>
                 <DynamicTable
-                    header={["Name", "Members", "Action"]}
+                    header={["Name", "Members", "Actions"]}
                     data={this.props.pendingGroups}
-                    selector={
-                        (group: ICourseGroup) => [
-                            group.name,
-                            this.getMembers(group.users),
-                            <span>
-                                <UpdateButton type="primary" group={group} status={CourseGroupStatus.approved}>
-                                    Approve
-                                </UpdateButton>
-                                <UpdateButton type="warning" group={group} status={CourseGroupStatus.rejected}>
-                                    Reject
-                                </UpdateButton>
-                                <UpdateButton type="danger" group={group} status={CourseGroupStatus.deleted}>
-                                    Remove
-                                </UpdateButton>
-                            </span>,
-                        ]}
+                    selector={(group: ICourseGroup) => this.renderRow(group)}
                 />
             </div>
         );
+    }
+
+    private renderRow(group: ICourseGroup): Array<string | JSX.Element> {
+        const selector: Array<string | JSX.Element> = [];
+        selector.push(group.name, this.getMembers(group.users));
+        const temp = this.renderDropdownMenu(group);
+        selector.push(temp);
+        return selector;
+    }
+
+    private renderDropdownMenu(group: ICourseGroup): JSX.Element {
+        const links = [];
+        links.push({ name: "Approve", uri: "approve", extra: "primary" });
+        links.push({ name: "Edit", uri: "edit", extra: "primary" });
+        links.push({ name: "Reject", uri: "reject", extra: "danger" });
+        links.push({ name: "Delete", uri: "delete", extra: "danger" });
+        return <ul className="nav nav-pills">
+            <LiDropDownMenu
+                links={links}
+                onClick={(link) => this.handleActionOnClick(group, link)}
+            >
+                <span className="glyphicon glyphicon-option-vertical" />
+            </LiDropDownMenu>
+        </ul>;
     }
 
     private createRejectedGroupView(): JSX.Element {
@@ -137,6 +148,26 @@ class CourseGroup extends React.Component<ICourseGroupProp, any> {
             this.props.navMan.refresh();
         }
     }
-}
 
-export { CourseGroup };
+    private async handleActionOnClick(group: ICourseGroup, link: ILink): Promise<void> {
+        switch (link.uri) {
+            case "approve":
+                await this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.approved);
+                break;
+            case "reject":
+                await this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.rejected);
+                break;
+            case "delete":
+                if (confirm(
+                    `Warning! This action is irreversible!
+
+Do you want to delete group:
+${group.name}?`,
+                )) {
+                    await this.props.courseMan.deleteGroup(group.id);
+                    break;
+                }
+        }
+        this.props.navMan.refresh();
+    }
+}
