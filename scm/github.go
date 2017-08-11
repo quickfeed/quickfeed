@@ -170,3 +170,8 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) erro
 	}
 	return nil
 }
+
+// CreateCloneURL implements the SCM interface.
+func (s *GithubSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
+	return "https://" + opt.UserToken + "@github.com/" + opt.Directory + "/" + opt.Repository, nil
+}

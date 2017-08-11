@@ -108,3 +108,8 @@ func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) error 
 	// TODO no implementation provided yet
 	return nil
 }
+
+// CreateCloneURL implements the SCM interface.
+func (s *FakeSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
+	return "", nil
+}

@@ -28,6 +28,8 @@ type SCM interface {
 	CreateTeam(context.Context, *CreateTeamOptions) error
 	// AddTeamMember as a member to a team.
 	// AddTeamMember(context.Context, *AddMemberOptions) error
+	// Returns a provider spesefic clone path.
+	CreateCloneURL(context.Context, *CreateClonePathOptions) (string, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -110,6 +112,12 @@ type CreateTeamOptions struct {
 type ErrNotSupported struct {
 	SCM    string
 	Method string
+}
+
+type CreateClonePathOptions struct {
+	UserToken  string
+	Directory  string
+	Repository string
 }
 
 func (e ErrNotSupported) Error() string {

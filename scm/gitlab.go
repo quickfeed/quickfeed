@@ -149,6 +149,11 @@ func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) erro
 	return nil
 }
 
+// CreateCloneURL implements the SCM interface.
+func (s *GitlabSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
+	return "", nil
+}
+
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)
