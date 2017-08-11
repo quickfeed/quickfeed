@@ -20,6 +20,8 @@ type SCM interface {
 	GetRepositories(context.Context, *Directory) ([]*Repository, error)
 	// Delete repository.
 	DeleteRepository(context.Context, uint64) error
+	// List the webhooks associated with the provided repository.
+	ListHooks(context.Context, *Repository) ([]*Hook, error)
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
@@ -72,6 +74,13 @@ type Repository struct {
 	HTTPURL string
 
 	DirectoryID uint64
+}
+
+// Hook contains information about a webhook for a repository.
+type Hook struct {
+	ID   uint64
+	Name string
+	URL  string
 }
 
 // CreateRepositoryOptions contains information on how a repository should be

@@ -125,6 +125,20 @@ func (s *GithubSCM) DeleteRepository(ctx context.Context, id uint64) error {
 	return nil
 }
 
+// ListHooks implements the SCM interface.
+func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
+	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
+	var hooks []*Hook
+	for _, hook := range githubHooks {
+		hooks = append(hooks, &Hook{
+			ID:   uint64(hook.GetID()),
+			Name: hook.GetName(),
+			URL:  hook.GetURL(),
+		})
+	}
+	return hooks, err
+}
+
 // CreateHook implements the SCM interface.
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
 	name := "web"

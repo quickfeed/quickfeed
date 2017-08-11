@@ -128,6 +128,12 @@ func (s *GitlabSCM) DeleteRepository(ctx context.Context, id uint64) (err error)
 	return
 }
 
+// ListHooks implements the SCM interface.
+func (s *GitlabSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // CreateHook implements the SCM interface.
 func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
 	_, _, err = s.client.Projects.AddProjectHook(strconv.FormatUint(opt.Repository.ID, 10), &gitlab.AddProjectHookOptions{
