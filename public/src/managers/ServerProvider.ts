@@ -110,13 +110,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
-        const result = await this.helper.put<{ courseid: number, userid: number, status: CourseUserState }, undefined>
+        const result = await this.helper.post<{ status: CourseUserState }, undefined>
             ("/courses/" + course.id + "/users/" + user.id, {
-                courseid: course.id,
-                userid: user.id,
                 status: CourseUserState.pending,
             });
-        if (result.statusCode <= 202) {
+        if (result.statusCode === 201) {
             return true;
         } else {
             this.handleError(result, "addUserToCourse");
