@@ -1225,6 +1225,100 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	}
 }
 
+func TestGormDBGetEmptyRepo(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+	if _, err := db.GetRepository(10); err != gorm.ErrRecordNotFound {
+		t.Fatal(err)
+	}
+}
+
+func createUser(db database.Database, provider, accesstoken string, remoteid uint64, t *testing.T) *models.User {
+	var user models.User
+	err := db.CreateUserFromRemoteIdentity(&user,
+		&models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteid,
+			AccessToken: accesstoken,
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &user
+}
+
+func TestGormDBGetSingleRepoWithUser(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	const (
+		provider    = "fake"
+		accesstoken = "10"
+		remoteid    = 10
+	)
+
+	user := createUser(db, provider, accesstoken, remoteid, t)
+
+	repo := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 100,
+		UserID:       user.ID,
+	}
+	if err := db.CreateRepository(&repo); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := db.GetRepository(repo.RepositoryID); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	const (
+		provider    = "fake"
+		accesstoken = "10"
+		remoteid    = 10
+	)
+
+	repo := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 100,
+		UserID:       20,
+	}
+	if err := db.CreateRepository(&repo); err != gorm.ErrRecordNotFound {
+		t.Fatal(err)
+	}
+}
+
+func TestGormDBGetSingleRepoWithoutUser(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	const (
+		provider    = "fake"
+		accesstoken = "10"
+		remoteid    = 10
+	)
+
+	repo := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 100,
+	}
+	if err := db.CreateRepository(&repo); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := db.GetRepository(repo.RepositoryID); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func envSet(env string) database.GormLogger {
 	if os.Getenv(env) != "" {
 		return database.Logger{Logger: logrus.New()}

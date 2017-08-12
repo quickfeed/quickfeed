@@ -33,6 +33,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&models.Assignment{},
 		&models.Submission{},
 		&models.Group{},
+		&models.Repository{},
 	).Error; err != nil {
 		return nil, err
 	}
@@ -573,6 +574,35 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 	}
 	tx.Commit()
 	return nil
+}
+
+// CreateRepository implements the Database interface
+func (db *GormDB) CreateRepository(repo *models.Repository) error {
+	if repo.DirectoryID == 0 || repo.RepositoryID == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	if repo.UserID > 0 {
+		err := db.conn.First(&models.User{}, repo.UserID).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return db.conn.Create(repo).Error
+}
+
+// GetRepository imlements the Database interface
+func (db *GormDB) GetRepository(rid uint64) (*models.Repository, error) {
+	// This uses the repositoryid from the provider to search with, and not
+	// the id of the entry in the database
+	var repo models.Repository
+
+	if err := db.conn.First(&repo, &models.Repository{RepositoryID: rid}).Error; err != nil {
+		return nil, err
+	}
+
+	return &repo, nil
 }
 
 // Close closes the gorm database.
