@@ -1113,7 +1113,6 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			// Setup.
 			db, cleanup := setup(t)
-			defer cleanup()
 
 			var course models.Course
 			if err := db.CreateCourse(&course); err != nil {
@@ -1195,6 +1194,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			if !reflect.DeepEqual(have, group) {
 				t.Errorf("have %#v want %#v", have, group)
 			}
+			cleanup()
 		})
 	}
 }
