@@ -445,6 +445,14 @@ func (db *GormDB) GetCourse(cid uint64) (*models.Course, error) {
 	}
 	return &course, nil
 }
+// GetCourseByDirectoryID implements the Database interface
+func (db *GormDB) GetCourseByDirectoryID(did uint64) (*models.Course, error) {
+	var course models.Course
+	if err := db.conn.First(&course, &models.Course{DirectoryID: did}).Error; err != nil {
+		return nil, err
+	}
+	return &course, nil
+}
 
 // UpdateCourse implements the Database interface
 func (db *GormDB) UpdateCourse(course *models.Course) error {

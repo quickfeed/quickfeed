@@ -689,6 +689,36 @@ func TestGormDBGetCourse(t *testing.T) {
 
 }
 
+func TestGormDBGetCourseByDirectory(t *testing.T) {
+	course := &models.Course{
+		Name:        "Test Course",
+		Code:        "DAT100",
+		Year:        2017,
+		Tag:         "Spring",
+		Provider:    "github",
+		DirectoryID: 1234,
+	}
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	err := db.CreateCourse(course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Get the created course.
+	createdCourse, err := db.GetCourseByDirectoryID(course.DirectoryID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(createdCourse, course) {
+		t.Errorf("have course %+v want %+v", createdCourse, course)
+	}
+
+}
+
 func TestGormDBGetCourseNoRecord(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()

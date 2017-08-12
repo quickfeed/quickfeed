@@ -22,6 +22,7 @@ type Database interface {
 
 	CreateCourse(*models.Course) error
 	GetCourse(uint64) (*models.Course, error)
+	GetCourseByDirectoryID(did uint64) (*models.Course, error)
 	GetCourses(...uint64) ([]*models.Course, error)
 	GetCoursesByUser(uid uint64, statuses ...uint) ([]*models.Course, error)
 	UpdateCourse(*models.Course) error
