@@ -214,6 +214,27 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 
 				logger.WithField("repo", repo).Println("Created new webhook for repository")
 			}
+
+			var repoType models.RepoType
+			switch path {
+			case InfoRepo:
+				repoType = models.CourseInfoRepo
+			case AssignmentRepo:
+				repoType = models.AssignmentsRepo
+			case TestsRepo:
+				repoType = models.TestsRepo
+			case SolutionsRepo:
+				repoType = models.SolutionsRepo
+			}
+
+			dbRepo := models.Repository{
+				DirectoryID:  directory.ID,
+				RepositoryID: repo.ID,
+				Type:         repoType,
+			}
+			if err := db.CreateRepository(&dbRepo); err != nil {
+				return err
+			}
 		}
 
 		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
