@@ -32,29 +32,64 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 			}
 			logger.WithField("identity", remoteIdentity).Warn("Found sender's remote identity")
 
-			getURL := p.Repository.CloneURL
-			getURL = strings.TrimPrefix(getURL, "https://")
-			getURL = strings.TrimSuffix(getURL, ".git")
-			logger.WithField("url", getURL).Warn("Repository's go get URL")
-
-			out, err := runner.Run(context.Background(), &ci.Job{
-				Image: "golang:1.8.3",
-				Commands: []string{
-					`echo "\n\n==START_CI==\n"`,
-					`git config --global url."https://` + remoteIdentity.AccessToken + `:x-oauth-basic@github.com/".insteadOf "https://github.com/"`,
-					`go get "` + getURL + `"`,
-					`cd "$GOPATH/src/` + getURL + `"`,
-					`go test -v`,
-					`echo "\n==DONE_CI==\n"`,
-				},
-			})
-
+			repo, err := db.GetRepository(uint64(p.Repository.ID))
 			if err != nil {
-				logger.WithError(err).Warn("Docker failed")
+				logger.WithError(err).Warn("Failed to get repository from database")
 				return
 			}
 
-			logger.WithField("out", out).Warn("Docker success")
+			if repo.Type > 0 {
+				// Here should we do a refresh of the courses since this would be a repo with a type
+				return
+			}
+
+			course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
+			if err != nil {
+				logger.WithError(err).Warn("Failed to get course from database")
+				return
+			}
+
+			assignments, err := db.GetAssignmentsByCourse(course.ID)
+			if err != nil {
+				logger.WithError(err).Warn("Failed to get course from database")
+				return
+			} else if len(assignments) < 1 {
+				logger.Warn("No assignments in database")
+				return
+			}
+
+			language := assignments[0].Language
+
+			switch language {
+			case "java":
+				logger.Println("Starting java build")
+			case "go":
+				logger.Println("Starting go build")
+				getURL := p.Repository.CloneURL
+				getURL = strings.TrimPrefix(getURL, "https://")
+				getURL = strings.TrimSuffix(getURL, ".git")
+				logger.WithField("url", getURL).Warn("Repository's go get URL")
+
+				out, err := runner.Run(context.Background(), &ci.Job{
+					Image: "golang:1.8.3",
+					Commands: []string{
+						`echo "\n\n==START_CI==\n"`,
+						`git config --global url."https://` + remoteIdentity.AccessToken + `:x-oauth-basic@github.com/".insteadOf "https://github.com/"`,
+						`go get "` + getURL + `"`,
+						`cd "$GOPATH/src/` + getURL + `"`,
+						`go test -v`,
+						`echo "\n==DONE_CI==\n"`,
+					},
+				})
+
+				if err != nil {
+					logger.WithError(err).Warn("Docker failed")
+					return
+				}
+
+				logger.WithField("out", out).Warn("Docker success")
+			}
+
 		default:
 			logger.WithFields(logrus.Fields{
 				"event":   event,
