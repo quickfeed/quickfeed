@@ -445,6 +445,7 @@ func (db *GormDB) GetCourse(cid uint64) (*models.Course, error) {
 	}
 	return &course, nil
 }
+
 // GetCourseByDirectoryID implements the Database interface
 func (db *GormDB) GetCourseByDirectoryID(did uint64) (*models.Course, error) {
 	var course models.Course
@@ -611,6 +612,59 @@ func (db *GormDB) GetRepository(rid uint64) (*models.Repository, error) {
 	}
 
 	return &repo, nil
+}
+
+// UpdateGroup updates a group
+func (db *GormDB) UpdateGroup(group *models.Group) error {
+	if group.CourseID == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	tx := db.conn.Begin()
+	var course uint64
+	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
+		ID: group.CourseID,
+	}).Count(&course).Error; err != nil {
+		return err
+	}
+	if course != 1 {
+		return gorm.ErrRecordNotFound
+	}
+	if err := tx.Model(&models.Group{}).Updates(group).Error; err != nil {
+		tx.Rollback()
+		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
+			return ErrDuplicateGroup
+		}
+		return err
+	}
+	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.ID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	var userids []uint64
+	for _, u := range group.Users {
+		userids = append(userids, u.ID)
+	}
+	query := tx.Model(&models.Enrollment{}).
+		Where(&models.Enrollment{
+			CourseID: group.CourseID,
+		}).
+		Where("user_id IN (?) AND status IN (?)", userids, []uint{models.Student, models.Teacher}).
+		Updates(&models.Enrollment{
+			GroupID: group.ID,
+		})
+
+	if query.Error != nil {
+		tx.Rollback()
+		return query.Error
+	}
+
+	if query.RowsAffected != int64(len(userids)) {
+		tx.Rollback()
+		return gorm.ErrRecordNotFound
+	}
+
+	tx.Commit()
+	return nil
 }
 
 // Close closes the gorm database.

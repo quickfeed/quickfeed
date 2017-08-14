@@ -118,7 +118,7 @@ export class StudentPage extends ViewPage {
         const course = await this.courseMan.getCourse(courseId);
         const curUser = this.userMan.getCurrentUser();
         if (course && curUser) {
-            const grp: ICourseGroup | null = await this.courseMan.getCourseByUserAndCourse(curUser.id, course.id);
+            const grp: ICourseGroup | null = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.id);
             if (grp) {
                 return <GroupInfo group={grp} course={course} />;
             } else {

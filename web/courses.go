@@ -719,41 +719,86 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// PatchGroup updates status of a group
-func PatchGroup(db database.Database) echo.HandlerFunc {
+// UpdateGroup update a group
+func UpdateGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := parseUint(c.Param("gid"))
+		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
 			return err
 		}
-		oldgrp, err := db.GetGroup(id)
+
+		if _, err := db.GetCourse(cid); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return echo.NewHTTPError(http.StatusNotFound, "course not found")
+			}
+			return err
+		}
+
+		gid, err := parseUint(c.Param("gid"))
+		if err != nil {
+			return err
+		}
+		oldgrp, err := db.GetGroup(gid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "group not found")
 			}
 			return err
 		}
-		var ngrp UpdateGroupRequest
-		if err := c.Bind(&ngrp); err != nil {
+
+		user := c.Get("user").(*models.User)
+		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
+		if err != nil {
 			return err
 		}
-		if ngrp.Status > models.Teacher {
+		if enrollment.Status != models.Teacher {
+			return echo.NewHTTPError(http.StatusForbidden, "only teacher can update a group")
+		}
+
+		var grp NewGroupRequest
+		if err := c.Bind(&grp); err != nil {
+			return err
+		}
+		if !grp.valid() {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+		users, err := db.GetUsers(grp.UserIDs...)
+		if err != nil {
+			return err
+		}
+		// check if provided user ids are valid
+		if len(users) != len(grp.UserIDs) {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		user := c.Get("user").(*models.User)
-		// TODO: This check should be performed in AccessControl.
-		if !user.IsAdmin {
-			// Ony Admin i.e Teacher can update status of a group
-			return c.NoContent(http.StatusForbidden)
+		// only enrolled user i.e accepted to the course can join a group
+		// prevent group override if a student is already in a group in this course
+		for _, user := range users {
+			enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
+			switch {
+			case err == gorm.ErrRecordNotFound:
+				return echo.NewHTTPError(http.StatusNotFound, "user is not enrolled to this course")
+			case err != nil:
+				return err
+			case enrollment.GroupID > 0 && enrollment.GroupID != oldgrp.ID:
+				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
+			case enrollment.Status < models.Student:
+				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
+			}
 		}
 
-		if err := db.UpdateGroupStatus(&models.Group{
-			ID:     oldgrp.ID,
-			Status: ngrp.Status,
+		if err := db.UpdateGroup(&models.Group{
+			ID:       oldgrp.ID,
+			Name:     grp.Name,
+			CourseID: cid,
+			Users:    users,
 		}); err != nil {
+			if err == database.ErrDuplicateGroup {
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			}
 			return err
 		}
+
 		return c.NoContent(http.StatusOK)
 	}
 }
@@ -776,29 +821,5 @@ func GetGroups(db database.Database) echo.HandlerFunc {
 			return err
 		}
 		return c.JSONPretty(http.StatusOK, groups, "\t")
-	}
-}
-
-// DeleteGroup deletes a pending or rejected group
-func DeleteGroup(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		gid, err := parseUint(c.Param("gid"))
-		if err != nil {
-			return err
-		}
-		group, err := db.GetGroup(gid)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return echo.NewHTTPError(http.StatusNotFound, "group not found")
-			}
-			return err
-		}
-		if group.Status > models.Rejected {
-			return echo.NewHTTPError(http.StatusForbidden, "accepted group cannot be deleted")
-		}
-		if err := db.DeleteGroup(gid); err != nil {
-			return nil
-		}
-		return c.NoContent(http.StatusOK)
 	}
 }

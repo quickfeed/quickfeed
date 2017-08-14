@@ -231,7 +231,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
+    public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
         throw new Error("Method not implemented");
     }
 

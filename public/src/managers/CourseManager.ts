@@ -42,7 +42,7 @@ export interface ICourseProvider {
     createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError>;
     getGroup(gid: number): Promise<ICourseGroup | null>;
     deleteGroup(groupId: number): Promise<boolean>;
-    getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
+    getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
     // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>>;
@@ -303,8 +303,8 @@ export class CourseManager {
         return await this.courseProvider.getCourseGroups(courseid);
     }
 
-    public async getCourseByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
-        return await this.courseProvider.getCourseByUserAndCourse(userid, courseid);
+    public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
+        return await this.courseProvider.getGroupByUserAndCourse(userid, courseid);
     }
 
     public async updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean> {
