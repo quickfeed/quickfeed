@@ -209,7 +209,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getGroup(gid: number): Promise<ICourseGroup | null> {
         const uri: string = "groups/" + gid;
         const result = await this.helper.get<ICourseGroup>(uri);
-        if (result.statusCode !== 302 || !result.data) {
+        if (result.statusCode !== 200 || !result.data) {
             this.handleError(result, "getGroup");
             return null;
         }
@@ -225,6 +225,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result, "deleteGroup");
         }
         return false;
+    }
+
+    public async updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError> {
+        const uri: string = "courses/" + courseId + "/groups/" + groupId;
+        const result = await this.helper.put<INewGroup, any>(uri, groupData);
+        if (result.statusCode !== 200) {
+            this.handleError(result, "updateGroup");
+            return this.parseError(result);
+        }
+        return JSON.parse(JSON.stringify(result.statusCode)) as IStatusCode;
     }
 
     // TODO change to use course id instead of getting all of them

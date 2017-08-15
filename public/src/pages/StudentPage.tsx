@@ -41,10 +41,10 @@ export class StudentPage extends ViewPage {
         this.navHelper.checkAuthentication = () => this.checkAuthentication();
 
         this.navHelper.registerFunction<any>("index", this.index);
-        this.navHelper.registerFunction<any>("course/{courseid:number}", this.course);
-        this.navHelper.registerFunction<any>("course/{courseid:number}/lab/{labid:number}", this.courseWithLab);
-        this.navHelper.registerFunction<any>("course/{courseid:number}/members", this.members);
-        this.navHelper.registerFunction<any>("course/{courseid:number}/{page}", this.courseMissing);
+        this.navHelper.registerFunction<any>("courses/{courseid:number}", this.course);
+        this.navHelper.registerFunction<any>("courses/{courseid:number}/lab/{labid:number}", this.courseWithLab);
+        this.navHelper.registerFunction<any>("courses/{courseid:number}/members", this.members);
+        this.navHelper.registerFunction<any>("courses/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
     }
 
@@ -151,19 +151,19 @@ export class StudentPage extends ViewPage {
                     allLinks.push(...labs.map((lab, ind) => {
                         return {
                             name: lab.assignment.name,
-                            uri: this.pagePath + "/course/" + course.course.id + "/lab/" + lab.assignment.id,
+                            uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
                         };
                     }));
                     allLinks.push({ name: "Group Labs" });
                     allLinks.push({ name: "Settings" });
                     allLinks.push({
-                        name: "Members", uri: this.pagePath + "/course/" + course.course.id + "/members",
+                        name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",
                     });
                     allLinks.push({
-                        name: "Course Info", uri: this.pagePath + "/course/" + course.course.id + "/info",
+                        name: "Course Info", uri: this.pagePath + "/courses/" + course.course.id + "/info",
                     });
                     return {
-                        item: { name: course.course.code, uri: this.pagePath + "/course/" + course.course.id },
+                        item: { name: course.course.code, uri: this.pagePath + "/courses/" + course.course.id },
                         children: allLinks,
                     };
                 });
@@ -230,6 +230,6 @@ export class StudentPage extends ViewPage {
     }
 
     private handleLabClick(courseId: number, labId: number): void {
-        this.navMan.navigateTo(this.pagePath + "/course/" + courseId + "/lab/" + labId);
+        this.navMan.navigateTo(this.pagePath + "/courses/" + courseId + "/lab/" + labId);
     }
 }

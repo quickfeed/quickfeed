@@ -33,9 +33,14 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
         if (this.props.rejectedGroups.length > 0) {
             rejectedGroups = this.createRejectedGroupView();
         }
+        let noGroupsWell;
+        if (!approvedGroups && !pendingGroups && !rejectedGroups) {
+            noGroupsWell = <p className="well">No groups to show!</p>;
+        }
         return (
             <div className="group-container">
                 <h1>{this.props.course.name}</h1>
+                {noGroupsWell}
                 {approvedGroups}
                 {pendingGroups}
                 {rejectedGroups}

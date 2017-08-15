@@ -43,6 +43,7 @@ export interface ICourseProvider {
     getGroup(gid: number): Promise<ICourseGroup | null>;
     deleteGroup(groupId: number): Promise<boolean>;
     getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
+    updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError>;
     // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>>;
@@ -293,6 +294,10 @@ export class CourseManager {
 
     public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError> {
         return await this.courseProvider.createGroup(groupData, courseId);
+    }
+
+    public async updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError> {
+        return await this.courseProvider.updateGroup(groupData, groupId, courseId);
     }
 
     /**

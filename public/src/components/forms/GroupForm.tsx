@@ -2,7 +2,10 @@ import * as React from "react";
 
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
-import { CourseUserState, ICourse, ICourseGroup, INewGroup, isError, IUser, IUserRelation } from "../../models";
+import {
+    CourseUserState, ICourse, ICourseGroup, IError,
+    INewGroup, isError, IStatusCode, IUser, IUserRelation,
+} from "../../models";
 
 import { Search } from "../../components";
 
@@ -27,19 +30,16 @@ interface IGroupState {
 class GroupForm extends React.Component<IGroupProp, IGroupState> {
     constructor(props: any) {
         super(props);
+        const currentUser = this.props.students.find((v) => v.user.id === this.props.curUser.id);
+        const as: IUserRelation[] = this.getAvailableStudents(currentUser);
+        const ss: IUserRelation[] = this.getSelectedStudents(currentUser);
         this.state = {
-            name: "",
-            students: this.props.students,
-            selectedStudents: [],
-            curUser: this.props.students.find((v) => v.user.id === this.props.curUser.id),
+            name: this.props.groupData ? this.props.groupData.name : "",
+            students: as,
+            selectedStudents: ss,
+            curUser: currentUser,
             errorFlash: null,
         };
-    }
-
-    public componentDidMount() {
-        if (this.state.curUser) {
-            this.handleAddToGroupOnClick(this.state.curUser);
-        }
     }
 
     public render() {
@@ -73,7 +73,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
 
         return (
             <div className="student-group-container">
-                <h1>Create a Group</h1>
+                <h1>{this.props.groupData ? "Edit Group" : "Create Group"}</h1>
                 {this.state.errorFlash}
                 <form className={this.props.className}
                     onSubmit={(e) => this.handleFormSubmit(e)}>
@@ -118,7 +118,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                         <div className="col-sm-offset-5 col-sm-2">
                             <button
                                 className="btn btn-primary active"
-                                type="submit">Create
+                                type="submit">{this.props.groupData ? "Update" : "Create"}
                             </button>
                         </div>
                     </div>
@@ -140,7 +140,9 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 name: this.state.name,
                 userids: this.state.selectedStudents.map((u, i) => u.user.id),
             };
-            const result = await this.props.courseMan.createGroup(formData, this.props.course.id);
+
+            const result = this.props.groupData ?
+                await this.updateGroup(formData, this.props.groupData.id) : await this.createGroup(formData);
             if (isError(result) && result.data) {
                 const errMsg = result.data.message;
                 let serverErrors: string[] = [];
@@ -154,10 +156,21 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                     errorFlash: flashErrors,
                 });
             } else {
-                const redirectTo: string = this.props.pagePath + "/course/" + this.props.course.id + "/members";
+                const redirectTo: string = this.props.groupData ?
+                    this.props.pagePath + "/courses/" + this.props.course.id + "/groups" :
+                    this.props.pagePath + "/courses/" + this.props.course.id + "/members";
+
                 this.props.navMan.navigateTo(redirectTo);
             }
         }
+    }
+
+    private async createGroup(formData: INewGroup): Promise<ICourseGroup | IError> {
+        return await this.props.courseMan.createGroup(formData, this.props.course.id);
+    }
+
+    private async updateGroup(formData: INewGroup, gid: number): Promise<IStatusCode | IError> {
+        return await this.props.courseMan.updateGroup(formData, gid, this.props.course.id);
     }
 
     private handleInputChange(e: React.FormEvent<any>) {
@@ -173,9 +186,12 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     private handleAddToGroupOnClick(student: IUserRelation) {
         const index = this.state.students.indexOf(student);
         if (index >= 0) {
-            const newSelectedArr = this.state.selectedStudents.concat(student);
+            const newSelectedArr = this.state.selectedStudents.slice();
+            newSelectedArr.push(student);
+            const newStudentArr = this.state.students.slice();
+            newStudentArr.splice(index, 1);
             this.setState({
-                students: this.state.students.filter((_, i) => i !== index),
+                students: newStudentArr, // this.state.students.filter((_, i) => i !== index),
                 selectedStudents: newSelectedArr,
             });
         }
@@ -242,6 +258,44 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     private isCurrentStudentSelected(student: IUserRelation): boolean {
         const index = this.state.selectedStudents.indexOf(student);
         return index >= 0;
+    }
+
+    private getSelectedStudents(curUser: IUserRelation | undefined): IUserRelation[] {
+        const ss: IUserRelation[] = [];
+        if (this.props.groupData) {
+            for (const user of this.props.groupData.users) {
+                const guser = this.props.students.find((v) => v.user.id === user.id);
+                if (guser) {
+                    ss.push(guser);
+                }
+            }
+
+        } else if (curUser) {
+            ss.push(curUser);
+        }
+        return ss;
+    }
+
+    private getAvailableStudents(curUser: IUserRelation | undefined): IUserRelation[] {
+        const as: IUserRelation[] = this.props.students.slice();
+        if (this.props.groupData) {
+            for (const user of this.props.groupData.users) {
+                const guser = as.find((v) => v.user.id === user.id);
+                if (guser) {
+                    const index = as.indexOf(guser);
+                    if (index >= 0) {
+                        as.splice(index, 1);
+                    }
+                }
+            }
+
+        } else if (curUser) {
+            const index = as.indexOf(curUser);
+            if (index >= 0) {
+                as.splice(index, 1);
+            }
+        }
+        return as;
     }
 }
 export { GroupForm };

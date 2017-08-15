@@ -14,7 +14,7 @@ export * from "./components/student/CoursesOverview";
 export * from "./components/student/CoursePanel";
 export * from "./components/student/SingleCourseOverview";
 export * from "./components/student/GroupInfo";
-export * from "./components/student/GroupForm";
+export * from "./components/forms/GroupForm";
 export * from "./components/bootstrap/BootstrapButton";
 export * from "./components/forms/CourseForm";
 export * from "./components/teacher/Results";
