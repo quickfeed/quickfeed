@@ -614,6 +614,16 @@ func (db *GormDB) GetRepository(rid uint64) (*models.Repository, error) {
 	return &repo, nil
 }
 
+// GetRepositoriesByDirectory implements the database interface
+func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*models.Repository, error) {
+
+	var repos []*models.Repository
+	if err := db.conn.Find(&repos, &models.Repository{DirectoryID: did}).Error; err != nil {
+		return nil, err
+	}
+	return repos, nil
+}
+
 // UpdateGroup updates a group
 func (db *GormDB) UpdateGroup(group *models.Group) error {
 	if group.CourseID == 0 {
