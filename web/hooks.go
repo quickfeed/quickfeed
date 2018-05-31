@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/autograde/aguis/ci"
@@ -49,7 +50,7 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 				// Here should we do a refresh of the courses since this would be a repo with a type
 				return
 			}
-			RunCI(logger, repo, db, runner, p.Repository.CloneURL, remoteIdentity)
+			RunCI(logger, repo, db, runner, p.Repository.CloneURL, p.HeadCommit.ID, remoteIdentity)
 
 		default:
 			logger.WithFields(logrus.Fields{
@@ -62,7 +63,7 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 }
 
 // RunCI Runs the ci from a RemoteIdentity
-func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, remoteIdentity *models.RemoteIdentity) {
+func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, commitHash string, remoteIdentity *models.RemoteIdentity) {
 
 	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
 	if err != nil {
@@ -91,14 +92,15 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 
 	logger.WithField("url", getURL).Warn("Repository's go get URL")
 	logger.WithField("url", getURLTest).Warn("Repository's go get test URL")
-
+	var result *models.CIResult
 	switch language {
 	case "java":
 		logger.Println("Starting java build")
 	case "go":
 		logger.Println("Starting go build")
+		var out string
 
-		out, err := runGoCI(runner, getURL, getURLTest, remoteIdentity.AccessToken)
+		result, out, err = runGoCI(runner, getURL, getURLTest, remoteIdentity.AccessToken)
 
 		if err != nil {
 			logger.WithError(err).Warn("Docker failed")
@@ -106,6 +108,35 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		}
 
 		logger.WithField("out", out).Warn("Docker success")
+	}
+	if result == nil {
+		logger.Error("Empty result object")
+		return
+	}
+	bi, err := json.Marshal(result.BuildInfo)
+	sc, err2 := json.Marshal(result.Scores)
+	if err != nil {
+		logger.WithError(err).Error("Problems with marshaling the build object")
+		return
+	}
+	if err2 != nil {
+		logger.WithError(err2).Error("Problems with marshaling the score object")
+		return
+	}
+	buildInfo := string(bi)
+	scores := string(sc)
+
+	err = db.CreateSubmission(&models.Submission{
+		AssignmentID: assignments[0].ID,
+		BuildInfo:    buildInfo,
+		CommitHash:   commitHash,
+		Score:        0,
+		ScoreObjects: scores,
+		UserID:       repo.UserID,
+	})
+	if err != nil {
+		logger.WithError(err).Error("Problems inserting the submission into the database")
+		return
 	}
 }
 
@@ -137,13 +168,13 @@ func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remote
 
 }
 
-func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string) (string, error) {
+func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string) (*models.CIResult, string, error) {
 	// getURL = strings.TrimPrefix(getURL, "https://")
 	// getURL = strings.TrimSuffix(getURL, ".git")
 	// getURL = strings.TrimPrefix(getURL, "https://")
 	// getURL = strings.TrimSuffix(getURL, ".git")
 
-	return runner.Run(context.Background(), &ci.Job{
+	out, err := runner.Run(context.Background(), &ci.Job{
 		Image: "golang:1.8.3",
 		Commands: []string{
 			`echo "\n\n==START_CI==\n"`,
@@ -165,6 +196,50 @@ func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string
 			`echo "\n==DONE_CI==\n"`,
 		},
 	})
+
+	if err != nil {
+		return nil, out, err
+	}
+	return &models.CIResult{
+		Scores: []*models.ScoreObject{
+			&models.ScoreObject{
+				Name:   "TestErrors",
+				Points: 5,
+				Score:  3,
+				Weight: 100,
+			},
+			&models.ScoreObject{
+				Name:   "TestFibonacci",
+				Points: 5,
+				Score:  3,
+				Weight: 100,
+			},
+			&models.ScoreObject{
+				Name:   "TestWriters",
+				Points: 5,
+				Score:  3,
+				Weight: 100,
+			},
+			&models.ScoreObject{
+				Name:   "TestRot13",
+				Points: 5,
+				Score:  3,
+				Weight: 100,
+			},
+			&models.ScoreObject{
+				Name:   "TestStringer",
+				Points: 5,
+				Score:  3,
+				Weight: 100,
+			},
+		},
+		BuildInfo: &models.BuildInfo{
+			BuildID:   1,
+			BuildDate: "TODAY",
+			BuildLog:  "Not yet implemented fully\n" + out,
+			ExecTime:  2,
+		},
+	}, out, nil
 }
 
 // GitlabHook handles events from Gitlab.
