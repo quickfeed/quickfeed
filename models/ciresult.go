@@ -18,3 +18,11 @@ type ScoreObject struct {
 	Points int    `json:"points"`
 	Weight int    `json:"weight"`
 }
+
+type CIOutput struct {
+	Secret   string
+	TestName string
+	Score    int
+	MaxScore int
+	Weight   int
+}

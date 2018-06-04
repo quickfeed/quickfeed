@@ -11,6 +11,10 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
 
     public render() {
         if (this.props.labInfo.latest) {
+            const latest = this.props.labInfo.latest;
+            console.log(latest.buildLog);
+            const buildLog = latest.buildLog.split("\n").map(x => <span>{x}<br /></span>);
+
             return (
                 <div className="col-md-9 col-sm-9 col-xs-12">
                     <div className="result-content" id="resultview">
@@ -18,24 +22,24 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                             <LabResult
                                 course_name={this.props.course.name}
                                 lab={this.props.labInfo.assignment.name}
-                                progress={this.props.labInfo.latest.score}
+                                progress={latest.score}
                             />
                             <LastBuild
-                                test_cases={this.props.labInfo.latest.testCases}
-                                score={this.props.labInfo.latest.score}
+                                test_cases={latest.testCases}
+                                score={latest.score}
                                 weight={100}
                             />
                             <LastBuildInfo
-                                pass_tests={this.props.labInfo.latest.passedTests}
-                                fail_tests={this.props.labInfo.latest.failedTests}
-                                exec_time={this.props.labInfo.latest.executetionTime}
-                                build_time={this.props.labInfo.latest.buildDate}
-                                build_id={this.props.labInfo.latest.buildId}
+                                pass_tests={latest.passedTests}
+                                fail_tests={latest.failedTests}
+                                exec_time={latest.executetionTime}
+                                build_time={latest.buildDate}
+                                build_id={latest.buildId}
                             />
                             <Row>
                                 <div className="col-lg-12">
                                     <div className="well">
-                                        <code id="logs">{this.props.labInfo.latest.buildLog}</code>
+                                        <code id="logs">{buildLog}</code>
                                     </div>
                                 </div>
                             </Row>

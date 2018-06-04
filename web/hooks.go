@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
@@ -80,7 +82,11 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		return
 	}
 
-	language := assignments[0].Language
+	selectedAssignment := assignments[0]
+
+	language := selectedAssignment.Language
+
+	logger.WithField("Assignemnt", selectedAssignment).Info("Found assignment")
 
 	testCloneURL, err := getTestRepoCloneURL(logger, db, remoteIdentity, repo)
 	if err != nil {
@@ -100,7 +106,7 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		logger.Println("Starting go build")
 		var out string
 
-		result, out, err = runGoCI(runner, getURL, getURLTest, remoteIdentity.AccessToken)
+		result, out, err = runGoCI(runner, getURL, getURLTest, remoteIdentity.AccessToken, selectedAssignment.Name)
 
 		if err != nil {
 			logger.WithError(err).Warn("Docker failed")
@@ -168,12 +174,12 @@ func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remote
 
 }
 
-func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string) (*models.CIResult, string, error) {
+func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string, assignmentName string) (*models.CIResult, string, error) {
 	// getURL = strings.TrimPrefix(getURL, "https://")
 	// getURL = strings.TrimSuffix(getURL, ".git")
 	// getURL = strings.TrimPrefix(getURL, "https://")
 	// getURL = strings.TrimSuffix(getURL, ".git")
-
+	startTime := time.Now()
 	out, err := runner.Run(context.Background(), &ci.Job{
 		Image: "golang:1.8.3",
 		Commands: []string{
@@ -191,53 +197,46 @@ func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string
 			`git clone ` + testURL + ` $TD`,
 			`cp -r $UD/* $MD`,
 			`cp -r $TD/* $MD`,
-			`cd merge`,
+			`cd $MD`,
+			`cd "` + assignmentName + `"`,
+			// `find`, // Could be readded for debugging the Internal of the CI files
+			`echo "Setup done"`,
 			`go test -v`,
 			`echo "\n==DONE_CI==\n"`,
 		},
 	})
+	endTime := time.Now()
 
 	if err != nil {
 		return nil, out, err
 	}
+	parts := strings.Split(out, "\n")
+	var scores []*models.ScoreObject
+	var filteredOutLines []string
+
+	for _, v := range parts {
+		if strings.Contains(v, "---|||---|||---|||---") {
+			score := &models.CIOutput{}
+			err := json.Unmarshal([]byte(v), score)
+			if err != nil {
+				return nil, out, err
+			}
+			scores = append(scores, &models.ScoreObject{Name: score.TestName, Points: score.MaxScore, Score: score.Score, Weight: score.Weight})
+		} else {
+			filteredOutLines = append(filteredOutLines, v)
+		}
+	}
+	filteredOut := strings.Join(filteredOutLines, "\n")
+	curDate := time.Now().Format("2006-01-02")
+	totalTimeName := endTime.UnixNano() - startTime.UnixNano()
+	totalms := totalTimeName / int64(time.Millisecond)
 	return &models.CIResult{
-		Scores: []*models.ScoreObject{
-			&models.ScoreObject{
-				Name:   "TestErrors",
-				Points: 5,
-				Score:  3,
-				Weight: 100,
-			},
-			&models.ScoreObject{
-				Name:   "TestFibonacci",
-				Points: 5,
-				Score:  3,
-				Weight: 100,
-			},
-			&models.ScoreObject{
-				Name:   "TestWriters",
-				Points: 5,
-				Score:  3,
-				Weight: 100,
-			},
-			&models.ScoreObject{
-				Name:   "TestRot13",
-				Points: 5,
-				Score:  3,
-				Weight: 100,
-			},
-			&models.ScoreObject{
-				Name:   "TestStringer",
-				Points: 5,
-				Score:  3,
-				Weight: 100,
-			},
-		},
+		Scores: scores,
 		BuildInfo: &models.BuildInfo{
 			BuildID:   1,
-			BuildDate: "TODAY",
-			BuildLog:  "Not yet implemented fully\n" + out,
-			ExecTime:  2,
+			BuildDate: curDate,
+			BuildLog:  "Not fully implemented\n" + filteredOut,
+			ExecTime:  int(totalms),
 		},
 	}, out, nil
 }
