@@ -17,7 +17,7 @@ class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
                     <h2>Latest build</h2>
                     <p id="passes">Number of passed tests:  {this.props.pass_tests}</p>
                     <p id="fails">Number of failed tests:  {this.props.fail_tests}</p>
-                    <p id="buildtime">Execution time:  {this.props.exec_time}</p>
+                    <p id="buildtime">Execution time:  {this.props.exec_time / 1000} s</p>
                     <p id="timedate">Build date:  {this.props.build_time.toString()}</p>
                     <p id="buildid">Build ID: {this.props.build_id}</p>
                 </div>

@@ -278,10 +278,19 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             e.buildDate = tempInfo.builddate;
             e.buildId = tempInfo.buildid;
             e.buildLog = tempInfo.buildlog;
-            e.executetionTime = tempInfo.exectime;
-            e.failedTests = 0;
-            e.passedTests = 1;
+            e.executetionTime = tempInfo.execTime;
             e.testCases = scoreObj;
+            e.failedTests = 0;
+            e.passedTests = 0;
+            e.testCases.forEach(x => {
+                if (x.points !== x.score) {
+                    e.failedTests++;
+                } else {
+                    e.passedTests++;
+                }
+            })
+            
+            
             return e.id;
         });
     }

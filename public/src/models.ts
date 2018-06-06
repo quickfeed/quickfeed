@@ -92,7 +92,7 @@ export interface IBuildInfo {
     buildid: number;
     builddate: Date;
     buildlog: string;
-    exectime: number;
+    execTime: number;
 }
 
 export interface ICourseWithEnrollStatus extends ICourse {
