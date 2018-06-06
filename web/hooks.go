@@ -121,6 +121,14 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 	}
 	bi, err := json.Marshal(result.BuildInfo)
 	sc, err2 := json.Marshal(result.Scores)
+
+	currentScore := float64(0.0)
+	maxScore := float64(0.0)
+	for _, v := range result.Scores {
+		percent := float64(v.Score) / float64(v.Points)
+		maxScore += float64(v.Weight)
+		currentScore += percent * float64(v.Weight)
+	}
 	if err != nil {
 		logger.WithError(err).Error("Problems with marshaling the build object")
 		return
@@ -136,7 +144,7 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		AssignmentID: assignments[0].ID,
 		BuildInfo:    buildInfo,
 		CommitHash:   commitHash,
-		Score:        0,
+		Score:        uint8(currentScore / maxScore * 100),
 		ScoreObjects: scores,
 		UserID:       repo.UserID,
 	})
