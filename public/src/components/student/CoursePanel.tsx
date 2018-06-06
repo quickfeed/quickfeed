@@ -14,7 +14,7 @@ interface IPanelProps {
 class CoursePanel extends React.Component<IPanelProps, any> {
 
     public render() {
-        const pathPrefix: string = "app/student/course/" + this.props.course.id + "/lab/";
+        const pathPrefix: string = "app/student/courses/" + this.props.course.id + "/lab/";
 
         return (
             <div className="col-lg-3 col-md-6 col-sm-6">
