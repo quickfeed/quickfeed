@@ -44,3 +44,18 @@ To ensure that webpack bundle files are updated when you pull in changes or reba
    webpack
    ```
 If you don't want to run `webpack` to create the bundle files on git pull/rebase, you will need to manually run `webpack` in the `public` folder.
+
+
+## Signing in to github and gitlab with teacher priviliges
+
+If autograder has not been authenticated with the provider yet, there is to ways of doing in the first time. The first method is as a student, and only require the user to use the normal sing in button for the provider. If the user is a teacher, and wants to be able to create courses, extra proviliges in the APIs are required, and the url:
+
+```
+https://{your_domain}/auth/{provider}-teacher
+```
+
+where provider could be `github` or `gitlab`. As an example:
+
+```
+https://example.com/auth/github-teacher
+```
