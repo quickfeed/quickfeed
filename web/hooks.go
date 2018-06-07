@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/autograde/aguis/scm"
+
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
@@ -49,7 +51,20 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 
 			if repo.Type > 0 {
 				logger.Info("Should refresh database course informaton")
-				// Here should we do a refresh of the courses since this would be a repo with a type
+				course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
+				if err != nil {
+					logger.WithError(err).Warn("Failed to get course from database")
+					return
+				}
+				s, err := scm.NewSCMClient("github", remoteIdentity.AccessToken)
+				if err != nil {
+					logger.WithError(err).Warn("Failed to create SCM Client")
+					return
+				}
+				_, err = RefreshCourseInformation(context.Background(), logger, db, course, remoteIdentity, s)
+				if err != nil {
+					logger.WithError(err).Error("Problem with refreshing course information")
+				}
 				return
 			}
 			RunCI(logger, repo, db, runner, p.Repository.CloneURL, p.HeadCommit.ID, remoteIdentity)

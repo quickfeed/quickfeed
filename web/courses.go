@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/autograde/aguis/ci"
@@ -384,20 +385,22 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 // RefreshCourse refreshes the information to a course
 func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, err := parseUint(c.Param("cid"))
+
+		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
 			return err
 		}
 
-		user := c.Get("user").(*models.User)
-
-		course, err := db.GetCourse(id)
+		course, err := db.GetCourse(cid)
 		if err != nil {
 			return err
 		}
+
 		if c.Get(course.Provider) == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
 		}
+
+		user := c.Get("user").(*models.User)
 
 		remoteID, err := getRemoteIDFor(user, course.Provider)
 		if err != nil {
@@ -406,72 +409,97 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 
 		s := c.Get(course.Provider).(scm.SCM)
 
-		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
-		defer cancel()
+		assignments, err := RefreshCourseInformation(c.Request().Context(), logger, db, course, remoteID, s)
 
-		directory, err := s.GetDirectory(ctx, course.DirectoryID)
 		if err != nil {
 			return err
-		}
-
-		path, err := s.CreateCloneURL(ctx, &scm.CreateClonePathOptions{
-			Directory:  directory.Path,
-			Repository: "tests.git",
-			UserToken:  remoteID.AccessToken,
-		})
-		if err != nil {
-			return err
-		}
-
-		runner := ci.Local{}
-
-		// This does not work that well on Windows because the path should be
-		// /mnt/c/Users/{user}/AppData/Local/Temp
-		// cloneDirectory := filepath.Join(os.TempDir(), "agclonepath")
-		cloneDirectory := "agclonepath"
-
-		// Clone all tests from tests repositry
-		_, err = runner.Run(c.Request().Context(), &ci.Job{
-			Commands: []string{
-				"mkdir " + cloneDirectory,
-				"cd " + cloneDirectory,
-				"git clone " + path,
-			},
-		})
-		if err != nil {
-			runner.Run(c.Request().Context(), &ci.Job{
-				Commands: []string{
-					"yes | rm -r " + cloneDirectory,
-				},
-			})
-			return err
-		}
-
-		// Parse assignments in the test directory
-		assignments, err := yamlparser.Parse("agclonepath/tests")
-		if err != nil {
-			return err
-		}
-
-		// Cleanup downloaded
-		runner.Run(c.Request().Context(), &ci.Job{
-			Commands: []string{
-				"yes | rm -r " + cloneDirectory,
-			},
-		})
-
-		for _, v := range assignments {
-			assignment, err := createAssignment(&v, course)
-			if err != nil {
-				return err
-			}
-			if err := db.CreateAssignment(assignment); err != nil {
-				return err
-			}
 		}
 
 		return c.JSONPretty(http.StatusOK, assignments, "\t")
 	}
+}
+
+var runLock sync.Mutex
+
+// RefreshCourseInformation refreshes the course information on a single course
+func RefreshCourseInformation(ctx context.Context, logger logrus.FieldLogger, db database.Database, course *models.Course, remoteID *models.RemoteIdentity, s scm.SCM) ([]yamlparser.NewAssignmentRequest, error) {
+	// Have to lock this, so no one tries to refreshes the courses simultanously, since that would result
+	// in different routines competing for storage resoruces.
+	runLock.Lock()
+	defer runLock.Unlock()
+
+	ctxGithub, cancel := context.WithTimeout(ctx, MaxWait)
+	defer cancel()
+
+	directory, err := s.GetDirectory(ctxGithub, course.DirectoryID)
+	if err != nil {
+		logger.Error("Problem fetching Directory")
+		return nil, err
+	}
+
+	path, err := s.CreateCloneURL(ctxGithub, &scm.CreateClonePathOptions{
+		Directory:  directory.Path,
+		Repository: "tests.git",
+		UserToken:  remoteID.AccessToken,
+	})
+	if err != nil {
+		logger.Error("Problem Creating clone URL")
+		return nil, err
+	}
+
+	runner := ci.Local{}
+
+	// This does not work that well on Windows because the path should be
+	// /mnt/c/Users/{user}/AppData/Local/Temp
+	// cloneDirectory := filepath.Join(os.TempDir(), "agclonepath")
+	cloneDirectory := "agclonepath"
+
+	// Clone all tests from tests repositry
+	job := &ci.Job{
+		Commands: []string{
+			"mkdir " + cloneDirectory,
+			"cd " + cloneDirectory,
+			"git clone " + path,
+		},
+	}
+	logger.WithField("job", job).Info("Running Job")
+	_, err = runner.Run(ctx, job)
+	if err != nil {
+		logger.Error("Problem Running CI runner")
+		runner.Run(ctx, &ci.Job{
+			Commands: []string{
+				"yes | rm -r " + cloneDirectory,
+			},
+		})
+		return nil, err
+	}
+
+	// Parse assignments in the test directory
+	assignments, err := yamlparser.Parse("agclonepath/tests")
+	if err != nil {
+		logger.Error("Problem getting assignments")
+		return nil, err
+	}
+
+	// Cleanup downloaded
+	runner.Run(ctx, &ci.Job{
+		Commands: []string{
+			"yes | rm -r " + cloneDirectory,
+		},
+	})
+
+	for _, v := range assignments {
+		assignment, err := createAssignment(&v, course)
+		if err != nil {
+			logger.Error("Problem createing assignment")
+			return nil, err
+		}
+		if err := db.CreateAssignment(assignment); err != nil {
+			logger.Error("Problem adding assignment to DB")
+			return nil, err
+		}
+	}
+	return assignments, nil
 }
 
 func getRemoteIDFor(user *models.User, provider string) (*models.RemoteIdentity, error) {
