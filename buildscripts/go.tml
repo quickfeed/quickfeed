@@ -9,12 +9,12 @@ UD="user-dir"  # User Dir
 TD="test-dir"  # Test Dir
 rm -rf $MD
 mkdir $MD
-git clone  + {{ .GetURL }} +  $UD
-git clone  + {{ .TestURL }} +  $TD
+git clone {{ .GetURL }} $UD
+git clone {{ .TestURL }} $TD
 cp -r $UD/* $MD
 cp -r $TD/* $MD
 cd $MD
-cd {{ .AssignmentName }}
+cd "{{ .AssignmentName }}"
 # find # Could be readded for debugging the Internal of the CI files
 echo "Setup done"
 go test -v
