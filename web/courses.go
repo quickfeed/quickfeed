@@ -117,14 +117,6 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// Default repository names.
-const (
-	InfoRepo       = "course-info"
-	AssignmentRepo = "assignments"
-	TestsRepo      = "tests"
-	SolutionsRepo  = "solutions"
-)
-
 // BaseHookOptions contains options shared among all webhooks.
 type BaseHookOptions struct {
 	BaseURL string
