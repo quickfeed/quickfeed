@@ -26,3 +26,10 @@ type CIOutput struct {
 	MaxScore int
 	Weight   int
 }
+
+type AssignmentCIInfo struct {
+	AccessToken    string
+	GetURL         string
+	TestURL        string
+	AssignmentName string
+}
