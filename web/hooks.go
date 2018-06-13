@@ -1,9 +1,13 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"html/template"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -113,23 +117,23 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 
 	logger.WithField("url", getURL).Warn("Repository's go get URL")
 	logger.WithField("url", getURLTest).Warn("Repository's go get test URL")
-	var result *models.CIResult
-	switch language {
-	case "java":
-		logger.Println("Starting java build")
-	case "go":
-		logger.Println("Starting go build")
-		var out string
 
-		result, out, err = runGoCI(runner, getURL, getURLTest, remoteIdentity.AccessToken, selectedAssignment.Name)
-
-		if err != nil {
-			logger.WithError(err).Warn("Docker failed")
-			return
-		}
-
-		logger.WithField("out", out).Warn("Docker success")
+	ciInfo := models.AssignmentCIInfo{
+		AccessToken:    remoteIdentity.AccessToken,
+		AssignmentName: selectedAssignment.Name,
+		GetURL:         getURL,
+		TestURL:        getURLTest,
 	}
+
+	result, out, err := runCIFromTML(runner, language, ciInfo)
+
+	if err != nil {
+		logger.WithError(err).Warn("Docker failed")
+		return
+	}
+
+	logger.WithField("out", out).Warn("Docker success")
+
 	if result == nil {
 		logger.Error("Empty result object")
 		return
@@ -195,6 +199,84 @@ func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remote
 	}
 	return *testRepos.CloneURL, nil
 
+}
+
+func runCIFromTML(runner ci.Runner, language string, ciInfo models.AssignmentCIInfo) (*models.CIResult, string, error) {
+	path := "buildscripts/" + language + ".tml"
+	if _, err := os.Stat(path); err != nil {
+		return nil, "", err
+	}
+	t, err := template.ParseFiles(path)
+	if err != nil {
+		return nil, "", err
+	}
+
+	buffer := bytes.NewBufferString("")
+
+	t.Execute(buffer, ciInfo)
+
+	lines := strings.Split(buffer.String(), "\n")
+	restData, _, image := extractDockerImageInformation(lines)
+
+	fmt.Println("Image:", *image)
+	fmt.Println("Data:", restData)
+
+	fmt.Println(strings.Join(restData, "\n"))
+
+	if image == nil {
+		return nil, "", fmt.Errorf("Image not specefied in template file")
+	}
+	startTime := time.Now()
+	out, err := runner.Run(context.Background(), &ci.Job{
+		Image:    *image,
+		Commands: restData,
+	})
+	endTime := time.Now()
+
+	if err != nil {
+		return nil, out, err
+	}
+	parts := strings.Split(out, "\n")
+	var scores []*models.ScoreObject
+	var filteredOutLines []string
+
+	for _, v := range parts {
+		if strings.Contains(v, "---|||---|||---|||---") {
+			score := &models.CIOutput{}
+			err := json.Unmarshal([]byte(v), score)
+			if err != nil {
+				return nil, out, err
+			}
+			scores = append(scores, &models.ScoreObject{Name: score.TestName, Points: score.MaxScore, Score: score.Score, Weight: score.Weight})
+		} else {
+			filteredOutLines = append(filteredOutLines, v)
+		}
+	}
+	filteredOut := strings.Join(filteredOutLines, "\n")
+	curDate := time.Now().Format("2006-01-02")
+	totalTimeName := endTime.UnixNano() - startTime.UnixNano()
+	totalms := totalTimeName / int64(time.Millisecond)
+	return &models.CIResult{
+		Scores: scores,
+		BuildInfo: &models.BuildInfo{
+			BuildID:   1,
+			BuildDate: curDate,
+			BuildLog:  filteredOut,
+			ExecTime:  int(totalms),
+		},
+	}, out, nil
+}
+
+func extractDockerImageInformation(lines []string) (data []string, container *string, image *string) {
+	if len(lines) > 0 && strings.Index(lines[0], "#!") == 0 {
+		firstLine := lines[0]
+		rest := lines[1:]
+		parts := strings.Split(firstLine, "/")
+		if len(parts) > 2 && parts[1] == "docker" {
+			return rest, &parts[1], &parts[2]
+		}
+	}
+	return lines, nil, nil
 }
 
 func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string, assignmentName string) (*models.CIResult, string, error) {
