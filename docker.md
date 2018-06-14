@@ -9,12 +9,22 @@ First check that the docker group exists
 ```
 cat /etc/group | grep docker
 ```
-
+This command can also be used to check which users are in that particular group.
+### Missing docker group
 If it does not exist, add it manualy with the command 
 ```
 sudo groupadd docker
 ```
+After this command is executed please restart your machine or restart the docker daemon with the commands:
 
+```
+sudo systemctl restart docker.service
+```
+or 
+```
+sudo service docker restart
+```
+### Docker group exists
 If it does add the user that should be running docker to this group with the given command
 
 ```
