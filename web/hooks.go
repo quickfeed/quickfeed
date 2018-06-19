@@ -125,7 +125,7 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		TestURL:        getURLTest,
 	}
 
-	result, out, err := runCIFromTML(runner, language, ciInfo)
+	result, out, err := runCIFromTMPL(runner, language, ciInfo)
 
 	if err != nil {
 		logger.WithError(err).Warn("Docker failed")
@@ -201,8 +201,8 @@ func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remote
 
 }
 
-func runCIFromTML(runner ci.Runner, language string, ciInfo models.AssignmentCIInfo) (*models.CIResult, string, error) {
-	path := "buildscripts/" + language + ".tml"
+func runCIFromTMPL(runner ci.Runner, language string, ciInfo models.AssignmentCIInfo) (*models.CIResult, string, error) {
+	path := "buildscripts/" + language + ".tmpl"
 	if _, err := os.Stat(path); err != nil {
 		return nil, "", err
 	}
@@ -216,7 +216,7 @@ func runCIFromTML(runner ci.Runner, language string, ciInfo models.AssignmentCII
 	t.Execute(buffer, ciInfo)
 
 	lines := strings.Split(buffer.String(), "\n")
-	restData, _, image := extractDockerImageInformation(lines)
+	restData, image := extractDockerImageInformation(lines)
 
 	fmt.Println("Image:", *image)
 	fmt.Println("Data:", restData)
@@ -226,6 +226,7 @@ func runCIFromTML(runner ci.Runner, language string, ciInfo models.AssignmentCII
 	if image == nil {
 		return nil, "", fmt.Errorf("Image not specefied in template file")
 	}
+
 	startTime := time.Now()
 	out, err := runner.Run(context.Background(), &ci.Job{
 		Image:    *image,
@@ -236,23 +237,12 @@ func runCIFromTML(runner ci.Runner, language string, ciInfo models.AssignmentCII
 	if err != nil {
 		return nil, out, err
 	}
-	parts := strings.Split(out, "\n")
-	var scores []*models.ScoreObject
-	var filteredOutLines []string
 
-	for _, v := range parts {
-		if strings.Contains(v, "---|||---|||---|||---") {
-			score := &models.CIOutput{}
-			err := json.Unmarshal([]byte(v), score)
-			if err != nil {
-				return nil, out, err
-			}
-			scores = append(scores, &models.ScoreObject{Name: score.TestName, Points: score.MaxScore, Score: score.Score, Weight: score.Weight})
-		} else {
-			filteredOutLines = append(filteredOutLines, v)
-		}
+	scores, filteredOut, err := parseCIOutput(out)
+	if err != nil {
+		return nil, out, err
 	}
-	filteredOut := strings.Join(filteredOutLines, "\n")
+
 	curDate := time.Now().Format("2006-01-02")
 	totalTimeName := endTime.UnixNano() - startTime.UnixNano()
 	totalms := totalTimeName / int64(time.Millisecond)
@@ -267,54 +257,7 @@ func runCIFromTML(runner ci.Runner, language string, ciInfo models.AssignmentCII
 	}, out, nil
 }
 
-func extractDockerImageInformation(lines []string) (data []string, container *string, image *string) {
-	if len(lines) > 0 && strings.Index(lines[0], "#!") == 0 {
-		firstLine := lines[0]
-		rest := lines[1:]
-		parts := strings.Split(firstLine, "/")
-		if len(parts) > 2 && parts[1] == "docker" {
-			return rest, &parts[1], &parts[2]
-		}
-	}
-	return lines, nil, nil
-}
-
-func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string, assignmentName string) (*models.CIResult, string, error) {
-	// getURL = strings.TrimPrefix(getURL, "https://")
-	// getURL = strings.TrimSuffix(getURL, ".git")
-	// getURL = strings.TrimPrefix(getURL, "https://")
-	// getURL = strings.TrimSuffix(getURL, ".git")
-	startTime := time.Now()
-	out, err := runner.Run(context.Background(), &ci.Job{
-		Image: "golang:1.8.3",
-		Commands: []string{
-			`echo "\n\n==START_CI==\n"`,
-			`git config --global url."https://` + accessToken + `:x-oauth-basic@github.com/".insteadOf "https://github.com/"`,
-			//`go get "` + getURL + `"`,
-			//`cd "$GOPATH/src/` + getURL + `"`,
-			//`go test -v`,
-			`MD="merge"     # Merged Dir`,
-			`UD="user-dir"  # User Dir`,
-			`TD="test-dir"  # Test Dir`,
-			`rm -rf $MD`,
-			`mkdir $MD`,
-			`git clone ` + getURL + ` $UD`,
-			`git clone ` + testURL + ` $TD`,
-			`cp -r $UD/* $MD`,
-			`cp -r $TD/* $MD`,
-			`cd $MD`,
-			`cd "` + assignmentName + `"`,
-			// `find`, // Could be readded for debugging the Internal of the CI files
-			`echo "Setup done"`,
-			`go test -v`,
-			`echo "\n==DONE_CI==\n"`,
-		},
-	})
-	endTime := time.Now()
-
-	if err != nil {
-		return nil, out, err
-	}
+func parseCIOutput(out string) ([]*models.ScoreObject, string, error) {
 	parts := strings.Split(out, "\n")
 	var scores []*models.ScoreObject
 	var filteredOutLines []string
@@ -332,18 +275,20 @@ func runGoCI(runner ci.Runner, getURL string, testURL string, accessToken string
 		}
 	}
 	filteredOut := strings.Join(filteredOutLines, "\n")
-	curDate := time.Now().Format("2006-01-02")
-	totalTimeName := endTime.UnixNano() - startTime.UnixNano()
-	totalms := totalTimeName / int64(time.Millisecond)
-	return &models.CIResult{
-		Scores: scores,
-		BuildInfo: &models.BuildInfo{
-			BuildID:   1,
-			BuildDate: curDate,
-			BuildLog:  "Not fully implemented\n" + filteredOut,
-			ExecTime:  int(totalms),
-		},
-	}, out, nil
+	return scores, filteredOut, nil
+}
+
+func extractDockerImageInformation(lines []string) (data []string, image *string) {
+	if len(lines) > 0 && strings.Index(lines[0], "#image") == 0 {
+		firstLine := lines[0]
+		rest := lines[1:]
+		parts := strings.Split(firstLine, "/")
+		if len(parts) > 1 {
+
+			return rest, &parts[1]
+		}
+	}
+	return lines, nil
 }
 
 // GitlabHook handles events from Gitlab.
