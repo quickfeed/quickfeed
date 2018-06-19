@@ -155,23 +155,47 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) error {
+func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
 	t, _, err := s.client.Organizations.CreateTeam(ctx, opt.Directory.Path, &github.Team{
 		Name: &opt.TeamName,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, user := range opt.Users {
 		_, _, err = s.client.Organizations.AddTeamMembership(ctx, t.GetID(), user, nil)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+	return &Team{
+		ID:   uint64(t.GetID()),
+		Name: t.GetName(),
+		URL:  t.GetURL(),
+	}, nil
 }
 
 // CreateCloneURL implements the SCM interface.
 func (s *GithubSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
 	return "https://" + opt.UserToken + "@github.com/" + opt.Directory + "/" + opt.Repository, nil
+}
+
+// AddTeamRepo implements the SCM interface.
+func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
+	_, err := s.client.Organizations.AddTeamRepo(ctx, int(opt.TeamID), opt.Owner, opt.Repo, &github.OrganizationAddTeamRepoOptions{
+		Permission: "push", // This make sure that users can pull and push
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetUserNameByID implements the SCM interface.
+func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
+	user, _, err := s.client.Users.GetByID(ctx, int(remoteID))
+	if err != nil {
+		return "", err
+	}
+	return user.GetLogin(), nil
 }

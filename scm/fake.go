@@ -104,12 +104,22 @@ func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error 
 }
 
 // CreateTeam implements the SCM interface.
-func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) error {
+func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
-	return nil
+	return nil, nil
 }
 
 // CreateCloneURL implements the SCM interface.
 func (s *FakeSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
+	return "", nil
+}
+
+// AddTeamRepo implements the SCM interface.
+func (s *FakeSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
+	return nil
+}
+
+// GetUserNameByID implements the SCM interface.
+func (s *FakeSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
 	return "", nil
 }

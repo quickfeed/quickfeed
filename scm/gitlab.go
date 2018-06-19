@@ -144,9 +144,20 @@ func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) error {
+func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
+// AddTeamRepo implements the SCM interface.
+func (s *GitlabSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	// TODO no implementation provided yet
 	return nil
+}
+
+// GetUserNameByID implements the SCM interface.
+func (s *GitlabSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
+	return "", nil
 }
 
 // CreateCloneURL implements the SCM interface.
