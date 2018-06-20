@@ -8,8 +8,11 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
+
+	"github.com/jinzhu/gorm"
 
 	"github.com/autograde/aguis/scm"
 
@@ -83,6 +86,27 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 	}
 }
 
+func getLatestAssignment(db database.Database, cid uint64, uid uint64) (*models.Assignment, error) {
+	assignments, err := db.GetAssignmentsByCourse(cid)
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(assignments, func(i, j int) bool {
+		return assignments[i].Order < assignments[j].Order
+	})
+	for _, v := range assignments {
+		fmt.Println(*v)
+		sub, err := db.GetSubmissionForUser(v.ID, uid)
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		if sub == nil || sub.Approved == false {
+			return v, nil
+		}
+	}
+	return nil, nil
+}
+
 // RunCI Runs the ci from a RemoteIdentity
 func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, commitHash string, remoteIdentity *models.RemoteIdentity) {
 
@@ -101,7 +125,12 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		return
 	}
 
-	selectedAssignment := assignments[0]
+	//selectedAssignment := assignments[0]
+	selectedAssignment, err := getLatestAssignment(db, course.ID, repo.UserID)
+	if err != nil {
+		logger.WithError(err).Warn("Failed to get course from database")
+		return
+	}
 
 	language := selectedAssignment.Language
 
@@ -160,7 +189,7 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 	scores := string(sc)
 
 	err = db.CreateSubmission(&models.Submission{
-		AssignmentID: assignments[0].ID,
+		AssignmentID: selectedAssignment.ID,
 		BuildInfo:    buildInfo,
 		CommitHash:   commitHash,
 		Score:        uint8(currentScore / maxScore * 100),

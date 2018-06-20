@@ -24,4 +24,5 @@ type Submission struct {
 	ScoreObjects string `json:"scoreobjects" sql:"type:text"`
 	BuildInfo    string `json:"buildinfo" sql:"type:text"`
 	CommitHash   string `json:"commithash"`
+	Approved     bool   `json:"approved"`
 }
