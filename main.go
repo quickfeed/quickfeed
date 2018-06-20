@@ -56,6 +56,8 @@ func main() {
 		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
 		public   = flag.String("http.public", "public", "directory to server static files from")
 
+		buildscritps = flag.String("script.path", "buildscripts", "Directory with docker build scripts")
+
 		dbFile = flag.String("database.file", tempFile("ag.db"), "database file")
 
 		baseURL = flag.String("service.url", "localhost", "service base url")
@@ -181,7 +183,7 @@ func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, db database.Datab
 
 	ghHook := whgithub.New(&whgithub.Config{Secret: secret})
 	if enabled["github"] {
-		ghHook.RegisterEvents(web.GithubHook(logger, db, &docker), whgithub.PushEvent)
+		ghHook.RegisterEvents(web.GithubHook(logger, db, &docker, buildscripts), whgithub.PushEvent)
 	}
 	glHook := whgitlab.New(&whgitlab.Config{Secret: secret})
 	if enabled["gitlab"] {

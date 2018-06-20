@@ -32,4 +32,6 @@ type AssignmentCIInfo struct {
 	GetURL         string
 	TestURL        string
 	AssignmentName string
+	RawGetURL      string
+	RawTestURL     string
 }

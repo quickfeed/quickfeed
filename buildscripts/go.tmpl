@@ -9,13 +9,14 @@ UD="user-dir"  # User Dir
 TD="test-dir"  # Test Dir
 rm -rf $MD
 mkdir $MD
-git clone {{ .GetURL }} $UD
-git clone {{ .TestURL }} $TD
-cp -r $UD/* $MD
-cp -r $TD/* $MD
-cd $MD
+get get {{ .RawGetURL }}
+get get {{ .RawTestURL }}
+rm $(find $GOHOME/src/{{ .RawGetURL }}/ | grep _ag_test.go)
+cp -r $GOHOME/src/{{ .RawTestURL }}/* $GOHOME/src/{{ .RawGetURL }}/
+cd $GOHOME/src/{{ .RawGetURL }}/
 cd "{{ .AssignmentName }}"
 # find # Could be readded for debugging the Internal of the CI files
 echo "Setup done"
-go test -v
+#go test -v
+go test -v $(find | grep _ag_test.go)
 echo "\n==DONE_CI==\n"

@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -30,7 +31,7 @@ import (
 )
 
 // GithubHook handles events from GitHub.
-func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runner) webhooks.ProcessPayloadFunc {
+func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runner, buildscripts string) webhooks.ProcessPayloadFunc {
 	return func(payload interface{}, header webhooks.Header) {
 		h := http.Header(header)
 		event := github.Event(h.Get("X-GitHub-Event"))
@@ -74,7 +75,7 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 				}
 				return
 			}
-			RunCI(logger, repo, db, runner, p.Repository.CloneURL, p.HeadCommit.ID, remoteIdentity)
+			RunCI(logger, repo, db, runner, p.Repository.CloneURL, p.HeadCommit.ID, remoteIdentity, buildscripts)
 
 		default:
 			logger.WithFields(logrus.Fields{
@@ -108,7 +109,7 @@ func getLatestAssignment(db database.Database, cid uint64, uid uint64) (*models.
 }
 
 // RunCI Runs the ci from a RemoteIdentity
-func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, commitHash string, remoteIdentity *models.RemoteIdentity) {
+func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, commitHash string, remoteIdentity *models.RemoteIdentity, buildscripts string) {
 
 	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
 	if err != nil {
@@ -152,9 +153,11 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		AssignmentName: selectedAssignment.Name,
 		GetURL:         getURL,
 		TestURL:        getURLTest,
+		RawGetURL:      strings.TrimPrefix(strings.TrimSuffix(getURL, ".git"), "https://"),
+		RawTestURL:     strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
 	}
 
-	result, out, err := runCIFromTMPL(runner, language, ciInfo)
+	result, out, err := runCIFromTMPL(runner, language, ciInfo, buildscripts)
 
 	if err != nil {
 		logger.WithError(err).Warn("Docker failed")
@@ -230,12 +233,12 @@ func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remote
 
 }
 
-func runCIFromTMPL(runner ci.Runner, language string, ciInfo models.AssignmentCIInfo) (*models.CIResult, string, error) {
-	path := "buildscripts/" + language + ".tmpl"
-	if _, err := os.Stat(path); err != nil {
+func runCIFromTMPL(runner ci.Runner, language string, ciInfo models.AssignmentCIInfo, buildscripts string) (*models.CIResult, string, error) {
+	bPath := path.Join(buildscripts, language+".tmpl")
+	if _, err := os.Stat(bPath); err != nil {
 		return nil, "", err
 	}
-	t, err := template.ParseFiles(path)
+	t, err := template.ParseFiles(bPath)
 	if err != nil {
 		return nil, "", err
 	}
