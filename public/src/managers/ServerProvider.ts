@@ -282,6 +282,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             e.testCases = scoreObj;
             e.failedTests = 0;
             e.passedTests = 0;
+            if (e.testCases == null) e.testCases = [];
             e.testCases.forEach(x => {
                 if (x.points !== x.score) {
                     e.failedTests++;
@@ -289,6 +290,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                     e.passedTests++;
                 }
             })
+            
+            
             
             
             return e.id;
