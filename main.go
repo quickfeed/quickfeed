@@ -93,7 +93,7 @@ func main() {
 	gothic.Store = store
 	e := newServer(l, store)
 	enabled := enableProviders(l, *baseURL, *fake)
-	registerWebhooks(l, e, db, bh.Secret, enabled)
+	registerWebhooks(l, e, db, bh.Secret, enabled, buildscripts)
 	registerAuth(e, db)
 	registerAPI(l, e, db, &bh)
 	registerFrontend(e, entryPoint, *public)
@@ -173,7 +173,7 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 	return enabled
 }
 
-func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, db database.Database, secret string, enabled map[string]bool) {
+func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, db database.Database, secret string, enabled map[string]bool, buildscripts *string) {
 	webhooks.DefaultLog = web.WebhookLogger{FieldLogger: logger}
 
 	docker := ci.Docker{
@@ -183,7 +183,7 @@ func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, db database.Datab
 
 	ghHook := whgithub.New(&whgithub.Config{Secret: secret})
 	if enabled["github"] {
-		ghHook.RegisterEvents(web.GithubHook(logger, db, &docker, buildscripts), whgithub.PushEvent)
+		ghHook.RegisterEvents(web.GithubHook(logger, db, &docker, *buildscripts), whgithub.PushEvent)
 	}
 	glHook := whgitlab.New(&whgitlab.Config{Secret: secret})
 	if enabled["gitlab"] {
