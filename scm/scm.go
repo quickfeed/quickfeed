@@ -25,9 +25,13 @@ type SCM interface {
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
-	CreateTeam(context.Context, *CreateTeamOptions) error
+	CreateTeam(context.Context, *CreateTeamOptions) (*Team, error)
+	// Add repo to team.
+	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember as a member to a team.
 	// AddTeamMember(context.Context, *AddMemberOptions) error
+	// Retrieves user by remoteID
+	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider spesefic clone path.
 	CreateCloneURL(context.Context, *CreateClonePathOptions) (string, error)
 }
@@ -118,6 +122,22 @@ type CreateClonePathOptions struct {
 	UserToken  string
 	Directory  string
 	Repository string
+}
+
+// AddTeamRepoOptions contains information about the repos to be added to a team.
+type AddTeamRepoOptions struct {
+	TeamID uint64
+	Repo   string
+
+	// Only used by GitHub.
+	Owner string
+}
+
+// Team represents a git Team
+type Team struct {
+	ID   uint64
+	Name string
+	URL  string
 }
 
 func (e ErrNotSupported) Error() string {

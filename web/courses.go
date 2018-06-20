@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -337,10 +338,81 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
-		// TODO If the enrollment is accepted, create repositories with webooks.
+		// TODO If the enrollment is accepted, create repositories and permissions for them with webooks.
 		switch eur.Status {
 		case models.Student:
+
+			// This should probably be the last one to occur ?
 			err = db.EnrollStudent(userID, courseID)
+			if err != nil {
+				return err
+			}
+			courseInfo, err := db.GetCourse(courseID)
+			if err != nil {
+				return err
+			}
+
+			provider := c.Get(courseInfo.Provider)
+			var s scm.SCM
+			if provider != nil {
+				s = provider.(scm.SCM)
+			} else {
+				return nil // TODO decide how to handle empty provider.
+			}
+
+			dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
+			if err != nil {
+				return err
+			}
+			student, err := db.GetUser(userID)
+			if err != nil {
+				return err
+			}
+			// Find out what the current plan is to set repo/team as private if not(?) do not create the repo
+
+			// TODO Decide which provider/remoteIdentity is being used,
+			gitUserName, err := s.GetUserNameByID(c.Request().Context(), student.RemoteIdentities[0].RemoteID)
+			if err != nil {
+				return err
+			}
+
+			// Creating repository
+			studentName := strings.Replace(student.Name, " ", "", -1)
+			pathName := studentName + "-labs"
+			repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
+				Directory: dir,
+				Path:      pathName,
+			})
+			if err != nil {
+				return err
+			}
+			dbRepo := models.Repository{
+				DirectoryID:  courseInfo.DirectoryID,
+				RepositoryID: repo.ID,
+				Type:         models.UserRepo,
+				UserID:       userID,
+			}
+			if err := db.CreateRepository(&dbRepo); err != nil {
+				return err
+			}
+			// Creating team
+			team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
+				Directory: &scm.Directory{Path: dir.Path},
+				TeamName:  studentName,
+				Users:     []string{gitUserName},
+			})
+			if err != nil {
+				return err
+			}
+			err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
+				TeamID: team.ID,
+				Owner:  repo.Owner,
+				Repo:   repo.Path,
+			})
+			if err != nil {
+				return err
+			}
+
 		case models.Teacher:
 			err = db.EnrollTeacher(userID, courseID)
 		case models.Rejected:
@@ -664,7 +736,9 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		if _, err := db.GetCourse(cid); err != nil {
+		var courseInfo *models.Course
+		courseInfo, err = db.GetCourse(cid)
+		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
 			}
@@ -679,6 +753,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
+		// TODO add remoteIdentity to users when getting multiple users
 		users, err := db.GetUsers(grp.UserIDs...)
 		if err != nil {
 			return err
@@ -720,6 +795,78 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			case enrollment.Status < models.Student:
 				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
 			}
+		}
+
+		var userRemoteIdentity []*models.RemoteIdentity
+		// TODO move this into the for loop above, modify db.GetUsers() to also retreive RemoteIdentity
+		// so we can remove individual GetUser calls
+		for _, user := range users {
+			remoteIdentityUser, _ := db.GetUser(user.ID)
+			if err != nil {
+				return err
+			}
+			// TODO, figure out which remote identity to be used!
+			userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+		}
+
+		provider := c.Get(courseInfo.Provider)
+		var s scm.SCM
+		if provider != nil {
+			s = provider.(scm.SCM)
+		} else {
+			return nil // TODO decide how to handle empty provider.
+		}
+
+		// TODO move this functionality down into SCM?
+		// Note: This Requires alot of calls to git.
+		// Figure out all group members git-username
+		var gitUserNames []string
+		for _, identity := range userRemoteIdentity {
+			gitName, err := s.GetUserNameByID(c.Request().Context(), identity.RemoteID)
+			if err != nil {
+				return err
+			}
+			gitUserNames = append(gitUserNames, gitName)
+		}
+
+		// Create and add repo to autograder group
+		dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
+		if err != nil {
+			return err
+		}
+		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
+			Directory: dir,
+			Path:      grp.Name,
+		})
+		if err != nil {
+			return err
+		}
+		// Add repo to DB
+		dbRepo := models.Repository{
+			DirectoryID:  courseInfo.DirectoryID,
+			RepositoryID: repo.ID,
+			Type:         models.UserRepo,
+			UserID:       grp.UserIDs[0], // Should this be groupID ????
+		}
+		if err := db.CreateRepository(&dbRepo); err != nil {
+			return err
+		}
+		// Create git-team
+		team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
+			Directory: &scm.Directory{Path: dir.Path},
+			TeamName:  grp.Name,
+			Users:     gitUserNames,
+		})
+		if err != nil {
+			return err
+		}
+		// Adding Repo to git-team
+		if err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
+			TeamID: team.ID,
+			Owner:  repo.Owner,
+			Repo:   repo.Path,
+		}); err != nil {
+			return err
 		}
 
 		group := models.Group{
