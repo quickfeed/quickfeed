@@ -11,9 +11,9 @@ rm -rf $MD
 mkdir $MD
 get get {{ .RawGetURL }}
 get get {{ .RawTestURL }}
-rm $(find $GOHOME/src/{{ .RawGetURL }}/ | grep _ag_test.go)
-cp -r $GOHOME/src/{{ .RawTestURL }}/* $GOHOME/src/{{ .RawGetURL }}/
-cd $GOHOME/src/{{ .RawGetURL }}/
+rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
+cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
+cd $GOPATH/src/{{ .RawGetURL }}/
 cd "{{ .AssignmentName }}"
 # find # Could be readded for debugging the Internal of the CI files
 echo "Setup done"
