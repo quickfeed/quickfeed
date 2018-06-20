@@ -13,10 +13,11 @@ go get {{ .RawGetURL }}
 go get {{ .RawTestURL }}
 rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
 cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
-cd $GOPATH/src/{{ .RawGetURL }}/
+cp -r $GOPATH/src/{{ .RawGetURL }}/ $GOPATH/src/{{ .RawGetURL }}/../labs/
+cd $GOPATH/src/{{ .RawGetURL }}/../labs
 cd "{{ .AssignmentName }}"
 # find # Could be readded for debugging the Internal of the CI files
 echo "Setup done"
 #go test -v
-go test -v $(find | grep _ag_test.go)
+go test -v -run .*AG
 echo "\n==DONE_CI==\n"
