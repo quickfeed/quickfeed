@@ -9,8 +9,8 @@ UD="user-dir"  # User Dir
 TD="test-dir"  # Test Dir
 rm -rf $MD
 mkdir $MD
-get get {{ .RawGetURL }}
-get get {{ .RawTestURL }}
+go get {{ .RawGetURL }}
+go get {{ .RawTestURL }}
 rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
 cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
 cd $GOPATH/src/{{ .RawGetURL }}/
