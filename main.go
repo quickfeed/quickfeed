@@ -56,7 +56,7 @@ func main() {
 		httpAddr = flag.String("http.addr", ":8080", "HTTP listen address")
 		public   = flag.String("http.public", "public", "directory to server static files from")
 
-		buildscritps = flag.String("script.path", "buildscripts", "Directory with docker build scripts")
+		buildscripts = flag.String("script.path", "buildscripts", "Directory with docker build scripts")
 
 		dbFile = flag.String("database.file", tempFile("ag.db"), "database file")
 
