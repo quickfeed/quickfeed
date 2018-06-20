@@ -212,8 +212,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     private handleInputChange(e: React.FormEvent<any>) {
         const target: any = e.target;
         const value = target.type === "checkbox" ? target.checked : target.value;
-        const name = target.name;
-
+        const name = target.name as "name";
+        
         this.setState({
             [name]: value,
         });
