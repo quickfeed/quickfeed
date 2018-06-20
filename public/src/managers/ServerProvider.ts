@@ -103,7 +103,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             throw new Error("Problem with the request");
         }
         return mapify(result.data as IAssignment[], (ele) => {
-            ele.deadline = new Date(2017, 7, 18);
+            //ele.deadline = new Date(2017, 7, 18);
             return ele.id;
         });
     }
