@@ -271,7 +271,7 @@ func (db *GormDB) GetSubmissionForUser(aid uint64, uid uint64) (*models.Submissi
 // GetSubmissionsByID implements the Database interface
 func (db *GormDB) GetSubmissionsByID(sid uint64) (*models.Submission, error) {
 	var submission models.Submission
-	if err := db.conn.Where(&models.Submission{ID: sid}).Error; err != nil {
+	if err := db.conn.First(&submission, sid).Error; err != nil {
 		return nil, err
 	}
 	return &submission, nil
