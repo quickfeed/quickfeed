@@ -105,7 +105,10 @@ export class StudentPage extends ViewPage {
             if (this.selectedAssignment) {
                 return <StudentLab
                     course={this.selectedCourse.course}
-                    assignment={this.selectedAssignment}>
+                    assignment={this.selectedAssignment}
+                    showApprove={false}
+                    onRebuildClick={() => {}}
+                    onApproveClick={() => {}}>
                 </StudentLab>;
             }
         }

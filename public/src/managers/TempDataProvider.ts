@@ -29,6 +29,7 @@ interface IDummyUser extends IUser {
  * to be able to simulate the backend for easier developtment
  */
 export class TempDataProvider implements IUserProvider, ICourseProvider {
+    
 
     private localUsers: IMap<IDummyUser>;
     private localAssignments: IMap<IAssignment>;
@@ -46,6 +47,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalUsers();
         this.addLocalLabInfo();
         this.addLocalCourseGroups();
+    }
+
+    public async approveSubmission(submissionid: number): Promise<void> {
+        throw new Error("Method not implemented.");
     }
 
     public async getDirectories(provider: string): Promise<IOrganization[]> {

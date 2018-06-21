@@ -50,6 +50,7 @@ export interface ICourseProvider {
     getDirectories(provider: string): Promise<IOrganization[]>;
     getProviders(): Promise<string[]>;
     refreshCoursesFor(courseid: number): Promise<any>;
+    approveSubmission(submissionid: number): Promise<void>;
 }
 
 export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollemtnt {
@@ -359,5 +360,9 @@ export class CourseManager {
                 studentCourse.assignments.push({ assignment: a, latest: temp });
             }
         }
+    }
+
+    public async approveSubmission(submissionid: number): Promise<void> {
+        return await this.courseProvider.approveSubmission(submissionid);
     }
 }

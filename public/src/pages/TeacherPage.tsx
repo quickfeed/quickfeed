@@ -140,7 +140,15 @@ export class TeacherPage extends ViewPage {
                 }
             }
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
-            return <Results course={course} labs={labs} students={linkedStudents}></Results>;
+            return <Results 
+                    course={course} 
+                    labs={labs} 
+                    students={linkedStudents}
+                    onApproveClick={(submissionID:number) => {
+                        this.courseMan.approveSubmission(submissionID);
+                    }}
+                    >
+                </Results>;
         }
         return <div>404 Page not found</div>;
     }

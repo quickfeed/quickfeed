@@ -268,6 +268,25 @@ func (db *GormDB) GetSubmissionForUser(aid uint64, uid uint64) (*models.Submissi
 	return &submission, nil
 }
 
+// GetSubmissionsByID implements the Database interface
+func (db *GormDB) GetSubmissionsByID(sid uint64) (*models.Submission, error) {
+	var submission models.Submission
+	if err := db.conn.Where(&models.Submission{ID: sid}).Error; err != nil {
+		return nil, err
+	}
+	return &submission, nil
+}
+
+// UpdateSubmissionByID implements the Database interface
+func (db *GormDB) UpdateSubmissionByID(sid uint64, approved bool) error {
+	sub, err := db.GetSubmissionsByID(sid)
+	if err != nil {
+		return err
+	}
+	sub.Approved = approved
+	return db.conn.Model(&models.Submission{}).Update(sub).Error
+}
+
 // GetSubmissions implements the Database interface
 func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, error) {
 	var course models.Course

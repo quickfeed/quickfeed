@@ -783,6 +783,15 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 	}
 }
 
+func TestGormDBGetSubmissionByID(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	if _, err := db.GetSubmissionsByID(10); err != gorm.ErrRecordNotFound {
+		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
+}
+
 func TestGormDBGetNonExsistingSubmissions(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()

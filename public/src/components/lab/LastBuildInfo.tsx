@@ -7,10 +7,19 @@ interface ILastBuildInfo {
     exec_time: number;
     build_time: Date;
     build_id: number;
+    showApprove: boolean;
+    onApproveClick: () => void;
+    onRebuildClick: () => void;
 }
 class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
 
     public render() {
+        let approveButton : JSX.Element;
+        if (this.props.showApprove) {
+            approveButton = <p> <button type="button" id="approve" className="btn btn-primary" onClick={ () => this.handleClick(this.props.onApproveClick)}> Approve </button> </p>;
+        } else {
+            approveButton = <p></p>;
+        }
         return (
             <Row>
                 <div className="col-lg-8">
@@ -27,9 +36,10 @@ class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
                         <div className="col-lg-12">
                             <p>
                                 <button type="button" id="rebuild" className="btn btn-primary"
-                                    onClick={() => this.handleClick()}>Rebuild
+                                    onClick={() => this.handleClick(this.props.onRebuildClick)}>Rebuild
                                 </button>
                             </p>
+                            {approveButton}
                         </div>
                     </Row>
                 </div>
@@ -37,8 +47,9 @@ class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
         );
     }
 
-    private handleClick() {
+    private handleClick(func: () => void) {
         // TODO: implement rebuild functionality
+        func();
         console.log("Rebuilding...");
     }
 }

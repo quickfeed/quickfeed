@@ -990,3 +990,20 @@ func GetGroups(db database.Database) echo.HandlerFunc {
 		return c.JSONPretty(http.StatusOK, groups, "\t")
 	}
 }
+
+// UpdateSubmission updates a submission
+func UpdateSubmission(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		sid, err := parseUint(c.Param("sid"))
+		if err != nil {
+			return err
+		}
+
+		err = db.UpdateSubmissionByID(sid, true)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}

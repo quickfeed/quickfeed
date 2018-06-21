@@ -5,6 +5,9 @@ import { ICourse, IStudentSubmission, ISubmission } from "../../models";
 interface ILabInfoProps {
     course: ICourse;
     labInfo: IStudentSubmission;
+    showApprove: boolean;
+    onApproveClick: () => void;
+    onRebuildClick: () => void;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps, {}> {
@@ -35,6 +38,9 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                                 exec_time={latest.executetionTime}
                                 build_time={latest.buildDate}
                                 build_id={latest.buildId}
+                                onApproveClick={this.props.onApproveClick}
+                                onRebuildClick={this.props.onRebuildClick}
+                                showApprove={this.props.showApprove}
                             />
                             <Row>
                                 <div className="col-lg-12">

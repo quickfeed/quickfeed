@@ -33,6 +33,7 @@ import { ILogger } from "./LogManager";
 import { combinePath } from "../NavigationHelper";
 
 export class ServerProvider implements IUserProvider, ICourseProvider {
+    
     private helper: HttpHelper;
     private logger: ILogger;
 
@@ -389,7 +390,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async refreshCoursesFor(courseid: number): Promise<any> {
         const result = await this.helper.post<any, null>("courses/" + courseid + "/refresh", null);
         if (result.statusCode !== 200 || !result.data) {
-            this.handleError(result, "getLoggedInUser");
+            this.handleError(result, "refreshCoursesFor");
             return null;
         }
         return this.makeUserInfo(result.data);
@@ -414,6 +415,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             error.data = JSON.parse(JSON.stringify(result.data)) as any;
         }
         return error;
+    }
+
+    public async approveSubmission(submissionid: number): Promise<void> {
+        const result = await this.helper.patch<any, null>("submission/" + submissionid, null);
+        if (result.statusCode !== 200) {
+            this.handleError(result, "approveSubmission");
+            return;
+        }
+        return;
     }
 
 }
