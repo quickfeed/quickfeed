@@ -418,7 +418,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async approveSubmission(submissionid: number): Promise<void> {
-        const result = await this.helper.patch<any, null>("submission/" + submissionid, null);
+        const result = await this.helper.patch<any, null>("submissions/" + submissionid, null);
         if (result.statusCode !== 200) {
             this.handleError(result, "approveSubmission");
             return;
