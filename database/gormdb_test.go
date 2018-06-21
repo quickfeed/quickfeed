@@ -787,7 +787,8 @@ func TestGormDBGetSubmissionByID(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.GetSubmissionsByID(10); err != gorm.ErrRecordNotFound {
+	if sub, err := db.GetSubmissionsByID(100); err != gorm.ErrRecordNotFound {
+		t.Errorf("got submission %v", sub)
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
