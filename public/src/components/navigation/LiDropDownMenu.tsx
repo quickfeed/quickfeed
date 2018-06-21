@@ -18,8 +18,8 @@ interface ILiDropDownMenuState {
 
 export class LiDropDownMenu extends React.Component<ILiDropDownMenuProps, ILiDropDownMenuState> {
     private lastCallback?: (e?: MouseEvent) => void;
-    constructor() {
-        super();
+    constructor(props: ILiDropDownMenuProps) {
+        super(props);
         this.state = {
             loginOpen: false,
         };

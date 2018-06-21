@@ -14,8 +14,8 @@ interface INavDropdownState {
 }
 
 class NavDropdown extends React.Component<INavDropdownProps, INavDropdownState> {
-    constructor() {
-        super();
+    constructor(props: INavDropdownProps) {
+        super(props);
         this.state = {
             isOpen: false,
         };

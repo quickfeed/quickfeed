@@ -18,8 +18,8 @@ export interface INavBarLoginState {
 
 export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLoginState> {
     private lastCallback?: (e?: MouseEvent) => void;
-    constructor() {
-        super();
+    constructor(props: INavBarLoginProps) {
+        super(props);
         this.state = {
             loginOpen: false,
         };

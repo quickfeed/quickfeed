@@ -53,7 +53,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     private currentMenuContent: JSX.Element[][] = [];
 
     constructor(props: IAutoGraderProps) {
-        super();
+        super(props);
 
         this.userMan = props.userManager;
         this.navMan = props.navigationManager;

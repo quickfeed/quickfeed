@@ -200,6 +200,8 @@ export interface ISubmission {
     buildLog: string;
     testCases: ITestCases[];
 
+    approved: boolean;
+
 }
 
 /**

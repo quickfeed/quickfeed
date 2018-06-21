@@ -19,8 +19,8 @@ interface IAddMenuState {
 
 export class AddMenu extends React.Component<IAddMenuProps, IAddMenuState> {
     private lastCallback?: (e?: MouseEvent) => void;
-    constructor() {
-        super();
+    constructor(props: IAddMenuProps) {
+        super(props);
         this.state = {
             loginOpen: false,
         };
