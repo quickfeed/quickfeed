@@ -10,12 +10,31 @@ interface ILabInfoProps {
     onRebuildClick: () => void;
 }
 
+function isDate(date: any): date is Date {
+    return (date as any).getDate != undefined;
+}
+
 export class LabResultView extends React.Component<ILabInfoProps, {}> {
+
+    private getSubmissionInfo(): string{
+        if (this.props.labInfo.latest) {
+            return this.props.labInfo.latest.approved ? "Approved" : "Not approved";
+        }
+        return "Nothing built yet!";
+    }
+
+    private getCodeDeliverdString(date?: Date | string) :string {
+        if (date && isDate(date)) {
+            return date.toDateString()
+        } else if (typeof(date) === "string"){
+            return date;
+        }
+        return "-";
+    }
 
     public render() {
         if (this.props.labInfo.latest) {
             const latest = this.props.labInfo.latest;
-            console.log(latest.buildLog);
             const buildLog = latest.buildLog.split("\n").map(x => <span>{x}<br /></span>);
 
             return (
@@ -26,6 +45,8 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                                 course_name={this.props.course.name}
                                 lab={this.props.labInfo.assignment.name}
                                 progress={latest.score}
+                                status={this.getSubmissionInfo()}
+                                deliverd={this.getCodeDeliverdString(this.props.labInfo.latest.buildDate)}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}

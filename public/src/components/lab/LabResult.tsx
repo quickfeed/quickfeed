@@ -7,6 +7,8 @@ interface ILabResult {
     lab: string;
     course_name: string;
     student?: IUser;
+    status: string;
+    deliverd: string;
 }
 class LabResult extends React.Component<ILabResult, any> {
 
@@ -29,10 +31,10 @@ class LabResult extends React.Component<ILabResult, any> {
                     <ProgressBar progress={this.props.progress}></ProgressBar>
                 </div>
                 <div className="col-lg-6">
-                    <p><strong id="status">Status: Nothing built yet.</strong></p>
+                    <p><strong id="status">Status: {this.props.status}</strong></p>
                 </div>
                 <div className="col-lg-6">
-                    <p><strong id="pushtime">Code delievered: - </strong></p>
+                    <p><strong id="pushtime">Code delievered: {this.props.deliverd} </strong></p>
                 </div>
             </Row>
         );
