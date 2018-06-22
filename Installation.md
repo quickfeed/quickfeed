@@ -51,7 +51,7 @@ This guide details the specifics for go and github, but should not be too hard t
 
 7. Starting Autograder with specific Database and web path.
     ```
-    ./aguis -database.file ./ag.db -http.public $GOPATH/src/github.com/autograde/aguis/public -servic.url <url> -script.path <buildscript path>
+    ./aguis -database.file ./ag.db -http.public $GOPATH/src/github.com/autograde/aguis/public -service.url <url> -script.path <buildscript path>
     ```
 
 8. Add webhook url to providers organization.
