@@ -930,6 +930,18 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
+		// Add repo to DB
+		dbRepo := models.Repository{
+			DirectoryID:  courseInfo.DirectoryID,
+			RepositoryID: repo.ID,
+			Type:         models.UserRepo,
+			UserID:       0,
+			GroupID:      oldgrp.ID,
+		}
+		if err := db.CreateRepository(&dbRepo); err != nil {
+			return err
+		}
+
 		if err := db.UpdateGroup(&models.Group{
 			ID:       oldgrp.ID,
 			Name:     grp.Name,
