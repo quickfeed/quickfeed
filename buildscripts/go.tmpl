@@ -1,9 +1,6 @@
 #image/golang:1.8.3
 echo "\n\n==Start_CI==\n"
 git config --global url."https://{{ .AccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-# go get "{{ .GetURL }}"
-# cd "$GOPATH/src/{{ .GetURL }}"
-# go test -v
 MD="merge"     # Merged Dir
 UD="user-dir"  # User Dir
 TD="test-dir"  # Test Dir
