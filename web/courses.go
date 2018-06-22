@@ -823,9 +823,7 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		var courseInfo *models.Course
-		courseInfo, err = db.GetCourse(cid)
-		if err != nil {
+		if _, err = db.GetCourse(cid); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
 			}
@@ -885,63 +883,6 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			}
 		}
 
-		var userRemoteIdentity []*models.RemoteIdentity
-		// TODO move this into the for loop above, modify db.GetUsers() to also retreive RemoteIdentity
-		// so we can remove individual GetUser calls
-		for _, user := range users {
-			remoteIdentityUser, _ := db.GetUser(user.ID)
-			if err != nil {
-				return err
-			}
-			// TODO, figure out which remote identity to be used!
-			userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
-		}
-
-		provider := c.Get(courseInfo.Provider)
-		var s scm.SCM
-		if provider != nil {
-			s = provider.(scm.SCM)
-		} else {
-			return nil // TODO decide how to handle empty provider.
-		}
-
-		// TODO move this functionality down into SCM?
-		// Note: This Requires alot of calls to git.
-		// Figure out all group members git-username
-		var gitUserNames []string
-		for _, identity := range userRemoteIdentity {
-			gitName, err := s.GetUserNameByID(c.Request().Context(), identity.RemoteID)
-			if err != nil {
-				return err
-			}
-			gitUserNames = append(gitUserNames, gitName)
-		}
-
-		// Create and add repo to autograder group
-		dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
-		if err != nil {
-			return err
-		}
-		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
-			Directory: dir,
-			Path:      grp.Name,
-		})
-		if err != nil {
-			return err
-		}
-
-		// Add repo to DB
-		dbRepo := models.Repository{
-			DirectoryID:  courseInfo.DirectoryID,
-			RepositoryID: repo.ID,
-			Type:         models.UserRepo,
-			UserID:       0,
-			GroupID:      oldgrp.ID,
-		}
-		if err := db.CreateRepository(&dbRepo); err != nil {
-			return err
-		}
-
 		if err := db.UpdateGroup(&models.Group{
 			ID:       oldgrp.ID,
 			Name:     grp.Name,
@@ -951,24 +892,6 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			if err == database.ErrDuplicateGroup {
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
-			return err
-		}
-
-		// Create git-team
-		team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
-			Directory: &scm.Directory{Path: dir.Path},
-			TeamName:  grp.Name,
-			Users:     gitUserNames,
-		})
-		if err != nil {
-			return err
-		}
-		// Adding Repo to git-team
-		if err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
-			TeamID: team.ID,
-			Owner:  repo.Owner,
-			Repo:   repo.Path,
-		}); err != nil {
 			return err
 		}
 

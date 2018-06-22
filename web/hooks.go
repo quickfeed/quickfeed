@@ -105,7 +105,7 @@ func getLatestAssignment(db database.Database, cid uint64, uid uint64, gid uint6
 			if sub == nil || sub.Approved == false {
 				return v, nil
 			}
-		} else if gid > 0 {
+		} else if gid > 0 && v.IsGroupLab {
 			sub, err := db.GetSubmissionForGroup(v.ID, gid)
 			if err != nil && err != gorm.ErrRecordNotFound {
 				return nil, err
