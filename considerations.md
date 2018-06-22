@@ -23,13 +23,13 @@
 * Checking to see if a organisation/directory allows private repos, or not
 * Be able to create private repositories. 
 * Refactor some code inside hooks, a little redundant code
-* Figure out way on how to approve an assingment
-* Running CI only on the correct assignment
+* <del>Figure out way on how to approve an assingment</del>
+* <del>Running CI only on the correct assignment</del>
 * Secret handling, or some better way of output sorting and stuff.
-* Need organisation with private repos, send message to Hein.
+* <del>Need organisation with private repos, send message to Hein.</del>
 * Make test cases with integration testing.
 * Update readme with information about webhooks on providers, what providers are supported, 
-    * how to setup docker, 
+    * <del>how to setup docker, </del>
     * need ssl sertificat fix
     * How to set up providers
     * 
