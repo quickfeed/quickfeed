@@ -831,6 +831,19 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			gitUserNames = append(gitUserNames, gitName)
 		}
 
+		group := models.Group{
+			Name:     grp.Name,
+			CourseID: cid,
+			Users:    users,
+		}
+		// CreateGroup creates a new group and update group_id in enrollment table
+		if err := db.CreateGroup(&group); err != nil {
+			if err == database.ErrDuplicateGroup {
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			}
+			return err
+		}
+
 		// Create and add repo to autograder group
 		dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
 		if err != nil {
@@ -848,7 +861,8 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			DirectoryID:  courseInfo.DirectoryID,
 			RepositoryID: repo.ID,
 			Type:         models.UserRepo,
-			UserID:       grp.UserIDs[0], // Should this be groupID ????
+			UserID:       0,
+			GroupID:      group.ID,
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return err
@@ -868,19 +882,6 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			Owner:  repo.Owner,
 			Repo:   repo.Path,
 		}); err != nil {
-			return err
-		}
-
-		group := models.Group{
-			Name:     grp.Name,
-			CourseID: cid,
-			Users:    users,
-		}
-		// CreateGroup creates a new group and update group_id in enrollment table
-		if err := db.CreateGroup(&group); err != nil {
-			if err == database.ErrDuplicateGroup {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-			}
 			return err
 		}
 
