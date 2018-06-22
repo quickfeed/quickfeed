@@ -585,6 +585,7 @@ func createAssignment(request *yamlparser.NewAssignmentRequest, course *models.C
 	if err != nil {
 		return nil, err
 	}
+
 	return &models.Assignment{
 		AutoApprove: request.AutoApprove,
 		CourseID:    course.ID,
@@ -592,6 +593,7 @@ func createAssignment(request *yamlparser.NewAssignmentRequest, course *models.C
 		Language:    request.Language,
 		Name:        request.Name,
 		Order:       request.AssignmentID,
+		IsGroupLab:  request.IsGroupLab,
 	}, nil
 }
 

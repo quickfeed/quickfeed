@@ -12,6 +12,7 @@ type Assignment struct {
 	AutoApprove bool        `json:"autoapprove" sql:"DEFAULT:false"`
 	Order       uint        `json:"order"`
 	Submission  *Submission `json:"submission,omitempty"`
+	IsGroupLab  bool        `json:"isgrouplab" sql:"DEFAULT:false"`
 }
 
 // Submission represents a single submission

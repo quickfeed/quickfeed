@@ -19,5 +19,8 @@ cd "{{ .AssignmentName }}"
 # find # Could be readded for debugging the Internal of the CI files
 echo "Setup done"
 #go test -v
+# The next to lines are for security resons
+git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+history -c
 go test -v -run .*AG
 echo "\n==DONE_CI==\n"

@@ -39,6 +39,7 @@ type Database interface {
 
 	CreateSubmission(*models.Submission) error
 	GetSubmissionForUser(aid uint64, uid uint64) (*models.Submission, error)
+	GetSubmissionForGroup(aid uint64, gid uint64) (*models.Submission, error)
 	GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, error)
 	GetSubmissionsByID(sid uint64) (*models.Submission, error)
 	UpdateSubmissionByID(sid uint64, approved bool) error
