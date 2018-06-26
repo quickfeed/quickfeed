@@ -936,3 +936,29 @@ func UpdateSubmission(db database.Database) echo.HandlerFunc {
 		return nil
 	}
 }
+
+// ListGroupSubmissions fetches all submissions from specific group
+func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return err
+		}
+
+		gid, err := parseUint(c.Param("gid"))
+		if err != nil {
+			return err
+		}
+
+		submission, err := db.GetGroupSubmissions(cid, gid)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return err
+		}
+
+		return c.JSONPretty(http.StatusOK, submission, "\t")
+
+	}
+}
