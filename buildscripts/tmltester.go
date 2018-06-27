@@ -9,12 +9,8 @@ import (
 	"github.com/autograde/aguis/models"
 )
 
-type NameStore struct {
-	Name string
-}
-
 func main() {
-	t, err := template.ParseFiles("go.tml")
+	t, err := template.ParseFiles("go.tmpl")
 	if err != nil {
 		fmt.Println(err)
 	}
