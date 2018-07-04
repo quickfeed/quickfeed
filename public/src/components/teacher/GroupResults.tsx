@@ -80,13 +80,14 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
 
     private getResultHeader(): string[] {
         let headers: string[] = ["Name", "Slipdays"];
-        headers = headers.concat(this.props.labs.map((e) => e.name));
+        headers = headers.concat(this.props.labs.filter((e) => e.isgrouplab).map((e) => e.name));
         return headers;
     }
 
     private getGroupResultSelector(group: IGroupCourseWithGroup): Array<string | JSX.Element> {
         let selector: Array<string | JSX.Element> = [group.group.name, "5"];
-        selector = selector.concat(group.course.assignments.map((e, i) => <a className="lab-result-cell"
+        selector = selector.concat(group.course.assignments.filter((e, i) => e.assignment.isgrouplab).map((e, i) => 
+        <a className="lab-result-cell"
             onClick={() => this.handleOnclick(e)}
             href="#">
             {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
