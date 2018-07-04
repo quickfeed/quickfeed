@@ -243,6 +243,67 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.statusCode)) as IStatusCode;
     }
 
+    // getAllGroupLabInfos 
+    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<ISubmission>> { 
+        const result = await this.helper.get<ISubmission[]>(
+            ("courses/" + courseId.toString() + "/groups/" + groupID + "/submissions"),
+        );
+        if (result.statusCode === 200 && result.data === undefined) {
+            return {};
+        }
+        if (!result.data) {
+            this.handleError(result, "getAllLabInfos");
+            return {};
+        }
+        return mapify(result.data, (e) => {
+            let a = "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}";
+            let b = "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]";
+            if ((e as any).buildinfo && ((e as any).buildinfo as string).trim().length > 2) {
+                a = (e as any).buildinfo as string;
+            }
+            if ((e as any).scoreobjects && ((e as any).scoreobjects as string).trim().length > 2) {
+                b = (e as any).scoreobjects;
+            }
+            let tempInfo: IBuildInfo;
+            let scoreObj: ITestCases[];
+            try {
+                tempInfo = JSON.parse(a);
+            } catch (e) {
+                tempInfo = JSON.parse(
+                    "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
+                );
+            }
+            try {
+                scoreObj = JSON.parse(b);
+            } catch (e) {
+                scoreObj = JSON.parse(
+                    "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
+                );
+            }
+
+            e.buildDate = tempInfo.builddate;
+            e.buildId = tempInfo.buildid;
+            e.buildLog = tempInfo.buildlog;
+            e.executetionTime = tempInfo.execTime;
+            e.testCases = scoreObj;
+            e.failedTests = 0;
+            e.passedTests = 0;
+            if (e.testCases == null) e.testCases = [];
+            e.testCases.forEach(x => {
+                if (x.points !== x.score) {
+                    e.failedTests++;
+                } else {
+                    e.passedTests++;
+                }
+            })
+            
+            
+            
+            
+            return e.id;
+        });
+    }
+    
     // TODO change to use course id instead of getting all of them
     public async getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>> {
         const result = await this.helper.get<ISubmission[]>(

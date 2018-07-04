@@ -17,6 +17,7 @@ import {
     IUser,
     IUserCourse,
     IUserRelation,
+    IGroupCourse,
 
 } from "../models";
 
@@ -47,6 +48,7 @@ export interface ICourseProvider {
     // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>>;
+    getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<ISubmission>>;
     getDirectories(provider: string): Promise<IOrganization[]>;
     getProviders(): Promise<string[]>;
     refreshCoursesFor(courseid: number): Promise<any>;
@@ -309,6 +311,29 @@ export class CourseManager {
         return await this.courseProvider.getCourseGroups(courseid);
     }
 
+    /**
+     * Load an IGroupCourse object for a single group and a single course
+     * @param group The group the information should be retrived from
+     * @param course The course the data should be loaded for
+     */
+    public async getGroupCourse(group: ICourseGroup, course: ICourse): Promise<IGroupCourse | null> {
+        // Fetching group enrollment status
+        const groupEnrollment = await this.courseProvider.getGroup(group.id)
+        
+        if (groupEnrollment != null && groupEnrollment.id === group.id) {
+            if (group.courseid === course.id) {
+                const returnTemp: IGroupCourse = {
+                    link: { groupid: group.id, courseId: course.id, state: groupEnrollment.status },
+                    assignments: [],
+                    course,
+                };
+                await this.fillLinksGroup(group, returnTemp);
+                return returnTemp;
+            }
+        }
+        return null;
+    }
+
     public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
         return await this.courseProvider.getGroupByUserAndCourse(userid, courseid);
     }
@@ -358,6 +383,27 @@ export class CourseManager {
             for (const a of assigns) {
                 const temp = submissions.find((sub) => sub.assignmentid === a.id);
                 studentCourse.assignments.push({ assignment: a, latest: temp });
+            }
+        }
+    }
+
+    /**
+     * Add IStudentSubmissions to an IUserCourse
+     * @param group The group
+     * @param groupCourse The group course
+     */
+    private async fillLinksGroup(group: ICourseGroup, groupCourse: IGroupCourse): Promise<void> {
+        if (!groupCourse.link) {
+            return;
+        }
+        const assigns = await this.getAssignments(groupCourse.course.id);
+        if (assigns.length > 0) {
+            const submissions = MapHelper.toArray(
+                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.id, group.id));
+
+            for (const a of assigns) {
+                const temp = submissions.find((sub) => sub.assignmentid === a.id);
+                groupCourse.assignments.push({ assignment: a, latest: temp });
             }
         }
     }

@@ -1,42 +1,47 @@
 import * as React from "react";
-import { IAssignment, ICourse, IStudentSubmission, IUser, IUserCourseWithUser } from "../../models";
+import { IAssignment, ICourse, IStudentSubmission, IUser, IUserCourseWithUser, IGroupCourseWithGroup } from "../../models";
 
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 
 interface IResultsProp {
     course: ICourse;
-    students: IUserCourseWithUser[];
+    groups: IGroupCourseWithGroup[];
     labs: IAssignment[];
     onApproveClick: (submissionID:number) => void;
 }
 interface IResultsState {
     assignment?: IStudentSubmission;
-    students: IUserCourseWithUser[];
+    groups: IGroupCourseWithGroup[];
 }
-class Results extends React.Component<IResultsProp, IResultsState> {
+class GroupResults extends React.Component<IResultsProp, IResultsState> {
     constructor(props: IResultsProp) {
         super(props);
 
-        if (this.props.students[0] && this.props.students[0].course.assignments[0]) {
+        
+        if (this.props.groups[0] && this.props.groups[0].course.assignments[0]) {
             this.state = {
-                assignment: this.props.students[0].course.assignments[0],
-                students: this.props.students,                
+                assignment: this.props.groups[0].course.assignments[0],
+                groups: this.props.groups,
+                
             };
         } else {
             this.state = {
                 assignment: undefined,
-                students: this.props.students,
+                groups: this.props.groups,
             };
         }
     }
 
     public render() {
-        let studentLab: JSX.Element | null = null;
-        if (this.props.students.length > 0 
-            && this.state.assignment 
-            && !this.state.assignment.assignment.isgrouplab
-        ){
-            studentLab = <StudentLab
+        let groupLab: JSX.Element | null = null;
+        let tmp: JSX.Element | null = null;
+        
+        if (this.props.groups 
+            && this.props.groups.length > 0 
+            && this.state.assignment
+            && this.state.assignment.assignment.isgrouplab) 
+            {
+                groupLab = <StudentLab
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
@@ -47,6 +52,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                     }
                 }}
             />;
+
         }
 
         return (
@@ -55,16 +61,17 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                 <Row>
                     <div className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
-                            placeholder="Search for students"
+                            placeholder="Search for groups"
                             onChange={(query) => this.handleOnchange(query)}
                         />
                         <DynamicTable header={this.getResultHeader()}
-                            data={this.state.students}
-                            selector={(item: IUserCourseWithUser) => this.getResultSelector(item)}
+                            data={this.state.groups}
+                            selector={(item: IGroupCourseWithGroup) => this.getGroupResultSelector(item)} 
                         />
+                        {tmp}
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12">
-                        {studentLab}
+                        {groupLab}
                     </div>
                 </Row>
             </div>
@@ -77,9 +84,9 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element> {
-        let selector: Array<string | JSX.Element> = [student.user.name, "5"];
-        selector = selector.concat(student.course.assignments.map((e, i) => <a className="lab-result-cell"
+    private getGroupResultSelector(group: IGroupCourseWithGroup): Array<string | JSX.Element> {
+        let selector: Array<string | JSX.Element> = [group.group.name, "5"];
+        selector = selector.concat(group.course.assignments.map((e, i) => <a className="lab-result-cell"
             onClick={() => this.handleOnclick(e)}
             href="#">
             {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
@@ -94,19 +101,18 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        const filteredData: IUserCourseWithUser[] = [];
-        this.props.students.forEach((std) => {
-            if (std.user.name.toLowerCase().indexOf(query) !== -1
-                || std.user.email.toLowerCase().indexOf(query) !== -1
+        const filteredData: IGroupCourseWithGroup[] = [];
+        this.props.groups.forEach((std) => {
+            if (std.group.name.toLowerCase().indexOf(query) !== -1
             ) {
                 filteredData.push(std);
             }
         });
 
         this.setState({
-            students: filteredData,
+            groups: filteredData,
         });
     }
 
 }
-export { Results };
+export { GroupResults };

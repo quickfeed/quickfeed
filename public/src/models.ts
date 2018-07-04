@@ -7,6 +7,11 @@ export interface IUser {
     isadmin: boolean;
 }
 
+export interface IGroup {
+    id: number;
+    name: string;
+
+}
 /**
  * Checks if value is compatible with the ICourse interface
  * @param value A value to check if it is an ICourse
@@ -21,7 +26,7 @@ export function isCourse(value: any): value is ICourse {
 // Browser only objects START
 
 /**
- * An interface which contains bouth the course, the course
+ * An interface which contains both the course, the course
  * link, all assignments and the latest submission to a single user
  */
 export interface IUserCourse {
@@ -37,11 +42,33 @@ export interface IUserCourse {
     /**
      * A list of all assignments and the last submission if there
      * is a relation between the user and the course which is
-     * student or teacher
+     * student or teacher 
      */
     assignments: IStudentSubmission[];
 }
 
+// TODO - Abstract IUserCourse and IGroupCourse.
+/**
+ * An interface which contains both the course, the course
+ * link, all assignments and the latest submission to a single group
+ */
+export interface IGroupCourse {
+    /**
+     * The course to the group
+     */
+    course: ICourse;
+    /**
+     * The relation between the group and the course.
+     * Is null if there is none
+     */
+    link?: ICourseGroupLink;
+    /**
+     * A list of all assignments and the last submission if there
+     * is a relation between the group and the course which is
+     * student or teacher
+     */
+    assignments: IStudentSubmission[];
+}
 /**
  * An IUserCourse instance which also contains the user it
  * is related to.
@@ -52,6 +79,15 @@ export interface IUserCourseWithUser {
     course: IUserCourse;
 }
 
+/**
+ * An ICourseGroup instance which also contains the group it
+ * is related to.
+ * @see ICourseGroup
+ */
+export interface IGroupCourseWithGroup {
+    group: ICourseGroup;
+    course: IGroupCourse;
+}
 /**
  * An interface which contains an assignment and the latest submission
  * for a spessific user.
@@ -70,6 +106,14 @@ export interface IUserRelation {
     link: ICourseUserLink;
 }
 
+/**
+ * An interface which contains a user and the relation to a signe course.
+ * Usualy returned when a course is given.
+ */
+export interface ICourseGroupRelation {
+    group: ICourseGroup;
+    link: ICourseGroupLink;
+}
 // Browser only objects END
 
 /**
@@ -163,6 +207,23 @@ export function courseUserStateToString(state: CourseUserState[]): string {
     }).join(",");
 }
 
+export function courseGroupStateToString(state: CourseGroupStatus[]): string {
+    return state.map((sta) => {
+        switch (sta) {
+            case CourseGroupStatus.pending:
+                return "pending";
+            case CourseGroupStatus.rejected:
+                return "rejected";
+            case CourseGroupStatus.approved:
+                return "approved";
+            case CourseGroupStatus.deleted:
+                return "deleted";
+            default:
+                return "";
+        }
+    }).join(",");
+}
+
 /**
  * The relation description between a user and course
  */
@@ -172,6 +233,14 @@ export interface ICourseUserLink {
     state: CourseUserState;
 }
 
+/**
+ * The relation description between a group and course
+ */
+export interface ICourseGroupLink {
+    groupid: number;
+    courseId: number;
+    state: CourseGroupStatus;
+}
 /**
  * A description of a single test case object
  */
@@ -224,7 +293,7 @@ export interface IOrganization {
 /**
  * ICourseGroup represents a student group in a course
  */
-export interface ICourseGroup {
+export interface ICourseGroup { 
     id: number;
     name: string;
     status: CourseGroupStatus;

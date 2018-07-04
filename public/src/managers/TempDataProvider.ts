@@ -30,7 +30,7 @@ interface IDummyUser extends IUser {
  */
 export class TempDataProvider implements IUserProvider, ICourseProvider {
     
-
+    
     private localUsers: IMap<IDummyUser>;
     private localAssignments: IMap<IAssignment>;
     private localCourses: IMap<ICourse>;
@@ -248,6 +248,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
     public async updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError> {
         throw new Error("Method not implemented");
+    }
+    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<Models.ISubmission>> {
+        throw new Error("Method not implemented.");
     }
 
     public async refreshCoursesFor(courseid: number): Promise<any> {
