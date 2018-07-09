@@ -30,6 +30,7 @@ export class StudentPage extends ViewPage {
 
     // Group user
     private GroupUserCourses: ICourseLinkAssignment[] = [];
+    private selectedUserGroupCourse: ICourseLinkAssignment | undefined;
 
     private selectedAssignment: IStudentSubmission | undefined;
 
@@ -126,7 +127,7 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
-            await this.selectAssignment(navInfo.params.labid); 
+            await this.selectGroupAssignment(navInfo.params.labid); 
             if (this.selectedAssignment) {
                 return <StudentLab
                     course={this.selectedUserCourse.course}
@@ -137,8 +138,8 @@ export class StudentPage extends ViewPage {
                 </StudentLab>;
             }
         }
-
-        return <div>404 not found</div>;
+        // Need to show something if person is not part of group yet.
+        return this.courseWithLab(navInfo); 
     }
 
     public async members(navInfo: INavInfo<{ courseid: number }>): View {
@@ -246,20 +247,19 @@ export class StudentPage extends ViewPage {
             this.activeUserCourses = this.onlyActiveCourses(this.userCourses as IUserCourse[]);
 
             // preloading groupdata.
-            if (this.userCourses) {
-                this.GroupUserCourses = [];
+            this.GroupUserCourses = [];
 
-                for(var i=0; i < this.userCourses.length; i++) {
-                    var course = this.userCourses[i];
-                    var group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
-                    if (group != null) {
-                        var groupCourse = await this.courseMan.getGroupCourse(group, course.course);
-                        if(groupCourse) {
-                            this.GroupUserCourses.push(groupCourse);
-                        }
+            for(var i=0; i < this.activeUserCourses.length; i++) {
+                var course = this.activeUserCourses[i];
+                var group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
+                if (group != null) {
+                    var groupCourse = await this.courseMan.getGroupCourse(group, course.course);
+                    if(groupCourse) {
+                        this.GroupUserCourses.push(groupCourse);
                     }
                 }
             }
+            
         }
     }
 
@@ -270,8 +270,8 @@ export class StudentPage extends ViewPage {
     }
 
     private selectGroupCourse(course: number) {
-        this.selectedUserCourse = undefined;
-        this.selectedUserCourse = this.GroupUserCourses.find(
+        this.selectedUserGroupCourse = undefined;
+        this.selectedUserGroupCourse = this.GroupUserCourses.find(
             (e) => e.course.id === course);
     }
 
@@ -279,6 +279,15 @@ export class StudentPage extends ViewPage {
         if (this.selectedUserCourse) {
             // TODO: Be carefull not to return anything that sould not be able to be returned
             this.selectedAssignment = this.selectedUserCourse.assignments.find(
+                (e) => e.assignment.id === labId,
+            );
+        }
+    }
+
+    private selectGroupAssignment(labId: number) {
+        if (this.selectedUserGroupCourse) {
+            // TODO: Be carefull not to return anything that sould not be able to be returned
+            this.selectedAssignment = this.selectedUserGroupCourse.assignments.find(
                 (e) => e.assignment.id === labId,
             );
         }
