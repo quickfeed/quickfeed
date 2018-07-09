@@ -106,8 +106,9 @@ export interface IAssignment {
     id: number;
     courseid: number;
     name: string;
-
+    language: string;
     deadline: Date;
+    isgrouplab: boolean;
 
     // Not implemented yet
     // start: Date;

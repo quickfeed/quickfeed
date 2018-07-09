@@ -151,13 +151,22 @@ export class StudentPage extends ViewPage {
                     const allLinks: ILink[] = [];
                     allLinks.push({ name: "Labs" });
                     const labs = course.assignments;
-                    allLinks.push(...labs.map((lab, ind) => {
-                        return {
-                            name: lab.assignment.name,
-                            uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
-                        };
-                    }));
+                    const gLabs:ILink[] = [];
+                    labs.forEach((lab) => {
+                        if(lab.assignment.isgrouplab){
+                            gLabs.push({
+                                name: lab.assignment.name,
+                                uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
+                            });
+                        } else {
+                            allLinks.push({
+                                name: lab.assignment.name,
+                                uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
+                            });
+                        }
+                    });
                     allLinks.push({ name: "Group Labs" });
+                    allLinks.push(...gLabs);
                     allLinks.push({ name: "Settings" });
                     allLinks.push({
                         name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",

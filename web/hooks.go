@@ -87,7 +87,7 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 	}
 }
 
-func getLatestAssignment(db database.Database, cid uint64, uid uint64) (*models.Assignment, error) {
+func getLatestAssignment(db database.Database, cid uint64, uid uint64, gid uint64) (*models.Assignment, error) {
 	assignments, err := db.GetAssignmentsByCourse(cid)
 	if err != nil {
 		return nil, err
@@ -97,12 +97,22 @@ func getLatestAssignment(db database.Database, cid uint64, uid uint64) (*models.
 	})
 	for _, v := range assignments {
 		fmt.Println(*v)
-		sub, err := db.GetSubmissionForUser(v.ID, uid)
-		if err != nil && err != gorm.ErrRecordNotFound {
-			return nil, err
-		}
-		if sub == nil || sub.Approved == false {
-			return v, nil
+		if uid > 0 {
+			sub, err := db.GetSubmissionForUser(v.ID, uid)
+			if err != nil && err != gorm.ErrRecordNotFound {
+				return nil, err
+			}
+			if sub == nil || sub.Approved == false {
+				return v, nil
+			}
+		} else if gid > 0 && v.IsGroupLab {
+			sub, err := db.GetSubmissionForGroup(v.ID, gid)
+			if err != nil && err != gorm.ErrRecordNotFound {
+				return nil, err
+			}
+			if sub == nil || sub.Approved == false {
+				return v, nil
+			}
 		}
 	}
 	return nil, nil
@@ -127,8 +137,8 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 	}
 
 	//selectedAssignment := assignments[0]
-	selectedAssignment, err := getLatestAssignment(db, course.ID, repo.UserID)
-	if err != nil {
+	selectedAssignment, err := getLatestAssignment(db, course.ID, repo.UserID, repo.GroupID)
+	if err != nil || selectedAssignment == nil {
 		logger.WithError(err).Warn("Failed to get course from database")
 		return
 	}
@@ -198,6 +208,7 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		Score:        uint8(currentScore / maxScore * 100),
 		ScoreObjects: scores,
 		UserID:       repo.UserID,
+		GroupID:      repo.GroupID,
 	})
 	if err != nil {
 		logger.WithError(err).Error("Problems inserting the submission into the database")

@@ -18,6 +18,7 @@ type NewAssignmentRequest struct {
 	Language     string `yaml:"language"`
 	Deadline     string `yaml:"deadline"`
 	AutoApprove  bool   `yaml:"autoapprove"`
+	IsGroupLab   bool   `yaml:"isgrouplab"`
 }
 
 // Parse recursively walks the given directory and parses any yaml files found

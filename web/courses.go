@@ -603,6 +603,7 @@ func createAssignment(request *yamlparser.NewAssignmentRequest, course *models.C
 	if err != nil {
 		return nil, err
 	}
+
 	return &models.Assignment{
 		AutoApprove: request.AutoApprove,
 		CourseID:    course.ID,
@@ -610,6 +611,7 @@ func createAssignment(request *yamlparser.NewAssignmentRequest, course *models.C
 		Language:    request.Language,
 		Name:        request.Name,
 		Order:       request.AssignmentID,
+		IsGroupLab:  request.IsGroupLab,
 	}, nil
 }
 
@@ -754,8 +756,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		var courseInfo *models.Course
-		courseInfo, err = db.GetCourse(cid)
+		_, err = db.GetCourse(cid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
@@ -913,7 +914,7 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		if _, err := db.GetCourse(cid); err != nil {
+		if _, err = db.GetCourse(cid); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
 			}
@@ -1024,5 +1025,31 @@ func UpdateSubmission(db database.Database) echo.HandlerFunc {
 		}
 
 		return nil
+	}
+}
+
+// ListGroupSubmissions fetches all submissions from specific group
+func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return err
+		}
+
+		gid, err := parseUint(c.Param("gid"))
+		if err != nil {
+			return err
+		}
+
+		submission, err := db.GetGroupSubmissions(cid, gid)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return c.NoContent(http.StatusNotFound)
+			}
+			return err
+		}
+
+		return c.JSONPretty(http.StatusOK, submission, "\t")
+
 	}
 }

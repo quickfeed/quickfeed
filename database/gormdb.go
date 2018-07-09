@@ -268,6 +268,15 @@ func (db *GormDB) GetSubmissionForUser(aid uint64, uid uint64) (*models.Submissi
 	return &submission, nil
 }
 
+// GetSubmissionForGroup implements the Database interface
+func (db *GormDB) GetSubmissionForGroup(aid uint64, gid uint64) (*models.Submission, error) {
+	var submission models.Submission
+	if err := db.conn.Where(&models.Submission{AssignmentID: aid, GroupID: gid}).Last(&submission).Error; err != nil {
+		return nil, err
+	}
+	return &submission, nil
+}
+
 // GetSubmissionsByID implements the Database interface
 func (db *GormDB) GetSubmissionsByID(sid uint64) (*models.Submission, error) {
 	var submission models.Submission
@@ -297,6 +306,27 @@ func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, 
 	var latestSubs []*models.Submission
 	for _, a := range course.Assignments {
 		temp, err := db.GetSubmissionForUser(a.ID, uid)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				continue
+			}
+			return nil, err
+		}
+		latestSubs = append(latestSubs, temp)
+	}
+	return latestSubs, nil
+}
+
+// GetGroupSubmissions implements the Database interface
+func (db *GormDB) GetGroupSubmissions(cid uint64, gid uint64) ([]*models.Submission, error) {
+	var course models.Course
+	if err := db.conn.Preload("Assignments").First(&course, cid).Error; err != nil {
+		return nil, err
+	}
+
+	var latestSubs []*models.Submission
+	for _, a := range course.Assignments {
+		temp, err := db.GetSubmissionForGroup(a.ID, gid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				continue

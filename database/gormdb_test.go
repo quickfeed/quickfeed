@@ -1359,6 +1359,156 @@ func TestGormDBGetSingleRepoWithoutUser(t *testing.T) {
 	}
 }
 
+func TestGormDBGetGroupSubmissions(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	if sub, err := db.GetGroupSubmissions(10, 10); err != gorm.ErrRecordNotFound {
+		t.Errorf("got submission %v", sub)
+		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
+}
+
+func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	course := models.Course{DirectoryID: 1}
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+	courseTwo := models.Course{DirectoryID: 2}
+	if err := db.CreateCourse(&courseTwo); err != nil {
+		t.Fatal(err)
+	}
+
+	var users []*models.User
+	enrollments := []uint{models.Student, models.Student}
+	for i := 0; i < len(enrollments); i++ {
+		var user models.User
+		if err := db.CreateUserFromRemoteIdentity(
+			&user,
+			&models.RemoteIdentity{RemoteID: uint64(i)},
+		); err != nil {
+			t.Fatal(err)
+		}
+		users = append(users, &user)
+	}
+	// Enroll users in course.
+	for i := 0; i < len(users); i++ {
+		if enrollments[i] == models.Pending {
+			continue
+		}
+		if err := db.CreateEnrollment(&models.Enrollment{
+			CourseID: course.ID,
+			UserID:   users[i].ID,
+		}); err != nil {
+			t.Fatal(err)
+		}
+		err := errors.New("enrollment status not implemented")
+		switch enrollments[i] {
+		case models.Student:
+			err = db.EnrollStudent(users[i].ID, course.ID)
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Creating Group
+	group := &models.Group{
+		Name:     "SameNameGroup",
+		CourseID: course.ID,
+		Users:    users,
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create Assignments
+	assignment1 := models.Assignment{
+		Order:      1,
+		CourseID:   course.ID,
+		IsGroupLab: true,
+	}
+	if err := db.CreateAssignment(&assignment1); err != nil {
+		t.Fatal(err)
+	}
+	assignment2 := models.Assignment{
+		Order:      2,
+		CourseID:   course.ID,
+		IsGroupLab: true,
+	}
+	if err := db.CreateAssignment(&assignment2); err != nil {
+		t.Fatal(err)
+	}
+	assignment3 := models.Assignment{
+		Order:      1,
+		CourseID:   courseTwo.ID,
+		IsGroupLab: false,
+	}
+	if err := db.CreateAssignment(&assignment3); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create some submissions
+	submission1 := models.Submission{
+		GroupID:      group.ID,
+		AssignmentID: assignment1.ID,
+	}
+	if err := db.CreateSubmission(&submission1); err != nil {
+		t.Fatal(err)
+	}
+	submission2 := models.Submission{
+		GroupID:      group.ID,
+		AssignmentID: assignment1.ID,
+	}
+	if err := db.CreateSubmission(&submission2); err != nil {
+		t.Fatal(err)
+	}
+	submission3 := models.Submission{
+		GroupID:      group.ID,
+		AssignmentID: assignment2.ID,
+	}
+	if err := db.CreateSubmission(&submission3); err != nil {
+		t.Fatal(err)
+	}
+	submission4 := models.Submission{
+		UserID:       users[0].ID,
+		AssignmentID: assignment3.ID,
+	}
+	if err := db.CreateSubmission(&submission4); err != nil {
+		t.Fatal(err)
+	}
+
+	// Even if there is three submission, only the latest for each assignment should be returned
+
+	submissions, err := db.GetGroupSubmissions(course.ID, group.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []*models.Submission{&submission2, &submission3}
+	if !reflect.DeepEqual(submissions, want) {
+		for _, s := range submissions {
+			fmt.Printf("%+v\n", s)
+		}
+		t.Errorf("have %#v want %#v", submissions, want)
+	}
+	data, err := db.GetGroupSubmissions(course.ID, group.ID)
+	if err != nil {
+		t.Fatal(err)
+	} else if len(data) != 2 {
+		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
+	}
+	// Since there is no submissions, but the course and user exist, an empty array should be returned
+	data, err = db.GetGroupSubmissions(courseTwo.ID, group.ID)
+	if err != nil {
+		t.Fatal(err)
+	} else if len(data) != 0 {
+		t.Errorf("Expected '%v' elements in the array, got '%v'", 0, len(data))
+	}
+}
+
 func envSet(env string) database.GormLogger {
 	if os.Getenv(env) != "" {
 		return database.Logger{Logger: logrus.New()}
