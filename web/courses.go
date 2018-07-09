@@ -168,12 +168,24 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			var ok bool
 			if repo, ok = existing[path]; !ok {
 				var err error
-				repo, err = s.CreateRepository(
-					ctx,
-					&scm.CreateRepositoryOptions{
-						Path:      path,
-						Directory: directory},
-				)
+				if strings.Compare(path, TestsRepo) == 0 {
+					repo, err = s.CreateRepository(
+						ctx,
+						&scm.CreateRepositoryOptions{
+							Path:      path,
+							Directory: directory,
+							Private:   true},
+					)
+				} else {
+					repo, err = s.CreateRepository(
+						ctx,
+						&scm.CreateRepositoryOptions{
+							Path:      path,
+							Directory: directory,
+							Private:   false},
+					)
+				}
+
 				if err != nil {
 					logger.WithField("repo", path).WithError(err).Warn("Failed to create repository")
 					return err
@@ -342,11 +354,6 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		switch eur.Status {
 		case models.Student:
 
-			// This should probably be the last one to occur ?
-			err = db.EnrollStudent(userID, courseID)
-			if err != nil {
-				return err
-			}
 			courseInfo, err := db.GetCourse(courseID)
 			if err != nil {
 				return err
@@ -382,6 +389,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
 				Directory: dir,
 				Path:      pathName,
+				Private:   true,
 			})
 			if err != nil {
 				return err
@@ -409,6 +417,11 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 				Owner:  repo.Owner,
 				Repo:   repo.Path,
 			})
+			if err != nil {
+				return err
+			}
+			// Update enrollment for student in DB.
+			err = db.EnrollStudent(userID, courseID)
 			if err != nil {
 				return err
 			}
@@ -472,6 +485,11 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 		}
 
 		s := c.Get(course.Provider).(scm.SCM)
+
+		if !user.IsAdmin {
+			// Only admin users should be able to update repos to private, if they are public.
+
+		}
 
 		assignments, err := RefreshCourseInformation(c.Request().Context(), logger, db, course, remoteID, s)
 
@@ -837,6 +855,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
 			Directory: dir,
 			Path:      grp.Name,
+			Private:   true,
 		})
 		if err != nil {
 			return err

@@ -165,6 +165,11 @@ func (s *GitlabSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOpti
 	return "", nil
 }
 
+// GetPaymentPlan implements the SCM interface.
+func (s *GitlabSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
+	return nil, nil
+}
+
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)

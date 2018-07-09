@@ -34,6 +34,8 @@ type SCM interface {
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider spesefic clone path.
 	CreateCloneURL(context.Context, *CreateClonePathOptions) (string, error)
+	// Fetch current payment plan
+	GetPaymentPlan(context.Context, uint64) (*PaymentPlan, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -94,6 +96,7 @@ type Hook struct {
 type CreateRepositoryOptions struct {
 	Path      string
 	Directory *Directory
+	Private   bool
 }
 
 // CreateHookOptions contains information on how to create a webhook.
@@ -138,6 +141,11 @@ type Team struct {
 	ID   uint64
 	Name string
 	URL  string
+}
+
+type PaymentPlan struct {
+	name         string
+	privateRepos uint64
 }
 
 func (e ErrNotSupported) Error() string {
