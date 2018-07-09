@@ -6,12 +6,11 @@ import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
 import {
-    CourseUserState, ICourse, ICourseGroup, isError,
-    IStudentSubmission, IUser, IUserCourse, IUserRelation,
+    CourseUserState, ICourse, ICourseGroup,
+    IStudentSubmission, IUserCourse, ICourseLinkAssignment,
 } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
-import { UserView } from "./views/UserView";
 
 import { INavInfo } from "../NavigationHelper";
 
@@ -24,9 +23,14 @@ export class StudentPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
 
-    private courses: IUserCourse[] = [];
-    private activeCourses: IUserCourse[] = [];
-    private selectedCourse: IUserCourse | undefined;
+    // Single user 
+    private userCourses: ICourseLinkAssignment[] = [];
+    private activeUserCourses: ICourseLinkAssignment[] = [];
+    private selectedUserCourse: ICourseLinkAssignment | undefined;
+
+    // Group user
+    private GroupUserCourses: ICourseLinkAssignment[] = [];
+
     private selectedAssignment: IStudentSubmission | undefined;
 
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
@@ -43,6 +47,7 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("index", this.index);
         this.navHelper.registerFunction<any>("courses/{courseid:number}", this.course);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/lab/{labid:number}", this.courseWithLab);
+        this.navHelper.registerFunction<any>("courses/{courseid:number}/grouplab/{labid:number}", this.courseWithGroupLab);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/members", this.members);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
@@ -59,9 +64,9 @@ export class StudentPage extends ViewPage {
 
     public async index(navInfo: INavInfo<any>): View {
         await this.setupData();
-        if (this.activeCourses) {
+        if (this.activeUserCourses) {
             return (<CoursesOverview
-                courseOverview={this.activeCourses}
+                courseOverview={this.activeUserCourses as IUserCourse[]}
                 navMan={this.navMan}
             />);
         }
@@ -89,9 +94,9 @@ export class StudentPage extends ViewPage {
     public async course(navInfo: INavInfo<{ courseid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
-        if (this.selectedCourse) {
+        if (this.selectedUserCourse) {
             return (<SingleCourseOverview
-                courseAndLabs={this.selectedCourse}
+                courseAndLabs={this.selectedUserCourse as IUserCourse}
                 onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)} />);
         }
         return <h1>404 not found</h1>;
@@ -100,11 +105,12 @@ export class StudentPage extends ViewPage {
     public async courseWithLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
-        if (this.selectedCourse) {
+        if (this.selectedUserCourse) {
             await this.selectAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
+                console.log(this.selectedAssignment)
                 return <StudentLab
-                    course={this.selectedCourse.course}
+                    course={this.selectedUserCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
                     onRebuildClick={() => {}}
@@ -112,6 +118,28 @@ export class StudentPage extends ViewPage {
                 </StudentLab>;
             }
         }
+        return <div>404 not found</div>;
+    }
+
+    // TODO - Instead of requesting to server for each time
+    // preload grouplab the same way as normal labs are loaded.
+    public async courseWithGroupLab(navInfo: INavInfo<{courseid: number, labid: number}>): View {
+        await this.setupData();
+        this.selectGroupCourse(navInfo.params.courseid);
+        if (this.selectedUserCourse) {
+            await this.selectAssignment(navInfo.params.labid); 
+            if (this.selectedAssignment) {
+              console.log("Triggered grouplab ")
+                        return <StudentLab
+                            course={this.selectedUserCourse.course}
+                            assignment={this.selectedAssignment}
+                            showApprove={false}
+                            onRebuildClick={() => {}}
+                            onApproveClick={() => {}}>
+                        </StudentLab>;
+            } else {console.log("failed selectedAssignment");}
+        }
+
         return <div>404 not found</div>;
     }
 
@@ -146,7 +174,7 @@ export class StudentPage extends ViewPage {
 
     public async renderMenu(key: number): Promise<JSX.Element[]> {
         if (key === 0) {
-            const coursesLinks: ILinkCollection[] = this.activeCourses.map(
+            const coursesLinks: ILinkCollection[] = this.activeUserCourses.map(
                 (course, i) => {
                     const allLinks: ILink[] = [];
                     allLinks.push({ name: "Labs" });
@@ -156,7 +184,7 @@ export class StudentPage extends ViewPage {
                         if(lab.assignment.isgrouplab){
                             gLabs.push({
                                 name: lab.assignment.name,
-                                uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
+                                uri: this.pagePath + "/courses/" + course.course.id + "/grouplab/" + lab.assignment.id,
                             });
                         } else {
                             allLinks.push({
@@ -208,28 +236,52 @@ export class StudentPage extends ViewPage {
         return temp;
     }
 
+    // Loads and cache information when user enters a page.
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            this.courses = await this.courseMan.getStudentCourses(curUser,
+            this.userCourses = await this.courseMan.getStudentCourses(curUser,
                 [
                     CourseUserState.student,
                     CourseUserState.teacher,
                 ]);
-            this.activeCourses = this.onlyActiveCourses(this.courses);
+            this.activeUserCourses = this.onlyActiveCourses(this.userCourses as IUserCourse[]);
+
+            // preloading groupdata.
+            if (this.userCourses) {
+                this.GroupUserCourses = [];
+
+                for(var i=0; i < this.userCourses.length; i++) {
+                    var course = this.userCourses[i];
+                    var group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
+                    if (group != null) {
+                        var groupCourse = await this.courseMan.getGroupCourse(group, course.course);
+                        if(groupCourse) {
+                            console.log("test");
+                            this.GroupUserCourses.push(groupCourse);
+                        }
+                    }
+                }
+            }
         }
     }
 
     private selectCourse(course: number) {
-        this.selectedCourse = undefined;
-        this.selectedCourse = this.activeCourses.find(
+        this.selectedUserCourse = undefined;
+        this.selectedUserCourse = this.activeUserCourses.find(
+            (e) => e.course.id === course);
+    }
+
+    private selectGroupCourse(course: number) {
+        this.selectedUserCourse = undefined;
+        this.selectedUserCourse = this.GroupUserCourses.find(
             (e) => e.course.id === course);
     }
 
     private selectAssignment(labId: number) {
-        if (this.selectedCourse) {
+        if (this.selectedUserCourse) {
             // TODO: Be carefull not to return anything that sould not be able to be returned
-            this.selectedAssignment = this.selectedCourse.assignments.find(
+            this.selectedAssignment = this.selectedUserCourse.assignments.find(
                 (e) => e.assignment.id === labId,
             );
         }

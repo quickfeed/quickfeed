@@ -25,34 +25,7 @@ export function isCourse(value: any): value is ICourse {
 
 // Browser only objects START
 
-/**
- * An interface which contains both the course, the course
- * link, all assignments and the latest submission to a single user
- */
-export interface IUserCourse {
-    /**
-     * The course to the user
-     */
-    course: ICourse;
-    /**
-     * The relation between the user and the course.
-     * Is null if there is none
-     */
-    link?: ICourseUserLink;
-    /**
-     * A list of all assignments and the last submission if there
-     * is a relation between the user and the course which is
-     * student or teacher 
-     */
-    assignments: IStudentSubmission[];
-}
-
-// TODO - Abstract IUserCourse and IGroupCourse.
-/**
- * An interface which contains both the course, the course
- * link, all assignments and the latest submission to a single group
- */
-export interface IGroupCourse {
+export interface ICourseLinkAssignment {
     /**
      * The course to the group
      */
@@ -61,13 +34,30 @@ export interface IGroupCourse {
      * The relation between the group and the course.
      * Is null if there is none
      */
-    link?: ICourseGroupLink;
+    link?: ICourseUserLink | ICourseGroupLink;
     /**
      * A list of all assignments and the last submission if there
      * is a relation between the group and the course which is
      * student or teacher
      */
     assignments: IStudentSubmission[];
+}
+
+/**
+ * An interface which contains both the course, the course
+ * link, all assignments and the latest submission to a single user
+ */
+export interface IUserCourse extends ICourseLinkAssignment {
+    link?: ICourseUserLink;
+}
+
+
+/**
+ * An interface which contains both the course, the course
+ * link, all assignments and the latest submission to a single group
+ */
+export interface IGroupCourse extends ICourseLinkAssignment {
+    link?: ICourseGroupLink;
 }
 /**
  * An IUserCourse instance which also contains the user it

@@ -18,6 +18,7 @@ import {
     IUserCourse,
     IUserRelation,
     IGroupCourse,
+    ICourseLinkAssignment,
 
 } from "../models";
 
@@ -258,7 +259,7 @@ export class CourseManager {
      * a single student
      * @param student The student to load the information for
      */
-    public async getStudentCourses(student: IUser, state?: CourseUserState[]): Promise<IUserCourse[]> {
+    public async getStudentCourses(student: IUser, state?: CourseUserState[]): Promise<ICourseLinkAssignment[]> {
         const links: IUserCourse[] = [];
         const userCourses = await this.courseProvider.getCoursesFor(student, state);
         for (const course of userCourses) {
