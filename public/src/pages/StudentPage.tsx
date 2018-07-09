@@ -108,7 +108,6 @@ export class StudentPage extends ViewPage {
         if (this.selectedUserCourse) {
             await this.selectAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
-                console.log(this.selectedAssignment)
                 return <StudentLab
                     course={this.selectedUserCourse.course}
                     assignment={this.selectedAssignment}
@@ -129,15 +128,14 @@ export class StudentPage extends ViewPage {
         if (this.selectedUserCourse) {
             await this.selectAssignment(navInfo.params.labid); 
             if (this.selectedAssignment) {
-              console.log("Triggered grouplab ")
-                        return <StudentLab
-                            course={this.selectedUserCourse.course}
-                            assignment={this.selectedAssignment}
-                            showApprove={false}
-                            onRebuildClick={() => {}}
-                            onApproveClick={() => {}}>
-                        </StudentLab>;
-            } else {console.log("failed selectedAssignment");}
+                return <StudentLab
+                    course={this.selectedUserCourse.course}
+                    assignment={this.selectedAssignment}
+                    showApprove={false}
+                    onRebuildClick={() => {}}
+                    onApproveClick={() => {}}>
+                </StudentLab>;
+            }
         }
 
         return <div>404 not found</div>;
@@ -257,7 +255,6 @@ export class StudentPage extends ViewPage {
                     if (group != null) {
                         var groupCourse = await this.courseMan.getGroupCourse(group, course.course);
                         if(groupCourse) {
-                            console.log("test");
                             this.GroupUserCourses.push(groupCourse);
                         }
                     }
