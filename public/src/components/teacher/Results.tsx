@@ -16,10 +16,12 @@ interface IResultsState {
 class Results extends React.Component<IResultsProp, IResultsState> {
     constructor(props: IResultsProp) {
         super(props);
-
-        if (this.props.students[0] && this.props.students[0].course.assignments[0]) {
+        
+        let currentStudent = this.props.students.length > 0 ? this.props.students[0] : null;
+        if (currentStudent && currentStudent.course.assignments.length > 0 && currentStudent.course.assignments[0]) {
             this.state = {
-                assignment: this.props.students[0].course.assignments[0],
+                // Only using the first student to fetch assignments.
+                assignment: currentStudent.course.assignments[0],
                 students: this.props.students,                
             };
         } else {
@@ -32,7 +34,8 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     public render() {
         let studentLab: JSX.Element | null = null;
-        if (this.props.students.length > 0 
+        let currentStudents = this.props.students.length > 0 ? this.props.students : null;
+        if (currentStudents
             && this.state.assignment 
             && !this.state.assignment.assignment.isgrouplab
         ){

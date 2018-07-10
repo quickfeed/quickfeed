@@ -17,10 +17,11 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
     constructor(props: IResultsProp) {
         super(props);
 
-        
-        if (this.props.groups[0] && this.props.groups[0].course.assignments[0]) {
+        let currentGroup = this.props.groups.length > 0 ? this.props.groups[0] : null;
+        if (currentGroup && currentGroup.course.assignments.length > 0) {
             this.state = {
-                assignment: this.props.groups[0].course.assignments[0],
+                // Only using the first group to fetch assignments.
+                assignment: currentGroup.course.assignments[0],
                 groups: this.props.groups,
                 
             };
@@ -34,10 +35,8 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
 
     public render() {
         let groupLab: JSX.Element | null = null;
-        let tmp: JSX.Element | null = null;
-        
-        if (this.props.groups 
-            && this.props.groups.length > 0 
+        let currentGroup = this.props.groups.length > 0 ? this.props.groups : null;
+        if (currentGroup 
             && this.state.assignment
             && this.state.assignment.assignment.isgrouplab) 
             {
@@ -68,7 +67,6 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
                             data={this.state.groups}
                             selector={(item: IGroupCourseWithGroup) => this.getGroupResultSelector(item)} 
                         />
-                        {tmp}
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12">
                         {groupLab}
@@ -104,8 +102,7 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
         query = query.toLowerCase();
         const filteredData: IGroupCourseWithGroup[] = [];
         this.props.groups.forEach((std) => {
-            if (std.group.name.toLowerCase().indexOf(query) !== -1
-            ) {
+            if (std.group.name.toLowerCase().indexOf(query) !== -1) {
                 filteredData.push(std);
             }
         });
