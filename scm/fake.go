@@ -128,3 +128,8 @@ func (s *FakeSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string,
 func (s *FakeSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
 	return nil, nil
 }
+
+// UpdateRepository implements the SCM interface.
+func (s *FakeSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
+	return nil
+}

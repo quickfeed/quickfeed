@@ -170,6 +170,11 @@ func (s *GitlabSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentP
 	return nil, nil
 }
 
+// UpdateRepository implements the SCM interface.
+func (s *GitlabSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
+	return nil
+}
+
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)

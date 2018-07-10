@@ -354,6 +354,13 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		switch eur.Status {
 		case models.Student:
 
+			// Update enrollment for student in DB.
+			// Should this be at the end?
+			err = db.EnrollStudent(userID, courseID)
+			if err != nil {
+				return err
+			}
+
 			courseInfo, err := db.GetCourse(courseID)
 			if err != nil {
 				return err
@@ -420,11 +427,6 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			if err != nil {
 				return err
 			}
-			// Update enrollment for student in DB.
-			err = db.EnrollStudent(userID, courseID)
-			if err != nil {
-				return err
-			}
 
 		case models.Teacher:
 			err = db.EnrollTeacher(userID, courseID)
@@ -486,8 +488,9 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 
 		s := c.Get(course.Provider).(scm.SCM)
 
-		if !user.IsAdmin {
+		if user.IsAdmin {
 			// Only admin users should be able to update repos to private, if they are public.
+			updateRepoToPrivate(c.Request().Context(), db, s, course.DirectoryID)
 
 		}
 
@@ -756,7 +759,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		_, err = db.GetCourse(cid)
+		courseInfo, err := db.GetCourse(cid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
@@ -1052,4 +1055,31 @@ func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
 		return c.JSONPretty(http.StatusOK, submission, "\t")
 
 	}
+}
+
+func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, directoryID uint64) {
+	repositories, err := db.GetRepositoriesByDirectory(directoryID)
+	if err != nil {
+		return
+	}
+
+	payment, _ := s.GetPaymentPlan(ctx, directoryID)
+	// If privaterepos is bigger than 0, we know that the org/team is paid for.
+	// TODO - replace == with > and test on paid repo.
+	if payment.PrivateRepos == 0 {
+		for _, repo := range repositories {
+			if repo.Type != models.TestsRepo {
+				scmRepo := &scm.Repository{
+					DirectoryID: repo.DirectoryID,
+					ID:          repo.RepositoryID,
+				}
+				err := s.UpdateRepository(ctx, scmRepo)
+				if err != nil {
+					return
+				}
+
+			}
+		}
+	}
+
 }

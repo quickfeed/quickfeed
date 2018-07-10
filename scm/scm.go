@@ -18,6 +18,8 @@ type SCM interface {
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within directory.
 	GetRepositories(context.Context, *Directory) ([]*Repository, error)
+	// Update repository settings
+	UpdateRepository(context.Context, *Repository) error
 	// Delete repository.
 	DeleteRepository(context.Context, uint64) error
 	// List the webhooks associated with the provided repository.
@@ -144,8 +146,8 @@ type Team struct {
 }
 
 type PaymentPlan struct {
-	name         string
-	privateRepos uint64
+	Name         string
+	PrivateRepos uint64
 }
 
 func (e ErrNotSupported) Error() string {

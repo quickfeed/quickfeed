@@ -221,8 +221,24 @@ func (s *GithubSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentP
 		return nil, err
 	}
 	plan := &PaymentPlan{
-		name:         org.Plan.GetName(),
-		privateRepos: uint64(org.Plan.GetPrivateRepos()),
+		Name:         org.Plan.GetName(),
+		PrivateRepos: uint64(org.Plan.GetPrivateRepos()),
 	}
 	return plan, nil
+}
+
+// UpdateRepository implements the SCM interface
+func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
+	gitRepo, _, err := s.client.Repositories.GetByID(ctx, int(repo.ID))
+	if err != nil {
+		return err
+	}
+
+	*gitRepo.Private = true
+	_, _, err = s.client.Repositories.Edit(ctx, gitRepo.Owner.GetLogin(), gitRepo.GetName(), gitRepo)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
