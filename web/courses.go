@@ -1068,7 +1068,10 @@ func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, d
 	// TODO - replace == with > and test on paid repo.
 	if payment.PrivateRepos == 0 {
 		for _, repo := range repositories {
-			if repo.Type != models.TestsRepo {
+			if repo.Type != models.AssignmentsRepo &&
+				repo.Type != models.CourseInfoRepo &&
+				repo.Type != models.SolutionsRepo {
+
 				scmRepo := &scm.Repository{
 					DirectoryID: repo.DirectoryID,
 					ID:          repo.RepositoryID,

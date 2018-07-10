@@ -229,6 +229,7 @@ func (s *GithubSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentP
 
 // UpdateRepository implements the SCM interface
 func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
+	// TODO - make this more flexible rather than only making stuff private.
 	gitRepo, _, err := s.client.Repositories.GetByID(ctx, int(repo.ID))
 	if err != nil {
 		return err
