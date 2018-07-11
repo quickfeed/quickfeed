@@ -140,11 +140,12 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		if c.Get(cr.Provider) == nil {
+		provider := c.Get(cr.Provider)
+		if provider == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
 		}
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := c.Get(cr.Provider).(scm.SCM)
+		s := provider.(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -355,15 +356,19 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 				return err
 			}
 
-			courseInfo, err := db.GetCourse(courseID)
+			course, err := db.GetCourse(courseID)
 			if err != nil {
 				return err
 			}
 
+			provider := c.Get(course.Provider)
+			if provider == nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
+			}
 			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-			s := c.Get(courseInfo.Provider).(scm.SCM)
+			s := provider.(scm.SCM)
 
-			dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
+			dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
 			if err != nil {
 				return err
 			}
@@ -391,7 +396,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 				return err
 			}
 			dbRepo := models.Repository{
-				DirectoryID:  courseInfo.DirectoryID,
+				DirectoryID:  course.DirectoryID,
 				RepositoryID: repo.ID,
 				Type:         models.UserRepo,
 				UserID:       userID,
@@ -453,7 +458,6 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 // RefreshCourse refreshes the information to a course
 func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
 			return err
@@ -464,9 +468,12 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 			return err
 		}
 
-		if c.Get(course.Provider) == nil {
+		provider := c.Get(course.Provider)
+		if provider == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
 		}
+		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+		s := provider.(scm.SCM)
 
 		user := c.Get("user").(*models.User)
 
@@ -475,16 +482,12 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 			return err
 		}
 
-		s := c.Get(course.Provider).(scm.SCM)
-
 		if user.IsAdmin {
 			// Only admin users should be able to update repos to private, if they are public.
 			updateRepoToPrivate(c.Request().Context(), db, s, course.DirectoryID)
-
 		}
 
 		assignments, err := RefreshCourseInformation(c.Request().Context(), logger, db, course, remoteID, s)
-
 		if err != nil {
 			return err
 		}
@@ -679,11 +682,12 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		if c.Get(cr.Provider) == nil {
+		provider := c.Get(cr.Provider)
+		if provider == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
 		}
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := c.Get(cr.Provider).(scm.SCM)
+		s := provider.(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -748,7 +752,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		courseInfo, err := db.GetCourse(cid)
+		course, err := db.GetCourse(cid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
@@ -820,13 +824,12 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
 		}
 
-		provider := c.Get(courseInfo.Provider)
-		var s scm.SCM
-		if provider != nil {
-			s = provider.(scm.SCM)
-		} else {
-			return nil // TODO decide how to handle empty provider.
+		provider := c.Get(course.Provider)
+		if provider == nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
 		}
+		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+		s := provider.(scm.SCM)
 
 		// TODO move this functionality down into SCM?
 		// Note: This Requires alot of calls to git.
@@ -841,7 +844,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		}
 
 		// Create and add repo to autograder group
-		dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
+		dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
 		if err != nil {
 			return err
 		}
@@ -855,7 +858,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		}
 		// Add repo to DB
 		dbRepo := models.Repository{
-			DirectoryID:  courseInfo.DirectoryID,
+			DirectoryID:  course.DirectoryID,
 			RepositoryID: repo.ID,
 			Type:         models.UserRepo,
 			UserID:       grp.UserIDs[0], // Should this be groupID ????
