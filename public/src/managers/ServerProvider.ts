@@ -33,7 +33,7 @@ import { ILogger } from "./LogManager";
 import { combinePath } from "../NavigationHelper";
 
 export class ServerProvider implements IUserProvider, ICourseProvider {
-    
+
     private helper: HttpHelper;
     private logger: ILogger;
 
@@ -104,7 +104,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             throw new Error("Problem with the request");
         }
         return mapify(result.data as IAssignment[], (ele) => {
-            if (!ele.deadline){
+            if (!ele.deadline) {
                 ele.deadline = new Date(2000, 1, 1);
             } else {
                 ele.deadline = new Date(ele.deadline);
@@ -243,7 +243,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     // getAllGroupLabInfos 
-    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>> { 
+    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>> {
         const result = await this.helper.get<ISubmission[]>(
             ("courses/" + courseID.toString() + "/groups/" + groupID + "/submissions"),
         );
@@ -255,25 +255,25 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return {};
         }
         return mapify(result.data, (submission) => {
-            let a = "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}";
-            let b = "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]";
+            let buildInfoAsString = "";
+            let scoreInfoAsString = "";
             if ((submission as any).buildinfo && ((submission as any).buildinfo as string).trim().length > 2) {
-                a = (submission as any).buildinfo as string;
+                buildInfoAsString = (submission as any).buildinfo as string;
             }
             if ((submission as any).scoreobjects && ((submission as any).scoreobjects as string).trim().length > 2) {
-                b = (submission as any).scoreobjects;
+                scoreInfoAsString = (submission as any).scoreobjects;
             }
             let buildInfo: IBuildInfo;
             let scoreObj: ITestCases[];
             try {
-                buildInfo = JSON.parse(a);
+                buildInfo = JSON.parse(buildInfoAsString);
             } catch (e) {
                 buildInfo = JSON.parse(
                     "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
                 );
             }
             try {
-                scoreObj = JSON.parse(b);
+                scoreObj = JSON.parse(scoreInfoAsString);
             } catch (e) {
                 scoreObj = JSON.parse(
                     "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
@@ -295,14 +295,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                     submission.passedTests++;
                 }
             })
-            
-            
-            
-            
             return submission.id;
         });
     }
-    
+
     // TODO change to use course id instead of getting all of them
     public async getAllLabInfos(courseID: number, userID: number): Promise<IMap<ISubmission>> {
         const result = await this.helper.get<ISubmission[]>(
@@ -316,25 +312,25 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return {};
         }
         return mapify(result.data, (submission) => {
-            let a = "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}";
-            let b = "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]";
+            let buildInfoAsString = "";
+            let scoreInfoAsString = "";
             if ((submission as any).buildinfo && ((submission as any).buildinfo as string).trim().length > 2) {
-                a = (submission as any).buildinfo as string;
+                buildInfoAsString = (submission as any).buildinfo as string;
             }
             if ((submission as any).scoreobjects && ((submission as any).scoreobjects as string).trim().length > 2) {
-                b = (submission as any).scoreobjects;
+                scoreInfoAsString = (submission as any).scoreobjects;
             }
             let buildInfo: IBuildInfo;
             let scoreObj: ITestCases[];
             try {
-                buildInfo = JSON.parse(a);
+                buildInfo = JSON.parse(buildInfoAsString);
             } catch (e) {
                 buildInfo = JSON.parse(
                     "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
                 );
             }
             try {
-                scoreObj = JSON.parse(b);
+                scoreObj = JSON.parse(scoreInfoAsString);
             } catch (e) {
                 scoreObj = JSON.parse(
                     "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
@@ -356,10 +352,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                     submission.passedTests++;
                 }
             })
-            
-            
-            
-            
             return submission.id;
         });
     }
