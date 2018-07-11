@@ -27,7 +27,7 @@ import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
     getCourses(): Promise<ICourse[]>;
-    getAssignments(courseId: number): Promise<IMap<IAssignment>>;
+    getAssignments(courseID: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
     getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]>;
     getUsersForCourse(course: ICourse, state?: CourseUserState[]): Promise<IUserEnrollment[]>;
@@ -37,23 +37,23 @@ export interface ICourseProvider {
 
     createNewCourse(courseData: INewCourse): Promise<ICourse | IError>;
     getCourse(id: number): Promise<ICourse | null>;
-    updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError>;
+    updateCourse(courseID: number, courseData: ICourse): Promise<IStatusCode | IError>;
 
-    getCourseGroups(courseId: number): Promise<ICourseGroup[]>;
-    updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean>;
+    getCourseGroups(courseID: number): Promise<ICourseGroup[]>;
+    updateGroupStatus(groupID: number, status: CourseGroupStatus): Promise<boolean>;
     createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError>;
-    getGroup(gid: number): Promise<ICourseGroup | null>;
-    deleteGroup(groupId: number): Promise<boolean>;
+    getGroup(groupID: number): Promise<ICourseGroup | null>;
+    deleteGroup(groupID: number): Promise<boolean>;
     getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
     updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError>;
     // deleteCourse(id: number): Promise<boolean>;
 
-    getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>>;
-    getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<ISubmission>>;
+    getAllLabInfos(courseID: number, userId: number): Promise<IMap<ISubmission>>;
+    getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>>;
     getDirectories(provider: string): Promise<IOrganization[]>;
     getProviders(): Promise<string[]>;
-    refreshCoursesFor(courseid: number): Promise<any>;
-    approveSubmission(submissionid: number): Promise<void>;
+    refreshCoursesFor(courseID: number): Promise<any>;
+    approveSubmission(submissionID: number): Promise<void>;
 }
 
 export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollment {
@@ -80,8 +80,8 @@ export interface IUserEnrollment extends IEnrollment {
 }
 
 export interface IEnrollment {
-    userid: number;
-    courseid: number;
+    userID: number;
+    courseID: number;
     status?: CourseUserState;
 
     course?: ICourse;
@@ -107,15 +107,15 @@ export class CourseManager {
 
     /**
      * Get a course from and id
-     * @param id The id of the course
+     * @param ID The id of the course
      */
-    public async getCourse(id: number): Promise<ICourse | null> {
+    public async getCourse(ID: number): Promise<ICourse | null> {
         // const a = (await this.courseProvider.getCourses())[id];
         // if (a) {
         //     return a;
         // }
         // return null;
-        return await this.courseProvider.getCourse(id);
+        return await this.courseProvider.getCourse(ID);
     }
 
     /**
@@ -133,7 +133,7 @@ export class CourseManager {
                 assignments: [],
                 course: ele.course,
                 link: ele.status !== undefined ?
-                    { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
+                    { courseId: ele.courseID, userid: ele.userID, state: ele.status } : undefined,
             };
         });
         return newMap;
@@ -163,11 +163,11 @@ export class CourseManager {
     /**
      * Retrives one assignment from a single course
      * @param course The course the assignment is in
-     * @param assignmentId The id to the assignment
+     * @param assignmentID The id to the assignment
      */
-    public async getAssignment(course: ICourse, assignmentId: number): Promise<IAssignment | null> {
+    public async getAssignment(course: ICourse, assignmentID: number): Promise<IAssignment | null> {
         const temp = await this.courseProvider.getAssignments(course.id);
-        const assign = temp[assignmentId];
+        const assign = temp[assignmentID];
         if (assign) {
             return assign;
         }
@@ -176,13 +176,13 @@ export class CourseManager {
 
     /**
      * Get all assignments in a single course
-     * @param courseId The course id or ICourse to retrive assignments from
+     * @param courseID The course id or ICourse to retrive assignments from
      */
-    public async getAssignments(courseId: number | ICourse): Promise<IAssignment[]> {
-        if (isCourse(courseId)) {
-            courseId = courseId.id;
+    public async getAssignments(courseID: number | ICourse): Promise<IAssignment[]> {
+        if (isCourse(courseID)) {
+            courseID = courseID.id;
         }
-        return MapHelper.toArray(await this.courseProvider.getAssignments(courseId));
+        return MapHelper.toArray(await this.courseProvider.getAssignments(courseID));
     }
 
     /**
@@ -206,8 +206,8 @@ export class CourseManager {
      * Updates a course with new information
      * @param courseData The new information for the course
      */
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError> {
-        return await this.courseProvider.updateCourse(courseId, courseData);
+    public async updateCourse(courseID: number, courseData: ICourse): Promise<IStatusCode | IError> {
+        return await this.courseProvider.updateCourse(courseID, courseData);
     }
 
     /**
@@ -218,7 +218,7 @@ export class CourseManager {
     public async getStudentCourse(student: IUser, course: ICourse): Promise<IUserCourse | null> {
         const courses = await this.courseProvider.getCoursesFor(student);
         for (const crs of courses) {
-            if (crs.courseid === course.id) {
+            if (crs.courseID === course.id) {
                 const returnTemp: IUserCourse = {
                     link: crs.status !== undefined ?
                         { userid: student.id, courseId: course.id, state: crs.status } : undefined,
@@ -267,7 +267,7 @@ export class CourseManager {
                 assignments: [],
                 course: course.course,
                 link: course.status !== undefined ?
-                    { courseId: course.courseid, userid: student.id, state: course.status } : undefined,
+                    { courseId: course.courseID, userid: student.id, state: course.status } : undefined,
             });
         }
 
@@ -290,26 +290,26 @@ export class CourseManager {
 
         return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
             return {
-                link: { courseId: course.id, userid: user.userid, state: user.status },
+                link: { courseId: course.id, userid: user.userID, state: user.status },
                 user: user.user,
             };
         });
     }
 
-    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError> {
-        return await this.courseProvider.createGroup(groupData, courseId);
+    public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
+        return await this.courseProvider.createGroup(groupData, courseID);
     }
 
-    public async updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError> {
-        return await this.courseProvider.updateGroup(groupData, groupId, courseId);
+    public async updateGroup(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
+        return await this.courseProvider.updateGroup(groupData, groupID, courseID);
     }
 
     /**
      * getCourseGroup returns all the groups under a course
-     * @param courseid course id of a course
+     * @param courseID course id of a course
      */
-    public async getCourseGroups(courseid: number): Promise<ICourseGroup[]> {
-        return await this.courseProvider.getCourseGroups(courseid);
+    public async getCourseGroups(courseID: number): Promise<ICourseGroup[]> {
+        return await this.courseProvider.getCourseGroups(courseID);
     }
 
     /**
@@ -335,24 +335,24 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
-        return await this.courseProvider.getGroupByUserAndCourse(userid, courseid);
+    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<ICourseGroup | null> {
+        return await this.courseProvider.getGroupByUserAndCourse(userID, courseID);
     }
 
-    public async updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean> {
-        return await this.courseProvider.updateGroupStatus(groupId, status);
+    public async updateGroupStatus(groupID: number, status: CourseGroupStatus): Promise<boolean> {
+        return await this.courseProvider.updateGroupStatus(groupID, status);
     }
 
-    public async getGroup(gid: number): Promise<ICourseGroup | null> {
-        return await this.courseProvider.getGroup(gid);
+    public async getGroup(groupID: number): Promise<ICourseGroup | null> {
+        return await this.courseProvider.getGroup(groupID);
     }
 
-    public async deleteGroup(gid: number): Promise<boolean> {
-        return await this.courseProvider.deleteGroup(gid);
+    public async deleteGroup(groupID: number): Promise<boolean> {
+        return await this.courseProvider.deleteGroup(groupID);
     }
 
-    public async refreshCoursesFor(courseid: number): Promise<any> {
-        return await this.courseProvider.refreshCoursesFor(courseid);
+    public async refreshCoursesFor(courseID: number): Promise<any> {
+        return await this.courseProvider.refreshCoursesFor(courseID);
     }
 
     /**
@@ -397,19 +397,19 @@ export class CourseManager {
         if (!groupCourse.link) {
             return;
         }
-        const assigns = await this.getAssignments(groupCourse.course.id);
-        if (assigns.length > 0) {
+        const assignments = await this.getAssignments(groupCourse.course.id);
+        if (assignments.length > 0) {
             const submissions = MapHelper.toArray(
                 await this.courseProvider.getAllGroupLabInfos(groupCourse.course.id, group.id));
 
-            for (const a of assigns) {
-                const temp = submissions.find((sub) => sub.assignmentid === a.id);
-                groupCourse.assignments.push({ assignment: a, latest: temp });
+            for (const a of assignments) {
+                const submission = submissions.find((sub) => sub.assignmentid === a.id);
+                groupCourse.assignments.push({ assignment: a, latest: submission });
             }
         }
     }
 
-    public async approveSubmission(submissionid: number): Promise<void> {
-        return await this.courseProvider.approveSubmission(submissionid);
+    public async approveSubmission(submissionID: number): Promise<void> {
+        return await this.courseProvider.approveSubmission(submissionID);
     }
 }
