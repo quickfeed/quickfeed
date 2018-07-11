@@ -167,27 +167,21 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			var repo *scm.Repository
 			var ok bool
 			if repo, ok = existing[path]; !ok {
-				var err error
-				if strings.Compare(path, TestsRepo) == 0 {
-					repo, err = s.CreateRepository(
-						ctx,
-						&scm.CreateRepositoryOptions{
-							Path:      path,
-							Directory: directory,
-							Private:   true},
-					)
-				} else {
-					repo, err = s.CreateRepository(
-						ctx,
-						&scm.CreateRepositoryOptions{
-							Path:      path,
-							Directory: directory,
-							Private:   false},
-					)
+				privRepo := false
+				if path == TestsRepo {
+					privRepo = true
 				}
+				var err error
+				repo, err = s.CreateRepository(
+					ctx,
+					&scm.CreateRepositoryOptions{
+						Path:      path,
+						Directory: directory,
+						Private:   privRepo},
+				)
 
 				if err != nil {
-					logger.WithField("repo", path).WithError(err).Warn("Failed to create repository")
+					logger.WithField("repo", path).WithField("private", privRepo).WithError(err).Warn("Failed to create repository")
 					return err
 				}
 				logger.WithField("repo", repo).Println("Created new repository")
