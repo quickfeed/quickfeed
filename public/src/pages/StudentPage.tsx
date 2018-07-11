@@ -226,13 +226,13 @@ export class StudentPage extends ViewPage {
     }
 
     private onlyActiveCourses(studentCourse: IUserCourse[]): IUserCourse[] {
-        const temp: IUserCourse[] = [];
+        const userCourses: IUserCourse[] = [];
         studentCourse.forEach((a) => {
             if (a.link && (a.link.state === CourseUserState.student || a.link.state === CourseUserState.teacher)) {
-                temp.push(a);
+                userCourses.push(a);
             }
         });
-        return temp;
+        return userCourses;
     }
 
     // Loads and cache information when user enters a page.

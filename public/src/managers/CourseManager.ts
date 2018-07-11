@@ -166,8 +166,8 @@ export class CourseManager {
      * @param assignmentID The id to the assignment
      */
     public async getAssignment(course: ICourse, assignmentID: number): Promise<IAssignment | null> {
-        const temp = await this.courseProvider.getAssignments(course.id);
-        const assign = temp[assignmentID];
+        const assignments = await this.courseProvider.getAssignments(course.id);
+        const assign = assignments[assignmentID];
         if (assign) {
             return assign;
         }
@@ -219,14 +219,14 @@ export class CourseManager {
         const courses = await this.courseProvider.getCoursesFor(student);
         for (const crs of courses) {
             if (crs.courseID === course.id) {
-                const returnTemp: IUserCourse = {
+                const userCourse: IUserCourse = {
                     link: crs.status !== undefined ?
                         { userid: student.id, courseId: course.id, state: crs.status } : undefined,
                     assignments: [],
                     course,
                 };
-                await this.fillLinks(student, returnTemp);
-                return returnTemp;
+                await this.fillLinks(student, userCourse);
+                return userCourse;
             }
         }
         return null;
@@ -240,12 +240,12 @@ export class CourseManager {
      * @param assignment The assignment the data should be loaded for
      */
     public async getUserSubmittions(student: IUser, assignment: IAssignment): Promise<IStudentSubmission> {
-        const temp = MapHelper.find(await this.courseProvider.getAllLabInfos(assignment.courseid, student.id),
+        const labsInfo = MapHelper.find(await this.courseProvider.getAllLabInfos(assignment.courseid, student.id),
             (ele) => ele.userid === student.id && ele.assignmentid === assignment.id);
-        if (temp) {
+        if (labsInfo) {
             return {
                 assignment,
-                latest: temp,
+                latest: labsInfo,
             };
         }
         return {
@@ -323,13 +323,13 @@ export class CourseManager {
         
         if (groupEnrollment != null && groupEnrollment.id === group.id) {
             if (group.courseid === course.id) {
-                const returnTemp: IGroupCourse = {
+                const groupCourse: IGroupCourse = {
                     link: { groupid: group.id, courseId: course.id, state: groupEnrollment.status },
                     assignments: [],
                     course,
                 };
-                await this.fillLinksGroup(group, returnTemp);
-                return returnTemp;
+                await this.fillLinksGroup(group, groupCourse);
+                return groupCourse;
             }
         }
         return null;
@@ -382,8 +382,8 @@ export class CourseManager {
                 await this.courseProvider.getAllLabInfos(studentCourse.course.id, student.id));
 
             for (const a of assigns) {
-                const temp = submissions.find((sub) => sub.assignmentid === a.id);
-                studentCourse.assignments.push({ assignment: a, latest: temp });
+                const submission = submissions.find((sub) => sub.assignmentid === a.id);
+                studentCourse.assignments.push({ assignment: a, latest: submission });
             }
         }
     }

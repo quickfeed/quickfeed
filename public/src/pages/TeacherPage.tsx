@@ -137,9 +137,9 @@ export class TeacherPage extends ViewPage {
                 ]);
             const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
-                const temp = await this.courseMan.getStudentCourse(student.user, course);
-                if (temp) {
-                    linkedStudents.push({ course: temp, user: student.user });
+                const userCourses = await this.courseMan.getStudentCourse(student.user, course);
+                if (userCourses) {
+                    linkedStudents.push({ course: userCourses, user: student.user });
                 }
             }              
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
