@@ -249,8 +249,7 @@ export class StudentPage extends ViewPage {
             // preloading groupdata.
             this.GroupUserCourses = [];
 
-            for(var i=0; i < this.activeUserCourses.length; i++) {
-                var course = this.activeUserCourses[i];
+            for(const course of this.activeUserCourses) {
                 var group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
                 if (group != null) {
                     var groupCourse = await this.courseMan.getGroupCourse(group, course.course);
@@ -259,7 +258,6 @@ export class StudentPage extends ViewPage {
                     }
                 }
             }
-            
         }
     }
 
