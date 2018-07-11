@@ -26,7 +26,7 @@ import { MemberView } from "./views/MemberView";
 import { GroupResults } from "../components/teacher/GroupResults";
 
 export class TeacherPage extends ViewPage {
-    
+
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
@@ -141,18 +141,18 @@ export class TeacherPage extends ViewPage {
                 if (temp) {
                     linkedStudents.push({ course: temp, user: student.user });
                 }
-            }              
+            }
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
-            return <Results 
-                    course={course} 
-                    labs={labs} 
-                    students={linkedStudents}
-                    onApproveClick={async (submissionID:number) => {
-                        await this.courseMan.approveSubmission(submissionID);
-                        this.navMan.refresh();
-                    }}
-                    >
-                </Results>;
+            return <Results
+                course={course}
+                labs={labs}
+                students={linkedStudents}
+                onApproveClick={async (submissionID: number) => {
+                    await this.courseMan.approveSubmission(submissionID);
+                    this.navMan.refresh();
+                }}
+            >
+            </Results>;
         }
         return <div>404 Page not found</div>;
     }
@@ -169,30 +169,28 @@ export class TeacherPage extends ViewPage {
                     linkedGroups.push({
                         course: grp,
                         group: grpCourse,
-                    
+
                     });
                 }
-            }            
+            }
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
-            return <GroupResults 
-                    course={course} 
-                    labs={labs} 
-                    groups={linkedGroups}
-                    onApproveClick={async (submissionID:number) => {
-                        await this.courseMan.approveSubmission(submissionID);
-                        this.navMan.refresh();
-                    }}
-                    >
-                </GroupResults>;
+            return <GroupResults
+                course={course}
+                labs={labs}
+                groups={linkedGroups}
+                onApproveClick={async (submissionID: number) => {
+                    await this.courseMan.approveSubmission(submissionID);
+                    this.navMan.refresh();
+                }}
+            >
+            </GroupResults>;
         }
         return <div>404 Page not found</div>;
     }
 
     public async groups(info: INavInfo<{ course: string }>): View {
-        const courseId = parseInt(info.params.course, 10);
-        const course = await this.courseMan.getCourse(courseId);
-        if (course) {
-            const groups = await this.courseMan.getCourseGroups(courseId);
+        return this.courseFunc(info.params.course, async (course) => {
+            const groups = await this.courseMan.getCourseGroups(course.id);
             const approvedGroups: ICourseGroup[] = [];
             const pendingGroups: ICourseGroup[] = [];
             const rejectedGroups: ICourseGroup[] = [];
@@ -218,8 +216,7 @@ export class TeacherPage extends ViewPage {
                 courseMan={this.courseMan}
                 pagePath={this.pagePath}
             />;
-        }
-        return <div>404 Page not found</div>;
+        })
     }
 
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
@@ -345,4 +342,14 @@ export class TeacherPage extends ViewPage {
         }
         return [];
     }
+
+    private async courseFunc(courseParam: string, fn: (course: ICourse) => View): View {
+        const courseId = parseInt(courseParam, 10);
+        const course = await this.courseMan.getCourse(courseId);
+        if (course) {
+            return fn(course)
+        }
+        return <div>404 Page not found</div>;
+    }
+
 }
