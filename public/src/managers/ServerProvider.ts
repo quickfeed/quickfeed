@@ -20,7 +20,7 @@ import { HttpHelper, IHTTPResult } from "../HttpHelper";
 import { ICourseProvider } from "./CourseManager";
 
 import {
-    ICourseEnrollemtnt,
+    ICourseEnrollment,
     IEnrollment,
     isCourseEnrollment,
     isUserEnrollment,
@@ -54,7 +54,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         // throw new Error("Method not implemented.");
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]> {
         // TODO: Fix to use correct url request
         const status = state ? "?status=" + courseUserStateToString(state) : "";
         const result = await this.helper.get<ICourseWithEnrollStatus[]>("/users/" + user.id + "/courses" + status);
@@ -63,7 +63,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return [];
         }
 
-        const arr: ICourseEnrollemtnt[] = [];
+        const arr: ICourseEnrollment[] = [];
         result.data.forEach((ele) => {
             const enroll = ele.enrolled as number >= 0 ? ele.enrolled : undefined;
             arr.push({
@@ -264,12 +264,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             if ((e as any).scoreobjects && ((e as any).scoreobjects as string).trim().length > 2) {
                 b = (e as any).scoreobjects;
             }
-            let tempInfo: IBuildInfo;
+            let buildInfo: IBuildInfo;
             let scoreObj: ITestCases[];
             try {
-                tempInfo = JSON.parse(a);
+                buildInfo = JSON.parse(a);
             } catch (e) {
-                tempInfo = JSON.parse(
+                buildInfo = JSON.parse(
                     "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
                 );
             }
@@ -281,10 +281,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 );
             }
 
-            e.buildDate = tempInfo.builddate;
-            e.buildId = tempInfo.buildid;
-            e.buildLog = tempInfo.buildlog;
-            e.executetionTime = tempInfo.execTime;
+            e.buildDate = buildInfo.builddate;
+            e.buildId = buildInfo.buildid;
+            e.buildLog = buildInfo.buildlog;
+            e.executetionTime = buildInfo.execTime;
             e.testCases = scoreObj;
             e.failedTests = 0;
             e.passedTests = 0;
@@ -325,12 +325,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             if ((e as any).scoreobjects && ((e as any).scoreobjects as string).trim().length > 2) {
                 b = (e as any).scoreobjects;
             }
-            let tempInfo: IBuildInfo;
+            let buildInfo: IBuildInfo;
             let scoreObj: ITestCases[];
             try {
-                tempInfo = JSON.parse(a);
+                buildInfo = JSON.parse(a);
             } catch (e) {
-                tempInfo = JSON.parse(
+                buildInfo = JSON.parse(
                     "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
                 );
             }
@@ -342,10 +342,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 );
             }
 
-            e.buildDate = tempInfo.builddate;
-            e.buildId = tempInfo.buildid;
-            e.buildLog = tempInfo.buildlog;
-            e.executetionTime = tempInfo.execTime;
+            e.buildDate = buildInfo.builddate;
+            e.buildId = buildInfo.buildid;
+            e.buildLog = buildInfo.buildlog;
+            e.executetionTime = buildInfo.execTime;
             e.testCases = scoreObj;
             e.failedTests = 0;
             e.passedTests = 0;

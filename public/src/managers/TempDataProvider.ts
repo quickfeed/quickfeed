@@ -18,7 +18,7 @@ import { ICourseProvider } from "./CourseManager";
 import { IMap, MapHelper, mapify } from "../map";
 import { IUserProvider } from "./UserManager";
 
-import { ICourseEnrollemtnt, IUserEnrollment } from "../managers";
+import { ICourseEnrollment, IUserEnrollment } from "../managers";
 
 interface IDummyUser extends IUser {
     password: string;
@@ -207,7 +207,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]> {
         const cLinks: ICourseUserLink[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
@@ -215,7 +215,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 cLinks.push(c);
             }
         }
-        const courses: ICourseEnrollemtnt[] = [];
+        const courses: ICourseEnrollment[] = [];
         const tempCourses = await this.getCourses();
         for (const link of cLinks) {
             const c = tempCourses[link.courseId];

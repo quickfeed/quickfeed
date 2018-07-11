@@ -29,7 +29,7 @@ export interface ICourseProvider {
     getCourses(): Promise<ICourse[]>;
     getAssignments(courseId: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
-    getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]>;
+    getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]>;
     getUsersForCourse(course: ICourse, state?: CourseUserState[]): Promise<IUserEnrollment[]>;
 
     addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
@@ -56,7 +56,7 @@ export interface ICourseProvider {
     approveSubmission(submissionid: number): Promise<void>;
 }
 
-export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollemtnt {
+export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollment {
     if ((enroll as any).course) {
         return true;
     }
@@ -70,7 +70,7 @@ export function isCourseEnrollment(enroll: IEnrollment): enroll is IUserEnrollme
     return false;
 }
 
-export interface ICourseEnrollemtnt extends IEnrollment {
+export interface ICourseEnrollment extends IEnrollment {
     course: ICourse;
 }
 
