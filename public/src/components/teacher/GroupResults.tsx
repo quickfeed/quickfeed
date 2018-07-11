@@ -83,7 +83,8 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
     }
 
     private getGroupResultSelector(group: IGroupCourseWithGroup): Array<string | JSX.Element> {
-        let selector: Array<string | JSX.Element> = [group.group.name, "5"];
+        const slipdayPlaceholder = "5";
+        let selector: Array<string | JSX.Element> = [group.group.name, slipdayPlaceholder];
         selector = selector.concat(group.course.assignments.filter((e, i) => e.assignment.isgrouplab).map((e, i) => 
         <a className="lab-result-cell"
             onClick={() => this.handleOnclick(e)}
