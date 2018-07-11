@@ -360,13 +360,8 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 				return err
 			}
 
-			provider := c.Get(courseInfo.Provider)
-			var s scm.SCM
-			if provider != nil {
-				s = provider.(scm.SCM)
-			} else {
-				return nil // TODO decide how to handle empty provider.
-			}
+			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+			s := c.Get(courseInfo.Provider).(scm.SCM)
 
 			dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
 			if err != nil {
