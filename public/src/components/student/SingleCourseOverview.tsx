@@ -1,15 +1,39 @@
 import * as React from "react";
-import { ICoursesWithAssignments, IUserCourse } from "../../models";
+import { ICoursesWithAssignments, IUserCourse, IGroupCourse, ICourseLinkAssignment, IStudentSubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IUserCourse;
+    groupAndLabs: IGroupCourse;
     onLabClick: (courseId: number, labId: number) => void;
 }
 
 class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
+    private buildInfo(studentLabs: IStudentSubmission[], groupLabs: IStudentSubmission[]): IStudentSubmission[] | null {
+        let labAndGrouplabs: IStudentSubmission[] = [];
+        if (studentLabs.length != groupLabs.length) {
+            return null;
+        }
+        for (var labCounter = 0; labCounter < studentLabs.length; labCounter++) {
+            if (!studentLabs[labCounter].assignment.isgrouplab) {
+                labAndGrouplabs.push(studentLabs[labCounter]);
+            } else {
+                labAndGrouplabs.push(groupLabs[labCounter]);
+            }
+        }
+
+        return labAndGrouplabs;
+    }
+
     public render() {
-        const labs: JSX.Element[] = this.props.courseAndLabs.assignments.map((submission, k) => {
+        var submissionArray = this.buildInfo(this.props.courseAndLabs.assignments, this.props.groupAndLabs.assignments);
+
+        // Fallback if the length of grouplabs and userlabs is different. 
+        if (!submissionArray) {
+            submissionArray = this.props.courseAndLabs.assignments;
+        }
+
+        const labs: JSX.Element[] = submissionArray.map((submission, k) => {
             let submissionInfo = <div>No submissions</div>;
             if (submission.latest) {
                 submissionInfo = <div className="row">

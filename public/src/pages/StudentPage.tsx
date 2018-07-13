@@ -7,7 +7,7 @@ import { UserManager } from "../managers/UserManager";
 
 import {
     CourseUserState, ICourse, ICourseGroup,
-    IStudentSubmission, IUserCourse, ICourseLinkAssignment,
+    IStudentSubmission, IUserCourse, ICourseLinkAssignment, IGroupCourse,
 } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
@@ -95,9 +95,11 @@ export class StudentPage extends ViewPage {
     public async course(navInfo: INavInfo<{ courseid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
+        this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
             return (<SingleCourseOverview
                 courseAndLabs={this.selectedUserCourse as IUserCourse}
+                groupAndLabs={this.selectedUserGroupCourse as IGroupCourse}
                 onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)} />);
         }
         return <h1>404 not found</h1>;
@@ -113,8 +115,8 @@ export class StudentPage extends ViewPage {
                     course={this.selectedUserCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
-                    onRebuildClick={() => {}}
-                    onApproveClick={() => {}}>
+                    onRebuildClick={() => { }}
+                    onApproveClick={() => { }}>
                 </StudentLab>;
             }
         }
@@ -123,23 +125,23 @@ export class StudentPage extends ViewPage {
 
     // TODO - Instead of requesting to server for each time
     // preload grouplab the same way as normal labs are loaded.
-    public async courseWithGroupLab(navInfo: INavInfo<{courseid: number, labid: number}>): View {
+    public async courseWithGroupLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
-            await this.selectGroupAssignment(navInfo.params.labid); 
+            await this.selectGroupAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
                 return <StudentLab
                     course={this.selectedUserCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
-                    onRebuildClick={() => {}}
-                    onApproveClick={() => {}}>
+                    onRebuildClick={() => { }}
+                    onApproveClick={() => { }}>
                 </StudentLab>;
             }
         }
         // Need to show something if person is not part of group yet.
-        return this.courseWithLab(navInfo); 
+        return this.courseWithLab(navInfo);
     }
 
     public async members(navInfo: INavInfo<{ courseid: number }>): View {
@@ -178,9 +180,9 @@ export class StudentPage extends ViewPage {
                     const allLinks: ILink[] = [];
                     allLinks.push({ name: "Labs" });
                     const labs = course.assignments;
-                    const gLabs:ILink[] = [];
+                    const gLabs: ILink[] = [];
                     labs.forEach((lab) => {
-                        if(lab.assignment.isgrouplab){
+                        if (lab.assignment.isgrouplab) {
                             gLabs.push({
                                 name: lab.assignment.name,
                                 uri: this.pagePath + "/courses/" + course.course.id + "/grouplab/" + lab.assignment.id,
@@ -249,11 +251,11 @@ export class StudentPage extends ViewPage {
             // preloading groupdata.
             this.GroupUserCourses = [];
 
-            for(const course of this.activeUserCourses) {
+            for (const course of this.activeUserCourses) {
                 var group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
                 if (group != null) {
                     var groupCourse = await this.courseMan.getGroupCourse(group, course.course);
-                    if(groupCourse) {
+                    if (groupCourse) {
                         this.GroupUserCourses.push(groupCourse);
                     }
                 }

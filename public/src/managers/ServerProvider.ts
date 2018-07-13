@@ -32,6 +32,40 @@ import { ILogger } from "./LogManager";
 
 import { combinePath } from "../NavigationHelper";
 
+interface Endpoints {
+    courses: string
+    users: string
+    user: string
+    group: string
+    groups: string
+    refresh: string
+    submissions: string
+    submission: string
+    assignments: string
+    directories: string
+    providers: string
+    auth: string
+    logout: string
+    api: string
+}
+
+const URL_ENDPOINT: Endpoints = {
+    courses: "/courses",
+    users: "/users",
+    user: "/user",
+    group: "/group",
+    groups: "/groups",
+    refresh: "/refresh",
+    submissions: "/submission",
+    submission: "/submission",
+    assignments: "/assignments",
+    directories: "/directories",
+    providers: "/providers",
+    auth: "/auth",
+    logout: "/logout",
+    api: "/api/v1/",
+};
+
 export class ServerProvider implements IUserProvider, ICourseProvider {
 
     private helper: HttpHelper;
