@@ -39,7 +39,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
                     links.push({ name: "This is a teacher", extra: "primary" });
                 } else {
                     links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });
-                    links.push({ name: "Rejecte", uri: "reject", extra: "danger" });
+                    links.push({ name: "Reject", uri: "reject", extra: "danger" });
                 }
 
                 return links;

@@ -18,7 +18,7 @@ import { ICourseProvider } from "./CourseManager";
 import { IMap, MapHelper, mapify } from "../map";
 import { IUserProvider } from "./UserManager";
 
-import { ICourseEnrollemtnt, IUserEnrollment } from "../managers";
+import { ICourseEnrollment, IUserEnrollment } from "../managers";
 
 interface IDummyUser extends IUser {
     password: string;
@@ -30,7 +30,7 @@ interface IDummyUser extends IUser {
  */
 export class TempDataProvider implements IUserProvider, ICourseProvider {
     
-
+    
     private localUsers: IMap<IDummyUser>;
     private localAssignments: IMap<IAssignment>;
     private localCourses: IMap<ICourse>;
@@ -158,7 +158,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 // TODO: See if we should have an error here or not
                 throw new Error("Link exist witout a user object");
             }
-            return { courseid: link.courseId, userid: link.userid, user, status: link.state };
+            return { courseID: link.courseId, userID: link.userid, user, status: link.state };
         });
     }
 
@@ -207,7 +207,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]> {
         const cLinks: ICourseUserLink[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
@@ -215,12 +215,12 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 cLinks.push(c);
             }
         }
-        const courses: ICourseEnrollemtnt[] = [];
+        const courses: ICourseEnrollment[] = [];
         const tempCourses = await this.getCourses();
         for (const link of cLinks) {
             const c = tempCourses[link.courseId];
             if (c) {
-                courses.push({ course: c, courseid: link.courseId, userid: link.userid, status: link.state });
+                courses.push({ course: c, courseID: link.courseId, userID: link.userid, status: link.state });
             }
         }
         return courses;
@@ -248,6 +248,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
     public async updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError> {
         throw new Error("Method not implemented");
+    }
+    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<Models.ISubmission>> {
+        throw new Error("Method not implemented.");
     }
 
     public async refreshCoursesFor(courseid: number): Promise<any> {

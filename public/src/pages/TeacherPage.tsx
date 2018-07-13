@@ -19,12 +19,14 @@ import {
     IUser,
     IUserCourseWithUser,
     IUserRelation,
+    IGroupCourseWithGroup,
 } from "../models";
 
 import { MemberView } from "./views/MemberView";
+import { GroupResults } from "../components/teacher/GroupResults";
 
 export class TeacherPage extends ViewPage {
-
+    
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
@@ -46,6 +48,7 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}", this.course);
         this.navHelper.registerFunction("courses/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("courses/{course}/results", this.results);
+        this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
     }
@@ -134,11 +137,11 @@ export class TeacherPage extends ViewPage {
                 ]);
             const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
-                const temp = await this.courseMan.getStudentCourse(student.user, course);
-                if (temp) {
-                    linkedStudents.push({ course: temp, user: student.user });
+                const userCourses = await this.courseMan.getStudentCourse(student.user, course);
+                if (userCourses) {
+                    linkedStudents.push({ course: userCourses, user: student.user });
                 }
-            }
+            }              
             const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
             return <Results 
                     course={course} 
@@ -150,6 +153,37 @@ export class TeacherPage extends ViewPage {
                     }}
                     >
                 </Results>;
+        }
+        return <div>404 Page not found</div>;
+    }
+
+    public async groupresults(info: INavInfo<{ course: string }>): View {
+        const courseId = parseInt(info.params.course, 10);
+        const course = await this.courseMan.getCourse(courseId);
+        if (course) {
+            var linkedGroups: IGroupCourseWithGroup[] = [];
+            const groupCourses = await this.courseMan.getCourseGroups(course.id);
+            for (const grpCourse of groupCourses) {
+                const grp = await this.courseMan.getGroupCourse(grpCourse, course);
+                if (grpCourse && grp) {
+                    linkedGroups.push({
+                        course: grp,
+                        group: grpCourse,
+                    
+                    });
+                }
+            }            
+            const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
+            return <GroupResults 
+                    course={course} 
+                    labs={labs} 
+                    groups={linkedGroups}
+                    onApproveClick={async (submissionID:number) => {
+                        await this.courseMan.approveSubmission(submissionID);
+                        this.navMan.refresh();
+                    }}
+                    >
+                </GroupResults>;
         }
         return <div>404 Page not found</div>;
     }
@@ -250,6 +284,7 @@ export class TeacherPage extends ViewPage {
             item: link,
             children: [
                 { name: "Results", uri: link.uri + "/results" },
+                { name: "Group Results", uri: link.uri + "/groupresults" },
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
                 // {name: "Settings", uri: link.uri + "/settings" },

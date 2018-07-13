@@ -82,8 +82,8 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
     private renderRow(group: ICourseGroup): Array<string | JSX.Element> {
         const selector: Array<string | JSX.Element> = [];
         selector.push(group.name, this.getMembers(group.users));
-        const temp = this.renderDropdownMenu(group);
-        selector.push(temp);
+        const dropdownMenu = this.renderDropdownMenu(group);
+        selector.push(dropdownMenu);
         return selector;
     }
 

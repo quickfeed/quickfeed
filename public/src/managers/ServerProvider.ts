@@ -20,7 +20,7 @@ import { HttpHelper, IHTTPResult } from "../HttpHelper";
 import { ICourseProvider } from "./CourseManager";
 
 import {
-    ICourseEnrollemtnt,
+    ICourseEnrollment,
     IEnrollment,
     isCourseEnrollment,
     isUserEnrollment,
@@ -32,8 +32,42 @@ import { ILogger } from "./LogManager";
 
 import { combinePath } from "../NavigationHelper";
 
+interface Endpoints {
+    courses: string
+    users: string
+    user: string
+    group: string
+    groups: string
+    refresh: string
+    submissions: string
+    submission: string
+    assignments: string
+    directories: string
+    providers: string
+    auth: string
+    logout: string
+    api: string
+}
+
+const URL_ENDPOINT: Endpoints = {
+    courses: "/courses",
+    users: "/users",
+    user: "/user",
+    group: "/group",
+    groups: "/groups",
+    refresh: "/refresh",
+    submissions: "/submission",
+    submission: "/submission",
+    assignments: "/assignments",
+    directories: "/directories",
+    providers: "/providers",
+    auth: "/auth",
+    logout: "/logout",
+    api: "/api/v1/",
+};
+
 export class ServerProvider implements IUserProvider, ICourseProvider {
-    
+
     private helper: HttpHelper;
     private logger: ILogger;
 
@@ -54,7 +88,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         // throw new Error("Method not implemented.");
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollemtnt[]> {
+    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]> {
         // TODO: Fix to use correct url request
         const status = state ? "?status=" + courseUserStateToString(state) : "";
         const result = await this.helper.get<ICourseWithEnrollStatus[]>("/users/" + user.id + "/courses" + status);
@@ -63,14 +97,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return [];
         }
 
-        const arr: ICourseEnrollemtnt[] = [];
+        const arr: ICourseEnrollment[] = [];
         result.data.forEach((ele) => {
             const enroll = ele.enrolled as number >= 0 ? ele.enrolled : undefined;
             arr.push({
                 course: ele as ICourse,
                 status: enroll,
-                courseid: ele.id,
-                userid: user.id,
+                courseID: ele.id,
+                userID: user.id,
                 user,
             });
         });
@@ -104,8 +138,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             throw new Error("Problem with the request");
         }
         return mapify(result.data as IAssignment[], (ele) => {
-            //ele.deadline = new Date(2017, 7, 18);
-            if (!ele.deadline){
+            if (!ele.deadline) {
                 ele.deadline = new Date(2000, 1, 1);
             } else {
                 ele.deadline = new Date(ele.deadline);
@@ -128,10 +161,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
-        const result = await this.helper.patch<{ courseid: number, userid: number, status: CourseUserState }, undefined>
+        const result = await this.helper.patch<{ courseID: number, userID: number, status: CourseUserState }, undefined>
             ("/courses/" + link.courseId + "/users/" + link.userid, {
-                courseid: link.courseId,
-                userid: link.userid,
+                courseID: link.courseId,
+                userID: link.userid,
                 status: state,
             });
         if (result.statusCode <= 202) {
@@ -151,8 +184,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.data)) as ICourse;
     }
 
-    public async getCourse(id: number): Promise<ICourse | null> {
-        const result = await this.helper.get<any>("courses/" + id);
+    public async getCourse(ID: number): Promise<ICourse | null> {
+        const result = await this.helper.get<any>("courses/" + ID);
         if (result.statusCode !== 200 || !result.data) {
             this.handleError(result, "getCourse");
             return null;
@@ -160,8 +193,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.data)) as ICourse;
     }
 
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError> {
-        const uri: string = "courses/" + courseId;
+    public async updateCourse(courseID: number, courseData: ICourse): Promise<IStatusCode | IError> {
+        const uri: string = "courses/" + courseID;
         const result = await this.helper.put<ICourse, ICourse>(uri, courseData);
         if (result.statusCode !== 200) {
             this.handleError(result, "updateCourse");
@@ -170,8 +203,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.statusCode)) as IStatusCode;
     }
 
-    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError> {
-        const uri: string = "courses/" + courseId + "/groups";
+    public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
+        const uri: string = "courses/" + courseID + "/groups";
         const result = await this.helper.post<INewGroup, ICourseGroup>(uri, groupData);
         if (result.statusCode !== 201 || !result.data) {
             this.handleError(result, "createGroup");
@@ -180,8 +213,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
     }
 
-    public async getCourseGroups(courseId: number): Promise<ICourseGroup[]> {
-        const uri: string = "courses/" + courseId + "/groups";
+    public async getCourseGroups(courseID: number): Promise<ICourseGroup[]> {
+        const uri: string = "courses/" + courseID + "/groups";
         const result = await this.helper.get<ICourseGroup>(uri);
         if (result.statusCode !== 200 || !result.data) {
             this.handleError(result, "getCourseGroups");
@@ -190,8 +223,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.data)) as ICourseGroup[];
     }
 
-    public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
-        const uri: string = "users/" + userid + "/courses/" + courseid + "/group";
+    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<ICourseGroup | null> {
+        const uri: string = "users/" + userID + "/courses/" + courseID + "/group";
         const result = await this.helper.get<ICourseGroup>(uri);
         if (result.statusCode !== 302 || !result.data) {
             return null;
@@ -199,8 +232,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
     }
 
-    public async updateGroupStatus(groupId: number, st: CourseGroupStatus): Promise<boolean> {
-        const uri: string = "groups/" + groupId;
+    public async updateGroupStatus(groupID: number, st: CourseGroupStatus): Promise<boolean> {
+        const uri: string = "groups/" + groupID;
         const data = { status: st };
 
         const result = await this.helper.patch<{ status: CourseGroupStatus }, undefined>(uri, data);
@@ -212,8 +245,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return false;
     }
 
-    public async getGroup(gid: number): Promise<ICourseGroup | null> {
-        const uri: string = "groups/" + gid;
+    public async getGroup(groupID: number): Promise<ICourseGroup | null> {
+        const uri: string = "groups/" + groupID;
         const result = await this.helper.get<ICourseGroup>(uri);
         if (result.statusCode !== 200 || !result.data) {
             this.handleError(result, "getGroup");
@@ -222,8 +255,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
     }
 
-    public async deleteGroup(groupId: number): Promise<boolean> {
-        const uri: string = "groups/" + groupId;
+    public async deleteGroup(groupID: number): Promise<boolean> {
+        const uri: string = "groups/" + groupID;
         const result = await this.helper.delete(uri);
         if (result.statusCode === 200) {
             return true;
@@ -233,8 +266,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return false;
     }
 
-    public async updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError> {
-        const uri: string = "courses/" + courseId + "/groups/" + groupId;
+    public async updateGroup(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
+        const uri: string = "courses/" + courseID + "/groups/" + groupID;
         const result = await this.helper.put<INewGroup, any>(uri, groupData);
         if (result.statusCode !== 200) {
             this.handleError(result, "updateGroup");
@@ -243,10 +276,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return JSON.parse(JSON.stringify(result.statusCode)) as IStatusCode;
     }
 
-    // TODO change to use course id instead of getting all of them
-    public async getAllLabInfos(courseId: number, userId: number): Promise<IMap<ISubmission>> {
+    // getAllGroupLabInfos 
+    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>> {
         const result = await this.helper.get<ISubmission[]>(
-            ("courses/" + courseId.toString() + "/users/" + userId + "/submissions"),
+            ("courses/" + courseID.toString() + "/groups/" + groupID + "/submissions"),
         );
         if (result.statusCode === 200 && result.data === undefined) {
             return {};
@@ -255,52 +288,105 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result, "getAllLabInfos");
             return {};
         }
-        return mapify(result.data, (e) => {
-            let a = "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}";
-            let b = "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]";
-            if ((e as any).buildinfo && ((e as any).buildinfo as string).trim().length > 2) {
-                a = (e as any).buildinfo as string;
+        return mapify(result.data, (submission) => {
+            let buildInfoAsString = "";
+            let scoreInfoAsString = "";
+            if ((submission as any).buildinfo && ((submission as any).buildinfo as string).trim().length > 2) {
+                buildInfoAsString = (submission as any).buildinfo as string;
             }
-            if ((e as any).scoreobjects && ((e as any).scoreobjects as string).trim().length > 2) {
-                b = (e as any).scoreobjects;
+            if ((submission as any).scoreobjects && ((submission as any).scoreobjects as string).trim().length > 2) {
+                scoreInfoAsString = (submission as any).scoreobjects;
             }
-            let tempInfo: IBuildInfo;
+            let buildInfo: IBuildInfo;
             let scoreObj: ITestCases[];
             try {
-                tempInfo = JSON.parse(a);
+                buildInfo = JSON.parse(buildInfoAsString);
             } catch (e) {
-                tempInfo = JSON.parse(
+                buildInfo = JSON.parse(
                     "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
                 );
             }
             try {
-                scoreObj = JSON.parse(b);
+                scoreObj = JSON.parse(scoreInfoAsString);
             } catch (e) {
                 scoreObj = JSON.parse(
                     "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
                 );
             }
 
-            e.buildDate = tempInfo.builddate;
-            e.buildId = tempInfo.buildid;
-            e.buildLog = tempInfo.buildlog;
-            e.executetionTime = tempInfo.execTime;
-            e.testCases = scoreObj;
-            e.failedTests = 0;
-            e.passedTests = 0;
-            if (e.testCases == null) e.testCases = [];
-            e.testCases.forEach(x => {
+            submission.buildDate = buildInfo.builddate;
+            submission.buildId = buildInfo.buildid;
+            submission.buildLog = buildInfo.buildlog;
+            submission.executetionTime = buildInfo.execTime;
+            submission.testCases = scoreObj;
+            submission.failedTests = 0;
+            submission.passedTests = 0;
+            if (submission.testCases == null) submission.testCases = [];
+            submission.testCases.forEach(x => {
                 if (x.points !== x.score) {
-                    e.failedTests++;
+                    submission.failedTests++;
                 } else {
-                    e.passedTests++;
+                    submission.passedTests++;
                 }
             })
-            
-            
-            
-            
-            return e.id;
+            return submission.id;
+        });
+    }
+
+    // TODO change to use course id instead of getting all of them
+    public async getAllLabInfos(courseID: number, userID: number): Promise<IMap<ISubmission>> {
+        const result = await this.helper.get<ISubmission[]>(
+            ("courses/" + courseID.toString() + "/users/" + userID + "/submissions"),
+        );
+        if (result.statusCode === 200 && result.data === undefined) {
+            return {};
+        }
+        if (!result.data) {
+            this.handleError(result, "getAllLabInfos");
+            return {};
+        }
+        return mapify(result.data, (submission) => {
+            let buildInfoAsString = "";
+            let scoreInfoAsString = "";
+            if ((submission as any).buildinfo && ((submission as any).buildinfo as string).trim().length > 2) {
+                buildInfoAsString = (submission as any).buildinfo as string;
+            }
+            if ((submission as any).scoreobjects && ((submission as any).scoreobjects as string).trim().length > 2) {
+                scoreInfoAsString = (submission as any).scoreobjects;
+            }
+            let buildInfo: IBuildInfo;
+            let scoreObj: ITestCases[];
+            try {
+                buildInfo = JSON.parse(buildInfoAsString);
+            } catch (e) {
+                buildInfo = JSON.parse(
+                    "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
+                );
+            }
+            try {
+                scoreObj = JSON.parse(scoreInfoAsString);
+            } catch (e) {
+                scoreObj = JSON.parse(
+                    "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
+                );
+            }
+
+            submission.buildDate = buildInfo.builddate;
+            submission.buildId = buildInfo.buildid;
+            submission.buildLog = buildInfo.buildlog;
+            submission.executetionTime = buildInfo.execTime;
+            submission.testCases = scoreObj;
+            submission.failedTests = 0;
+            submission.passedTests = 0;
+            if (submission.testCases == null) submission.testCases = [];
+            submission.testCases.forEach(x => {
+                if (x.points !== x.score) {
+                    submission.failedTests++;
+                } else {
+                    submission.passedTests++;
+                }
+            })
+            return submission.id;
         });
     }
 
@@ -387,8 +473,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.makeUserInfo(result.data);
     }
 
-    public async refreshCoursesFor(courseid: number): Promise<any> {
-        const result = await this.helper.post<any, null>("courses/" + courseid + "/refresh", null);
+    public async refreshCoursesFor(courseID: number): Promise<any> {
+        const result = await this.helper.post<any, null>("courses/" + courseID + "/refresh", null);
         if (result.statusCode !== 200 || !result.data) {
             this.handleError(result, "refreshCoursesFor");
             return null;
@@ -417,8 +503,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return error;
     }
 
-    public async approveSubmission(submissionid: number): Promise<void> {
-        const result = await this.helper.patch<any, null>("submissions/" + submissionid, null);
+    public async approveSubmission(submissionID: number): Promise<void> {
+        const result = await this.helper.patch<any, null>("submissions/" + submissionID, null);
         if (result.statusCode !== 200) {
             this.handleError(result, "approveSubmission");
             return;

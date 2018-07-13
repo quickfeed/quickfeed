@@ -27,8 +27,8 @@ export class LoginPage extends ViewPage {
     }
 
     public async login(info: INavInfo<{ provider: string }>): View {
-        const temp: Promise<IUser | null> = this.userMan.tryRemoteLogin(info.params.provider);
-        temp.then((result: IUser | null) => {
+        const iUser: Promise<IUser | null> = this.userMan.tryRemoteLogin(info.params.provider);
+        iUser.then((result: IUser | null) => {
             if (result) {
                 console.log("Sucessful login of: ", result);
                 this.navMan.navigateToDefault();
