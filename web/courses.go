@@ -413,13 +413,15 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			if err != nil {
 				return err
 			}
-			err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
-				TeamID: team.ID,
-				Owner:  repo.Owner,
-				Repo:   repo.Path,
-			})
-			if err != nil {
-				return err
+			if team != nil {
+				err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
+					TeamID: team.ID,
+					Owner:  repo.Owner,
+					Repo:   repo.Path,
+				})
+				if err != nil {
+					return err
+				}
 			}
 
 		case models.Teacher:
@@ -1076,5 +1078,4 @@ func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, d
 			}
 		}
 	}
-
 }
