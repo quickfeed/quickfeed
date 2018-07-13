@@ -6,6 +6,7 @@ interface ISingleCourseOverviewProps {
     courseAndLabs: IUserCourse;
     groupAndLabs: IGroupCourse;
     onLabClick: (courseId: number, labId: number) => void;
+    onGroupLabClick: (courseId: number, labId: number) => void;
 }
 
 class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
@@ -55,10 +56,17 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
             }
             return (
                 <li key={k} className="list-group-item clickable"
-                    onClick={() => this.props.onLabClick(submission.assignment.courseid, submission.assignment.id)}>
+                    // Testing if the onClick handler should be for studentlab or grouplab.
+                    onClick={() => {
+                        if (!submission.assignment.isgrouplab) {
+                            return this.props.onLabClick(submission.assignment.courseid, submission.assignment.id);
+                        } else {
+                            return this.props.onGroupLabClick(submission.assignment.courseid, submission.assignment.id);
+                        }
+                    }}>}
                     <strong>{submission.assignment.name}</strong>
                     {submissionInfo}
-                </li>);
+                </li >);
         });
         return (
             <div>
@@ -68,7 +76,7 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
                         {labs}
                     </ul>
                 </div>
-            </div>
+            </div >
         );
     }
 }

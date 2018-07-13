@@ -100,7 +100,8 @@ export class StudentPage extends ViewPage {
             return (<SingleCourseOverview
                 courseAndLabs={this.selectedUserCourse as IUserCourse}
                 groupAndLabs={this.selectedUserGroupCourse as IGroupCourse}
-                onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)} />);
+                onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}
+                onGroupLabClick={(courseId: number, labId: number) => this.handleGroupLabClick(courseId, labId)} />);
         }
         return <h1>404 not found</h1>;
     }
@@ -301,5 +302,9 @@ export class StudentPage extends ViewPage {
 
     private handleLabClick(courseId: number, labId: number): void {
         this.navMan.navigateTo(this.pagePath + "/courses/" + courseId + "/lab/" + labId);
+    }
+
+    private handleGroupLabClick(courseId: number, labId: number): void {
+        this.navMan.navigateTo(this.pagePath + "/courses/" + courseId + "/grouplab/" + labId);
     }
 }
