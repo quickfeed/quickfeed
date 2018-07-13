@@ -26,7 +26,7 @@ import { MemberView } from "./views/MemberView";
 import { GroupResults } from "../components/teacher/GroupResults";
 
 export class TeacherPage extends ViewPage {
-    
+
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
@@ -68,9 +68,7 @@ export class TeacherPage extends ViewPage {
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
-        const courseId = parseInt(info.params.course, 10);
-        const course = await this.courseMan.getCourse(courseId);
-        if (course) {
+        return this.courseFunc(info.params.course, async (course) => {
             if (info.params.page) {
                 return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
             }
@@ -88,17 +86,16 @@ export class TeacherPage extends ViewPage {
                                     this.navMan.refresh();
                                 });
                             this.navMan.refresh();
-                        }}
-                    >
+                        }}>
                         Refresh course info
-                </BootstrapButton>;
+                    </BootstrapButton>;
                     break;
                 case 1:
                     button = <BootstrapButton
                         classType="default"
                         disabled={true}>
                         Refreshing Course information
-                </BootstrapButton>;
+                    </BootstrapButton>;
                     break;
                 case 2:
                     button = <BootstrapButton
@@ -112,24 +109,20 @@ export class TeacherPage extends ViewPage {
                                     this.navMan.refresh();
                                 });
                             this.navMan.refresh();
-                        }}
-                    >
+                        }}>
                         Info refreshed
-                </BootstrapButton>;
+                    </BootstrapButton>;
                     break;
             }
             return <div>
                 <h1>Overview for {course.name}</h1>
                 {button}
             </div>;
-        }
-        return <div>404 Page not found</div>;
+        })
     }
 
     public async results(info: INavInfo<{ course: string }>): View {
-        const courseId = parseInt(info.params.course, 10);
-        const course = await this.courseMan.getCourse(courseId);
-        if (course) {
+        return this.courseFunc(info.params.course, async (course) => {
             const students = await this.courseMan.getUsersForCourse(course, this.userMan,
                 [
                     CourseUserState.student,
@@ -141,26 +134,23 @@ export class TeacherPage extends ViewPage {
                 if (userCourses) {
                     linkedStudents.push({ course: userCourses, user: student.user });
                 }
-            }              
-            const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
-            return <Results 
-                    course={course} 
-                    labs={labs} 
-                    students={linkedStudents}
-                    onApproveClick={async (submissionID:number) => {
-                        await this.courseMan.approveSubmission(submissionID);
-                        this.navMan.refresh();
-                    }}
-                    >
-                </Results>;
-        }
-        return <div>404 Page not found</div>;
+            }
+            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
+            return <Results
+                course={course}
+                labs={labs}
+                students={linkedStudents}
+                onApproveClick={async (submissionID: number) => {
+                    await this.courseMan.approveSubmission(submissionID);
+                    this.navMan.refresh();
+                }}
+            >
+            </Results>;
+        })
     }
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
-        const courseId = parseInt(info.params.course, 10);
-        const course = await this.courseMan.getCourse(courseId);
-        if (course) {
+        return this.courseFunc(info.params.course, async (course) => {
             var linkedGroups: IGroupCourseWithGroup[] = [];
             const groupCourses = await this.courseMan.getCourseGroups(course.id);
             for (const grpCourse of groupCourses) {
@@ -169,30 +159,27 @@ export class TeacherPage extends ViewPage {
                     linkedGroups.push({
                         course: grp,
                         group: grpCourse,
-                    
+
                     });
                 }
-            }            
-            const labs: IAssignment[] = await this.courseMan.getAssignments(courseId);
-            return <GroupResults 
-                    course={course} 
-                    labs={labs} 
-                    groups={linkedGroups}
-                    onApproveClick={async (submissionID:number) => {
-                        await this.courseMan.approveSubmission(submissionID);
-                        this.navMan.refresh();
-                    }}
-                    >
-                </GroupResults>;
-        }
-        return <div>404 Page not found</div>;
+            }
+            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
+            return <GroupResults
+                course={course}
+                labs={labs}
+                groups={linkedGroups}
+                onApproveClick={async (submissionID: number) => {
+                    await this.courseMan.approveSubmission(submissionID);
+                    this.navMan.refresh();
+                }}
+            >
+            </GroupResults>;
+        })
     }
 
     public async groups(info: INavInfo<{ course: string }>): View {
-        const courseId = parseInt(info.params.course, 10);
-        const course = await this.courseMan.getCourse(courseId);
-        if (course) {
-            const groups = await this.courseMan.getCourseGroups(courseId);
+        return this.courseFunc(info.params.course, async (course) => {
+            const groups = await this.courseMan.getCourseGroups(course.id);
             const approvedGroups: ICourseGroup[] = [];
             const pendingGroups: ICourseGroup[] = [];
             const rejectedGroups: ICourseGroup[] = [];
@@ -218,8 +205,7 @@ export class TeacherPage extends ViewPage {
                 courseMan={this.courseMan}
                 pagePath={this.pagePath}
             />;
-        }
-        return <div>404 Page not found</div>;
+        })
     }
 
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
@@ -246,12 +232,8 @@ export class TeacherPage extends ViewPage {
     }
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
-        const courseId = parseInt(info.params.course, 10);
-        const course = await this.courseMan.getCourse(courseId);
-        if (course) {
-            const all = await this.courseMan.getUsersForCourse(
-                course,
-                this.userMan);
+        return this.courseFunc(info.params.course, async (course) => {
+            const all = await this.courseMan.getUsersForCourse(course, this.userMan);
             const acceptedUsers: IUserRelation[] = [];
             const pendingUsers: IUserRelation[] = [];
             // Sorts all the users to the correct tables, and ignores the rejected once
@@ -275,8 +257,7 @@ export class TeacherPage extends ViewPage {
                 courseMan={this.courseMan}
             >
             </MemberView>;
-        }
-        return <div>404 Page not found</div>;
+        })
     }
 
     public generateCollectionFor(link: ILink): ILinkCollection {
@@ -345,4 +326,14 @@ export class TeacherPage extends ViewPage {
         }
         return [];
     }
+
+    private async courseFunc(courseParam: string, fn: (course: ICourse) => View): View {
+        const courseId = parseInt(courseParam, 10);
+        const course = await this.courseMan.getCourse(courseId);
+        if (course) {
+            return fn(course)
+        }
+        return <div>404 Page not found</div>;
+    }
+
 }
