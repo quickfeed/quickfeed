@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ICoursesWithAssignments, IUserCourse, IGroupCourse, ICourseLinkAssignment, IStudentSubmission } from "../../models";
+import { IGroupCourse, IStudentSubmission, IUserCourse } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
@@ -10,26 +10,10 @@ interface ISingleCourseOverviewProps {
 }
 
 class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
-    private buildInfo(studentLabs: IStudentSubmission[], groupLabs: IStudentSubmission[]): IStudentSubmission[] | null {
-        let labAndGrouplabs: IStudentSubmission[] = [];
-        if (studentLabs.length != groupLabs.length) {
-            return null;
-        }
-        for (var labCounter = 0; labCounter < studentLabs.length; labCounter++) {
-            if (!studentLabs[labCounter].assignment.isgrouplab) {
-                labAndGrouplabs.push(studentLabs[labCounter]);
-            } else {
-                labAndGrouplabs.push(groupLabs[labCounter]);
-            }
-        }
-
-        return labAndGrouplabs;
-    }
-
     public render() {
-        var submissionArray = this.buildInfo(this.props.courseAndLabs.assignments, this.props.groupAndLabs.assignments);
+        let submissionArray = this.buildInfo(this.props.courseAndLabs.assignments, this.props.groupAndLabs.assignments);
 
-        // Fallback if the length of grouplabs and userlabs is different. 
+        // Fallback if the length of grouplabs and userlabs is different.
         if (!submissionArray) {
             submissionArray = this.props.courseAndLabs.assignments;
         }
@@ -63,7 +47,7 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
                         } else {
                             return this.props.onGroupLabClick(submission.assignment.courseid, submission.assignment.id);
                         }
-                    }}>}
+                    }}>
                     <strong>{submission.assignment.name}</strong>
                     {submissionInfo}
                 </li >);
@@ -78,6 +62,21 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
                 </div>
             </div >
         );
+    }
+    private buildInfo(studentLabs: IStudentSubmission[], groupLabs: IStudentSubmission[]): IStudentSubmission[] | null {
+        const labAndGrouplabs: IStudentSubmission[] = [];
+        if (studentLabs.length !== groupLabs.length) {
+            return null;
+        }
+        for (let labCounter = 0; labCounter < studentLabs.length; labCounter++) {
+            if (!studentLabs[labCounter].assignment.isgrouplab) {
+                labAndGrouplabs.push(studentLabs[labCounter]);
+            } else {
+                labAndGrouplabs.push(groupLabs[labCounter]);
+            }
+        }
+
+        return labAndGrouplabs;
     }
 }
 export { SingleCourseOverview };
