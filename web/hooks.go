@@ -4,17 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"os"
 	"path"
-	"sort"
 	"strings"
 	"time"
-
-	"github.com/jinzhu/gorm"
 
 	"github.com/autograde/aguis/scm"
 
@@ -88,40 +84,6 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 	}
 }
 
-// getLatestAssignment TODO DOC
-// TODO Should we check the inputs for consistency, or is it ok to ignore gid if uid is also provided.
-// TODO Should this be renamed to getNextUnapprovedAssignment() ??
-func getLatestAssignment(db database.Database, cid uint64, uid uint64, gid uint64) (*models.Assignment, error) {
-	assignments, err := db.GetAssignmentsByCourse(cid)
-	if err != nil {
-		return nil, err
-	}
-	sort.Slice(assignments, func(i, j int) bool {
-		return assignments[i].Order < assignments[j].Order
-	})
-	for _, v := range assignments {
-		fmt.Println(*v)
-		if uid > 0 {
-			sub, err := db.GetSubmissionForUser(v.ID, uid)
-			if err != nil && err != gorm.ErrRecordNotFound {
-				return nil, err
-			}
-			if sub == nil || !sub.Approved {
-				return v, nil
-			}
-		} else if gid > 0 && v.IsGroupLab {
-			sub, err := db.GetSubmissionForGroup(v.ID, gid)
-			if err != nil && err != gorm.ErrRecordNotFound {
-				return nil, err
-			}
-			if sub == nil || !sub.Approved {
-				return v, nil
-			}
-		}
-	}
-	return nil, errors.New("no next unapproved assignment found")
-}
-
 // RunCI Runs the ci from a RemoteIdentity
 func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, commitHash string, remoteIdentity *models.RemoteIdentity, buildscripts string) {
 	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
@@ -130,6 +92,7 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		return
 	}
 
+	//TODO(hein): we don't need the assignments to run CI, other than to emit an error if there are no assignments
 	assignments, err := db.GetAssignmentsByCourse(course.ID)
 	if err != nil {
 		logger.WithError(err).Warn("Failed to get course from database")
@@ -139,7 +102,7 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		return
 	}
 
-	selectedAssignment, err := getLatestAssignment(db, course.ID, repo.UserID, repo.GroupID)
+	selectedAssignment, err := db.GetNextUnapprovedAssignment(course.ID, repo.UserID, repo.GroupID)
 	if err != nil {
 		logger.WithError(err).Warn("Failed to find a next unapproved assignment")
 		return

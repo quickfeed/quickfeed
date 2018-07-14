@@ -2,6 +2,8 @@ package database
 
 import (
 	"errors"
+	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/autograde/aguis/models"
@@ -219,9 +221,51 @@ func (db *GormDB) GetAssignmentsByCourse(cid uint64) ([]*models.Assignment, erro
 	return course.Assignments, nil
 }
 
+// GetNextUnapprovedAssignment returns the next assignment to be approved
+// for the given user and (optionally) group.
+func (db *GormDB) GetNextUnapprovedAssignment(cid uint64, uid uint64, gid uint64) (*models.Assignment, error) {
+	assignments, err := db.GetAssignmentsByCourse(cid)
+	if err != nil {
+		return nil, err
+	}
+	if uid == 0 {
+		return nil, errors.New("user id must be provided")
+	}
+	sort.Slice(assignments, func(i, j int) bool {
+		return assignments[i].Order < assignments[j].Order
+	})
+	approved := 0
+	nxtToApprove := assignments[0]
+	for _, v := range assignments {
+		var sub *models.Submission
+		switch {
+		case v.IsGroupLab && gid > 0:
+			sub, err = db.GetSubmissionForGroup(v.ID, gid)
+		case !v.IsGroupLab && uid > 0:
+			sub, err = db.GetSubmissionForUser(v.ID, uid)
+		default:
+			return nil, gorm.ErrRecordNotFound
+		}
+		if err != nil && err != gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		if sub != nil && sub.Approved {
+			approved++
+			continue
+		}
+		nxtToApprove = v
+		break
+	}
+	if len(assignments) == approved {
+		return nil, fmt.Errorf("all assignments approved for user %d (group %d) in course %d", uid, gid, cid)
+	}
+	return nxtToApprove, nil
+}
+
 // CreateSubmission implements the Database interface
 // TODO: Also check enrollment to see if the user is
 // enrolled in the course the assignment belongs to
+// TODO(hein): What if both UserID and GroupID is set?
 func (db *GormDB) CreateSubmission(submission *models.Submission) error {
 	// Primary key must be greater than 0.
 	if submission.AssignmentID < 1 {
@@ -234,7 +278,7 @@ func (db *GormDB) CreateSubmission(submission *models.Submission) error {
 	case submission.UserID > 0:
 		m = db.conn.First(&models.User{ID: submission.UserID})
 	case submission.GroupID > 0:
-		m = db.conn.First(&models.User{ID: submission.UserID})
+		m = db.conn.First(&models.Group{ID: submission.GroupID})
 	default:
 		return gorm.ErrRecordNotFound
 	}
