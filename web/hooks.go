@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -87,6 +88,9 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 	}
 }
 
+// getLatestAssignment TODO DOC
+// TODO Should we check the inputs for consistency, or is it ok to ignore gid if uid is also provided.
+// TODO Should this be renamed to getNextUnapprovedAssignment() ??
 func getLatestAssignment(db database.Database, cid uint64, uid uint64, gid uint64) (*models.Assignment, error) {
 	assignments, err := db.GetAssignmentsByCourse(cid)
 	if err != nil {
@@ -102,7 +106,7 @@ func getLatestAssignment(db database.Database, cid uint64, uid uint64, gid uint6
 			if err != nil && err != gorm.ErrRecordNotFound {
 				return nil, err
 			}
-			if sub == nil || sub.Approved == false {
+			if sub == nil || !sub.Approved {
 				return v, nil
 			}
 		} else if gid > 0 && v.IsGroupLab {
@@ -110,17 +114,16 @@ func getLatestAssignment(db database.Database, cid uint64, uid uint64, gid uint6
 			if err != nil && err != gorm.ErrRecordNotFound {
 				return nil, err
 			}
-			if sub == nil || sub.Approved == false {
+			if sub == nil || !sub.Approved {
 				return v, nil
 			}
 		}
 	}
-	return nil, nil
+	return nil, errors.New("no next unapproved assignment found")
 }
 
 // RunCI Runs the ci from a RemoteIdentity
 func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, commitHash string, remoteIdentity *models.RemoteIdentity, buildscripts string) {
-
 	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
 	if err != nil {
 		logger.WithError(err).Warn("Failed to get course from database")
@@ -136,10 +139,9 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		return
 	}
 
-	//selectedAssignment := assignments[0]
 	selectedAssignment, err := getLatestAssignment(db, course.ID, repo.UserID, repo.GroupID)
-	if err != nil || selectedAssignment == nil {
-		logger.WithError(err).Warn("Failed to get course from database")
+	if err != nil {
+		logger.WithError(err).Warn("Failed to find a next unapproved assignment")
 		return
 	}
 
@@ -327,7 +329,6 @@ func extractDockerImageInformation(lines []string) (data []string, image *string
 		rest := lines[1:]
 		parts := strings.Split(firstLine, "/")
 		if len(parts) > 1 {
-
 			return rest, &parts[1]
 		}
 	}
