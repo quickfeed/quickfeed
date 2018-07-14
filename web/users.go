@@ -100,10 +100,12 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			updateUser.AvatarURL = uur.AvatarURL
 			status = http.StatusOK
 		}
-		if uur.IsAdmin != nil && currentUser.IsAdmin {
+
+		// Checking if user has admin privliges, and if user is trying to promote another user.
+		if uur.IsAdmin != nil && *uur.IsAdmin != updateUser.IsAdmin && currentUser.IsAdmin {
 			updateUser.IsAdmin = *uur.IsAdmin
 			status = http.StatusOK
-		} else if uur.IsAdmin != nil && !currentUser.IsAdmin {
+		} else if uur.IsAdmin != nil && *uur.IsAdmin != updateUser.IsAdmin && !currentUser.IsAdmin {
 			status = http.StatusUnauthorized
 		}
 
