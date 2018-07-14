@@ -81,6 +81,9 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
+		// Get current user
+		currentUser := c.Get("user").(*models.User)
+
 		if uur.Name != "" {
 			updateUser.Name = uur.Name
 			status = http.StatusOK
@@ -97,9 +100,11 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			updateUser.AvatarURL = uur.AvatarURL
 			status = http.StatusOK
 		}
-		if uur.IsAdmin != nil {
+		if uur.IsAdmin != nil && currentUser.IsAdmin {
 			updateUser.IsAdmin = *uur.IsAdmin
 			status = http.StatusOK
+		} else if uur.IsAdmin != nil && !currentUser.IsAdmin {
+			status = http.StatusUnauthorized
 		}
 
 		if err := db.UpdateUser(updateUser); err != nil {
