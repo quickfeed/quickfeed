@@ -275,6 +275,8 @@ func TestPatchUser(t *testing.T) {
 	defer cleanup()
 
 	var user models.User
+	var adminUser models.User
+	adminUser.IsAdmin = true
 	var remoteIdentity models.RemoteIdentity
 	if err := db.CreateUserFromRemoteIdentity(
 		&user, &remoteIdentity,
@@ -301,6 +303,7 @@ func TestPatchUser(t *testing.T) {
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
+	c.Set("user", &adminUser)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
@@ -324,6 +327,7 @@ func TestPatchUser(t *testing.T) {
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
 	// Prepare context with user request.
+	c.Set("user", &adminUser)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
@@ -355,6 +359,7 @@ func TestPatchUser(t *testing.T) {
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
 	// Prepare context with user request.
+	c.Set("user", &adminUser)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
