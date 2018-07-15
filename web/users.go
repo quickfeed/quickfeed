@@ -61,7 +61,8 @@ func GetUsers(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// PatchUser promotes a user to an administrator
+// PatchUser updates a user's information, including promoting to administrator.
+// Only existing administrators can promote another user.
 func PatchUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
@@ -100,7 +101,7 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			updateUser.AvatarURL = uur.AvatarURL
 			status = http.StatusOK
 		}
-		// Checking if user has admin privliges, and if user is trying to promote another user.
+		// Promote other user to admin, only if current user has admin privileges
 		if uur.IsAdmin != nil && currentUser.IsAdmin {
 			updateUser.IsAdmin = *uur.IsAdmin
 			status = http.StatusOK
@@ -109,7 +110,6 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 		if err := db.UpdateUser(updateUser); err != nil {
 			return err
 		}
-
 		return c.NoContent(status)
 	}
 }
