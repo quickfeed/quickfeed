@@ -763,39 +763,30 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		if len(users) != len(grp.UserIDs) {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
-		// if logged in user is student, he must need to be member of the group
-		user := c.Get("user").(*models.User)
-		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
-		if err != nil {
-			return err
-		}
-		if enrollment.Status == models.Student {
-			found := false
-			for _, id := range grp.UserIDs {
-				if user.ID == id {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return echo.NewHTTPError(http.StatusBadRequest,
-					"you must need to be a member of the group")
-			}
-		}
-		// only enrolled user i.e accepted to the course can join a group
+
+		// signed in student user must be member of the group
+		signedInUser := c.Get("user").(*models.User)
+		signedInUserInGroup := false
+
+		// only enrolled users can join a group
 		// prevent group override if a student is already in a group in this course
 		for _, user := range users {
 			enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
 			switch {
 			case err == gorm.ErrRecordNotFound:
-				return echo.NewHTTPError(http.StatusNotFound, "user is not enrolled to this course")
+				return echo.NewHTTPError(http.StatusNotFound, "user not enrolled in course")
 			case err != nil:
 				return err
 			case enrollment.GroupID > 0:
-				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
+				return echo.NewHTTPError(http.StatusBadRequest, "user already enrolled in another group")
 			case enrollment.Status < models.Student:
-				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
+				return echo.NewHTTPError(http.StatusBadRequest, "user not yet accepted for this course")
+			case signedInUser.ID == user.ID && enrollment.Status == models.Student:
+				signedInUserInGroup = true
 			}
+		}
+		if !signedInUserInGroup {
+			return echo.NewHTTPError(http.StatusBadRequest, "student must be member of new group")
 		}
 
 		group := models.Group{
