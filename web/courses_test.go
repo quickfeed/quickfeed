@@ -531,6 +531,83 @@ func TestGetCourse(t *testing.T) {
 	assertCode(t, w.Code, http.StatusOK)
 }
 
+func TestNewGroup(t *testing.T) {
+	const route = "/courses/:cid/groups"
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var course models.Course
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	// Only single member group for now.
+	newGroupReq := web.NewGroupRequest{
+		Name:     "Hein's Group",
+		CourseID: course.ID,
+		UserIDs:  []uint64{user.ID},
+	}
+	b, err := json.Marshal(newGroupReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requestBody := bytes.NewReader(b)
+
+	e := echo.New()
+	router := echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodPost, route, web.NewGroup(db))
+
+	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10) + "/groups"
+	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
+	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+	// Prepare context with user request.
+	c.Set(auth.UserKey, &user)
+	c.Set("user", &user)
+	router.Find(http.MethodPost, requestURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+
+	// h := web.NewGroup(db)
+	// if err := h(c); err != nil {
+	// 	t.Fatal(err)
+	// }
+	assertCode(t, w.Code, http.StatusCreated)
+
+	var respGroup models.Group
+	if err := json.Unmarshal(w.Body.Bytes(), &respGroup); err != nil {
+		t.Fatal(err)
+	}
+
+	group, err := db.GetGroup(respGroup.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// remove enrollments because models.Group removes this field in JSON encoding.
+	group.Enrollments = nil
+	if !reflect.DeepEqual(&respGroup, group) {
+		t.Errorf("have response group %+v, while database has %+v", &respGroup, group)
+	}
+}
+
 func courseToRequest(t *testing.T, course *models.Course) (cr web.NewCourseRequest) {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
