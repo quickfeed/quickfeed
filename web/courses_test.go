@@ -576,7 +576,6 @@ func TestNewGroup(t *testing.T) {
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	c.Set(auth.UserKey, &user)
 	c.Set("user", &user)
 	router.Find(http.MethodPost, requestURL, c)
 
@@ -584,11 +583,6 @@ func TestNewGroup(t *testing.T) {
 	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
-
-	// h := web.NewGroup(db)
-	// if err := h(c); err != nil {
-	// 	t.Fatal(err)
-	// }
 	assertCode(t, w.Code, http.StatusCreated)
 
 	var respGroup models.Group
@@ -601,7 +595,8 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// remove enrollments because models.Group removes this field in JSON encoding.
+	// JSON marshalling removes the enrollment field from respGroup,
+	// so we remove group.Enrollments obtained from the database before comparing.
 	group.Enrollments = nil
 	if !reflect.DeepEqual(&respGroup, group) {
 		t.Errorf("have response group %+v, while database has %+v", &respGroup, group)
