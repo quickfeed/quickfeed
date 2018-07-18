@@ -4,14 +4,18 @@ import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IUserCourse;
-    groupAndLabs: IGroupCourse;
+    groupAndLabs?: IGroupCourse;
     onLabClick: (courseId: number, labId: number) => void;
     onGroupLabClick: (courseId: number, labId: number) => void;
 }
 
 class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
     public render() {
-        let submissionArray = this.buildInfo(this.props.courseAndLabs.assignments, this.props.groupAndLabs.assignments);
+        let groupLabs: IStudentSubmission[] = [];
+        if (this.props.groupAndLabs !== undefined) {
+            groupLabs = this.props.groupAndLabs.assignments;
+        }
+        let submissionArray = this.buildInfo(this.props.courseAndLabs.assignments, groupLabs);
 
         // Fallback if the length of grouplabs and userlabs is different.
         if (!submissionArray) {

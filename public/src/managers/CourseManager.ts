@@ -80,8 +80,8 @@ export interface IUserEnrollment extends IEnrollment {
 }
 
 export interface IEnrollment {
-    userID: number;
-    courseID: number;
+    userid: number;
+    courseid: number;
     status?: CourseUserState;
 
     course?: ICourse;
@@ -133,7 +133,7 @@ export class CourseManager {
                 assignments: [],
                 course: ele.course,
                 link: ele.status !== undefined ?
-                    { courseId: ele.courseID, userid: ele.userID, state: ele.status } : undefined,
+                    { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
             };
         });
         return newMap;
@@ -218,7 +218,7 @@ export class CourseManager {
     public async getStudentCourse(student: IUser, course: ICourse): Promise<IUserCourse | null> {
         const courses = await this.courseProvider.getCoursesFor(student);
         for (const crs of courses) {
-            if (crs.courseID === course.id) {
+            if (crs.courseid === course.id) {
                 const userCourse: IUserCourse = {
                     link: crs.status !== undefined ?
                         { userid: student.id, courseId: course.id, state: crs.status } : undefined,
@@ -267,7 +267,7 @@ export class CourseManager {
                 assignments: [],
                 course: course.course,
                 link: course.status !== undefined ?
-                    { courseId: course.courseID, userid: student.id, state: course.status } : undefined,
+                    { courseId: course.courseid, userid: student.id, state: course.status } : undefined,
             });
         }
 

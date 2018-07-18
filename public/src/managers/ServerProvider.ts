@@ -103,8 +103,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             arr.push({
                 course: ele as ICourse,
                 status: enroll,
-                courseID: ele.id,
-                userID: user.id,
+                courseid: ele.id,
+                userid: user.id,
                 user,
             });
         });
