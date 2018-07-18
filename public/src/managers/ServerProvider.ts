@@ -114,8 +114,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getUsersForCourse(course: ICourse, state?: CourseUserState[]): Promise<IUserEnrollment[]> {
         const status = state ? "?status=" + courseUserStateToString(state) : "";
-        const result = await this.helper.get<IEnrollment[]>(URL_ENDPOINT.courses + "/" +
-            course.id + "/" + URL_ENDPOINT.users + status);
+        const uri: string[] = [URL_ENDPOINT.courses, course.id.toString(), URL_ENDPOINT.users];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.get<IEnrollment[]>(URL + status);
 
         if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "getUserForCourse");
@@ -126,7 +127,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         result.data.forEach((ele) => {
             if (isCourseEnrollment(ele)) {
                 ele.user = this.makeUserInfo(ele.user);
-                console.log("BBBB ", ele.user);
                 arr.push(ele);
             }
         });
@@ -350,7 +350,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             submission.testCases = scoreObj;
             submission.failedTests = 0;
             submission.passedTests = 0;
-            if (submission.testCases == null) submission.testCases = [];
+            if (submission.testCases == null) { submission.testCases = []; }
             submission.testCases.forEach((x) => {
                 if (x.points !== x.score) {
                     submission.failedTests++;
@@ -368,7 +368,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(),
         URL_ENDPOINT.users, userID.toString(), URL_ENDPOINT.submissions];
         const URL = this.buildURL(uri);
-        console.log("Testing ", URL);
         const result = await this.helper.get<ISubmission[]>(URL);
         if (result.statusCode === HttpStatusCode.OK && result.data === undefined) {
             return {};
@@ -410,7 +409,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             submission.testCases = scoreObj;
             submission.failedTests = 0;
             submission.passedTests = 0;
-            if (submission.testCases == null) submission.testCases = [];
+            if (submission.testCases == null) { submission.testCases = []; }
             submission.testCases.forEach((x) => {
                 if (x.points !== x.score) {
                     submission.failedTests++;
@@ -453,8 +452,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeAdminRole(user: IUser): Promise<boolean> {
-        const result = await this.helper.patch<{ isadmin: boolean }, {}>("/" + URL_ENDPOINT.users +
-            "/" + user.id + "", { isadmin: true });
+        const uri: string[] = [URL_ENDPOINT.users, user.id.toString()];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.patch<{ isadmin: boolean }, {}>(URL, { isadmin: true });
         if (result.statusCode < HttpStatusCode.BAD_REQUEST) {
             return false;
         } else {
@@ -465,8 +465,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async updateUser(user: IUser): Promise<boolean> {
         // TODO: make actuall implementation
-        const result = await this.helper.patch<{ isadmin: boolean }, {}>("/" + URL_ENDPOINT.users
-            + "/" + user.id + "", user);
+        const uri: string[] = [URL_ENDPOINT.users, user.id.toString()];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.patch<{ isadmin: boolean }, {}>(URL, user);
         if (result.statusCode < HttpStatusCode.BAD_REQUEST) {
             return false;
         } else {
@@ -509,8 +510,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async refreshCoursesFor(courseID: number): Promise<any> {
-        const result = await this.helper.post<any, null>(URL_ENDPOINT.courses + "/" + courseID + "/" +
-            URL_ENDPOINT.refresh, null);
+        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.refresh];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.post<any, null>(URL, null);
         if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "refreshCoursesFor");
             return null;
@@ -519,7 +521,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async approveSubmission(submissionID: number): Promise<void> {
-        const result = await this.helper.patch<any, null>(URL_ENDPOINT.submissions + "/" + submissionID, null);
+        const uri: string[] = [URL_ENDPOINT.submissions, submissionID.toString()];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.patch<any, null>(URL, null);
         if (result.statusCode !== HttpStatusCode.OK) {
             this.handleError(result, "approveSubmission");
             return;
@@ -550,9 +554,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     private buildURL(uri: string[]): string {
         let url = "";
+        let counter = 0;
         for (const tag of uri) {
             url += tag;
-            url += "/";
+            url += counter < uri.length - 1 ? "/" : "";
+            ++counter;
         }
         return url;
     }
