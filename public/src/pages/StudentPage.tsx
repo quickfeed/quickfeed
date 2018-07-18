@@ -7,7 +7,7 @@ import { UserManager } from "../managers/UserManager";
 
 import {
     CourseUserState, ICourse, ICourseGroup,
-    IStudentSubmission, IUserCourse, ICourseLinkAssignment, IGroupCourse,
+    ICourseLinkAssignment, IGroupCourse, IStudentSubmission, IUserCourse,
 } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
@@ -23,7 +23,7 @@ export class StudentPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
 
-    // Single user 
+    // Single user
     private userCourses: ICourseLinkAssignment[] = [];
     private activeUserCourses: ICourseLinkAssignment[] = [];
     private selectedUserCourse: ICourseLinkAssignment | undefined;
@@ -253,9 +253,9 @@ export class StudentPage extends ViewPage {
             this.GroupUserCourses = [];
 
             for (const course of this.activeUserCourses) {
-                var group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
+                const group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
                 if (group != null) {
-                    var groupCourse = await this.courseMan.getGroupCourse(group, course.course);
+                    const groupCourse = await this.courseMan.getGroupCourse(group, course.course);
                     if (groupCourse) {
                         this.GroupUserCourses.push(groupCourse);
                     }

@@ -14,9 +14,12 @@ interface ILastBuildInfo {
 class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
 
     public render() {
-        let approveButton : JSX.Element;
+        let approveButton: JSX.Element;
         if (this.props.showApprove) {
-            approveButton = <p> <button type="button" id="approve" className="btn btn-primary" onClick={ () => this.handleClick(this.props.onApproveClick)}> Approve </button> </p>;
+            approveButton = <p> <button type="button"
+                id="approve"
+                className="btn btn-primary"
+                onClick={() => this.handleClick(this.props.onApproveClick)}> Approve </button> </p>;
         } else {
             approveButton = <p></p>;
         }

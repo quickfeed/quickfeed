@@ -19,6 +19,7 @@ import {
 import { HttpHelper, IHTTPResult } from "../HttpHelper";
 import { ICourseProvider } from "./CourseManager";
 
+import HttpStatusCode from "../HttpStatusCode";
 import {
     ICourseEnrollment,
     IEnrollment,
@@ -30,40 +31,38 @@ import {
 import { IMap, mapify } from "../map";
 import { ILogger } from "./LogManager";
 
-import { combinePath } from "../NavigationHelper";
-
-interface Endpoints {
-    courses: string
-    users: string
-    user: string
-    group: string
-    groups: string
-    refresh: string
-    submissions: string
-    submission: string
-    assignments: string
-    directories: string
-    providers: string
-    auth: string
-    logout: string
-    api: string
+interface IEndpoints {
+    courses: string;
+    users: string;
+    user: string;
+    group: string;
+    groups: string;
+    refresh: string;
+    submissions: string;
+    submission: string;
+    assignments: string;
+    directories: string;
+    providers: string;
+    auth: string;
+    logout: string;
+    api: string;
 }
 
-const URL_ENDPOINT: Endpoints = {
-    courses: "/courses",
-    users: "/users",
-    user: "/user",
-    group: "/group",
-    groups: "/groups",
-    refresh: "/refresh",
-    submissions: "/submission",
-    submission: "/submission",
-    assignments: "/assignments",
-    directories: "/directories",
-    providers: "/providers",
-    auth: "/auth",
-    logout: "/logout",
-    api: "/api/v1/",
+const URL_ENDPOINT: IEndpoints = {
+    courses: "courses",
+    users: "users",
+    user: "user",
+    group: "group",
+    groups: "groups",
+    refresh: "refresh",
+    submissions: "submissions",
+    submission: "submission",
+    assignments: "assignments",
+    directories: "directories",
+    providers: "providers",
+    auth: "auth",
+    logout: "logout",
+    api: "api/v1",
 };
 
 export class ServerProvider implements IUserProvider, ICourseProvider {
@@ -77,8 +76,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getCourses(): Promise<ICourse[]> {
-        const result = await this.helper.get<any>("courses");
-        if (result.statusCode !== 200 || !result.data) {
+        const result = await this.helper.get<any>(URL_ENDPOINT.courses);
+        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "getCourses");
             return [];
         }
@@ -91,8 +90,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]> {
         // TODO: Fix to use correct url request
         const status = state ? "?status=" + courseUserStateToString(state) : "";
-        const result = await this.helper.get<ICourseWithEnrollStatus[]>("/users/" + user.id + "/courses" + status);
-        if (result.statusCode !== 200 || !result.data) {
+        const result = await this.helper.get<ICourseWithEnrollStatus[]>("/" + URL_ENDPOINT.users +
+            "/" + user.id + "/" + URL_ENDPOINT.courses + status);
+
+        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "getCoursesFor");
             return [];
         }
@@ -113,8 +114,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getUsersForCourse(course: ICourse, state?: CourseUserState[]): Promise<IUserEnrollment[]> {
         const status = state ? "?status=" + courseUserStateToString(state) : "";
-        const result = await this.helper.get<IEnrollment[]>("/courses/" + course.id + "/users" + status);
-        if (result.statusCode !== 200 || !result.data) {
+        const result = await this.helper.get<IEnrollment[]>(URL_ENDPOINT.courses + "/" +
+            course.id + "/" + URL_ENDPOINT.users + status);
+
+        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "getUserForCourse");
             return [];
         }
@@ -123,6 +126,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         result.data.forEach((ele) => {
             if (isCourseEnrollment(ele)) {
                 ele.user = this.makeUserInfo(ele.user);
+                console.log("BBBB ", ele.user);
                 arr.push(ele);
             }
         });
@@ -130,9 +134,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
-        const result = await this.helper.get<any>("courses/" + courseId.toString() + "/assignments");
+        const result = await this.helper.get<any>(URL_ENDPOINT.courses + "/" +
+            courseId.toString() + "/" + URL_ENDPOINT.assignments);
 
-        if (result.statusCode !== 200 || !result.data) {
+        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             console.log(result);
             this.handleError(result, "getAssignments");
             throw new Error("Problem with the request");
@@ -149,10 +154,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
         const result = await this.helper.post<{ status: CourseUserState }, undefined>
-            ("/courses/" + course.id + "/users/" + user.id, {
+            (URL_ENDPOINT.courses + "/" + course.id + "/" + URL_ENDPOINT.users + "/" + user.id, {
                 status: CourseUserState.pending,
             });
-        if (result.statusCode === 201) {
+        if (result.statusCode === HttpStatusCode.CREATED) {
             return true;
         } else {
             this.handleError(result, "addUserToCourse");
@@ -161,13 +166,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
+        const uri: string[] = [
+            URL_ENDPOINT.courses, link.courseId.toString(),
+            URL_ENDPOINT.users, link.userid.toString()];
+        const URL = this.buildURL(uri);
         const result = await this.helper.patch<{ courseID: number, userID: number, status: CourseUserState }, undefined>
-            ("/courses/" + link.courseId + "/users/" + link.userid, {
+            ("/" + URL, {
                 courseID: link.courseId,
                 userID: link.userid,
                 status: state,
             });
-        if (result.statusCode <= 202) {
+        if (result.statusCode <= HttpStatusCode.ACCEPTED) {
             return true;
         } else {
             this.handleError(result, "changeUserState");
@@ -176,17 +185,19 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async createNewCourse(courseData: INewCourse): Promise<ICourse | IError> {
-        const uri: string = "courses";
-        const result = await this.helper.post<INewCourse, ICourse>(uri, courseData);
-        if (result.statusCode !== 201 || !result.data) {
+        // const uri: string = "courses";
+        const result = await this.helper.post<INewCourse, ICourse>(URL_ENDPOINT.courses, courseData);
+        if (result.statusCode !== HttpStatusCode.CREATED || !result.data) {
             return this.parseError(result);
         }
         return JSON.parse(JSON.stringify(result.data)) as ICourse;
     }
 
     public async getCourse(ID: number): Promise<ICourse | null> {
-        const result = await this.helper.get<any>("courses/" + ID);
-        if (result.statusCode !== 200 || !result.data) {
+        const uri: string[] = [URL_ENDPOINT.courses, ID.toString()];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.get<any>(URL);
+        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "getCourse");
             return null;
         }
@@ -194,9 +205,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async updateCourse(courseID: number, courseData: ICourse): Promise<IStatusCode | IError> {
-        const uri: string = "courses/" + courseID;
-        const result = await this.helper.put<ICourse, ICourse>(uri, courseData);
-        if (result.statusCode !== 200) {
+        // const uri: string = "courses/" + courseID;
+        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString()];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.put<ICourse, ICourse>(URL, courseData);
+        if (result.statusCode !== HttpStatusCode.OK) {
             this.handleError(result, "updateCourse");
             return this.parseError(result);
         }
@@ -204,9 +217,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
-        const uri: string = "courses/" + courseID + "/groups";
-        const result = await this.helper.post<INewGroup, ICourseGroup>(uri, groupData);
-        if (result.statusCode !== 201 || !result.data) {
+        // const uri: string = "courses/" + courseID + "/groups";
+        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.groups];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.post<INewGroup, ICourseGroup>(URL, groupData);
+        if (result.statusCode !== HttpStatusCode.CREATED || !result.data) {
             this.handleError(result, "createGroup");
             return this.parseError(result);
         }
@@ -214,9 +229,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getCourseGroups(courseID: number): Promise<ICourseGroup[]> {
-        const uri: string = "courses/" + courseID + "/groups";
-        const result = await this.helper.get<ICourseGroup>(uri);
-        if (result.statusCode !== 200 || !result.data) {
+        // const uri: string = "courses/" + courseID + "/groups";
+        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.groups];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.get<ICourseGroup>(URL);
+        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "getCourseGroups");
             return [];
         }
@@ -224,20 +241,26 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<ICourseGroup | null> {
-        const uri: string = "users/" + userID + "/courses/" + courseID + "/group";
-        const result = await this.helper.get<ICourseGroup>(uri);
-        if (result.statusCode !== 302 || !result.data) {
+        // const uri: string = "users/" + userID + "/courses/" + courseID + "/group";
+        const uri: string[] = [URL_ENDPOINT.users, userID.toString(),
+        URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.group];
+        const URL = this.buildURL(uri);
+
+        const result = await this.helper.get<ICourseGroup>(URL);
+        if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
             return null;
         }
         return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
     }
 
     public async updateGroupStatus(groupID: number, st: CourseGroupStatus): Promise<boolean> {
-        const uri: string = "groups/" + groupID;
+        // const uri: string = "groups/" + groupID;
         const data = { status: st };
+        const uri: string[] = [URL_ENDPOINT.groups, groupID.toString()];
+        const URL = this.buildURL(uri);
 
-        const result = await this.helper.patch<{ status: CourseGroupStatus }, undefined>(uri, data);
-        if (result.statusCode === 200) {
+        const result = await this.helper.patch<{ status: CourseGroupStatus }, undefined>(URL, data);
+        if (result.statusCode === HttpStatusCode.OK) {
             return true;
         } else {
             this.handleError(result, "updateGroupStatus");
@@ -246,9 +269,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getGroup(groupID: number): Promise<ICourseGroup | null> {
-        const uri: string = "groups/" + groupID;
-        const result = await this.helper.get<ICourseGroup>(uri);
-        if (result.statusCode !== 200 || !result.data) {
+        // const uri: string = "groups/" + groupID;
+        const uri: string[] = [URL_ENDPOINT.groups, groupID.toString()];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.get<ICourseGroup>(URL);
+        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "getGroup");
             return null;
         }
@@ -256,9 +281,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async deleteGroup(groupID: number): Promise<boolean> {
-        const uri: string = "groups/" + groupID;
+        // const uri: string = "groups/" + groupID;
+        const uri: string = URL_ENDPOINT.groups + "/" + groupID;
         const result = await this.helper.delete(uri);
-        if (result.statusCode === 200) {
+        if (result.statusCode === HttpStatusCode.OK) {
             return true;
         } else {
             this.handleError(result, "deleteGroup");
@@ -267,21 +293,24 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async updateGroup(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
-        const uri: string = "courses/" + courseID + "/groups/" + groupID;
-        const result = await this.helper.put<INewGroup, any>(uri, groupData);
-        if (result.statusCode !== 200) {
+        // const uri: string = "courses/" + courseID + "/groups/" + groupID;
+        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.groups, groupID.toString()];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.put<INewGroup, any>(URL, groupData);
+        if (result.statusCode !== HttpStatusCode.OK) {
             this.handleError(result, "updateGroup");
             return this.parseError(result);
         }
         return JSON.parse(JSON.stringify(result.statusCode)) as IStatusCode;
     }
 
-    // getAllGroupLabInfos 
+    // getAllGroupLabInfos
     public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>> {
-        const result = await this.helper.get<ISubmission[]>(
-            ("courses/" + courseID.toString() + "/groups/" + groupID + "/submissions"),
-        );
-        if (result.statusCode === 200 && result.data === undefined) {
+        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(),
+        URL_ENDPOINT.groups, groupID.toString(), URL_ENDPOINT.submissions];
+        const URL = this.buildURL(uri);
+        const result = await this.helper.get<ISubmission[]>(URL);
+        if (result.statusCode === HttpStatusCode.OK && result.data === undefined) {
             return {};
         }
         if (!result.data) {
@@ -322,23 +351,26 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             submission.failedTests = 0;
             submission.passedTests = 0;
             if (submission.testCases == null) submission.testCases = [];
-            submission.testCases.forEach(x => {
+            submission.testCases.forEach((x) => {
                 if (x.points !== x.score) {
                     submission.failedTests++;
                 } else {
                     submission.passedTests++;
                 }
-            })
+            });
+            // This ID is used as index in an array created by mapify function.
             return submission.id;
         });
     }
 
     // TODO change to use course id instead of getting all of them
     public async getAllLabInfos(courseID: number, userID: number): Promise<IMap<ISubmission>> {
-        const result = await this.helper.get<ISubmission[]>(
-            ("courses/" + courseID.toString() + "/users/" + userID + "/submissions"),
-        );
-        if (result.statusCode === 200 && result.data === undefined) {
+        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(),
+        URL_ENDPOINT.users, userID.toString(), URL_ENDPOINT.submissions];
+        const URL = this.buildURL(uri);
+        console.log("Testing ", URL);
+        const result = await this.helper.get<ISubmission[]>(URL);
+        if (result.statusCode === HttpStatusCode.OK && result.data === undefined) {
             return {};
         }
         if (!result.data) {
@@ -379,13 +411,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             submission.failedTests = 0;
             submission.passedTests = 0;
             if (submission.testCases == null) submission.testCases = [];
-            submission.testCases.forEach(x => {
+            submission.testCases.forEach((x) => {
                 if (x.points !== x.score) {
                     submission.failedTests++;
                 } else {
                     submission.passedTests++;
                 }
-            })
+            });
+            // This ID is used as index in an array created by mapify function.
             return submission.id;
         });
     }
@@ -395,13 +428,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async logout(user: IUser): Promise<boolean> {
-        window.location.assign("/logout");
+        window.location.assign("/" + URL_ENDPOINT.logout);
         return true;
     }
 
     public async getAllUser(): Promise<IUser[]> {
-        const result = await this.helper.get<IUser[]>("users");
-        if (result.statusCode !== 302 || !result.data) {
+        const result = await this.helper.get<IUser[]>(URL_ENDPOINT.users);
+        if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
             this.handleError(result, "getAllUser");
             return [];
         }
@@ -413,15 +446,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async tryRemoteLogin(provider: string): Promise<IUser | null> {
         // TODO this needs to be fixed to return user data from provider
         if (provider.length > 0) {
-            const requestString = "/auth/" + provider;
+            const requestString = "/" + URL_ENDPOINT.auth + "/" + provider;
             window.location.assign(requestString);
         }
         return null;
     }
 
     public async changeAdminRole(user: IUser): Promise<boolean> {
-        const result = await this.helper.patch<{ isadmin: boolean }, {}>("/users/" + user.id + "", { isadmin: true });
-        if (result.statusCode < 400) {
+        const result = await this.helper.patch<{ isadmin: boolean }, {}>("/" + URL_ENDPOINT.users +
+            "/" + user.id + "", { isadmin: true });
+        if (result.statusCode < HttpStatusCode.BAD_REQUEST) {
             return false;
         } else {
             this.handleError(result, "changeAdminRole");
@@ -431,8 +465,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async updateUser(user: IUser): Promise<boolean> {
         // TODO: make actuall implementation
-        const result = await this.helper.patch<{ isadmin: boolean }, {}>("/users/" + user.id + "", user);
-        if (result.statusCode < 400) {
+        const result = await this.helper.patch<{ isadmin: boolean }, {}>("/" + URL_ENDPOINT.users
+            + "/" + user.id + "", user);
+        if (result.statusCode < HttpStatusCode.BAD_REQUEST) {
             return false;
         } else {
             this.handleError(result, "updateUser");
@@ -442,10 +477,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     // TODO: check if resp.status contain correct status
     public async getDirectories(provider: string): Promise<IOrganization[]> {
-        const uri: string = "directories";
+        const uri: string = URL_ENDPOINT.directories;
         const data: { provider: string } = { provider };
         const result = await this.helper.post<{ provider: string }, IOrganization[]>(uri, data);
-        if (result.statusCode === 200 && result.data) {
+        if (result.statusCode === HttpStatusCode.OK && result.data) {
             return result.data;
         } else {
             this.handleError(result, "getDirectories");
@@ -455,7 +490,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getProviders(): Promise<string[]> {
         // https://nicolasf.itest.run/api/v1/providers
-        const result = await this.helper.get<string[]>("providers");
+        const result = await this.helper.get<string[]>(URL_ENDPOINT.providers);
         if (result.data) {
             return result.data;
         } else {
@@ -465,8 +500,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getLoggedInUser(): Promise<IUser | null> {
-        const result = await this.helper.get<IUser>("user");
-        if (result.statusCode !== 302 || !result.data) {
+        const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
+        if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
             this.handleError(result, "getLoggedInUser");
             return null;
         }
@@ -474,12 +509,22 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async refreshCoursesFor(courseID: number): Promise<any> {
-        const result = await this.helper.post<any, null>("courses/" + courseID + "/refresh", null);
-        if (result.statusCode !== 200 || !result.data) {
+        const result = await this.helper.post<any, null>(URL_ENDPOINT.courses + "/" + courseID + "/" +
+            URL_ENDPOINT.refresh, null);
+        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
             this.handleError(result, "refreshCoursesFor");
             return null;
         }
         return this.makeUserInfo(result.data);
+    }
+
+    public async approveSubmission(submissionID: number): Promise<void> {
+        const result = await this.helper.patch<any, null>(URL_ENDPOINT.submissions + "/" + submissionID, null);
+        if (result.statusCode !== HttpStatusCode.OK) {
+            this.handleError(result, "approveSubmission");
+            return;
+        }
+        return;
     }
 
     private makeUserInfo(data: IUser): IUser {
@@ -503,13 +548,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return error;
     }
 
-    public async approveSubmission(submissionID: number): Promise<void> {
-        const result = await this.helper.patch<any, null>("submissions/" + submissionID, null);
-        if (result.statusCode !== 200) {
-            this.handleError(result, "approveSubmission");
-            return;
+    private buildURL(uri: string[]): string {
+        let url = "";
+        for (const tag of uri) {
+            url += tag;
+            url += "/";
         }
-        return;
+        return url;
     }
-
 }
