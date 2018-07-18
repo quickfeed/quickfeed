@@ -290,7 +290,7 @@ export class CourseManager {
 
         return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
             return {
-                link: { courseId: course.id, userid: user.userID, state: user.status },
+                link: { courseId: course.id, userid: user.user.id, state: user.status },
                 user: user.user,
             };
         });
@@ -320,7 +320,7 @@ export class CourseManager {
     public async getGroupCourse(group: ICourseGroup, course: ICourse): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
         const groupEnrollment = await this.courseProvider.getGroup(group.id)
-        
+
         if (groupEnrollment != null && groupEnrollment.id === group.id) {
             if (group.courseid === course.id) {
                 const groupCourse: IGroupCourse = {
