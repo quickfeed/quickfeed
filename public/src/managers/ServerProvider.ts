@@ -133,7 +133,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const result = await this.helper.get<any>("courses/" + courseId.toString() + "/assignments");
 
         if (result.statusCode !== 200 || !result.data) {
-            console.log(result);
             this.handleError(result, "getAssignments");
             throw new Error("Problem with the request");
         }
