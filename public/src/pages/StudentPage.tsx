@@ -7,7 +7,7 @@ import { UserManager } from "../managers/UserManager";
 
 import {
     CourseUserState, ICourse, ICourseGroup,
-    IStudentSubmission, IUserCourse, ICourseLinkAssignment, IGroupCourse,
+    IStudentSubmission, IUserCourse, ICourseLinkAssignment, isIUserCourse, IGroupCourse,
 } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
@@ -68,6 +68,7 @@ export class StudentPage extends ViewPage {
         if (this.activeUserCourses) {
             return (<CoursesOverview
                 courseOverview={this.activeUserCourses as IUserCourse[]}
+                groupCourseOverview={this.GroupUserCourses as IGroupCourse[]}
                 navMan={this.navMan}
             />);
         }

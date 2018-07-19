@@ -319,7 +319,7 @@ export class CourseManager {
      */
     public async getGroupCourse(group: ICourseGroup, course: ICourse): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
-        const groupEnrollment = await this.courseProvider.getGroup(group.id)
+        const groupEnrollment = await this.courseProvider.getGroup(group.id);
 
         if (groupEnrollment != null && groupEnrollment.id === group.id) {
             if (group.courseid === course.id) {
