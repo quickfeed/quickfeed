@@ -971,8 +971,11 @@ func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 		if len(courseInfoRepo) > 1 && len(courseInfoRepo) == 0 {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Too many course information repositories exists for this course")
 		}
-		var courseInfoURL string
-		courseInfoURL = courseInfoRepo[0].HTMLURL
-		return c.JSONPretty(http.StatusOK, courseInfoURL, "\t")
+
+		// Have to be in string array to be able to jsonify so frontend recognize it.
+		// See public/src/HttpHelper.ts -> send()
+		var courseInfoURL []string
+		courseInfoURL = append(courseInfoURL, courseInfoRepo[0].HTMLURL)
+		return c.JSONPretty(http.StatusOK, &courseInfoURL, "\t")
 	}
 }

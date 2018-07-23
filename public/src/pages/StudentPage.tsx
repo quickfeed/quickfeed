@@ -50,6 +50,7 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("courses/{courseid:number}/lab/{labid:number}", this.courseWithLab);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/grouplab/{labid:number}", this.courseWithGroupLab);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/members", this.members);
+        this.navHelper.registerFunction<any>("courses/{courseid:number}/info", this.courseInformation);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
     }
@@ -168,6 +169,24 @@ export class StudentPage extends ViewPage {
 
         }
         return <div>404 not found</div>;
+    }
+
+    public async courseInformation(navInfo: INavInfo<{ courseid: number }>): View {
+        const informationURL = await this.courseMan.getCourseInformationURL(navInfo.params.courseid);
+        if (informationURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        const win = window.open(informationURL, "_blank");
+        // Focus on the new window.
+        const test = win ? win.focus() : null;
+        // We have to deliver a view back to user, so we deliver a link to the user
+        // incase a popup blocker is present.
+
+        // TODO replace the <a href> with something smarter,
+        // since it crashes the program if we do it like that and user tries to go back in history
+        return <div> Course information found <a href={informationURL}> here </a> </div>;
     }
 
     public async courseMissing(navInfo: INavInfo<{ courseid: number, page: string }>): View {
