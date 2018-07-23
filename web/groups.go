@@ -99,6 +99,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		dbRepo := models.Repository{
 			DirectoryID:  courseInfo.DirectoryID,
 			RepositoryID: repo.ID,
+			HTMLURL:      repo.WebURL,
 			Type:         models.UserRepo,
 			UserID:       0,
 			GroupID:      oldgrp.ID,

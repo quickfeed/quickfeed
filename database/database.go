@@ -55,4 +55,5 @@ type Database interface {
 	CreateRepository(repo *models.Repository) error
 	GetRepository(uint64) (*models.Repository, error)
 	GetRepositoriesByDirectory(uint64) ([]*models.Repository, error)
+	GetRepositoriesByCourseAndType(uint64, models.RepoType) ([]*models.Repository, error)
 }

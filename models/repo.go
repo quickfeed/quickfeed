@@ -20,6 +20,7 @@ type Repository struct {
 	RepositoryID uint64 `json:"repositoryid"`
 	UserID       uint64 `json:"userid"`
 	GroupID      uint64 `json:"groupid"`
+	HTMLURL      string `json:"htmlurl"`
 	// TODO: See if this have a functionality
 	// Could be used if we need to get the link to the repo for the frontend
 	// Or use the SCM could provide that with the use of RepositoryID
