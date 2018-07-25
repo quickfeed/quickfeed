@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -26,7 +27,10 @@ import (
 //	To run this test:
 //	go test -test.run=GithubLogin$
 
-const TAKE_SCREENSHOT = false
+const (
+	TAKE_SCREENSHOT = false
+	WANT_MESSAGE    = "Hi,"
+)
 
 // Saves a image taken by the webdriver, and saves it to the current
 // folder.
@@ -166,8 +170,8 @@ func TestGithubLogin(t *testing.T) {
 
 	fmt.Printf("%s\n", outputText)
 
-	// Output:
-	// Hello WebDriver!a
-	// Program exited.
+	if !reflect.DeepEqual(outputText, WANT_MESSAGE) {
+		t.Errorf("have database course %+v want %+v", outputText, WANT_MESSAGE)
+	}
 
 }
