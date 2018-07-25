@@ -30,6 +30,8 @@ import (
 const (
 	TAKE_SCREENSHOT = false
 	WANT_MESSAGE    = "Hi,"
+	USERNAME        = ""
+	PASSWORD        = ""
 )
 
 // Saves a image taken by the webdriver, and saves it to the current
@@ -118,7 +120,12 @@ func TestGithubLogin(t *testing.T) {
 			}).Fatal(err)
 		}*/
 	// Quick hack since I didnt find out how to get the above to work
-	wd.ExecuteScript("document.getElementsByClassName(\"social-login\")[0].children[0].firstChild.click()", nil)
+	//wd.ExecuteScript("document.getElementsByClassName(\"social-login\")[0].children[0].firstChild.click()", nil)
+	login, err := wd.FindElement(selenium.ByCSSSelector, "a[href=\"/app/login/login/github\"]")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	login.Click()
 	sleep()
 
 	// Fetch the fields needed.
@@ -127,13 +134,13 @@ func TestGithubLogin(t *testing.T) {
 		logrus.Fatal(err)
 	}
 
-	loginField.SendKeys("<YOUR USERNAME>")
+	loginField.SendKeys(USERNAME)
 
 	passwordField, err := wd.FindElement(selenium.ByID, "password")
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	passwordField.SendKeys("<YOUR PASSWORD>")
+	passwordField.SendKeys(PASSWORD)
 
 	loginButton, err := wd.FindElement(selenium.ByName, "commit")
 	if err != nil {
