@@ -14,16 +14,6 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-// IMPORTANT!
-// Test case are made like explained below.
-// For example:
-
-// Output:
-// <your wanted situation here>
-// <your wanted situation here>
-// <your wanted situation here>
-// Program exited.
-
 //	To run this test:
 //	go test -test.run=GithubLogin$
 
@@ -82,6 +72,7 @@ func TestGithubLogin(t *testing.T) {
 		logrus.Fatal(err)
 	}
 	defer service.Stop()
+
 	// Connect to the WebDriver instance running locally.
 	caps := selenium.Capabilities{"browserName": "firefox", "acceptSslCerts": true}
 	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", port))
@@ -98,28 +89,14 @@ func TestGithubLogin(t *testing.T) {
 		}).Fatal(err)
 	}
 	// Need time to load the index screen.
-	// Find out why wd.SetPageLoadTimeout(150000) is not working!
-	time.Sleep(time.Millisecond * 1000)
+	sleep()
+
 	// One way to get image of how the page you are currently at
 	// looks like.
 	saveScreenshot(wd, "indexpage")
 
-	// Get a reference to the github-login button.
-	/*
-		elem, err := wd.FindElement(selenium.ByPartialLinkText, "github")
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"Function": "FindElement(loginbox))",
-			}).Fatal(err)
-		}
-
-		// Click the login button.
-		if err := elem.Click(); err != nil {
-			logrus.WithFields(logrus.Fields{
-				"Function": "Loginbutton Click()",
-			}).Fatal(err)
-		}*/
-	// Quick hack since I didnt find out how to get the above to work
+	// It is also possible to insert script like below, this script does the exact same as
+	// the css selector does.
 	//wd.ExecuteScript("document.getElementsByClassName(\"social-login\")[0].children[0].firstChild.click()", nil)
 	login, err := wd.FindElement(selenium.ByCSSSelector, "a[href=\"/app/login/login/github\"]")
 	if err != nil {
@@ -160,22 +137,21 @@ func TestGithubLogin(t *testing.T) {
 
 	authorize, err := wd.FindElement(selenium.ByID, "js-oauth-authorize-btn")
 	if err != nil {
-		//logrus.Info("No auth page found")
+		logrus.Info("No auth page found")
 	} else {
 		authorize.Click()
 	}
+
 	sleep()
 	hellomsg, err := wd.FindElement(selenium.ByCSSSelector, "div[class='centerblock container']")
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
 	outputText, err := hellomsg.Text()
 	if err != nil {
 		logrus.Error("Could not get output text")
 	}
-	//logrus.Info(outputText)
-
-	fmt.Printf("%s\n", outputText)
 
 	if !reflect.DeepEqual(outputText, WANT_MESSAGE) {
 		t.Errorf("have database course %+v want %+v", outputText, WANT_MESSAGE)
