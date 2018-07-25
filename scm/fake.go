@@ -106,7 +106,7 @@ func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error 
 // CreateTeam implements the SCM interface.
 func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
-	return nil, nil
+	return &Team{ID: 1, Name: "", URL: ""}, nil
 }
 
 // CreateCloneURL implements the SCM interface.
