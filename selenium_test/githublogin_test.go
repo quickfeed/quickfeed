@@ -22,6 +22,7 @@ const (
 	WANT_MESSAGE    = "Hi,"
 	USERNAME        = ""
 	PASSWORD        = ""
+	TRAVIS_RUN      = false
 )
 
 // Saves a image taken by the webdriver, and saves it to the current
@@ -56,6 +57,9 @@ func sleep() {
 func TestGithubLogin(t *testing.T) {
 	// Start a Selenium WebDriver server instance (if one is not already
 	// running).
+	if !TRAVIS_RUN {
+		t.Skipf("Test must be skipped on travis")
+	}
 	const (
 		seleniumPath    = "../vendor/seleniumhq.org/selenium-server-standalone-3.13.0.jar"
 		geckoDriverPath = "../vendor/seleniumhq.org/geckodriver"
