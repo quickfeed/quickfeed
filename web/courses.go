@@ -1059,8 +1059,7 @@ func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, d
 
 	payment, _ := s.GetPaymentPlan(ctx, directoryID)
 	// If privaterepos is bigger than 0, we know that the org/team is paid for.
-	// TODO - replace == with > and test on paid repo.
-	if payment.PrivateRepos == 0 {
+	if payment.PrivateRepos > 0 {
 		for _, repo := range repositories {
 			if repo.Type != models.AssignmentsRepo &&
 				repo.Type != models.CourseInfoRepo &&
