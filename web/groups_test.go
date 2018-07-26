@@ -1,8 +1,10 @@
 package web_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strconv"
 	"testing"
 
@@ -77,4 +79,78 @@ func TestDeleteGroup(t *testing.T) {
 
 	assertCode(t, w.Code, http.StatusOK)
 
+}
+
+func TestGetGroup(t *testing.T) {
+	const (
+		route = "/groups/:gid"
+	)
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	// Create course.
+	testCourse := models.Course{
+		Name:        "Distributed Systems",
+		Code:        "DAT520",
+		Year:        2018,
+		Tag:         "Spring",
+		Provider:    "fake",
+		DirectoryID: 1,
+	}
+	if err := db.CreateCourse(&testCourse); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create user.
+	var user models.User
+	if err := db.CreateUserFromRemoteIdentity(
+		&user, &models.RemoteIdentity{},
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create enrollment.
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID:   user.ID,
+		CourseID: testCourse.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(user.ID, testCourse.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create group.
+	group := models.Group{CourseID: testCourse.ID}
+	if err := db.CreateGroup(&group); err != nil {
+		t.Fatal(err)
+	}
+
+	e := echo.New()
+	router := echo.NewRouter(e)
+
+	// Add the route to handler.
+	router.Add(http.MethodDelete, route, web.GetGroup(db))
+
+	requestURL := "/groups/" + strconv.FormatUint(group.ID, 10)
+	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+	// Prepare context with course request.
+	router.Find(http.MethodDelete, requestURL, c)
+
+	// Invoke the prepared handler.
+	if err := c.Handler()(c); err != nil {
+		t.Fatal(err)
+	}
+	assertCode(t, w.Code, http.StatusOK)
+
+	var respGroup models.Group
+	if err := json.Unmarshal(w.Body.Bytes(), &respGroup); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(respGroup, group) {
+		t.Errorf("have response group %+v, while database has %+v", &respGroup, group)
+	}
 }
