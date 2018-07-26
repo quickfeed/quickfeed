@@ -27,7 +27,11 @@ case $username in
     junaid)
         rport=3004
         ;;
-    *)
+     frtvedt)
+        rport=3006
+        ;;
+      *)
+      
         echo -e "$0: invalid username: $username";
         echo -e "usage: $0 remote_user remote_host local_port";
         exit;
