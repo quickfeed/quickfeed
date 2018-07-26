@@ -88,7 +88,7 @@ func ListCoursesWithEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		statuses, err := parseEnrollmentStatus(c.QueryParam("status"))
 		if err != nil {
@@ -108,7 +108,7 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		assignments, err := db.GetAssignmentsByCourse(id)
 		if err != nil {
@@ -272,11 +272,11 @@ func CreateEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		courseID, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		userID, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		var eur EnrollUserRequest
@@ -307,11 +307,11 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		courseID, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		userID, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		var eur EnrollUserRequest
@@ -430,7 +430,7 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		course, err := db.GetCourse(id)
@@ -452,7 +452,7 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		course, err := db.GetCourse(cid)
@@ -602,7 +602,7 @@ func GetSubmission(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		assignmentID, err := parseUint(c.Param("aid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		user := c.Get("user").(*models.User)
@@ -624,7 +624,7 @@ func ListSubmissions(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		courseID, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		// Check if a user is provided, else used logged in user
@@ -650,7 +650,7 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		if _, err := db.GetCourse(id); err != nil {
@@ -706,7 +706,7 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		statuses, err := parseEnrollmentStatus(c.QueryParam("status"))
@@ -735,7 +735,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		_, err = db.GetCourse(cid)
@@ -811,7 +811,7 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		if _, err = db.GetCourse(cid); err != nil {
@@ -823,7 +823,7 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 
 		gid, err := parseUint(c.Param("gid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		oldgrp, err := db.GetGroup(gid)
 		if err != nil {
@@ -895,7 +895,7 @@ func GetGroups(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		if _, err := db.GetCourse(cid); err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -916,7 +916,7 @@ func UpdateSubmission(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		sid, err := parseUint(c.Param("sid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		err = db.UpdateSubmissionByID(sid, true)
@@ -933,12 +933,12 @@ func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		gid, err := parseUint(c.Param("gid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		submission, err := db.GetGroupSubmissions(cid, gid)
