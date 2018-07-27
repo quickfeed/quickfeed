@@ -59,7 +59,9 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 				return err
 			}
 			// TODO, figure out which remote identity to be used!
-			userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+			if len(remoteIdentityUser.RemoteIdentities) > 0 {
+				userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+			}
 		}
 
 		provider := c.Get(courseInfo.Provider)
