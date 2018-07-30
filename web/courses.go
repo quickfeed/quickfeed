@@ -231,6 +231,7 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			dbRepo := models.Repository{
 				DirectoryID:  directory.ID,
 				RepositoryID: repo.ID,
+				HTMLURL:      repo.WebURL,
 				Type:         repoType,
 			}
 			if err := db.CreateRepository(&dbRepo); err != nil {
@@ -397,6 +398,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			dbRepo := models.Repository{
 				DirectoryID:  course.DirectoryID,
 				RepositoryID: repo.ID,
+				HTMLURL:      repo.WebURL,
 				Type:         models.UserRepo,
 				UserID:       userID,
 			}
@@ -1044,6 +1046,30 @@ func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
 	}
 }
 
+// GetCourseInformationURL Returns the course information html as string
+func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse courseID")
+		}
+		courseInfoRepo, err := db.GetRepositoriesByCourseAndType(cid, models.CourseInfoRepo)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve any course information repos")
+		}
+		// There should only exist 1 course info pr course.
+		if len(courseInfoRepo) > 1 && len(courseInfoRepo) == 0 {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Too many course information repositories exists for this course")
+		}
+
+		// Have to be in string array to be able to jsonify so frontend recognize it.
+		// See public/src/HttpHelper.ts -> send()
+		var courseInfoURL []string
+		courseInfoURL = append(courseInfoURL, courseInfoRepo[0].HTMLURL)
+		return c.JSONPretty(http.StatusOK, &courseInfoURL, "\t")
+	}
+}
+
 func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, directoryID uint64) {
 	repositories, err := db.GetRepositoriesByDirectory(directoryID)
 	if err != nil {
@@ -1066,7 +1092,6 @@ func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, d
 				if err != nil {
 					return
 				}
-
 			}
 		}
 	}

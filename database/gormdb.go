@@ -726,6 +726,21 @@ func (db *GormDB) UpdateGroup(group *models.Group) error {
 	return nil
 }
 
+// GetRepositoriesByCourseAndType returns repos beloning to directoryID and with repo type
+func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
+
+	course, err := db.GetCourse(cid)
+	if err != nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var repos []*models.Repository
+	if err := db.conn.Find(&repos, &models.Repository{DirectoryID: course.DirectoryID, Type: repoType}).Error; err != nil {
+		return nil, err
+	}
+	return repos, nil
+}
+
 // Close closes the gorm database.
 func (db *GormDB) Close() error {
 	return db.conn.Close()
