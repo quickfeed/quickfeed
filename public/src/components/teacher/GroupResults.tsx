@@ -23,7 +23,6 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
                 // Only using the first group to fetch assignments.
                 assignment: currentGroup.course.assignments[0],
                 groups: this.props.groups,
-
             };
         } else {
             this.state = {

@@ -143,11 +143,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             throw new Error("Problem with the request");
         }
         return mapify(result.data as IAssignment[], (ele) => {
-            if (!ele.deadline) {
-                ele.deadline = new Date(2000, 1, 1);
-            } else {
-                ele.deadline = new Date(ele.deadline);
-            }
+            ele.deadline = !ele.deadline ? new Date(2000, 1, 1) : new Date(ele.deadline);
             return ele.id;
         });
     }
@@ -245,7 +241,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const uri: string[] = [URL_ENDPOINT.users, userID.toString(),
         URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.group];
         const URL = this.buildURL(uri);
-
         const result = await this.helper.get<ICourseGroup>(URL);
         if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
             return null;
@@ -258,7 +253,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const data = { status: st };
         const uri: string[] = [URL_ENDPOINT.groups, groupID.toString()];
         const URL = this.buildURL(uri);
-
         const result = await this.helper.patch<{ status: CourseGroupStatus }, undefined>(URL, data);
         if (result.statusCode === HttpStatusCode.OK) {
             return true;
@@ -342,7 +336,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                     "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
                 );
             }
-
             submission.buildDate = buildInfo.builddate;
             submission.buildId = buildInfo.buildid;
             submission.buildLog = buildInfo.buildlog;
@@ -401,7 +394,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                     "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
                 );
             }
-
             submission.buildDate = buildInfo.builddate;
             submission.buildId = buildInfo.buildid;
             submission.buildLog = buildInfo.buildlog;
