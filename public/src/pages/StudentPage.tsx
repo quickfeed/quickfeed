@@ -7,8 +7,8 @@ import { UserManager } from "../managers/UserManager";
 
 import {
     CourseUserState, ICourse, ICourseGroup,
-    ICourseLinkAssignment, IGroupCourse, IStudentSubmission, 
-    IUserCourse, isIUserCourse, IGroupCourse
+    ICourseLinkAssignment, IGroupCourse, IStudentSubmission,
+    IUserCourse,
 
 } from "../models";
 
