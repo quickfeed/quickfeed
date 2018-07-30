@@ -11,31 +11,15 @@ interface ILabInfoProps {
 }
 
 function isDate(date: any): date is Date {
-    return (date as any).getDate != undefined;
+    return (date as any).getDate !== undefined;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps, {}> {
 
-    private getSubmissionInfo(): string{
-        if (this.props.labInfo.latest) {
-            return this.props.labInfo.latest.approved ? "Approved" : "Not approved";
-        }
-        return "Nothing built yet!";
-    }
-
-    private getCodeDeliverdString(date?: Date | string) :string {
-        if (date && isDate(date)) {
-            return date.toDateString()
-        } else if (typeof(date) === "string"){
-            return date;
-        }
-        return "-";
-    }
-
     public render() {
         if (this.props.labInfo.latest) {
             const latest = this.props.labInfo.latest;
-            const buildLog = latest.buildLog.split("\n").map(x => <span>{x}<br /></span>);
+            const buildLog = latest.buildLog.split("\n").map((x) => <span>{x}<br /></span>);
 
             return (
                 <div className="col-md-9 col-sm-9 col-xs-12">
@@ -77,5 +61,21 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
             );
         }
         return <h1>No subissions have been submitted yet</h1>;
+    }
+
+    private getSubmissionInfo(): string {
+        if (this.props.labInfo.latest) {
+            return this.props.labInfo.latest.approved ? "Approved" : "Not approved";
+        }
+        return "Nothing built yet!";
+    }
+
+    private getCodeDeliverdString(date?: Date | string): string {
+        if (date && isDate(date)) {
+            return date.toDateString();
+        } else if (typeof (date) === "string") {
+            return date;
+        }
+        return "-";
     }
 }

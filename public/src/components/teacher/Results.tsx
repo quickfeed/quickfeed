@@ -7,7 +7,7 @@ interface IResultsProp {
     course: ICourse;
     students: IUserCourseWithUser[];
     labs: IAssignment[];
-    onApproveClick: (submissionID:number) => void;
+    onApproveClick: (submissionID: number) => void;
 }
 interface IResultsState {
     assignment?: IStudentSubmission;
@@ -16,13 +16,13 @@ interface IResultsState {
 class Results extends React.Component<IResultsProp, IResultsState> {
     constructor(props: IResultsProp) {
         super(props);
-        
-        let currentStudent = this.props.students.length > 0 ? this.props.students[0] : null;
+
+        const currentStudent = this.props.students.length > 0 ? this.props.students[0] : null;
         if (currentStudent && currentStudent.course.assignments.length > 0 && currentStudent.course.assignments[0]) {
             this.state = {
                 // Only using the first student to fetch assignments.
                 assignment: currentStudent.course.assignments[0],
-                students: this.props.students,                
+                students: this.props.students,
             };
         } else {
             this.state = {
@@ -34,19 +34,19 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     public render() {
         let studentLab: JSX.Element | null = null;
-        let currentStudents = this.props.students.length > 0 ? this.props.students : null;
+        const currentStudents = this.props.students.length > 0 ? this.props.students : null;
         if (currentStudents
-            && this.state.assignment 
+            && this.state.assignment
             && !this.state.assignment.assignment.isgrouplab
-        ){
+        ) {
             studentLab = <StudentLab
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
-                onRebuildClick={() => {}}
+                onRebuildClick={() => { }}
                 onApproveClick={() => {
                     if (this.state.assignment && this.state.assignment.latest) {
-                        this.props.onApproveClick(this.state.assignment.latest.id)
+                        this.props.onApproveClick(this.state.assignment.latest.id);
                     }
                 }}
             />;
@@ -83,10 +83,11 @@ class Results extends React.Component<IResultsProp, IResultsState> {
     private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element> {
         const slipdayPlaceholder = "5";
         let selector: Array<string | JSX.Element> = [student.user.name, slipdayPlaceholder];
-        selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.isgrouplab).map((e, i) => <a className="lab-result-cell"
-            onClick={() => this.handleOnclick(e)}
-            href="#">
-            {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
+        selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.isgrouplab).map(
+            (e, i) => <a className="lab-result-cell"
+                onClick={() => this.handleOnclick(e)}
+                href="#">
+                {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
         return selector;
     }
 

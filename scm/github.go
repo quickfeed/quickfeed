@@ -63,9 +63,23 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 
 // CreateRepository implements the SCM interface.
 func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	repo, _, err := s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{Name: &opt.Path})
+	var repo *github.Repository
+
+	repo, _, err := s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{
+		Name:    &opt.Path,
+		Private: &opt.Private,
+	})
 	if err != nil {
-		return nil, err
+		// Could not create a private repo, trying to create public
+		err = nil
+		repo, _, err = s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{
+			Name: &opt.Path,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	return &Repository{
@@ -198,4 +212,34 @@ func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 		return "", err
 	}
 	return user.GetLogin(), nil
+}
+
+// GetPaymentPlan implements the SCM interface.
+func (s *GithubSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
+	org, _, err := s.client.Organizations.GetByID(ctx, int(orgID))
+	if err != nil {
+		return nil, err
+	}
+	plan := &PaymentPlan{
+		Name:         org.Plan.GetName(),
+		PrivateRepos: uint64(org.Plan.GetPrivateRepos()),
+	}
+	return plan, nil
+}
+
+// UpdateRepository implements the SCM interface
+func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
+	// TODO - make this more flexible rather than only making stuff private.
+	gitRepo, _, err := s.client.Repositories.GetByID(ctx, int(repo.ID))
+	if err != nil {
+		return err
+	}
+
+	*gitRepo.Private = true
+	_, _, err = s.client.Repositories.Edit(ctx, gitRepo.Owner.GetLogin(), gitRepo.GetName(), gitRepo)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

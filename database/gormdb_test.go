@@ -1509,6 +1509,240 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 }
 
+func TestGetRepositoriesByDirectory(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	course := &models.Course{
+		Name:        "Test Course",
+		Code:        "DAT100",
+		Year:        2017,
+		Tag:         "Spring",
+		Provider:    "github",
+		DirectoryID: 1234,
+	}
+
+	err := db.CreateCourse(course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const (
+		provider    = "fake"
+		accesstoken = "10"
+		remoteid    = 10
+	)
+
+	user := createUser(db, provider, accesstoken, remoteid, t)
+
+	// Creating Course info repo
+	repoCourseInfo := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 100,
+		UserID:       user.ID,
+		Type:         models.CourseInfoRepo,
+		HTMLURL:      "http://repoCourseInfo.com/",
+	}
+	if err := db.CreateRepository(&repoCourseInfo); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating solution
+	repoSolution := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 101,
+		UserID:       user.ID,
+		Type:         models.SolutionsRepo,
+		HTMLURL:      "http://repoSolution.com/",
+	}
+	if err := db.CreateRepository(&repoSolution); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating AssignmentRepo
+	repoAssignment := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 102,
+		UserID:       user.ID,
+		Type:         models.AssignmentsRepo,
+		HTMLURL:      "http://repoAssignment.com/",
+	}
+	if err := db.CreateRepository(&repoAssignment); err != nil {
+		t.Fatal(err)
+	}
+
+	want := []*models.Repository{&repoCourseInfo, &repoSolution, &repoAssignment}
+
+	gotRepo, err := db.GetRepositoriesByDirectory(120)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(gotRepo, want) {
+		for _, s := range gotRepo {
+			fmt.Printf("have %+v\n", s)
+		}
+		fmt.Println("")
+		for _, s := range want {
+			fmt.Printf("want %+v\n", s)
+		}
+		t.Errorf("Failed")
+	}
+
+}
+
+func TestDeleteGroup(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var course models.Course
+	if err := db.CreateCourse(&course); err != nil {
+		t.Fatal(err)
+	}
+	var users []*models.User
+	enrollments := []uint{models.Student, models.Student}
+	for i := 0; i < len(enrollments); i++ {
+		var user models.User
+		if err := db.CreateUserFromRemoteIdentity(
+			&user,
+			&models.RemoteIdentity{RemoteID: uint64(i)},
+		); err != nil {
+			t.Fatal(err)
+		}
+		users = append(users, &user)
+	}
+	// Enroll users in course.
+	for i := 0; i < len(users); i++ {
+		if enrollments[i] == models.Pending {
+			continue
+		}
+		if err := db.CreateEnrollment(&models.Enrollment{
+			CourseID: course.ID,
+			UserID:   users[i].ID,
+		}); err != nil {
+			t.Fatal(err)
+		}
+		err := errors.New("enrollment status not implemented")
+		switch enrollments[i] {
+		case models.Student:
+			err = db.EnrollStudent(users[i].ID, course.ID)
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	group := &models.Group{
+		Name:     "SameNameGroup",
+		CourseID: course.ID,
+		Users:    users,
+		ID:       1,
+	}
+	if err := db.CreateGroup(group); err != nil {
+		t.Fatal(err)
+	}
+
+	err := db.DeleteGroup(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gotModels, _ := db.GetGroup(group.ID)
+	if gotModels != nil {
+		t.Errorf("Got %+v wanted None", gotModels)
+	}
+
+}
+
+func TestGetRepositoriesByCourseAndType(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	course := &models.Course{
+		Name:        "Test Course",
+		Code:        "DAT100",
+		Year:        2017,
+		Tag:         "Spring",
+		Provider:    "github",
+		DirectoryID: 1234,
+		ID:          1,
+	}
+
+	err := db.CreateCourse(course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const (
+		provider    = "fake"
+		accesstoken = "10"
+		remoteid    = 10
+	)
+
+	user := createUser(db, provider, accesstoken, remoteid, t)
+
+	// Creating Course info repo
+	repoCourseInfo := models.Repository{
+		DirectoryID: 1234,
+		// Name:         "Name",
+		RepositoryID: 100,
+		UserID:       user.ID,
+		Type:         models.CourseInfoRepo,
+		HTMLURL:      "http://repoCourseInfo.com/",
+	}
+	if err := db.CreateRepository(&repoCourseInfo); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating solution
+	repoSolution := models.Repository{
+		DirectoryID: 1234,
+		// Name:         "Name",
+		RepositoryID: 101,
+		UserID:       user.ID,
+		Type:         models.SolutionsRepo,
+		HTMLURL:      "http://repoSolution.com/",
+	}
+	if err := db.CreateRepository(&repoSolution); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating AssignmentRepo
+	repoAssignment := models.Repository{
+		DirectoryID: 1234,
+		// Name:         "Name",
+		RepositoryID: 102,
+		UserID:       user.ID,
+		Type:         models.AssignmentsRepo,
+		HTMLURL:      "http://repoAssignment.com/",
+	}
+	if err := db.CreateRepository(&repoAssignment); err != nil {
+		t.Fatal(err)
+	}
+
+	want := []*models.Repository{&repoCourseInfo}
+
+	gotRepo, err := db.GetRepositoriesByCourseAndType(course.ID, models.CourseInfoRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(gotRepo, want) {
+		for _, s := range gotRepo {
+			fmt.Printf("got %+v\n", s)
+		}
+		fmt.Println("")
+		for _, s := range want {
+			fmt.Printf("want %+v\n", s)
+		}
+		t.Errorf("Failed")
+	}
+
+}
+
 func envSet(env string) database.GormLogger {
 	if os.Getenv(env) != "" {
 		return database.Logger{Logger: logrus.New()}

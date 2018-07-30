@@ -13,13 +13,13 @@ interface IStudentLabProbs {
 
 class StudentLab extends React.Component<IStudentLabProbs, {}> {
     public render() {
-        return <LabResultView 
-                course={this.props.course} 
-                labInfo={this.props.assignment}  
-                onApproveClick={this.props.onApproveClick}
-                onRebuildClick={this.props.onRebuildClick}
-                showApprove={this.props.showApprove}>
-            </LabResultView>;
+        return <LabResultView
+            course={this.props.course}
+            labInfo={this.props.assignment}
+            onApproveClick={this.props.onApproveClick}
+            onRebuildClick={this.props.onRebuildClick}
+            showApprove={this.props.showApprove}>
+        </LabResultView>;
     }
 }
 

@@ -33,7 +33,7 @@ func GetUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		user, err := db.GetUser(id)
@@ -67,7 +67,7 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		var uur UpdateUserRequest
 		if err := c.Bind(&uur); err != nil {
@@ -119,11 +119,11 @@ func GetGroupByUserAndCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		uid, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return nil
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, uid)
 		if err != nil {
@@ -135,7 +135,7 @@ func GetGroupByUserAndCourse(db database.Database) echo.HandlerFunc {
 		if enrollment.GroupID > 0 {
 			group, err := db.GetGroup(enrollment.GroupID)
 			if err != nil {
-				return nil
+				return c.NoContent(http.StatusNotFound)
 			}
 			return c.JSONPretty(http.StatusFound, group, "\t")
 		}

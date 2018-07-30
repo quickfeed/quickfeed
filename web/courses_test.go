@@ -295,6 +295,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
 	c.Set(auth.UserKey, &admin)
+	fakeProvider, err := scm.NewSCMClient("fake", "token")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fakeProvider.CreateDirectory(c.Request().Context(),
+		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
+	)
+	c.Set("fake", fakeProvider)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler. This will attempt to accept the
@@ -538,6 +546,9 @@ func TestNewGroup(t *testing.T) {
 	defer cleanup()
 
 	var course models.Course
+	course.Provider = "fake"
+	// only created 1 directory, if we had created two directories ID would be 2
+	course.DirectoryID = 1
 	if err := db.CreateCourse(&course); err != nil {
 		t.Fatal(err)
 	}
@@ -575,6 +586,17 @@ func TestNewGroup(t *testing.T) {
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
+
+	// Prepare provider
+	fakeProvider, err := scm.NewSCMClient("fake", "token")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fakeProvider.CreateDirectory(c.Request().Context(),
+		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
+	)
+	c.Set("fake", fakeProvider)
+
 	// Prepare context with user request.
 	c.Set("user", &user)
 	router.Find(http.MethodPost, requestURL, c)

@@ -16,14 +16,14 @@ import {
     ICourse,
     ICourseGroup,
     ICourseUserLink,
+    IGroupCourseWithGroup,
     IUser,
     IUserCourseWithUser,
     IUserRelation,
-    IGroupCourseWithGroup,
 } from "../models";
 
-import { MemberView } from "./views/MemberView";
 import { GroupResults } from "../components/teacher/GroupResults";
+import { MemberView } from "./views/MemberView";
 
 export class TeacherPage extends ViewPage {
 
@@ -118,7 +118,7 @@ export class TeacherPage extends ViewPage {
                 <h1>Overview for {course.name}</h1>
                 {button}
             </div>;
-        })
+        });
     }
 
     public async results(info: INavInfo<{ course: string }>): View {
@@ -146,12 +146,12 @@ export class TeacherPage extends ViewPage {
                 }}
             >
             </Results>;
-        })
+        });
     }
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            var linkedGroups: IGroupCourseWithGroup[] = [];
+            const linkedGroups: IGroupCourseWithGroup[] = [];
             const groupCourses = await this.courseMan.getCourseGroups(course.id);
             for (const grpCourse of groupCourses) {
                 const grp = await this.courseMan.getGroupCourse(grpCourse, course);
@@ -174,7 +174,7 @@ export class TeacherPage extends ViewPage {
                 }}
             >
             </GroupResults>;
-        })
+        });
     }
 
     public async groups(info: INavInfo<{ course: string }>): View {
@@ -205,7 +205,7 @@ export class TeacherPage extends ViewPage {
                 courseMan={this.courseMan}
                 pagePath={this.pagePath}
             />;
-        })
+        });
     }
 
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
@@ -257,7 +257,7 @@ export class TeacherPage extends ViewPage {
                 courseMan={this.courseMan}
             >
             </MemberView>;
-        })
+        });
     }
 
     public generateCollectionFor(link: ILink): ILinkCollection {
@@ -331,7 +331,7 @@ export class TeacherPage extends ViewPage {
         const courseId = parseInt(courseParam, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            return fn(course)
+            return fn(course);
         }
         return <div>404 Page not found</div>;
     }
