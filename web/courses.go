@@ -753,8 +753,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		course, err := db.GetCourse(cid)
-		if err != nil {
+		if _, err := db.GetCourse(cid); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
 			}
@@ -804,80 +803,6 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "student must be member of new group")
 		}
 
-		var userRemoteIdentity []*models.RemoteIdentity
-		// TODO move this into the for loop above, modify db.GetUsers() to also retreive RemoteIdentity
-		// so we can remove individual GetUser calls
-		for _, user := range users {
-			remoteIdentityUser, _ := db.GetUser(user.ID)
-			if err != nil {
-				return err
-			}
-			// TODO, figure out which remote identity to be used!
-			if len(remoteIdentityUser.RemoteIdentities) > 0 {
-				userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
-			}
-		}
-
-		provider := c.Get(course.Provider)
-		if provider == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
-		}
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := provider.(scm.SCM)
-
-		// TODO move this functionality down into SCM?
-		// Note: This Requires alot of calls to git.
-		// Figure out all group members git-username
-		var gitUserNames []string
-		for _, identity := range userRemoteIdentity {
-			gitName, err := s.GetUserNameByID(c.Request().Context(), identity.RemoteID)
-			if err != nil {
-				return err
-			}
-			gitUserNames = append(gitUserNames, gitName)
-		}
-
-		// Create and add repo to autograder group
-		dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
-		if err != nil {
-			return err
-		}
-		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
-			Directory: dir,
-			Path:      grp.Name,
-			Private:   true,
-		})
-		if err != nil {
-			return err
-		}
-		// Add repo to DB
-		dbRepo := models.Repository{
-			DirectoryID:  course.DirectoryID,
-			RepositoryID: repo.ID,
-			Type:         models.UserRepo,
-			UserID:       grp.UserIDs[0], // Should this be groupID ????
-		}
-		if err := db.CreateRepository(&dbRepo); err != nil {
-			return err
-		}
-		// Create git-team
-		team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
-			Directory: &scm.Directory{Path: dir.Path},
-			TeamName:  grp.Name,
-			Users:     gitUserNames,
-		})
-		if err != nil {
-			return err
-		}
-		// Adding Repo to git-team
-		if err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
-			TeamID: team.ID,
-			Owner:  repo.Owner,
-			Repo:   repo.Path,
-		}); err != nil {
-			return err
-		}
-
 		group := models.Group{
 			Name:     grp.Name,
 			CourseID: cid,
@@ -895,6 +820,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 	}
 }
 
+// TODO: Remove this function? similar exists in web/groups.go
 // UpdateGroup update a group
 func UpdateGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -903,7 +829,8 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		if _, err = db.GetCourse(cid); err != nil {
+		course, err := db.GetCourse(cid)
+		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
 			}
@@ -972,6 +899,80 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			if err == database.ErrDuplicateGroup {
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
+			return err
+		}
+
+		provider := c.Get(course.Provider)
+		if provider == nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
+		}
+		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+		s := provider.(scm.SCM)
+
+		var userRemoteIdentity []*models.RemoteIdentity
+		// TODO move this into the for loop above, modify db.GetUsers() to also retreive RemoteIdentity
+		// so we can remove individual GetUser calls
+		for _, user := range users {
+			remoteIdentityUser, _ := db.GetUser(user.ID)
+			if err != nil {
+				return err
+			}
+			// TODO, figure out which remote identity to be used!
+			if len(remoteIdentityUser.RemoteIdentities) > 0 {
+				userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+			}
+		}
+
+		// TODO move this functionality down into SCM?
+		// Note: This Requires alot of calls to git.
+		// Figure out all group members git-username
+		var gitUserNames []string
+		for _, identity := range userRemoteIdentity {
+			gitName, err := s.GetUserNameByID(c.Request().Context(), identity.RemoteID)
+			if err != nil {
+				return err
+			}
+			gitUserNames = append(gitUserNames, gitName)
+		}
+
+		// Create and add repo to autograder group
+		dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
+		if err != nil {
+			return err
+		}
+		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
+			Directory: dir,
+			Path:      grp.Name,
+			Private:   true,
+		})
+		if err != nil {
+			return err
+		}
+		// Add repo to DB
+		dbRepo := models.Repository{
+			DirectoryID:  course.DirectoryID,
+			RepositoryID: repo.ID,
+			Type:         models.UserRepo,
+			UserID:       grp.UserIDs[0], // Should this be groupID ????
+		}
+		if err := db.CreateRepository(&dbRepo); err != nil {
+			return err
+		}
+		// Create git-team
+		team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
+			Directory: &scm.Directory{Path: dir.Path},
+			TeamName:  grp.Name,
+			Users:     gitUserNames,
+		})
+		if err != nil {
+			return err
+		}
+		// Adding Repo to git-team
+		if err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
+			TeamID: team.ID,
+			Owner:  repo.Owner,
+			Repo:   repo.Path,
+		}); err != nil {
 			return err
 		}
 

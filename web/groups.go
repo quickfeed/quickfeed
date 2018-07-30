@@ -92,6 +92,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
 			Directory: dir,
 			Path:      oldgrp.Name,
+			Private:   true,
 		})
 		if err != nil {
 			return err
