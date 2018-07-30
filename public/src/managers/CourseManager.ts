@@ -5,20 +5,20 @@ import {
     IAssignment,
     ICourse,
     ICourseGroup,
+    ICourseLinkAssignment,
     ICourseUserLink,
     ICourseWithEnrollStatus,
     IError,
+    IGroupCourse,
     INewCourse,
-    INewGroup,
-    IOrganization,
-    isCourse, IStatusCode,
+    INewGroup, IOrganization,
+    isCourse,
+    IStatusCode,
     IStudentSubmission,
     ISubmission,
     IUser,
     IUserCourse,
     IUserRelation,
-    IGroupCourse,
-    ICourseLinkAssignment,
 
 } from "../models";
 
@@ -290,7 +290,7 @@ export class CourseManager {
 
         return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
             return {
-                link: { courseId: course.id, userid: user.user.id, state: user.status },
+                link: { courseId: course.id, userid: user.userid, state: user.status },
                 user: user.user,
             };
         });
@@ -319,7 +319,7 @@ export class CourseManager {
      */
     public async getGroupCourse(group: ICourseGroup, course: ICourse): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
-        const groupEnrollment = await this.courseProvider.getGroup(group.id)
+        const groupEnrollment = await this.courseProvider.getGroup(group.id);
 
         if (groupEnrollment != null && groupEnrollment.id === group.id) {
             if (group.courseid === course.id) {
@@ -367,6 +367,10 @@ export class CourseManager {
         return await this.courseProvider.getProviders();
     }
 
+    public async approveSubmission(submissionID: number): Promise<void> {
+        return await this.courseProvider.approveSubmission(submissionID);
+    }
+
     /**
      * Add IStudentSubmissions to an IUserCourse
      * @param student The student
@@ -407,9 +411,5 @@ export class CourseManager {
                 groupCourse.assignments.push({ assignment: a, latest: submission });
             }
         }
-    }
-
-    public async approveSubmission(submissionID: number): Promise<void> {
-        return await this.courseProvider.approveSubmission(submissionID);
     }
 }

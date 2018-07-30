@@ -30,7 +30,6 @@ interface IDummyUser extends IUser {
  */
 export class TempDataProvider implements IUserProvider, ICourseProvider {
 
-
     private localUsers: IMap<IDummyUser>;
     private localAssignments: IMap<IAssignment>;
     private localCourses: IMap<ICourse>;
