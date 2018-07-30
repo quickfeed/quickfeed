@@ -1067,6 +1067,7 @@ func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 		var courseInfoURL []string
 		courseInfoURL = append(courseInfoURL, courseInfoRepo[0].HTMLURL)
 		return c.JSONPretty(http.StatusOK, &courseInfoURL, "\t")
+	}
 }
 
 func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, directoryID uint64) {
