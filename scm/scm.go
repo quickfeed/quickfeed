@@ -18,6 +18,8 @@ type SCM interface {
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within directory.
 	GetRepositories(context.Context, *Directory) ([]*Repository, error)
+	// Update repository settings
+	UpdateRepository(context.Context, *Repository) error
 	// Delete repository.
 	DeleteRepository(context.Context, uint64) error
 	// List the webhooks associated with the provided repository.
@@ -34,6 +36,8 @@ type SCM interface {
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider spesefic clone path.
 	CreateCloneURL(context.Context, *CreateClonePathOptions) (string, error)
+	// Fetch current payment plan
+	GetPaymentPlan(context.Context, uint64) (*PaymentPlan, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -94,6 +98,7 @@ type Hook struct {
 type CreateRepositoryOptions struct {
 	Path      string
 	Directory *Directory
+	Private   bool
 }
 
 // CreateHookOptions contains information on how to create a webhook.
@@ -138,6 +143,11 @@ type Team struct {
 	ID   uint64
 	Name string
 	URL  string
+}
+
+type PaymentPlan struct {
+	Name         string
+	PrivateRepos uint64
 }
 
 func (e ErrNotSupported) Error() string {

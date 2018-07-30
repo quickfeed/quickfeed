@@ -295,6 +295,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
 	c.Set(auth.UserKey, &admin)
+	fakeProvider, err := scm.NewSCMClient("fake", "token")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fakeProvider.CreateDirectory(c.Request().Context(),
+		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
+	)
+	c.Set("fake", fakeProvider)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler. This will attempt to accept the

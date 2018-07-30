@@ -100,7 +100,6 @@ func getLatestAssignment(db database.Database, cid uint64, uid uint64, gid uint6
 		return assignments[i].Order < assignments[j].Order
 	})
 	for _, v := range assignments {
-		fmt.Println(*v)
 		if uid > 0 {
 			sub, err := db.GetSubmissionForUser(v.ID, uid)
 			if err != nil && err != gorm.ErrRecordNotFound {
@@ -262,11 +261,6 @@ func runCIFromTMPL(runner ci.Runner, language string, ciInfo models.AssignmentCI
 
 	lines := strings.Split(buffer.String(), "\n")
 	restData, image := extractDockerImageInformation(lines)
-
-	fmt.Println("Image:", *image)
-	fmt.Println("Data:", restData)
-
-	fmt.Println(strings.Join(restData, "\n"))
 
 	if image == nil {
 		return nil, "", fmt.Errorf("Image not specefied in template file")
