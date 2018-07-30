@@ -48,7 +48,7 @@ class CoursePanel extends React.Component<IPanelProps, any> {
     }
 
     private handleCourseClick() {
-        const uri: string = "app/student/course/" + this.props.course.id;
+        const uri: string = "app/student/courses/" + this.props.course.id;
         this.props.navMan.navigateTo(uri);
     }
 }

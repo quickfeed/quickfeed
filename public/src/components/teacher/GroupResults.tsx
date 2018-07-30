@@ -1,5 +1,5 @@
 import * as React from "react";
-import { IAssignment, ICourse, IStudentSubmission, IUser, IUserCourseWithUser, IGroupCourseWithGroup } from "../../models";
+import { IAssignment, ICourse, IGroupCourseWithGroup, IStudentSubmission } from "../../models";
 
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 
@@ -7,7 +7,7 @@ interface IResultsProp {
     course: ICourse;
     groups: IGroupCourseWithGroup[];
     labs: IAssignment[];
-    onApproveClick: (submissionID:number) => void;
+    onApproveClick: (submissionID: number) => void;
 }
 interface IResultsState {
     assignment?: IStudentSubmission;
@@ -17,13 +17,12 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
     constructor(props: IResultsProp) {
         super(props);
 
-        let currentGroup = this.props.groups.length > 0 ? this.props.groups[0] : null;
+        const currentGroup = this.props.groups.length > 0 ? this.props.groups[0] : null;
         if (currentGroup && currentGroup.course.assignments.length > 0) {
             this.state = {
                 // Only using the first group to fetch assignments.
                 assignment: currentGroup.course.assignments[0],
                 groups: this.props.groups,
-                
             };
         } else {
             this.state = {
@@ -35,19 +34,18 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
 
     public render() {
         let groupLab: JSX.Element | null = null;
-        let currentGroup = this.props.groups.length > 0 ? this.props.groups : null;
-        if (currentGroup 
+        const currentGroup = this.props.groups.length > 0 ? this.props.groups : null;
+        if (currentGroup
             && this.state.assignment
-            && this.state.assignment.assignment.isgrouplab) 
-            {
-                groupLab = <StudentLab
+            && this.state.assignment.assignment.isgrouplab) {
+            groupLab = <StudentLab
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
-                onRebuildClick={() => {}}
+                onRebuildClick={() => { }}
                 onApproveClick={() => {
                     if (this.state.assignment && this.state.assignment.latest) {
-                        this.props.onApproveClick(this.state.assignment.latest.id)
+                        this.props.onApproveClick(this.state.assignment.latest.id);
                     }
                 }}
             />;
@@ -65,7 +63,7 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.groups}
-                            selector={(item: IGroupCourseWithGroup) => this.getGroupResultSelector(item)} 
+                            selector={(item: IGroupCourseWithGroup) => this.getGroupResultSelector(item)}
                         />
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12">
@@ -85,11 +83,11 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
     private getGroupResultSelector(group: IGroupCourseWithGroup): Array<string | JSX.Element> {
         const slipdayPlaceholder = "5";
         let selector: Array<string | JSX.Element> = [group.group.name, slipdayPlaceholder];
-        selector = selector.concat(group.course.assignments.filter((e, i) => e.assignment.isgrouplab).map((e, i) => 
-        <a className="lab-result-cell"
-            onClick={() => this.handleOnclick(e)}
-            href="#">
-            {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
+        selector = selector.concat(group.course.assignments.filter((e) => e.assignment.isgrouplab).map((e) =>
+            <a className="lab-result-cell"
+                onClick={() => this.handleOnclick(e)}
+                href="#">
+                {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
         return selector;
     }
 

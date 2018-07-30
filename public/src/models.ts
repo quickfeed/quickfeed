@@ -51,7 +51,6 @@ export interface IUserCourse extends ICourseLinkAssignment {
     link?: ICourseUserLink;
 }
 
-
 /**
  * An interface which contains both the course, the course
  * link, all assignments and the latest submission to a single group
@@ -283,7 +282,7 @@ export interface IOrganization {
 /**
  * ICourseGroup represents a student group in a course
  */
-export interface ICourseGroup { 
+export interface ICourseGroup {
     id: number;
     name: string;
     status: CourseGroupStatus;
