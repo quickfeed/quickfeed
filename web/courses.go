@@ -350,7 +350,6 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		case models.Student:
 
 			// Update enrollment for student in DB.
-			// Should this be at the end?
 			err = db.EnrollStudent(userID, courseID)
 			if err != nil {
 				return err
@@ -823,7 +822,9 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 				return err
 			}
 			// TODO, figure out which remote identity to be used!
-			userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+			if len(remoteIdentityUser.RemoteIdentities) > 0 {
+				userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+			}
 		}
 
 		provider := c.Get(course.Provider)
