@@ -429,6 +429,8 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			err = db.EnrollTeacher(userID, courseID)
 		case models.Rejected:
 			err = db.RejectEnrollment(userID, courseID)
+		case models.Pending:
+			err = db.SetPendingEnrollment(userID, courseID)
 		}
 		if err != nil {
 			return err

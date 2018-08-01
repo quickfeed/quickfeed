@@ -405,6 +405,11 @@ func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, models.Teacher)
 }
 
+// EnrollTeacher implements the Database interface.
+func (db *GormDB) SetPendingEnrollment(uid, cid uint64) error {
+	return db.setEnrollment(uid, cid, models.Pending)
+}
+
 // GetEnrollmentsByCourse implements the Database interface.
 func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*models.Enrollment, error) {
 	return db.getEnrollments(&models.Course{ID: cid}, statuses...)
@@ -443,10 +448,15 @@ func (db *GormDB) setEnrollment(uid, cid uint64, status uint) error {
 	if status > models.Teacher {
 		panic("invalid status")
 	}
-	return db.conn.
+	var enrollment models.Enrollment
+	if err := db.conn.
 		Model(&models.Enrollment{}).
-		Where(&models.Enrollment{CourseID: cid, UserID: uid}).
-		Update(&models.Enrollment{Status: status}).Error
+		Where(&models.Enrollment{CourseID: cid, UserID: uid}).First(&enrollment).Error; err != nil {
+		return err
+	}
+	enrollment.Status = status
+	// Update wont allow value 0 (models.Pending), so need to use save.
+	return db.conn.Save(&enrollment).Error
 }
 
 // GetCoursesByUser returns all courses (with enrollment status)

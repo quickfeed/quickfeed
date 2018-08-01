@@ -236,6 +236,7 @@ export class TeacherPage extends ViewPage {
             const all = await this.courseMan.getUsersForCourse(course, this.userMan);
             const acceptedUsers: IUserRelation[] = [];
             const pendingUsers: IUserRelation[] = [];
+            const rejectedUsers: IUserRelation[] = [];
             // Sorts all the users to the correct tables, and ignores the rejected once
             // TODO: Maybe move this to the Members view
             all.forEach((user, id) => {
@@ -247,6 +248,9 @@ export class TeacherPage extends ViewPage {
                     case CourseUserState.pending:
                         pendingUsers.push(user);
                         break;
+                    case CourseUserState.rejected:
+                        rejectedUsers.push(user);
+                        break;
                 }
             });
             return <MemberView
@@ -254,6 +258,7 @@ export class TeacherPage extends ViewPage {
                 course={course}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
+                rejectedUsers={rejectedUsers}
                 courseMan={this.courseMan}
             >
             </MemberView>;
