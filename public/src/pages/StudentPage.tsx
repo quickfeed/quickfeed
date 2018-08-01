@@ -186,9 +186,6 @@ export class StudentPage extends ViewPage {
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
-
-        // TODO replace the <a href> with something smarter,
-        // since it crashes the program if we do it like that and user tries to go back in history
         return <div> Course information found <a href={informationURL}> here </a> </div>;
     }
 
@@ -204,9 +201,6 @@ export class StudentPage extends ViewPage {
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
-
-        // TODO replace the <a href> with something smarter,
-        // since it crashes the program if we do it like that and user tries to go back in history
         return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
     }
 

@@ -20,6 +20,7 @@ import {
     IUser,
     IUserCourseWithUser,
     IUserRelation,
+    RepositoryType,
 } from "../models";
 
 import { GroupResults } from "../components/teacher/GroupResults";
@@ -51,6 +52,11 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
+        this.navHelper.registerFunction("courses/{cid}/info", this.courseInformation);
+        this.navHelper.registerFunction("courses/{cid}/assignmentinfo", this.assignmentInformation);
+        this.navHelper.registerFunction("courses/{cid}/testinfo", this.testInformation);
+        this.navHelper.registerFunction("courses/{cid}/solutioninfo", this.solutionInformation);
+
     }
 
     public checkAuthentication(): boolean {
@@ -274,9 +280,75 @@ export class TeacherPage extends ViewPage {
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
                 // {name: "Settings", uri: link.uri + "/settings" },
-                // {name: "Course Info", uri: link.uri + "/courseinfo" },
+                { name: "Course Info", uri: link.uri + "/info" },
+                { name: "Assignment repository", uri: link.uri + "/assignmentinfo" },
+                { name: "Test repository", uri: link.uri + "/testinfo" },
+                { name: "Solution repository", uri: link.uri + "/solutioninfo" },
             ],
         };
+    }
+    public async courseInformation(navInfo: INavInfo<{ cid: string }>): View {
+        const courseId = parseInt(navInfo.params.cid, 10);
+        const informationURL = await this.courseMan.getCourseInformationURL(courseId);
+        if (informationURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        window.open(informationURL, "_blank");
+
+        // We have to deliver a view back to user, so we deliver a link to the user
+        // incase a popup blocker is present.
+        return <div> Course information found <a href={informationURL}> here </a> </div>;
+    }
+
+    public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
+        const courseId = parseInt(navInfo.params.cid, 10);
+        const assignmentURL = await this.courseMan.getRepositoryURL(courseId,
+            RepositoryType.AssignmentsRepo);
+        if (assignmentURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        window.open(assignmentURL, "_blank");
+
+        // We have to deliver a view back to user, so we deliver a link to the user
+        // incase a popup blocker is present.
+        return <div> Assignment repository found <a href={assignmentURL}> here </a> </div>;
+    }
+
+    public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
+        const courseId = parseInt(navInfo.params.cid, 10);
+        const informationURL = await this.courseMan.getRepositoryURL(courseId, RepositoryType.TestsRepo);
+        if (informationURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        window.open(informationURL, "_blank");
+
+        // We have to deliver a view back to user, so we deliver a link to the user
+        // incase a popup blocker is present.
+
+        // since it crashes the program if we do it like that and user tries to go back in history
+        return <div> Test repository found <a href={informationURL}> here </a> </div>;
+    }
+
+    public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
+        const courseId = parseInt(navInfo.params.cid, 10);
+        const assignmentURL = await this.courseMan.getRepositoryURL(courseId,
+            RepositoryType.SolutionsRepo);
+        if (assignmentURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        window.open(assignmentURL, "_blank");
+
+        // We have to deliver a view back to user, so we deliver a link to the user
+        // incase a popup blocker is present.
+        return <div> Solution repository found <a href={assignmentURL}> here </a> </div>;
     }
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
