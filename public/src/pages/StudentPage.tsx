@@ -181,9 +181,8 @@ export class StudentPage extends ViewPage {
         }
 
         // Open new window for course information.
-        const win = window.open(informationURL, "_blank");
-        // Focus on the new window.
-        const test = win ? win.focus() : null;
+        window.open(informationURL, "_blank");
+
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
 
