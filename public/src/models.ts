@@ -187,6 +187,17 @@ export enum CourseGroupStatus {
     deleted = 3,
 }
 
+/**
+ * Status of a course group
+ */
+export enum RepositoryType {
+    UserRepo = 0,
+    AssignmentsRepo = 1,
+    TestsRepo = 2,
+    SolutionsRepo = 3,
+    CourseInfoRepo = 4,
+}
+
 export function courseUserStateToString(state: CourseUserState[]): string {
     return state.map((sta) => {
         switch (sta) {

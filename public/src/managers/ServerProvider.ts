@@ -522,6 +522,18 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return "";
     }
 
+    public async getRepositoryURL(courseID: number, repoType: number): Promise<string> {
+        const type = "?type=" + repoType;
+        console.log(courseID);
+        const result = await this.helper.get<string[]>("courses/" + courseID + "/repositoryurl" + type);
+        if (result.data) {
+            return result.data[0];
+        } else {
+            this.handleError(result, "getRepositoryURL");
+        }
+        return "";
+    }
+
     public async approveSubmission(submissionID: number): Promise<void> {
         const uri: string[] = [URL_ENDPOINT.submissions, submissionID.toString()];
         const URL = this.buildURL(uri);

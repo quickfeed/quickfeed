@@ -56,6 +56,7 @@ export interface ICourseProvider {
     approveSubmission(submissionID: number): Promise<void>;
 
     getCourseInformationURL(cid: number): Promise<string>;
+    getRepositoryURL(cid: number, type: number): Promise<string>;
 }
 
 export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollment {
@@ -371,6 +372,10 @@ export class CourseManager {
 
     public async getCourseInformationURL(cid: number): Promise<string> {
         return await this.courseProvider.getCourseInformationURL(cid);
+    }
+
+    public async getRepositoryURL(cid: number, type: number): Promise<string> {
+        return this.courseProvider.getRepositoryURL(cid, type);
     }
 
     public async approveSubmission(submissionID: number): Promise<void> {

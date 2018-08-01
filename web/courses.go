@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1053,9 +1054,43 @@ func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse courseID")
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
 		}
 		courseInfoRepo, err := db.GetRepositoriesByCourseAndType(cid, models.CourseInfoRepo)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve any course information repos")
+		}
+		// There should only exist 1 course info pr course.
+		if len(courseInfoRepo) > 1 && len(courseInfoRepo) == 0 {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Too many course information repositories exists for this course")
+		}
+
+		// Have to be in string array to be able to jsonify so frontend recognize it.
+		// See public/src/HttpHelper.ts -> send()
+		var courseInfoURL []string
+		courseInfoURL = append(courseInfoURL, courseInfoRepo[0].HTMLURL)
+		return c.JSONPretty(http.StatusOK, &courseInfoURL, "\t")
+	}
+}
+
+// GetCourseInformationURL Returns the course information html as string
+func GetRepositoryURL(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
+		}
+
+		// parseUint does not allow 0 values, since model.RepoType can be 0 we convert it ourselves.
+		repoType, err := strconv.ParseUint(c.QueryParam("type"), 10, 64)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse repoType")
+		}
+		identifiedRepoType, err := models.IdentifyRepoTypeFromFrontEnd(repoType)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse Repository type")
+		}
+		courseInfoRepo, err := db.GetRepositoriesByCourseAndType(cid, identifiedRepoType)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve any course information repos")
 		}
