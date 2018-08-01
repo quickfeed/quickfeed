@@ -102,8 +102,8 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			status = http.StatusOK
 		}
 		// Promote other user to admin, only if current user has admin privileges
-		if uur.IsAdmin != nil && currentUser.IsAdmin {
-			updateUser.IsAdmin = *uur.IsAdmin
+		if uur.IsAdmin != nil && *currentUser.IsAdmin {
+			updateUser.IsAdmin = uur.IsAdmin
 			status = http.StatusOK
 		}
 

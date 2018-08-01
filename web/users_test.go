@@ -151,7 +151,9 @@ func TestGetUsers(t *testing.T) {
 	user1.RemoteIdentities = nil
 	user2.RemoteIdentities = nil
 	// First user should be admin.
-	user1.IsAdmin = true
+	var admin bool
+	admin = true
+	user1.IsAdmin = &admin
 	wantUsers := []*models.User{&user1, &user2}
 	if !reflect.DeepEqual(foundUsers, wantUsers) {
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
@@ -276,7 +278,9 @@ func TestPatchUser(t *testing.T) {
 
 	var user models.User
 	var adminUser models.User
-	adminUser.IsAdmin = true
+	var isAdmin bool
+	isAdmin = true
+	adminUser.IsAdmin = &isAdmin
 	var remoteIdentity models.RemoteIdentity
 	if err := db.CreateUserFromRemoteIdentity(
 		&user, &remoteIdentity,
@@ -341,7 +345,7 @@ func TestPatchUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !admin.IsAdmin {
+	if admin.IsAdmin == nil || !*admin.IsAdmin {
 		t.Error("expected user to have become admin")
 	}
 
@@ -375,11 +379,12 @@ func TestPatchUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	var wantAdmin bool
+	wantAdmin = true
 	wantUser := &models.User{
 		ID:               withName.ID,
 		Name:             "Scrooge McDuck",
-		IsAdmin:          true,
+		IsAdmin:          &wantAdmin,
 		StudentID:        "99",
 		Email:            "test@test.com",
 		AvatarURL:        "www.hello.com",

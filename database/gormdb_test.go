@@ -73,11 +73,12 @@ func TestGormDBUpdateUser(t *testing.T) {
 		provider = "github"
 		remoteID = 10
 	)
-
+	var admin bool
+	admin = true
 	var (
 		wantUser = &models.User{
 			ID:        uID,
-			IsAdmin:   true, // first user is always admin
+			IsAdmin:   &admin, // first user is always admin
 			Name:      "Scrooge McDuck",
 			StudentID: "22",
 			Email:     "scrooge@mc.duck",
@@ -618,7 +619,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if user.IsAdmin {
+	if user.IsAdmin != nil && *user.IsAdmin {
 		t.Error("user should not yet be an administrator")
 	}
 
@@ -631,7 +632,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !admin.IsAdmin {
+	if admin.IsAdmin == nil || !*admin.IsAdmin {
 		t.Error("user should be an administrator")
 	}
 }

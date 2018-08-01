@@ -446,7 +446,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async changeAdminRole(user: IUser): Promise<boolean> {
         const uri: string[] = [URL_ENDPOINT.users, user.id.toString()];
         const URL = this.buildURL(uri);
-        const result = await this.helper.patch<{ isadmin: boolean }, {}>(URL, { isadmin: true });
+        const result = await this.helper.patch<{ isadmin: boolean }, {}>(URL, { isadmin: !user.isadmin });
         if (result.statusCode < HttpStatusCode.BAD_REQUEST) {
             return false;
         } else {

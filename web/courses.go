@@ -340,7 +340,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		user := c.Get("user").(*models.User)
 		// TODO: This check should be performed in AccessControl.
-		if !user.IsAdmin {
+		if user.IsAdmin == nil || !*user.IsAdmin {
 			// Only admin users are allowed to enroll or reject users to a course.
 			// TODO we should also allow users of the 'teachers' team to accept/reject users
 			return c.NoContent(http.StatusUnauthorized)
@@ -487,7 +487,7 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 			return err
 		}
 
-		if user.IsAdmin {
+		if user.IsAdmin != nil && *user.IsAdmin {
 			// Only admin users should be able to update repos to private, if they are public.
 			updateRepoToPrivate(c.Request().Context(), db, s, course.DirectoryID)
 		}

@@ -4,7 +4,7 @@ package models
 type User struct {
 	ID uint64 `json:"id"`
 
-	IsAdmin bool `json:"isadmin"`
+	IsAdmin *bool `json:"isadmin"`
 
 	Name      string `json:"name"`
 	StudentID string `json:"studentid"`

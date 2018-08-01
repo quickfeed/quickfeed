@@ -109,7 +109,9 @@ func (db *GormDB) SetAdmin(uid uint64) error {
 	if err := db.conn.First(&user, uid).Error; err != nil {
 		return err
 	}
-	user.IsAdmin = true
+	var admin bool
+	admin = true
+	user.IsAdmin = &admin
 	return db.conn.Save(&user).Error
 }
 
@@ -138,7 +140,9 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity
 		if err := db.SetAdmin(1); err != nil {
 			return err
 		}
-		user.IsAdmin = true
+		var admin bool
+		admin = true
+		user.IsAdmin = &admin
 	}
 	return nil
 }
