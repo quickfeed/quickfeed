@@ -56,5 +56,7 @@ type Database interface {
 	CreateRepository(repo *models.Repository) error
 	GetRepository(uint64) (*models.Repository, error)
 	GetRepositoriesByDirectory(uint64) ([]*models.Repository, error)
-	GetRepositoriesByCourseAndType(uint64, models.RepoType) ([]*models.Repository, error)
+	GetRepositoriesByCourseIDAndType(uint64, models.RepoType) ([]*models.Repository, error)
+	GetRepositoriesByCourseIDandUserID(uint64, uint64) (*models.Repository, error)
+	GetRepoByCourseIDUserIDandType(uint64, uint64, models.RepoType) (*models.Repository, error)
 }

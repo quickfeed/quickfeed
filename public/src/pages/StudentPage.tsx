@@ -54,6 +54,7 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("courses/{courseid:number}/members", this.members);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/info", this.courseInformation);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/assignments", this.courseAssignments);
+        this.navHelper.registerFunction<any>("courses/{courseid:number}/repository", this.courseUserRepo);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
     }
@@ -204,6 +205,21 @@ export class StudentPage extends ViewPage {
         return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
     }
 
+    public async courseUserRepo(navInfo: INavInfo<{ courseid: number }>): View {
+        const assignmentURL = await this.courseMan.getRepositoryURL(navInfo.params.courseid,
+            RepositoryType.UserRepo);
+        if (assignmentURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        window.open(assignmentURL, "_blank");
+
+        // We have to deliver a view back to user, so we deliver a link to the user
+        // incase a popup blocker is present.
+        return <div> User repository found <a href={assignmentURL}> here </a> </div>;
+    }
+
     public async courseMissing(navInfo: INavInfo<{ courseid: number, page: string }>): View {
         return <div>The page {navInfo.params.page} is not yet implemented</div >;
     }
@@ -231,15 +247,19 @@ export class StudentPage extends ViewPage {
                     });
                     allLinks.push({ name: "Group Labs" });
                     allLinks.push(...gLabs);
-                    allLinks.push({ name: "Settings" });
+                    allLinks.push({ name: "Repositories" });
                     allLinks.push({
-                        name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",
+                        name: "User Repository", uri: this.pagePath + "/courses/" + course.course.id + "/repository",
                     });
                     allLinks.push({
                         name: "Course Info", uri: this.pagePath + "/courses/" + course.course.id + "/info",
                     });
                     allLinks.push({
                         name: "Assignments", uri: this.pagePath + "/courses/" + course.course.id + "/assignments",
+                    });
+                    allLinks.push({ name: "Settings" });
+                    allLinks.push({
+                        name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",
                     });
                     return {
                         item: { name: course.course.code, uri: this.pagePath + "/courses/" + course.course.id },

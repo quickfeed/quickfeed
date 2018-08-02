@@ -1056,7 +1056,7 @@ func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
 		}
-		courseInfoRepo, err := db.GetRepositoriesByCourseAndType(cid, models.CourseInfoRepo)
+		courseInfoRepo, err := db.GetRepositoriesByCourseIDAndType(cid, models.CourseInfoRepo)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve any course information repos")
 		}
@@ -1090,20 +1090,37 @@ func GetRepositoryURL(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse Repository type")
 		}
-		courseInfoRepo, err := db.GetRepositoriesByCourseAndType(cid, identifiedRepoType)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve any course information repos")
+
+		var repos []*models.Repository
+		if identifiedRepoType == models.UserRepo {
+			user := c.Get("user").(*models.User)
+			if user == nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "user not registered")
+			}
+			userRepo, err := db.GetRepoByCourseIDUserIDandType(cid, user.ID, models.UserRepo)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "GetRepoByCourseIDUserIDandType: Could not retrieve any UserRepo")
+			}
+			repos = append(repos, userRepo)
+		} else {
+			repos, err = db.GetRepositoriesByCourseIDAndType(cid, identifiedRepoType)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "GetRepositoriesByCourseIDAndType: Could not retrieve any repos")
+			}
 		}
-		// There should only exist 1 course info pr course.
-		if len(courseInfoRepo) > 1 && len(courseInfoRepo) == 0 {
+
+		// There should only exist one of each specific repo pr course.
+		// AssignmentRepo, CourseInfoRepo, SolutionRepo, TestRepo
+		// There can exist many UserRepo, but only one pr user
+		if len(repos) > 1 && len(repos) == 0 {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Too many course information repositories exists for this course")
 		}
 
 		// Have to be in string array to be able to jsonify so frontend recognize it.
 		// See public/src/HttpHelper.ts -> send()
-		var courseInfoURL []string
-		courseInfoURL = append(courseInfoURL, courseInfoRepo[0].HTMLURL)
-		return c.JSONPretty(http.StatusOK, &courseInfoURL, "\t")
+		var repoURL []string
+		repoURL = append(repoURL, repos[0].HTMLURL)
+		return c.JSONPretty(http.StatusOK, &repoURL, "\t")
 	}
 }
 

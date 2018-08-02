@@ -280,10 +280,11 @@ export class TeacherPage extends ViewPage {
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
                 // {name: "Settings", uri: link.uri + "/settings" },
+                { name: "Repositories" },
                 { name: "Course Info", uri: link.uri + "/info" },
-                { name: "Assignment repository", uri: link.uri + "/assignmentinfo" },
-                { name: "Test repository", uri: link.uri + "/testinfo" },
-                { name: "Solution repository", uri: link.uri + "/solutioninfo" },
+                { name: "Assignments", uri: link.uri + "/assignmentinfo" },
+                { name: "Tests", uri: link.uri + "/testinfo" },
+                { name: "Solutions", uri: link.uri + "/solutioninfo" },
             ],
         };
     }

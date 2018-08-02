@@ -109,8 +109,8 @@ func (db *GormDB) SetAdmin(uid uint64) error {
 	if err := db.conn.First(&user, uid).Error; err != nil {
 		return err
 	}
-	var admin bool
-	admin = true
+	//var admin bool
+	admin := true
 	user.IsAdmin = &admin
 	return db.conn.Save(&user).Error
 }
@@ -140,8 +140,7 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity
 		if err := db.SetAdmin(1); err != nil {
 			return err
 		}
-		var admin bool
-		admin = true
+		admin := true
 		user.IsAdmin = &admin
 	}
 	return nil
@@ -677,6 +676,36 @@ func (db *GormDB) GetRepository(rid uint64) (*models.Repository, error) {
 	return &repo, nil
 }
 
+// GetRepoByCourseAndUserID Fetches Repo based on courseid, userid and type
+func (db *GormDB) GetRepositoriesByCourseIDandUserID(cid uint64, uid uint64) (*models.Repository, error) {
+	course, err := db.GetCourse(cid)
+	if err != nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var repo models.Repository
+	if err := db.conn.First(&repo, &models.Repository{DirectoryID: course.DirectoryID, UserID: uid}).Error; err != nil {
+		return nil, err
+	}
+
+	return &repo, nil
+}
+
+// GetRepoByCourseIDandUserIDandType Fetches Repo based on courseid, userid and type
+func (db *GormDB) GetRepoByCourseIDUserIDandType(cid uint64, uid uint64, repoType models.RepoType) (*models.Repository, error) {
+	course, err := db.GetCourse(cid)
+	if err != nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var repo models.Repository
+	if err := db.conn.First(&repo, &models.Repository{DirectoryID: course.DirectoryID, UserID: uid, Type: repoType}).Error; err != nil {
+		return nil, err
+	}
+
+	return &repo, nil
+}
+
 // GetRepositoriesByDirectory implements the database interface
 func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*models.Repository, error) {
 
@@ -741,7 +770,7 @@ func (db *GormDB) UpdateGroup(group *models.Group) error {
 }
 
 // GetRepositoriesByCourseAndType returns repos beloning to directoryID and with repo type
-func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
+func (db *GormDB) GetRepositoriesByCourseIDAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
 
 	course, err := db.GetCourse(cid)
 	if err != nil {
