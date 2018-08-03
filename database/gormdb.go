@@ -408,7 +408,7 @@ func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, models.Teacher)
 }
 
-// EnrollTeacher implements the Database interface.
+// SetPendingEnrollment implements the Database interface.
 func (db *GormDB) SetPendingEnrollment(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, models.Pending)
 }
@@ -676,7 +676,7 @@ func (db *GormDB) GetRepository(rid uint64) (*models.Repository, error) {
 	return &repo, nil
 }
 
-// GetRepoByCourseAndUserID Fetches Repo based on courseid, userid and type
+// GetRepositoriesByCourseIDandUserID Fetches Repo based on courseid, userid and type
 func (db *GormDB) GetRepositoriesByCourseIDandUserID(cid uint64, uid uint64) (*models.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
@@ -691,7 +691,7 @@ func (db *GormDB) GetRepositoriesByCourseIDandUserID(cid uint64, uid uint64) (*m
 	return &repo, nil
 }
 
-// GetRepoByCourseIDandUserIDandType Fetches Repo based on courseid, userid and type
+// GetRepoByCourseIDUserIDandType Fetches Repo based on courseid, userid and type
 func (db *GormDB) GetRepoByCourseIDUserIDandType(cid uint64, uid uint64, repoType models.RepoType) (*models.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
@@ -769,7 +769,7 @@ func (db *GormDB) UpdateGroup(group *models.Group) error {
 	return nil
 }
 
-// GetRepositoriesByCourseAndType returns repos beloning to directoryID and with repo type
+// GetRepositoriesByCourseIDAndType returns repos beloning to directoryID and with repo type
 func (db *GormDB) GetRepositoriesByCourseIDAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
 
 	course, err := db.GetCourse(cid)

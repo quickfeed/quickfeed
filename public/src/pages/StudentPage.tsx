@@ -191,9 +191,7 @@ export class StudentPage extends ViewPage {
             this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
         }
 
-        // We have to deliver a view back to user, so we deliver a link to the user
-        // incase a popup blocker is present.
-
+        // If for some reason navigateTo did not succeed, show this error message.
         return <div> Popup blocker prevented the page to load. </div>;
     }
 
@@ -213,9 +211,7 @@ export class StudentPage extends ViewPage {
             this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
         }
 
-        // We have to deliver a view back to user, so we deliver a link to the user
-        // incase a popup blocker is present.
-
+        // If for some reason navigateTo did not succeed, show this error message.
         return <div> Popup blocker prevented the page to load. </div>;
     }
 
@@ -235,9 +231,7 @@ export class StudentPage extends ViewPage {
             this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
         }
 
-        // We have to deliver a view back to user, so we deliver a link to the user
-        // incase a popup blocker is present.
-
+        // If for some reason navigateTo did not succeed, show this error message.
         return <div> Popup blocker prevented the page to load. </div>;
     }
 

@@ -73,8 +73,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 		provider = "github"
 		remoteID = 10
 	)
-	var admin bool
-	admin = true
+	admin := true
 	var (
 		wantUser = &models.User{
 			ID:        uID,
