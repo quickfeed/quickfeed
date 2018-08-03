@@ -109,7 +109,9 @@ func (db *GormDB) SetAdmin(uid uint64) error {
 	if err := db.conn.First(&user, uid).Error; err != nil {
 		return err
 	}
-	user.IsAdmin = true
+	//var admin bool
+	admin := true
+	user.IsAdmin = &admin
 	return db.conn.Save(&user).Error
 }
 
@@ -138,7 +140,8 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity
 		if err := db.SetAdmin(1); err != nil {
 			return err
 		}
-		user.IsAdmin = true
+		admin := true
+		user.IsAdmin = &admin
 	}
 	return nil
 }
@@ -405,6 +408,11 @@ func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, models.Teacher)
 }
 
+// SetPendingEnrollment implements the Database interface.
+func (db *GormDB) SetPendingEnrollment(uid, cid uint64) error {
+	return db.setEnrollment(uid, cid, models.Pending)
+}
+
 // GetEnrollmentsByCourse implements the Database interface.
 func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*models.Enrollment, error) {
 	return db.getEnrollments(&models.Course{ID: cid}, statuses...)
@@ -443,10 +451,15 @@ func (db *GormDB) setEnrollment(uid, cid uint64, status uint) error {
 	if status > models.Teacher {
 		panic("invalid status")
 	}
-	return db.conn.
+	var enrollment models.Enrollment
+	if err := db.conn.
 		Model(&models.Enrollment{}).
-		Where(&models.Enrollment{CourseID: cid, UserID: uid}).
-		Update(&models.Enrollment{Status: status}).Error
+		Where(&models.Enrollment{CourseID: cid, UserID: uid}).First(&enrollment).Error; err != nil {
+		return err
+	}
+	enrollment.Status = status
+	// Update wont allow value 0 (models.Pending), so need to use save.
+	return db.conn.Save(&enrollment).Error
 }
 
 // GetCoursesByUser returns all courses (with enrollment status)
@@ -663,6 +676,36 @@ func (db *GormDB) GetRepository(rid uint64) (*models.Repository, error) {
 	return &repo, nil
 }
 
+// GetRepositoriesByCourseIDandUserID Fetches Repo based on courseid, userid and type
+func (db *GormDB) GetRepositoriesByCourseIDandUserID(cid uint64, uid uint64) (*models.Repository, error) {
+	course, err := db.GetCourse(cid)
+	if err != nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var repo models.Repository
+	if err := db.conn.First(&repo, &models.Repository{DirectoryID: course.DirectoryID, UserID: uid}).Error; err != nil {
+		return nil, err
+	}
+
+	return &repo, nil
+}
+
+// GetRepoByCourseIDUserIDandType Fetches Repo based on courseid, userid and type
+func (db *GormDB) GetRepoByCourseIDUserIDandType(cid uint64, uid uint64, repoType models.RepoType) (*models.Repository, error) {
+	course, err := db.GetCourse(cid)
+	if err != nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var repo models.Repository
+	if err := db.conn.First(&repo, &models.Repository{DirectoryID: course.DirectoryID, UserID: uid, Type: repoType}).Error; err != nil {
+		return nil, err
+	}
+
+	return &repo, nil
+}
+
 // GetRepositoriesByDirectory implements the database interface
 func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*models.Repository, error) {
 
@@ -726,8 +769,8 @@ func (db *GormDB) UpdateGroup(group *models.Group) error {
 	return nil
 }
 
-// GetRepositoriesByCourseAndType returns repos beloning to directoryID and with repo type
-func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
+// GetRepositoriesByCourseIDAndType returns repos beloning to directoryID and with repo type
+func (db *GormDB) GetRepositoriesByCourseIDAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
 
 	course, err := db.GetCourse(cid)
 	if err != nil {

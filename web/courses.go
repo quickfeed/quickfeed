@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -340,7 +341,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		user := c.Get("user").(*models.User)
 		// TODO: This check should be performed in AccessControl.
-		if !user.IsAdmin {
+		if user.IsAdmin == nil || !*user.IsAdmin {
 			// Only admin users are allowed to enroll or reject users to a course.
 			// TODO we should also allow users of the 'teachers' team to accept/reject users
 			return c.NoContent(http.StatusUnauthorized)
@@ -429,6 +430,8 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			err = db.EnrollTeacher(userID, courseID)
 		case models.Rejected:
 			err = db.RejectEnrollment(userID, courseID)
+		case models.Pending:
+			err = db.SetPendingEnrollment(userID, courseID)
 		}
 		if err != nil {
 			return err
@@ -485,7 +488,7 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 			return err
 		}
 
-		if user.IsAdmin {
+		if user.IsAdmin != nil && *user.IsAdmin {
 			// Only admin users should be able to update repos to private, if they are public.
 			updateRepoToPrivate(c.Request().Context(), db, s, course.DirectoryID)
 		}
@@ -1051,9 +1054,9 @@ func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse courseID")
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
 		}
-		courseInfoRepo, err := db.GetRepositoriesByCourseAndType(cid, models.CourseInfoRepo)
+		courseInfoRepo, err := db.GetRepositoriesByCourseIDAndType(cid, models.CourseInfoRepo)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve any course information repos")
 		}
@@ -1067,6 +1070,57 @@ func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 		var courseInfoURL []string
 		courseInfoURL = append(courseInfoURL, courseInfoRepo[0].HTMLURL)
 		return c.JSONPretty(http.StatusOK, &courseInfoURL, "\t")
+	}
+}
+
+// GetCourseInformationURL Returns the course information html as string
+func GetRepositoryURL(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
+		}
+
+		// parseUint does not allow 0 values, since model.RepoType can be 0 we convert it ourselves.
+		repoType, err := strconv.ParseUint(c.QueryParam("type"), 10, 64)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse repoType")
+		}
+		identifiedRepoType, err := models.IdentifyRepoTypeFromFrontEnd(repoType)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse Repository type")
+		}
+
+		var repos []*models.Repository
+		if identifiedRepoType == models.UserRepo {
+			user := c.Get("user").(*models.User)
+			if user == nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "user not registered")
+			}
+			userRepo, err := db.GetRepoByCourseIDUserIDandType(cid, user.ID, models.UserRepo)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "GetRepoByCourseIDUserIDandType: Could not retrieve any UserRepo")
+			}
+			repos = append(repos, userRepo)
+		} else {
+			repos, err = db.GetRepositoriesByCourseIDAndType(cid, identifiedRepoType)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "GetRepositoriesByCourseIDAndType: Could not retrieve any repos")
+			}
+		}
+
+		// There should only exist one of each specific repo pr course.
+		// AssignmentRepo, CourseInfoRepo, SolutionRepo, TestRepo
+		// There can exist many UserRepo, but only one pr user
+		if len(repos) > 1 && len(repos) == 0 {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Too many course information repositories exists for this course")
+		}
+
+		// Have to be in string array to be able to jsonify so frontend recognize it.
+		// See public/src/HttpHelper.ts -> send()
+		var repoURL []string
+		repoURL = append(repoURL, repos[0].HTMLURL)
+		return c.JSONPretty(http.StatusOK, &repoURL, "\t")
 	}
 }
 

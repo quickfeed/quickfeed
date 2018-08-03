@@ -20,6 +20,7 @@ import {
     IUser,
     IUserCourseWithUser,
     IUserRelation,
+    RepositoryType,
 } from "../models";
 
 import { GroupResults } from "../components/teacher/GroupResults";
@@ -51,6 +52,11 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
+        this.navHelper.registerFunction("courses/{cid}/info", this.courseInformation);
+        this.navHelper.registerFunction("courses/{cid}/assignmentinfo", this.assignmentInformation);
+        this.navHelper.registerFunction("courses/{cid}/testinfo", this.testInformation);
+        this.navHelper.registerFunction("courses/{cid}/solutioninfo", this.solutionInformation);
+
     }
 
     public checkAuthentication(): boolean {
@@ -236,6 +242,7 @@ export class TeacherPage extends ViewPage {
             const all = await this.courseMan.getUsersForCourse(course, this.userMan);
             const acceptedUsers: IUserRelation[] = [];
             const pendingUsers: IUserRelation[] = [];
+            const rejectedUsers: IUserRelation[] = [];
             // Sorts all the users to the correct tables, and ignores the rejected once
             // TODO: Maybe move this to the Members view
             all.forEach((user, id) => {
@@ -247,6 +254,9 @@ export class TeacherPage extends ViewPage {
                     case CourseUserState.pending:
                         pendingUsers.push(user);
                         break;
+                    case CourseUserState.rejected:
+                        rejectedUsers.push(user);
+                        break;
                 }
             });
             return <MemberView
@@ -254,6 +264,7 @@ export class TeacherPage extends ViewPage {
                 course={course}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
+                rejectedUsers={rejectedUsers}
                 courseMan={this.courseMan}
             >
             </MemberView>;
@@ -269,9 +280,94 @@ export class TeacherPage extends ViewPage {
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
                 // {name: "Settings", uri: link.uri + "/settings" },
-                // {name: "Course Info", uri: link.uri + "/courseinfo" },
+                { name: "Repositories" },
+                { name: "Course Info", uri: link.uri + "/info" },
+                { name: "Assignments", uri: link.uri + "/assignmentinfo" },
+                { name: "Tests", uri: link.uri + "/testinfo" },
+                { name: "Solutions", uri: link.uri + "/solutioninfo" },
             ],
         };
+    }
+    public async courseInformation(navInfo: INavInfo<{ cid: string }>): View {
+        const courseId = parseInt(navInfo.params.cid, 10);
+        const informationURL = await this.courseMan.getCourseInformationURL(courseId);
+        if (informationURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        const popup = window.open(informationURL, "_blank");
+
+        if (!popup) {
+            return <div> Course information found <a href={informationURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
+
+        // If for some reason navigateTo did not succeed, show this error message.
+        return <div> Popup blocker prevented the page to load. </div>;
+    }
+
+    public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
+        const courseId = parseInt(navInfo.params.cid, 10);
+        const assignmentURL = await this.courseMan.getRepositoryURL(courseId,
+            RepositoryType.AssignmentsRepo);
+        if (assignmentURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        const popup = window.open(assignmentURL, "_blank");
+
+        if (!popup) {
+            return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
+
+        // If for some reason navigateTo did not succeed, show this error message.
+        return <div> Popup blocker prevented the page to load. </div>;
+    }
+
+    public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
+        const courseId = parseInt(navInfo.params.cid, 10);
+        const testInformationURL = await this.courseMan.getRepositoryURL(courseId, RepositoryType.TestsRepo);
+        if (testInformationURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        const popup = window.open(testInformationURL, "_blank");
+
+        if (!popup) {
+            return <div> Test repository found <a href={testInformationURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
+
+        // If for some reason navigateTo did not succeed, show this error message.
+        return <div> Popup blocker prevented the page to load. </div>;
+    }
+
+    public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
+        const courseId = parseInt(navInfo.params.cid, 10);
+        const solutionURL = await this.courseMan.getRepositoryURL(courseId,
+            RepositoryType.SolutionsRepo);
+        if (solutionURL === "") {
+            return <div> 404 not found</div>;
+        }
+
+        // Open new window for course information.
+        const popup = window.open(solutionURL, "_blank");
+
+        if (!popup) {
+            return <div> solution repository found <a href={solutionURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
+
+        // If for some reason navigateTo did not succeed, show this error message.
+        return <div> Popup blocker prevented the page to load. </div>;
     }
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {

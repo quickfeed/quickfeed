@@ -446,7 +446,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async changeAdminRole(user: IUser): Promise<boolean> {
         const uri: string[] = [URL_ENDPOINT.users, user.id.toString()];
         const URL = this.buildURL(uri);
-        const result = await this.helper.patch<{ isadmin: boolean }, {}>(URL, { isadmin: true });
+        const result = await this.helper.patch<{ isadmin: boolean }, {}>(URL, { isadmin: !user.isadmin });
         if (result.statusCode < HttpStatusCode.BAD_REQUEST) {
             return false;
         } else {
@@ -518,6 +518,18 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return result.data[0];
         } else {
             this.handleError(result, "getCourseInformationURL");
+        }
+        return "";
+    }
+
+    public async getRepositoryURL(courseID: number, repoType: number): Promise<string> {
+        const type = "?type=" + repoType;
+        console.log(courseID);
+        const result = await this.helper.get<string[]>("courses/" + courseID + "/repositoryurl" + type);
+        if (result.data) {
+            return result.data[0];
+        } else {
+            this.handleError(result, "getRepositoryURL");
         }
         return "";
     }

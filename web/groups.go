@@ -34,7 +34,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 
 		user := c.Get("user").(*models.User)
 		// TODO: This check should be performed in AccessControl.
-		if !user.IsAdmin {
+		if user.IsAdmin == nil || !*user.IsAdmin {
 			// Ony Admin i.e Teacher can update status of a group
 			return c.NoContent(http.StatusForbidden)
 		}

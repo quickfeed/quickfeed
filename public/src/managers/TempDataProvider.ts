@@ -277,6 +277,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented.");
     }
 
+    public async getRepositoryURL(cid: number, type: number): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
+
     private addLocalUsers() {
         this.localUsers = mapify([
             {

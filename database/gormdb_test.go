@@ -73,11 +73,11 @@ func TestGormDBUpdateUser(t *testing.T) {
 		provider = "github"
 		remoteID = 10
 	)
-
+	admin := true
 	var (
 		wantUser = &models.User{
 			ID:        uID,
-			IsAdmin:   true, // first user is always admin
+			IsAdmin:   &admin, // first user is always admin
 			Name:      "Scrooge McDuck",
 			StudentID: "22",
 			Email:     "scrooge@mc.duck",
@@ -618,7 +618,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if user.IsAdmin {
+	if user.IsAdmin != nil && *user.IsAdmin {
 		t.Error("user should not yet be an administrator")
 	}
 
@@ -631,7 +631,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !admin.IsAdmin {
+	if admin.IsAdmin == nil || !*admin.IsAdmin {
 		t.Error("user should be an administrator")
 	}
 }
@@ -1591,7 +1591,6 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 		}
 		t.Errorf("Failed")
 	}
-
 }
 
 func TestDeleteGroup(t *testing.T) {
@@ -1654,10 +1653,9 @@ func TestDeleteGroup(t *testing.T) {
 	if gotModels != nil {
 		t.Errorf("Got %+v wanted None", gotModels)
 	}
-
 }
 
-func TestGetRepositoriesByCourseAndType(t *testing.T) {
+func TestGetRepositoriesByCourseIDAndType(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -1725,7 +1723,7 @@ func TestGetRepositoriesByCourseAndType(t *testing.T) {
 
 	want := []*models.Repository{&repoCourseInfo}
 
-	gotRepo, err := db.GetRepositoriesByCourseAndType(course.ID, models.CourseInfoRepo)
+	gotRepo, err := db.GetRepositoriesByCourseIDAndType(course.ID, models.CourseInfoRepo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1740,7 +1738,218 @@ func TestGetRepositoriesByCourseAndType(t *testing.T) {
 		}
 		t.Errorf("Failed")
 	}
+}
 
+func TestGetRepoByCourseIDUserIDandType(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	course := &models.Course{
+		ID:          1234,
+		Name:        "Test Course",
+		Code:        "DAT100",
+		Year:        2017,
+		Tag:         "Spring",
+		Provider:    "github",
+		DirectoryID: 120,
+	}
+
+	err := db.CreateCourse(course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const (
+		provider    = "fake"
+		accesstoken = "10"
+		remoteid    = 10
+	)
+
+	user := createUser(db, provider, accesstoken, remoteid, t)
+	userTwo := createUser(db, provider, accesstoken+"1", remoteid+1, t)
+
+	// Creating Course info repo
+	repoCourseInfo := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 100,
+		UserID:       user.ID,
+		Type:         models.CourseInfoRepo,
+		HTMLURL:      "http://repoCourseInfo.com/",
+	}
+	if err := db.CreateRepository(&repoCourseInfo); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating solution
+	repoSolution := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 101,
+		UserID:       user.ID,
+		Type:         models.SolutionsRepo,
+		HTMLURL:      "http://repoSolution.com/",
+	}
+	if err := db.CreateRepository(&repoSolution); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating AssignmentRepo
+	repoAssignment := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 102,
+		UserID:       user.ID,
+		Type:         models.AssignmentsRepo,
+		HTMLURL:      "http://repoAssignment.com/",
+	}
+	if err := db.CreateRepository(&repoAssignment); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating UserRepo for user
+	repoUser := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 103,
+		UserID:       user.ID,
+		Type:         models.UserRepo,
+		HTMLURL:      "http://repoAssignment.com/",
+	}
+	if err := db.CreateRepository(&repoUser); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating UserRepo for userTwo
+	repoUserTwo := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 104,
+		UserID:       userTwo.ID,
+		Type:         models.UserRepo,
+		HTMLURL:      "http://repoAssignment.com/",
+	}
+	if err := db.CreateRepository(&repoUserTwo); err != nil {
+		t.Fatal(err)
+	}
+
+	want := &repoUserTwo
+
+	gotRepo, err := db.GetRepoByCourseIDUserIDandType(course.ID, userTwo.ID, models.UserRepo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(gotRepo, want) {
+		fmt.Printf("have %+v want %+v\n", gotRepo, want)
+		t.Errorf("Failed")
+	}
+}
+
+func TestGetRepositoriesByCourseIDandUserID(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	course := &models.Course{
+		ID:          1234,
+		Name:        "Test Course",
+		Code:        "DAT100",
+		Year:        2017,
+		Tag:         "Spring",
+		Provider:    "github",
+		DirectoryID: 120,
+	}
+
+	err := db.CreateCourse(course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const (
+		provider    = "fake"
+		accesstoken = "10"
+		remoteid    = 10
+	)
+
+	user := createUser(db, provider, accesstoken, remoteid, t)
+	userTwo := createUser(db, provider, accesstoken+"1", remoteid+1, t)
+
+	// Creating Course info repo
+	repoCourseInfo := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 100,
+		UserID:       user.ID,
+		Type:         models.CourseInfoRepo,
+		HTMLURL:      "http://repoCourseInfo.com/",
+	}
+	if err := db.CreateRepository(&repoCourseInfo); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating solution
+	repoSolution := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 101,
+		UserID:       user.ID,
+		Type:         models.SolutionsRepo,
+		HTMLURL:      "http://repoSolution.com/",
+	}
+	if err := db.CreateRepository(&repoSolution); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating AssignmentRepo
+	repoAssignment := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 102,
+		UserID:       user.ID,
+		Type:         models.AssignmentsRepo,
+		HTMLURL:      "http://repoAssignment.com/",
+	}
+	if err := db.CreateRepository(&repoAssignment); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating UserRepo for user
+	repoUser := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 103,
+		UserID:       user.ID,
+		Type:         models.UserRepo,
+		HTMLURL:      "http://repoAssignment.com/",
+	}
+	if err := db.CreateRepository(&repoUser); err != nil {
+		t.Fatal(err)
+	}
+
+	// Creating UserRepo for userTwo
+	repoUserTwo := models.Repository{
+		DirectoryID: 120,
+		// Name:         "Name",
+		RepositoryID: 104,
+		UserID:       userTwo.ID,
+		Type:         models.UserRepo,
+		HTMLURL:      "http://repoAssignment.com/",
+	}
+	if err := db.CreateRepository(&repoUserTwo); err != nil {
+		t.Fatal(err)
+	}
+
+	want := &repoUserTwo
+
+	gotRepo, err := db.GetRepositoriesByCourseIDandUserID(course.ID, userTwo.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(gotRepo, want) {
+		fmt.Printf("have %+v want %+v\n", gotRepo, want)
+		t.Errorf("Failed")
+	}
 }
 
 func envSet(env string) database.GormLogger {
