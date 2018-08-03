@@ -183,11 +183,18 @@ export class StudentPage extends ViewPage {
         }
 
         // Open new window for course information.
-        window.open(informationURL, "_blank");
+        const popup = window.open(informationURL, "_blank");
+
+        if (!popup) {
+            return <div> Course information found <a href={informationURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
-        return <div> Course information found <a href={informationURL}> here </a> </div>;
+
+        return <div> Popup blocker prevented the page to load. </div>;
     }
 
     public async courseAssignments(navInfo: INavInfo<{ courseid: number }>): View {
@@ -198,26 +205,40 @@ export class StudentPage extends ViewPage {
         }
 
         // Open new window for course information.
-        window.open(assignmentURL, "_blank");
+        const popup = window.open(assignmentURL, "_blank");
+
+        if (!popup) {
+            return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
-        return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
+
+        return <div> Popup blocker prevented the page to load. </div>;
     }
 
     public async courseUserRepo(navInfo: INavInfo<{ courseid: number }>): View {
-        const assignmentURL = await this.courseMan.getRepositoryURL(navInfo.params.courseid,
+        const userRepoURL = await this.courseMan.getRepositoryURL(navInfo.params.courseid,
             RepositoryType.UserRepo);
-        if (assignmentURL === "") {
+        if (userRepoURL === "") {
             return <div> 404 not found</div>;
         }
 
         // Open new window for course information.
-        window.open(assignmentURL, "_blank");
+        const popup = window.open(userRepoURL, "_blank");
+
+        if (!popup) {
+            return <div> User Repository found <a href={userRepoURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
-        return <div> User repository found <a href={assignmentURL}> here </a> </div>;
+
+        return <div> Popup blocker prevented the page to load. </div>;
     }
 
     public async courseMissing(navInfo: INavInfo<{ courseid: number, page: string }>): View {

@@ -296,11 +296,18 @@ export class TeacherPage extends ViewPage {
         }
 
         // Open new window for course information.
-        window.open(informationURL, "_blank");
+        const popup = window.open(informationURL, "_blank");
+
+        if (!popup) {
+            return <div> Course information found <a href={informationURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
-        return <div> Course information found <a href={informationURL}> here </a> </div>;
+
+        return <div> Popup blocker prevented the page to load. </div>;
     }
 
     public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
@@ -312,44 +319,63 @@ export class TeacherPage extends ViewPage {
         }
 
         // Open new window for course information.
-        window.open(assignmentURL, "_blank");
+        const popup = window.open(assignmentURL, "_blank");
+
+        if (!popup) {
+            return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
-        return <div> Assignment repository found <a href={assignmentURL}> here </a> </div>;
+
+        return <div> Popup blocker prevented the page to load. </div>;
     }
 
     public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
         const courseId = parseInt(navInfo.params.cid, 10);
-        const informationURL = await this.courseMan.getRepositoryURL(courseId, RepositoryType.TestsRepo);
-        if (informationURL === "") {
+        const testInformationURL = await this.courseMan.getRepositoryURL(courseId, RepositoryType.TestsRepo);
+        if (testInformationURL === "") {
             return <div> 404 not found</div>;
         }
 
         // Open new window for course information.
-        window.open(informationURL, "_blank");
+        const popup = window.open(testInformationURL, "_blank");
+
+        if (!popup) {
+            return <div> Test repository found <a href={testInformationURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
 
-        // since it crashes the program if we do it like that and user tries to go back in history
-        return <div> Test repository found <a href={informationURL}> here </a> </div>;
+        return <div> Popup blocker prevented the page to load. </div>;
     }
 
     public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
         const courseId = parseInt(navInfo.params.cid, 10);
-        const assignmentURL = await this.courseMan.getRepositoryURL(courseId,
+        const solutionURL = await this.courseMan.getRepositoryURL(courseId,
             RepositoryType.SolutionsRepo);
-        if (assignmentURL === "") {
+        if (solutionURL === "") {
             return <div> 404 not found</div>;
         }
 
         // Open new window for course information.
-        window.open(assignmentURL, "_blank");
+        const popup = window.open(solutionURL, "_blank");
+
+        if (!popup) {
+            return <div> solution repository found <a href={solutionURL}> here </a> </div>;
+        } else {
+            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        }
 
         // We have to deliver a view back to user, so we deliver a link to the user
         // incase a popup blocker is present.
-        return <div> Solution repository found <a href={assignmentURL}> here </a> </div>;
+
+        return <div> Popup blocker prevented the page to load. </div>;
     }
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
