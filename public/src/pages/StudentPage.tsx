@@ -135,11 +135,11 @@ export class StudentPage extends ViewPage {
     public async courseWithGroupLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectGroupCourse(navInfo.params.courseid);
-        if (this.selectedUserCourse) {
+        if (this.selectedUserGroupCourse) {
             await this.selectGroupAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
                 return <StudentLab
-                    course={this.selectedUserCourse.course}
+                    course={this.selectedUserGroupCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
                     onRebuildClick={() => { }}
