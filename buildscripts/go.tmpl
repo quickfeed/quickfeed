@@ -7,6 +7,7 @@ TD="test-dir"  # Test Dir
 rm -rf $MD
 mkdir $MD
 go get {{ .RawGetURL }}
+git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 go get {{ .RawTestURL }}
 rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
 cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
