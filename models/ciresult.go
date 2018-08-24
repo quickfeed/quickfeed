@@ -28,10 +28,11 @@ type CIOutput struct {
 }
 
 type AssignmentCIInfo struct {
-	AccessToken    string
-	GetURL         string
-	TestURL        string
-	AssignmentName string
-	RawGetURL      string
-	RawTestURL     string
+	AccessToken        string
+	CreatorAccessToken string
+	GetURL             string
+	TestURL            string
+	AssignmentName     string
+	RawGetURL          string
+	RawTestURL         string
 }

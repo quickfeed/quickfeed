@@ -2,7 +2,8 @@ package models
 
 // Course represents a course backed by a directory.
 type Course struct {
-	ID uint64 `json:"id"`
+	ID              uint64 `json:"id"`
+	CourseCreatorID uint64 `json:"coursecreatorid"`
 
 	Name string `json:"name"`
 	Code string `json:"code"`

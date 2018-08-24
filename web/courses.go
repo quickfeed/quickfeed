@@ -240,14 +240,17 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			}
 		}
 
+		user := c.Get("user").(*models.User)
+
 		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
 		course := models.Course{
-			Name:        cr.Name,
-			Code:        cr.Code,
-			Year:        cr.Year,
-			Tag:         cr.Tag,
-			Provider:    cr.Provider,
-			DirectoryID: directory.ID,
+			Name:            cr.Name,
+			CourseCreatorID: user.ID,
+			Code:            cr.Code,
+			Year:            cr.Year,
+			Tag:             cr.Tag,
+			Provider:        cr.Provider,
+			DirectoryID:     directory.ID,
 		}
 		if err := db.CreateCourse(&course); err != nil {
 			if err == database.ErrCourseExists {
@@ -258,7 +261,7 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 
 		// Automatically enroll the teacher creating the course
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		user := c.Get("user").(*models.User)
+
 		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,

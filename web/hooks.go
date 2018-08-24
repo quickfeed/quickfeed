@@ -57,14 +57,20 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 				return
 			}
 			logger.WithField("repo", repo).Info("Found repository, continuing on")
+			course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
+			if err != nil {
+				logger.WithError(err).Warn("Failed to get course from database")
+				return
+			}
+			courseCreator, err := db.GetUser(course.CourseCreatorID)
+			if err != nil {
+				logger.WithError(err).Warn("Failed to fetch course creator.")
+			}
+			creatorAccessToken := courseCreator.RemoteIdentities[0]
 
 			if repo.Type > 0 {
 				logger.Info("Should refresh database course informaton")
-				course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
-				if err != nil {
-					logger.WithError(err).Warn("Failed to get course from database")
-					return
-				}
+
 				s, err := scm.NewSCMClient("github", remoteIdentity.AccessToken)
 				if err != nil {
 					logger.WithError(err).Warn("Failed to create SCM Client")
@@ -76,7 +82,7 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 				}
 				return
 			}
-			RunCI(logger, repo, db, runner, p.Repository.CloneURL, p.HeadCommit.ID, remoteIdentity, buildscripts)
+			RunCI(logger, repo, db, runner, p.Repository.CloneURL, p.HeadCommit.ID, remoteIdentity, buildscripts, creatorAccessToken)
 
 		default:
 			logger.WithFields(logrus.Fields{
@@ -122,7 +128,9 @@ func getLatestAssignment(db database.Database, cid uint64, uid uint64, gid uint6
 }
 
 // RunCI Runs the ci from a RemoteIdentity
-func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, commitHash string, remoteIdentity *models.RemoteIdentity, buildscripts string) {
+func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, 
+	commitHash string, remoteIdentity *models.RemoteIdentity, buildscripts string, courseCreator *models.RemoteIdentity) {
+	
 	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
 	if err != nil {
 		logger.WithError(err).Warn("Failed to get course from database")
@@ -161,12 +169,13 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 	logger.WithField("url", getURLTest).Warn("Repository's go get test URL")
 
 	ciInfo := models.AssignmentCIInfo{
-		AccessToken:    remoteIdentity.AccessToken,
-		AssignmentName: selectedAssignment.Name,
-		GetURL:         getURL,
-		TestURL:        getURLTest,
-		RawGetURL:      strings.TrimPrefix(strings.TrimSuffix(getURL, ".git"), "https://"),
-		RawTestURL:     strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
+		AccessToken:        remoteIdentity.AccessToken,
+		CreatorAccessToken: courseCreator.AccessToken,
+		AssignmentName:     selectedAssignment.Name,
+		GetURL:             getURL,
+		TestURL:            getURLTest,
+		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(getURL, ".git"), "https://"),
+		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
 	}
 
 	result, out, err := runCIFromTMPL(runner, language, ciInfo, buildscripts)
