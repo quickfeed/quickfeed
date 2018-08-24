@@ -148,11 +148,12 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 
 	logger.WithField("Assignemnt", selectedAssignment).Info("Found assignment")
 
-	testCloneURL, err := getTestRepoCloneURL(logger, db, remoteIdentity, repo)
+	// testCloneURL, err := getTestRepoCloneURL(logger, db, remoteIdentity, repo)
+	testRepos, err := db.GetRepositoriesByCourseIDAndType(course.ID, models.TestsRepo)
 	if err != nil {
 		return
 	}
-
+	testCloneURL := testRepos[0].HTMLURL
 	getURL := cloneURL
 	getURLTest := testCloneURL
 
