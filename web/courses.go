@@ -386,7 +386,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			}
 
 			// Creating repository
-			studentName := strings.Replace(student.Name, " ", "", -1)
+			studentName := strings.Replace(gitUserName, " ", "", -1)
 			pathName := studentName + "-labs"
 			repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
 				Directory: dir,
