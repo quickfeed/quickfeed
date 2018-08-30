@@ -52,9 +52,6 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("courses/{courseid:number}/lab/{labid:number}", this.courseWithLab);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/grouplab/{labid:number}", this.courseWithGroupLab);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/members", this.members);
-        this.navHelper.registerFunction<any>("courses/{courseid:number}/info", this.courseInformation);
-        this.navHelper.registerFunction<any>("courses/{courseid:number}/assignments", this.courseAssignments);
-        this.navHelper.registerFunction<any>("courses/{courseid:number}/repository", this.courseUserRepo);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
     }
@@ -176,111 +173,53 @@ export class StudentPage extends ViewPage {
         return <div>404 not found</div>;
     }
 
-    public async courseInformation(navInfo: INavInfo<{ courseid: number }>): View {
-        const informationURL = await this.courseMan.getCourseInformationURL(navInfo.params.courseid);
-        if (informationURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(informationURL, "_blank");
-
-        if (!popup) {
-            return <div> Course information found <a href={informationURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
-    }
-
-    public async courseAssignments(navInfo: INavInfo<{ courseid: number }>): View {
-        const assignmentURL = await this.courseMan.getRepositoryURL(navInfo.params.courseid,
-            RepositoryType.AssignmentsRepo);
-        if (assignmentURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(assignmentURL, "_blank");
-
-        if (!popup) {
-            return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
-    }
-
-    public async courseUserRepo(navInfo: INavInfo<{ courseid: number }>): View {
-        const userRepoURL = await this.courseMan.getRepositoryURL(navInfo.params.courseid,
-            RepositoryType.UserRepo);
-        if (userRepoURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(userRepoURL, "_blank");
-
-        if (!popup) {
-            return <div> User Repository found <a href={userRepoURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
-    }
-
     public async courseMissing(navInfo: INavInfo<{ courseid: number, page: string }>): View {
         return <div>The page {navInfo.params.page} is not yet implemented</div >;
     }
 
     public async renderMenu(key: number): Promise<JSX.Element[]> {
         if (key === 0) {
-            const coursesLinks: ILinkCollection[] = this.activeUserCourses.map(
-                (course, i) => {
-                    const allLinks: ILink[] = [];
-                    allLinks.push({ name: "Labs" });
-                    const labs = course.assignments;
-                    const gLabs: ILink[] = [];
-                    labs.forEach((lab) => {
-                        if (lab.assignment.isgrouplab) {
-                            gLabs.push({
-                                name: lab.assignment.name,
-                                uri: this.pagePath + "/courses/" + course.course.id + "/grouplab/" + lab.assignment.id,
-                            });
-                        } else {
-                            allLinks.push({
-                                name: lab.assignment.name,
-                                uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
-                            });
-                        }
-                    });
-                    allLinks.push({ name: "Group Labs" });
-                    allLinks.push(...gLabs);
-                    allLinks.push({ name: "Repositories" });
-                    allLinks.push({
-                        name: "User Repository", uri: this.pagePath + "/courses/" + course.course.id + "/repository",
-                    });
-                    allLinks.push({
-                        name: "Course Info", uri: this.pagePath + "/courses/" + course.course.id + "/info",
-                    });
-                    allLinks.push({
-                        name: "Assignments", uri: this.pagePath + "/courses/" + course.course.id + "/assignments",
-                    });
-                    allLinks.push({ name: "Settings" });
-                    allLinks.push({
-                        name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",
-                    });
-                    return {
-                        item: { name: course.course.code, uri: this.pagePath + "/courses/" + course.course.id },
-                        children: allLinks,
-                    };
+            const coursesLinks: ILinkCollection[] = [];
+            for (const course of this.activeUserCourses) {
+
+                const allLinks: ILink[] = [];
+                allLinks.push({ name: "Labs" });
+                const labs = course.assignments;
+                const gLabs: ILink[] = [];
+                labs.forEach((lab) => {
+                    if (lab.assignment.isgrouplab) {
+                        gLabs.push({
+                            name: lab.assignment.name,
+                            uri: this.pagePath + "/courses/" + course.course.id + "/grouplab/" + lab.assignment.id,
+                        });
+                    } else {
+                        allLinks.push({
+                            name: lab.assignment.name,
+                            uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
+                        });
+                    }
                 });
+                allLinks.push({ name: "Group Labs" });
+                allLinks.push(...gLabs);
+                allLinks.push({ name: "Repositories" });
+
+                const userRepoURL = await this.courseMan.getRepositoryURL(course.course.id, RepositoryType.UserRepo);
+                const informationURL = await this.courseMan.getCourseInformationURL(course.course.id);
+                const assignmentURL = await this.courseMan.getRepositoryURL(course.course.id, RepositoryType.AssignmentsRepo);
+
+                allLinks.push({ name: "User Repository", uri: userRepoURL, absolute: true });
+                allLinks.push({ name: "Course Info", uri: informationURL, absolute: true });
+                allLinks.push({ name: "Assignments", uri: assignmentURL, absolute: true });
+
+                allLinks.push({ name: "Settings" });
+                allLinks.push({
+                    name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",
+                });
+                coursesLinks.push({
+                    item: { name: course.course.code, uri: this.pagePath + "/courses/" + course.course.id },
+                    children: allLinks,
+                });
+            }
 
             const settings = [
                 { name: "Join course", uri: this.pagePath + "/enroll" },

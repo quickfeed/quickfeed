@@ -95,10 +95,17 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
         const isActive = link.active ? "active" : "";
 
         if (link.uri) {
-            return <li key={index} className={isActive}>
-                <a onClick={(e) => this.handleClick(e, link)}
-                    href={"/" + link.uri}>{link.name}</a>
-            </li>;
+            if (link.absolute) {
+                return <li key={index} className={isActive}>
+                    <a target="_blank" href={link.uri}>{link.name}</a>
+                </li>;
+            } else {
+                return <li key={index} className={isActive}>
+                    <a onClick={(e) => this.handleClick(e, link)}
+                        href={"/" + link.uri}>{link.name}</a>
+                </li>;
+            }
+            
         } else {
             return <li key={index} className={isActive}>
                 <span className="header">{link.name}</span>
