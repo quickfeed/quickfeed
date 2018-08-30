@@ -94,6 +94,7 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
             }
             return <a className="lab-result-cell"
                 onClick={() => this.handleOnclick(e)}
+                style={approvedCss}
                 href="#">
                 {e.latest ? (e.latest.score + "%") : "N/A"}</a>;
         }));
