@@ -92,7 +92,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.isgrouplab).map(
             (e, i) => {
                 let approvedCss: string = "";
-                if (e.latest) {
+                if (e.latest && e.latest.approved) {
                     approvedCss = "approved-cell";
                 }
                 const iCell: ICellElement = {
