@@ -2,6 +2,7 @@ import * as React from "react";
 import { IAssignment, ICourse, IStudentSubmission, IUser, IUserCourseWithUser } from "../../models";
 
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
+import { ICellElement } from "../data/DynamicTable";
 
 interface IResultsProp {
     course: ICourse;
@@ -85,20 +86,23 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element> {
+    private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element | ICellElement> {
         const slipdayPlaceholder = "5";
         let selector: Array<string | JSX.Element> = [student.user.name, slipdayPlaceholder];
         selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.isgrouplab).map(
             (e, i) => {
-                let approvedCss;
+                let approvedCss: string = "";
                 if (e.latest) {
-                    approvedCss = e.latest.approved ? this.approvedStyle : undefined;
+                    approvedCss = "approved-cell";
                 }
-                return <a className="lab-result-cell"
+                const iCell: ICellElement = {
+                    value: <a className="lab-result-cell"
                     onClick={() => this.handleOnclick(e)}
-                    style={approvedCss}
                     href="#">
-                    {e.latest ? (e.latest.score + "%") : "N/A"}</a>;
+                {e.latest ? (e.latest.score + "%") : "N/A"}</a>,
+                className: approvedCss
+                };
+                return "";
             }));
         return selector;
     }
