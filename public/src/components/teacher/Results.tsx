@@ -14,6 +14,11 @@ interface IResultsState {
     students: IUserCourseWithUser[];
 }
 class Results extends React.Component<IResultsProp, IResultsState> {
+
+    private approvedStyle = {
+        color: "green",
+    };
+
     constructor(props: IResultsProp) {
         super(props);
 
@@ -84,10 +89,17 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         const slipdayPlaceholder = "5";
         let selector: Array<string | JSX.Element> = [student.user.name, slipdayPlaceholder];
         selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.isgrouplab).map(
-            (e, i) => <a className="lab-result-cell"
-                onClick={() => this.handleOnclick(e)}
-                href="#">
-                {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
+            (e, i) => {
+                let approvedCss;
+                if (e.latest) {
+                    approvedCss = e.latest.approved ? this.approvedStyle : undefined;
+                }
+                return <a className="lab-result-cell"
+                    onClick={() => this.handleOnclick(e)}
+                    style={approvedCss}
+                    href="#">
+                    {e.latest ? (e.latest.score + "%") : "N/A"}</a>;
+            }));
         return selector;
     }
 

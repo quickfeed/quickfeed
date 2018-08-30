@@ -14,6 +14,10 @@ interface IResultsState {
     groups: IGroupCourseWithGroup[];
 }
 class GroupResults extends React.Component<IResultsProp, IResultsState> {
+    private approvedStyle = {
+        color: "green",
+    };
+
     constructor(props: IResultsProp) {
         super(props);
 
@@ -83,11 +87,16 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
     private getGroupResultSelector(group: IGroupCourseWithGroup): Array<string | JSX.Element> {
         const slipdayPlaceholder = "5";
         let selector: Array<string | JSX.Element> = [group.group.name, slipdayPlaceholder];
-        selector = selector.concat(group.course.assignments.filter((e) => e.assignment.isgrouplab).map((e) =>
-            <a className="lab-result-cell"
+        selector = selector.concat(group.course.assignments.filter((e) => e.assignment.isgrouplab).map((e) => {
+            let approvedCss;
+            if (e.latest) {
+                approvedCss = e.latest.approved ? this.approvedStyle : undefined;
+            }
+            return <a className="lab-result-cell"
                 onClick={() => this.handleOnclick(e)}
                 href="#">
-                {e.latest ? (e.latest.score + "%") : "N/A"}</a>));
+                {e.latest ? (e.latest.score + "%") : "N/A"}</a>;
+        }));
         return selector;
     }
 
