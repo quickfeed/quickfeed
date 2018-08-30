@@ -88,7 +88,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element | ICellElement> {
         const slipdayPlaceholder = "5";
-        let selector: Array<string | JSX.Element> = [student.user.name, slipdayPlaceholder];
+        let selector: Array<string | JSX.Element | ICellElement> = [student.user.name, slipdayPlaceholder];
         selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.isgrouplab).map(
             (e, i) => {
                 let approvedCss: string = "";
@@ -102,7 +102,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                 {e.latest ? (e.latest.score + "%") : "N/A"}</a>,
                 className: approvedCss
                 };
-                return "";
+                return iCell;
             }));
         return selector;
     }
