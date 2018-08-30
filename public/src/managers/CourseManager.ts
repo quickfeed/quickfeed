@@ -236,6 +236,21 @@ export class CourseManager {
     }
 
     /**
+     * Load an IUserCourse object for a single user and a single course
+     * @param student The student the information should be retrived from
+     * @param course The course the data should be loaded for
+     */
+    public async getStudentCourseForTeacher(student: IUserRelation, course: ICourse, assignments: IAssignment[]): Promise<IUserCourse | null> {
+        const userCourse: IUserCourse = {
+            link: { userid: student.user.id, courseId: course.id, state: student.link.state },
+            assignments: [],
+            course,
+        };
+        await this.fillLinks(student.user, userCourse, assignments);
+        return userCourse;
+    }
+
+    /**
      * Loads a single IStudentSubmission for a student and an assignment.
      * This will contains information about an assignment and the lates
      * sumbission information related to that assignment.
@@ -322,18 +337,28 @@ export class CourseManager {
      */
     public async getGroupCourse(group: ICourseGroup, course: ICourse): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
-        const groupEnrollment = await this.courseProvider.getGroup(group.id);
+        if (group.courseid === course.id) {
+            const groupCourse: IGroupCourse = {
+                link: { groupid: group.id, courseId: course.id, state: group.status },
+                assignments: [],
+                course,
+            };
+            await this.fillLinksGroup(group, groupCourse);
+            return groupCourse;
+        }
+        return null;
+    }
 
-        if (groupEnrollment != null && groupEnrollment.id === group.id) {
-            if (group.courseid === course.id) {
-                const groupCourse: IGroupCourse = {
-                    link: { groupid: group.id, courseId: course.id, state: groupEnrollment.status },
-                    assignments: [],
-                    course,
-                };
-                await this.fillLinksGroup(group, groupCourse);
-                return groupCourse;
-            }
+    public async getGroupCourseForTeacher(group: ICourseGroup, course: ICourse, assignments: IAssignment[]): Promise<IGroupCourse | null> {
+        // Fetching group enrollment status        
+        if (group.courseid === course.id) {
+            const groupCourse: IGroupCourse = {
+                link: { groupid: group.id, courseId: course.id, state: group.status },
+                assignments: [],
+                course,
+            };
+            await this.fillLinksGroup(group, groupCourse, assignments);
+            return groupCourse;
         }
         return null;
     }
@@ -387,16 +412,18 @@ export class CourseManager {
      * @param student The student
      * @param studentCourse The student course
      */
-    private async fillLinks(student: IUser, studentCourse: IUserCourse): Promise<void> {
+    private async fillLinks(student: IUser, studentCourse: IUserCourse, assignments?: IAssignment[]): Promise<void> {
         if (!studentCourse.link) {
             return;
         }
-        const assigns = await this.getAssignments(studentCourse.course.id);
-        if (assigns.length > 0) {
+        if (!assignments) {
+            assignments = await this.getAssignments(studentCourse.course.id);
+        }
+        if (assignments.length > 0) {
             const submissions = MapHelper.toArray(
                 await this.courseProvider.getAllLabInfos(studentCourse.course.id, student.id));
 
-            for (const a of assigns) {
+            for (const a of assignments) {
                 const submission = submissions.find((sub) => sub.assignmentid === a.id);
                 studentCourse.assignments.push({ assignment: a, latest: submission });
             }
@@ -408,11 +435,13 @@ export class CourseManager {
      * @param group The group
      * @param groupCourse The group course
      */
-    private async fillLinksGroup(group: ICourseGroup, groupCourse: IGroupCourse): Promise<void> {
+    private async fillLinksGroup(group: ICourseGroup, groupCourse: IGroupCourse, assignments?: IAssignment[]): Promise<void> {
         if (!groupCourse.link) {
             return;
         }
-        const assignments = await this.getAssignments(groupCourse.course.id);
+        if (!assignments){
+            assignments = await this.getAssignments(groupCourse.course.id);
+        }
         if (assignments.length > 0) {
             const submissions = MapHelper.toArray(
                 await this.courseProvider.getAllGroupLabInfos(groupCourse.course.id, group.id));

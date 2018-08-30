@@ -129,6 +129,8 @@ export class TeacherPage extends ViewPage {
 
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
+            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
+
             const students = await this.courseMan.getUsersForCourse(course, this.userMan,
                 [
                     CourseUserState.student,
@@ -136,19 +138,18 @@ export class TeacherPage extends ViewPage {
                 ]);
             const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
-                const userCourses = await this.courseMan.getStudentCourse(student.user, course);
+                const userCourses = await this.courseMan.getStudentCourseForTeacher(student, course, labs);
                 if (userCourses) {
                     linkedStudents.push({ course: userCourses, user: student.user });
                 }
             }
-            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
             return <Results
                 course={course}
                 labs={labs}
                 students={linkedStudents}
                 onApproveClick={async (submissionID: number) => {
                     await this.courseMan.approveSubmission(submissionID);
-                    this.navMan.refresh();
+                    // this.navMan.refresh();
                 }}
             >
             </Results>;
@@ -159,8 +160,10 @@ export class TeacherPage extends ViewPage {
         return this.courseFunc(info.params.course, async (course) => {
             const linkedGroups: IGroupCourseWithGroup[] = [];
             const groupCourses = await this.courseMan.getCourseGroups(course.id);
+            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
+
             for (const grpCourse of groupCourses) {
-                const grp = await this.courseMan.getGroupCourse(grpCourse, course);
+                const grp = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
                 if (grpCourse && grp) {
                     linkedGroups.push({
                         course: grp,
@@ -169,7 +172,7 @@ export class TeacherPage extends ViewPage {
                     });
                 }
             }
-            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
+
             return <GroupResults
                 course={course}
                 labs={labs}
