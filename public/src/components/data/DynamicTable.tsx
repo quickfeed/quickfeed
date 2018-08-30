@@ -14,7 +14,7 @@ export interface ICellElement{
 }
 
 function isICellElement(obj: any): obj is ICellElement{
-    return obj.value && obj.className;
+    return obj.value;
 }
 
 export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, {}> {
