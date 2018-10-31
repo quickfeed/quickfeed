@@ -788,6 +788,10 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 
 		// signed in student user must be member of the group
 		signedInUser := c.Get("user").(*models.User)
+		signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(cid, signedInUser.ID)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusNotFound, "Not able to retreive enrollment for signed in user")
+		}
 		signedInUserInGroup := false
 
 		// only enrolled users can join a group
@@ -803,10 +807,18 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 				return echo.NewHTTPError(http.StatusBadRequest, "user already enrolled in another group")
 			case enrollment.Status < models.Student:
 				return echo.NewHTTPError(http.StatusBadRequest, "user not yet accepted for this course")
+			case enrollment.Status == models.Teacher && signedInUserEnrollment.Status != models.Teacher:
+				return echo.NewHTTPError(http.StatusBadRequest, "A teacher has to create this group")
 			case signedInUser.ID == user.ID && enrollment.Status == models.Student:
 				signedInUserInGroup = true
 			}
 		}
+
+		// If user is a teacher it should be allowed to proceed and create a group with only the "enrolled" persons.
+		if signedInUserEnrollment.Status == models.Teacher {
+			signedInUserInGroup = true
+		}
+
 		if !signedInUserInGroup {
 			return echo.NewHTTPError(http.StatusBadRequest, "student must be member of new group")
 		}
