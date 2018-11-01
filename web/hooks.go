@@ -92,17 +92,7 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 		return
 	}
 
-	//TODO(hein): we don't need the assignments to run CI, other than to emit an error if there are no assignments
-	assignments, err := db.GetAssignmentsByCourse(course.ID)
-	if err != nil {
-		logger.WithError(err).Warn("Failed to get course from database")
-		return
-	} else if len(assignments) < 1 {
-		logger.Warn("No assignments in database")
-		return
-	}
-
-	selectedAssignment, err := db.GetNextUnapprovedAssignment(course.ID, repo.UserID, repo.GroupID)
+	selectedAssignment, err := db.GetNextAssignment(course.ID, repo.UserID, repo.GroupID)
 	if err != nil {
 		logger.WithError(err).Warn("Failed to find a next unapproved assignment")
 		return

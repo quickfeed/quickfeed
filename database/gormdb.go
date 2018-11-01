@@ -221,15 +221,15 @@ func (db *GormDB) GetAssignmentsByCourse(cid uint64) ([]*models.Assignment, erro
 	return course.Assignments, nil
 }
 
-// GetNextUnapprovedAssignment returns the next assignment to be approved
-// for the given user and (optionally) group.
-func (db *GormDB) GetNextUnapprovedAssignment(cid uint64, uid uint64, gid uint64) (*models.Assignment, error) {
+// GetNextAssignment returns the next assignment to be approved for
+// the given course, user, or group if the next assignment is a group lab.
+func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*models.Assignment, error) {
 	assignments, err := db.GetAssignmentsByCourse(cid)
 	if err != nil {
 		return nil, err
 	}
-	if uid == 0 {
-		return nil, errors.New("user id must be provided")
+	if len(assignments) < 1 {
+		return nil, fmt.Errorf("no assignments found for course %d", cid)
 	}
 	sort.Slice(assignments, func(i, j int) bool {
 		return assignments[i].Order < assignments[j].Order
@@ -265,16 +265,17 @@ func (db *GormDB) GetNextUnapprovedAssignment(cid uint64, uid uint64, gid uint64
 // CreateSubmission implements the Database interface
 // TODO: Also check enrollment to see if the user is
 // enrolled in the course the assignment belongs to
-// TODO(hein): What if both UserID and GroupID is set?
 func (db *GormDB) CreateSubmission(submission *models.Submission) error {
 	// Primary key must be greater than 0.
 	if submission.AssignmentID < 1 {
 		return gorm.ErrRecordNotFound
 	}
 
-	// Either user or group id must be set.
+	// Either user or group id must be set, but not both.
 	var m *gorm.DB
 	switch {
+	case submission.UserID > 0 && submission.GroupID > 0:
+		return gorm.ErrRecordNotFound
 	case submission.UserID > 0:
 		m = db.conn.First(&models.User{ID: submission.UserID})
 	case submission.GroupID > 0:

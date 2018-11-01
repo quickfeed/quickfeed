@@ -6,11 +6,11 @@ import (
 	"github.com/autograde/aguis/models"
 )
 
-func TestGetNextUnapprovedAssignment(t *testing.T) {
+func TestGetNextAssignment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	_, err := db.GetNextUnapprovedAssignment(0, 0, 0)
+	_, err := db.GetNextAssignment(0, 0, 0)
 	if err == nil {
 		t.Fatal("expected error 'record not found'")
 	}
@@ -51,6 +51,11 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	_, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
+	if err == nil {
+		t.Fatal("expected error 'no assignments found for course 1'")
+	}
+
 	// Create assignments
 	assigment1 := models.Assignment{CourseID: course.ID, Order: 1}
 	if err := db.CreateAssignment(&assigment1); err != nil {
@@ -69,12 +74,12 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = db.GetNextUnapprovedAssignment(course.ID, 0, 0)
+	_, err = db.GetNextAssignment(course.ID, 0, 0)
 	if err == nil {
-		t.Fatal("expected error 'user id must be provided'")
+		t.Fatal("expected error 'record not found'")
 	}
 
-	nxtUnapproved, err := db.GetNextUnapprovedAssignment(course.ID, user.ID, 0)
+	nxtUnapproved, err := db.GetNextAssignment(course.ID, user.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +111,7 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 
 	// we haven't approved any of the submissions yet; expect same result as above
 
-	nxtUnapproved, err = db.GetNextUnapprovedAssignment(course.ID, user.ID, 0)
+	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +131,7 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 	// that finds the latest submission for the user and marks it approved.
 	// That is, maybe the UpdateSubmissionByID shouldn't be exported.
 
-	nxtUnapproved, err = db.GetNextUnapprovedAssignment(course.ID, user.ID, 0)
+	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +146,7 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 
 	// now the first assignment is approved, moving on to the second
 
-	nxtUnapproved, err = db.GetNextUnapprovedAssignment(course.ID, user.ID, 0)
+	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +163,7 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 	// this fails because the next assignment to approve is a group lab,
 	// and we don't provide a group id.
 
-	_, err = db.GetNextUnapprovedAssignment(course.ID, user.ID, 0)
+	_, err = db.GetNextAssignment(course.ID, user.ID, 0)
 	if err == nil {
 		t.Fatal("expected error 'record not found'")
 	}
@@ -166,14 +171,14 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 	// moving on to the third assignment, using the group id this time.
 	// fails because user id must be provided.
 
-	_, err = db.GetNextUnapprovedAssignment(course.ID, 0, group.ID)
+	_, err = db.GetNextAssignment(course.ID, 0, group.ID)
 	if err == nil {
 		t.Fatal("expected error 'user id must be provided'")
 	}
 
 	// moving on to the third assignment, using both user id and group id this time.
 
-	nxtUnapproved, err = db.GetNextUnapprovedAssignment(course.ID, user.ID, group.ID)
+	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -189,14 +194,14 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 	// approving the 4th submission (for assignment3, which is a group lab),
 	// should fail because we only provide user id, and no group.ID.
 
-	_, err = db.GetNextUnapprovedAssignment(course.ID, user.ID, 0)
+	_, err = db.GetNextAssignment(course.ID, user.ID, 0)
 	if err == nil {
 		t.Fatal("expected error 'user id must be provided'")
 	}
 
 	// here it should pass since we also provide the group id.
 
-	nxtUnapproved, err = db.GetNextUnapprovedAssignment(course.ID, user.ID, group.ID)
+	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,7 +221,7 @@ func TestGetNextUnapprovedAssignment(t *testing.T) {
 
 	// all assignments have been approved
 
-	nxtUnapproved, err = db.GetNextUnapprovedAssignment(course.ID, user.ID, group.ID)
+	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
 	if nxtUnapproved != nil || err == nil {
 		t.Fatal("expected error 'all assignments approved'")
 	}

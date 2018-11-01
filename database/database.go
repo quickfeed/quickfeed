@@ -36,7 +36,7 @@ type Database interface {
 
 	CreateAssignment(*models.Assignment) error
 	GetAssignmentsByCourse(uint64) ([]*models.Assignment, error)
-	GetNextUnapprovedAssignment(cid, uid, gid uint64) (*models.Assignment, error)
+	GetNextAssignment(cid, uid, gid uint64) (*models.Assignment, error)
 
 	CreateSubmission(*models.Submission) error
 	GetSubmissionForUser(aid uint64, uid uint64) (*models.Submission, error)
