@@ -2,20 +2,35 @@ import * as React from "react";
 
 import { CoursePanel, Row } from "../../components";
 
-import { ICoursesWithAssignments, IUserCourse } from "../../models";
+import { IGroupCourse, IStudentSubmission, IUserCourse } from "../../models";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
 interface ICourseOverviewProps {
     courseOverview: IUserCourse[];
+    groupCourseOverview: IGroupCourse[];
     navMan: NavigationManager;
 }
 
 class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
 
     public render() {
+        const groupCourses = this.props.groupCourseOverview ? this.props.groupCourseOverview : null;
         const courses = this.props.courseOverview.map((val, key) => {
-            return <CoursePanel key={key} course={val.course} labs={val.assignments} navMan={this.props.navMan} />;
+            const courseAssignments: IStudentSubmission[] = val.assignments;
+            if (groupCourses && groupCourses[key] && groupCourses[key].course.id === val.course.id) {
+
+                for (let iter = 0; iter < courseAssignments.length; iter++) {
+                    if (courseAssignments[iter].assignment.isgrouplab) {
+                        courseAssignments[iter].latest = groupCourses[key].assignments[iter].latest;
+                    }
+                }
+            }
+            return <CoursePanel
+                key={key}
+                course={val.course}
+                labs={courseAssignments}
+                navMan={this.props.navMan} />;
         });
 
         let added: number = 0;

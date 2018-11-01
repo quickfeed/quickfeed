@@ -51,13 +51,21 @@ export interface IUserCourse extends ICourseLinkAssignment {
     link?: ICourseUserLink;
 }
 
-
 /**
  * An interface which contains both the course, the course
  * link, all assignments and the latest submission to a single group
  */
 export interface IGroupCourse extends ICourseLinkAssignment {
     link?: ICourseGroupLink;
+}
+/**
+ * Function to find out if object is a instance of IUserCourse.
+ * Will return false if link is missing.
+ * @param object
+ */
+export function isIUserCourse(test: IUserCourse | IGroupCourse | ICourseLinkAssignment): test is IUserCourse {
+    const inter = test as IUserCourse;
+    return inter.link ? (inter.link as ICourseUserLink).userid !== undefined : false;
 }
 /**
  * An IUserCourse instance which also contains the user it
@@ -68,7 +76,6 @@ export interface IUserCourseWithUser {
     user: IUser;
     course: IUserCourse;
 }
-
 /**
  * An ICourseGroup instance which also contains the group it
  * is related to.
@@ -180,6 +187,17 @@ export enum CourseGroupStatus {
     deleted = 3,
 }
 
+/**
+ * Status of a course group
+ */
+export enum RepositoryType {
+    UserRepo = 0,
+    AssignmentsRepo = 1,
+    TestsRepo = 2,
+    SolutionsRepo = 3,
+    CourseInfoRepo = 4,
+}
+
 export function courseUserStateToString(state: CourseUserState[]): string {
     return state.map((sta) => {
         switch (sta) {
@@ -283,7 +301,7 @@ export interface IOrganization {
 /**
  * ICourseGroup represents a student group in a course
  */
-export interface ICourseGroup { 
+export interface ICourseGroup {
     id: number;
     name: string;
     status: CourseGroupStatus;

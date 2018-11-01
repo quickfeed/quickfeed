@@ -156,13 +156,39 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                     errorFlash: flashErrors,
                 });
             } else {
-                const redirectTo: string = this.props.groupData ?
-                    this.props.pagePath + "/courses/" + this.props.course.id + "/groups" :
-                    this.props.pagePath + "/courses/" + this.props.course.id + "/members";
+                if (this.props.groupData) {
+                    if (this.props.groupData.users.filter((x) => x.id === this.props.curUser.id).length > 0) {
+                        const redirectTo: string = this.props.groupData ?
+                            this.props.pagePath + "/courses/" + this.props.course.id + "/groups"
+                            : this.props.pagePath + "/courses/" + this.props.course.id + "/members";
 
-                this.props.navMan.navigateTo(redirectTo);
+                        this.props.navMan.navigateTo(redirectTo);
+                    } else {
+                        // There is group data, but cur user is not part of that group
+                        const flash = this.genCurUserMissingFromGroupWarn();
+                        this.setState({
+                            errorFlash: flash,
+                        });
+                    }
+                } else { // Teacher created group, so no group data.
+                    const flash = this.genCurUserMissingFromGroupWarn();
+
+                    this.setState({
+                        errorFlash: flash,
+                    });
+                    this.props.navMan.refresh();
+                }
+
             }
         }
+    }
+    private genCurUserMissingFromGroupWarn(): JSX.Element {
+        const flash: JSX.Element =
+            <div className="alert alert-warning">
+                <h4> Group created without you as a member.</h4>
+            </div>;
+
+        return flash;
     }
 
     private async createGroup(formData: INewGroup): Promise<ICourseGroup | IError> {
@@ -233,9 +259,14 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         if (this.state.selectedStudents.length === 0) {
             errors.push("Group mush have members.");
         }
-        if (this.state.curUser && this.state.curUser.link.state === CourseUserState.student &&
-            !this.isCurrentStudentSelected(this.state.curUser)) {
-            errors.push("You must be a member of the group");
+        if (this.state.curUser
+            && (this.state.curUser.link.state === CourseUserState.student
+                || this.state.curUser.link.state === CourseUserState.teacher)
+            && !this.isCurrentStudentSelected(this.state.curUser)) {
+
+            if (this.state.curUser.link.state !== CourseUserState.teacher) {
+                errors.push("You must be a member of the group");
+            }
         }
         return errors;
     }

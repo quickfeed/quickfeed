@@ -10,6 +10,7 @@ interface IUserViewerProps {
     courseMan: CourseManager;
     acceptedUsers: IUserRelation[];
     pendingUsers: IUserRelation[];
+    rejectedUsers: IUserRelation[];
     course: ICourse;
 }
 
@@ -24,7 +25,25 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
             <h1>{this.props.course.name}</h1>
             {this.renderUserView()}
             {this.renderPendingView(pendingActions)}
+            {this.renderRejectedView()}
         </div>;
+    }
+
+    public renderRejectedView() {
+        if (this.props.rejectedUsers.length > 0) {
+            return this.renderUsers(
+                "Rejected users",
+                this.props.rejectedUsers,
+                [],
+                ActionType.Menu,
+                (user: IUserRelation) => {
+                    const links = [];
+                    if (user.link.state === CourseUserState.rejected) {
+                        links.push({ name: "Set pending", uri: "remove", extra: "primary" });
+                    }
+                    return links;
+                });
+        }
     }
 
     public renderUserView() {
@@ -82,12 +101,14 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
             case "teacher":
                 if (confirm(
                     `Warning! This action is irreversible!
-
-Do you want to continue assigning:
-${userRel.user.name} as a teacher?`,
+                    Do you want to continue assigning:
+                    ${userRel.user.name} as a teacher?`,
                 )) {
                     this.props.courseMan.changeUserState(userRel.link, CourseUserState.teacher);
                 }
+                break;
+            case "remove":
+                this.props.courseMan.changeUserState(userRel.link, CourseUserState.pending);
                 break;
         }
         this.props.navMan.refresh();

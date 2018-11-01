@@ -226,3 +226,7 @@
 .btn{
     background-image: none;
 }
+
+.approved-cell {
+    background-color: #dff0d8;
+}

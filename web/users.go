@@ -33,7 +33,7 @@ func GetUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		user, err := db.GetUser(id)
@@ -61,12 +61,13 @@ func GetUsers(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// PatchUser promotes a user to an administrator
+// PatchUser updates a user's information, including promoting to administrator.
+// Only existing administrators can promote another user.
 func PatchUser(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		var uur UpdateUserRequest
 		if err := c.Bind(&uur); err != nil {
@@ -80,6 +81,9 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
+
+		// Get current user
+		currentUser := c.Get("user").(*models.User)
 
 		if uur.Name != "" {
 			updateUser.Name = uur.Name
@@ -97,15 +101,15 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			updateUser.AvatarURL = uur.AvatarURL
 			status = http.StatusOK
 		}
-		if uur.IsAdmin != nil {
-			updateUser.IsAdmin = *uur.IsAdmin
+		// Promote other user to admin, only if current user has admin privileges
+		if uur.IsAdmin != nil && *currentUser.IsAdmin {
+			updateUser.IsAdmin = uur.IsAdmin
 			status = http.StatusOK
 		}
 
 		if err := db.UpdateUser(updateUser); err != nil {
 			return err
 		}
-
 		return c.NoContent(status)
 	}
 }
@@ -115,11 +119,11 @@ func GetGroupByUserAndCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		uid, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return nil
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, uid)
 		if err != nil {
@@ -131,7 +135,7 @@ func GetGroupByUserAndCourse(db database.Database) echo.HandlerFunc {
 		if enrollment.GroupID > 0 {
 			group, err := db.GetGroup(enrollment.GroupID)
 			if err != nil {
-				return nil
+				return c.NoContent(http.StatusNotFound)
 			}
 			return c.JSONPretty(http.StatusFound, group, "\t")
 		}

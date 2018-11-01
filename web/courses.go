@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -88,7 +89,7 @@ func ListCoursesWithEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		statuses, err := parseEnrollmentStatus(c.QueryParam("status"))
 		if err != nil {
@@ -108,7 +109,7 @@ func ListAssignments(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		assignments, err := db.GetAssignmentsByCourse(id)
 		if err != nil {
@@ -140,11 +141,12 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		if c.Get(cr.Provider) == nil {
+		provider := c.Get(cr.Provider)
+		if provider == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
 		}
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := c.Get(cr.Provider).(scm.SCM)
+		s := provider.(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -167,15 +169,21 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			var repo *scm.Repository
 			var ok bool
 			if repo, ok = existing[path]; !ok {
+				privRepo := false
+				if path == TestsRepo {
+					privRepo = true
+				}
 				var err error
 				repo, err = s.CreateRepository(
 					ctx,
 					&scm.CreateRepositoryOptions{
 						Path:      path,
-						Directory: directory},
+						Directory: directory,
+						Private:   privRepo},
 				)
+
 				if err != nil {
-					logger.WithField("repo", path).WithError(err).Warn("Failed to create repository")
+					logger.WithField("repo", path).WithField("private", privRepo).WithError(err).Warn("Failed to create repository")
 					return err
 				}
 				logger.WithField("repo", repo).Println("Created new repository")
@@ -224,6 +232,7 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			dbRepo := models.Repository{
 				DirectoryID:  directory.ID,
 				RepositoryID: repo.ID,
+				HTMLURL:      repo.WebURL,
 				Type:         repoType,
 			}
 			if err := db.CreateRepository(&dbRepo); err != nil {
@@ -231,14 +240,17 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			}
 		}
 
+		user := c.Get("user").(*models.User)
+
 		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
 		course := models.Course{
-			Name:        cr.Name,
-			Code:        cr.Code,
-			Year:        cr.Year,
-			Tag:         cr.Tag,
-			Provider:    cr.Provider,
-			DirectoryID: directory.ID,
+			Name:            cr.Name,
+			CourseCreatorID: user.ID,
+			Code:            cr.Code,
+			Year:            cr.Year,
+			Tag:             cr.Tag,
+			Provider:        cr.Provider,
+			DirectoryID:     directory.ID,
 		}
 		if err := db.CreateCourse(&course); err != nil {
 			if err == database.ErrCourseExists {
@@ -249,7 +261,7 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 
 		// Automatically enroll the teacher creating the course
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		user := c.Get("user").(*models.User)
+
 		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   user.ID,
 			CourseID: course.ID,
@@ -272,11 +284,11 @@ func CreateEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		courseID, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		userID, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		var eur EnrollUserRequest
@@ -307,11 +319,11 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		courseID, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		userID, err := parseUint(c.Param("uid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		var eur EnrollUserRequest
@@ -332,7 +344,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		user := c.Get("user").(*models.User)
 		// TODO: This check should be performed in AccessControl.
-		if !user.IsAdmin {
+		if user.IsAdmin == nil || !*user.IsAdmin {
 			// Only admin users are allowed to enroll or reject users to a course.
 			// TODO we should also allow users of the 'teachers' team to accept/reject users
 			return c.NoContent(http.StatusUnauthorized)
@@ -342,25 +354,25 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		switch eur.Status {
 		case models.Student:
 
-			// This should probably be the last one to occur ?
+			// Update enrollment for student in DB.
 			err = db.EnrollStudent(userID, courseID)
 			if err != nil {
 				return err
 			}
-			courseInfo, err := db.GetCourse(courseID)
+
+			course, err := db.GetCourse(courseID)
 			if err != nil {
 				return err
 			}
 
-			provider := c.Get(courseInfo.Provider)
-			var s scm.SCM
-			if provider != nil {
-				s = provider.(scm.SCM)
-			} else {
-				return nil // TODO decide how to handle empty provider.
+			provider := c.Get(course.Provider)
+			if provider == nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
 			}
+			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+			s := provider.(scm.SCM)
 
-			dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
+			dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
 			if err != nil {
 				return err
 			}
@@ -377,18 +389,20 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			}
 
 			// Creating repository
-			studentName := strings.Replace(student.Name, " ", "", -1)
+			studentName := strings.Replace(gitUserName, " ", "", -1)
 			pathName := studentName + "-labs"
 			repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
 				Directory: dir,
 				Path:      pathName,
+				Private:   true,
 			})
 			if err != nil {
 				return err
 			}
 			dbRepo := models.Repository{
-				DirectoryID:  courseInfo.DirectoryID,
+				DirectoryID:  course.DirectoryID,
 				RepositoryID: repo.ID,
+				HTMLURL:      repo.WebURL,
 				Type:         models.UserRepo,
 				UserID:       userID,
 			}
@@ -404,19 +418,23 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			if err != nil {
 				return err
 			}
-			err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
-				TeamID: team.ID,
-				Owner:  repo.Owner,
-				Repo:   repo.Path,
-			})
-			if err != nil {
-				return err
+			if team != nil {
+				err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
+					TeamID: team.ID,
+					Owner:  repo.Owner,
+					Repo:   repo.Path,
+				})
+				if err != nil {
+					return err
+				}
 			}
 
 		case models.Teacher:
 			err = db.EnrollTeacher(userID, courseID)
 		case models.Rejected:
 			err = db.RejectEnrollment(userID, courseID)
+		case models.Pending:
+			err = db.SetPendingEnrollment(userID, courseID)
 		}
 		if err != nil {
 			return err
@@ -430,7 +448,7 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		course, err := db.GetCourse(id)
@@ -449,10 +467,9 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 // RefreshCourse refreshes the information to a course
 func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		course, err := db.GetCourse(cid)
@@ -460,9 +477,12 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 			return err
 		}
 
-		if c.Get(course.Provider) == nil {
+		provider := c.Get(course.Provider)
+		if provider == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
 		}
+		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+		s := provider.(scm.SCM)
 
 		user := c.Get("user").(*models.User)
 
@@ -471,10 +491,12 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 			return err
 		}
 
-		s := c.Get(course.Provider).(scm.SCM)
+		if user.IsAdmin != nil && *user.IsAdmin {
+			// Only admin users should be able to update repos to private, if they are public.
+			updateRepoToPrivate(c.Request().Context(), db, s, course.DirectoryID)
+		}
 
 		assignments, err := RefreshCourseInformation(c.Request().Context(), logger, db, course, remoteID, s)
-
 		if err != nil {
 			return err
 		}
@@ -602,7 +624,7 @@ func GetSubmission(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		assignmentID, err := parseUint(c.Param("aid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		user := c.Get("user").(*models.User)
@@ -624,7 +646,7 @@ func ListSubmissions(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		courseID, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		// Check if a user is provided, else used logged in user
@@ -650,7 +672,7 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		if _, err := db.GetCourse(id); err != nil {
@@ -669,11 +691,12 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		if c.Get(cr.Provider) == nil {
+		provider := c.Get(cr.Provider)
+		if provider == nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
 		}
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := c.Get(cr.Provider).(scm.SCM)
+		s := provider.(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -706,7 +729,7 @@ func GetEnrollmentsByCourse(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		statuses, err := parseEnrollmentStatus(c.QueryParam("status"))
@@ -735,11 +758,10 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		_, err = db.GetCourse(cid)
-		if err != nil {
+		if _, err := db.GetCourse(cid); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
 			}
@@ -763,39 +785,42 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		if len(users) != len(grp.UserIDs) {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
-		// if logged in user is student, he must need to be member of the group
-		user := c.Get("user").(*models.User)
-		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
+
+		// signed in student user must be member of the group
+		signedInUser := c.Get("user").(*models.User)
+		signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(cid, signedInUser.ID)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusNotFound, "Not able to retreive enrollment for signed in user")
 		}
-		if enrollment.Status == models.Student {
-			found := false
-			for _, id := range grp.UserIDs {
-				if user.ID == id {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return echo.NewHTTPError(http.StatusBadRequest,
-					"you must need to be a member of the group")
-			}
-		}
-		// only enrolled user i.e accepted to the course can join a group
+		signedInUserInGroup := false
+
+		// only enrolled users can join a group
 		// prevent group override if a student is already in a group in this course
 		for _, user := range users {
 			enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
 			switch {
 			case err == gorm.ErrRecordNotFound:
-				return echo.NewHTTPError(http.StatusNotFound, "user is not enrolled to this course")
+				return echo.NewHTTPError(http.StatusNotFound, "user not enrolled in course")
 			case err != nil:
 				return err
 			case enrollment.GroupID > 0:
-				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
+				return echo.NewHTTPError(http.StatusBadRequest, "user already enrolled in another group")
 			case enrollment.Status < models.Student:
-				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
+				return echo.NewHTTPError(http.StatusBadRequest, "user not yet accepted for this course")
+			case enrollment.Status == models.Teacher && signedInUserEnrollment.Status != models.Teacher:
+				return echo.NewHTTPError(http.StatusBadRequest, "A teacher has to create this group")
+			case signedInUser.ID == user.ID && enrollment.Status == models.Student:
+				signedInUserInGroup = true
 			}
+		}
+
+		// If user is a teacher it should be allowed to proceed and create a group with only the "enrolled" persons.
+		if signedInUserEnrollment.Status == models.Teacher {
+			signedInUserInGroup = true
+		}
+
+		if !signedInUserInGroup {
+			return echo.NewHTTPError(http.StatusBadRequest, "student must be member of new group")
 		}
 
 		group := models.Group{
@@ -815,15 +840,17 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 	}
 }
 
+// TODO: Remove this function? similar exists in web/groups.go
 // UpdateGroup update a group
 func UpdateGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		if _, err = db.GetCourse(cid); err != nil {
+		course, err := db.GetCourse(cid)
+		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
 			}
@@ -832,7 +859,7 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 
 		gid, err := parseUint(c.Param("gid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		oldgrp, err := db.GetGroup(gid)
 		if err != nil {
@@ -895,6 +922,80 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
+		provider := c.Get(course.Provider)
+		if provider == nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
+		}
+		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+		s := provider.(scm.SCM)
+
+		var userRemoteIdentity []*models.RemoteIdentity
+		// TODO move this into the for loop above, modify db.GetUsers() to also retreive RemoteIdentity
+		// so we can remove individual GetUser calls
+		for _, user := range users {
+			remoteIdentityUser, _ := db.GetUser(user.ID)
+			if err != nil {
+				return err
+			}
+			// TODO, figure out which remote identity to be used!
+			if len(remoteIdentityUser.RemoteIdentities) > 0 {
+				userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+			}
+		}
+
+		// TODO move this functionality down into SCM?
+		// Note: This Requires alot of calls to git.
+		// Figure out all group members git-username
+		var gitUserNames []string
+		for _, identity := range userRemoteIdentity {
+			gitName, err := s.GetUserNameByID(c.Request().Context(), identity.RemoteID)
+			if err != nil {
+				return err
+			}
+			gitUserNames = append(gitUserNames, gitName)
+		}
+
+		// Create and add repo to autograder group
+		dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
+		if err != nil {
+			return err
+		}
+		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
+			Directory: dir,
+			Path:      grp.Name,
+			Private:   true,
+		})
+		if err != nil {
+			return err
+		}
+		// Add repo to DB
+		dbRepo := models.Repository{
+			DirectoryID:  course.DirectoryID,
+			RepositoryID: repo.ID,
+			Type:         models.UserRepo,
+			UserID:       grp.UserIDs[0], // Should this be groupID ????
+		}
+		if err := db.CreateRepository(&dbRepo); err != nil {
+			return err
+		}
+		// Create git-team
+		team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
+			Directory: &scm.Directory{Path: dir.Path},
+			TeamName:  grp.Name,
+			Users:     gitUserNames,
+		})
+		if err != nil {
+			return err
+		}
+		// Adding Repo to git-team
+		if err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
+			TeamID: team.ID,
+			Owner:  repo.Owner,
+			Repo:   repo.Path,
+		}); err != nil {
+			return err
+		}
+
 		return c.NoContent(http.StatusOK)
 	}
 }
@@ -904,7 +1005,7 @@ func GetGroups(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 		if _, err := db.GetCourse(cid); err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -925,7 +1026,7 @@ func UpdateSubmission(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		sid, err := parseUint(c.Param("sid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		err = db.UpdateSubmissionByID(sid, true)
@@ -942,12 +1043,12 @@ func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		gid, err := parseUint(c.Param("gid"))
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
 		submission, err := db.GetGroupSubmissions(cid, gid)
@@ -960,5 +1061,107 @@ func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
 
 		return c.JSONPretty(http.StatusOK, submission, "\t")
 
+	}
+}
+
+// GetCourseInformationURL Returns the course information html as string
+func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
+		}
+		courseInfoRepo, err := db.GetRepositoriesByCourseIDAndType(cid, models.CourseInfoRepo)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve any course information repos")
+		}
+		// There should only exist 1 course info pr course.
+		if len(courseInfoRepo) > 1 && len(courseInfoRepo) == 0 {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Too many course information repositories exists for this course")
+		}
+
+		// Have to be in string array to be able to jsonify so frontend recognize it.
+		// See public/src/HttpHelper.ts -> send()
+		var courseInfoURL []string
+		courseInfoURL = append(courseInfoURL, courseInfoRepo[0].HTMLURL)
+		return c.JSONPretty(http.StatusOK, &courseInfoURL, "\t")
+	}
+}
+
+// GetCourseInformationURL Returns the course information html as string
+func GetRepositoryURL(db database.Database) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cid, err := parseUint(c.Param("cid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
+		}
+
+		// parseUint does not allow 0 values, since model.RepoType can be 0 we convert it ourselves.
+		repoType, err := strconv.ParseUint(c.QueryParam("type"), 10, 64)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse repoType")
+		}
+		identifiedRepoType, err := models.IdentifyRepoTypeFromFrontEnd(repoType)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse Repository type")
+		}
+
+		var repos []*models.Repository
+		if identifiedRepoType == models.UserRepo {
+			user := c.Get("user").(*models.User)
+			if user == nil {
+				return echo.NewHTTPError(http.StatusBadRequest, "user not registered")
+			}
+			userRepo, err := db.GetRepoByCourseIDUserIDandType(cid, user.ID, models.UserRepo)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "GetRepoByCourseIDUserIDandType: Could not retrieve any UserRepo")
+			}
+			repos = append(repos, userRepo)
+		} else {
+			repos, err = db.GetRepositoriesByCourseIDAndType(cid, identifiedRepoType)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "GetRepositoriesByCourseIDAndType: Could not retrieve any repos")
+			}
+		}
+
+		// There should only exist one of each specific repo pr course.
+		// AssignmentRepo, CourseInfoRepo, SolutionRepo, TestRepo
+		// There can exist many UserRepo, but only one pr user
+		if len(repos) > 1 && len(repos) == 0 {
+			return echo.NewHTTPError(http.StatusInternalServerError, "Too many course information repositories exists for this course")
+		}
+
+		// Have to be in string array to be able to jsonify so frontend recognize it.
+		// See public/src/HttpHelper.ts -> send()
+		var repoURL []string
+		repoURL = append(repoURL, repos[0].HTMLURL)
+		return c.JSONPretty(http.StatusOK, &repoURL, "\t")
+	}
+}
+
+func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, directoryID uint64) {
+	repositories, err := db.GetRepositoriesByDirectory(directoryID)
+	if err != nil {
+		return
+	}
+
+	payment, _ := s.GetPaymentPlan(ctx, directoryID)
+	// If privaterepos is bigger than 0, we know that the org/team is paid for.
+	if payment.PrivateRepos > 0 {
+		for _, repo := range repositories {
+			if repo.Type != models.AssignmentsRepo &&
+				repo.Type != models.CourseInfoRepo &&
+				repo.Type != models.SolutionsRepo {
+
+				scmRepo := &scm.Repository{
+					DirectoryID: repo.DirectoryID,
+					ID:          repo.RepositoryID,
+				}
+				err := s.UpdateRepository(ctx, scmRepo)
+				if err != nil {
+					return
+				}
+			}
+		}
 	}
 }

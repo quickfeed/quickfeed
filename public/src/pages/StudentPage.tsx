@@ -7,7 +7,9 @@ import { UserManager } from "../managers/UserManager";
 
 import {
     CourseUserState, ICourse, ICourseGroup,
-    IStudentSubmission, IUserCourse, ICourseLinkAssignment, IGroupCourse,
+    ICourseLinkAssignment, IGroupCourse, IStudentSubmission,
+    IUserCourse, RepositoryType,
+
 } from "../models";
 
 import { View, ViewPage } from "./ViewPage";
@@ -23,7 +25,7 @@ export class StudentPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
 
-    // Single user 
+    // Single user
     private userCourses: ICourseLinkAssignment[] = [];
     private activeUserCourses: ICourseLinkAssignment[] = [];
     private selectedUserCourse: ICourseLinkAssignment | undefined;
@@ -68,6 +70,7 @@ export class StudentPage extends ViewPage {
         if (this.activeUserCourses) {
             return (<CoursesOverview
                 courseOverview={this.activeUserCourses as IUserCourse[]}
+                groupCourseOverview={this.GroupUserCourses as IGroupCourse[]}
                 navMan={this.navMan}
             />);
         }
@@ -129,11 +132,11 @@ export class StudentPage extends ViewPage {
     public async courseWithGroupLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectGroupCourse(navInfo.params.courseid);
-        if (this.selectedUserCourse) {
+        if (this.selectedUserGroupCourse) {
             await this.selectGroupAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
                 return <StudentLab
-                    course={this.selectedUserCourse.course}
+                    course={this.selectedUserGroupCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
                     onRebuildClick={() => { }}
@@ -176,39 +179,47 @@ export class StudentPage extends ViewPage {
 
     public async renderMenu(key: number): Promise<JSX.Element[]> {
         if (key === 0) {
-            const coursesLinks: ILinkCollection[] = this.activeUserCourses.map(
-                (course, i) => {
-                    const allLinks: ILink[] = [];
-                    allLinks.push({ name: "Labs" });
-                    const labs = course.assignments;
-                    const gLabs: ILink[] = [];
-                    labs.forEach((lab) => {
-                        if (lab.assignment.isgrouplab) {
-                            gLabs.push({
-                                name: lab.assignment.name,
-                                uri: this.pagePath + "/courses/" + course.course.id + "/grouplab/" + lab.assignment.id,
-                            });
-                        } else {
-                            allLinks.push({
-                                name: lab.assignment.name,
-                                uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
-                            });
-                        }
-                    });
-                    allLinks.push({ name: "Group Labs" });
-                    allLinks.push(...gLabs);
-                    allLinks.push({ name: "Settings" });
-                    allLinks.push({
-                        name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",
-                    });
-                    allLinks.push({
-                        name: "Course Info", uri: this.pagePath + "/courses/" + course.course.id + "/info",
-                    });
-                    return {
-                        item: { name: course.course.code, uri: this.pagePath + "/courses/" + course.course.id },
-                        children: allLinks,
-                    };
+            const coursesLinks: ILinkCollection[] = [];
+            for (const course of this.activeUserCourses) {
+
+                const allLinks: ILink[] = [];
+                allLinks.push({ name: "Labs" });
+                const labs = course.assignments;
+                const gLabs: ILink[] = [];
+                labs.forEach((lab) => {
+                    if (lab.assignment.isgrouplab) {
+                        gLabs.push({
+                            name: lab.assignment.name,
+                            uri: this.pagePath + "/courses/" + course.course.id + "/grouplab/" + lab.assignment.id,
+                        });
+                    } else {
+                        allLinks.push({
+                            name: lab.assignment.name,
+                            uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
+                        });
+                    }
                 });
+                allLinks.push({ name: "Group Labs" });
+                allLinks.push(...gLabs);
+                allLinks.push({ name: "Repositories" });
+
+                const userRepoURL = await this.courseMan.getRepositoryURL(course.course.id, RepositoryType.UserRepo);
+                const informationURL = await this.courseMan.getCourseInformationURL(course.course.id);
+                const assignmentURL = await this.courseMan.getRepositoryURL(course.course.id, RepositoryType.AssignmentsRepo);
+
+                allLinks.push({ name: "User Repository", uri: userRepoURL, absolute: true });
+                allLinks.push({ name: "Course Info", uri: informationURL, absolute: true });
+                allLinks.push({ name: "Assignments", uri: assignmentURL, absolute: true });
+
+                allLinks.push({ name: "Settings" });
+                allLinks.push({
+                    name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",
+                });
+                coursesLinks.push({
+                    item: { name: course.course.code, uri: this.pagePath + "/courses/" + course.course.id },
+                    children: allLinks,
+                });
+            }
 
             const settings = [
                 { name: "Join course", uri: this.pagePath + "/enroll" },
@@ -253,9 +264,9 @@ export class StudentPage extends ViewPage {
             this.GroupUserCourses = [];
 
             for (const course of this.activeUserCourses) {
-                var group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
+                const group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
                 if (group != null) {
-                    var groupCourse = await this.courseMan.getGroupCourse(group, course.course);
+                    const groupCourse = await this.courseMan.getGroupCourse(group, course.course);
                     if (groupCourse) {
                         this.GroupUserCourses.push(groupCourse);
                     }

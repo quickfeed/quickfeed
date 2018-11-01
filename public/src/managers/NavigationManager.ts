@@ -19,6 +19,7 @@ export interface ILink {
     uri?: string;
     active?: boolean;
     extra?: string;
+    absolute?: boolean;
 }
 
 export interface ILinkCollection {

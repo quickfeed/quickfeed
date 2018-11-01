@@ -4,11 +4,20 @@ interface IDynamicTableProps<T> {
     header: string[];
     footer?: string[];
     data: T[];
-    selector: (item: T) => Array<string | JSX.Element>;
+    selector: (item: T) => Array<string | JSX.Element | ICellElement>;
     onRowClick?: (link: T) => void;
 }
 
-class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, {}> {
+export interface ICellElement{
+    value: string | JSX.Element;
+    className?: string;
+}
+
+function isICellElement(obj: any): obj is ICellElement{
+    return obj.value;
+}
+
+export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, {}> {
 
     public render() {
         const footer = this.props.footer;
@@ -30,12 +39,21 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, {}> {
         );
     }
 
-    private renderCells(values: Array<string | JSX.Element>, th: boolean = false): JSX.Element[] {
+    private renderCells(values: Array<string | JSX.Element | ICellElement>, th: boolean = false): JSX.Element[] {
         return values.map((v, i) => {
             if (th) {
-                return <th key={i}>{v}</th>;
+                if (isICellElement(v)){
+                    return <th key={i} className={v.className ? v.className : ""}>{v.value}</th>;
+                } else {
+                    return <th key={i}>{v}</th>;
+                }
+                
             }
-            return <td key={i}>{v}</td>;
+            if (isICellElement(v)){
+                return <td className={v.className ? v.className : ""} key={i}>{v.value}</td>;
+            } else {
+                return <td key={i}>{v}</td>;
+            }
         });
     }
 
@@ -54,5 +72,3 @@ class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, {}> {
         }
     }
 }
-
-export { DynamicTable };

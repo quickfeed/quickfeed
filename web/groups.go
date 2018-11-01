@@ -34,7 +34,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 
 		user := c.Get("user").(*models.User)
 		// TODO: This check should be performed in AccessControl.
-		if !user.IsAdmin {
+		if user.IsAdmin == nil || !*user.IsAdmin {
 			// Ony Admin i.e Teacher can update status of a group
 			return c.NoContent(http.StatusForbidden)
 		}
@@ -59,7 +59,9 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 				return err
 			}
 			// TODO, figure out which remote identity to be used!
-			userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+			if len(remoteIdentityUser.RemoteIdentities) > 0 {
+				userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
+			}
 		}
 
 		provider := c.Get(courseInfo.Provider)
@@ -90,6 +92,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
 			Directory: dir,
 			Path:      oldgrp.Name,
+			Private:   true,
 		})
 		if err != nil {
 			return err
@@ -99,6 +102,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		dbRepo := models.Repository{
 			DirectoryID:  courseInfo.DirectoryID,
 			RepositoryID: repo.ID,
+			HTMLURL:      repo.WebURL,
 			Type:         models.UserRepo,
 			UserID:       0,
 			GroupID:      oldgrp.ID,

@@ -309,7 +309,8 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 			TeamName:  c.String("team"),
 			Users:     users,
 		}
-		return (*client).CreateTeam(ctx, opt)
+		_, err := (*client).CreateTeam(ctx, opt)
+		return err
 	}
 }
 

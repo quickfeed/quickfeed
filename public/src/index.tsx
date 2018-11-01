@@ -223,6 +223,14 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             { name: "Your profile", uri: "/app/user" },
             { name: "Help", uri: "/app/help" },
             { name: "#separator" },
+            { name: "Sign out", uri: "app/login/logout" },
+        ];
+        const adminLinks: ILink[] = [
+            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.name : "") },
+            { name: "#separator" },
+            { name: "Your profile", uri: "/app/user" },
+            { name: "Help", uri: "/app/help" },
+            { name: "#separator" },
             { name: "Manage courses", uri: "app/admin/courses" },
             { name: "Manage users", uri: "app/admin/users" },
             { name: "#separator" },
@@ -251,6 +259,12 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 );
                 break;
         }
+        let currentLinks: ILink[] = [];
+        if (this.state.curUser && this.state.curUser.isadmin) {
+            currentLinks = adminLinks;
+        } else {
+            currentLinks = userLinks;
+        }
         return (
             <div>
                 <NavBar id="top-bar"
@@ -264,7 +278,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                     <NavBarLogin
                         user={this.state.curUser}
                         loginLinks={loginLink}
-                        userLinks={userLinks}
+                        userLinks={currentLinks}
                         onClick={(link) => this.handleClick(link)}>
                     </NavBarLogin>
                     <AddMenu

@@ -29,8 +29,7 @@ interface IDummyUser extends IUser {
  * to be able to simulate the backend for easier developtment
  */
 export class TempDataProvider implements IUserProvider, ICourseProvider {
-    
-    
+
     private localUsers: IMap<IDummyUser>;
     private localAssignments: IMap<IAssignment>;
     private localCourses: IMap<ICourse>;
@@ -158,7 +157,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 // TODO: See if we should have an error here or not
                 throw new Error("Link exist witout a user object");
             }
-            return { courseID: link.courseId, userID: link.userid, user, status: link.state };
+            return { courseid: link.courseId, userid: link.userid, user, status: link.state };
         });
     }
 
@@ -220,7 +219,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         for (const link of cLinks) {
             const c = tempCourses[link.courseId];
             if (c) {
-                courses.push({ course: c, courseID: link.courseId, userID: link.userid, status: link.state });
+                courses.push({ course: c, courseid: link.courseId, userid: link.userid, status: link.state });
             }
         }
         return courses;
@@ -272,6 +271,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         }
 
         return Promise.resolve(true);
+    }
+
+    public async getCourseInformationURL(cid: number): Promise<string> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async getRepositoryURL(cid: number, type: number): Promise<string> {
+        throw new Error("Method not implemented.");
     }
 
     private addLocalUsers() {

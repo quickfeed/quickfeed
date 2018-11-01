@@ -31,6 +31,7 @@ type Database interface {
 	RejectEnrollment(uid uint64, cid uint64) error
 	EnrollStudent(uid uint64, cid uint64) error
 	EnrollTeacher(uid uint64, cid uint64) error
+	SetPendingEnrollment(uid, cid uint64) error
 	GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*models.Enrollment, error)
 	GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.Enrollment, error)
 
@@ -56,4 +57,7 @@ type Database interface {
 	CreateRepository(repo *models.Repository) error
 	GetRepository(uint64) (*models.Repository, error)
 	GetRepositoriesByDirectory(uint64) ([]*models.Repository, error)
+	GetRepositoriesByCourseIDAndType(uint64, models.RepoType) ([]*models.Repository, error)
+	GetRepositoriesByCourseIDandUserID(uint64, uint64) (*models.Repository, error)
+	GetRepoByCourseIDUserIDandType(uint64, uint64, models.RepoType) (*models.Repository, error)
 }

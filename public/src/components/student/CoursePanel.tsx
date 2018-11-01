@@ -14,7 +14,8 @@ interface IPanelProps {
 class CoursePanel extends React.Component<IPanelProps, any> {
 
     public render() {
-        const pathPrefix: string = "app/student/courses/" + this.props.course.id + "/lab/";
+        const labPath: string = "app/student/courses/" + this.props.course.id + "/lab/";
+        const glabPath: string = "app/student/courses/" + this.props.course.id + "/grouplab/";
 
         return (
             <div className="col-lg-3 col-md-6 col-sm-6">
@@ -33,7 +34,9 @@ class CoursePanel extends React.Component<IPanelProps, any> {
                                     item.assignment.deadline.toDateString(),
                                 ];
                             }}
-                            onRowClick={(lab: IStudentSubmission) => this.handleRowClick(pathPrefix, lab.assignment)}
+                            onRowClick={(lab: IStudentSubmission) => {
+                                this.handleRowClick(!lab.assignment.isgrouplab ? labPath : glabPath, lab.assignment);
+                            }}
                         />
                     </div>
                 </div>
@@ -48,7 +51,7 @@ class CoursePanel extends React.Component<IPanelProps, any> {
     }
 
     private handleCourseClick() {
-        const uri: string = "app/student/course/" + this.props.course.id;
+        const uri: string = "app/student/courses/" + this.props.course.id;
         this.props.navMan.navigateTo(uri);
     }
 }
