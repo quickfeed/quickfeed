@@ -50,7 +50,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	if timeout < 0 {
 		timeout = 0
 	}
-	defer cli.ContainerStop(ctx, resp.ID, &timeout)
+	defer cli.ContainerKill(ctx, resp.ID, &timeout)
 
 	waitc, errc := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
