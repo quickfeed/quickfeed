@@ -2,6 +2,11 @@
 
 This guide details the specifics for go and github, but should be similar setup for gitlab.
 
+(Note to self: When running in the dev environment at UiS, you may wish to update the NGINX configuration on ag2. That is, the following file needs to be updated: `/etc/nginx/sites-available/default` with a new server entry etc.)
+
+(Another note to self: Merge this with the README.md documentation.)
+(And: make the process more streamlined; can we avoid the teacher authorization thing, or link to it so that we don't have to remember this...)
+
 1. Install a linux distro server edition (For this we choose ubuntu LTS)
 2. Install Golang (Recommended 1.10)
     1. Create folder go in $HOME
@@ -32,17 +37,17 @@ This guide details the specifics for go and github, but should be similar setup 
 
 5. Setting up the source control managment.
 
-    For Github see <a href="GithubSetup.MD"> Github Setup</a>
+    For GitHub see <a href="GithubSetup.MD"> GitHub Setup</a>
     
-    For Gitlab see <a href="GitlabSetup.MD"> Gitlab Setup</a>
+    For GitLab see <a href="GitlabSetup.MD"> GitLab Setup</a>
 
 
 6. Download and set up autograder dev environment
     1. Add environment variables in $HOME/.bashrc
     ```
-    export GITHUB_KEY = "key"
-    export GITHUB_SECRET = "secret"
-    export GOPATH = $HOME/go/
+    export GITHUB_KEY="key"
+    export GITHUB_SECRET="secret"
+    export GOPATH=$HOME/go/
     ```
     ``` 
     go get github.com/autograde/aguis
