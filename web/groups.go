@@ -65,12 +65,11 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		}
 
 		provider := c.Get(courseInfo.Provider)
-		var s scm.SCM
-		if provider != nil {
-			s = provider.(scm.SCM)
-		} else {
-			return nil // TODO decide how to handle empty provider.
+		if provider == nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "provider "+courseInfo.Provider+" not registered")
 		}
+		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
+		s := provider.(scm.SCM)
 
 		// TODO move this functionality down into SCM?
 		// Note: This Requires alot of calls to git.
