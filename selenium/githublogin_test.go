@@ -65,6 +65,7 @@ func TestGithubLogin(t *testing.T) {
 		geckoDriverPath = "./drivers/geckodriver"
 		port            = 8080
 	)
+
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),           // Start an X frame buffer for the browser to run in.
 		selenium.GeckoDriver(geckoDriverPath), // Specify the path to GeckoDriver in order to use Firefox.
