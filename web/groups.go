@@ -9,10 +9,11 @@ import (
 	"github.com/autograde/aguis/scm"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
+	"github.com/sirupsen/logrus"
 )
 
 // PatchGroup updates status of a group
-func PatchGroup(db database.Database) echo.HandlerFunc {
+func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("gid"))
 		if err != nil {
@@ -92,13 +93,26 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		repo, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-			Directory: dir,
-			Path:      oldgrp.Name,
-			Private:   true,
-		})
+		repos, err := s.GetRepositories(ctx, dir)
 		if err != nil {
 			return err
+		}
+		existing := make(map[string]*scm.Repository)
+		for _, repo := range repos {
+			existing[repo.Path] = repo
+		}
+		repo, created := existing[oldgrp.Name]
+		if !created {
+			repo, err = s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
+				Directory: dir,
+				Path:      oldgrp.Name,
+				Private:   true,
+			})
+			if err != nil {
+				logger.WithField("path", oldgrp.Name).WithError(err).Warn("Failed to create repository")
+				return err
+			}
+			logger.WithField("repo", repo).Println("Created new group repository")
 		}
 
 		// Add repo to DB
@@ -111,6 +125,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 			GroupID:      oldgrp.ID,
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
+			logger.WithField("url", repo.WebURL).WithField("gid", oldgrp.ID).WithError(err).Warn("Failed to create repository in database")
 			return err
 		}
 
@@ -118,6 +133,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 			ID:     oldgrp.ID,
 			Status: ngrp.Status,
 		}); err != nil {
+			logger.WithField("status", ngrp.Status).WithField("gid", oldgrp.ID).WithError(err).Warn("Failed to update group status in database")
 			return err
 		}
 
@@ -128,6 +144,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 			Users:     gitUserNames,
 		})
 		if err != nil {
+			logger.WithField("path", dir.Path).WithField("team", oldgrp.Name).WithField("users", gitUserNames).WithError(err).Warn("Failed to create git-team")
 			return err
 		}
 		// Adding Repo to git-team
@@ -136,6 +153,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 			Owner:  repo.Owner,
 			Repo:   repo.Path,
 		}); err != nil {
+			logger.WithField("repo", repo.Path).WithField("team", team.ID).WithField("owner", repo.Owner).WithError(err).Warn("Failed to add repo to git-team")
 			return err
 		}
 

@@ -237,7 +237,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	router := echo.NewRouter(e)
 
 	// Add the route to handler.
-	router.Add(http.MethodPatch, route, web.PatchGroup(db))
+	router.Add(http.MethodPatch, route, web.PatchGroup(nullLogger(), db))
 
 	// Send empty request, the user should not be modified.
 	emptyJSON, err := json.Marshal(&web.UpdateGroupRequest{})
