@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -158,7 +159,10 @@ func TestGetGroup(t *testing.T) {
 }
 
 func TestPatchGroupStatus(t *testing.T) {
-	const route = "/groups/:gid"
+	const (
+		route = "/groups/:gid"
+		fake  = "fake"
+	)
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -251,6 +255,14 @@ func TestPatchGroupStatus(t *testing.T) {
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
+	f := scm.NewFakeSCMClient()
+	if _, err := f.CreateDirectory(context.Background(), &scm.CreateDirectoryOptions{
+		Name: testCourse.Code,
+		Path: testCourse.Code,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	c.Set(fake, f)
 	// Prepare context with user request.
 	c.Set("user", &adminUser)
 	router.Find(http.MethodPatch, requestURL, c)
