@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/autograde/aguis/database"
@@ -71,12 +72,15 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		s := provider.(scm.SCM)
 
+		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
+		defer cancel()
+
 		// TODO move this functionality down into SCM?
 		// Note: This Requires alot of calls to git.
 		// Figure out all group members git-username
 		var gitUserNames []string
 		for _, identity := range userRemoteIdentity {
-			gitName, err := s.GetUserNameByID(c.Request().Context(), identity.RemoteID)
+			gitName, err := s.GetUserNameByID(ctx, identity.RemoteID)
 			if err != nil {
 				return err
 			}
@@ -84,11 +88,11 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		}
 
 		// Create and add repo to autograder group
-		dir, err := s.GetDirectory(c.Request().Context(), courseInfo.DirectoryID)
+		dir, err := s.GetDirectory(ctx, courseInfo.DirectoryID)
 		if err != nil {
 			return err
 		}
-		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
+		repo, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 			Directory: dir,
 			Path:      oldgrp.Name,
 			Private:   true,
@@ -118,7 +122,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 		}
 
 		// Create git-team
-		team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
+		team, err := s.CreateTeam(ctx, &scm.CreateTeamOptions{
 			Directory: &scm.Directory{Path: dir.Path},
 			TeamName:  oldgrp.Name,
 			Users:     gitUserNames,
@@ -127,7 +131,7 @@ func PatchGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 		// Adding Repo to git-team
-		if err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
+		if err = s.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
 			TeamID: team.ID,
 			Owner:  repo.Owner,
 			Repo:   repo.Path,
