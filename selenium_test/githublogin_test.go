@@ -61,8 +61,8 @@ func TestGithubLogin(t *testing.T) {
 		t.Skipf("Test must be skipped on travis")
 	}
 	const (
-		seleniumPath    = "../vendor/seleniumhq.org/selenium-server-standalone-3.13.0.jar"
-		geckoDriverPath = "../vendor/seleniumhq.org/geckodriver"
+		seleniumPath    = "./drivers/selenium-server-standalone-3.141.59.jar"
+		geckoDriverPath = "./drivers/geckodriver"
 		port            = 8080
 	)
 	opts := []selenium.ServiceOption{
