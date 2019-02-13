@@ -43,8 +43,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 
 		users := oldgrp.Users
 
-		var courseInfo *models.Course
-		courseInfo, err = db.GetCourse(oldgrp.CourseID)
+		course, err := db.GetCourse(oldgrp.CourseID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
@@ -66,7 +65,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			}
 		}
 
-		s, err := getSCM(c, courseInfo.Provider)
+		s, err := getSCM(c, course.Provider)
 		if err != nil {
 			return err
 		}
@@ -87,11 +86,11 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		}
 
 		// Create and add repo to autograder group
-		dir, err := s.GetDirectory(ctx, courseInfo.DirectoryID)
+		dir, err := s.GetDirectory(ctx, course.DirectoryID)
 		if err != nil {
 			return err
 		}
-		logger.WithField("course.DirID", courseInfo.DirectoryID).
+		logger.WithField("course.DirID", course.DirectoryID).
 			WithField("dir", dir.Path).
 			Println("GetDir")
 		repos, err := s.GetRepositories(ctx, dir)
@@ -123,7 +122,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 
 		// Add repo to DB
 		dbRepo := models.Repository{
-			DirectoryID:  courseInfo.DirectoryID,
+			DirectoryID:  course.DirectoryID,
 			RepositoryID: repo.ID,
 			HTMLURL:      repo.WebURL,
 			Type:         models.UserRepo,
