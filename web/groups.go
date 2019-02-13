@@ -66,12 +66,10 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			}
 		}
 
-		provider := c.Get(courseInfo.Provider)
-		if provider == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+courseInfo.Provider+" not registered")
+		s, err := getSCM(c, courseInfo.Provider)
+		if err != nil {
+			return err
 		}
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := provider.(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
