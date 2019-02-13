@@ -5,6 +5,8 @@ import "errors"
 // RepoType represents a type of repsitory
 type RepoType uint
 
+// TODO(meling) RepoType seems to be missing GroupRepo; decide if we need both.
+
 // Enum for
 const (
 	UserRepo RepoType = iota

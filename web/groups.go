@@ -93,12 +93,18 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		if err != nil {
 			return err
 		}
+		logger.WithField("course.DirID", courseInfo.DirectoryID).
+			WithField("dir", dir.Path).
+			Println("GetDir")
 		repos, err := s.GetRepositories(ctx, dir)
 		if err != nil {
 			return err
 		}
 		existing := make(map[string]*scm.Repository)
 		for _, repo := range repos {
+			logger.WithField("path", oldgrp.Name).
+				WithField("repoPath", repo.Path).
+				Println("Existing repo")
 			existing[repo.Path] = repo
 		}
 		repo, created := existing[oldgrp.Name]
@@ -110,6 +116,8 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			})
 			if err != nil {
 				logger.WithField("path", oldgrp.Name).WithError(err).Warn("Failed to create repository")
+				//TODO(meling) this does not seem to hold group repos for unknown reasons
+				repo = existing[oldgrp.Name]
 				return err
 			}
 			logger.WithField("repo", repo).Println("Created new group repository")
@@ -128,6 +136,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			logger.WithField("url", repo.WebURL).WithField("gid", oldgrp.ID).WithError(err).Warn("Failed to create repository in database")
 			return err
 		}
+		logger.WithField("repo", repo).Println("Created new group repository in database")
 
 		if err := db.UpdateGroupStatus(&models.Group{
 			ID:     oldgrp.ID,
