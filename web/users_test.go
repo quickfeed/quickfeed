@@ -167,13 +167,14 @@ var allUsers = []struct {
 	secret   string
 }{
 	{"github", 1, "123"},
-	{"github", 2, "456"},
-	{"gitlab", 3, "789"},
-	{"gitlab", 4, "012"},
-	{"bitlab", 5, "345"},
-	{"gitlab", 6, "678"},
-	{"gitlab", 7, "901"},
-	{"gitlab", 8, "234"},
+	{"github", 2, "123"},
+	{"github", 3, "456"},
+	{"gitlab", 4, "789"},
+	{"gitlab", 5, "012"},
+	{"bitlab", 6, "345"},
+	{"gitlab", 7, "678"},
+	{"gitlab", 8, "901"},
+	{"gitlab", 9, "234"},
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
@@ -184,33 +185,27 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	var users []*models.User
 	for _, u := range allUsers {
-		var user models.User
-		if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{
-			Provider:    u.provider,
-			RemoteID:    u.remoteID,
-			AccessToken: u.secret,
-		}); err != nil {
-			t.Fatal(err)
-		}
-		// Remote identities should not be loaded.
+		user := createFakeUser(t, db, u.remoteID)
+		// remote identities should not be loaded.
 		user.RemoteIdentities = nil
-		users = append(users, &user)
+		users = append(users, user)
 	}
-
+	admin := users[0]
 	for _, course := range allCourses {
-		err := db.CreateCourse(course)
+		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	// users to enroll in course DAT520 Distributed Systems
+	// (excluding admin because admin is enrolled on creation)
 	wantUsers := users[0 : len(allUsers)-3]
-
-	// users to enroll in course DAT320 Operating Systems
-	osUsers := users[3:7]
-
-	for _, user := range wantUsers {
+	for i, user := range wantUsers {
+		if i == 0 {
+			// skip enrolling admin as student
+			continue
+		}
 		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   user.ID,
 			CourseID: allCourses[0].ID,
@@ -222,6 +217,9 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
+	// users to enroll in course DAT320 Operating Systems
+	// (excluding admin because admin is enrolled on creation)
+	osUsers := users[3:7]
 	for _, user := range osUsers {
 		if err := db.CreateEnrollment(&models.Enrollment{
 			UserID:   user.ID,
@@ -237,16 +235,14 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	e := echo.New()
 	router := echo.NewRouter(e)
 
-	// Add the route to handler.
+	// add the route to handler
 	router.Add(http.MethodGet, route, web.GetEnrollmentsByCourse(db))
 	requestURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users"
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
-	// Prepare context with user request.
 	router.Find(http.MethodGet, requestURL, c)
-
-	// Invoke the prepared handler.
+	// invoke the prepared handler
 	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
@@ -257,12 +253,18 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 	var foundUsers []*models.User
 	for _, e := range foundEnrollments {
-		// Remote identities should not be loaded.
+		// remote identities should not be loaded.
 		e.User.RemoteIdentities = nil
 		foundUsers = append(foundUsers, e.User)
 	}
 
 	if !reflect.DeepEqual(foundUsers, wantUsers) {
+		for _, u := range foundUsers {
+			t.Logf("user %+v", u)
+		}
+		for _, u := range wantUsers {
+			t.Logf("want %+v", u)
+		}
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
 	}
 
@@ -389,125 +391,5 @@ func TestPatchUser(t *testing.T) {
 	}
 	if !reflect.DeepEqual(withName, wantUser) {
 		t.Errorf("have users %+v want %+v", withName, wantUser)
-	}
-}
-
-func TestGetGroupByUserAndCourse(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	// Prepare course
-	testCourse := models.Course{
-		Name:        "Distributed Systems",
-		Code:        "DAT520",
-		Year:        2018,
-		Tag:         "Spring",
-		Provider:    "fake",
-		DirectoryID: 1,
-		ID:          1,
-	}
-
-	err := db.CreateCourse(&testCourse)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Prepare users
-
-	var user models.User
-	user.ID = 1
-
-	var adminUser models.User
-	adminUser.ID = 2
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{ID: 1, UserID: 1},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.CreateUserFromRemoteIdentity(
-		&adminUser, &models.RemoteIdentity{ID: 2, UserID: 2},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	// Create Enrollments
-	userEnroll := &models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-		GroupID:  1,
-	}
-
-	adminEnroll := &models.Enrollment{
-		UserID:   adminUser.ID,
-		CourseID: testCourse.ID,
-		GroupID:  1,
-	}
-
-	if err := db.CreateEnrollment(userEnroll); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.CreateEnrollment(adminEnroll); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.EnrollStudent(userEnroll.ID, 1); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.EnrollStudent(adminEnroll.ID, 1); err != nil {
-		t.Fatal(err)
-	}
-
-	createGroup := &models.Group{
-		CourseID: testCourse.ID,
-		ID:       1,
-		Users:    []*models.User{&user, &adminUser},
-	}
-	err = db.CreateGroup(createGroup)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-	const findroute = "/users/:uid/courses/:cid/group"
-	router.Add(http.MethodGet, findroute, web.GetGroupByUserAndCourse(db))
-	// Add the route to handler.
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses/" + strconv.FormatUint(1, 10) + "/group"
-
-	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
-	w := httptest.NewRecorder()
-
-	c := e.NewContext(r, w)
-
-	// Prepare context with user request.
-	router.Find(http.MethodGet, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusFound)
-
-	var respGroup models.Group
-	if err := json.Unmarshal(w.Body.Bytes(), &respGroup); err != nil {
-		t.Fatal(err)
-	}
-
-	dbGroup, err := db.GetGroup(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// See models.Group, enrollment field is not transmitted over http
-	if len(respGroup.Enrollments) > 0 {
-		t.Error("Need to update test to check for Enrollments!")
-	}
-	respGroup.Enrollments = dbGroup.Enrollments
-
-	if !reflect.DeepEqual(&respGroup, dbGroup) {
-		t.Errorf("have response group %+v, while database has %+v", &respGroup, dbGroup)
 	}
 }

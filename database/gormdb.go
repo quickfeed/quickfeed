@@ -158,6 +158,9 @@ var (
 	// ErrCourseExists is returned when trying to create an association in
 	// the database for a DirectoryID that already exists in the database.
 	ErrCourseExists = errors.New("course already exists on git provider")
+	// ErrInsufficientAccess is returned when trying to update database
+	// with insufficient access priviledges.
+	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
 )
 
 // AssociateUserWithRemoteIdentity implements the Database interface.
@@ -186,18 +189,38 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 		FirstOrCreate(&remoteIdentity).Error
 }
 
-// CreateCourse implements the Database interface.
-func (db *GormDB) CreateCourse(course *models.Course) error {
+// CreateCourse creates the given course and enrolls
+// the given user (uid) as teacher for the course.
+func (db *GormDB) CreateCourse(uid uint64, course *models.Course) error {
+	user, err := db.GetUser(uid)
+	if err != nil {
+		return err
+	}
+	if user.IsAdmin == nil || !*user.IsAdmin {
+		return ErrInsufficientAccess
+	}
+
 	var courses uint64
-	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
-		DirectoryID: course.DirectoryID,
-	}).Count(&courses).Error; err != nil {
+	// check if course already exists in database
+	if err := db.conn.Model(&models.Course{}).
+		Where(&models.Course{DirectoryID: course.DirectoryID}).
+		Count(&courses).Error; err != nil {
 		return err
 	}
 	if courses > 0 {
 		return ErrCourseExists
 	}
-	return db.conn.Create(course).Error
+	//TODO(meling) these db updates should be done as a transaction
+	if err := db.conn.Create(course).Error; err != nil {
+		return err
+	}
+	if err := db.CreateEnrollment(&models.Enrollment{UserID: uid, CourseID: course.ID}); err != nil {
+		return err
+	}
+	if err := db.EnrollTeacher(uid, course.ID); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetCourses implements the Database interface.
