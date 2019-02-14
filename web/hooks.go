@@ -90,10 +90,10 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 	}
 }
 
-// RunCI Runs the ci from a RemoteIdentity
-func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string, 
+// RunCI runs the ci from a RemoteIdentity
+func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string,
 	commitHash string, remoteIdentity *models.RemoteIdentity, buildscripts string, courseCreator *models.RemoteIdentity) {
-	
+
 	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
 	if err != nil {
 		logger.WithError(err).Warn("Failed to get course from database")
@@ -227,7 +227,7 @@ func runCIFromTMPL(runner ci.Runner, language string, ciInfo models.AssignmentCI
 	restData, image := extractDockerImageInformation(lines)
 
 	if image == nil {
-		return nil, "", fmt.Errorf("Image not specefied in template file")
+		return nil, "", fmt.Errorf("image not specified in template file")
 	}
 
 	startTime := time.Now()

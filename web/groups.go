@@ -43,8 +43,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 
 		users := oldgrp.Users
 
-		var courseInfo *models.Course
-		courseInfo, err = db.GetCourse(oldgrp.CourseID)
+		course, err := db.GetCourse(oldgrp.CourseID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
@@ -66,12 +65,10 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			}
 		}
 
-		provider := c.Get(courseInfo.Provider)
-		if provider == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+courseInfo.Provider+" not registered")
+		s, err := getSCM(c, course.Provider)
+		if err != nil {
+			return err
 		}
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := provider.(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -89,14 +86,13 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		}
 
 		// Create and add repo to autograder group
-		dir, err := s.GetDirectory(ctx, courseInfo.DirectoryID)
+		dir, err := s.GetDirectory(ctx, course.DirectoryID)
 		if err != nil {
 			return err
 		}
-		logger.WithField("course.DirID", courseInfo.DirectoryID).
+		logger.WithField("course.DirID", course.DirectoryID).
 			WithField("dir", dir.Path).
 			Println("GetDir")
-
 		repos, err := s.GetRepositories(ctx, dir)
 		if err != nil {
 			return err
@@ -117,6 +113,8 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			})
 			if err != nil {
 				logger.WithField("path", oldgrp.Name).WithError(err).Warn("Failed to create repository")
+				//TODO(meling) this does not seem to hold group repos for unknown reasons
+				repo = existing[oldgrp.Name]
 				return err
 			}
 			logger.WithField("repo", repo).Println("Created new group repository")
@@ -124,7 +122,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 
 		// Add repo to DB
 		dbRepo := models.Repository{
-			DirectoryID:  courseInfo.DirectoryID,
+			DirectoryID:  course.DirectoryID,
 			RepositoryID: repo.ID,
 			HTMLURL:      repo.WebURL,
 			Type:         models.UserRepo,
@@ -135,6 +133,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			logger.WithField("url", repo.WebURL).WithField("gid", oldgrp.ID).WithError(err).Warn("Failed to create repository in database")
 			return err
 		}
+		logger.WithField("repo", repo).Println("Created new group repository in database")
 
 		if err := db.UpdateGroupStatus(&models.Group{
 			ID:     oldgrp.ID,

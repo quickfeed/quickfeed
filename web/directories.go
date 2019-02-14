@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/autograde/aguis/scm"
 	"github.com/labstack/echo"
 )
 
@@ -30,11 +29,10 @@ func ListDirectories() echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		if c.Get(dr.Provider) == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+dr.Provider+" not registered")
+		s, err := getSCM(c, dr.Provider)
+		if err != nil {
+			return err
 		}
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := c.Get(dr.Provider).(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()

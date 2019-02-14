@@ -140,13 +140,10 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		if !cr.valid() {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
-
-		provider := c.Get(cr.Provider)
-		if provider == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
+		s, err := getSCM(c, cr.Provider)
+		if err != nil {
+			return err
 		}
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := provider.(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -364,13 +361,10 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			if err != nil {
 				return err
 			}
-
-			provider := c.Get(course.Provider)
-			if provider == nil {
-				return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
+			s, err := getSCM(c, course.Provider)
+			if err != nil {
+				return err
 			}
-			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-			s := provider.(scm.SCM)
 
 			dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
 			if err != nil {
@@ -476,13 +470,10 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 		if err != nil {
 			return err
 		}
-
-		provider := c.Get(course.Provider)
-		if provider == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
+		s, err := getSCM(c, course.Provider)
+		if err != nil {
+			return err
 		}
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := provider.(scm.SCM)
 
 		user := c.Get("user").(*models.User)
 
@@ -691,12 +682,10 @@ func UpdateCourse(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		provider := c.Get(cr.Provider)
-		if provider == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+cr.Provider+" not registered")
+		s, err := getSCM(c, cr.Provider)
+		if err != nil {
+			return err
 		}
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := provider.(scm.SCM)
 
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
@@ -922,12 +911,10 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		provider := c.Get(course.Provider)
-		if provider == nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "provider "+course.Provider+" not registered")
+		s, err := getSCM(c, course.Provider)
+		if err != nil {
+			return err
 		}
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		s := provider.(scm.SCM)
 
 		var userRemoteIdentity []*models.RemoteIdentity
 		// TODO move this into the for loop above, modify db.GetUsers() to also retreive RemoteIdentity
