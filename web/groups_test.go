@@ -18,13 +18,11 @@ import (
 )
 
 func TestDeleteGroup(t *testing.T) {
-	const (
-		route = "/groups/:gid"
-	)
+	const route = "/groups/:gid"
+
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// Create course.
 	testCourse := models.Course{
 		Name:        "Distributed Systems",
 		Code:        "DAT520",
@@ -33,30 +31,20 @@ func TestDeleteGroup(t *testing.T) {
 		Provider:    "fake",
 		DirectoryID: 1,
 	}
-	if err := db.CreateCourse(&testCourse); err != nil {
+	admin := createFakeUser(t, db, 1)
+	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create user.
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	// Create enrollment.
-	if err := db.CreateEnrollment(&models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-	}); err != nil {
+	// create user and enroll as student
+	user := createFakeUser(t, db, 2)
+	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.EnrollStudent(user.ID, testCourse.ID); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create group.
 	group := models.Group{CourseID: testCourse.ID}
 	if err := db.CreateGroup(&group); err != nil {
 		t.Fatal(err)
@@ -81,17 +69,14 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	assertCode(t, w.Code, http.StatusOK)
-
 }
 
 func TestGetGroup(t *testing.T) {
-	const (
-		route = "/groups/:gid"
-	)
+	const route = "/groups/:gid"
+
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// Create course.
 	testCourse := models.Course{
 		Name:        "Distributed Systems",
 		Code:        "DAT520",
@@ -100,30 +85,20 @@ func TestGetGroup(t *testing.T) {
 		Provider:    "fake",
 		DirectoryID: 1,
 	}
-	if err := db.CreateCourse(&testCourse); err != nil {
+	admin := createFakeUser(t, db, 1)
+	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create user.
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	// Create enrollment.
-	if err := db.CreateEnrollment(&models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-	}); err != nil {
+	// create user and enroll as student
+	user := createFakeUser(t, db, 2)
+	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.EnrollStudent(user.ID, testCourse.ID); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create group.
 	group := models.Group{CourseID: testCourse.ID}
 	if err := db.CreateGroup(&group); err != nil {
 		t.Fatal(err)
@@ -159,15 +134,12 @@ func TestGetGroup(t *testing.T) {
 }
 
 func TestPatchGroupStatus(t *testing.T) {
-	const (
-		route = "/groups/:gid"
-		fake  = "fake"
-	)
+	const route = "/groups/:gid"
+
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// Prepare course
-	testCourse := models.Course{
+	course := models.Course{
 		Name:        "Distributed Systems",
 		Code:        "DAT520",
 		Year:        2018,
@@ -177,62 +149,42 @@ func TestPatchGroupStatus(t *testing.T) {
 		ID:          1,
 	}
 
-	err := db.CreateCourse(&testCourse)
+	admin := createFakeUser(t, db, 1)
+	err := db.CreateCourse(admin.ID, &course)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var adminUser models.User
-	adminUser.ID = 1
-	adminRemote := &models.RemoteIdentity{ID: 1, UserID: 1, Provider: "fake", AccessToken: "", RemoteID: 2}
+	user1 := createFakeUser(t, db, 2)
+	user2 := createFakeUser(t, db, 3)
 
-	var user models.User
-	user.ID = 2
-	userRemote := &models.RemoteIdentity{ID: 2, UserID: 2, Provider: "fake", AccessToken: "", RemoteID: 2}
-
-	if err := db.CreateUserFromRemoteIdentity(
-		&adminUser, adminRemote,
-	); err != nil {
+	// enroll users in course and group
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID: user1.ID, CourseID: course.ID, GroupID: 1}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, userRemote,
-	); err != nil {
+	if err := db.EnrollStudent(user1.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
-
-	// Create Enrollments
-	userEnroll := &models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourse.ID,
-		GroupID:  1,
-	}
-
-	adminEnroll := &models.Enrollment{
-		UserID:   adminUser.ID,
-		CourseID: testCourse.ID,
-		GroupID:  1,
-	}
-
-	if err := db.CreateEnrollment(userEnroll); err != nil {
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID: user2.ID, CourseID: course.ID, GroupID: 1}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(adminEnroll); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollStudent(userEnroll.ID, 1); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollStudent(adminEnroll.ID, 1); err != nil {
+	if err := db.EnrollStudent(user2.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
 
-	createGroup := &models.Group{
-		CourseID: testCourse.ID,
+	group := &models.Group{
 		ID:       1,
-		Users:    []*models.User{&user, &adminUser},
+		CourseID: course.ID,
+		Users:    []*models.User{user1, user2},
 	}
-	err = db.CreateGroup(createGroup)
+	err = db.CreateGroup(group)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// get the group as stored in db with enrollments
+	prePatchGroup, err := db.GetGroup(group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,43 +192,50 @@ func TestPatchGroupStatus(t *testing.T) {
 	e := echo.New()
 	router := echo.NewRouter(e)
 
-	// Add the route to handler.
+	// add the route to handler.
 	router.Add(http.MethodPatch, route, web.PatchGroup(nullLogger(), db))
 
-	// Send empty request, the user should not be modified.
+	// send empty request, the user should not be modified.
 	emptyJSON, err := json.Marshal(&web.UpdateGroupRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	requestBody := bytes.NewReader(emptyJSON)
 
-	requestURL := "/groups/" + strconv.FormatUint(createGroup.ID, 10)
+	requestURL := "/groups/" + strconv.FormatUint(group.ID, 10)
 	r := httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	f := scm.NewFakeSCMClient()
 	if _, err := f.CreateDirectory(context.Background(), &scm.CreateDirectoryOptions{
-		Name: testCourse.Code,
-		Path: testCourse.Code,
+		Name: course.Code,
+		Path: course.Code,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	c.Set(fake, f)
-	// Prepare context with user request.
-	c.Set("user", &adminUser)
+	c.Set("fake", f)
+	// set admin as the user for this context
+	c.Set("user", admin)
 	router.Find(http.MethodPatch, requestURL, c)
 
-	// Invoke the prepared handler.
+	// invoke the prepared handler
 	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
 	assertCode(t, w.Code, http.StatusOK)
 
-	// Send request with name changed, the group name should change.
-	trueJSON, err := json.Marshal(&web.UpdateGroupRequest{
-		Status: 3,
-	})
+	// check that the group didn't change
+	haveGroup, err := db.GetGroup(group.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(prePatchGroup, haveGroup) {
+		t.Errorf("have group %+v want %+v", haveGroup, prePatchGroup)
+	}
+
+	// send request for status change of the group
+	trueJSON, err := json.Marshal(&web.UpdateGroupRequest{Status: 3})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -286,8 +245,8 @@ func TestPatchGroupStatus(t *testing.T) {
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
-	// Prepare context with user request.
-	c.Set("user", &adminUser)
+	// set admin as the user for this context
+	c.Set("user", admin)
 	fakeProvider, err := scm.NewSCMClient("fake", "token")
 	if err != nil {
 		t.Fatal(err)
@@ -296,27 +255,105 @@ func TestPatchGroupStatus(t *testing.T) {
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
 	)
 	c.Set("fake", fakeProvider)
-
 	router.Find(http.MethodPatch, requestURL, c)
 
-	// Invoke the prepared handler.
+	// invoke the prepared handler
 	if err := c.Handler()(c); err != nil {
 		t.Error(err)
 	}
 	assertCode(t, w.Code, http.StatusOK)
 
-	haveGroup, err := db.GetGroup(createGroup.ID)
+	// check that the group have changed status
+	haveGroup, err = db.GetGroup(group.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantGroup := prePatchGroup
+	wantGroup.Status = 3
+	if !reflect.DeepEqual(wantGroup, haveGroup) {
+		t.Errorf("have group %+v want %+v", haveGroup, wantGroup)
+	}
+}
+
+func TestGetGroupByUserAndCourse(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	course := models.Course{
+		Name:        "Distributed Systems",
+		Code:        "DAT520",
+		Year:        2018,
+		Tag:         "Spring",
+		Provider:    "fake",
+		DirectoryID: 1,
+		ID:          1,
+	}
+
+	admin := createFakeUser(t, db, 1)
+	err := db.CreateCourse(admin.ID, &course)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	wantGroup := &models.Group{
-		ID:     1,
-		Status: 3,
-		Users:  []*models.User{&user, &adminUser},
+	user1 := createFakeUser(t, db, 2)
+	user2 := createFakeUser(t, db, 3)
+
+	// enroll users in course and group
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID: user1.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(user1.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&models.Enrollment{
+		UserID: user2.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(user2.ID, course.ID); err != nil {
+		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(wantGroup.Status, haveGroup.Status) {
-		t.Errorf("have group %+v want %+v", haveGroup.Status, wantGroup.Status)
+	group := &models.Group{
+		ID:       1,
+		CourseID: course.ID,
+		Users:    []*models.User{user1, user2},
+	}
+	err = db.CreateGroup(group)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	e := echo.New()
+	router := echo.NewRouter(e)
+	const route = "/users/:uid/courses/:cid/group"
+	router.Add(http.MethodGet, route, web.GetGroupByUserAndCourse(db))
+	// add the route to handler
+	requestURL := "/users/" + strconv.FormatUint(user1.ID, 10) + "/courses/" + strconv.FormatUint(course.ID, 10) + "/group"
+	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
+	w := httptest.NewRecorder()
+	c := e.NewContext(r, w)
+	router.Find(http.MethodGet, requestURL, c)
+	// invoke the prepared handler
+	if err := c.Handler()(c); err != nil {
+		t.Error(err)
+	}
+	assertCode(t, w.Code, http.StatusFound)
+
+	var respGroup models.Group
+	if err := json.Unmarshal(w.Body.Bytes(), &respGroup); err != nil {
+		t.Fatal(err)
+	}
+
+	dbGroup, err := db.GetGroup(group.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// see models.Group; enrollment field is not transmitted over http
+	// we simply ignore enrollments
+	dbGroup.Enrollments = nil
+
+	if !reflect.DeepEqual(&respGroup, dbGroup) {
+		t.Errorf("have response group %+v, while database has %+v", &respGroup, dbGroup)
 	}
 }

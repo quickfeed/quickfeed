@@ -24,15 +24,15 @@ func TestGetNextAssignment(t *testing.T) {
 		Provider:    "fake",
 		DirectoryID: 1,
 	}
-	if err := db.CreateCourse(&course); err != nil {
+
+	// Create course as teacher
+	teacher := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create and enroll user
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{}); err != nil {
-		t.Fatal(err)
-	}
+	// Create and enroll user as student
+	user := createFakeUser(t, db, 11)
 	if err := db.CreateEnrollment(&models.Enrollment{CourseID: course.ID, UserID: user.ID}); err != nil {
 		t.Fatal(err)
 	}

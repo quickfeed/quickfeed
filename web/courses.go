@@ -238,8 +238,6 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		}
 
 		user := c.Get("user").(*models.User)
-
-		// TODO CreateCourse and CreateEnrollment should be combined into a method with transactions.
 		course := models.Course{
 			Name:            cr.Name,
 			CourseCreatorID: user.ID,
@@ -249,29 +247,15 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			Provider:        cr.Provider,
 			DirectoryID:     directory.ID,
 		}
-		if err := db.CreateCourse(&course); err != nil {
+		if err := db.CreateCourse(user.ID, &course); err != nil {
+			//TODO(meling) Should we even communicate bad request to the client?
+			// We should log errors and debug it on the server side instead.
+			// If clients make mistakes, there is nothing it can do with the error message.
 			if err == database.ErrCourseExists {
 				return c.JSONPretty(http.StatusBadRequest, err.Error(), "\t")
 			}
 			return err
 		}
-
-		// Automatically enroll the teacher creating the course
-		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-
-		if err := db.CreateEnrollment(&models.Enrollment{
-			UserID:   user.ID,
-			CourseID: course.ID,
-		}); err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return c.NoContent(http.StatusNotFound)
-			}
-			return err
-		}
-		if err := db.EnrollTeacher(user.ID, course.ID); err != nil {
-			return err
-		}
-
 		return c.JSONPretty(http.StatusCreated, &course, "\t")
 	}
 }
@@ -829,8 +813,8 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// TODO: Remove this function? similar exists in web/groups.go
 // UpdateGroup update a group
+// TODO: Remove this function? similar exists in web/groups.go
 func UpdateGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
@@ -1051,7 +1035,7 @@ func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// GetCourseInformationURL Returns the course information html as string
+// GetCourseInformationURL returns the course information html as string
 func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
@@ -1075,7 +1059,7 @@ func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// GetCourseInformationURL Returns the course information html as string
+// GetRepositoryURL returns the course information html as string
 func GetRepositoryURL(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))

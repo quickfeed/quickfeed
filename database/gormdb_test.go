@@ -132,18 +132,19 @@ func TestGormDBGetCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	user := createFakeUser(t, db, 10)
 	c1 := models.Course{DirectoryID: 1}
-	if err := db.CreateCourse(&c1); err != nil {
+	if err := db.CreateCourse(user.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
 
 	c2 := models.Course{DirectoryID: 2}
-	if err := db.CreateCourse(&c2); err != nil {
+	if err := db.CreateCourse(user.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
 
 	c3 := models.Course{DirectoryID: 3}
-	if err := db.CreateCourse(&c3); err != nil {
+	if err := db.CreateCourse(user.ID, &c3); err != nil {
 		t.Fatal(err)
 	}
 
@@ -212,7 +213,8 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if err := db.CreateCourse(&models.Course{}); err != nil {
+	user := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(user.ID, &models.Course{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -260,18 +262,13 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	teacher := createFakeUser(t, db, 1)
 	var course models.Course
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
+	user := createFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -291,18 +288,13 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	teacher := createFakeUser(t, db, 1)
 	var course models.Course
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
+	user := createFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -355,33 +347,28 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	teacher := createFakeUser(t, db, 1)
 	c1 := models.Course{DirectoryID: 1}
-	if err := db.CreateCourse(&c1); err != nil {
+	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
 
 	c2 := models.Course{DirectoryID: 2}
-	if err := db.CreateCourse(&c2); err != nil {
+	if err := db.CreateCourse(teacher.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
 
 	c3 := models.Course{DirectoryID: 3}
-	if err := db.CreateCourse(&c3); err != nil {
+	if err := db.CreateCourse(teacher.ID, &c3); err != nil {
 		t.Fatal(err)
 	}
 
 	c4 := models.Course{DirectoryID: 4}
-	if err := db.CreateCourse(&c4); err != nil {
+	if err := db.CreateCourse(teacher.ID, &c4); err != nil {
 		t.Fatal(err)
 	}
 
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
+	user := createFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: c1.ID,
@@ -650,12 +637,28 @@ func TestGormDBCreateCourse(t *testing.T) {
 		DirectoryID: 1,
 	}
 
-	if err := db.CreateCourse(&course); err != nil {
+	user := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(user.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
 	if course.ID == 0 {
 		t.Error("expected id to be set")
+	}
+}
+
+func TestGormDBCreateCourseNonAdmin(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	admin := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(admin.ID, &models.Course{}); err != nil {
+		t.Fatal(err)
+	}
+	nonAdmin := createFakeUser(t, db, 11)
+	// the following should fail to create a course
+	if err := db.CreateCourse(nonAdmin.ID, &models.Course{}); err == nil {
+		t.Fatal(err)
 	}
 }
 
@@ -672,8 +675,8 @@ func TestGormDBGetCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	err := db.CreateCourse(course)
-	if err != nil {
+	user := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(user.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
@@ -702,8 +705,8 @@ func TestGormDBGetCourseByDirectory(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	err := db.CreateCourse(course)
-	if err != nil {
+	user := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(user.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
@@ -752,14 +755,13 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	err := db.CreateCourse(course)
-	if err != nil {
+	user := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(user.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
 	updates.ID = course.ID
-	err = db.UpdateCourse(updates)
-	if err != nil {
+	if err := db.UpdateCourse(updates); err != nil {
 		t.Fatal(err)
 	}
 
@@ -813,9 +815,10 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create the course and assignment.
+	teacher := createFakeUser(t, db, 10)
+	// create a course and an assignment
 	var course models.Course
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 	assigment := models.Assignment{
@@ -826,21 +829,16 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// create a submission for the assignment; should fail
 	if err := db.CreateSubmission(&models.Submission{
 		AssignmentID: assigment.ID,
-		UserID:       1,
+		UserID:       2,
 	}); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
 	}
 
-	// Create the user and enroll him
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
+	// create user and enroll as student
+	user := createFakeUser(t, db, 11)
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: course.ID,
@@ -851,7 +849,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Now we should succeed.
+	// create another submission for the assignment; now it should succeed
 	if err := db.CreateSubmission(&models.Submission{
 		AssignmentID: assigment.ID,
 		UserID:       user.ID,
@@ -859,7 +857,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Check that the submission is in the database
+	// confirm that the submission is in the database
 	submissions, err := db.GetSubmissions(course.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -875,32 +873,27 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
 	}
-
 }
 
 func TestGormDBGetInsertSubmissions(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	teacher := createFakeUser(t, db, 10)
 	// Create course c1 and c2
 	c1 := models.Course{DirectoryID: 1}
-	if err := db.CreateCourse(&c1); err != nil {
+	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
 	c2 := models.Course{DirectoryID: 2}
-	if err := db.CreateCourse(&c2); err != nil {
+	if err := db.CreateCourse(teacher.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create the user
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
+	// create user and enroll as student
+	user := createFakeUser(t, db, 11)
 
-	// Enroll the user to the course
+	// enroll student in course c1
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: c1.ID,
@@ -1121,26 +1114,21 @@ var createGroupTests = []struct {
 func TestGormDBCreateAndGetGroup(t *testing.T) {
 	for _, test := range createGroupTests {
 		t.Run(test.name, func(t *testing.T) {
-			// Setup.
 			db, cleanup := setup(t)
 
+			teacher := createFakeUser(t, db, 10)
 			var course models.Course
-			if err := db.CreateCourse(&course); err != nil {
+			if err := db.CreateCourse(teacher.ID, &course); err != nil {
 				t.Fatal(err)
 			}
 			var uids []uint64
-			// Create as many users as the desired number of enrollments.
+			// create as many users as the desired number of enrollments
 			for i := 0; i < len(test.enrollments); i++ {
-				var user models.User
-				if err := db.CreateUserFromRemoteIdentity(
-					&user,
-					&models.RemoteIdentity{RemoteID: uint64(i)},
-				); err != nil {
-					t.Fatal(err)
-				}
+				user := createFakeUser(t, db, uint64(i))
 				uids = append(uids, user.ID)
 			}
-			// Enroll users in course.
+			// enroll users in course
+			//TODO(meling) this loop and the one above can be merged, I think
 			for i := 0; i < len(uids); i++ {
 				if test.enrollments[i] == models.Pending {
 					continue
@@ -1213,23 +1201,19 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	teacher := createFakeUser(t, db, 10)
 	var course models.Course
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 	var users []*models.User
 	enrollments := []uint{models.Student, models.Student}
+	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
-		var user models.User
-		if err := db.CreateUserFromRemoteIdentity(
-			&user,
-			&models.RemoteIdentity{RemoteID: uint64(i)},
-		); err != nil {
-			t.Fatal(err)
-		}
-		users = append(users, &user)
+		user := createFakeUser(t, db, uint64(i))
+		users = append(users, user)
 	}
-	// Enroll users in course.
+	// enroll users in course
 	for i := 0; i < len(users); i++ {
 		if enrollments[i] == models.Pending {
 			continue
@@ -1273,13 +1257,14 @@ func TestGormDBGetEmptyRepo(t *testing.T) {
 	}
 }
 
-func createUser(db database.Database, provider, accesstoken string, remoteid uint64, t *testing.T) *models.User {
+// createFakeUser is a test helper to create a user in the database
+// with the given remote id and the fake scm provider.
+func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *models.User {
 	var user models.User
 	err := db.CreateUserFromRemoteIdentity(&user,
 		&models.RemoteIdentity{
-			Provider:    provider,
-			RemoteID:    remoteid,
-			AccessToken: accesstoken,
+			Provider: "fake",
+			RemoteID: remoteID,
 		})
 	if err != nil {
 		t.Fatal(err)
@@ -1291,14 +1276,7 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	const (
-		provider    = "fake"
-		accesstoken = "10"
-		remoteid    = 10
-	)
-
-	user := createUser(db, provider, accesstoken, remoteid, t)
-
+	user := createFakeUser(t, db, 10)
 	repo := models.Repository{
 		DirectoryID: 120,
 		// Name:         "Name",
@@ -1318,12 +1296,6 @@ func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	const (
-		provider    = "fake"
-		accesstoken = "10"
-		remoteid    = 10
-	)
-
 	repo := models.Repository{
 		DirectoryID: 120,
 		// Name:         "Name",
@@ -1338,12 +1310,6 @@ func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
 func TestGormDBGetSingleRepoWithoutUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-
-	const (
-		provider    = "fake"
-		accesstoken = "10"
-		remoteid    = 10
-	)
 
 	repo := models.Repository{
 		DirectoryID: 120,
@@ -1373,28 +1339,24 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	teacher := createFakeUser(t, db, 10)
 	course := models.Course{DirectoryID: 1}
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 	courseTwo := models.Course{DirectoryID: 2}
-	if err := db.CreateCourse(&courseTwo); err != nil {
+	if err := db.CreateCourse(teacher.ID, &courseTwo); err != nil {
 		t.Fatal(err)
 	}
 
 	var users []*models.User
 	enrollments := []uint{models.Student, models.Student}
+	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
-		var user models.User
-		if err := db.CreateUserFromRemoteIdentity(
-			&user,
-			&models.RemoteIdentity{RemoteID: uint64(i)},
-		); err != nil {
-			t.Fatal(err)
-		}
-		users = append(users, &user)
+		user := createFakeUser(t, db, uint64(i))
+		users = append(users, user)
 	}
-	// Enroll users in course.
+	// enroll users in course
 	for i := 0; i < len(users); i++ {
 		if enrollments[i] == models.Pending {
 			continue
@@ -1522,18 +1484,12 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 		DirectoryID: 1234,
 	}
 
-	err := db.CreateCourse(course)
-	if err != nil {
+	teacher := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
-	const (
-		provider    = "fake"
-		accesstoken = "10"
-		remoteid    = 10
-	)
-
-	user := createUser(db, provider, accesstoken, remoteid, t)
+	user := createFakeUser(t, db, 11)
 
 	// Creating Course info repo
 	repoCourseInfo := models.Repository{
@@ -1597,23 +1553,19 @@ func TestDeleteGroup(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	teacher := createFakeUser(t, db, 10)
 	var course models.Course
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 	var users []*models.User
 	enrollments := []uint{models.Student, models.Student}
+	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
-		var user models.User
-		if err := db.CreateUserFromRemoteIdentity(
-			&user,
-			&models.RemoteIdentity{RemoteID: uint64(i)},
-		); err != nil {
-			t.Fatal(err)
-		}
-		users = append(users, &user)
+		user := createFakeUser(t, db, uint64(i))
+		users = append(users, user)
 	}
-	// Enroll users in course.
+	// enroll users in course
 	for i := 0; i < len(users); i++ {
 		if enrollments[i] == models.Pending {
 			continue
@@ -1669,18 +1621,12 @@ func TestGetRepositoriesByCourseIDAndType(t *testing.T) {
 		ID:          1,
 	}
 
-	err := db.CreateCourse(course)
-	if err != nil {
+	teacher := createFakeUser(t, db, 10)
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
-	const (
-		provider    = "fake"
-		accesstoken = "10"
-		remoteid    = 10
-	)
-
-	user := createUser(db, provider, accesstoken, remoteid, t)
+	user := createFakeUser(t, db, 11)
 
 	// Creating Course info repo
 	repoCourseInfo := models.Repository{
@@ -1754,19 +1700,13 @@ func TestGetRepoByCourseIDUserIDandType(t *testing.T) {
 		DirectoryID: 120,
 	}
 
-	err := db.CreateCourse(course)
-	if err != nil {
+	teacher := createFakeUser(t, db, 1)
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
-	const (
-		provider    = "fake"
-		accesstoken = "10"
-		remoteid    = 10
-	)
-
-	user := createUser(db, provider, accesstoken, remoteid, t)
-	userTwo := createUser(db, provider, accesstoken+"1", remoteid+1, t)
+	user := createFakeUser(t, db, 10)
+	userTwo := createFakeUser(t, db, 11)
 
 	// Creating Course info repo
 	repoCourseInfo := models.Repository{
@@ -1860,19 +1800,13 @@ func TestGetRepositoriesByCourseIDandUserID(t *testing.T) {
 		DirectoryID: 120,
 	}
 
-	err := db.CreateCourse(course)
-	if err != nil {
+	teacher := createFakeUser(t, db, 1)
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
-	const (
-		provider    = "fake"
-		accesstoken = "10"
-		remoteid    = 10
-	)
-
-	user := createUser(db, provider, accesstoken, remoteid, t)
-	userTwo := createUser(db, provider, accesstoken+"1", remoteid+1, t)
+	user := createFakeUser(t, db, 10)
+	userTwo := createFakeUser(t, db, 11)
 
 	// Creating Course info repo
 	repoCourseInfo := models.Repository{
