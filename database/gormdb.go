@@ -247,7 +247,10 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*models
 		case !v.IsGroupLab && uid > 0:
 			sub, err = db.GetSubmissionForUser(v.ID, uid)
 		default:
-			return nil, gorm.ErrRecordNotFound
+			// This is when uid or gid is set to 0, but there is a group or user lab
+			// TODO: Fix so uid always is included and gid is optional
+			sub = &models.Submission{Approved: true}
+			// return nil, gorm.ErrRecordNotFound
 		}
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, err
