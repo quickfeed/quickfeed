@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
@@ -57,16 +58,32 @@ var allCourses = []*models.Course{
 	},
 }
 
+// createFakeUser is a test helper to create a user in the database
+// with the given remote id and the fake scm provider.
+func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *models.User {
+	var user models.User
+	err := db.CreateUserFromRemoteIdentity(&user,
+		&models.RemoteIdentity{
+			Provider: "fake",
+			RemoteID: remoteID,
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &user
+}
+
 func TestListCourses(t *testing.T) {
 	const route = "/courses"
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	user := createFakeUser(t, db, 1)
 	var testCourses []*models.Course
 	for _, course := range allCourses {
 		testCourse := *course
-		err := db.CreateCourse(&testCourse)
+		err := db.CreateCourse(user.ID, &testCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -106,14 +123,7 @@ func TestNewCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{
-			Provider: fake,
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
+	user := createFakeUser(t, db, 1)
 
 	testCourse := *allCourses[0]
 
@@ -188,35 +198,15 @@ func TestNewCourse(t *testing.T) {
 func TestEnrollmentProcess(t *testing.T) {
 	const (
 		route = "/courses/:cid/users/:uid"
-
-		github = "github"
-		gitlab = "gitlab"
 	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// Create course.
+	admin := createFakeUser(t, db, 1)
+	user := createFakeUser(t, db, 2)
 	testCourse := *allCourses[0]
-	if err := db.CreateCourse(&testCourse); err != nil {
-		t.Fatal(err)
-	}
-	// Create admin.
-	var admin models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&admin, &models.RemoteIdentity{
-			Provider: github,
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
-	// Create user.
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{
-			Provider: gitlab,
-		},
-	); err != nil {
+	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
 		t.Fatal(err)
 	}
 
@@ -238,7 +228,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	c.Set(auth.UserKey, &user)
+	c.Set(auth.UserKey, user)
 	router.Find(http.MethodPut, requestURL, c)
 
 	// Invoke the prepared handler. This will attempt to create an
@@ -284,7 +274,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
 	// Prepare context with user request.
-	c.Set(auth.UserKey, &user)
+	c.Set(auth.UserKey, user)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler. This will attempt to accept the
@@ -298,7 +288,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	requestBody.Reset(b)
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
-	c.Set(auth.UserKey, &admin)
+	c.Set(auth.UserKey, admin)
 	fakeProvider, err := scm.NewSCMClient("fake", "token")
 	if err != nil {
 		t.Fatal(err)
@@ -334,23 +324,18 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	admin := createFakeUser(t, db, 1)
 	var testCourses []*models.Course
 	for _, course := range allCourses {
 		testCourse := *course
-		err := db.CreateCourse(&testCourse)
+		err := db.CreateCourse(admin.ID, &testCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
 		testCourses = append(testCourses, &testCourse)
 	}
 
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
+	user := createFakeUser(t, db, 2)
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
 		CourseID: testCourses[0].ID,
@@ -425,22 +410,18 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	admin := createFakeUser(t, db, 1)
 	var testCourses []*models.Course
 	for _, course := range allCourses {
 		testCourse := *course
-		err := db.CreateCourse(&testCourse)
+		err := db.CreateCourse(admin.ID, &testCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
 		testCourses = append(testCourses, &testCourse)
 	}
 
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
+	user := createFakeUser(t, db, 2)
 
 	if err := db.CreateEnrollment(&models.Enrollment{
 		UserID:   user.ID,
@@ -507,8 +488,9 @@ func TestGetCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	admin := createFakeUser(t, db, 1)
 	var course models.Course
-	err := db.CreateCourse(&course)
+	err := db.CreateCourse(admin.ID, &course)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -549,17 +531,15 @@ func TestNewGroup(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	admin := createFakeUser(t, db, 1)
 	var course models.Course
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.DirectoryID = 1
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{}); err != nil {
-		t.Fatal(err)
-	}
+	user := createFakeUser(t, db, 2)
 	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -602,7 +582,7 @@ func TestNewGroup(t *testing.T) {
 	c.Set("fake", fakeProvider)
 
 	// Prepare context with user request.
-	c.Set("user", &user)
+	c.Set("user", user)
 	router.Find(http.MethodPost, requestURL, c)
 
 	// Invoke the prepared handler.
@@ -635,18 +615,16 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	admin := createFakeUser(t, db, 1)
 	var course models.Course
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.DirectoryID = 1
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
-	var teacher models.User
-	if err := db.CreateUserFromRemoteIdentity(&teacher, &models.RemoteIdentity{RemoteID: 1}); err != nil {
-		t.Fatal(err)
-	}
+	teacher := createFakeUser(t, db, 2)
 	if err := db.CreateEnrollment(&models.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -654,10 +632,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{RemoteID: 2}); err != nil {
-		t.Fatal(err)
-	}
+	user := createFakeUser(t, db, 3)
 	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -700,7 +675,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	c.Set("fake", fakeProvider)
 
 	// Prepare context with user request.
-	c.Set("user", &teacher)
+	c.Set("user", teacher)
 	router.Find(http.MethodPost, requestURL, c)
 
 	// Invoke the prepared handler.
@@ -733,18 +708,16 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	admin := createFakeUser(t, db, 1)
 	var course models.Course
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
 	course.DirectoryID = 1
-	if err := db.CreateCourse(&course); err != nil {
+	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
-	var teacher models.User
-	if err := db.CreateUserFromRemoteIdentity(&teacher, &models.RemoteIdentity{RemoteID: 1}); err != nil {
-		t.Fatal(err)
-	}
+	teacher := createFakeUser(t, db, 2)
 	if err := db.CreateEnrollment(&models.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -752,10 +725,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(&user, &models.RemoteIdentity{RemoteID: 2}); err != nil {
-		t.Fatal(err)
-	}
+	user := createFakeUser(t, db, 3)
 	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
@@ -798,7 +768,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	c.Set("fake", fakeProvider)
 
 	// Prepare context with user request.
-	c.Set("user", &user)
+	c.Set("user", user)
 	router.Find(http.MethodPost, requestURL, c)
 
 	// Invoke the prepared handler.

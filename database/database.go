@@ -20,7 +20,7 @@ type Database interface {
 	// create courses, so it makes sense that teachers are made admins.
 	SetAdmin(uint64) error
 
-	CreateCourse(*models.Course) error
+	CreateCourse(uint64, *models.Course) error
 	GetCourse(uint64) (*models.Course, error)
 	GetCourseByDirectoryID(did uint64) (*models.Course, error)
 	GetCourses(...uint64) ([]*models.Course, error)
