@@ -93,12 +93,19 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		if err != nil {
 			return err
 		}
+		logger.WithField("course.DirID", courseInfo.DirectoryID).
+			WithField("dir", dir.Path).
+			Println("GetDir")
+
 		repos, err := s.GetRepositories(ctx, dir)
 		if err != nil {
 			return err
 		}
 		existing := make(map[string]*scm.Repository)
 		for _, repo := range repos {
+			logger.WithField("path", oldgrp.Name).
+				WithField("repoPath", repo.Path).
+				Println("Existing repo")
 			existing[repo.Path] = repo
 		}
 		repo, created := existing[oldgrp.Name]
