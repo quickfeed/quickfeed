@@ -205,26 +205,27 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			return c.Redirect(http.StatusFound, redirect)
 		}
 
+		remote := &models.RemoteIdentity{
+			Provider:    provider,
+			RemoteID:    remoteID,
+			AccessToken: externalUser.AccessToken,
+		}
 		// Try to get user from database.
-		user, err := db.GetUserByRemoteIdentity(provider, remoteID, externalUser.AccessToken)
-		if err == gorm.ErrRecordNotFound {
-			// Create new user.
+		user, err := db.GetUserByRemoteIdentity(remote)
+		switch {
+		case err == nil:
+			// found user in database; update access token
+			err = db.UpdateAccessToken(remote)
+		case err == gorm.ErrRecordNotFound:
+			// user not in database; create new user
 			user = &models.User{
 				Name:      externalUser.Name,
 				Email:     externalUser.Email,
 				AvatarURL: externalUser.AvatarURL,
 			}
-			if err := db.CreateUserFromRemoteIdentity(
-				user,
-				&models.RemoteIdentity{
-					Provider:    provider,
-					RemoteID:    remoteID,
-					AccessToken: externalUser.AccessToken,
-				},
-			); err != nil {
-				return err
-			}
-		} else if err != nil {
+			err = db.CreateUserFromRemoteIdentity(user, remote)
+		}
+		if err != nil {
 			return err
 		}
 

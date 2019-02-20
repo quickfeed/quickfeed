@@ -53,23 +53,17 @@ func (db *GormDB) GetUser(uid uint64) (*models.User, error) {
 }
 
 // GetUserByRemoteIdentity implements the Database interface.
-func (db *GormDB) GetUserByRemoteIdentity(provider string, rid uint64, accessToken string) (*models.User, error) {
+func (db *GormDB) GetUserByRemoteIdentity(remote *models.RemoteIdentity) (*models.User, error) {
 	tx := db.conn.Begin()
 
 	// Get the remote identity.
 	var remoteIdentity models.RemoteIdentity
 	if err := tx.
 		Where(&models.RemoteIdentity{
-			Provider: provider,
-			RemoteID: rid,
+			Provider: remote.Provider,
+			RemoteID: remote.RemoteID,
 		}).
 		First(&remoteIdentity).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	// Update the access token.
-	if err := tx.Model(&remoteIdentity).Update("access_token", accessToken).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -84,6 +78,29 @@ func (db *GormDB) GetUserByRemoteIdentity(provider string, rid uint64, accessTok
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (db *GormDB) UpdateAccessToken(remote *models.RemoteIdentity) error {
+	tx := db.conn.Begin()
+
+	// Get the remote identity.
+	var remoteIdentity models.RemoteIdentity
+	if err := tx.
+		Where(&models.RemoteIdentity{
+			Provider: remote.Provider,
+			RemoteID: remote.RemoteID,
+		}).
+		First(&remoteIdentity).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Update the access token.
+	if err := tx.Model(&remoteIdentity).Update("access_token", remote.AccessToken).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 // GetUsers implements the Database interface.
