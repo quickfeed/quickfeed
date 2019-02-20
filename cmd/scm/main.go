@@ -17,20 +17,33 @@ import (
 	"github.com/urfave/cli"
 )
 
+// To use this tool, there are two options:
+// (1) you either need to have an existing ag.db database file for a running
+//     AG server instance with the appropriate access tokens for an admin user.
+// (2) you need to set up a GITHUB_ACCESS_TOKEN environment variable
+//     for your organization. To use this option with GitHub navigate to
+//     Settings -> Developer settings -> Personal access tokens and from
+//     there generate a new token. Copy this token to the GITHUB_ACCESS_TOKEN
+//     environment variable.
+//
 // Example usage if you have an organization on github called autograder-test:
 // % scm --provider github get repository --all --namespace autograder-test
 // OR
 // % scm get repository --all --namespace autograder-test
-
+//
 // Another example usage to delete all repos in organzation on github
 // % scm delete repository --all --namespace autograder-test
-
+//
 // Here is an example usage for creating a team with two members
 // % scm create team --namespace autograder-test --team teachers --users s111,meling
+//
+// Here is how to fetch the login name of a specific user id:
+// % scm get user --id 810999
+// OR to fetch the login name of the currently logged in user:
+// % scm get user
 
 func main() {
 	var client scm.SCM
-	var db database.GormDB
 
 	app := cli.NewApp()
 	app.Name = "scm"
@@ -40,6 +53,11 @@ func main() {
 			Name:  "provider",
 			Usage: "SCM provider to use. [github|gitlab]",
 			Value: "github",
+		},
+		cli.StringFlag{
+			Name:  "token",
+			Usage: "Environment variable with access token.",
+			Value: "GITHUB_ACCESS_TOKEN",
 		},
 		cli.StringFlag{
 			Name:  "database",
@@ -52,8 +70,7 @@ func main() {
 			Value: 1,
 		},
 	}
-	app.Before = before(&client, &db)
-	app.After = after(&db)
+	app.Before = before(&client)
 	app.Commands = []cli.Command{
 		{
 			Name:  "delete",
@@ -102,6 +119,18 @@ func main() {
 						},
 					},
 					Action: getRepositories(&client),
+				},
+				{
+					Name:  "user",
+					Usage: "Get user information.",
+					Flags: []cli.Flag{
+						cli.Uint64Flag{
+							Name:  "id",
+							Usage: "Remote user id (0 is the logged in user)",
+							Value: 0,
+						},
+					},
+					Action: getUser(&client),
 				},
 			},
 		},
@@ -164,23 +193,32 @@ func main() {
 	}
 }
 
-func before(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
+func before(client *scm.SCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
 		l := logrus.New()
 		l.Out = ioutil.Discard
-		tdb, err := database.NewGormDB("sqlite3", c.String("database"), database.Logger{Logger: l})
+
+		provider := c.String("provider")
+		accessToken := os.Getenv(c.String("token"))
+		if accessToken != "" {
+			*client, err = scm.NewSCMClient(provider, accessToken)
+			return
+		}
+
+		// access token not provided in env variable; check if database holds access token
+		db, err := database.NewGormDB("sqlite3", c.String("database"), database.Logger{Logger: l})
 		if err != nil {
 			return err
 		}
-		*db = *tdb
+		defer func() error {
+			return db.Close()
+		}()
 
 		u, err := db.GetUser(c.Uint64("admin"))
 		if err != nil {
 			return err
 		}
 
-		provider := c.String("provider")
-		var accessToken string
 		for _, ri := range u.RemoteIdentities {
 			if ri.Provider == provider {
 				accessToken = ri.AccessToken
@@ -191,15 +229,6 @@ func before(client *scm.SCM, db *database.GormDB) cli.BeforeFunc {
 		}
 		*client, err = scm.NewSCMClient(provider, accessToken)
 		return
-	}
-}
-
-func after(db *database.GormDB) cli.AfterFunc {
-	return func(c *cli.Context) error {
-		if db != nil {
-			return db.Close()
-		}
-		return nil
 	}
 }
 
@@ -267,6 +296,28 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 		}
 
 		return cli.NewExitError("not implemented", 9)
+	}
+}
+
+func getUser(client *scm.SCM) cli.ActionFunc {
+	ctx := context.Background()
+
+	return func(c *cli.Context) error {
+		var (
+			userName string
+			err      error
+		)
+		remoteID := c.Uint64("id")
+		if remoteID > 0 {
+			userName, err = (*client).GetUserNameByID(ctx, remoteID)
+		} else {
+			userName, err = (*client).GetUserName(ctx)
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(userName)
+		return nil
 	}
 }
 

@@ -32,7 +32,9 @@ type SCM interface {
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember as a member to a team.
 	// AddTeamMember(context.Context, *AddMemberOptions) error
-	// Retrieves user by remoteID
+	// GetUserName returns the currently logged in user's login name.
+	GetUserName(context.Context) (string, error)
+	// GetUserNameByID returns the login name of user with the given remoteID.
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider spesefic clone path.
 	CreateCloneURL(context.Context, *CreateClonePathOptions) (string, error)

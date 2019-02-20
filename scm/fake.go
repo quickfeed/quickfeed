@@ -119,6 +119,11 @@ func (s *FakeSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) erro
 	return nil
 }
 
+// GetUserName implements the SCM interface.
+func (s *FakeSCM) GetUserName(ctx context.Context) (string, error) {
+	return "", nil
+}
+
 // GetUserNameByID implements the SCM interface.
 func (s *FakeSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
 	return "", nil
