@@ -205,6 +205,15 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 	return nil
 }
 
+// GetUserName implements the SCM interface.
+func (s *GithubSCM) GetUserName(ctx context.Context) (string, error) {
+	user, _, err := s.client.Users.Get(ctx, "")
+	if err != nil {
+		return "", err
+	}
+	return user.GetLogin(), nil
+}
+
 // GetUserNameByID implements the SCM interface.
 func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
 	user, _, err := s.client.Users.GetByID(ctx, int(remoteID))
