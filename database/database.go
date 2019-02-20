@@ -8,11 +8,16 @@ type Database interface {
 
 	CreateUserFromRemoteIdentity(*models.User, *models.RemoteIdentity) error
 	AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error
+	// GetUserByRemoteIdentity returns the user for the given remote identity.
+	// The supplied remote identity must contain Provider and RemoteID.
+	GetUserByRemoteIdentity(*models.RemoteIdentity) (*models.User, error)
+	// UpdateAccessToken updates the access token for the given remote identity.
+	// The supplied remote identity must contain Provider, RemoteID and AccessToken.
+	UpdateAccessToken(*models.RemoteIdentity) error
 
+	// GetUser returns the user for the given user ID,
+	// including the users's remote identities.
 	GetUser(uint64) (*models.User, error)
-	// GetUserByRemoteIdentity gets an user by a remote identity and updates the access token.
-	// TODO: The update access token functionality should be split into its own method.
-	GetUserByRemoteIdentity(provider string, rid uint64, accessToken string) (*models.User, error)
 	GetUsers(...uint64) ([]*models.User, error)
 	UpdateUser(*models.User) error
 
