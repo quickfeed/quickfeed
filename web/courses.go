@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -315,6 +314,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
+		// check that userID has enrolled in courseID
 		if _, err := db.GetEnrollmentByCourseAndUser(courseID, userID); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
@@ -331,26 +331,15 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			return c.NoContent(http.StatusUnauthorized)
 		}
 
-		// TODO If the enrollment is accepted, create repositories and permissions for them with webooks.
+		// TODO If the enrollment is accepted, create repositories and permissions for them with webhooks.
 		switch eur.Status {
 		case models.Student:
-
-			// Update enrollment for student in DB.
+			// update enrollment for student in database
 			err = db.EnrollStudent(userID, courseID)
 			if err != nil {
 				return err
 			}
-
 			course, err := db.GetCourse(courseID)
-			if err != nil {
-				return err
-			}
-			s, err := getSCM(c, course.Provider)
-			if err != nil {
-				return err
-			}
-
-			dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
 			if err != nil {
 				return err
 			}
@@ -358,20 +347,32 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			if err != nil {
 				return err
 			}
-			// Find out what the current plan is to set repo/team as private if not(?) do not create the repo
+			remote, err := getRemoteIDFor(student, course.Provider)
+			if err != nil {
+				return err
+			}
+			s, err := getSCM(c, course.Provider)
+			if err != nil {
+				return err
+			}
+			ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
+			defer cancel()
 
-			// TODO Decide which provider/remoteIdentity is being used,
-			gitUserName, err := s.GetUserNameByID(c.Request().Context(), student.RemoteIdentities[0].RemoteID)
+			dir, err := s.GetDirectory(ctx, course.DirectoryID)
+			if err != nil {
+				return err
+			}
+			gitUserName, err := s.GetUserNameByID(ctx, remote.ID)
 			if err != nil {
 				return err
 			}
 
-			// Creating repository
-			studentName := strings.Replace(gitUserName, " ", "", -1)
-			pathName := studentName + "-labs"
-			repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
+			//TODO(meling) Find the current payment plan and if private is available create team/repo;
+			// if not private do not create the team/repo.
+
+			repo, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 				Directory: dir,
-				Path:      pathName,
+				Path:      StudentRepoName(gitUserName),
 				Private:   true,
 			})
 			if err != nil {
@@ -388,23 +389,21 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 				return err
 			}
 			// Creating team
-			team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
+			team, err := s.CreateTeam(ctx, &scm.CreateTeamOptions{
 				Directory: &scm.Directory{Path: dir.Path},
-				TeamName:  studentName,
+				TeamName:  gitUserName,
 				Users:     []string{gitUserName},
 			})
 			if err != nil {
 				return err
 			}
-			if team != nil {
-				err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
-					TeamID: team.ID,
-					Owner:  repo.Owner,
-					Repo:   repo.Path,
-				})
-				if err != nil {
-					return err
-				}
+			err = s.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
+				TeamID: team.ID,
+				Owner:  repo.Owner,
+				Repo:   repo.Path,
+			})
+			if err != nil {
+				return err
 			}
 
 		case models.Teacher:
