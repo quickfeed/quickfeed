@@ -596,7 +596,7 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := db.GetGroup(respGroup.ID)
+	group, err := db.GetGroup(false, respGroup.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -689,7 +689,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := db.GetGroup(respGroup.ID)
+	group, err := db.GetGroup(false, respGroup.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

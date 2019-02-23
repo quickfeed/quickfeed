@@ -748,8 +748,8 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		// TODO add remoteIdentity to users when getting multiple users
-		users, err := db.GetUsers(grp.UserIDs...)
+		// Don't add remote identities here since these users are returned to the client.
+		users, err := db.GetUsers(false, grp.UserIDs...)
 		if err != nil {
 			return err
 		}
@@ -833,7 +833,8 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
-		oldgrp, err := db.GetGroup(gid)
+		// we don't remote identities here; we only do this to check that the group exists.
+		oldgrp, err := db.GetGroup(false, gid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "group not found")
@@ -857,7 +858,8 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 		if !grp.valid() {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
-		users, err := db.GetUsers(grp.UserIDs...)
+		// we need the remote identities of users of the group to find their scm user names
+		users, err := db.GetUsers(true, grp.UserIDs...)
 		if err != nil {
 			return err
 		}

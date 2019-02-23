@@ -18,9 +18,12 @@ type Database interface {
 	// GetUser returns the user for the given user ID,
 	// including the user's remote identities.
 	GetUser(uint64) (*models.User, error)
-	// GetUsers returns the users for the given set of user IDs,
-	// excluding the users's remote identities.
-	GetUsers(...uint64) ([]*models.User, error)
+	// GetUsers returns the users for the given set of user IDs.
+	// The returned users's remote identities are included if withRemoteIDs
+	// is true, otherwise remote identities won't be include.
+	// Note: Remote identities holds the user's access token and should not
+	// be returned to the frontend.
+	GetUsers(withRemoteIDs bool, userIDs ...uint64) ([]*models.User, error)
 	// UpdateUser updates the user's details, excluding remote identities.
 	UpdateUser(*models.User) error
 
@@ -56,7 +59,12 @@ type Database interface {
 	UpdateSubmissionByID(sid uint64, approved bool) error
 
 	CreateGroup(*models.Group) error
-	GetGroup(uint64) (*models.Group, error)
+	// GetGroup returns the group with the specified group id.
+	// The returned users's remote identities are included if withRemoteIDs
+	// is true, otherwise remote identities won't be include.
+	// Note: Remote identities holds the user's access token and should not
+	// be returned to the frontend.
+	GetGroup(withRemoteIDs bool, groupID uint64) (*models.Group, error)
 	GetGroupsByCourse(cid uint64) ([]*models.Group, error)
 	UpdateGroupStatus(*models.Group) error
 	UpdateGroup(group *models.Group) error
