@@ -19,7 +19,8 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		if err != nil {
 			return err
 		}
-		oldgrp, err := db.GetGroup(id)
+		// we need the remote identities of the group's users
+		oldgrp, err := db.GetGroup(true, id)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "group not found")
@@ -174,7 +175,7 @@ func GetGroup(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		group, err := db.GetGroup(gid)
+		group, err := db.GetGroup(false, gid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "group not found")
@@ -192,7 +193,7 @@ func DeleteGroup(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		group, err := db.GetGroup(gid)
+		group, err := db.GetGroup(false, gid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "group not found")

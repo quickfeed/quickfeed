@@ -50,7 +50,8 @@ func GetUser(db database.Database) echo.HandlerFunc {
 // GetUsers returns all the users in the database.
 func GetUsers(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		users, err := db.GetUsers()
+		// we don't want remote identities of users returned to the frontend
+		users, err := db.GetUsers(false)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
@@ -133,7 +134,8 @@ func GetGroupByUserAndCourse(db database.Database) echo.HandlerFunc {
 			return err
 		}
 		if enrollment.GroupID > 0 {
-			group, err := db.GetGroup(enrollment.GroupID)
+			// no need for remote identities
+			group, err := db.GetGroup(false, enrollment.GroupID)
 			if err != nil {
 				return c.NoContent(http.StatusNotFound)
 			}

@@ -184,7 +184,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	// get the group as stored in db with enrollments
-	prePatchGroup, err := db.GetGroup(group.ID)
+	prePatchGroup, err := db.GetGroup(true, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +226,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	assertCode(t, w.Code, http.StatusOK)
 
 	// check that the group didn't change
-	haveGroup, err := db.GetGroup(group.ID)
+	haveGroup, err := db.GetGroup(true, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,7 +264,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	assertCode(t, w.Code, http.StatusOK)
 
 	// check that the group have changed status
-	haveGroup, err = db.GetGroup(group.ID)
+	haveGroup, err = db.GetGroup(true, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -345,7 +345,8 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	dbGroup, err := db.GetGroup(group.ID)
+	// we don't expect remote identities from GetGroupByUserAndCourse
+	dbGroup, err := db.GetGroup(false, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

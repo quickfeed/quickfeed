@@ -59,7 +59,7 @@ func TestGormDBGetUsers(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.GetUsers(); err != nil {
+	if _, err := db.GetUsers(false); err != nil {
 		t.Errorf("have error '%v' wanted '%v'", err, nil)
 	}
 }
@@ -1178,12 +1178,12 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				}
 			}
 
-			have, err := db.GetGroup(group.ID)
+			have, err := db.GetGroup(false, group.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if len(uids) > 0 {
-				group.Users, err = db.GetUsers(uids...)
+				group.Users, err = db.GetUsers(false, uids...)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1601,7 +1601,7 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotModels, _ := db.GetGroup(group.ID)
+	gotModels, _ := db.GetGroup(false, group.ID)
 	if gotModels != nil {
 		t.Errorf("Got %+v wanted None", gotModels)
 	}

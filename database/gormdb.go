@@ -120,10 +120,13 @@ func (db *GormDB) UpdateAccessToken(remote *models.RemoteIdentity) error {
 }
 
 // GetUsers implements the Database interface.
-func (db *GormDB) GetUsers(uids ...uint64) ([]*models.User, error) {
+func (db *GormDB) GetUsers(withRemoteIDs bool, uids ...uint64) ([]*models.User, error) {
 	m := db.conn
 	if len(uids) > 0 {
 		m = m.Where(uids)
+	}
+	if withRemoteIDs {
+		m = m.Preload("RemoteIdentities")
 	}
 
 	var users []*models.User
@@ -662,8 +665,8 @@ func (db *GormDB) CreateGroup(group *models.Group) error {
 	return nil
 }
 
-// GetGroup returns a group specified by id return error if does not exits
-func (db *GormDB) GetGroup(gid uint64) (*models.Group, error) {
+// GetGroup implements the Database interface
+func (db *GormDB) GetGroup(withRemoteIDs bool, gid uint64) (*models.Group, error) {
 	var group models.Group
 	if err := db.conn.Preload("Enrollments").First(&group, gid).Error; err != nil {
 		return nil, err
@@ -673,7 +676,7 @@ func (db *GormDB) GetGroup(gid uint64) (*models.Group, error) {
 		userIDs = append(userIDs, enrollment.UserID)
 	}
 	if len(userIDs) > 0 {
-		users, err := db.GetUsers(userIDs...)
+		users, err := db.GetUsers(withRemoteIDs, userIDs...)
 		if err != nil {
 			return nil, err
 		}
@@ -705,7 +708,7 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
 			userIDs = append(userIDs, enrollment.UserID)
 		}
 		if len(userIDs) > 0 {
-			users, err := db.GetUsers(userIDs...)
+			users, err := db.GetUsers(false, userIDs...)
 			if err != nil {
 				return nil, err
 			}
@@ -718,7 +721,7 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
 
 // DeleteGroup delete a group
 func (db *GormDB) DeleteGroup(gid uint64) error {
-	group, err := db.GetGroup(gid)
+	group, err := db.GetGroup(false, gid)
 	if err != nil {
 		return err
 	}
