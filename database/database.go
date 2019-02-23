@@ -16,9 +16,12 @@ type Database interface {
 	UpdateAccessToken(*models.RemoteIdentity) error
 
 	// GetUser returns the user for the given user ID,
-	// including the users's remote identities.
+	// including the user's remote identities.
 	GetUser(uint64) (*models.User, error)
+	// GetUsers returns the users for the given set of user IDs,
+	// excluding the users's remote identities.
 	GetUsers(...uint64) ([]*models.User, error)
+	// UpdateUser updates the user's details, excluding remote identities.
 	UpdateUser(*models.User) error
 
 	// SetAdmin makes an existing user an administrator. The admin role is allowed to

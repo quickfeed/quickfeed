@@ -10,6 +10,21 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+var (
+	// ErrDuplicateIdentity is returned when trying to associate a remote identity
+	// with a user account and the identity is already in use.
+	ErrDuplicateIdentity = errors.New("remote identity register with another user")
+	// ErrDuplicateGroup is returned when trying to create a group with the same
+	// name as a previously registered group.
+	ErrDuplicateGroup = errors.New("group name already registered")
+	// ErrCourseExists is returned when trying to create an association in
+	// the database for a DirectoryID that already exists in the database.
+	ErrCourseExists = errors.New("course already exists on git provider")
+	// ErrInsufficientAccess is returned when trying to update database
+	// with insufficient access priviledges.
+	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
+)
+
 // GormDB implements the Database interface.
 type GormDB struct {
 	conn *gorm.DB
@@ -80,6 +95,7 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *models.RemoteIdentity) (*model
 	return &user, nil
 }
 
+// UpdateAccessToken implements the Database interface.
 func (db *GormDB) UpdateAccessToken(remote *models.RemoteIdentity) error {
 	tx := db.conn.Begin()
 
@@ -164,21 +180,6 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity
 	}
 	return nil
 }
-
-var (
-	// ErrDuplicateIdentity is returned when trying to associate a remote identity
-	// with a user account and the identity is already in use.
-	ErrDuplicateIdentity = errors.New("remote identity register with another user")
-	// ErrDuplicateGroup is returned when trying to create a group with the same
-	// name as a previously registered group.
-	ErrDuplicateGroup = errors.New("group name already registered")
-	// ErrCourseExists is returned when trying to create an association in
-	// the database for a DirectoryID that already exists in the database.
-	ErrCourseExists = errors.New("course already exists on git provider")
-	// ErrInsufficientAccess is returned when trying to update database
-	// with insufficient access priviledges.
-	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
-)
 
 // AssociateUserWithRemoteIdentity implements the Database interface.
 func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error {
