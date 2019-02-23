@@ -52,39 +52,12 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			return err
 		}
 
-		var userRemoteIdentity []*models.RemoteIdentity
-		// TODO move this into the for loop above, modify db.GetUsers() to also retreive RemoteIdentity
-		// so we can remove individual GetUser calls
-		for _, user := range users {
-			remoteIdentityUser, _ := db.GetUser(user.ID)
-			if err != nil {
-				return err
-			}
-			// TODO, figure out which remote identity to be used!
-			if len(remoteIdentityUser.RemoteIdentities) > 0 {
-				userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
-			}
-		}
-
 		s, err := getSCM(c, course.Provider)
 		if err != nil {
 			return err
 		}
-
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
-
-		// TODO move this functionality down into SCM?
-		// Note: This Requires alot of calls to git.
-		// Figure out all group members git-username
-		var gitUserNames []string
-		for _, identity := range userRemoteIdentity {
-			gitName, err := s.GetUserNameByID(ctx, identity.RemoteID)
-			if err != nil {
-				return err
-			}
-			gitUserNames = append(gitUserNames, gitName)
-		}
 
 		// Create and add repo to autograder group
 		dir, err := s.GetDirectory(ctx, course.DirectoryID)
@@ -142,6 +115,20 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		}); err != nil {
 			logger.WithField("status", ngrp.Status).WithField("gid", oldgrp.ID).WithError(err).Warn("Failed to update group status in database")
 			return err
+		}
+
+		var gitUserNames []string
+		for _, user := range users {
+			remote, err := getRemoteIDFor(user, course.Provider)
+			if err != nil {
+				return err
+			}
+			// Note this requires one git call per user in the group
+			userName, err := s.GetUserNameByID(ctx, remote.RemoteID)
+			if err != nil {
+				return err
+			}
+			gitUserNames = append(gitUserNames, userName)
 		}
 
 		// Create git-team
