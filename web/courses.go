@@ -143,7 +143,6 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		if err != nil {
 			return err
 		}
-
 		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
 		defer cancel()
 
@@ -812,12 +811,33 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// UpdateGroup update a group
-// TODO: Remove this function? similar exists in web/groups.go
+// UpdateGroup updates the group for the given group gid and course cid.
+// Only teachers can invoke this.
+// TODO(meling) Consider synergies with PatchGroup() in web/groups.go
 func UpdateGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+		gid, err := parseUint(c.Param("gid"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		}
+
+		user := c.Get("user").(*models.User)
+		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
+		if err != nil {
+			return err
+		}
+		if enrollment.Status != models.Teacher {
+			return echo.NewHTTPError(http.StatusForbidden, "only teacher can update a group")
+		}
+		var grp NewGroupRequest
+		if err := c.Bind(&grp); err != nil {
+			return err
+		}
+		if !grp.valid() {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
@@ -829,12 +849,8 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		gid, err := parseUint(c.Param("gid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
 		// we don't remote identities here; we only do this to check that the group exists.
-		oldgrp, err := db.GetGroup(false, gid)
+		_, err = db.GetGroup(false, gid)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "group not found")
@@ -842,22 +858,6 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		user := c.Get("user").(*models.User)
-		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
-		if err != nil {
-			return err
-		}
-		if enrollment.Status != models.Teacher {
-			return echo.NewHTTPError(http.StatusForbidden, "only teacher can update a group")
-		}
-
-		var grp NewGroupRequest
-		if err := c.Bind(&grp); err != nil {
-			return err
-		}
-		if !grp.valid() {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
 		// we need the remote identities of users of the group to find their scm user names
 		users, err := db.GetUsers(true, grp.UserIDs...)
 		if err != nil {
@@ -868,16 +868,35 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		// only enrolled user i.e accepted to the course can join a group
-		// prevent group override if a student is already in a group in this course
+		s, err := getSCM(c, course.Provider)
+		if err != nil {
+			return err
+		}
+		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
+		defer cancel()
+
+		var gitUserNames []string
 		for _, user := range users {
+			remote, err := getRemoteIDFor(user, course.Provider)
+			if err != nil {
+				return err
+			}
+			// Note this requires one git call per user in the group
+			userName, err := s.GetUserNameByID(ctx, remote.RemoteID)
+			if err != nil {
+				return err
+			}
+			gitUserNames = append(gitUserNames, userName)
+
+			// only users enrolled in the course can join a group
+			// prevent group override if a student is already in a group for this course
 			enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
 			switch {
 			case err == gorm.ErrRecordNotFound:
 				return echo.NewHTTPError(http.StatusNotFound, "user is not enrolled to this course")
 			case err != nil:
 				return err
-			case enrollment.GroupID > 0 && enrollment.GroupID != oldgrp.ID:
+			case enrollment.GroupID > 0 && enrollment.GroupID != gid:
 				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
 			case enrollment.Status < models.Student:
 				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
@@ -885,7 +904,7 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 		}
 
 		if err := db.UpdateGroup(&models.Group{
-			ID:       oldgrp.ID,
+			ID:       gid,
 			Name:     grp.Name,
 			CourseID: cid,
 			Users:    users,
@@ -896,43 +915,12 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 
-		s, err := getSCM(c, course.Provider)
-		if err != nil {
-			return err
-		}
-
-		var userRemoteIdentity []*models.RemoteIdentity
-		// TODO move this into the for loop above, modify db.GetUsers() to also retreive RemoteIdentity
-		// so we can remove individual GetUser calls
-		for _, user := range users {
-			remoteIdentityUser, _ := db.GetUser(user.ID)
-			if err != nil {
-				return err
-			}
-			// TODO, figure out which remote identity to be used!
-			if len(remoteIdentityUser.RemoteIdentities) > 0 {
-				userRemoteIdentity = append(userRemoteIdentity, remoteIdentityUser.RemoteIdentities[0])
-			}
-		}
-
-		// TODO move this functionality down into SCM?
-		// Note: This Requires alot of calls to git.
-		// Figure out all group members git-username
-		var gitUserNames []string
-		for _, identity := range userRemoteIdentity {
-			gitName, err := s.GetUserNameByID(c.Request().Context(), identity.RemoteID)
-			if err != nil {
-				return err
-			}
-			gitUserNames = append(gitUserNames, gitName)
-		}
-
 		// Create and add repo to autograder group
-		dir, err := s.GetDirectory(c.Request().Context(), course.DirectoryID)
+		dir, err := s.GetDirectory(ctx, course.DirectoryID)
 		if err != nil {
 			return err
 		}
-		repo, err := s.CreateRepository(c.Request().Context(), &scm.CreateRepositoryOptions{
+		repo, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 			Directory: dir,
 			Path:      grp.Name,
 			Private:   true,
@@ -951,7 +939,7 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 		// Create git-team
-		team, err := s.CreateTeam(c.Request().Context(), &scm.CreateTeamOptions{
+		team, err := s.CreateTeam(ctx, &scm.CreateTeamOptions{
 			Directory: &scm.Directory{Path: dir.Path},
 			TeamName:  grp.Name,
 			Users:     gitUserNames,
@@ -960,7 +948,7 @@ func UpdateGroup(db database.Database) echo.HandlerFunc {
 			return err
 		}
 		// Adding Repo to git-team
-		if err = s.AddTeamRepo(c.Request().Context(), &scm.AddTeamRepoOptions{
+		if err = s.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
 			TeamID: team.ID,
 			Owner:  repo.Owner,
 			Repo:   repo.Path,
