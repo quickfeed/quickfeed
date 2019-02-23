@@ -52,24 +52,6 @@ func (eur *EnrollUserRequest) valid() bool {
 	return eur.Status <= models.Teacher
 }
 
-// NewGroupRequest represents a new group.
-type NewGroupRequest struct {
-	Name     string   `json:"name"`
-	CourseID uint64   `json:"courseid"`
-	UserIDs  []uint64 `json:"userids"`
-}
-
-func (grp *NewGroupRequest) valid() bool {
-	return grp != nil &&
-		grp.Name != "" &&
-		len(grp.UserIDs) > 0
-}
-
-// UpdateGroupRequest updates group
-type UpdateGroupRequest struct {
-	Status uint `json:"status"`
-}
-
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
