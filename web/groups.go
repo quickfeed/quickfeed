@@ -19,14 +19,6 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		if err != nil {
 			return err
 		}
-		// we need the remote identities of the group's users
-		oldgrp, err := db.GetGroup(true, id)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return echo.NewHTTPError(http.StatusNotFound, "group not found")
-			}
-			return err
-		}
 		var ngrp UpdateGroupRequest
 		if err := c.Bind(&ngrp); err != nil {
 			return err
@@ -38,10 +30,18 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		user := c.Get("user").(*models.User)
 		// TODO: This check should be performed in AccessControl.
 		if user.IsAdmin == nil || !*user.IsAdmin {
-			// Ony Admin i.e Teacher can update status of a group
+			// Only admin / teacher can update status of a group
 			return c.NoContent(http.StatusForbidden)
 		}
 
+		// we need the remote identities of the group's users
+		oldgrp, err := db.GetGroup(true, id)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return echo.NewHTTPError(http.StatusNotFound, "group not found")
+			}
+			return err
+		}
 		users := oldgrp.Users
 
 		course, err := db.GetCourse(oldgrp.CourseID)
