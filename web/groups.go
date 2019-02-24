@@ -163,6 +163,8 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 			return echo.NewHTTPError(http.StatusForbidden, "only teacher can update a group")
 		}
 
+		// the request is aimed to update the group with changes made by teacher
+		// note: we reuse the NewGroupRequest also for updates
 		var grp NewGroupRequest
 		if err := c.Bind(&grp); err != nil {
 			return err
@@ -171,10 +173,20 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		course, err := db.GetCourse(cid)
+		// get users from database based on NewGroupRequst submitted by teacher
+		grpUsers, err := db.GetUsers(false, grp.UserIDs...)
 		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return echo.NewHTTPError(http.StatusNotFound, "course not found")
+			return err
+		}
+		// update group in database according to request from teacher
+		if err := db.UpdateGroup(&models.Group{
+			ID:       gid,
+			Name:     grp.Name,
+			CourseID: cid,
+			Users:    grpUsers,
+		}); err != nil {
+			if err == database.ErrDuplicateGroup {
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
 			return err
 		}
@@ -188,8 +200,8 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 			return err
 		}
 
-		// sanity check: same number of users in registered group as in the new group request
-		//TODO should this check be performed? I mean this is the teacher, possibly making changes to the group
+		// sanity check: after updating database with teacher approved group members,
+		// the group should have same number of members as in the NewGroupRequest.
 		if len(group.Users) != len(grp.UserIDs) {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
@@ -210,15 +222,10 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 			}
 		}
 
-		//TODO(meling) move this after create repo?
-		if err := db.UpdateGroup(&models.Group{
-			ID:       gid,
-			Name:     grp.Name,
-			CourseID: cid,
-			Users:    group.Users,
-		}); err != nil {
-			if err == database.ErrDuplicateGroup {
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		course, err := db.GetCourse(cid)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return echo.NewHTTPError(http.StatusNotFound, "course not found")
 			}
 			return err
 		}
@@ -232,8 +239,10 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 		dbRepo := models.Repository{
 			DirectoryID:  course.DirectoryID,
 			RepositoryID: repo.ID,
-			Type:         models.UserRepo,
-			UserID:       grp.UserIDs[0], // Should this be groupID ????
+			UserID:       0,
+			GroupID:      group.ID,
+			HTMLURL:      repo.WebURL,
+			Type:         models.UserRepo, // TODO(meling) should we distinguish GroupRepo?
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return err
@@ -281,13 +290,6 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			return err
 		}
 
-		// s, err := getSCM(c, course.Provider)
-		// if err != nil {
-		// 	return err
-		// }
-		// ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
-		// defer cancel()
-
 		// create group repo and team on the SCM
 		repo, err := createGroupRepoAndTeam(c, logger, oldgrp, course)
 		if err != nil {
@@ -299,10 +301,10 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		dbRepo := models.Repository{
 			DirectoryID:  course.DirectoryID,
 			RepositoryID: repo.ID,
-			HTMLURL:      repo.WebURL,
-			Type:         models.UserRepo,
 			UserID:       0,
 			GroupID:      oldgrp.ID,
+			HTMLURL:      repo.WebURL,
+			Type:         models.UserRepo, // TODO(meling) should we distinguish GroupRepo?
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			logger.WithField("url", repo.WebURL).WithField("gid", oldgrp.ID).WithError(err).Warn("Failed to create repository in database")
