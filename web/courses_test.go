@@ -222,14 +222,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	requestURL := fmt.Sprintf("/courses/%d/users/%d", testCourse.ID, user.ID)
 
 	// Add the route to handler.
-	router.Add(http.MethodPut, route, web.CreateEnrollment(db))
-	r := httptest.NewRequest(http.MethodPut, requestURL, requestBody)
+	router.Add(http.MethodPost, route, web.CreateEnrollment(db))
+	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
 	c.Set(auth.UserKey, user)
-	router.Find(http.MethodPut, requestURL, c)
+	router.Find(http.MethodPost, requestURL, c)
 
 	// Invoke the prepared handler. This will attempt to create an
 	// enrollment for the user in the chosen course.
