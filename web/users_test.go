@@ -3,10 +3,10 @@ package web_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/autograde/aguis/models"
@@ -34,7 +34,7 @@ func TestGetSelf(t *testing.T) {
 		t.Error(err)
 	}
 
-	userURL := "/users/" + strconv.FormatUint(user.ID, 10)
+	userURL := fmt.Sprintf("/users/%d", user.ID)
 	location := w.Header().Get("Location")
 	if location != apiPrefix+userURL {
 		t.Errorf("have Location '%v' want '%v'", location, apiPrefix+userURL)
@@ -77,7 +77,7 @@ func TestGetUser(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.GetUser(db))
 
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10)
+	requestURL := fmt.Sprintf("/users/%d", user.ID)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -237,7 +237,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	// add the route to handler
 	router.Add(http.MethodGet, route, web.GetEnrollmentsByCourse(db))
-	requestURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users"
+	requestURL := fmt.Sprintf("/courses/%d/users", allCourses[0].ID)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -301,7 +301,7 @@ func TestPatchUser(t *testing.T) {
 	}
 	requestBody := bytes.NewReader(emptyJSON)
 
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10)
+	requestURL := fmt.Sprintf("/users/%d", user.ID)
 	r := httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()

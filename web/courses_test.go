@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/autograde/aguis/database"
@@ -367,7 +366,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
 
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses"
+	requestURL := fmt.Sprintf("/users/%d/courses", user.ID)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -454,7 +453,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
 
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses" + query
+	requestURL := fmt.Sprintf("/users/%d/courses%s", user.ID, query)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -501,7 +500,7 @@ func TestGetCourse(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.GetCourse(db))
 
-	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10)
+	requestURL := fmt.Sprintf("/courses/%d", course.ID)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
