@@ -27,16 +27,18 @@ func (grp *NewGroupRequest) valid() bool {
 
 // UpdateGroupRequest updates group
 type UpdateGroupRequest struct {
+	//TODO(meling) make separate GroupStatus iota for group (to make type safe use??)
 	Status uint `json:"status"`
 }
 
-// GetGroups returns all groups under a course
+// GetGroups returns all groups for the given course cid.
 func GetGroups(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
+		//TODO(meling) is this really necessary? The GetGroupsByCourse() should fail in this case too.
 		if _, err := db.GetCourse(cid); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")
@@ -51,7 +53,10 @@ func GetGroups(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// NewGroup creates a new group under a course
+// NewGroup creates a new group for the given course cid.
+// This function is typically called by a student when creating
+// a group, which will later be (optionally) edited and approved
+// by a teacher of the course using the UpdateGroup function below.
 func NewGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
@@ -88,7 +93,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 		signedInUser := c.Get("user").(*models.User)
 		signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(cid, signedInUser.ID)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusNotFound, "Not able to retreive enrollment for signed in user")
+			return echo.NewHTTPError(http.StatusNotFound, "unable to retrieve enrollment for signed in user")
 		}
 		signedInUserInGroup := false
 
@@ -106,6 +111,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			case enrollment.Status < models.Student:
 				return echo.NewHTTPError(http.StatusBadRequest, "user not yet accepted for this course")
 			case enrollment.Status == models.Teacher && signedInUserEnrollment.Status != models.Teacher:
+				//TODO(meling) teachers shouldn't be part of a group; I think we can remove the second part of the && expression
 				return echo.NewHTTPError(http.StatusBadRequest, "A teacher has to create this group")
 			case signedInUser.ID == user.ID && enrollment.Status == models.Student:
 				signedInUserInGroup = true
@@ -138,7 +144,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// UpdateGroup updates the group for the given group gid and course cid.
+// UpdateGroup updates the group for the given gid and course cid.
 // Only teachers can invoke this, and allows the teacher to add or remove
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
@@ -252,7 +258,7 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 	}
 }
 
-// PatchGroup updates status of a group
+// PatchGroup updates status of the group for the given gid.
 func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, err := parseUint(c.Param("gid"))
@@ -263,6 +269,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		if err := c.Bind(&ngrp); err != nil {
 			return err
 		}
+		//TODO(meling) make separate GroupStatus iota for group to avoid using models.Teacher.
 		if ngrp.Status > models.Teacher {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
@@ -399,7 +406,7 @@ func fetchGitUserNames(ctx context.Context, s scm.SCM, users []*models.User, cou
 	return gitUserNames, nil
 }
 
-// GetGroup returns a group
+// GetGroup returns the group for the given gid.
 func GetGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		gid, err := parseUint(c.Param("gid"))
@@ -417,7 +424,7 @@ func GetGroup(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// DeleteGroup deletes a pending or rejected group
+// DeleteGroup deletes a pending or rejected group for the given gid.
 func DeleteGroup(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		gid, err := parseUint(c.Param("gid"))
@@ -431,6 +438,7 @@ func DeleteGroup(db database.Database) echo.HandlerFunc {
 			}
 			return err
 		}
+		//TODO(meling) make separate GroupStatus iota for group to avoid using models.Teacher.
 		if group.Status > models.Rejected {
 			return echo.NewHTTPError(http.StatusForbidden, "accepted group cannot be deleted")
 		}
