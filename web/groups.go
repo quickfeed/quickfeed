@@ -111,18 +111,16 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			case enrollment.Status < models.Student:
 				return echo.NewHTTPError(http.StatusBadRequest, "user not yet accepted for this course")
 			case enrollment.Status == models.Teacher && signedInUserEnrollment.Status != models.Teacher:
-				//TODO(meling) teachers shouldn't be part of a group; I think we can remove the second part of the && expression
-				return echo.NewHTTPError(http.StatusBadRequest, "A teacher has to create this group")
+				return echo.NewHTTPError(http.StatusBadRequest, "only teachers can create group with a teacher")
 			case signedInUser.ID == user.ID && enrollment.Status == models.Student:
 				signedInUserInGroup = true
 			}
 		}
 
-		// If user is a teacher it should be allowed to proceed and create a group with only the "enrolled" persons.
+		// if signed in user is teacher we proceed to create group with the enrolled users
 		if signedInUserEnrollment.Status == models.Teacher {
 			signedInUserInGroup = true
 		}
-
 		if !signedInUserInGroup {
 			return echo.NewHTTPError(http.StatusBadRequest, "student must be member of new group")
 		}
@@ -132,7 +130,7 @@ func NewGroup(db database.Database) echo.HandlerFunc {
 			CourseID: cid,
 			Users:    users,
 		}
-		// CreateGroup creates a new group and update group_id in enrollment table
+		// create a new group and update group_id in enrollment table
 		if err := db.CreateGroup(&group); err != nil {
 			if err == database.ErrDuplicateGroup {
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
