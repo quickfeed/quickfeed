@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/autograde/aguis/models"
@@ -59,7 +58,7 @@ func TestNewGroup(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodPost, route, web.NewGroup(db))
 
-	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10) + "/groups"
+	requestURL := fmt.Sprintf("/courses/%d/groups", course.ID)
 	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
@@ -152,7 +151,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodPost, route, web.NewGroup(db))
 
-	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10) + "/groups"
+	requestURL := fmt.Sprintf("/courses/%d/groups", course.ID)
 	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
@@ -245,7 +244,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodPost, route, web.NewGroup(db))
 
-	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10) + "/groups"
+	requestURL := fmt.Sprintf("/courses/%d/groups", course.ID)
 	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
@@ -531,7 +530,7 @@ func TestDeleteGroup(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodDelete, route, web.DeleteGroup(db))
 
-	requestURL := "/groups/" + strconv.FormatUint(group.ID, 10)
+	requestURL := fmt.Sprintf("/groups/%d", group.ID)
 	r := httptest.NewRequest(http.MethodDelete, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -585,7 +584,7 @@ func TestGetGroup(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodDelete, route, web.GetGroup(db))
 
-	requestURL := "/groups/" + strconv.FormatUint(group.ID, 10)
+	requestURL := fmt.Sprintf("/groups/%d", group.ID)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -677,7 +676,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 	requestBody := bytes.NewReader(emptyJSON)
 
-	requestURL := "/groups/" + strconv.FormatUint(group.ID, 10)
+	requestURL := fmt.Sprintf("/groups/%d", group.ID)
 	r := httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
 	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
@@ -804,7 +803,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	const route = "/users/:uid/courses/:cid/group"
 	router.Add(http.MethodGet, route, web.GetGroupByUserAndCourse(db))
 	// add the route to handler
-	requestURL := "/users/" + strconv.FormatUint(user1.ID, 10) + "/courses/" + strconv.FormatUint(course.ID, 10) + "/group"
+	requestURL := fmt.Sprintf("/users/%d/courses/%d/group", user1.ID, course.ID)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
