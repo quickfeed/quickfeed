@@ -11,7 +11,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
@@ -55,21 +54,6 @@ var allCourses = []*models.Course{
 		Provider:        "fake",
 		DirectoryID:     4,
 	},
-}
-
-// createFakeUser is a test helper to create a user in the database
-// with the given remote id and the fake scm provider.
-func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *models.User {
-	var user models.User
-	err := db.CreateUserFromRemoteIdentity(&user,
-		&models.RemoteIdentity{
-			Provider: "fake",
-			RemoteID: remoteID,
-		})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return &user
 }
 
 func TestListCourses(t *testing.T) {
