@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
@@ -43,33 +44,14 @@ func TestGetSelf(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	const (
-		route       = "/users/:uid"
-		provider    = "github"
-		accessToken = "secret"
-	)
+	const route = "/users/:uid"
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	// Create first user (the admin).
-	if err := db.CreateUserFromRemoteIdentity(
-		&models.User{},
-		&models.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	var user models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&models.RemoteIdentity{
-			Provider:    provider,
-			AccessToken: accessToken,
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
+	createFakeUser(t, db, 1)
+	user := createFakeUser(t, db, 2)
 
 	e := echo.New()
 	router := echo.NewRouter(e)
@@ -94,43 +76,20 @@ func TestGetUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Access token should be stripped.
-	user.RemoteIdentities[0].AccessToken = ""
-	if !reflect.DeepEqual(foundUser, &user) {
-		t.Errorf("have user %+v want %+v", foundUser, &user)
+	if !reflect.DeepEqual(foundUser, user) {
+		t.Errorf("have user %+v want %+v", foundUser, user)
 	}
 	assertCode(t, w.Code, http.StatusFound)
 }
 
 func TestGetUsers(t *testing.T) {
-	const (
-		route = "/users"
-
-		github = "github"
-		gitlab = "gitlab"
-	)
+	const route = "/users"
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user1 models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user1,
-		&models.RemoteIdentity{
-			Provider: github,
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
-	var user2 models.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user2,
-		&models.RemoteIdentity{
-			Provider: gitlab,
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
+	user1 := createFakeUser(t, db, 1)
+	user2 := createFakeUser(t, db, 2)
 
 	e := echo.New()
 	r := httptest.NewRequest(http.MethodGet, route, nil)
@@ -153,7 +112,7 @@ func TestGetUsers(t *testing.T) {
 	// First user should be admin.
 	admin := true
 	user1.IsAdmin = &admin
-	wantUsers := []*models.User{&user1, &user2}
+	wantUsers := []*models.User{user1, user2}
 	if !reflect.DeepEqual(foundUsers, wantUsers) {
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
 	}
@@ -277,16 +236,8 @@ func TestPatchUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
-	var adminUser models.User
-	isAdmin := true
-	adminUser.IsAdmin = &isAdmin
-	var remoteIdentity models.RemoteIdentity
-	if err := db.CreateUserFromRemoteIdentity(
-		&user, &remoteIdentity,
-	); err != nil {
-		t.Fatal(err)
-	}
+	adminUser := createFakeUser(t, db, 1)
+	user := createFakeUser(t, db, 2)
 
 	e := echo.New()
 	router := echo.NewRouter(e)
@@ -307,7 +258,7 @@ func TestPatchUser(t *testing.T) {
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
-	c.Set("user", &adminUser)
+	c.Set("user", adminUser)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
@@ -331,7 +282,7 @@ func TestPatchUser(t *testing.T) {
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
 	// Prepare context with user request.
-	c.Set("user", &adminUser)
+	c.Set("user", adminUser)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
@@ -366,7 +317,7 @@ func TestPatchUser(t *testing.T) {
 	w = httptest.NewRecorder()
 	c.Reset(r, w)
 	// Prepare context with user request.
-	c.Set("user", &adminUser)
+	c.Set("user", adminUser)
 	router.Find(http.MethodPatch, requestURL, c)
 
 	// Invoke the prepared handler.
@@ -387,9 +338,24 @@ func TestPatchUser(t *testing.T) {
 		StudentID:        "99",
 		Email:            "test@test.com",
 		AvatarURL:        "www.hello.com",
-		RemoteIdentities: []*models.RemoteIdentity{&remoteIdentity},
+		RemoteIdentities: user.RemoteIdentities,
 	}
 	if !reflect.DeepEqual(withName, wantUser) {
 		t.Errorf("have users %+v want %+v", withName, wantUser)
 	}
+}
+
+// createFakeUser is a test helper to create a user in the database
+// with the given remote id and the fake scm provider.
+func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *models.User {
+	var user models.User
+	err := db.CreateUserFromRemoteIdentity(&user,
+		&models.RemoteIdentity{
+			Provider: "fake",
+			RemoteID: remoteID,
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return &user
 }
