@@ -210,9 +210,9 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
+		// only users enrolled in the course can join a group
+		// prevent group override if a student is already in a group for this course
 		for _, user := range group.Users {
-			// only users enrolled in the course can join a group
-			// prevent group override if a student is already in a group for this course
 			enrollment, err := db.GetEnrollmentByCourseAndUser(cid, user.ID)
 			switch {
 			case err == gorm.ErrRecordNotFound:
