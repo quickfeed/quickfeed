@@ -166,8 +166,8 @@ func (s *GitlabSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 }
 
 // CreateCloneURL implements the SCM interface.
-func (s *GitlabSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
-	return "", nil
+func (s *GitlabSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
+	return ""
 }
 
 // GetPaymentPlan implements the SCM interface.

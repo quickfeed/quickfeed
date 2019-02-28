@@ -10,6 +10,7 @@ import (
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
 	client *github.Client
+	token  string
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
@@ -18,6 +19,7 @@ func NewGithubSCMClient(token string) *GithubSCM {
 	client := github.NewClient(oauth2.NewClient(context.Background(), ts))
 	return &GithubSCM{
 		client: client,
+		token:  token,
 	}
 }
 
@@ -70,7 +72,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		Private: &opt.Private,
 	})
 	if err != nil {
-		// Could not create a private repo, trying to create public
+		// could not create a private repo, trying to create public
 		err = nil
 		repo, _, err = s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{
 			Name: &opt.Path,
@@ -79,7 +81,6 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		if err != nil {
 			return nil, err
 		}
-
 	}
 
 	return &Repository{
@@ -154,6 +155,7 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, e
 }
 
 // CreateHook implements the SCM interface.
+//TODO(meling) this is not used yet; find out if we can use it to simplify setup
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
 	name := "web"
 	_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, &github.Hook{
@@ -190,8 +192,12 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 }
 
 // CreateCloneURL implements the SCM interface.
-func (s *GithubSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
-	return "https://" + opt.UserToken + "@github.com/" + opt.Directory + "/" + opt.Repository, nil
+func (s *GithubSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
+	token := s.token
+	if len(opt.UserToken) > 0 {
+		token = opt.UserToken
+	}
+	return "https://" + token + "@github.com/" + opt.Directory + "/" + opt.Repository + ".git"
 }
 
 // AddTeamRepo implements the SCM interface.

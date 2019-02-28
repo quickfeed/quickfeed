@@ -110,8 +110,8 @@ func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team
 }
 
 // CreateCloneURL implements the SCM interface.
-func (s *FakeSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
-	return "", nil
+func (s *FakeSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
+	return ""
 }
 
 // AddTeamRepo implements the SCM interface.

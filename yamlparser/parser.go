@@ -5,7 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/autograde/aguis/models"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,29 +24,45 @@ type NewAssignmentRequest struct {
 }
 
 // Parse recursively walks the given directory and parses any yaml files found
-// and returns an array of assignment requests.
-func Parse(dir string) ([]NewAssignmentRequest, error) {
+// and returns an array of assignments.
+func Parse(dir string, courseID uint64) ([]*models.Assignment, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, err
 	}
 
-	var assignments []NewAssignmentRequest
+	var assignments []*models.Assignment
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			if filename == target {
-				var assignment NewAssignmentRequest
+				var v NewAssignmentRequest
 				source, err := ioutil.ReadFile(path)
 				if err != nil {
 					return err
 				}
-				err = yaml.Unmarshal(source, &assignment)
+				err = yaml.Unmarshal(source, &v)
 				if err != nil {
 					return err
 				}
+
 				// convert to lowercase to normalize language name
-				assignment.Language = strings.ToLower(assignment.Language)
+				v.Language = strings.ToLower(v.Language)
+				deadline, err := time.Parse("02-01-2006 15:04", v.Deadline)
+				if err != nil {
+					return err
+				}
+
+				assignment := &models.Assignment{
+					ID:          uint64(v.AssignmentID),
+					CourseID:    courseID,
+					Deadline:    deadline,
+					Language:    v.Language,
+					Name:        v.Name,
+					Order:       v.AssignmentID,
+					AutoApprove: v.AutoApprove,
+					IsGroupLab:  v.IsGroupLab,
+				}
 				assignments = append(assignments, assignment)
 			}
 		}
