@@ -46,7 +46,10 @@ type Database interface {
 	GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*models.Enrollment, error)
 	GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.Enrollment, error)
 
+	// CreateAssignment creates a new or updates an existing assignment.
 	CreateAssignment(*models.Assignment) error
+	// UpdateAssignments updates the specified list of assignments.
+	UpdateAssignments([]*models.Assignment) error
 	GetAssignmentsByCourse(uint64) ([]*models.Assignment, error)
 	GetNextAssignment(cid, uid, gid uint64) (*models.Assignment, error)
 

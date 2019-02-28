@@ -463,6 +463,18 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 		}).FirstOrCreate(assignment).Error
 }
 
+// UpdateAssignments implements the Database interface.
+func (db *GormDB) UpdateAssignments(assignments []*models.Assignment) error {
+	//TODO Updating the database may need locking??
+	for _, v := range assignments {
+		// this will create or update an existing assignment
+		if err := db.CreateAssignment(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // CreateEnrollment implements the Database interface.
 // This method will overwrite the status field with models.Pending.
 func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
@@ -692,6 +704,8 @@ func (db *GormDB) UpdateGroupStatus(group *models.Group) error {
 
 // GetGroupsByCourse returns a list of groups
 func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
+	//TODO(meling) add test for this method
+	//TODO(meling) can this also Preload("Users") to avoid the GetUsers below.
 	var groups []*models.Group
 	if err := db.conn.
 		Preload("Enrollments").
@@ -714,7 +728,6 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
 			}
 			group.Users = users
 		}
-
 	}
 	return groups, nil
 }

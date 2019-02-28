@@ -36,8 +36,8 @@ type SCM interface {
 	GetUserName(context.Context) (string, error)
 	// GetUserNameByID returns the login name of user with the given remoteID.
 	GetUserNameByID(context.Context, uint64) (string, error)
-	// Returns a provider spesefic clone path.
-	CreateCloneURL(context.Context, *CreateClonePathOptions) (string, error)
+	// Returns a provider specific clone path.
+	CreateCloneURL(*CreateClonePathOptions) string
 	// Fetch current payment plan
 	GetPaymentPlan(context.Context, uint64) (*PaymentPlan, error)
 }
@@ -125,6 +125,7 @@ type ErrNotSupported struct {
 	Method string
 }
 
+// CreateClonePathOptions holds elements used when constructing a clone URL string.
 type CreateClonePathOptions struct {
 	UserToken  string
 	Directory  string
@@ -147,6 +148,7 @@ type Team struct {
 	URL  string
 }
 
+// PaymentPlan represents the payment plan to use.
 type PaymentPlan struct {
 	Name         string
 	PrivateRepos uint64

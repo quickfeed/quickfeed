@@ -4,11 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
-
-	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/yamlparser"
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
@@ -415,7 +411,6 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 				return c.NoContent(http.StatusNotFound)
 			}
 			return err
-
 		}
 
 		return c.JSONPretty(http.StatusOK, course, "\t")
@@ -440,107 +435,28 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 		}
 
 		user := c.Get("user").(*models.User)
-
-		remoteID, err := getRemoteIDFor(user, course.Provider)
-		if err != nil {
-			return err
-		}
-
 		if user.IsAdmin != nil && *user.IsAdmin {
 			// Only admin users should be able to update repos to private, if they are public.
 			updateRepoToPrivate(c.Request().Context(), db, s, course.DirectoryID)
 		}
 
-		assignments, err := RefreshCourseInformation(c.Request().Context(), logger, db, course, remoteID, s)
+		assignments, err := FetchAssignments(c.Request().Context(), s, course)
 		if err != nil {
 			return err
 		}
-
-		return c.JSONPretty(http.StatusOK, assignments, "\t")
-	}
-}
-
-var runLock sync.Mutex
-
-// RefreshCourseInformation refreshes the course information on a single course
-func RefreshCourseInformation(ctx context.Context, logger logrus.FieldLogger, db database.Database, course *models.Course, remoteID *models.RemoteIdentity, s scm.SCM) ([]yamlparser.NewAssignmentRequest, error) {
-	// Have to lock this, so no one tries to refreshes the courses simultanously, since that would result
-	// in different routines competing for storage resoruces.
-	runLock.Lock()
-	defer runLock.Unlock()
-
-	ctxGithub, cancel := context.WithTimeout(ctx, MaxWait)
-	defer cancel()
-
-	directory, err := s.GetDirectory(ctxGithub, course.DirectoryID)
-	if err != nil {
-		logger.Error("Problem fetching Directory")
-		return nil, err
-	}
-
-	path, err := s.CreateCloneURL(ctxGithub, &scm.CreateClonePathOptions{
-		Directory:  directory.Path,
-		Repository: "tests.git",
-		UserToken:  remoteID.AccessToken,
-	})
-	if err != nil {
-		logger.Error("Problem Creating clone URL")
-		return nil, err
-	}
-
-	runner := ci.Local{}
-
-	// This does not work that well on Windows because the path should be
-	// /mnt/c/Users/{user}/AppData/Local/Temp
-	// cloneDirectory := filepath.Join(os.TempDir(), "agclonepath")
-	cloneDirectory := "agclonepath"
-
-	// Clone all tests from tests repositry
-	job := &ci.Job{
-		Commands: []string{
-			"mkdir " + cloneDirectory,
-			"cd " + cloneDirectory,
-			"git clone " + path,
-		},
-	}
-	logger.WithField("job", job).Info("Running Job")
-	_, err = runner.Run(ctx, job)
-	if err != nil {
-		logger.Error("Problem Running CI runner")
-		runner.Run(ctx, &ci.Job{
-			Commands: []string{
-				"yes | rm -r " + cloneDirectory,
-			},
-		})
-		return nil, err
-	}
-
-	// Parse assignments in the test directory
-	assignments, err := yamlparser.Parse("agclonepath/tests")
-	if err != nil {
-		logger.Error("Problem getting assignments")
-		return nil, err
-	}
-
-	// Cleanup downloaded
-	runner.Run(ctx, &ci.Job{
-		Commands: []string{
-			"yes | rm -r " + cloneDirectory,
-		},
-	})
-
-	for _, v := range assignments {
-		assignment, err := createAssignment(&v, course)
-		if err != nil {
-			logger.Error("Problem createing assignment")
-			return nil, err
+		if err = db.UpdateAssignments(assignments); err != nil {
+			logger.WithError(err).Error("Failed to update assignments in database")
+			return err
 		}
-		if err := db.CreateAssignment(assignment); err != nil {
-			logger.Error("Problem adding assignment to DB")
-			return nil, err
-		}
+
+		//TODO(meling) Are the assignments (previously it was yamlparser.NewAssignmentRequest)
+		// needed by the frontend? Or can we use models.Assignment instead through db.GetAssignmentsByCourse()?
+		// Currently the frontend looks faulty, i.e. doesn't use the returned results from this
+		// function; see 'refreshCoursesFor(courseID: number): Promise<any>' in ServerProvider.ts,
+		// which does a 'return this.makeUserInfo(result.data);', indicating that the result is
+		// converted into a UserInfo type, which probably fails??
+		return c.JSONPretty(http.StatusOK, &assignments, "\t")
 	}
-	return assignments, nil
 }
 
 func getRemoteIDFor(user *models.User, provider string) (*models.RemoteIdentity, error) {
@@ -555,23 +471,6 @@ func getRemoteIDFor(user *models.User, provider string) (*models.RemoteIdentity,
 		return nil, echo.ErrNotFound
 	}
 	return remoteID, nil
-}
-
-func createAssignment(request *yamlparser.NewAssignmentRequest, course *models.Course) (*models.Assignment, error) {
-	date, err := time.Parse("02-01-2006 15:04", request.Deadline)
-	if err != nil {
-		return nil, err
-	}
-
-	return &models.Assignment{
-		AutoApprove: request.AutoApprove,
-		CourseID:    course.ID,
-		Deadline:    date,
-		Language:    request.Language,
-		Name:        request.Name,
-		Order:       request.AssignmentID,
-		IsGroupLab:  request.IsGroupLab,
-	}, nil
 }
 
 // GetSubmission returns a single submission for a assignment and a user

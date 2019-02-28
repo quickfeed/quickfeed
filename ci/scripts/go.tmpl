@@ -1,0 +1,21 @@
+#image/golang:1.11.0
+echo "\n\n==Start_CI==\n"
+git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+go get {{ .RawGetURL }}
+go get {{ .RawTestURL }}
+rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
+cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
+cp -r $GOPATH/src/{{ .RawGetURL }}/ $GOPATH/src/{{ .RawGetURL }}/../assignments/
+cd $GOPATH/src/{{ .RawGetURL }}/../assignments
+cd "{{ .AssignmentName }}"
+echo "Setup done"
+
+# Clear access token and the shell history to avoid leaking information to student test code.
+git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+history -c
+if [ -f "setup.sh" ]; then
+    bash setup.sh
+fi
+go test -v ./... -run .*AG 2>&1
+echo "\n==DONE_CI==\n"
