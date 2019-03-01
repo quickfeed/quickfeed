@@ -18,6 +18,7 @@ type AssignmentInfo struct {
 	TestURL            string
 	RawGetURL          string
 	RawTestURL         string
+	RandomSecret       string
 }
 
 // ParseScriptTemplate returns a job describing the docker image to use and
