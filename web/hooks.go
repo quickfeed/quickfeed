@@ -2,6 +2,9 @@ package web
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha1"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -122,6 +125,7 @@ func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner,
 	logger.WithField("url", getURL).Info("Code Repository")
 	logger.WithField("url", getURLTest).Info("Test repository")
 
+	randomSecret := randomSecret()
 	info := ci.AssignmentInfo{
 		CreatorAccessToken: courseCreator.RemoteIdentities[0].AccessToken,
 		AssignmentName:     selectedAssignment.Name,
@@ -130,6 +134,7 @@ func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(getURL, ".git"), "https://"),
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
+		RandomSecret:       randomSecret,
 	}
 	job, err := ci.ParseScriptTemplate(scriptPath, info)
 	if err != nil {
@@ -146,8 +151,6 @@ func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner,
 	execTime := time.Since(start)
 	logger.WithField("out", out).WithField("execTime", execTime).Info("Docker execution successful")
 
-	//TODO(meling) this secret needs to be sent as input to docker (test execution script) somehow??
-	randomSecret := "---|||---|||---|||---"
 	result, err := ci.ExtractResult(out, randomSecret, execTime)
 	if err != nil {
 		logger.WithError(err).Error("Failed to extract results from log")
@@ -172,6 +175,15 @@ func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner,
 		logger.WithError(err).Error("Failed to add submission to database")
 		return
 	}
+}
+
+func randomSecret() string {
+	randomness := make([]byte, 10)
+	_, err := rand.Read(randomness)
+	if err != nil {
+		panic("couldn't generate randomness")
+	}
+	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
 // GitlabHook handles events from Gitlab.
