@@ -1,11 +1,17 @@
 package models
 
-import "errors"
+import (
+	"errors"
+	"strconv"
+)
 
 // RepoType represents the type of repsitory.
 type RepoType uint
 
-// TODO(meling) RepoType seems to be missing GroupRepo; decide if we need both.
+//TODO(meling) Figure out how this breaks the database content; automigrate only handles adding fields
+// I believe the schema should remain the same, but the database content will change depending on the RepoType.
+//TODO(meling) RepoType seems to be missing GroupRepo; decide if we need both.
+//TODO(meling) Add None to the iota to avoid UserRepo = 0
 
 // The available repository types.
 const (
@@ -16,22 +22,28 @@ const (
 	CourseInfoRepo
 )
 
-// IdentifyRepoTypeFromFrontEnd Identifies a repo type from int.
-func IdentifyRepoTypeFromFrontEnd(repoType uint64) (RepoType, error) {
-	switch repoType {
-	case 0:
-		return UserRepo, nil
-	case 1:
-		return AssignmentsRepo, nil
-	case 2:
-		return TestsRepo, nil
-	case 3:
-		return SolutionsRepo, nil
-	case 4:
-		return CourseInfoRepo, nil
-	default:
-		return 0, errors.New("Repository type not found")
+// RepoTypeFromString returns the repo type for the provided string identifier.
+func RepoTypeFromString(repoStrType string) (repoType RepoType, err error) {
+	repoUint, err := strconv.ParseUint(repoStrType, 10, 64)
+	if err != nil {
+		//TODO(meling) should not use 0 (UserRepo); introduce RepoType None
+		return 0, err
 	}
+	switch repoUint {
+	case 0:
+		repoType = UserRepo
+	case 1:
+		repoType = AssignmentsRepo
+	case 2:
+		repoType = TestsRepo
+	case 3:
+		repoType = SolutionsRepo
+	case 4:
+		repoType = CourseInfoRepo
+	default:
+		err = errors.New("unknown repository type")
+	}
+	return
 }
 
 // Repository represents a git repository
@@ -57,4 +69,14 @@ func (t Repository) IsTestsRepo() bool {
 // IsStudentRepo returns true if the repository is a user or group repo type.
 func (t Repository) IsStudentRepo() bool {
 	return t.Type == UserRepo
+}
+
+// IsStudentRepo returns true if the repository is a user or group repo type.
+func (t RepoType) IsStudentRepo() bool {
+	return t == UserRepo
+}
+
+// IsCourseRepo returns true if the repository is one of the course repo types.
+func (t RepoType) IsCourseRepo() bool {
+	return t == CourseInfoRepo || t == TestsRepo || t == SolutionsRepo || t == AssignmentsRepo
 }

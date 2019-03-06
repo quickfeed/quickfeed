@@ -755,14 +755,25 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 // CreateRepository implements the Database interface
 func (db *GormDB) CreateRepository(repo *models.Repository) error {
 	if repo.DirectoryID == 0 || repo.RepositoryID == 0 {
-		return gorm.ErrRecordNotFound
+		return fmt.Errorf("both DirectoryID and RepositoryID must be provided for repository")
 	}
 
-	if repo.UserID > 0 {
+	switch {
+	case repo.UserID > 0:
+		// check that user exists creating repo in database
 		err := db.conn.First(&models.User{}, repo.UserID).Error
 		if err != nil {
 			return err
 		}
+	case repo.GroupID > 0:
+		// check that group exists creating repo in database
+		err := db.conn.First(&models.Group{}, repo.GroupID).Error
+		if err != nil {
+			return err
+		}
+	case !repo.Type.IsCourseRepo():
+		// if both user and group are unset, the repository belongs to the course
+		return fmt.Errorf("either UserID, GroupID or a course repository Type must be provided")
 	}
 
 	return db.conn.Create(repo).Error
@@ -781,23 +792,8 @@ func (db *GormDB) GetRepository(rid uint64) (*models.Repository, error) {
 	return &repo, nil
 }
 
-// GetRepositoriesByCourseIDandUserID Fetches Repo based on courseid, userid and type
-func (db *GormDB) GetRepositoriesByCourseIDandUserID(cid uint64, uid uint64) (*models.Repository, error) {
-	course, err := db.GetCourse(cid)
-	if err != nil {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	var repo models.Repository
-	if err := db.conn.First(&repo, &models.Repository{DirectoryID: course.DirectoryID, UserID: uid}).Error; err != nil {
-		return nil, err
-	}
-
-	return &repo, nil
-}
-
-// GetRepoByCourseIDUserIDandType Fetches Repo based on courseid, userid and type
-func (db *GormDB) GetRepoByCourseIDUserIDandType(cid uint64, uid uint64, repoType models.RepoType) (*models.Repository, error) {
+// GetRepositoryByCourseUserType implements the database interface
+func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType models.RepoType) (*models.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
 		return nil, gorm.ErrRecordNotFound
@@ -874,9 +870,8 @@ func (db *GormDB) UpdateGroup(group *models.Group) error {
 	return nil
 }
 
-// GetRepositoriesByCourseIDAndType returns repos beloning to directoryID and with repo type
-func (db *GormDB) GetRepositoriesByCourseIDAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
-
+// GetRepositoriesByCourseAndType implements the database interface
+func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
 		return nil, gorm.ErrRecordNotFound

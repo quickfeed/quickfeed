@@ -63,24 +63,41 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 	}, nil
 }
 
+// CreateRepoAndTeam implements the SCM interface.
+func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error) {
+	repo, err := s.CreateRepository(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
+		Directory: opt.Directory,
+		TeamName:  teamName,
+		Users:     gitUserNames,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.AddTeamRepo(ctx, &AddTeamRepoOptions{
+		TeamID: team.ID,
+		Owner:  repo.Owner,
+		Repo:   repo.Path,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return repo, nil
+}
+
 // CreateRepository implements the SCM interface.
 func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	var repo *github.Repository
-
 	repo, _, err := s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{
 		Name:    &opt.Path,
 		Private: &opt.Private,
 	})
 	if err != nil {
-		// could not create a private repo, trying to create public
-		err = nil
-		repo, _, err = s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{
-			Name: &opt.Path,
-		})
-
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return &Repository{
@@ -155,7 +172,6 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, e
 }
 
 // CreateHook implements the SCM interface.
-//TODO(meling) this is not used yet; find out if we can use it to simplify setup
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
 	name := "web"
 	_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, &github.Hook{

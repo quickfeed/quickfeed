@@ -53,6 +53,33 @@ func (s *FakeSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, erro
 	return dir, nil
 }
 
+// CreateRepoAndTeam implements the SCM interface.
+func (s *FakeSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error) {
+	repo, err := s.CreateRepository(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
+		Directory: opt.Directory,
+		TeamName:  teamName,
+		Users:     gitUserNames,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.AddTeamRepo(ctx, &AddTeamRepoOptions{
+		TeamID: team.ID,
+		Owner:  repo.Owner,
+		Repo:   repo.Path,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return repo, nil
+}
+
 // CreateRepository implements the SCM interface.
 func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
 	id := len(s.Repositories) + 1

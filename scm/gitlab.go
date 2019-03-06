@@ -69,6 +69,12 @@ func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 	}, nil
 }
 
+// CreateRepoAndTeam implements the SCM interface.
+func (s *GitlabSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // CreateRepository implements the SCM interface.
 func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
 	directoryID := int(opt.Directory.ID)

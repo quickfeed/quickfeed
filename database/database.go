@@ -73,10 +73,15 @@ type Database interface {
 	UpdateGroup(group *models.Group) error
 	DeleteGroup(uint64) error
 
+	// CreateRepository creates a new repository.
 	CreateRepository(repo *models.Repository) error
+	// GetRepository returns the repository for the provided repository ID.
 	GetRepository(uint64) (*models.Repository, error)
+	//TODO(meling) this is only used by courses.go:updateRepoToPrivate(), which should be removed; hence do we need this method?
 	GetRepositoriesByDirectory(uint64) ([]*models.Repository, error)
-	GetRepositoriesByCourseIDAndType(uint64, models.RepoType) ([]*models.Repository, error)
-	GetRepositoriesByCourseIDandUserID(uint64, uint64) (*models.Repository, error)
-	GetRepoByCourseIDUserIDandType(uint64, uint64, models.RepoType) (*models.Repository, error)
+	// GetRepositoryByCourseUserType returns the repository
+	// for the given course ID, user ID and repository type.
+	GetRepositoryByCourseUserType(uint64, uint64, models.RepoType) (*models.Repository, error)
+	// GetRepositoriesByCourseAndType returns repositories for the given course and repository type.
+	GetRepositoriesByCourseAndType(uint64, models.RepoType) ([]*models.Repository, error)
 }

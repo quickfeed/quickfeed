@@ -14,6 +14,13 @@ type SCM interface {
 	CreateDirectory(context.Context, *CreateDirectoryOptions) (*Directory, error)
 	// Gets a directory.
 	GetDirectory(context.Context, uint64) (*Directory, error)
+	// CreateRepoAndTeam invokes the SCM to create a repository and team for the
+	// specified namespace (typically the course name), the path of the repository
+	// (typically the name of the student with a '-labs' suffix or the group name).
+	// The team name is usually the student name or group name, whereas the git
+	// user names are the members of the team. For single student repositories,
+	// the git user names are typically just the one student.
+	CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within directory.
