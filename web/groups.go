@@ -235,12 +235,12 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 		}
 
 		// create group repo and team on the SCM
-		repo, err := createGroupRepoAndTeam(c, logger, group, course)
+		repo, err := createGroupRepoAndTeam(c, course, group)
 		if err != nil {
 			return err
 		}
 
-		dbRepo := models.Repository{
+		groupRepo := &models.Repository{
 			DirectoryID:  course.DirectoryID,
 			RepositoryID: repo.ID,
 			UserID:       0,
@@ -248,7 +248,7 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 			HTMLURL:      repo.WebURL,
 			Type:         models.UserRepo, // TODO(meling) should we distinguish GroupRepo?
 		}
-		if err := db.CreateRepository(&dbRepo); err != nil {
+		if err := db.CreateRepository(groupRepo); err != nil {
 			return err
 		}
 
@@ -296,14 +296,14 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 		}
 
 		// create group repo and team on the SCM
-		repo, err := createGroupRepoAndTeam(c, logger, oldgrp, course)
+		repo, err := createGroupRepoAndTeam(c, course, oldgrp)
 		if err != nil {
 			return err
 		}
 		logger.WithField("repo", repo).Println("Successfully created new group repository")
 
 		// added the repository details to the database
-		dbRepo := models.Repository{
+		groupRepo := &models.Repository{
 			DirectoryID:  course.DirectoryID,
 			RepositoryID: repo.ID,
 			UserID:       0,
@@ -311,7 +311,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			HTMLURL:      repo.WebURL,
 			Type:         models.UserRepo, // TODO(meling) should we distinguish GroupRepo?
 		}
-		if err := db.CreateRepository(&dbRepo); err != nil {
+		if err := db.CreateRepository(groupRepo); err != nil {
 			logger.WithField("url", repo.WebURL).WithField("gid", oldgrp.ID).WithError(err).Warn("Failed to create repository in database")
 			return err
 		}
@@ -332,12 +332,9 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 // createGroupRepoAndTeam creates the given group in course on the provided SCM.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createGroupRepoAndTeam(c echo.Context, logger logrus.FieldLogger,
-	group *models.Group, course *models.Course) (*scm.Repository, error) {
-
+func createGroupRepoAndTeam(c echo.Context, course *models.Course, group *models.Group) (*scm.Repository, error) {
 	s, err := getSCM(c, course.Provider)
 	if err != nil {
-		logger.WithField("provider", course.Provider).WithError(err).Warn("Failed to get SCM provider")
 		return nil, err
 	}
 	ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
@@ -345,56 +342,30 @@ func createGroupRepoAndTeam(c echo.Context, logger logrus.FieldLogger,
 
 	dir, err := s.GetDirectory(ctx, course.DirectoryID)
 	if err != nil {
-		logger.WithField("dirID", course.DirectoryID).WithError(err).Warn("Failed to fetch directory")
 		return nil, err
 	}
 
-	repo, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
+	gitUserNames, err := fetchGitUserNames(ctx, s, course, group.Users...)
+	if err != nil {
+		return nil, err
+	}
+
+	opt := &scm.CreateRepositoryOptions{
 		Directory: dir,
 		Path:      group.Name,
 		Private:   true,
-	})
-	if err != nil {
-		logger.WithField("path", group.Name).WithError(err).Warn("Failed to create repository")
-		return nil, err
 	}
-
-	gitUserNames, err := fetchGitUserNames(ctx, s, group.Users, course)
-	if err != nil {
-		logger.WithField("group", group.Name).WithError(err).Warn("Failed to fetch git usernames")
-		return nil, err
-	}
-
-	team, err := s.CreateTeam(ctx, &scm.CreateTeamOptions{
-		Directory: &scm.Directory{Path: dir.Path},
-		TeamName:  group.Name,
-		Users:     gitUserNames,
-	})
-	if err != nil {
-		logger.WithField("path", dir.Path).WithField("team", group.Name).WithField("users", gitUserNames).WithError(err).Warn("Failed to create team")
-		return nil, err
-	}
-
-	if err = s.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
-		TeamID: team.ID,
-		Owner:  repo.Owner,
-		Repo:   repo.Path,
-	}); err != nil {
-		logger.WithField("repo", repo.Path).WithField("team", team.ID).WithField("owner", repo.Owner).WithError(err).Warn("Failed to associate repo with team")
-		return nil, err
-	}
-
-	return repo, nil
+	return s.CreateRepoAndTeam(ctx, opt, group.Name, gitUserNames)
 }
 
-func fetchGitUserNames(ctx context.Context, s scm.SCM, users []*models.User, course *models.Course) ([]string, error) {
+func fetchGitUserNames(ctx context.Context, s scm.SCM, course *models.Course, users ...*models.User) ([]string, error) {
 	var gitUserNames []string
 	for _, user := range users {
-		remote, err := getRemoteIDFor(user, course.Provider)
-		if err != nil {
-			return nil, err
+		remote := user.GetRemoteIDFor(course.Provider)
+		if remote == nil {
+			return nil, echo.ErrNotFound
 		}
-		// Note this requires one git call per user in the group
+		// note this requires one git call per user in the group
 		userName, err := s.GetUserNameByID(ctx, remote.RemoteID)
 		if err != nil {
 			return nil, err

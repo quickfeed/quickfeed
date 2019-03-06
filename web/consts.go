@@ -1,5 +1,13 @@
 package web
 
+import "time"
+
+// MaxWait is the maximum time a request is allowed to stay open before
+// aborting.
+const MaxWait = 10 * time.Minute
+
+//TODO(meling) consider to move these to models along with the RepoType etc.
+
 // Default repository names.
 const (
 	InfoRepo          = "course-info"

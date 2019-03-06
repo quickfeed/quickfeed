@@ -3,8 +3,6 @@ package web
 import (
 	"context"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
@@ -13,10 +11,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
 )
-
-// MaxWait is the maximum time a request is allowed to stay open before
-// aborting.
-const MaxWait = 10 * time.Minute
 
 // NewCourseRequest represents a request for a new course.
 type NewCourseRequest struct {
@@ -108,8 +102,11 @@ type BaseHookOptions struct {
 
 // NewCourse creates a new course and associates it with a directory (organization in github)
 // and creates the repositories for the course.
+//TODO(meling) refactor this to separate out business logic
+//TODO(meling) remove logger from method, and use c.Logger() instead
 func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOptions) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		// c.Logger()
 		var cr NewCourseRequest
 		if err := c.Bind(&cr); err != nil {
 			return err
@@ -190,29 +187,18 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 				logger.WithField("repo", repo).Println("Created new webhook for repository")
 			}
 
-			var repoType models.RepoType
-			switch path {
-			case InfoRepo:
-				repoType = models.CourseInfoRepo
-			case AssignmentRepo:
-				repoType = models.AssignmentsRepo
-			case TestsRepo:
-				repoType = models.TestsRepo
-			case SolutionsRepo:
-				repoType = models.SolutionsRepo
-			}
-
-			dbRepo := models.Repository{
+			courseRepo := &models.Repository{
 				DirectoryID:  directory.ID,
 				RepositoryID: repo.ID,
 				HTMLURL:      repo.WebURL,
-				Type:         repoType,
+				Type:         repoType(path),
 			}
-			if err := db.CreateRepository(&dbRepo); err != nil {
+			if err := db.CreateRepository(courseRepo); err != nil {
 				return err
 			}
 		}
 
+		//TODO(meling) check user is admin/teacher (move to AccessControl middleware??)
 		user := c.Get("user").(*models.User)
 		course := models.Course{
 			Name:            cr.Name,
@@ -234,6 +220,20 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		}
 		return c.JSONPretty(http.StatusCreated, &course, "\t")
 	}
+}
+
+func repoType(path string) (repoType models.RepoType) {
+	switch path {
+	case InfoRepo:
+		repoType = models.CourseInfoRepo
+	case AssignmentRepo:
+		repoType = models.AssignmentsRepo
+	case TestsRepo:
+		repoType = models.TestsRepo
+	case SolutionsRepo:
+		repoType = models.SolutionsRepo
+	}
+	return
 }
 
 // CreateEnrollment enrolls a user in a course.
@@ -324,62 +324,23 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 			if err != nil {
 				return err
 			}
-			remote, err := getRemoteIDFor(student, course.Provider)
-			if err != nil {
-				return err
-			}
-			s, err := getSCM(c, course.Provider)
-			if err != nil {
-				return err
-			}
-			ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
-			defer cancel()
 
-			dir, err := s.GetDirectory(ctx, course.DirectoryID)
+			// create user repo and team on the SCM
+			repo, err := createUserRepoAndTeam(c, course, student)
 			if err != nil {
 				return err
 			}
-			gitUserName, err := s.GetUserNameByID(ctx, remote.ID)
-			if err != nil {
-				return err
-			}
+			// logger.WithField("repo", repo).Println("Successfully created new student repository")
 
-			//TODO(meling) Find the current payment plan and if private is available create team/repo;
-			// if not private do not create the team/repo.
-
-			repo, err := s.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-				Directory: dir,
-				Path:      StudentRepoName(gitUserName),
-				Private:   true,
-			})
-			if err != nil {
-				return err
-			}
-			dbRepo := models.Repository{
+			// add student repo to database if SCM interaction was successful
+			studentRepo := &models.Repository{
 				DirectoryID:  course.DirectoryID,
 				RepositoryID: repo.ID,
 				HTMLURL:      repo.WebURL,
 				Type:         models.UserRepo,
 				UserID:       userID,
 			}
-			if err := db.CreateRepository(&dbRepo); err != nil {
-				return err
-			}
-			// Creating team
-			team, err := s.CreateTeam(ctx, &scm.CreateTeamOptions{
-				Directory: &scm.Directory{Path: dir.Path},
-				TeamName:  gitUserName,
-				Users:     []string{gitUserName},
-			})
-			if err != nil {
-				return err
-			}
-			err = s.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
-				TeamID: team.ID,
-				Owner:  repo.Owner,
-				Repo:   repo.Path,
-			})
-			if err != nil {
+			if err := db.CreateRepository(studentRepo); err != nil {
 				return err
 			}
 
@@ -395,6 +356,37 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		}
 		return c.NoContent(http.StatusOK)
 	}
+}
+
+func createUserRepoAndTeam(c echo.Context, course *models.Course, student *models.User) (*scm.Repository, error) {
+	s, err := getSCM(c, course.Provider)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
+	defer cancel()
+
+	dir, err := s.GetDirectory(ctx, course.DirectoryID)
+	if err != nil {
+		return nil, err
+	}
+
+	gitUserNames, err := fetchGitUserNames(ctx, s, course, student)
+	if err != nil {
+		return nil, err
+	}
+	if len(gitUserNames) > 1 || len(gitUserNames) == 0 {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+	}
+	// the student's git user name is the same as the team name
+	teamName := gitUserNames[0]
+
+	opt := &scm.CreateRepositoryOptions{
+		Directory: dir,
+		Path:      StudentRepoName(teamName),
+		Private:   true,
+	}
+	return s.CreateRepoAndTeam(ctx, opt, teamName, gitUserNames)
 }
 
 // GetCourse find course by id and return JSON object.
@@ -417,7 +409,7 @@ func GetCourse(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// RefreshCourse refreshes the information to a course
+// RefreshCourse updates the course assignments (and possibly other course information).
 func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
@@ -437,6 +429,8 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 		user := c.Get("user").(*models.User)
 		if user.IsAdmin != nil && *user.IsAdmin {
 			// Only admin users should be able to update repos to private, if they are public.
+			//TODO(meling) remove this; we should prevent creating public repos in the first place
+			// and instead only if the teacher specifically requests public repo from the frontend
 			updateRepoToPrivate(c.Request().Context(), db, s, course.DirectoryID)
 		}
 
@@ -457,20 +451,6 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 		// converted into a UserInfo type, which probably fails??
 		return c.JSONPretty(http.StatusOK, &assignments, "\t")
 	}
-}
-
-func getRemoteIDFor(user *models.User, provider string) (*models.RemoteIdentity, error) {
-	var remoteID *models.RemoteIdentity
-	for _, v := range user.RemoteIdentities {
-		if v.Provider == provider {
-			remoteID = v
-			break
-		}
-	}
-	if remoteID == nil {
-		return nil, echo.ErrNotFound
-	}
-	return remoteID, nil
 }
 
 // GetSubmission returns a single submission for a assignment and a user
@@ -629,7 +609,6 @@ func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
-
 		gid, err := parseUint(c.Param("gid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
@@ -644,18 +623,19 @@ func ListGroupSubmissions(db database.Database) echo.HandlerFunc {
 		}
 
 		return c.JSONPretty(http.StatusOK, submission, "\t")
-
 	}
 }
 
 // GetCourseInformationURL returns the course information html as string
+//TODO(meling) merge this functionality with func below into a single func.
+// Use only one db call as well. Make sure the db can only return one repo.
 func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
 		}
-		courseInfoRepo, err := db.GetRepositoriesByCourseIDAndType(cid, models.CourseInfoRepo)
+		courseInfoRepo, err := db.GetRepositoriesByCourseAndType(cid, models.CourseInfoRepo)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve any course information repos")
 		}
@@ -666,8 +646,7 @@ func GetCourseInformationURL(db database.Database) echo.HandlerFunc {
 
 		// Have to be in string array to be able to jsonify so frontend recognize it.
 		// See public/src/HttpHelper.ts -> send()
-		var courseInfoURL []string
-		courseInfoURL = append(courseInfoURL, courseInfoRepo[0].HTMLURL)
+		courseInfoURL := []string{courseInfoRepo[0].HTMLURL}
 		return c.JSONPretty(http.StatusOK, &courseInfoURL, "\t")
 	}
 }
@@ -677,32 +656,26 @@ func GetRepositoryURL(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cid, err := parseUint(c.Param("cid"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse courseID")
+			return echo.NewHTTPError(http.StatusBadRequest, "failed to parse course ID")
 		}
-
-		// parseUint does not allow 0 values, since model.RepoType can be 0 we convert it ourselves.
-		repoType, err := strconv.ParseUint(c.QueryParam("type"), 10, 64)
+		repoType, err := models.RepoTypeFromString(c.QueryParam("type"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Failed to parse repoType")
-		}
-		identifiedRepoType, err := models.IdentifyRepoTypeFromFrontEnd(repoType)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse Repository type")
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
 		var repos []*models.Repository
-		if identifiedRepoType == models.UserRepo {
+		if repoType.IsStudentRepo() {
 			user := c.Get("user").(*models.User)
 			if user == nil {
 				return echo.NewHTTPError(http.StatusBadRequest, "user not registered")
 			}
-			userRepo, err := db.GetRepoByCourseIDUserIDandType(cid, user.ID, models.UserRepo)
+			userRepo, err := db.GetRepositoryByCourseUserType(cid, user.ID, models.UserRepo)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "GetRepoByCourseIDUserIDandType: Could not retrieve any UserRepo")
 			}
 			repos = append(repos, userRepo)
 		} else {
-			repos, err = db.GetRepositoriesByCourseIDAndType(cid, identifiedRepoType)
+			repos, err = db.GetRepositoriesByCourseAndType(cid, repoType)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "GetRepositoriesByCourseIDAndType: Could not retrieve any repos")
 			}
@@ -717,12 +690,14 @@ func GetRepositoryURL(db database.Database) echo.HandlerFunc {
 
 		// Have to be in string array to be able to jsonify so frontend recognize it.
 		// See public/src/HttpHelper.ts -> send()
-		var repoURL []string
-		repoURL = append(repoURL, repos[0].HTMLURL)
+		repoURL := []string{repos[0].HTMLURL}
 		return c.JSONPretty(http.StatusOK, &repoURL, "\t")
 	}
 }
 
+//TODO(meling) there are no error handling here; also add tests
+//TODO(meling) this method should probably not be necessary because we shouldn't let the frontend
+// create non-private repos unless this action is specifically specified in the CreateRepository call.
 func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, directoryID uint64) {
 	repositories, err := db.GetRepositoriesByDirectory(directoryID)
 	if err != nil {
