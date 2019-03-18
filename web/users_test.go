@@ -296,7 +296,7 @@ func TestPatchUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if admin.IsAdmin == nil || !*admin.IsAdmin {
+	if !admin.IAdmin() {
 		t.Error("expected user to have become admin")
 	}
 

@@ -104,9 +104,9 @@ type BaseHookOptions struct {
 // and creates the repositories for the course.
 //TODO(meling) refactor this to separate out business logic
 //TODO(meling) remove logger from method, and use c.Logger() instead
+// Problem: (the echo.Logger is not compatible with logrus.FieldLogger)
 func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOptions) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// c.Logger()
 		var cr NewCourseRequest
 		if err := c.Bind(&cr); err != nil {
 			return err
@@ -114,6 +114,13 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 		if !cr.valid() {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
+		user := c.Get("user").(*models.User)
+		// TODO: This check should be performed in AccessControl.
+		if !user.IAdmin() {
+			// Only teacher with admin rights can create a new course
+			return c.NoContent(http.StatusForbidden)
+		}
+
 		s, err := getSCM(c, cr.Provider)
 		if err != nil {
 			return err
@@ -198,8 +205,6 @@ func NewCourse(logger logrus.FieldLogger, db database.Database, bh *BaseHookOpti
 			}
 		}
 
-		//TODO(meling) check user is admin/teacher (move to AccessControl middleware??)
-		user := c.Get("user").(*models.User)
 		course := models.Course{
 			Name:            cr.Name,
 			CourseCreatorID: user.ID,
@@ -302,7 +307,7 @@ func UpdateEnrollment(db database.Database) echo.HandlerFunc {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		user := c.Get("user").(*models.User)
 		// TODO: This check should be performed in AccessControl.
-		if user.IsAdmin == nil || !*user.IsAdmin {
+		if !user.IAdmin() {
 			// Only admin users are allowed to enroll or reject users to a course.
 			// TODO we should also allow users of the 'teachers' team to accept/reject users
 			return c.NoContent(http.StatusUnauthorized)
@@ -427,7 +432,7 @@ func RefreshCourse(logger logrus.FieldLogger, db database.Database) echo.Handler
 		}
 
 		user := c.Get("user").(*models.User)
-		if user.IsAdmin != nil && *user.IsAdmin {
+		if user.IAdmin() {
 			// Only admin users should be able to update repos to private, if they are public.
 			//TODO(meling) remove this; we should prevent creating public repos in the first place
 			// and instead only if the teacher specifically requests public repo from the frontend

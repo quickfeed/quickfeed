@@ -106,7 +106,7 @@ func TestNewCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user := createFakeUser(t, db, 1)
+	adminUser := createFakeUser(t, db, 1)
 
 	testCourse := *allCourses[0]
 
@@ -132,7 +132,7 @@ func TestNewCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 	c.Set(fake, f)
-	c.Set(auth.UserKey, &models.User{ID: user.ID})
+	c.Set(auth.UserKey, adminUser)
 
 	h := web.NewCourse(nullLogger(), db, &web.BaseHookOptions{})
 	if err := h(c); err != nil {
@@ -159,14 +159,14 @@ func TestNewCourse(t *testing.T) {
 		t.Errorf("have response course %+v want %+v", &respCourse, course)
 	}
 
-	enrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, user.ID)
+	enrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, adminUser.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantEnrollment := &models.Enrollment{
 		ID:       enrollment.ID,
 		CourseID: testCourse.ID,
-		UserID:   user.ID,
+		UserID:   adminUser.ID,
 		Status:   models.Teacher,
 	}
 	if !reflect.DeepEqual(enrollment, wantEnrollment) {
