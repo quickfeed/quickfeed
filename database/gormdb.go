@@ -147,7 +147,6 @@ func (db *GormDB) SetAdmin(uid uint64) error {
 	if err := db.conn.First(&user, uid).Error; err != nil {
 		return err
 	}
-	//var admin bool
 	admin := true
 	user.IsAdmin = &admin
 	return db.conn.Save(&user).Error
@@ -217,7 +216,7 @@ func (db *GormDB) CreateCourse(uid uint64, course *models.Course) error {
 	if err != nil {
 		return err
 	}
-	if user.IsAdmin == nil || !*user.IsAdmin {
+	if !user.IAdmin() {
 		return ErrInsufficientAccess
 	}
 

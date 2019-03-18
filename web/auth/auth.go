@@ -267,7 +267,8 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				// Invalidate session. This could happen if the user has been entirely remove
 				// from the database, but a valid session still exists.
 				if err == gorm.ErrRecordNotFound {
-					OAuth2Logout()
+					//TODO(meling) log this error
+					return OAuth2Logout()(c)
 				}
 				return echo.ErrUnauthorized
 			}

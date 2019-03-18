@@ -157,7 +157,7 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
-		// signed in user must be teacher for course
+		// signed in user must be teacher for course (don't need to be admin, I think?)
 		signedInUser := c.Get("user").(*models.User)
 		signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(cid, signedInUser.ID)
 		if err != nil {
@@ -274,7 +274,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 
 		user := c.Get("user").(*models.User)
 		// TODO: This check should be performed in AccessControl.
-		if user.IsAdmin == nil || !*user.IsAdmin {
+		if !user.IAdmin() {
 			// Only admin / teacher can update status of a group
 			return c.NoContent(http.StatusForbidden)
 		}
