@@ -77,14 +77,11 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 
 		status := http.StatusNotModified
 
-		// Get user to update
+		// get user to update
 		updateUser, err := db.GetUser(id)
 		if err != nil {
 			return err
 		}
-
-		// Get current user
-		currentUser := c.Get("user").(*models.User)
 
 		if uur.Name != "" {
 			updateUser.Name = uur.Name
@@ -102,8 +99,10 @@ func PatchUser(db database.Database) echo.HandlerFunc {
 			updateUser.AvatarURL = uur.AvatarURL
 			status = http.StatusOK
 		}
-		// Promote other user to admin, only if current user has admin privileges
-		if uur.IsAdmin != nil && *currentUser.IsAdmin {
+		// get current user
+		currentUser := c.Get("user").(*models.User)
+		// promote other user to admin, only if current user has admin privileges
+		if currentUser.IAdmin() && uur.IsAdmin != nil {
 			updateUser.IsAdmin = uur.IsAdmin
 			status = http.StatusOK
 		}
