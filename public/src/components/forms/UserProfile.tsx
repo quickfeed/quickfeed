@@ -1,6 +1,7 @@
 import * as React from "react";
 import { UserManager } from "../../managers";
-import { IUser } from "../../models";
+//import { IUser } from "../../models";
+import { User } from "../../../proto/ag_pb";
 
 import { bindFunc, copy, RProp } from "../../helper";
 
@@ -12,7 +13,7 @@ interface IUserProfileProps {
 }
 
 interface IUserProfileState {
-    curUser?: IUser;
+    curUser?: User;
     editMode: boolean;
 }
 
@@ -22,6 +23,8 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
     constructor(props: IUserProfileProps, context: any) {
         super(props, context);
         const curUser = props.userMan.getCurrentUser();
+        //HACK: logging
+        console.log("UserProfile: setting current user: " + curUser);
         if (curUser) {
             this.state = {
                 curUser,
@@ -47,7 +50,7 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         </div >;
     }
 
-    public renderUserInfoBox(curUser: IUser): JSX.Element {
+    public renderUserInfoBox(curUser: User): JSX.Element {
         let message: JSX.Element | undefined;
         if (!this.props.userMan.isValidUser(curUser)) {
             message = <div style={{ color: "red" }}>
@@ -106,24 +109,88 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
     }
 
     public renderValue(field: string, obj: any) {
-        if (this.state.editMode) {
+        // grpc class has no public fields, to use a right getter check what value is rendering
+        let renderString = ""
+            switch (field) {
+                case "name": {
+                    //HACK: logging
+                    console.log("UserProfile renderValue: rendering name: " + (obj as User).getName());
+                    renderString = (obj as User).getName();
+                    break;
+                }
+                case "email": {
+                    //HACK: logging
+                    console.log("UserProfile renderValue: rendering email: " + (obj as User).getEmail());
+
+                    renderString = (obj as User).getEmail();
+                    break;
+                }
+                case "studentid": {
+                    //HACK: logging
+                    console.log("UserProfile renderValue: rendering student id: " + (obj as User).getStudentId())
+                    renderString = (obj as User).getStudentId();
+                    break;
+                }
+                default: {
+                    console.log("UserProfile: unknown field name when rendering user fields: " + field);
+                    break;
+                }
+            }
+
+        if (this.state.editMode) {            
             return <input
                 className="form-control"
                 name={field}
                 type="text"
-                value={obj[field]}
+                value={renderString}
                 onChange={(e) => this.handleChange(e)} />;
         } else {
-            return <span>{obj[field]}</span>;
+            return <span>{renderString}</span>;
         }
     }
 
     private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         const name = event.target.name;
+        //HACK: logging
+        console.log("UserProfile: handleChange. event.target.name is " + name);
         const curUser = this.state.curUser;
+        //HACK: logging
+        console.log("UserProfile: handleChange for current user " + curUser);
         if (curUser) {
-            const newUser: IUser = copy(curUser);
-            (newUser as any)[name] = event.target.value;
+            const newUser: User = new User();
+            newUser.setId(curUser.getId())
+            newUser.setName(curUser.getName());
+            newUser.setStudentId(curUser.getStudentId());
+            newUser.setEmail(curUser.getEmail());
+            newUser.setAvatarUrl(curUser.getAvatarUrl());
+            newUser.setIsAdmin(curUser.getIsAdmin());
+            newUser.setRemoteIdentitiesList(curUser.getRemoteIdentitiesList());
+            newUser.setEnrollmentsList(curUser.getEnrollmentsList());
+            //HACK: logging
+        console.log("UserProfile: handleChange for new user " + newUser);
+        //HACK: logging
+        console.log("UserProfile: handleChange tries to assign value " + event.target.value + " to new user");
+            switch(name) {
+                case "name": {
+                    newUser.setName(event.target.value);
+                    break;
+                }
+                case "email": {
+                    newUser.setEmail(event.target.value);
+                    break;
+                }
+                case "studentid": {
+                    newUser.setStudentId(event.target.value);
+                    break;
+                }
+                default: {
+                    console.log("UserProfile change event gets some other value: " + name);
+                    break;
+                }
+            }
+        
+        
+
             this.setState({
                 curUser: newUser,
             });

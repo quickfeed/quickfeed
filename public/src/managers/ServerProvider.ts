@@ -1,3 +1,15 @@
+import {Assignment, 
+        Course, 
+        Enrollment, 
+        User, 
+        Timestamp, 
+        StatusCode, 
+        Group, 
+        Submission, 
+        Directories,
+        Directory,
+        ActionRequest,
+        RecordRequest} from "../../proto/ag_pb";
 import {
     CourseGroupStatus,
     CourseUserState,
@@ -17,6 +29,7 @@ import {
 } from "../models";
 
 import { HttpHelper, IHTTPResult } from "../HttpHelper";
+import {GrpcManager} from "./GRPCManager"
 import { ICourseProvider } from "./CourseManager";
 
 import HttpStatusCode from "../HttpStatusCode";
@@ -30,6 +43,7 @@ import {
 } from "../managers";
 import { IMap, mapify } from "../map";
 import { ILogger } from "./LogManager";
+import { userInfo } from "os";
 
 interface IEndpoints {
     courses: string;
@@ -68,92 +82,92 @@ const URL_ENDPOINT: IEndpoints = {
 export class ServerProvider implements IUserProvider, ICourseProvider {
 
     private helper: HttpHelper;
+    private grpcHelper: GrpcManager;
     private logger: ILogger;
 
-    constructor(helper: HttpHelper, logger: ILogger) {
+    constructor(helper: HttpHelper, grpcHelper: GrpcManager, logger: ILogger) {
         this.helper = helper;
+        this.grpcHelper = grpcHelper;
         this.logger = logger;
     }
 
     public async getCourses(): Promise<ICourse[]> {
-        const result = await this.helper.get<any>(URL_ENDPOINT.courses);
-        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
+        const result = await this.grpcHelper.getCourses();
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCourses");
             return [];
         }
-        return result.data;
-        // const data = JSON.parse(JSON.stringify(result.data).toLowerCase()) as ICourse[];
-        // return mapify(result.data, (ele) => ele.id);
-        // throw new Error("Method not implemented.");
+        const data = result.data.getCoursesList().map((course) => {
+            return this.toICourse(course);
+        });
+        return data;
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]> {
-        // TODO: Fix to use correct url request
-        const status = state ? "?status=" + courseUserStateToString(state) : "";
-        const result = await this.helper.get<ICourseWithEnrollStatus[]>("/" + URL_ENDPOINT.users +
-            "/" + user.id + "/" + URL_ENDPOINT.courses + status);
 
-        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
+    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
+        const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCoursesFor");
             return [];
         }
 
         const arr: ICourseEnrollment[] = [];
-        result.data.forEach((ele) => {
-            const enroll = ele.enrolled as number >= 0 ? ele.enrolled : undefined;
+        result.data.getCoursesList().forEach((ele) => {
+            const course = this.toICourse(ele);
+            const enroll: number = ele.getEnrolled();
             arr.push({
-                course: ele as ICourse,
+                course,
                 status: enroll,
-                courseid: ele.id,
-                userid: user.id,
+                courseid: course.id,
+                userid: user.getId(),
                 user,
             });
         });
         return arr;
     }
 
-    public async getUsersForCourse(course: ICourse, state?: CourseUserState[]): Promise<IUserEnrollment[]> {
-        const status = state ? "?status=" + courseUserStateToString(state) : "";
-        const uri: string[] = [URL_ENDPOINT.courses, course.id.toString(), URL_ENDPOINT.users];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.get<IEnrollment[]>(URL + status);
 
-        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
+    public async getUsersForCourse(course: ICourse, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]> {
+        const result = await this.grpcHelper.getEnrollmentsByCourse(course.id, state);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getUserForCourse");
             return [];
         }
 
         const arr: IUserEnrollment[] = [];
-        result.data.forEach((ele) => {
-            if (isCourseEnrollment(ele)) {
-                ele.user = this.makeUserInfo(ele.user);
-                arr.push(ele);
+        result.data.getEnrollmentsList().forEach((ele) => {
+            const enroll: IEnrollment = this.toIEnrollment(ele);
+            if (isCourseEnrollment(enroll)) {
+                enroll.user = this.makeUserInfo(enroll.user);
+                arr.push(enroll);
             }
         });
         return arr;
     }
 
-    public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
-        const result = await this.helper.get<any>(URL_ENDPOINT.courses + "/" +
-            courseId.toString() + "/" + URL_ENDPOINT.assignments);
 
-        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
-            console.log(result);
+    public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
+        const result = await this.grpcHelper.getAssignments(courseId);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getAssignments");
             throw new Error("Problem with the request");
         }
-        return mapify(result.data as IAssignment[], (ele) => {
+        const assignments: IAssignment[] = [];
+        result.data.getAssignmentsList().forEach((ele) => {
+            const asg = this.toIAssignment(ele);
+            assignments.push(asg);
+        });
+
+        return mapify(assignments, (ele) => {
             ele.deadline = !ele.deadline ? new Date(2000, 1, 1) : new Date(ele.deadline);
             return ele.id;
         });
     }
 
-    public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
-        const result = await this.helper.post<{ status: CourseUserState }, undefined>
-            (URL_ENDPOINT.courses + "/" + course.id + "/" + URL_ENDPOINT.users + "/" + user.id, {
-                status: CourseUserState.pending,
-            });
-        if (result.statusCode === HttpStatusCode.CREATED) {
+
+    public async addUserToCourse(user: User, course: ICourse): Promise<boolean> {
+        const result = await this.grpcHelper.createEnrollment(user.getId(), course.id);
+        if (result.statusCode === 0) {
             return true;
         } else {
             this.handleError(result, "addUserToCourse");
@@ -161,18 +175,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return false;
     }
 
-    public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
-        const uri: string[] = [
-            URL_ENDPOINT.courses, link.courseId.toString(),
-            URL_ENDPOINT.users, link.userid.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.patch<{ courseID: number, userID: number, status: CourseUserState }, undefined>
-            ("/" + URL, {
-                courseID: link.courseId,
-                userID: link.userid,
-                status: state,
-            });
-        if (result.statusCode <= HttpStatusCode.ACCEPTED) {
+    public async changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean> {
+        const result = await this.grpcHelper.updateEnrollment(link.userid, link.courseId, state);
+        if (result.statusCode === 0) {
             return true;
         } else {
             this.handleError(result, "changeUserState");
@@ -180,81 +185,77 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return false;
     }
 
+
+
     public async createNewCourse(courseData: INewCourse): Promise<ICourse | IError> {
-        // const uri: string = "courses";
-        const result = await this.helper.post<INewCourse, ICourse>(URL_ENDPOINT.courses, courseData);
-        if (result.statusCode !== HttpStatusCode.CREATED || !result.data) {
+        const result = await this.grpcHelper.createCourse(courseData);
+        if (result.statusCode !== 0 || !result.data) {
+            this.handleError(result, "createNewCourse");
             return this.parseError(result);
         }
-        return JSON.parse(JSON.stringify(result.data)) as ICourse;
+        return this.toICourse(result.data);
     }
 
-    public async getCourse(ID: number): Promise<ICourse | null> {
-        const uri: string[] = [URL_ENDPOINT.courses, ID.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.get<any>(URL);
-        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
+
+    public async getCourse(id: number): Promise<ICourse | null> {
+        const result = await this.grpcHelper.getCourse(id);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCourse");
             return null;
         }
-        return JSON.parse(JSON.stringify(result.data)) as ICourse;
+        return this.toICourse(result.data);
     }
 
-    public async updateCourse(courseID: number, courseData: ICourse): Promise<IStatusCode | IError> {
-        // const uri: string = "courses/" + courseID;
-        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.put<ICourse, ICourse>(URL, courseData);
-        if (result.statusCode !== HttpStatusCode.OK) {
+
+    public async updateCourse(courseId: number, courseData: ICourse): Promise<StatusCode | IError> {
+        const result = await this.grpcHelper.updateCourse(courseData);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "updateCourse");
             return this.parseError(result);
         }
-        return JSON.parse(JSON.stringify(result.statusCode)) as IStatusCode;
-    }
+        const scode = new StatusCode();
+        scode.setStatusCode(0);
+        return scode;
+     }
 
     public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
-        // const uri: string = "courses/" + courseID + "/groups";
-        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.groups];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.post<INewGroup, ICourseGroup>(URL, groupData);
-        if (result.statusCode !== HttpStatusCode.CREATED || !result.data) {
+        const result = await this.grpcHelper.createGroup(groupData, courseID);
+        
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "createGroup");
             return this.parseError(result);
         }
-        return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
+        return this.toIGroup(result.data);
     }
 
+
     public async getCourseGroups(courseID: number): Promise<ICourseGroup[]> {
-        // const uri: string = "courses/" + courseID + "/groups";
-        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.groups];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.get<ICourseGroup>(URL);
-        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
+        const result = await this.grpcHelper.getGroups(courseID);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCourseGroups");
-            return [];
+            throw new Error("Problem with the request");
         }
-        return JSON.parse(JSON.stringify(result.data)) as ICourseGroup[];
+        const arr: ICourseGroup[] = [];
+        result.data.getGroupsList().forEach((ele) => {
+            const grp = this.toIGroup(ele);
+            arr.push(grp);
+        });
+        return arr;
     }
 
     public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<ICourseGroup | null> {
-        // const uri: string = "users/" + userID + "/courses/" + courseID + "/group";
-        const uri: string[] = [URL_ENDPOINT.users, userID.toString(),
-        URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.group];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.get<ICourseGroup>(URL);
-        if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
+        const result = await this.grpcHelper.getGroupByUserAndCourse(userID, courseID);
+        if (result.statusCode !== 0 || !result.data) {
+            //this.handleError(result, "getGroupByUserAndCourse");
             return null;
         }
-        return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
+        return this.toIGroup(result.data);
     }
 
-    public async updateGroupStatus(groupID: number, st: CourseGroupStatus): Promise<boolean> {
-        // const uri: string = "groups/" + groupID;
-        const data = { status: st };
-        const uri: string[] = [URL_ENDPOINT.groups, groupID.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.patch<{ status: CourseGroupStatus }, undefined>(URL, data);
-        if (result.statusCode === HttpStatusCode.OK) {
+
+    public async updateGroupStatus(groupID: number, st: Group.GroupStatus): Promise<boolean> {
+        const result = await this.grpcHelper.updateGroupStatus(groupID, st);
+        if (result.statusCode === 0)  {
             return true;
         } else {
             this.handleError(result, "updateGroupStatus");
@@ -262,23 +263,20 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return false;
     }
 
+
     public async getGroup(groupID: number): Promise<ICourseGroup | null> {
-        // const uri: string = "groups/" + groupID;
-        const uri: string[] = [URL_ENDPOINT.groups, groupID.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.get<ICourseGroup>(URL);
-        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
+        const result = await this.grpcHelper.getGroup(groupID);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getGroup");
             return null;
         }
-        return JSON.parse(JSON.stringify(result.data)) as ICourseGroup;
+        return this.toIGroup(result.data);
     }
 
+
     public async deleteGroup(groupID: number): Promise<boolean> {
-        // const uri: string = "groups/" + groupID;
-        const uri: string = URL_ENDPOINT.groups + "/" + groupID;
-        const result = await this.helper.delete(uri);
-        if (result.statusCode === HttpStatusCode.OK) {
+        const result = await this.grpcHelper.deleteGroup(groupID);
+         if (result.statusCode === 0) {
             return true;
         } else {
             this.handleError(result, "deleteGroup");
@@ -286,82 +284,40 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return false;
     }
 
+
     public async updateGroup(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
-        // const uri: string = "courses/" + courseID + "/groups/" + groupID;
-        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.groups, groupID.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.put<INewGroup, any>(URL, groupData);
-        if (result.statusCode !== HttpStatusCode.OK) {
-            this.handleError(result, "updateGroup");
+        const result = await this.grpcHelper.updateGroup(groupData, groupID, courseID);
+        if (result.statusCode !== 0 || !result.data) {
+            this.handleError(result, "getGroup");
             return this.parseError(result);
         }
-        return JSON.parse(JSON.stringify(result.statusCode)) as IStatusCode;
+        const code: IStatusCode = {statusCode: result.data.getStatusCode()};
+        return code;
     }
 
-    // getAllGroupLabInfos
     public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>> {
-        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(),
-        URL_ENDPOINT.groups, groupID.toString(), URL_ENDPOINT.submissions];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.get<ISubmission[]>(URL);
-        if (result.statusCode === HttpStatusCode.OK && result.data === undefined) {
+        const result = await this.grpcHelper.getGroupSubmissions(courseID, groupID);
+        if (result.statusCode === 0 && result.data === undefined) {
             return {};
         }
         if (!result.data) {
             this.handleError(result, "getAllLabInfos");
             return {};
         }
-        return mapify(result.data, (submission) => {
-            let buildInfoAsString = "";
-            let scoreInfoAsString = "";
-            if ((submission as any).buildinfo && ((submission as any).buildinfo as string).trim().length > 2) {
-                buildInfoAsString = (submission as any).buildinfo as string;
-            }
-            if ((submission as any).scoreobjects && ((submission as any).scoreobjects as string).trim().length > 2) {
-                scoreInfoAsString = (submission as any).scoreobjects;
-            }
-            let buildInfo: IBuildInfo;
-            let scoreObj: ITestCases[];
-            try {
-                buildInfo = JSON.parse(buildInfoAsString);
-            } catch (e) {
-                buildInfo = JSON.parse(
-                    "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
-                );
-            }
-            try {
-                scoreObj = JSON.parse(scoreInfoAsString);
-            } catch (e) {
-                scoreObj = JSON.parse(
-                    "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
-                );
-            }
-            submission.buildDate = buildInfo.builddate;
-            submission.buildId = buildInfo.buildid;
-            submission.buildLog = buildInfo.buildlog;
-            submission.executetionTime = buildInfo.execTime;
-            submission.testCases = scoreObj;
-            submission.failedTests = 0;
-            submission.passedTests = 0;
-            if (submission.testCases == null) { submission.testCases = []; }
-            submission.testCases.forEach((x) => {
-                if (x.points !== x.score) {
-                    submission.failedTests++;
-                } else {
-                    submission.passedTests++;
-                }
-            });
-            // This ID is used as index in an array created by mapify function.
-            return submission.id;
+
+        const isubmissions: ISubmission[] = [];
+        result.data.getSubmissionsList().forEach((ele) => {
+            const isbm = this.toISUbmission(ele);
+            isubmissions.push(isbm);
         });
+        return mapify(isubmissions, (ele) => {
+            return ele.id;
+        });
+
     }
 
-    // TODO change to use course id instead of getting all of them
     public async getAllLabInfos(courseID: number, userID: number): Promise<IMap<ISubmission>> {
-        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(),
-        URL_ENDPOINT.users, userID.toString(), URL_ENDPOINT.submissions];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.get<ISubmission[]>(URL);
+        const result = await this.grpcHelper.getSubmissions(courseID, userID);
         if (result.statusCode === HttpStatusCode.OK && result.data === undefined) {
             return {};
         }
@@ -369,73 +325,38 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result, "getAllLabInfos");
             return {};
         }
-        return mapify(result.data, (submission) => {
-            let buildInfoAsString = "";
-            let scoreInfoAsString = "";
-            if ((submission as any).buildinfo && ((submission as any).buildinfo as string).trim().length > 2) {
-                buildInfoAsString = (submission as any).buildinfo as string;
-            }
-            if ((submission as any).scoreobjects && ((submission as any).scoreobjects as string).trim().length > 2) {
-                scoreInfoAsString = (submission as any).scoreobjects;
-            }
-            let buildInfo: IBuildInfo;
-            let scoreObj: ITestCases[];
-            try {
-                buildInfo = JSON.parse(buildInfoAsString);
-            } catch (e) {
-                buildInfo = JSON.parse(
-                    "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
-                );
-            }
-            try {
-                scoreObj = JSON.parse(scoreInfoAsString);
-            } catch (e) {
-                scoreObj = JSON.parse(
-                    "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
-                );
-            }
-            submission.buildDate = buildInfo.builddate;
-            submission.buildId = buildInfo.buildid;
-            submission.buildLog = buildInfo.buildlog;
-            submission.executetionTime = buildInfo.execTime;
-            submission.testCases = scoreObj;
-            submission.failedTests = 0;
-            submission.passedTests = 0;
-            if (submission.testCases == null) { submission.testCases = []; }
-            submission.testCases.forEach((x) => {
-                if (x.points !== x.score) {
-                    submission.failedTests++;
-                } else {
-                    submission.passedTests++;
-                }
-            });
-            // This ID is used as index in an array created by mapify function.
-            return submission.id;
+        const isubmissions: ISubmission[] = [];
+        result.data.getSubmissionsList().forEach((ele) => {
+            const isbm = this.toISUbmission(ele);
+            isubmissions.push(isbm);
+        });
+        return mapify(isubmissions, (ele) => {
+            return ele.id;
         });
     }
 
-    public async tryLogin(username: string, password: string): Promise<IUser | null> {
+
+    public async tryLogin(username: string, password: string): Promise<User | null> {
         throw new Error("tryLogin This could be removed since there is no normal login.");
     }
 
-    public async logout(user: IUser): Promise<boolean> {
+    public async logout(user: User): Promise<boolean> {
         window.location.assign("/" + URL_ENDPOINT.logout);
         return true;
     }
 
-    public async getAllUser(): Promise<IUser[]> {
-        const result = await this.helper.get<IUser[]>(URL_ENDPOINT.users);
-        if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
+    public async getAllUser(): Promise<User[]> {
+        const result = await this.grpcHelper.getUsers();
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getAllUser");
             return [];
         }
-        const newArray = result.data.map<IUser>((ele) => this.makeUserInfo(ele));
-        // return mapify(newArray, (ele) => ele.id);
-        return newArray;
+
+        const arr = result.data.getUsersList().map<User>((ele) => this.makeUserInfo(ele));
+        return arr;
     }
 
-    public async tryRemoteLogin(provider: string): Promise<IUser | null> {
-        // TODO this needs to be fixed to return user data from provider
+    public async tryRemoteLogin(provider: string): Promise<User | null> {
         if (provider.length > 0) {
             const requestString = "/" + URL_ENDPOINT.auth + "/" + provider;
             window.location.assign(requestString);
@@ -443,11 +364,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
-    public async changeAdminRole(user: IUser): Promise<boolean> {
-        const uri: string[] = [URL_ENDPOINT.users, user.id.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.patch<{ isadmin: boolean }, {}>(URL, { isadmin: !user.isadmin });
-        if (result.statusCode < HttpStatusCode.BAD_REQUEST) {
+    public async changeAdminRole(user: User): Promise<boolean> {
+        const result = await this.grpcHelper.updateUser(user, true);
+        if (result.statusCode !== 0) {
             return false;
         } else {
             this.handleError(result, "changeAdminRole");
@@ -455,89 +374,93 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async updateUser(user: IUser): Promise<boolean> {
-        // TODO: make actuall implementation
-        const uri: string[] = [URL_ENDPOINT.users, user.id.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.patch<{ isadmin: boolean }, {}>(URL, user);
-        if (result.statusCode < HttpStatusCode.BAD_REQUEST) {
-            return false;
-        } else {
+
+    public async updateUser(user: User): Promise<boolean> {
+        const result = await this.grpcHelper.updateUser(user);
+        if (result.statusCode !== 0) {
             this.handleError(result, "updateUser");
         }
         return true;
     }
 
-    // TODO: check if resp.status contain correct status
-    public async getDirectories(provider: string): Promise<IOrganization[]> {
-        const uri: string = URL_ENDPOINT.directories;
-        const data: { provider: string } = { provider };
-        const result = await this.helper.post<{ provider: string }, IOrganization[]>(uri, data);
-        if (result.statusCode === HttpStatusCode.OK && result.data) {
-            return result.data;
-        } else {
+    public async getDirectories(provider: string): Promise<Directory[]> {
+        const result = await this.grpcHelper.getDirectories(provider);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getDirectories");
+        } else {
+            return result.data.getDirectoriesList();
         }
-        return [];
+        return[];
     }
 
     public async getProviders(): Promise<string[]> {
-        // https://nicolasf.itest.run/api/v1/providers
-        const result = await this.helper.get<string[]>(URL_ENDPOINT.providers);
-        if (result.data) {
-            return result.data;
-        } else {
+        const result = await this.grpcHelper.getProviders();
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getProviders");
+        } else {
+            return result.data.getProvidersList();
         }
         return [];
     }
 
-    public async getLoggedInUser(): Promise<IUser | null> {
+    public async getLoggedInUser(): Promise<User | null> {
+      
         const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
+
         if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
             this.handleError(result, "getLoggedInUser");
             return null;
         }
-        return this.makeUserInfo(result.data);
+        const iusr = result.data;
+
+        // We want a user with full information provided to be set as currentUser 
+        // Such user is retrieved by GRPC method getUser
+        const grpcResult = await this.grpcHelper.getUser(iusr.id);
+        if (grpcResult.statusCode !== 0 || !grpcResult.data) {
+            this.handleError(result, "getLoggedInUser");
+            const usr: User = new User();
+            usr.setId(iusr.id);
+            usr.setStudentId(iusr.studentid);
+            usr.setName(iusr.name);
+            usr.setEmail(iusr.email);
+            usr.setAvatarUrl(iusr.avatarurl);
+            usr.setIsAdmin(iusr.isadmin);
+            return this.makeUserInfo(usr);
+        }
+        return this.makeUserInfo(grpcResult.data);
     }
 
     public async refreshCoursesFor(courseID: number): Promise<any> {
-        const uri: string[] = [URL_ENDPOINT.courses, courseID.toString(), URL_ENDPOINT.refresh];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.post<any, null>(URL, null);
-        if (result.statusCode !== HttpStatusCode.OK || !result.data) {
+        const result = await this.grpcHelper.refreshCourse(courseID);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "refreshCoursesFor");
             return null;
         }
-        return this.makeUserInfo(result.data);
+        return result.data
     }
 
     public async getCourseInformationURL(courseID: number): Promise<string> {
-        const result = await this.helper.get<string[]>("courses/" + courseID + "/courseinformation");
-        if (result.data) {
-            return result.data[0];
-        } else {
+        const result = await this.grpcHelper.getCourseInformationURL(courseID);
+        if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCourseInformationURL");
+        } else {
+            return result.data.getUrl();
         }
-        return "";
+        return ""
     }
 
     public async getRepositoryURL(courseID: number, repoType: number): Promise<string> {
-        const type = "?type=" + repoType;
-        console.log(courseID);
-        const result = await this.helper.get<string[]>("courses/" + courseID + "/repositoryurl" + type);
-        if (result.data) {
-            return result.data[0];
-        } else {
-            this.handleError(result, "getRepositoryURL");
+        const result = await this.grpcHelper.getRepositoryURL(courseID, repoType);
+        if (result.statusCode !== 0 || !result.data) {
+            //this.handleError(result, "getRepositoryURL");
+            return "";
         }
-        return "";
+        return result.data.getUrl();
     }
 
+
     public async approveSubmission(submissionID: number): Promise<void> {
-        const uri: string[] = [URL_ENDPOINT.submissions, submissionID.toString()];
-        const URL = this.buildURL(uri);
-        const result = await this.helper.patch<any, null>(URL, null);
+        const result = await this.grpcHelper.updateSubmission(submissionID);
         if (result.statusCode !== HttpStatusCode.OK) {
             this.handleError(result, "approveSubmission");
             return;
@@ -545,7 +468,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return;
     }
 
-    private makeUserInfo(data: IUser): IUser {
+
+    private makeUserInfo(data: User): User {
         return data;
     }
 
@@ -576,4 +500,130 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         return url;
     }
+
+    // this method convert a grpc Course to ICourse
+    private toICourse(course: Course): ICourse {
+        const icourse: ICourse = {
+            id: course.getId(),
+            name: course.getName(),
+            code: course.getCode(),
+            tag: course.getTag(),
+            year: course.getYear(),
+            provider: course.getProvider(),
+            directoryid: course.getDirectoryId(),
+        };
+
+        return icourse;
+    }
+
+    private toIGroup(grp: Group): ICourseGroup {
+                
+        const igroup: ICourseGroup = {
+            id: grp.getId(),
+            name: grp.getName(),
+            courseid: grp.getCourseId(),
+            status: grp.getStatus().valueOf(),
+            users: grp.getUsersList(),
+        }
+        return igroup;
+    }
+
+    private toISUbmission(sbm: Submission): ISubmission {      
+        let buildInfoAsString = "";
+        let scoreInfoAsString = "";
+        if (sbm.getBuildInfo() && (sbm.getBuildInfo().trim().length > 2)) {
+            buildInfoAsString = sbm.getBuildInfo();
+        }
+        if (sbm.getScoreObjects() && (sbm.getScoreObjects().trim().length > 2)) {
+            scoreInfoAsString = sbm.getScoreObjects();
+        }
+        let buildInfo: IBuildInfo;
+        let scoreObj: ITestCases[];
+        try {
+            buildInfo = JSON.parse(buildInfoAsString);
+        } catch (e) {
+            buildInfo = JSON.parse(
+                "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
+            );
+        }
+        try {
+            scoreObj = JSON.parse(scoreInfoAsString);
+        } catch (e) {
+            scoreObj = JSON.parse(
+                "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
+            );
+        }
+
+        let failed = 0;
+        let passed = 0;
+        scoreObj.forEach((ele) => {
+            if (ele.points !== ele.score) {
+                failed++;
+            } else {
+                passed++;
+            }
+        });
+        const isbm: ISubmission = {
+            id: sbm.getId(),
+            userid: sbm.getUserId(),
+            groupid: sbm.getGroupId(),
+            assignmentid: sbm.getAssignmentId(),
+            passedTests: passed,
+            failedTests: failed,
+            score: sbm.getScore(),
+            buildId: buildInfo.buildid,
+            buildDate: buildInfo.builddate,
+            executetionTime: buildInfo.execTime,
+            buildLog: buildInfo.buildlog,
+            testCases: scoreObj,
+            approved: sbm.getApproved()
+        };
+
+        return isbm;
+
+
+    }
+
+    // this method convert a grpc Assignment to IAssignment
+    private toIAssignment(assg: Assignment): IAssignment {
+        let deadline = assg.getDeadline();
+        let date: Date = new Date();
+        if (deadline) {
+            //HACK: check the correctnes of date conversion
+            let date = new Date(deadline.getSeconds());
+        }
+        const iassgn: IAssignment = {
+            id: assg.getId(),
+            name: assg.getName(),
+            courseid: assg.getCourseId(),
+            deadline: date,
+            language: assg.getLanguage(),
+            isgrouplab: assg.getIsGrouplab()
+        };
+        return  iassgn;
+    }
+
+    // this method convert a grpc Enrollment to IEnrollment
+    private toIEnrollment(enrollment: Enrollment): IEnrollment {
+        const ienroll: IEnrollment =  {
+            userid: enrollment.getUserId(),
+            courseid: enrollment.getCourseId(),
+        };
+        if (enrollment.getStatus() !== undefined) {
+            ienroll.status = enrollment.getStatus().valueOf();
+        }
+
+        const user: User | undefined = enrollment.getUser();
+        if (user !== undefined) {
+            ienroll.user = user;
+        }
+        const course: Course | undefined = enrollment.getCourse();
+        if (course !== undefined) {
+            ienroll.course = this.toICourse(course);
+        }
+
+        return ienroll as IEnrollment;
+    }
+
+
 }

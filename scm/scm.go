@@ -3,21 +3,23 @@ package scm
 import (
 	"context"
 	"errors"
+
+	pb "github.com/autograde/aguis/ag"
 )
 
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
 	// Lists directories which can be used as a course directory.
-	ListDirectories(context.Context) ([]*Directory, error)
+	ListDirectories(context.Context) ([]*pb.Directory, error)
 	// Creates a new directory.
-	CreateDirectory(context.Context, *CreateDirectoryOptions) (*Directory, error)
+	CreateDirectory(context.Context, *CreateDirectoryOptions) (*pb.Directory, error)
 	// Gets a directory.
-	GetDirectory(context.Context, uint64) (*Directory, error)
+	GetDirectory(context.Context, uint64) (*pb.Directory, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within directory.
-	GetRepositories(context.Context, *Directory) ([]*Repository, error)
+	GetRepositories(context.Context, *pb.Directory) ([]*Repository, error)
 	// Update repository settings
 	UpdateRepository(context.Context, *Repository) error
 	// Delete repository.
@@ -97,7 +99,7 @@ type Hook struct {
 // created.
 type CreateRepositoryOptions struct {
 	Path      string
-	Directory *Directory
+	Directory *pb.Directory
 	Private   bool
 }
 

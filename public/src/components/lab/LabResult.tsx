@@ -1,12 +1,13 @@
 import * as React from "react";
 import { ProgressBar, Row } from "../../components";
-import { IUser } from "../../models";
+//import { IUser } from "../../models";
+import { User } from "../../../proto/ag_pb";
 
 interface ILabResult {
     progress: number;
     lab: string;
     course_name: string;
-    student?: IUser;
+    student?: User;
     status: string;
     deliverd: string;
 }
@@ -15,7 +16,7 @@ class LabResult extends React.Component<ILabResult, any> {
     public render() {
         let labHeading: JSX.Element;
         if (this.props.student) {
-            labHeading = <h3>{this.props.student.name}: {this.props.lab}</h3>;
+            labHeading = <h3>{this.props.student.getName()}: {this.props.lab}</h3>;
         } else {
             labHeading = <div>
                 <h1>{this.props.course_name}</h1>

@@ -88,7 +88,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element | ICellElement> {
         const slipdayPlaceholder = "5";
-        let selector: Array<string | JSX.Element | ICellElement> = [student.user.name, slipdayPlaceholder];
+        let selector: Array<string | JSX.Element | ICellElement> = [student.user.getName(), slipdayPlaceholder];
         selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.isgrouplab).map(
             (e, i) => {
                 let approvedCss: string = "";
@@ -117,8 +117,8 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         query = query.toLowerCase();
         const filteredData: IUserCourseWithUser[] = [];
         this.props.students.forEach((std) => {
-            if (std.user.name.toLowerCase().indexOf(query) !== -1
-                || std.user.email.toLowerCase().indexOf(query) !== -1
+            if (std.user.getName().toLowerCase().indexOf(query) !== -1
+                || std.user.getEmail().toLowerCase().indexOf(query) !== -1
             ) {
                 filteredData.push(std);
             }

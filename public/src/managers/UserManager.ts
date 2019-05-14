@@ -1,20 +1,23 @@
 import { IEventData, newEvent } from "../event";
+import {Assignment, Course, Enrollment, User, Timestamp, StatusCode, Group, Submission, ActionRequest} from "../../proto/ag_pb";
+
 import { IMap, MapHelper } from "../map";
 import { IUser } from "../models";
 import { ILogger } from "./LogManager";
+import { isNullOrUndefined } from "util";
 
 export interface IUserProvider {
-    tryLogin(username: string, password: string): Promise<IUser | null>;
-    logout(user: IUser): Promise<boolean>;
-    getAllUser(): Promise<IUser[]>;
-    tryRemoteLogin(provider: string): Promise<IUser | null>;
-    changeAdminRole(user: IUser): Promise<boolean>;
-    getLoggedInUser(): Promise<IUser | null>;
-    updateUser(user: IUser): Promise<boolean>;
+    tryLogin(username: string, password: string): Promise<User | null>;
+    logout(user: User): Promise<boolean>;
+    getAllUser(): Promise<User[]>;
+    tryRemoteLogin(provider: string): Promise<User | null>;
+    changeAdminRole(user: User): Promise<boolean>;
+    getLoggedInUser(): Promise<User | null>;
+    updateUser(user: User): Promise<boolean>;
 }
 
 interface IUserLoginEvent extends IEventData {
-    user: IUser;
+    user: User;
 }
 
 export class UserManager {
@@ -28,7 +31,8 @@ export class UserManager {
     public onLogout = newEvent<IEventData>("UserManager.onLogout");
 
     private userProvider: IUserProvider;
-    private currentUser: IUser | null;
+    private currentUser: User | null;
+   // private usersToken: string | null;
 
     /**
      * Creates a new instance of the UserManager
@@ -42,14 +46,14 @@ export class UserManager {
      * Returns the current logged in user.
      * If there is no logged in user it returns null
      */
-    public getCurrentUser(): IUser | null {
+    public getCurrentUser(): User | null {
         return this.currentUser;
     }
 
-    public isValidUser(user: IUser): boolean {
-        return user.email.length > 0
-            && user.name.length > 0
-            && user.studentid.length > 0;
+    public isValidUser(user: User): boolean {
+        return user.getEmail().length > 0
+            && user.getName().length > 0
+            && user.getStudentId().length > 0;
     }
 
     /**
@@ -58,7 +62,7 @@ export class UserManager {
      * @param username The username to try login with
      * @param password The password to try login with
      */
-    public async tryLogin(username: string, password: string): Promise<IUser | null> {
+    public async tryLogin(username: string, password: string): Promise<User | null> {
         const result = await this.userProvider.tryLogin(username, password);
         if (result) {
             this.currentUser = result;
@@ -73,11 +77,13 @@ export class UserManager {
      * @param provider Provider service to login with. Currently supports github and gitlab
      * @returns Returns the user if succsess or null if failed.
      */
-    public async tryRemoteLogin(provider: string): Promise<IUser | null> {
+    public async tryRemoteLogin(provider: string): Promise<User | null> {
         const result = await this.userProvider.tryRemoteLogin(provider);
         if (result) {
             this.currentUser = result;
             this.onLogin({ target: this, user: this.currentUser });
+        } else {
+            console.log("Try remote login (userMan) - result is empty");
         }
         return result;
     }
@@ -98,8 +104,11 @@ export class UserManager {
      * @param user User to check if is an admin
      * @returns Returns true if admin. False otherwise
      */
-    public isAdmin(user: IUser): boolean {
-        return user.isadmin;
+    public isAdmin(user: User): boolean {
+        if (user.getIsAdmin()) {
+            return user.getIsAdmin();
+        }
+        return false;
     }
 
     /**
@@ -107,8 +116,8 @@ export class UserManager {
      * @param user User to check if is an teacher in a courses
      * @returns Returns true if user is teacher in one or more courses
      */
-    public async isTeacher(user: IUser): Promise<boolean> {
-        return user.isadmin;
+    public async isTeacher(user: User): Promise<boolean> {
+        return user.getIsAdmin();
     }
 
     /**
@@ -116,7 +125,7 @@ export class UserManager {
      * This function is mostly for testing and will change in the future
      * @returns All users at the backend
      */
-    public async getAllUser(): Promise<IUser[]> {
+    public async getAllUser(): Promise<User[]> {
         return await this.userProvider.getAllUser();
     }
 
@@ -124,7 +133,7 @@ export class UserManager {
      * This is not implemented
      * @param id the id of a single userobject to be returned
      */
-    public async getUser(id: number): Promise<IUser> {
+    public async getUser(id: number): Promise<User> {
         throw new Error("Not implemented error");
     }
 
@@ -132,7 +141,7 @@ export class UserManager {
      * A way to promote a user to an administrator
      * @param user The user to premote to admin
      */
-    public async changeAdminRole(user: IUser): Promise<boolean> {
+    public async changeAdminRole(user: User): Promise<boolean> {
         return await this.userProvider.changeAdminRole(user);
     }
 
@@ -140,7 +149,7 @@ export class UserManager {
      * Updates a user
      * @param user The user to update with the new information
      */
-    public updateUser(user: IUser): Promise<boolean> {
+    public updateUser(user: User): Promise<boolean> {
         return this.userProvider.updateUser(user);
     }
 
@@ -148,9 +157,10 @@ export class UserManager {
      * Communicates with the backend to see if there is a logged inn user
      */
     public async checkUserLoggedIn(): Promise<boolean> {
-        const user = await this.userProvider.getLoggedInUser();
-        this.currentUser = user;
-        if (user) {
+        const usr = await this.userProvider.getLoggedInUser();
+
+        this.currentUser = usr;
+        if (usr) {
             return true;
         }
         return false;

@@ -1,0 +1,258 @@
+syntax = "proto3";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+//  USERS AND  USERGROUPS   //
+
+message User {
+    uint64 id = 1;
+    bool is_admin = 2;
+    string name = 3;
+    string student_id = 4;
+    string email = 5;
+    string avatar_url = 6;
+
+    repeated RemoteIdentity remote_identities = 7;
+    repeated Enrollment enrollments = 8;
+}
+
+message Users {
+    repeated User users = 1;
+}
+
+message RemoteIdentity {
+    uint64 id = 1;
+    string provider = 2 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
+    uint64 remote_id = 3 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
+    string access_token = 4;
+    uint64 user_id = 5;
+}
+
+message Group {
+    enum GroupStatus {
+        PENDING_GROUP = 0;
+        REJECTED_GROUP = 1;
+        APPROVED = 2;
+        DELETED = 3;
+    }
+    uint64 id = 1;
+    string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
+    uint64 course_id = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
+    GroupStatus status = 4;
+
+    repeated User users = 5;
+    repeated Enrollment enrollments = 6;
+}
+
+message Groups {
+    repeated Group groups = 1;
+}
+
+//   COURSES   //
+
+message Course {
+    uint64 id = 1;
+    uint64 coursecreator_id = 2;
+    string name = 3;
+    string code = 4;
+    uint32 year = 5;
+    string tag = 6;
+    string provider = 7;
+    uint64 directory_id = 8;
+    Enrollment.UserStatus enrolled = 9;
+
+    repeated Enrollment enrollments = 10;
+    repeated Assignment assignments = 12;
+    repeated Group groups = 13;
+}
+
+message Courses {
+    repeated Course Courses = 1;
+}
+
+message Enrollment {
+    enum UserStatus {
+        PENDING = 0;
+        REJECTED = 1;
+        STUDENT = 2;
+        TEACHER = 3;
+    }
+    
+    uint64 id = 1;
+    uint64 course_id = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
+    uint64 user_id = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
+    uint64 group_id = 4;
+    User user = 5;
+    Course course = 6;
+    Group group = 7;
+    UserStatus status = 8;
+}
+
+message Enrollments {
+    repeated Enrollment enrollments = 1;
+}
+
+message Assignment {
+    uint64 id = 1;
+    uint64 course_id = 2;
+    string name = 3;
+    string language = 4;
+    google.protobuf.Timestamp deadline = 5; 
+    bool auto_approve = 6;
+    uint32 order = 7;
+    bool is_grouplab = 8;
+    Submission submission = 9;    
+}
+
+message Assignments {
+    repeated Assignment assignments = 1;
+}
+
+message Submission {
+    uint64 id = 1;
+    uint64 assignment_id = 2;
+    uint64 user_id = 3;
+    uint64 group_id = 4;
+    uint32 score = 5;
+    string score_objects = 6;
+    string build_info = 7;
+    string commit_hash = 8;
+    bool approved = 9;
+}
+
+message Submissions {
+    repeated Submission submissions = 1;
+}
+
+message Repository {
+    enum RepoType {
+        USER = 0;
+        ASSIGNMENT = 1;
+        TESTS = 2;
+        SOLUTION = 3;
+        COURSEINFO = 4;
+    }
+    uint64 id = 1;
+    uint64 directory_id = 2;
+    uint64 repository_id = 3;
+    uint64 user_id = 4;
+    uint64 group_id = 5;
+    string html_url = 6;
+    RepoType repo_type = 7;
+}
+
+message Repositories {
+    repeated Repository repositories = 1;
+}
+
+message Directory {
+    uint64 id = 1;
+    string path = 2;
+    string avatar = 3;
+}
+
+message Directories {
+    repeated Directory directories = 1;
+}
+
+////    REQUESTS AND RESPONSES      \\\\
+
+message RecordRequest {
+    uint64 id = 1;
+    repeated Enrollment.UserStatus statuses = 2;
+    repeated Group.GroupStatus group_statuses = 3;
+}
+
+// fields can be empty, do not use fields for user validation, use context
+// can be used in submission, enrollment and group requests, also in requests with multiple IDs
+message ActionRequest {
+    uint64 id = 1;
+    uint64 user_id = 2;
+    uint64 group_id = 3;
+    uint64 course_id = 4;
+    Enrollment.UserStatus status = 5;
+    Group.GroupStatus group_status = 6;
+}
+
+message DirectoryRequest {
+    string provider = 1;
+    uint64 course_id = 2;
+}
+
+message RepositoryRequest {
+    uint64 id = 1;
+    Repository.RepoType type = 2;
+    uint64 directory_id = 3;
+    uint64 repository_id = 4;
+    uint64 user_id = 5;
+    uint64 course_id = 6;
+}
+
+message Providers {
+    repeated string providers = 1;
+}
+
+message URLResponse {
+    string url = 1;
+}
+
+message StatusCode {
+    int32 status_code = 1;
+}
+
+message Void {}
+
+service AutograderService {
+
+    // users //
+
+    rpc GetSelf(Void) returns (User) {}
+    rpc GetUser(RecordRequest) returns (User) {}
+    rpc GetUsers(Void) returns (Users) {}
+    rpc UpdateUser(User) returns (User) {}
+
+    // groups //
+
+    rpc GetGroup(RecordRequest) returns (Group) {}
+    rpc GetGroupByUserAndCourse(ActionRequest) returns (Group) {} 
+    rpc GetGroups(RecordRequest) returns (Groups) {} 
+    rpc CreateGroup(Group) returns (Group) {} 
+    rpc UpdateGroup(Group) returns (Void) {}
+    rpc UpdateGroupStatus (Group) returns (Void) {} 
+    rpc DeleteGroup(Group) returns (Void) {}
+
+    // courses //
+
+    rpc GetCourse(RecordRequest) returns (Course) {} 
+    rpc GetCourses(Void) returns (Courses) {} 
+    rpc GetCoursesWithEnrollment(RecordRequest) returns (Courses) {}
+    rpc GetCourseInformationURL (RecordRequest) returns (URLResponse) {} 
+    rpc CreateCourse(Course) returns (Course) {}
+    rpc UpdateCourse(Course) returns (Void) {}
+    rpc RefreshCourse (RecordRequest) returns (Assignments) {}
+
+    // enrollments //
+
+    rpc GetEnrollmentsByCourse(RecordRequest) returns (Enrollments) {}
+    rpc CreateEnrollment(ActionRequest) returns (StatusCode) {} 
+    rpc UpdateEnrollment(ActionRequest) returns (StatusCode) {} 
+
+    // submissions //
+
+    rpc GetSubmissions(ActionRequest) returns (Submissions) {}
+    rpc GetSubmission(RecordRequest) returns (Submission) {}
+    rpc GetGroupSubmissions(ActionRequest) returns (Submissions) {}
+    rpc UpdateSubmission(RecordRequest) returns (Void) {}
+   
+    // misc //
+    
+    rpc GetAssignments(RecordRequest) returns (Assignments) {} 
+    rpc GetRepositoryURL(RepositoryRequest) returns (URLResponse){}
+    rpc GetProviders(Void) returns (Providers) {}
+    rpc GetDirectories (DirectoryRequest) returns (Directories) {}
+
+    // The sole purpose of this RPC is to provide a reference to Repository type to TypeScript client
+    // Might later be used as a more general type for retrieval of repo information 
+    rpc GetRepository (RepositoryRequest) returns (Repository) {}
+}

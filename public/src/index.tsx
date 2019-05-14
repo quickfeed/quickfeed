@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
@@ -11,7 +12,7 @@ import { StudentPage } from "./pages/StudentPage";
 import { TeacherPage } from "./pages/TeacherPage";
 import { ViewPage } from "./pages/ViewPage";
 
-import { IUser } from "./models";
+import {User} from "../proto/ag_pb";
 import { AdminPage } from "./pages/AdminPage";
 
 import { NavBarLogin } from "./components/navigation/NavBarLogin";
@@ -29,12 +30,13 @@ import { UserProfile } from "./components/forms/UserProfile";
 import { UserPage } from "./pages/UserPage";
 
 import { AddMenu } from "./components/navigation/AddMenu";
+import { GrpcManager } from "./managers/GRPCManager";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
     currentContent: JSX.Element;
     topLinks: ILink[];
-    curUser: IUser | null;
+    curUser: User | null;
     curMessage?: ILogEntry;
 }
 
@@ -64,7 +66,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         });
 
         const curUser = this.userMan.getCurrentUser();
-
         this.state = {
             activePage: undefined,
             topLinks: [],
@@ -112,7 +113,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         this.setState({ activePage: e.page, currentContent: newContent });
     }
 
-    public async generateTopLinksFor(user: IUser | null): Promise<ILink[]> {
+    public async generateTopLinksFor(user: User | null): Promise<ILink[]> {
         if (user) {
             const basis: ILink[] = [];
             if (this.userMan.isAdmin(user)) {
@@ -139,6 +140,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     public checkloggedInUser(): boolean {
+        
         const cur = this.userMan.getCurrentUser();
         if (cur) {
             return this.userMan.isValidUser(cur);
@@ -214,11 +216,11 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         const dropDownMenuLinks: ILink[] = [
             { name: "Join Course", uri: "app/student/enroll" },
         ];
-        if (this.state.curUser && this.state.curUser.isadmin) {
+        if (this.state.curUser && this.state.curUser.getIsAdmin()) {
             dropDownMenuLinks.push({ name: "New Course", uri: "app/admin/courses/new" });
         }
         const userLinks: ILink[] = [
-            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.name : "") },
+            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.getName() : "") },
             { name: "#separator" },
             { name: "Your profile", uri: "/app/user" },
             { name: "Help", uri: "/app/help" },
@@ -226,7 +228,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             { name: "Sign out", uri: "app/login/logout" },
         ];
         const adminLinks: ILink[] = [
-            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.name : "") },
+            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.getName() : "") },
             { name: "#separator" },
             { name: "Your profile", uri: "/app/user" },
             { name: "Help", uri: "/app/help" },
@@ -260,7 +262,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 break;
         }
         let currentLinks: ILink[] = [];
-        if (this.state.curUser && this.state.curUser.isadmin) {
+        if (this.state.curUser && this.state.curUser.getIsAdmin()) {
             currentLinks = adminLinks;
         } else {
             currentLinks = userLinks;
@@ -308,6 +310,8 @@ async function main(): Promise<void> {
     const DEBUG_BROWSER = "DEBUG_BROWSER";
     const DEBUG_SERVER = "DEBUG_SERVER";
 
+    
+
     let curRunning: string;
     curRunning = DEBUG_SERVER;
 
@@ -322,12 +326,18 @@ async function main(): Promise<void> {
     let courseMan: CourseManager;
     const logMan = new LogManager();
     const navMan: NavigationManager = new NavigationManager(history, logMan.createLogger("NavigationManager"));
+    
 
     if (curRunning === DEBUG_SERVER) {
+
         const httpHelper = new HttpHelper("/api/v1");
-        const serverData = new ServerProvider(httpHelper, logMan.createLogger("ServerProvider"));
+
+        const grpcHelper = new GrpcManager();
+
+        const serverData = new ServerProvider(httpHelper, grpcHelper, logMan.createLogger("ServerProvider"));
 
         userMan = new UserManager(serverData, logMan.createLogger("UserManager"));
+        grpcHelper.setUserMan(userMan);
         courseMan = new CourseManager(serverData, logMan.createLogger("CourseManager"));
     } else {
         userMan = new UserManager(tempData, logMan.createLogger("UserManager"));
@@ -336,7 +346,12 @@ async function main(): Promise<void> {
         const user = await userMan.tryLogin("test@testersen.no", "1234");
     }
 
+    
+
     await userMan.checkUserLoggedIn();
+    
+    
+
 
     (window as any).debugData = { tempData, userMan, courseMan, navMan, logMan };
 

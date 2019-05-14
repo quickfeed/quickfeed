@@ -2,6 +2,8 @@ import * as React from "react";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
 import { CourseUserState, IUser, IUserRelation } from "../../models";
+import {User, Enrollment} from "../../../proto/ag_pb";
+
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 
@@ -72,14 +74,14 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private renderRow(user: IUserRelation): Array<string | JSX.Element> {
         const selector: Array<string | JSX.Element> = [];
-        if (user.link.state === CourseUserState.teacher) {
-            selector.push(<span className="text-muted">{user.user.name}</span>);
+        if (user.link.state === Enrollment.UserStatus.TEACHER) {
+            selector.push(<span className="text-muted">{user.user.getName()}</span>);
         } else {
-            selector.push(user.user.name);
+            selector.push(user.user.getName());
         }
         selector.push(
-            <a href={"mailto:" + user.user.email}>{user.user.email}</a>,
-            user.user.studentid.toString(),
+            <a href={"mailto:" + user.user.getEmail()}>{user.user.getEmail()}</a>,
+            user.user.getStudentId().toString(),
         );
         const temp = this.renderActions(user);
         if (Array.isArray(temp) && temp.length > 0) {
@@ -141,9 +143,9 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         query = query.toLowerCase();
         const filteredData: IUserRelation[] = [];
         this.props.users.forEach((user) => {
-            if (user.user.name.toLowerCase().indexOf(query) !== -1
-                || user.user.email.toLowerCase().indexOf(query) !== -1
-                || user.user.studentid.toString().indexOf(query) !== -1
+            if (user.user.getName().toLowerCase().indexOf(query) !== -1
+                || user.user.getEmail().toLowerCase().indexOf(query) !== -1
+                || user.user.getStudentId().toString().indexOf(query) !== -1
             ) {
                 filteredData.push(user);
             }

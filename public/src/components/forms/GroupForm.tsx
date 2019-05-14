@@ -6,13 +6,13 @@ import {
     CourseUserState, ICourse, ICourseGroup, IError,
     INewGroup, isError, IStatusCode, IUser, IUserRelation,
 } from "../../models";
-
+import { User, Enrollment } from "../../../proto/ag_pb";
 import { Search } from "../../components";
 
 interface IGroupProp {
     className: string;
     students: IUserRelation[];
-    curUser: IUser;
+    curUser: User;
     courseMan: CourseManager;
     navMan: NavigationManager;
     pagePath: string;
@@ -30,7 +30,7 @@ interface IGroupState {
 class GroupForm extends React.Component<IGroupProp, IGroupState> {
     constructor(props: any) {
         super(props);
-        const currentUser = this.props.students.find((v) => v.user.id === this.props.curUser.id);
+        const currentUser = this.props.students.find((v) => v.user.getId() === this.props.curUser.getId());
         const as: IUserRelation[] = this.getAvailableStudents(currentUser);
         const ss: IUserRelation[] = this.getSelectedStudents(currentUser);
         this.state = {
@@ -50,8 +50,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         const selectableStudents: JSX.Element[] = [];
         for (const student of this.state.students) {
             selectableStudents.push(
-                <li key={student.user.id} className="list-group-item">
-                    {student.user.name}
+                <li key={student.user.getId()} className="list-group-item">
+                    {student.user.getName()}
                     <button type="button"
                         className="btn btn-outline-success" onClick={() => this.handleAddToGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-plus-sign" />
@@ -62,8 +62,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         const selectedStudents: JSX.Element[] = [];
         for (const student of this.state.selectedStudents) {
             selectedStudents.push(
-                <li key={student.user.id} className="list-group-item">
-                    {student.user.name}
+                <li key={student.user.getId()} className="list-group-item">
+                    {student.user.getName()}
                     <button className="btn btn-outline-primary"
                         onClick={() => this.handleRemoveFromGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-minus-sign" />
@@ -138,7 +138,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         } else {
             const formData: INewGroup = {
                 name: this.state.name,
-                userids: this.state.selectedStudents.map((u, i) => u.user.id),
+                userids: this.state.selectedStudents.map((u, i) => u.user.getId()),
             };
 
             const result = this.props.groupData ?
@@ -157,7 +157,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 });
             } else {
                 if (this.props.groupData) {
-                    if (this.props.groupData.users.filter((x) => x.id === this.props.curUser.id).length > 0) {
+                    if (this.props.groupData.users.filter((x) => x.getId() === this.props.curUser.getId()).length > 0) {
                         const redirectTo: string = this.props.groupData ?
                             this.props.pagePath + "/courses/" + this.props.course.id + "/groups"
                             : this.props.pagePath + "/courses/" + this.props.course.id + "/members";
@@ -238,8 +238,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         query = query.toLowerCase();
         const filteredData: IUserRelation[] = [];
         this.props.students.forEach((student) => {
-            if ((student.user.name.toLowerCase().indexOf(query) !== -1
-                || student.user.email.toString().indexOf(query) !== -1)
+            if ((student.user.getName().toLowerCase().indexOf(query) !== -1
+                || student.user.getEmail().toString().indexOf(query) !== -1)
                 && this.state.selectedStudents.indexOf(student) === -1
             ) {
                 filteredData.push(student);
@@ -260,11 +260,11 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
             errors.push("Group mush have members.");
         }
         if (this.state.curUser
-            && (this.state.curUser.link.state === CourseUserState.student
-                || this.state.curUser.link.state === CourseUserState.teacher)
+            && (this.state.curUser.link.state === Enrollment.UserStatus.STUDENT
+                || this.state.curUser.link.state === Enrollment.UserStatus.TEACHER)
             && !this.isCurrentStudentSelected(this.state.curUser)) {
 
-            if (this.state.curUser.link.state !== CourseUserState.teacher) {
+            if (this.state.curUser.link.state !== Enrollment.UserStatus.TEACHER) {
                 errors.push("You must be a member of the group");
             }
         }
@@ -295,7 +295,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         const ss: IUserRelation[] = [];
         if (this.props.groupData) {
             for (const user of this.props.groupData.users) {
-                const guser = this.props.students.find((v) => v.user.id === user.id);
+                const guser = this.props.students.find((v) => v.user.getId() === user.getId());
                 if (guser) {
                     ss.push(guser);
                 }
@@ -311,7 +311,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         const as: IUserRelation[] = this.props.students.slice();
         if (this.props.groupData) {
             for (const user of this.props.groupData.users) {
-                const guser = as.find((v) => v.user.id === user.id);
+                const guser = as.find((v) => v.user.getId() === user.getId());
                 if (guser) {
                     const index = as.indexOf(guser);
                     if (index >= 0) {

@@ -1,0 +1,340 @@
+
+import * as grpcWeb from 'grpc-web'
+
+import {AutograderServiceClient} from '../../proto/AgServiceClientPb'
+import {
+    Repository,
+    RepositoryRequest,
+    Providers,
+    User,
+    Users,
+    RecordRequest,
+    Course,
+    Courses,
+    StatusCode,
+    Submission,
+    Submissions,
+    Assignment,
+    Assignments,
+    RemoteIdentity,
+    Enrollment,
+    ActionRequest,
+    Enrollments,
+    Group,
+    Groups,
+    Void,
+    Directories,
+    DirectoryRequest,
+    URLResponse
+} from "../../proto/ag_pb"
+import { ICourse, INewCourse, INewGroup, IUser, ICourseGroup } from "../models";
+import { InitialLetterAlignProperty } from 'csstype';
+import { Context } from 'vm';
+import { UserManager } from './UserManager';
+import { createContext } from 'react';
+
+
+
+export interface IGrpcResponse<T> {
+    statusCode: number;
+    data?: T;
+}
+
+
+export class GrpcManager {
+
+    agService: AutograderServiceClient;
+    private userMan: UserManager;
+
+    constructor() {
+        this.agService = new AutograderServiceClient('http://localhost:8080', null, null);
+
+    }
+
+    public setUserMan(man: UserManager) {
+        this.userMan =  man;
+    }
+
+   // /* USERS */ //
+
+    public getSelf(): Promise<IGrpcResponse<User>> {
+        const request = new Void();
+        return this.grpcSend<User>(this.agService.getSelf, request);
+    }
+
+    public getUsers(): Promise<IGrpcResponse<Users>> {
+        const request = new Void();
+        return this.grpcSend<Users>(this.agService.getUsers, request);
+    }
+
+    
+    public getUser(id:number): Promise<IGrpcResponse<User>> {
+        const request = new RecordRequest();
+        request.setId(id);
+        return this.grpcSend<User>(this.agService.getUser, request);
+    }
+
+    public updateUser(user: User, isadmin?: boolean): Promise<IGrpcResponse<User>> {
+        const requrest = new User();
+        requrest.setId(user.getId());
+        requrest.setAvatarUrl(user.getAvatarUrl());
+        requrest.setEmail(user.getEmail());
+        requrest.setName(user.getName());
+        requrest.setStudentId(user.getStudentId());
+        if (isadmin) {
+            requrest.setIsAdmin(isadmin);
+        } else {
+            requrest.setIsAdmin(user.getIsAdmin());
+        }
+        return this.grpcSend(this.agService.updateUser, requrest);
+    }
+
+
+   // /* COURSES */ //
+
+    public createCourse(course: INewCourse): Promise<IGrpcResponse<Course>> {
+        const request = new Course();
+        request.setName(course.name);
+        request.setCode(course.code);
+        request.setProvider(course.provider);
+        request.setDirectoryId(course.directoryid);
+        request.setTag(course.tag);
+        request.setYear(course.year);
+        return this.grpcSend<Course>(this.agService.createCourse, request);
+    }
+    
+    public updateCourse(course: ICourse): Promise<IGrpcResponse<Course>> {
+        const request = new Course();
+        request.setId(course.id);
+        request.setName(course.name);
+        request.setCode(course.code);
+        request.setDirectoryId(course.directoryid);
+        request.setProvider(course.provider);
+        request.setYear(course.year);
+        request.setTag(course.tag);
+        return this.grpcSend<Course>(this.agService.updateCourse, request);
+    }
+
+    public refreshCourse(courseID: number): Promise<IGrpcResponse<any>> {
+        const request = new RecordRequest();
+        request.setId(courseID);
+        return this.grpcSend<Assignments>(this.agService.refreshCourse, request);
+    }
+
+    public getCourse(id: number): Promise<IGrpcResponse<Course>> {
+        const request = new RecordRequest();
+        request.setId(id);
+        return this.grpcSend(this.agService.getCourse, request);
+    }
+
+    public getCourses(): Promise<IGrpcResponse<Courses>> {
+        const request = new Void();
+        return this.grpcSend<Courses>(this.agService.getCourses, request);
+    }
+
+    public getCoursesWithEnrollment(userid: number, state: any): Promise<IGrpcResponse<Courses>> {
+        const request = new RecordRequest();
+        request.setId(userid);
+        request.setStatusesList(state);
+        return this.grpcSend<Courses>(this.agService.getCoursesWithEnrollment, request);
+    }
+
+    public getCourseInformationURL(courseID: number): Promise<IGrpcResponse<URLResponse>> {
+        const request = new RecordRequest();
+        request.setId(courseID);
+        return this.grpcSend<URLResponse>(this.agService.getCourseInformationURL, request);
+    }
+   // /* ASSIGNMENTS */ //
+
+
+    public getAssignments(courseId: number): Promise<IGrpcResponse<Assignments>> {
+        const request = new RecordRequest();
+        request.setId(courseId);
+        return this.grpcSend<Assignments>(this.agService.getAssignments, request);
+    }
+
+   // /* ENROLLMENTS */ //
+
+    public getEnrollmentsByCourse(courseid: number, state: any): Promise<IGrpcResponse<Enrollments>> {
+        const request = new RecordRequest();
+        request.setId(courseid);
+        request.setStatusesList(state);
+        return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request);
+    }
+
+    public createEnrollment(userid: number, courseid: number): Promise<IGrpcResponse<StatusCode>> {
+        const request = new ActionRequest();
+        request.setUserId(userid);
+        request.setCourseId(courseid);
+        return this.grpcSend<StatusCode>( this.agService.createEnrollment, request);
+    }
+
+    public updateEnrollment(userid: number,
+                            courseid: number,
+                            state: any): Promise<IGrpcResponse<StatusCode>> {
+        const request = new ActionRequest();
+        request.setUserId(userid);
+        request.setCourseId(courseid);
+        request.setStatus(state);
+        return this.grpcSend<StatusCode>(this.agService.updateEnrollment, request);
+    }
+
+   // /* GROUPS */ //
+
+    public getGroup(groupID: number): Promise<IGrpcResponse<Group>> {
+        const request = new ActionRequest();
+        request.setGroupId(groupID);
+        return this.grpcSend<Group>(this.agService.getGroup, request);
+    }
+
+    public getGroupByUserAndCourse(userID: number, courseID: number): Promise<IGrpcResponse<Group>> {
+        const request = new ActionRequest();
+        request.setUserId(userID);
+        request.setCourseId(courseID);
+        return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse,request);
+    }
+
+
+
+    //HACK: check if really gets groups by course id
+    public getGroups(courseid: number): Promise<IGrpcResponse<Groups>> {
+        const request = new RecordRequest();
+        request.setId(courseid);
+        return this.grpcSend<Groups>(this.agService.getGroups, request);
+    }
+
+    public updateGroupStatus(groupid: number, state: Group.GroupStatus): Promise<IGrpcResponse<StatusCode>> {
+        const request = new Group();
+        request.setId(groupid);
+        request.setStatus(state);
+        return this.grpcSend<StatusCode>(this.agService.updateGroup, request);
+    }
+
+    public updateGroup(grp: INewGroup, groupid: number, courseid: number): Promise<IGrpcResponse<StatusCode>> {
+        const request = new Group();
+        request.setId(groupid);
+        request.setCourseId(courseid);
+        request.setName(grp.name);
+        const groupUsers: User[] = []
+        grp.userids.forEach((ele) => {
+            const usr = new User();
+            usr.setId(ele);
+            groupUsers.push(usr);
+        });
+        request.setUsersList(groupUsers);
+        return this.grpcSend<StatusCode>(this.agService.updateGroup, request);
+    }
+
+    public deleteGroup(groupid: number): Promise<IGrpcResponse<StatusCode>> {
+        const request = new Group();
+        request.setId(groupid);
+        return this.grpcSend<StatusCode>(this.agService.deleteGroup, request);
+    }
+
+
+    public createGroup(igrp: INewGroup, courseid: number): Promise<IGrpcResponse<Group>>  {
+        const request = new Group();
+        request.setName(igrp.name);
+        request.setCourseId(courseid);
+        const grpusers: User[] = [];
+        igrp.userids.forEach((ele) => {
+            const usr = new User();
+            usr.setId(ele);
+            grpusers.push(usr);
+        } );
+        request.setUsersList(grpusers);
+        return this.grpcSend<Group>(this.agService.createGroup, request);
+    }
+
+    // /* SUBMISSIONS */ //
+
+    public getSubmission(assignmentID: number): Promise<IGrpcResponse<Submission>> {
+        const request = new RecordRequest();
+        request.setId(assignmentID);
+        return this. grpcSend<Submission>(this.agService.getSubmission, request);
+    }
+
+    public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
+        const request = new ActionRequest();
+        request.setCourseId(courseID);
+        request.setUserId(userID);
+        return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
+    }
+
+    public getGroupSubmissions(courseID: number, groupID: number): Promise<IGrpcResponse<Submissions>> {
+        const request = new ActionRequest();
+        request.setCourseId(courseID);
+        request.setGroupId(groupID);
+        return this.grpcSend<Submissions>(this.agService.getGroupSubmissions, request);
+    }
+
+    public updateSubmission(submissionID: number): Promise<IGrpcResponse<StatusCode>> {
+        const request = new RecordRequest();
+        request.setId(submissionID);
+        return this.grpcSend<StatusCode>(this.agService.updateSubmission, request);
+    }
+
+
+   // /* REPOSITORY */ //
+
+    public getRepositoryURL(courseid: number, repotype: number): Promise<IGrpcResponse<URLResponse>> {
+        const request = new RepositoryRequest();
+        request.setCourseId(courseid);
+        request.setType(repotype);
+        return this.grpcSend<URLResponse>(this.agService.getRepositoryURL, request);
+    }
+
+    public getProviders(): Promise<IGrpcResponse<Providers>> {
+        const request = new Void();
+        return this.grpcSend<Providers>(this.agService.getProviders, request);
+    }
+
+    public getDirectories(provider: string): Promise<IGrpcResponse<Directories>> {
+        const request = new DirectoryRequest();
+        request.setProvider(provider);
+        return this.grpcSend<Directories>(this.agService.getDirectories, request);
+    }
+    
+   // /* UTILITY */ //
+
+    private grpcSend<T>(method: any, request: any): Promise<IGrpcResponse<T>> {
+        
+        const grpcPromise = new Promise<IGrpcResponse<T>>((resolve) => {
+
+            let userId = "";
+            
+            // currentUser reference is created on authorization with a provider and stores a User object
+            // This object can be used for user validation. This implementation sends user ID to simplify
+            // and standardize different server checks.
+            // Alternative solution is to send the token, which requires a sequre way of storing the token
+            const currentUser = this.userMan.getCurrentUser();
+            if (currentUser != null) {
+                userId = currentUser.getId().toString();
+            }
+
+
+            const call = method.call(this.agService, request, {'custom-header-1': 'value1', "user": userId}, 
+            (err: grpcWeb.Error, response: T | undefined) => {
+                if (err) {
+                    if (err.code !== grpcWeb.StatusCode.OK) {
+                        const temp : IGrpcResponse<T> = {
+                            statusCode: err.code,
+                        }
+                        resolve(temp);
+                    }   
+                } else {
+                    const temp : IGrpcResponse<T> = {
+                        data: response as T,
+                        statusCode: 0,
+                    };
+                    resolve(temp);
+                }
+                
+            });
+        });
+        return grpcPromise;
+    }
+
+    
+
+}

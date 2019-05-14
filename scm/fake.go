@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"strconv"
+
+	pb "github.com/autograde/aguis/ag"
 )
 
 // FakeSCM implements the SCM interface.
 type FakeSCM struct {
 	Repositories map[uint64]*Repository
-	Directories  map[uint64]*Directory
+	Directories  map[uint64]*pb.Directory
 	Hooks        map[uint64]int
 }
 
@@ -17,14 +19,14 @@ type FakeSCM struct {
 func NewFakeSCMClient() *FakeSCM {
 	return &FakeSCM{
 		Repositories: make(map[uint64]*Repository),
-		Directories:  make(map[uint64]*Directory),
+		Directories:  make(map[uint64]*pb.Directory),
 		Hooks:        make(map[uint64]int),
 	}
 }
 
 // ListDirectories implements the SCM interface.
-func (s *FakeSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
-	var dirs []*Directory
+func (s *FakeSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error) {
+	var dirs []*pb.Directory
 	for _, dir := range s.Directories {
 		dirs = append(dirs, dir)
 	}
@@ -33,19 +35,19 @@ func (s *FakeSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 }
 
 // CreateDirectory implements the SCM interface.
-func (s *FakeSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*Directory, error) {
+func (s *FakeSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*pb.Directory, error) {
 	id := len(s.Directories) + 1
-	dir := &Directory{
-		ID:     uint64(id),
+	dir := &pb.Directory{
+		Id:     uint64(id),
 		Path:   opt.Path,
 		Avatar: "https://avatars3.githubusercontent.com/u/1000" + strconv.Itoa(id) + "?v=3",
 	}
-	s.Directories[dir.ID] = dir
+	s.Directories[dir.Id] = dir
 	return dir, nil
 }
 
 // GetDirectory implements the SCM interface.
-func (s *FakeSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, error) {
+func (s *FakeSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory, error) {
 	dir, ok := s.Directories[id]
 	if !ok {
 		return nil, errors.New("directory not found")
@@ -62,17 +64,17 @@ func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 		WebURL:      "https://example.com/" + opt.Directory.Path + "/" + opt.Path,
 		SSHURL:      "git@example.com:" + opt.Directory.Path + "/" + opt.Path,
 		HTTPURL:     "https://example.com/" + opt.Directory.Path + "/" + opt.Path + ".git",
-		DirectoryID: opt.Directory.ID,
+		DirectoryID: opt.Directory.Id,
 	}
 	s.Repositories[repo.ID] = repo
 	return repo, nil
 }
 
 // GetRepositories implements the SCM interface.
-func (s *FakeSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+func (s *FakeSCM) GetRepositories(ctx context.Context, directory *pb.Directory) ([]*Repository, error) {
 	var repos []*Repository
 	for _, repo := range s.Repositories {
-		if repo.DirectoryID == directory.ID {
+		if repo.DirectoryID == directory.Id {
 			repos = append(repos, repo)
 		}
 	}

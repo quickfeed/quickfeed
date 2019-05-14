@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { CourseGroupStatus, ICourse, ICourseGroup } from "../../models";
+import { Group } from "../../../proto/ag_pb";
 
 interface IGroupPro {
     group: ICourseGroup;
@@ -10,7 +11,7 @@ class GroupInfo extends React.Component<IGroupPro, any> {
     public render() {
         const groupMembers: JSX.Element[] = [];
         for (let i: number = 0; i < this.props.group.users.length; i++) {
-            groupMembers.push(<li key={i} className="list-group-item">{this.props.group.users[i].name}</li>);
+            groupMembers.push(<li key={i} className="list-group-item">{this.props.group.users[i].getName()}</li>);
         }
         return (
             <div className="group-info">
@@ -27,11 +28,11 @@ class GroupInfo extends React.Component<IGroupPro, any> {
 
     private getStatus(): string {
         switch (this.props.group.status) {
-            case CourseGroupStatus.approved:
+            case Group.GroupStatus.APPROVED:
                 return "Appproved";
-            case CourseGroupStatus.pending:
+            case Group.GroupStatus.PENDING_GROUP:
                 return "Pending";
-            case CourseGroupStatus.rejected:
+            case Group.GroupStatus.REJECTED_GROUP:
                 return "Rejected";
             default:
                 return "N/A";

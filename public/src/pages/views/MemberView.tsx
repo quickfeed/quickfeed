@@ -4,6 +4,7 @@ import { CourseUserState, ICourse, ICourseUserLink, IUser, IUserRelation } from 
 
 import { DynamicTable } from "../../components";
 import { ActionType, UserView } from "./UserView";
+import { Enrollment } from "../../../proto/ag_pb";
 
 interface IUserViewerProps {
     navMan: NavigationManager;
@@ -38,7 +39,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
                 ActionType.Menu,
                 (user: IUserRelation) => {
                     const links = [];
-                    if (user.link.state === CourseUserState.rejected) {
+                    if (user.link.state === Enrollment.UserStatus.REJECTED) {
                         links.push({ name: "Set pending", uri: "remove", extra: "primary" });
                     }
                     return links;
@@ -54,7 +55,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
             ActionType.Menu,
             (user: IUserRelation) => {
                 const links = [];
-                if (user.link.state === CourseUserState.teacher) {
+                if (user.link.state === Enrollment.UserStatus.TEACHER) {
                     links.push({ name: "This is a teacher", extra: "primary" });
                 } else {
                     links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });
@@ -93,22 +94,22 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
     public handleAction(userRel: IUserRelation, link: ILink) {
         switch (link.uri) {
             case "accept":
-                this.props.courseMan.changeUserState(userRel.link, CourseUserState.student);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
                 break;
             case "reject":
-                this.props.courseMan.changeUserState(userRel.link, CourseUserState.rejected);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
                 break;
             case "teacher":
                 if (confirm(
                     `Warning! This action is irreversible!
                     Do you want to continue assigning:
-                    ${userRel.user.name} as a teacher?`,
+                    ${userRel.user.getName()} as a teacher?`,
                 )) {
-                    this.props.courseMan.changeUserState(userRel.link, CourseUserState.teacher);
+                    this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
                 }
                 break;
             case "remove":
-                this.props.courseMan.changeUserState(userRel.link, CourseUserState.pending);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
                 break;
         }
         this.props.navMan.refresh();

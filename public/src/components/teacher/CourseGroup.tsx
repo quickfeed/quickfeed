@@ -3,6 +3,7 @@ import * as React from "react";
 import { BootstrapButton, DynamicTable } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { CourseGroupStatus, ICourse, ICourseGroup, IUser } from "../../models";
+import { User, Group } from "../../../proto/ag_pb";
 
 import { bindFunc, RProp } from "../../helper";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
@@ -116,7 +117,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                             group.name,
                             this.getMembers(group.users),
                             <span>
-                                <UpdateButton type="danger" group={group} status={CourseGroupStatus.deleted}>
+                                <UpdateButton type="danger" group={group} status={Group.GroupStatus.DELETED}>
                                     Remove
                                 </UpdateButton>
                             </span>,
@@ -129,7 +130,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
     private updateButton(props: RProp<{
         type: BootstrapClass,
         group: ICourseGroup,
-        status: CourseGroupStatus,
+        status: Group.GroupStatus,
     }>) {
         return <BootstrapButton
             onClick={(e) => this.handleUpdateStatus(props.group.id, props.status)}
@@ -138,16 +139,16 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
         </BootstrapButton>;
     }
 
-    private getMembers(users: IUser[]): string {
+    private getMembers(users: User[]): string {
         const names: string[] = [];
         for (const user of users) {
-            names.push(user.name);
+            names.push(user.getName());
         }
         return names.toString();
     }
 
-    private async handleUpdateStatus(gid: number, status: CourseGroupStatus): Promise<void> {
-        const result = status === CourseGroupStatus.deleted ?
+    private async handleUpdateStatus(gid: number, status: Group.GroupStatus): Promise<void> {
+        const result = status === Group.GroupStatus.DELETED ?
             await this.props.courseMan.deleteGroup(gid) :
             await this.props.courseMan.updateGroupStatus(gid, status);
         if (result) {
@@ -158,10 +159,10 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
     private async handleActionOnClick(group: ICourseGroup, link: ILink): Promise<void> {
         switch (link.uri) {
             case "approve":
-                await this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.approved);
+                await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.APPROVED);
                 break;
             case "reject":
-                await this.props.courseMan.updateGroupStatus(group.id, CourseGroupStatus.rejected);
+                await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.REJECTED_GROUP);
                 break;
             case "edit":
                 this.props.navMan

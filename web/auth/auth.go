@@ -2,12 +2,13 @@ package auth
 
 import (
 	"encoding/gob"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/jinzhu/gorm"
@@ -45,6 +46,8 @@ type UserSession struct {
 }
 
 func newUserSession(id uint64) *UserSession {
+	//HACK: logging
+	log.Println("AUTH: newUserSession for : ", id)
 	return &UserSession{
 		ID:        id,
 		Providers: make(map[string]struct{}),
@@ -52,6 +55,8 @@ func newUserSession(id uint64) *UserSession {
 }
 
 func (us *UserSession) enableProvider(provider string) {
+	//HACK: logging
+	log.Println("AUTH: enableProvider for ", provider)
 	us.Providers[provider] = struct{}{}
 }
 
@@ -62,11 +67,13 @@ func OAuth2Logout() echo.HandlerFunc {
 		w := c.Response()
 
 		sess, err := session.Get(SessionKey, c)
+
 		if err != nil {
 			return sess.Save(r, w)
 		}
 
 		if i, ok := sess.Values[UserKey]; ok {
+
 			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 			us := i.(*UserSession)
 			// Invalidate gothic user sessions.
@@ -80,7 +87,6 @@ func OAuth2Logout() echo.HandlerFunc {
 				sess.Save(r, w)
 			}
 		}
-
 		// Invalidate our user session.
 		sess.Options.MaxAge = -1
 		sess.Values = make(map[interface{}]interface{})
@@ -94,6 +100,7 @@ func OAuth2Logout() echo.HandlerFunc {
 // was found for the given provider.
 func PreAuth(db database.Database) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
+
 		return func(c echo.Context) error {
 			sess, err := session.Get(SessionKey, c)
 			if err != nil {
@@ -110,7 +117,6 @@ func PreAuth(db database.Database) echo.MiddlewareFunc {
 					return OAuth2Logout()(c)
 				}
 			}
-
 			return next(c)
 		}
 	}
@@ -187,9 +193,9 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			if !ok {
 				return OAuth2Logout()(c)
 			}
+
 			// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 			us := i.(*UserSession)
-
 			// Associate user with remote identity.
 			if err := db.AssociateUserWithRemoteIdentity(
 				us.ID, provider, remoteID, externalUser.AccessToken,
@@ -209,16 +215,16 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		user, err := db.GetUserByRemoteIdentity(provider, remoteID, externalUser.AccessToken)
 		if err == gorm.ErrRecordNotFound {
 			// Create new user.
-			user = &models.User{
+			user = &pb.User{
 				Name:      externalUser.Name,
 				Email:     externalUser.Email,
-				AvatarURL: externalUser.AvatarURL,
+				AvatarUrl: externalUser.AvatarURL,
 			}
 			if err := db.CreateUserFromRemoteIdentity(
 				user,
-				&models.RemoteIdentity{
+				&pb.RemoteIdentity{
 					Provider:    provider,
-					RemoteID:    remoteID,
+					RemoteId:    remoteID,
 					AccessToken: externalUser.AccessToken,
 				},
 			); err != nil {
@@ -229,13 +235,12 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		}
 
 		// Register user session.
-		us := newUserSession(user.ID)
+		us := newUserSession(user.Id)
 		us.enableProvider(provider)
 		sess.Values[UserKey] = us
 		if err := sess.Save(r, w); err != nil {
 			return err
 		}
-
 		return c.Redirect(http.StatusFound, redirect)
 	}
 }
@@ -249,7 +254,7 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 			sess, err := session.Get(SessionKey, c)
 			if err != nil {
 				// Save fixes the session if it has been modified
-				// or it is no longer valid due to change of keys.
+				// or it is no longer valid due tonewUserSessnewUserSessnewUserSess change of keys.
 				sess.Save(c.Request(), c.Response())
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
@@ -270,7 +275,6 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				}
 				return echo.ErrUnauthorized
 			}
-
 			c.Set(UserKey, user)
 			for _, remoteIdentity := range user.RemoteIdentities {
 				if _, ok := scms[remoteIdentity.AccessToken]; !ok {
@@ -297,6 +301,7 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 
 func extractRedirectURL(r *http.Request, key string) string {
 	// TODO: Validate redirect URL.
+
 	url := r.URL.Query().Get(key)
 	if url == "" {
 		url = "/"

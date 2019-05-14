@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	pb "github.com/autograde/aguis/ag"
 	gitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -20,16 +21,16 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 }
 
 // ListDirectories implements the SCM interface.
-func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
+func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error) {
 	groups, _, err := s.client.Groups.ListGroups(nil, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
-	var directories []*Directory
+	var directories []*pb.Directory
 	for _, group := range groups {
-		directories = append(directories, &Directory{
-			ID:     uint64(group.ID),
+		directories = append(directories, &pb.Directory{
+			Id:     uint64(group.ID),
 			Path:   group.Path,
 			Avatar: group.AvatarURL,
 		})
@@ -38,7 +39,7 @@ func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 }
 
 // CreateDirectory implements the SCM interface.
-func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*Directory, error) {
+func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*pb.Directory, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
 		Name:            &opt.Name,
 		Path:            &opt.Path,
@@ -48,22 +49,22 @@ func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 		return nil, err
 	}
 
-	return &Directory{
-		ID:     uint64(group.ID),
+	return &pb.Directory{
+		Id:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
 }
 
 // GetDirectory implements the SCM interface.
-func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, error) {
+func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory, error) {
 	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
-	return &Directory{
-		ID:     uint64(group.ID),
+	return &pb.Directory{
+		Id:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
@@ -71,7 +72,7 @@ func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, er
 
 // CreateRepository implements the SCM interface.
 func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	directoryID := int(opt.Directory.ID)
+	directoryID := int(opt.Directory.Id)
 	repo, _, err := s.client.Projects.CreateProject(
 		&gitlab.CreateProjectOptions{
 			Path:        &opt.Path,
@@ -89,17 +90,17 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		WebURL:      repo.WebURL,
 		SSHURL:      repo.SSHURLToRepo,
 		HTTPURL:     repo.HTTPURLToRepo,
-		DirectoryID: opt.Directory.ID,
+		DirectoryID: opt.Directory.Id,
 	}, nil
 }
 
 // GetRepositories implements the SCM interface.
-func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Directory) ([]*Repository, error) {
 	var gid interface{}
 	if directory.Path != "" {
 		gid = directory.Path
 	} else {
-		gid = strconv.FormatUint(directory.ID, 10)
+		gid = strconv.FormatUint(directory.Id, 10)
 	}
 
 	repos, _, err := s.client.Groups.ListGroupProjects(gid, nil, gitlab.WithContext(ctx))
@@ -115,7 +116,7 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) (
 			WebURL:      repo.WebURL,
 			SSHURL:      repo.SSHURLToRepo,
 			HTTPURL:     repo.HTTPURLToRepo,
-			DirectoryID: directory.ID,
+			DirectoryID: directory.Id,
 		})
 	}
 

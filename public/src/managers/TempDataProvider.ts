@@ -19,8 +19,16 @@ import { IMap, MapHelper, mapify } from "../map";
 import { IUserProvider } from "./UserManager";
 
 import { ICourseEnrollment, IUserEnrollment } from "../managers";
+import { Group, Enrollment, User, Directory } from "../../proto/ag_pb";
+import { userInfo } from "os";
+import { isNull } from "util";
 
-interface IDummyUser extends IUser {
+interface IDummyUser extends User {
+    password: string;
+}
+
+interface IGrpcDummyUser {
+    user: User;
     password: string;
 }
 
@@ -30,14 +38,14 @@ interface IDummyUser extends IUser {
  */
 export class TempDataProvider implements IUserProvider, ICourseProvider {
 
-    private localUsers: IMap<IDummyUser>;
+    private localUsers: IMap<IGrpcDummyUser>;
     private localAssignments: IMap<IAssignment>;
     private localCourses: IMap<ICourse>;
     private localCourseStudent: ICourseUserLink[];
     private localLabInfo: IMap<ISubmission>;
     private localCourseGroups: ICourseGroup[];
 
-    private currentLoggedIn: IUser | null = null;
+    private currentLoggedIn: User | null = null;
 
     constructor() {
         this.addLocalAssignments();
@@ -52,12 +60,17 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented.");
     }
 
-    public async getDirectories(provider: string): Promise<IOrganization[]> {
+    public async getDirectories(provider: string): Promise<Directory[]> {
         throw new Error("Not implemented");
     }
 
-    public async getAllUser(): Promise<IUser[]> {
-        return MapHelper.toArray(this.localUsers);
+    public async getAllUser(): Promise<User[]> {
+        const users: User[] = [];
+        const dummyUsers =  MapHelper.toArray(this.localUsers);
+        dummyUsers.forEach((ele) => {
+            users.push(ele.user);
+        });
+        return users;
     }
 
     public async getCourses(): Promise<ICourse[]> {
@@ -79,42 +92,48 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
-    public async tryLogin(username: string, password: string): Promise<IUser | null> {
+    public async tryLogin(username: string, password: string): Promise<User | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+            u.user.getEmail().toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
-            this.currentLoggedIn = user;
-            return user;
+            this.currentLoggedIn = user.user;
+            return user.user;
         }
         return null;
     }
 
-    public async tryRemoteLogin(provider: string): Promise<IUser | null> {
+    public async tryRemoteLogin(provider: string): Promise< User | null> {
         let lookup = "test@testersen.no";
         if (provider === "gitlab") {
             lookup = "bob@bobsen.no";
         }
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === lookup);
+            u.user.getEmail().toLocaleLowerCase() === lookup);
 
-        return new Promise<IUser | null>((resolve, reject) => {
+        return new Promise< User | null>((resolve, reject) => {
             // Simulate async callback
             setTimeout(() => {
-                this.currentLoggedIn = user;
-                resolve(user);
+                if (isNull(user)) {
+                    this.currentLoggedIn = user;
+                    resolve(user);
+                } else {
+                    this.currentLoggedIn = user.user;
+                    resolve(user.user);
+                }
+                
             }, 500);
         });
     }
 
-    public async logout(user: IUser): Promise<boolean> {
+    public async logout(user: User): Promise<boolean> {
         return true;
     }
 
-    public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
+    public async addUserToCourse(user: User, course: ICourse): Promise<boolean> {
         this.localCourseStudent.push({
             courseId: course.id,
-            userid: user.id,
-            state: Models.CourseUserState.pending,
+            userid: user.getId(),
+            state: Enrollment.UserStatus.PENDING,
         });
         return true;
     }
@@ -124,18 +143,18 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
      * @param course The course userlinks should be retrived from
      * @param state Optinal. The state of the relation, all if not present
      */
-    public async getUserLinksForCourse(course: ICourse, state?: CourseUserState[]): Promise<ICourseUserLink[]> {
+    public async getUserLinksForCourse(course: ICourse, state?: Enrollment.UserStatus[]): Promise<ICourseUserLink[]> {
         const users: ICourseUserLink[] = [];
         for (const c of await this.getCoursesStudent()) {
-            if (course.id === c.courseId && (state === undefined || c.state === CourseUserState.student)) {
+            if (course.id === c.courseId && (state === undefined || c.state === Enrollment.UserStatus.STUDENT)) {
                 users.push(c);
             }
         }
         return users;
     }
 
-    public async getUsersAsMap(ids: number[]): Promise<IMap<IUser>> {
-        const returnUsers: IMap<IUser> = {};
+    public async getUsersAsMap(ids: number[]): Promise<IMap<User>> {
+        const returnUsers: IMap<User> = {};
         const allUsers = await this.getAllUser();
         ids.forEach((ele) => {
             const temp = allUsers[ele];
@@ -146,7 +165,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Models.ICourse, state?: CourseUserState[])
+    public async getUsersForCourse(course: Models.ICourse, state?: Enrollment.UserStatus[])
         : Promise<IUserEnrollment[]> {
         const courseStds: ICourseUserLink[] =
             await this.getUserLinksForCourse(course, state);
@@ -177,13 +196,13 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async changeUserState(link: ICourseUserLink, state: Models.CourseUserState): Promise<boolean> {
+    public async changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean> {
         link.state = state;
         return true;
     }
 
-    public async changeAdminRole(user: IUser): Promise<boolean> {
-        user.isadmin = !user.isadmin;
+    public async changeAdminRole(user: User): Promise<boolean> {
+        user.setIsAdmin(!user.getIsAdmin());
         return true;
     }
 
@@ -202,15 +221,19 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return ["github"];
     }
 
-    public async getLoggedInUser(): Promise<IUser | null> {
+    public async grpcGetLoggedInUser(): Promise <User| null > {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]> {
+    public async getLoggedInUser(): Promise< User | null> {
+        return this.currentLoggedIn;
+    }
+
+    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
         const cLinks: ICourseUserLink[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
-            if (user.id === c.userid && (state === undefined || c.state === CourseUserState.student)) {
+            if (user.getId() === c.userid && (state === undefined || c.state === Enrollment.UserStatus.STUDENT)) {
                 cLinks.push(c);
             }
         }
@@ -239,7 +262,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean> {
+    public async updateGroupStatus(groupId: number, status: Group.GroupStatus): Promise<boolean> {
         throw new Error("Method not implemented");
     }
     public async getGroup(gid: number): Promise<ICourseGroup | null> {
@@ -260,14 +283,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    public async updateUser(user: IUser): Promise<boolean> {
+    public async updateUser(user: User): Promise<boolean> {
 
-        const tempUser = this.localUsers[user.id];
+        const tempUser = this.localUsers[user.getId()];
         if (tempUser) {
-            tempUser.name = user.name;
-            tempUser.email = user.email;
-            tempUser.studentid = user.studentid;
-            tempUser.isadmin = user.isadmin;
+            tempUser.user.setName(user.getName());
+            tempUser.user.setEmail(user.getEmail());
+            tempUser.user.setStudentId(user.getStudentId());
+            tempUser.user.setIsAdmin(user.getIsAdmin());
         }
 
         return Promise.resolve(true);
@@ -282,48 +305,51 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalUsers() {
-        this.localUsers = mapify([
-            {
-                id: 999,
-                name: "Test Testersen",
-                email: "test@testersen.no",
-                studentid: "9999",
-                password: "1234",
-                isadmin: true,
-            },
-            {
-                id: 1000,
-                name: "Admin Admin",
-                email: "admin@admin",
-                studentid: "1000",
-                password: "1234",
-                isadmin: true,
-            },
-            {
-                id: 1,
-                name: "Per Pettersen",
-                email: "per@pettersen.no",
-                studentid: "1234",
-                password: "1234",
-                isadmin: false,
-            },
-            {
-                id: 2,
-                name: "Bob Bobsen",
-                email: "bob@bobsen.no",
-                studentid: "1234",
-                password: "1234",
-                isadmin: false,
-            },
-            {
-                id: 3,
-                name: "Petter Pan",
-                email: "petter@pan.no",
-                studentid: "1234",
-                password: "1234",
-                isadmin: false,
-            },
-        ] as IDummyUser[], (ele) => ele.id);
+        const dummyUsers: IGrpcDummyUser[] = [];
+        
+        const tempUser: User = new User();
+        
+        tempUser.setId(999);
+        tempUser.setName("Test Testersen");
+        tempUser.setEmail("test@testersen.no");
+        tempUser.setStudentId("9999");
+        tempUser.setIsAdmin(true);
+        let tempDummy = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        dummyUsers.push(tempDummy);
+
+        tempUser.setId(1000);
+        tempUser.setName("Admin Admin");
+        tempUser.setEmail("admin@admin");
+        tempUser.setStudentId("1000");
+        tempUser.setIsAdmin(true);
+        let tempDummy1 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        dummyUsers.push(tempDummy1);
+
+        tempUser.setId(1);
+        tempUser.setName("Per Pettersen");
+        tempUser.setEmail("per@pettersen.no");
+        tempUser.setStudentId("1234");
+        tempUser.setIsAdmin(true);
+        let tempDummy2 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        dummyUsers.push(tempDummy2);
+
+        tempUser.setId(2);
+        tempUser.setName("Bob Bobsen");
+        tempUser.setEmail("bob@bobsen.no");
+        tempUser.setStudentId("1234");
+        tempUser.setIsAdmin(true);
+        let tempDummy3 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        dummyUsers.push(tempDummy3);
+
+        tempUser.setId(3);
+        tempUser.setName("Petter Pan");
+        tempUser.setEmail("petter@pan.no");
+        tempUser.setStudentId("1234");
+        tempUser.setIsAdmin(true);
+        let tempDummy4 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        dummyUsers.push(tempDummy4);
+
+        this.localUsers = mapify(dummyUsers, (ele) => ele.user.getId());
     }
 
     private addLocalAssignments() {
@@ -581,8 +607,16 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    private getLocalDirectories(): IOrganization[] {
-        return (
+    private getLocalDirectories(): Directory[] {
+        const localDirectory = new Directory();
+        localDirectory.setId(23650610);
+        localDirectory.setPath("dat520-2017");
+        localDirectory.setAvatar("https://avatars2.githubusercontent.com/u/23650610?v=3");
+
+        const localDirectories: Directory[] = [];
+        localDirectories.push(localDirectory);
+        return localDirectories;
+        /*return (
             [
                 {
                     id: 23650610,
@@ -590,15 +624,18 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     avatar: "https://avatars2.githubusercontent.com/u/23650610?v=3",
                 },
             ]
-        );
+        );*/
     }
 
     private addLocalCourseGroups(): void {
+
+        /*
+
         this.localCourseGroups = [
             {
                 id: 1,
                 name: "Group1",
-                status: CourseGroupStatus.approved,
+                status: Group.GroupStatus.APPROVED,
                 courseid: 1,
                 users: [
                     {
@@ -622,7 +659,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             {
                 id: 2,
                 name: "Group2",
-                status: CourseGroupStatus.pending,
+                status: Group.GroupStatus.PENDING_GROUP,
                 courseid: 1,
                 users: [
                     {
@@ -643,7 +680,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     },
                 ],
             },
-        ];
+        ];*/
     }
 
 }

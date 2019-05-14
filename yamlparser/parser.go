@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	pb "github.com/autograde/aguis/ag"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -23,18 +25,18 @@ type NewAssignmentRequest struct {
 
 // Parse recursively walks the given directory and parses any yaml files found
 // and returns an array of assignment requests.
-func Parse(dir string) ([]NewAssignmentRequest, error) {
+func Parse(dir string) ([]*pb.Assignment, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, err
 	}
 
-	var assignments []NewAssignmentRequest
+	var assignments []*pb.Assignment
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			if filename == target {
-				var assignment NewAssignmentRequest
+				var assignment *pb.Assignment
 				source, err := ioutil.ReadFile(path)
 				if err != nil {
 					return err

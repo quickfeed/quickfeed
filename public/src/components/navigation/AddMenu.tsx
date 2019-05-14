@@ -3,14 +3,15 @@ import * as React from "react";
 import { ILink } from "../../managers";
 import { NavigationHelper } from "../../NavigationHelper";
 
-import { IUser } from "../../models";
+//import { IUser } from "../../models";
+import { User } from "../../../proto/ag_pb";
 import { NavMenu } from "./NavMenu";
 import { NavMenuDropdown } from "./NavMenuDropdown";
 
 export interface IAddMenuProps {
     links?: ILink[];
     onClick?: (lin: ILink) => void;
-    user: IUser | null;
+    user: User | null;
 }
 
 interface IAddMenuState {

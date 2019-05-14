@@ -2,14 +2,15 @@
 import * as React from "react";
 import { ILink } from "../../managers";
 
-import { IUser } from "../../models";
+//import { IUser } from "../../models";
+import { User } from "../../../proto/ag_pb";
 import { NavMenuDropdown } from "./NavMenuDropdown";
 
 export interface INavBarLoginProps {
     loginLinks?: ILink[];
     userLinks?: ILink[];
     onClick?: (lin: ILink) => void;
-    user: IUser | null;
+    user: User | null;
 }
 
 export interface INavBarLoginState {
@@ -39,7 +40,7 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
                             onClick={(e) => { this.toggleMenu(e); }}
                             aria-haspopup="true"
                             aria-expanded="false">
-                            <img className="img-rounded" src={this.props.user.avatarurl} width="20" height="20" />
+                            <img className="img-rounded" src={this.props.user.getAvatarUrl()} width="20" height="20" />
                             <span className="caret"></span>
                         </a>
                         <NavMenuDropdown links={this.props.userLinks}

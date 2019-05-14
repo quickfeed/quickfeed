@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/autograde/aguis/scm"
-
+	"github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
+	"github.com/autograde/aguis/scm"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
@@ -24,6 +24,7 @@ import (
 	"gopkg.in/go-playground/webhooks.v3/github"
 	"gopkg.in/go-playground/webhooks.v3/gitlab"
 
+	pb "github.com/autograde/aguis/ag"
 	gh "github.com/google/go-github/github"
 )
 
@@ -53,18 +54,20 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 				return
 			}
 			logger.WithField("repo", repo).Info("Found repository, continuing on")
-			course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
+			course, err := db.GetCourseByDirectoryID(repo.DirectoryId)
 			if err != nil {
 				logger.WithError(err).Warn("Failed to get course from database")
 				return
 			}
-			courseCreator, err := db.GetUser(course.CourseCreatorID)
+
+			courseCreator, err := db.GetUser(course.CoursecreatorId)
 			if err != nil {
 				logger.WithError(err).Warn("Failed to fetch course creator.")
 			}
+
 			creatorAccessToken := courseCreator.RemoteIdentities[0]
 
-			if repo.Type > 0 {
+			if repo.RepoType > 0 {
 				logger.Info("Should refresh database course informaton")
 
 				s, err := scm.NewSCMClient("github", remoteIdentity.AccessToken)
@@ -72,12 +75,14 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 					logger.WithError(err).Warn("Failed to create SCM Client")
 					return
 				}
-				_, err = RefreshCourseInformation(context.Background(), logger, db, course, remoteIdentity, s)
+				// removed logger from parameters for now, to be replaced with grpc-wrapped logger
+				_, err = RefreshCourseInformation(context.Background(), db, course, remoteIdentity, s)
 				if err != nil {
 					logger.WithError(err).Error("Problem with refreshing course information")
 				}
 				return
 			}
+
 			RunCI(logger, repo, db, runner, p.Repository.CloneURL, p.HeadCommit.ID, remoteIdentity, buildscripts, creatorAccessToken)
 
 		default:
@@ -91,16 +96,16 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 }
 
 // RunCI runs the ci from a RemoteIdentity
-func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Database, runner ci.Runner, cloneURL string,
-	commitHash string, remoteIdentity *models.RemoteIdentity, buildscripts string, courseCreator *models.RemoteIdentity) {
+func RunCI(logger logrus.FieldLogger, repo *pb.Repository, db database.Database, runner ci.Runner, cloneURL string,
+	commitHash string, remoteIdentity *pb.RemoteIdentity, buildscripts string, courseCreator *pb.RemoteIdentity) {
 
-	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
+	course, err := db.GetCourseByDirectoryID(repo.DirectoryId)
 	if err != nil {
 		logger.WithError(err).Warn("Failed to get course from database")
 		return
 	}
 
-	selectedAssignment, err := db.GetNextAssignment(course.ID, repo.UserID, repo.GroupID)
+	selectedAssignment, err := db.GetNextAssignment(course.Id, repo.UserId, repo.GroupId)
 	if err != nil {
 		logger.WithError(err).Warn("Failed to find a next unapproved assignment")
 		return
@@ -111,11 +116,11 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 	logger.WithField("Assignemnt", selectedAssignment).Info("Found assignment")
 
 	// testCloneURL, err := getTestRepoCloneURL(logger, db, remoteIdentity, repo)
-	testRepos, err := db.GetRepositoriesByCourseIDAndType(course.ID, models.TestsRepo)
+	testRepos, err := db.GetRepositoriesByCourseIDAndType(course.Id, ag.Repository_TESTS)
 	if err != nil {
 		return
 	}
-	testCloneURL := testRepos[0].HTMLURL
+	testCloneURL := testRepos[0].HtmlUrl
 	getURL := cloneURL
 	getURLTest := testCloneURL
 
@@ -166,14 +171,14 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 	buildInfo := string(bi)
 	scores := string(sc)
 
-	err = db.CreateSubmission(&models.Submission{
-		AssignmentID: selectedAssignment.ID,
+	err = db.CreateSubmission(&pb.Submission{
+		AssignmentId: selectedAssignment.Id,
 		BuildInfo:    buildInfo,
 		CommitHash:   commitHash,
-		Score:        uint8(currentScore / maxScore * 100),
+		Score:        uint32(currentScore / maxScore * 100),
 		ScoreObjects: scores,
-		UserID:       repo.UserID,
-		GroupID:      repo.GroupID,
+		UserId:       repo.UserId,
+		GroupId:      repo.GroupId,
 	})
 	if err != nil {
 		logger.WithError(err).Error("Problems inserting the submission into the database")
@@ -181,18 +186,18 @@ func RunCI(logger logrus.FieldLogger, repo *models.Repository, db database.Datab
 	}
 }
 
-func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remoteIdentity *models.RemoteIdentity, repo *models.Repository) (string, error) {
+func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remoteIdentity *pb.RemoteIdentity, repo *pb.Repository) (string, error) {
 	// Add repository url to repository table in database to prevent requestion the data every time we need it.
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: remoteIdentity.AccessToken})
 	client := gh.NewClient(oauth2.NewClient(context.Background(), ts))
-	allRepos, err := db.GetRepositoriesByDirectory(repo.DirectoryID)
+	allRepos, err := db.GetRepositoriesByDirectory(repo.DirectoryId)
 	if err != nil {
 		logger.WithError(err).Error("Problem with requesting repositories")
 		return "", err
 	}
-	var testRepo *models.Repository
+	var testRepo *ag.Repository
 	for _, v := range allRepos {
-		if v.Type == models.TestsRepo {
+		if v.RepoType == ag.Repository_TESTS {
 			testRepo = v
 			break
 		}
@@ -200,7 +205,7 @@ func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remote
 	if testRepo == nil {
 		logger.Error("Test Repo does not exists")
 	}
-	testRepos, _, err := client.Repositories.GetByID(context.Background(), int(testRepo.RepositoryID))
+	testRepos, _, err := client.Repositories.GetByID(context.Background(), int(testRepo.RepositoryId))
 	if err != nil {
 		logger.WithError(err).Error("Got error while requesting repository")
 		return "", err

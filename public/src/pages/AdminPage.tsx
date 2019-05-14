@@ -37,7 +37,7 @@ export class AdminPage extends ViewPage {
             return {
                 user,
                 link: {
-                    userid: user.id,
+                    userid: user.getId(),
                     courseId: 0,
                     state: 0,
                 },

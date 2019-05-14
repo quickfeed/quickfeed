@@ -1,144 +1,124 @@
 package web
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/models"
+
+	//"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-// UpdateUserRequest updates a user object in the database.
-type UpdateUserRequest struct {
+/*
+// Updaterequestuest updates a user object in the database.
+type Updaterequestuest struct {
 	Name      string `json:"name"`
 	StudentID string `json:"studentid"`
 	Email     string `json:"email"`
 	AvatarURL string `json:"avatarurl"`
 	IsAdmin   *bool  `json:"isadmin"`
-}
+}*/
 
 // GetSelf redirects to GetUser with the current user's id.
-func GetSelf() echo.HandlerFunc {
+func GetSelf(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		user := c.Get("user").(*models.User)
-		return c.Redirect(http.StatusFound, fmt.Sprintf("/api/v1/users/%d", user.ID))
-	}
-}
-
-// GetUser returns information about the provided user id.
-func GetUser(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		id, err := parseUint(c.Param("uid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-
-		user, err := db.GetUser(id)
+		usr := c.Get("user").(*pb.User)
+		user, err := db.GetUser(usr.GetId())
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
 			}
 			return err
 		}
+		log.Println("Users.go, HTTP, gets user for GetSelf, user: ", user.GetName(), " isAdmin: ", user.GetIsAdmin())
 		return c.JSONPretty(http.StatusFound, user, "\t")
 	}
 }
 
-// GetUsers returns all the users in the database.
-func GetUsers(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		users, err := db.GetUsers()
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return c.NoContent(http.StatusNotFound)
-			}
-			return err
+// GetUser returns information about the provided user id.
+func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) {
+	user, err := db.GetUser(request.Id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, status.Errorf(codes.NotFound, "User not found")
 		}
-		return c.JSONPretty(http.StatusFound, users, "\t")
+		return nil, err
 	}
+	// Remove access token for user because otherhewise anyone can get access to user tokens
+	for _, remoteID := range user.GetRemoteIdentities() {
+		remoteID.AccessToken = ""
+	}
+
+	return user, nil
 }
 
-// PatchUser updates a user's information, including promoting to administrator.
-// Only existing administrators can promote another user.
-func PatchUser(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		id, err := parseUint(c.Param("uid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-		var uur UpdateUserRequest
-		if err := c.Bind(&uur); err != nil {
-			return err
-		}
+// GetUsers returns all the users in the database.
+func GetUsers(db database.Database) (*pb.Users, error) {
+	// This call does not preload the remote identities,
+	// and therefore we do not need to remove the access token.
 
-		status := http.StatusNotModified
-
-		// Get user to update
-		updateUser, err := db.GetUser(id)
-		if err != nil {
-			return err
+	users, err := db.GetUsers()
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, status.Errorf(codes.NotFound, "No users found")
 		}
-
-		// Get current user
-		currentUser := c.Get("user").(*models.User)
-
-		if uur.Name != "" {
-			updateUser.Name = uur.Name
-			status = http.StatusOK
-		}
-		if uur.StudentID != "" {
-			updateUser.StudentID = uur.StudentID
-			status = http.StatusOK
-		}
-		if uur.Email != "" {
-			updateUser.Email = uur.Email
-			status = http.StatusOK
-		}
-		if uur.AvatarURL != "" {
-			updateUser.AvatarURL = uur.AvatarURL
-			status = http.StatusOK
-		}
-		// Promote other user to admin, only if current user has admin privileges
-		if uur.IsAdmin != nil && *currentUser.IsAdmin {
-			updateUser.IsAdmin = uur.IsAdmin
-			status = http.StatusOK
-		}
-
-		if err := db.UpdateUser(updateUser); err != nil {
-			return err
-		}
-		return c.NoContent(status)
+		return nil, err
 	}
+	return &pb.Users{Users: users}, nil
+}
+
+// UpdateUser promotes a user to an administrator or makes other changes to the user database entry.
+func UpdateUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
+	user, err := db.GetUser(request.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if request.Name != "" {
+		user.Name = request.Name
+	}
+	if request.StudentId != "" {
+		user.StudentId = request.StudentId
+	}
+	if request.Email != "" {
+		user.Email = request.Email
+	}
+	if request.AvatarUrl != "" {
+		user.AvatarUrl = request.AvatarUrl
+	}
+
+	// no need to check IsAdmin field for nil any more, it is type safe - it is always boolean and cannot be nil
+	if currentUser.IsAdmin {
+		user.IsAdmin = request.IsAdmin
+	}
+	if err := db.UpdateUser(user); err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 // GetGroupByUserAndCourse returns a single group of a user for a course
-func GetGroupByUserAndCourse(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		uid, err := parseUint(c.Param("uid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-		cid, err := parseUint(c.Param("cid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, uid)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return c.NoContent(http.StatusNotFound)
-			}
-			return err
-		}
-		if enrollment.GroupID > 0 {
-			group, err := db.GetGroup(enrollment.GroupID)
-			if err != nil {
-				return c.NoContent(http.StatusNotFound)
-			}
-			return c.JSONPretty(http.StatusFound, group, "\t")
-		}
-		return c.NoContent(http.StatusNotFound)
+func GetGroupByUserAndCourse(request *pb.ActionRequest, db database.Database) (*pb.Group, error) {
+
+	enrollment, err := db.GetEnrollmentByCourseAndUser(request.UserId, request.CourseId)
+	if err != nil {
+		log.Println("GetGroupByUserAndCourse: no active enrollment found")
+		return nil, err
+
 	}
+	if enrollment.GroupId > 0 {
+		group, err := db.GetGroup(enrollment.GroupId)
+		if err != nil {
+			log.Println("GetGroupByUserAndCourse: no existing group found")
+			return nil, err
+		}
+		return group, nil
+	}
+	return nil, status.Errorf(codes.NotFound, "No groups found")
 }

@@ -3,6 +3,7 @@ package scm
 import (
 	"context"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
@@ -22,16 +23,16 @@ func NewGithubSCMClient(token string) *GithubSCM {
 }
 
 // ListDirectories implements the SCM interface.
-func (s *GithubSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
+func (s *GithubSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error) {
 	orgs, _, err := s.client.Organizations.ListOrgMemberships(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var directories []*Directory
+	var directories []*pb.Directory
 	for _, org := range orgs {
-		directories = append(directories, &Directory{
-			ID:     uint64(org.Organization.GetID()),
+		directories = append(directories, &pb.Directory{
+			Id:     uint64(org.Organization.GetID()),
 			Path:   org.Organization.GetLogin(),
 			Avatar: org.Organization.GetAvatarURL(),
 		})
@@ -40,7 +41,7 @@ func (s *GithubSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 }
 
 // CreateDirectory implements the SCM interface.
-func (s *GithubSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*Directory, error) {
+func (s *GithubSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*pb.Directory, error) {
 	return nil, ErrNotSupported{
 		SCM:    "github",
 		Method: "CreateDirectory",
@@ -48,14 +49,14 @@ func (s *GithubSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 }
 
 // GetDirectory implements the SCM interface.
-func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, error) {
+func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory, error) {
 	org, _, err := s.client.Organizations.GetByID(ctx, int(id))
 	if err != nil {
 		return nil, err
 	}
 
-	return &Directory{
-		ID:     uint64(org.GetID()),
+	return &pb.Directory{
+		Id:     uint64(org.GetID()),
 		Path:   org.GetLogin(),
 		Avatar: org.GetAvatarURL(),
 	}, nil
@@ -89,17 +90,17 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		WebURL:      repo.GetHTMLURL(),
 		SSHURL:      repo.GetSSHURL(),
 		HTTPURL:     repo.GetCloneURL(),
-		DirectoryID: opt.Directory.ID,
+		DirectoryID: opt.Directory.Id,
 	}, nil
 }
 
 // GetRepositories implements the SCM interface.
-func (s *GithubSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+func (s *GithubSCM) GetRepositories(ctx context.Context, directory *pb.Directory) ([]*Repository, error) {
 	var path string
 	if directory.Path != "" {
 		path = directory.Path
 	} else {
-		directory, err := s.GetDirectory(ctx, directory.ID)
+		directory, err := s.GetDirectory(ctx, directory.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +121,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, directory *Directory) (
 			WebURL:      repo.GetHTMLURL(),
 			SSHURL:      repo.GetSSHURL(),
 			HTTPURL:     repo.GetCloneURL(),
-			DirectoryID: directory.ID,
+			DirectoryID: directory.Id,
 		})
 	}
 

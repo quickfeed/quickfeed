@@ -6,6 +6,8 @@ import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
+import {StatusCode, Directory } from "../../../proto/ag_pb"
+
 interface ICourseFormProps<T> {
     className?: string;
     courseMan: CourseManager;
@@ -182,7 +184,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         }
     }
 
-    private async updateCourse(courseId: number): Promise<IStatusCode | IError> {
+    private async updateCourse(courseId: number): Promise<StatusCode | IError> {
         const courseData: ICourse = {
             id: courseId,
             name: this.state.name,
@@ -244,20 +246,20 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         this.updateOrganisationDivs(directories);
     }
 
-    private updateOrganisationDivs(orgs: IOrganization[]): void {
+    private updateOrganisationDivs(orgs: Directory[]): void {
         const organisationDetails: JSX.Element[] = [];
         for (let i: number = 0; i < orgs.length; i++) {
             organisationDetails.push(
                 <button type="button" key={i} className="btn organisation"
-                    onClick={(e) => this.handleOrgClick(e, orgs[i].id)}
-                    title={orgs[i].path}>
+                    onClick={(e) => this.handleOrgClick(e, orgs[i].getId())}
+                    title={orgs[i].getPath()}>
 
                     <div className="organisationInfo">
-                        <img src={orgs[i].avatar}
+                        <img src={orgs[i].getAvatar()}
                             className="img-rounded"
                             width={80}
                             height={80} />
-                        <div className="caption">{orgs[i].path}</div>
+                        <div className="caption">{orgs[i].getPath()}</div>
                     </div>
                     <input type="radio" />
                 </button>,

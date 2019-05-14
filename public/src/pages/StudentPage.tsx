@@ -12,6 +12,9 @@ import {
 
 } from "../models";
 
+
+import {Enrollment, User} from "../../proto/ag_pb"
+
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
@@ -154,12 +157,12 @@ export class StudentPage extends ViewPage {
         const course = await this.courseMan.getCourse(courseId);
         const curUser = this.userMan.getCurrentUser();
         if (course && curUser) {
-            const grp: ICourseGroup | null = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.id);
+            const grp: ICourseGroup | null = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.id);
             if (grp) {
                 return <GroupInfo group={grp} course={course} />;
             } else {
                 const students = await this.courseMan
-                    .getUsersForCourse(course, this.userMan, [CourseUserState.student, CourseUserState.teacher]);
+                    .getUsersForCourse(course, this.userMan, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
                 return <GroupForm className="form-horizontal"
                     students={students}
                     course={course}
@@ -242,7 +245,7 @@ export class StudentPage extends ViewPage {
     private onlyActiveCourses(studentCourse: IUserCourse[]): IUserCourse[] {
         const userCourses: IUserCourse[] = [];
         studentCourse.forEach((a) => {
-            if (a.link && (a.link.state === CourseUserState.student || a.link.state === CourseUserState.teacher)) {
+            if (a.link && (a.link.state === Enrollment.UserStatus.STUDENT || a.link.state === Enrollment.UserStatus.TEACHER)) {
                 userCourses.push(a);
             }
         });
@@ -255,8 +258,8 @@ export class StudentPage extends ViewPage {
         if (curUser) {
             this.userCourses = await this.courseMan.getStudentCourses(curUser,
                 [
-                    CourseUserState.student,
-                    CourseUserState.teacher,
+                    Enrollment.UserStatus.STUDENT,
+                    Enrollment.UserStatus.TEACHER,
                 ]);
             this.activeUserCourses = this.onlyActiveCourses(this.userCourses as IUserCourse[]);
 
@@ -264,7 +267,7 @@ export class StudentPage extends ViewPage {
             this.GroupUserCourses = [];
 
             for (const course of this.activeUserCourses) {
-                const group = await this.courseMan.getGroupByUserAndCourse(curUser.id, course.course.id);
+                const group = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.course.id);
                 if (group != null) {
                     const groupCourse = await this.courseMan.getGroupCourse(group, course.course);
                     if (groupCourse) {

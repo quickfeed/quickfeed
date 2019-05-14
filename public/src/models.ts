@@ -1,3 +1,6 @@
+import {User, Enrollment, Group} from "../proto/ag_pb";
+
+
 export interface IUser {
     id: number;
     name: string;
@@ -73,7 +76,7 @@ export function isIUserCourse(test: IUserCourse | IGroupCourse | ICourseLinkAssi
  * @see IUserCourse
  */
 export interface IUserCourseWithUser {
-    user: IUser;
+    user: User;
     course: IUserCourse;
 }
 /**
@@ -99,7 +102,7 @@ export interface IStudentSubmission {
  * Usualy returned when a course is given.
  */
 export interface IUserRelation {
-    user: IUser;
+    user: User;
     link: ICourseUserLink;
 }
 
@@ -137,7 +140,7 @@ export interface IBuildInfo {
 }
 
 export interface ICourseWithEnrollStatus extends ICourse {
-    enrolled: CourseUserState;
+    enrolled: Enrollment.UserStatus;
 }
 
 /**
@@ -198,16 +201,16 @@ export enum RepositoryType {
     CourseInfoRepo = 4,
 }
 
-export function courseUserStateToString(state: CourseUserState[]): string {
+export function courseUserStateToString(state: Enrollment.UserStatus[]): string {
     return state.map((sta) => {
         switch (sta) {
-            case CourseUserState.pending:
+            case Enrollment.UserStatus.PENDING:
                 return "pending";
-            case CourseUserState.rejected:
+            case Enrollment.UserStatus.REJECTED:
                 return "rejected";
-            case CourseUserState.student:
+            case Enrollment.UserStatus.STUDENT:
                 return "student";
-            case CourseUserState.teacher:
+            case Enrollment.UserStatus.TEACHER:
                 return "teacher";
             default:
                 return "";
@@ -215,16 +218,16 @@ export function courseUserStateToString(state: CourseUserState[]): string {
     }).join(",");
 }
 
-export function courseGroupStateToString(state: CourseGroupStatus[]): string {
+export function courseGroupStateToString(state: Group.GroupStatus[]): string {
     return state.map((sta) => {
         switch (sta) {
-            case CourseGroupStatus.pending:
+            case Group.GroupStatus.PENDING_GROUP:
                 return "pending";
-            case CourseGroupStatus.rejected:
+            case Group.GroupStatus.REJECTED_GROUP:
                 return "rejected";
-            case CourseGroupStatus.approved:
+            case Group.GroupStatus.APPROVED:
                 return "approved";
-            case CourseGroupStatus.deleted:
+            case Group.GroupStatus.DELETED:
                 return "deleted";
             default:
                 return "";
@@ -238,7 +241,7 @@ export function courseGroupStateToString(state: CourseGroupStatus[]): string {
 export interface ICourseUserLink {
     userid: number;
     courseId: number;
-    state: CourseUserState;
+    state: Enrollment.UserStatus;
 }
 
 /**
@@ -247,7 +250,7 @@ export interface ICourseUserLink {
 export interface ICourseGroupLink {
     groupid: number;
     courseId: number;
-    state: CourseGroupStatus;
+    state: Group.GroupStatus;
 }
 /**
  * A description of a single test case object
@@ -304,9 +307,9 @@ export interface IOrganization {
 export interface ICourseGroup {
     id: number;
     name: string;
-    status: CourseGroupStatus;
+    status: Group.GroupStatus;
     courseid: number;
-    users: IUser[];
+    users: User[];
 }
 
 /**

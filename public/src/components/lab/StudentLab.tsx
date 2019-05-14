@@ -1,11 +1,12 @@
 import * as React from "react";
 import { IAssignment, ICourse, IStudentSubmission, ISubmission, ITestCases, IUser } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
+import { User } from "../../../proto/ag_pb";
 
 interface IStudentLabProbs {
     course: ICourse;
     assignment: IStudentSubmission;
-    student?: IUser;
+    student?: User;
     showApprove: boolean;
     onApproveClick: () => void;
     onRebuildClick: () => void;

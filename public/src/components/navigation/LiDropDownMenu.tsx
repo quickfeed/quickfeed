@@ -3,7 +3,7 @@ import * as React from "react";
 import { ILink } from "../../managers";
 import { NavigationHelper } from "../../NavigationHelper";
 
-import { IUser } from "../../models";
+//import { IUser } from "../../models";
 import { NavMenu } from "./NavMenu";
 import { NavMenuDropdown } from "./NavMenuDropdown";
 

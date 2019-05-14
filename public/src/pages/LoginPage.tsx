@@ -4,7 +4,8 @@ import { View, ViewPage } from "./ViewPage";
 import { INavInfo } from "../NavigationHelper";
 
 import { NavigationManager, UserManager } from "../managers";
-import { IUser } from "../models";
+import {User} from "../../proto/ag_pb";
+
 
 export class LoginPage extends ViewPage {
     private navMan: NavigationManager;
@@ -27,10 +28,9 @@ export class LoginPage extends ViewPage {
     }
 
     public async login(info: INavInfo<{ provider: string }>): View {
-        const iUser: Promise<IUser | null> = this.userMan.tryRemoteLogin(info.params.provider);
-        iUser.then((result: IUser | null) => {
+        const iUser: Promise<User | null> = this.userMan.tryRemoteLogin(info.params.provider);
+        iUser.then((result: User | null) => {
             if (result) {
-                console.log("Sucessful login of: ", result);
                 this.navMan.navigateToDefault();
             } else {
                 console.log("Failed");

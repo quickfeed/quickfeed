@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { ILink } from "../../managers/NavigationManager";
-import { IUser } from "../../models";
+//import { IUser } from "../../models";
 import { NavHeaderBar } from "./NavHeaderBar";
 
 import { NavigationHelper } from "../../NavigationHelper";
