@@ -7,8 +7,8 @@ import (
 
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/web"
 	"gopkg.in/go-playground/webhooks.v3/github"
 )
@@ -30,12 +30,12 @@ func TestGithubHook(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
+	var user pb.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
-		&models.RemoteIdentity{
+		&pb.RemoteIdentity{
 			Provider:    "github",
-			RemoteID:    0,
+			RemoteId:    0,
 			AccessToken: "",
 		},
 	); err != nil {

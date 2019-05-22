@@ -102,6 +102,7 @@ func TestGetNextAssignment(t *testing.T) {
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
 	}
+
 	// send new submission for assignment3
 	// submission4 := models.Submission{AssignmentId: assigment3.Id, UserId: user.Id, GroupId: group.Id}
 	submission4 := pb.Submission{AssignmentId: assigment3.Id, GroupId: group.Id}

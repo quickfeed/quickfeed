@@ -271,9 +271,9 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Ass
 		var sub *pb.Submission
 		switch {
 		case v.IsGrouplab && gid > 0:
-			sub, err = db.GetSubmissionForGroup(v.CourseId, gid)
+			sub, err = db.GetSubmissionForGroup(v.Id, gid)
 		case !v.IsGrouplab && uid > 0:
-			sub, err = db.GetSubmissionForUser(v.CourseId, uid)
+			sub, err = db.GetSubmissionForUser(v.Id, uid)
 		default:
 			// This is when uid or gid is set to 0, but there is a group or user lab
 			// TODO: Fix so uid always is included and gid is optional
@@ -310,8 +310,6 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	switch {
 	case submission.UserId > 0 && submission.GroupId > 0:
 		return gorm.ErrRecordNotFound
-
-	// TODO: change to pb.User, pb.Group
 	case submission.UserId > 0:
 		m = db.conn.First(&pb.User{Id: submission.UserId})
 	case submission.GroupId > 0:

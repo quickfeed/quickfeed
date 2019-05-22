@@ -15,7 +15,7 @@ if [[ $# -eq 3 ]]; then
 fi
 
 case $username in
-    pedersen)
+    veray)
         rport=3001
         ;;
     meling)
@@ -36,6 +36,6 @@ case $username in
         exit;
 esac
 
-gnome-terminal -e "ssh -L 7575:$rhost:22 -N $username@badne7.ux.uis.no"
+gnome-terminal -e "ssh -v -i ~/.ssh/id_rsa -L 7575:$rhost:22 -N $username@badne7.ux.uis.no"
 sleep 5
-ssh -R $rport:localhost:$lport -N $username@localhost -p 7575
+ssh -v -R $rport:localhost:$lport -N $username@localhost -p 7575

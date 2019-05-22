@@ -1,18 +1,20 @@
 package web_test
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strconv"
 	"testing"
 
-	"github.com/autograde/aguis/models"
+	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
+	"github.com/autograde/aguis/web/grpc_service"
 	"github.com/labstack/echo"
+	"google.golang.org/grpc/metadata"
 )
 
 func TestGetSelf(t *testing.T) {
@@ -21,20 +23,23 @@ func TestGetSelf(t *testing.T) {
 		apiPrefix = "/api/v1"
 	)
 
+	db, cleanup := setup(t)
+	defer cleanup()
+
 	r := httptest.NewRequest(http.MethodGet, selfURL, nil)
 	w := httptest.NewRecorder()
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	user := &models.User{ID: 1}
+	user := &pb.User{Id: 1}
 	c.Set(auth.UserKey, user)
 
-	userHandler := web.GetSelf()
+	userHandler := web.GetSelf(db)
 	if err := userHandler(c); err != nil {
 		t.Error(err)
 	}
 
-	userURL := "/users/" + strconv.FormatUint(user.ID, 10)
+	userURL := "/users/" + strconv.FormatUint(user.Id, 10)
 	location := w.Header().Get("Location")
 	if location != apiPrefix+userURL {
 		t.Errorf("have Location '%v' want '%v'", location, apiPrefix+userURL)
@@ -43,8 +48,8 @@ func TestGetSelf(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
+
 	const (
-		route       = "/users/:uid"
 		provider    = "github"
 		accessToken = "secret"
 	)
@@ -54,16 +59,16 @@ func TestGetUser(t *testing.T) {
 
 	// Create first user (the admin).
 	if err := db.CreateUserFromRemoteIdentity(
-		&models.User{},
-		&models.RemoteIdentity{},
+		&pb.User{},
+		&pb.RemoteIdentity{},
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	var user models.User
+	var user pb.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
-		&models.RemoteIdentity{
+		&pb.RemoteIdentity{
 			Provider:    provider,
 			AccessToken: accessToken,
 		},
@@ -71,35 +76,18 @@ func TestGetUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	e := echo.New()
-	router := echo.NewRouter(e)
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.Id))
 
-	// Add the route to handler.
-	router.Add(http.MethodGet, route, web.GetUser(db))
-
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10)
-	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	// Prepare context with user request.
-	router.Find(http.MethodGet, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
+	foundUser, err := test_ag.GetUser(cont, &pb.RecordRequest{Id: user.Id})
+	if err != nil {
 		t.Error(err)
 	}
-
-	var foundUser *models.User
-	if err := json.Unmarshal(w.Body.Bytes(), &foundUser); err != nil {
-		t.Fatal(err)
-	}
-
-	// Access token should be stripped.
-	user.RemoteIdentities[0].AccessToken = ""
+	user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	if !reflect.DeepEqual(foundUser, &user) {
 		t.Errorf("have user %+v want %+v", foundUser, &user)
 	}
-	assertCode(t, w.Code, http.StatusFound)
 }
 
 func TestGetUsers(t *testing.T) {
@@ -113,37 +101,31 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user1 models.User
+	var user1 pb.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user1,
-		&models.RemoteIdentity{
+		&pb.RemoteIdentity{
 			Provider: github,
 		},
 	); err != nil {
 		t.Fatal(err)
 	}
-	var user2 models.User
+	var user2 pb.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user2,
-		&models.RemoteIdentity{
+		&pb.RemoteIdentity{
 			Provider: gitlab,
 		},
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	e := echo.New()
-	r := httptest.NewRequest(http.MethodGet, route, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user1.Id))
 
-	h := web.GetUsers(db)
-	if err := h(c); err != nil {
-		t.Error(err)
-	}
-
-	var foundUsers []*models.User
-	if err := json.Unmarshal(w.Body.Bytes(), &foundUsers); err != nil {
+	foundUsers, err := test_ag.GetUsers(cont, &pb.Void{})
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -152,13 +134,14 @@ func TestGetUsers(t *testing.T) {
 	user2.RemoteIdentities = nil
 	// First user should be admin.
 	admin := true
-	user1.IsAdmin = &admin
-	wantUsers := []*models.User{&user1, &user2}
-	if !reflect.DeepEqual(foundUsers, wantUsers) {
-		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
+	user1.IsAdmin = admin
+	wantUsers := make([]*pb.User, 0)
+	wantUsers = append(wantUsers, &user1)
+	wantUsers = append(wantUsers, &user2)
+	if !reflect.DeepEqual(foundUsers.Users, wantUsers) {
+		t.Errorf("have users %+v want %+v", foundUsers.Users, wantUsers)
 	}
 
-	assertCode(t, w.Code, http.StatusFound)
 }
 
 var allUsers = []struct {
@@ -178,12 +161,11 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	const route = "/courses/:cid/users"
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var users []*models.User
+	var users []*pb.User
 	for _, u := range allUsers {
 		user := createFakeUser(t, db, u.remoteID)
 		// remote identities should not be loaded.
@@ -192,11 +174,15 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 	admin := users[0]
 	for _, course := range allCourses {
-		err := db.CreateCourse(admin.ID, course)
+		err := db.CreateCourse(admin.Id, course)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
+
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(admin.Id))
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
@@ -206,13 +192,13 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 			// skip enrolling admin as student
 			continue
 		}
-		if err := db.CreateEnrollment(&models.Enrollment{
-			UserID:   user.ID,
-			CourseID: allCourses[0].ID,
+		if err := db.CreateEnrollment(&pb.Enrollment{
+			UserId:   user.Id,
+			CourseId: allCourses[0].Id,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(user.ID, allCourses[0].ID); err != nil {
+		if err := db.EnrollStudent(user.Id, allCourses[0].Id); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -221,38 +207,24 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	// (excluding admin because admin is enrolled on creation)
 	osUsers := users[3:7]
 	for _, user := range osUsers {
-		if err := db.CreateEnrollment(&models.Enrollment{
-			UserID:   user.ID,
-			CourseID: allCourses[1].ID,
+		if err := db.CreateEnrollment(&pb.Enrollment{
+			UserId:   user.Id,
+			CourseId: allCourses[1].Id,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(user.ID, allCourses[1].ID); err != nil {
+		if err := db.EnrollStudent(user.Id, allCourses[1].Id); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// add the route to handler
-	router.Add(http.MethodGet, route, web.GetEnrollmentsByCourse(db))
-	requestURL := "/courses/" + strconv.FormatUint(allCourses[0].ID, 10) + "/users"
-	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	router.Find(http.MethodGet, requestURL, c)
-	// invoke the prepared handler
-	if err := c.Handler()(c); err != nil {
+	foundEnrollments, err := test_ag.GetEnrollmentsByCourse(cont, &pb.RecordRequest{Id: allCourses[0].Id})
+	if err != nil {
 		t.Error(err)
 	}
 
-	var foundEnrollments []*models.Enrollment
-	if err := json.Unmarshal(w.Body.Bytes(), &foundEnrollments); err != nil {
-		t.Fatal(err)
-	}
-	var foundUsers []*models.User
-	for _, e := range foundEnrollments {
+	var foundUsers []*pb.User
+	for _, e := range foundEnrollments.Enrollments {
 		// remote identities should not be loaded.
 		e.User.RemoteIdentities = nil
 		foundUsers = append(foundUsers, e.User)
@@ -268,126 +240,67 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
 	}
 
-	assertCode(t, w.Code, http.StatusOK)
 }
 
 func TestPatchUser(t *testing.T) {
-	const route = "/users/:uid"
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
-	var adminUser models.User
+	var user pb.User
+	var adminUser pb.User
 	isAdmin := true
-	adminUser.IsAdmin = &isAdmin
-	var remoteIdentity models.RemoteIdentity
+	adminUser.IsAdmin = isAdmin
+	var remoteIdentity pb.RemoteIdentity
 	if err := db.CreateUserFromRemoteIdentity(
 		&user, &remoteIdentity,
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	e := echo.New()
-	router := echo.NewRouter(e)
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(adminUser.Id))
 
-	// Add the route to handler.
-	router.Add(http.MethodPatch, route, web.PatchUser(db))
-
-	// Send empty request, the user should not be modified.
-	emptyJSON, err := json.Marshal(&web.UpdateUserRequest{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	requestBody := bytes.NewReader(emptyJSON)
-
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10)
-	r := httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	// Prepare context with user request.
-	c.Set("user", &adminUser)
-	router.Find(http.MethodPatch, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusNotModified)
-
-	tmp := true
-	// Send request with IsAdmin set to true, the user should become admin.
-	trueJSON, err := json.Marshal(&web.UpdateUserRequest{
-		IsAdmin: &tmp,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	requestBody.Reset(trueJSON)
-
-	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w = httptest.NewRecorder()
-	c.Reset(r, w)
-	// Prepare context with user request.
-	c.Set("user", &adminUser)
-	router.Find(http.MethodPatch, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusOK)
-
-	admin, err := db.GetUser(user.ID)
+	respUser, err := test_ag.UpdateUser(cont, &user)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if admin.IsAdmin == nil || !*admin.IsAdmin {
+	admin, err := db.GetUser(user.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !admin.IsAdmin {
 		t.Error("expected user to have become admin")
 	}
 
-	// Send request with Name.
-	nameChangeJSON, err := json.Marshal(&web.UpdateUserRequest{
+	namechangeRequest := &pb.User{
+		Id:        respUser.Id,
 		Name:      "Scrooge McDuck",
-		StudentID: "99",
+		StudentId: "99",
 		Email:     "test@test.com",
-		AvatarURL: "www.hello.com",
-	})
-	if err != nil {
-		t.Fatal(err)
+		AvatarUrl: "www.hello.com",
 	}
-	requestBody.Reset(nameChangeJSON)
 
-	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w = httptest.NewRecorder()
-	c.Reset(r, w)
-	// Prepare context with user request.
-	c.Set("user", &adminUser)
-	router.Find(http.MethodPatch, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
+	_, err = test_ag.UpdateUser(cont, namechangeRequest)
+	if err != nil {
 		t.Error(err)
 	}
-	assertCode(t, w.Code, http.StatusOK)
-
-	withName, err := db.GetUser(user.ID)
+	withName, err := db.GetUser(user.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantAdmin := true
-	wantUser := &models.User{
-		ID:               withName.ID,
+	wantUser := &pb.User{
+		Id:               withName.Id,
 		Name:             "Scrooge McDuck",
-		IsAdmin:          &wantAdmin,
-		StudentID:        "99",
+		IsAdmin:          wantAdmin,
+		StudentId:        "99",
 		Email:            "test@test.com",
-		AvatarURL:        "www.hello.com",
-		RemoteIdentities: []*models.RemoteIdentity{&remoteIdentity},
+		AvatarUrl:        "www.hello.com",
+		RemoteIdentities: []*pb.RemoteIdentity{&remoteIdentity},
 	}
 	if !reflect.DeepEqual(withName, wantUser) {
 		t.Errorf("have users %+v want %+v", withName, wantUser)
