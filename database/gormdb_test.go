@@ -59,7 +59,7 @@ func TestGormDBGetUsers(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.GetUsers(); err != nil {
+	if _, err := db.GetUsers(false); err != nil {
 		t.Errorf("have error '%v' wanted '%v'", err, nil)
 	}
 }
@@ -605,7 +605,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if user.IsAdmin != nil && *user.IsAdmin {
+	if user.IAdmin() {
 		t.Error("user should not yet be an administrator")
 	}
 
@@ -618,7 +618,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if admin.IsAdmin == nil || !*admin.IsAdmin {
+	if !admin.IAdmin() {
 		t.Error("user should be an administrator")
 	}
 }
@@ -1178,12 +1178,12 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				}
 			}
 
-			have, err := db.GetGroup(group.ID)
+			have, err := db.GetGroup(false, group.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if len(uids) > 0 {
-				group.Users, err = db.GetUsers(uids...)
+				group.Users, err = db.GetUsers(false, uids...)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1307,21 +1307,26 @@ func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
 	}
 }
 
-func TestGormDBGetSingleRepoWithoutUser(t *testing.T) {
+func TestGormDBGetCourseRepoType(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	repo := models.Repository{
-		DirectoryID: 120,
-		// Name:         "Name",
+		DirectoryID:  120,
 		RepositoryID: 100,
+		Type:         models.CourseInfoRepo,
+		// Name:         "Name",
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := db.GetRepository(repo.RepositoryID); err != nil {
+	gotRepo, err := db.GetRepository(repo.RepositoryID)
+	if err != nil {
 		t.Fatal(err)
+	}
+	if !gotRepo.Type.IsCourseRepo() {
+		t.Fatalf("Expected course info repo (%v), but got: %v", models.CourseInfoRepo, gotRepo.Type)
 	}
 }
 
@@ -1601,7 +1606,7 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotModels, _ := db.GetGroup(group.ID)
+	gotModels, _ := db.GetGroup(false, group.ID)
 	if gotModels != nil {
 		t.Errorf("Got %+v wanted None", gotModels)
 	}
@@ -1669,24 +1674,23 @@ func TestGetRepositoriesByCourseIDAndType(t *testing.T) {
 
 	want := []*models.Repository{&repoCourseInfo}
 
-	gotRepo, err := db.GetRepositoriesByCourseIDAndType(course.ID, models.CourseInfoRepo)
+	gotRepo, err := db.GetRepositoriesByCourseAndType(course.ID, models.CourseInfoRepo)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if !reflect.DeepEqual(gotRepo, want) {
+		t.Errorf("Failed")
 		for _, s := range gotRepo {
-			fmt.Printf("got %+v\n", s)
+			t.Logf("have %+v\n", s)
 		}
-		fmt.Println("")
 		for _, s := range want {
-			fmt.Printf("want %+v\n", s)
+			t.Logf("want %+v\n", s)
 		}
-		t.Errorf("Failed")
 	}
 }
 
-func TestGetRepoByCourseIDUserIDandType(t *testing.T) {
+func TestGetRepositoryByCourseUserType(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -1704,7 +1708,6 @@ func TestGetRepoByCourseIDUserIDandType(t *testing.T) {
 	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
-
 	user := createFakeUser(t, db, 10)
 	userTwo := createFakeUser(t, db, 11)
 
@@ -1775,114 +1778,13 @@ func TestGetRepoByCourseIDUserIDandType(t *testing.T) {
 
 	want := &repoUserTwo
 
-	gotRepo, err := db.GetRepoByCourseIDUserIDandType(course.ID, userTwo.ID, models.UserRepo)
+	gotRepo, err := db.GetRepositoryByCourseUserType(course.ID, userTwo.ID, models.UserRepo)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if !reflect.DeepEqual(gotRepo, want) {
-		fmt.Printf("have %+v want %+v\n", gotRepo, want)
-		t.Errorf("Failed")
-	}
-}
-
-func TestGetRepositoriesByCourseIDandUserID(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	course := &models.Course{
-		ID:          1234,
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryID: 120,
-	}
-
-	teacher := createFakeUser(t, db, 1)
-	if err := db.CreateCourse(teacher.ID, course); err != nil {
-		t.Fatal(err)
-	}
-
-	user := createFakeUser(t, db, 10)
-	userTwo := createFakeUser(t, db, 11)
-
-	// Creating Course info repo
-	repoCourseInfo := models.Repository{
-		DirectoryID: 120,
-		// Name:         "Name",
-		RepositoryID: 100,
-		UserID:       user.ID,
-		Type:         models.CourseInfoRepo,
-		HTMLURL:      "http://repoCourseInfo.com/",
-	}
-	if err := db.CreateRepository(&repoCourseInfo); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating solution
-	repoSolution := models.Repository{
-		DirectoryID: 120,
-		// Name:         "Name",
-		RepositoryID: 101,
-		UserID:       user.ID,
-		Type:         models.SolutionsRepo,
-		HTMLURL:      "http://repoSolution.com/",
-	}
-	if err := db.CreateRepository(&repoSolution); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating AssignmentRepo
-	repoAssignment := models.Repository{
-		DirectoryID: 120,
-		// Name:         "Name",
-		RepositoryID: 102,
-		UserID:       user.ID,
-		Type:         models.AssignmentsRepo,
-		HTMLURL:      "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoAssignment); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating UserRepo for user
-	repoUser := models.Repository{
-		DirectoryID: 120,
-		// Name:         "Name",
-		RepositoryID: 103,
-		UserID:       user.ID,
-		Type:         models.UserRepo,
-		HTMLURL:      "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoUser); err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating UserRepo for userTwo
-	repoUserTwo := models.Repository{
-		DirectoryID: 120,
-		// Name:         "Name",
-		RepositoryID: 104,
-		UserID:       userTwo.ID,
-		Type:         models.UserRepo,
-		HTMLURL:      "http://repoAssignment.com/",
-	}
-	if err := db.CreateRepository(&repoUserTwo); err != nil {
-		t.Fatal(err)
-	}
-
-	want := &repoUserTwo
-
-	gotRepo, err := db.GetRepositoriesByCourseIDandUserID(course.ID, userTwo.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(gotRepo, want) {
-		fmt.Printf("have %+v want %+v\n", gotRepo, want)
-		t.Errorf("Failed")
+		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
 	}
 }
 

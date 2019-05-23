@@ -70,6 +70,12 @@ func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory,
 	}, nil
 }
 
+// CreateRepoAndTeam implements the SCM interface.
+func (s *GitlabSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // CreateRepository implements the SCM interface.
 func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
 	directoryID := int(opt.Directory.Id)
@@ -156,14 +162,19 @@ func (s *GitlabSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 	return nil
 }
 
+// GetUserName implements the SCM interface.
+func (s *GitlabSCM) GetUserName(ctx context.Context) (string, error) {
+	return "", nil
+}
+
 // GetUserNameByID implements the SCM interface.
 func (s *GitlabSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
 	return "", nil
 }
 
 // CreateCloneURL implements the SCM interface.
-func (s *GitlabSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
-	return "", nil
+func (s *GitlabSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
+	return ""
 }
 
 // GetPaymentPlan implements the SCM interface.

@@ -1,7 +1,6 @@
 package web
 
 import (
-	"log"
 	"net/http"
 
 	pb "github.com/autograde/aguis/ag"
@@ -36,7 +35,6 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 			}
 			return err
 		}
-		log.Println("Users.go, HTTP, gets user for GetSelf, user: ", user.GetName(), " isAdmin: ", user.GetIsAdmin())
 		return c.JSONPretty(http.StatusFound, user, "\t")
 	}
 }
@@ -46,27 +44,27 @@ func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) 
 	user, err := db.GetUser(request.Id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "User not found")
+			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
 		return nil, err
 	}
-	// Remove access token for user because otherhewise anyone can get access to user tokens
-	for _, remoteID := range user.GetRemoteIdentities() {
-		remoteID.AccessToken = ""
-	}
+
+	//TODO(vera): this can be removed - remote identities will not be sent over http
+	/*
+		// Remove access token for user because otherhewise anyone can get access to user tokens
+		for _, remoteID := range user.GetRemoteIdentities() {
+			remoteID.AccessToken = ""
+		}*/
 
 	return user, nil
 }
 
 // GetUsers returns all the users in the database.
 func GetUsers(db database.Database) (*pb.Users, error) {
-	// This call does not preload the remote identities,
-	// and therefore we do not need to remove the access token.
-
 	users, err := db.GetUsers()
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "No users found")
+			return nil, status.Errorf(codes.NotFound, "no users found")
 		}
 		return nil, err
 	}
@@ -74,51 +72,31 @@ func GetUsers(db database.Database) (*pb.Users, error) {
 }
 
 // UpdateUser promotes a user to an administrator or makes other changes to the user database entry.
-func UpdateUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
-	user, err := db.GetUser(request.Id)
+func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
+	updateUser, err := db.GetUser(request.Id)
 	if err != nil {
 		return nil, err
 	}
 
 	if request.Name != "" {
-		user.Name = request.Name
+		updateUser.Name = request.Name
 	}
 	if request.StudentId != "" {
-		user.StudentId = request.StudentId
+		updateUser.StudentId = request.StudentId
 	}
 	if request.Email != "" {
-		user.Email = request.Email
+		updateUser.Email = request.Email
 	}
 	if request.AvatarUrl != "" {
-		user.AvatarUrl = request.AvatarUrl
+		updateUser.AvatarUrl = request.AvatarUrl
 	}
 
 	// no need to check IsAdmin field for nil any more, it is type safe - it is always boolean and cannot be nil
 	if currentUser.IsAdmin {
-		user.IsAdmin = request.IsAdmin
+		updateUser.IsAdmin = request.IsAdmin
 	}
-	if err := db.UpdateUser(user); err != nil {
+	if err := db.UpdateUser(updateUser); err != nil {
 		return nil, err
 	}
-	return user, nil
-}
-
-// GetGroupByUserAndCourse returns a single group of a user for a course
-func GetGroupByUserAndCourse(request *pb.ActionRequest, db database.Database) (*pb.Group, error) {
-
-	enrollment, err := db.GetEnrollmentByCourseAndUser(request.UserId, request.CourseId)
-	if err != nil {
-		log.Println("GetGroupByUserAndCourse: no active enrollment found")
-		return nil, err
-
-	}
-	if enrollment.GroupId > 0 {
-		group, err := db.GetGroup(enrollment.GroupId)
-		if err != nil {
-			log.Println("GetGroupByUserAndCourse: no existing group found")
-			return nil, err
-		}
-		return group, nil
-	}
-	return nil, status.Errorf(codes.NotFound, "No groups found")
+	return updateUser, nil
 }

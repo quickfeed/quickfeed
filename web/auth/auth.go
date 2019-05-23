@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/gob"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -46,8 +45,6 @@ type UserSession struct {
 }
 
 func newUserSession(id uint64) *UserSession {
-	//HACK: logging
-	log.Println("AUTH: newUserSession for : ", id)
 	return &UserSession{
 		ID:        id,
 		Providers: make(map[string]struct{}),
@@ -55,8 +52,6 @@ func newUserSession(id uint64) *UserSession {
 }
 
 func (us *UserSession) enableProvider(provider string) {
-	//HACK: logging
-	log.Println("AUTH: enableProvider for ", provider)
 	us.Providers[provider] = struct{}{}
 }
 
@@ -211,26 +206,27 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			return c.Redirect(http.StatusFound, redirect)
 		}
 
+		remote := &pb.RemoteIdentity{
+			Provider:    provider,
+			RemoteId:    remoteID,
+			AccessToken: externalUser.AccessToken,
+		}
 		// Try to get user from database.
-		user, err := db.GetUserByRemoteIdentity(provider, remoteID, externalUser.AccessToken)
-		if err == gorm.ErrRecordNotFound {
-			// Create new user.
+		user, err := db.GetUserByRemoteIdentity(remote)
+		switch {
+		case err == nil:
+			// found user in database; update access token
+			err = db.UpdateAccessToken(remote)
+		case err == gorm.ErrRecordNotFound:
+			// user not in database; create new user
 			user = &pb.User{
 				Name:      externalUser.Name,
 				Email:     externalUser.Email,
 				AvatarUrl: externalUser.AvatarURL,
 			}
-			if err := db.CreateUserFromRemoteIdentity(
-				user,
-				&pb.RemoteIdentity{
-					Provider:    provider,
-					RemoteId:    remoteID,
-					AccessToken: externalUser.AccessToken,
-				},
-			); err != nil {
-				return err
-			}
-		} else if err != nil {
+			err = db.CreateUserFromRemoteIdentity(user, remote)
+		}
+		if err != nil {
 			return err
 		}
 
@@ -271,7 +267,8 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 				// Invalidate session. This could happen if the user has been entirely remove
 				// from the database, but a valid session still exists.
 				if err == gorm.ErrRecordNotFound {
-					OAuth2Logout()
+					//TODO(meling) log this error
+					return OAuth2Logout()(c)
 				}
 				return echo.ErrUnauthorized
 			}

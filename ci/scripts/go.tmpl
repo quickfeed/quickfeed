@@ -1,0 +1,45 @@
+#image/golang:1.11.0
+
+echo "\n=== Preparing for Test Execution ===\n"
+
+git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+# Fetch student repo and the test repo
+go get {{ .RawGetURL }}
+go get {{ .RawTestURL }}
+
+# Make sure there are no Autograder tests in the student repo
+rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
+
+# Generate new secret.go with new secret value for each run
+cd $GOPATH/src/{{ .RawTestURL }}/
+cat <<EOF > common/secret.go
+package common
+
+func Secret() string {
+  return "{{ .RandomSecret }}"
+}
+EOF
+
+# Fail student code that attempts to access secret
+cd $GOPATH/src/{{ .RawGetURL }}/{{ .AssignmentName }}/
+if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
+  echo "\n=== Misbehavior Detected: Failed ===\n"
+  exit
+fi
+
+# Copy tests into student assignments folder for running tests
+cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
+
+# Clear access token and the shell history to avoid leaking information to student test code.
+git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+history -c
+
+# Perform lab specific setup
+if [ -f "setup.sh" ]; then
+    bash setup.sh
+fi
+
+echo "\n=== Running Tests ===\n"
+go test -v ./... 2>&1
+echo "\n=== Finished Running Tests ===\n"

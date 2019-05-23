@@ -65,7 +65,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	if err != nil {
 		return nil, err
 	}
-	usr, err := web.UpdateUser(currentUser, in, s.db)
+	usr, err := web.PatchUser(currentUser, in, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +151,7 @@ func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User,
 	return web.GetUser(&pb.RecordRequest{Id: currentUser.Id}, s.db)
 }
 
+//TODO(Vera): groups should not return remote identities
 // GetGroup returns information about a group
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
 	return web.GetGroup(in, s.db)
@@ -167,7 +168,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	return web.CreateGroup(in, s.db, usr)
+	return web.NewGroup(in, s.db, usr)
 }
 
 // UpdateGroup is called by UpdateGroup client method, changes group information
@@ -201,7 +202,7 @@ func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group)
 	if err != nil {
 		return nil, err
 	}
-	return web.PatchGroup(ctx, in, s.db, usr, scm)
+	return web.UpdateGroup(ctx, in, s.db, usr, scm)
 }
 
 // DeleteGroup removes group record from the database

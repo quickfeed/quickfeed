@@ -11,6 +11,7 @@ import (
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
 	client *github.Client
+	token  string
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
@@ -19,6 +20,7 @@ func NewGithubSCMClient(token string) *GithubSCM {
 	client := github.NewClient(oauth2.NewClient(context.Background(), ts))
 	return &GithubSCM{
 		client: client,
+		token:  token,
 	}
 }
 
@@ -62,25 +64,41 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory,
 	}, nil
 }
 
+// CreateRepoAndTeam implements the SCM interface.
+func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error) {
+	repo, err := s.CreateRepository(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
+		Directory: opt.Directory,
+		TeamName:  teamName,
+		Users:     gitUserNames,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.AddTeamRepo(ctx, &AddTeamRepoOptions{
+		TeamID: team.ID,
+		Owner:  repo.Owner,
+		Repo:   repo.Path,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return repo, nil
+}
+
 // CreateRepository implements the SCM interface.
 func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	var repo *github.Repository
-
 	repo, _, err := s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{
 		Name:    &opt.Path,
 		Private: &opt.Private,
 	})
 	if err != nil {
-		// Could not create a private repo, trying to create public
-		err = nil
-		repo, _, err = s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{
-			Name: &opt.Path,
-		})
-
-		if err != nil {
-			return nil, err
-		}
-
+		return nil, err
 	}
 
 	return &Repository{
@@ -191,8 +209,12 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 }
 
 // CreateCloneURL implements the SCM interface.
-func (s *GithubSCM) CreateCloneURL(ctx context.Context, opt *CreateClonePathOptions) (string, error) {
-	return "https://" + opt.UserToken + "@github.com/" + opt.Directory + "/" + opt.Repository, nil
+func (s *GithubSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
+	token := s.token
+	if len(opt.UserToken) > 0 {
+		token = opt.UserToken
+	}
+	return "https://" + token + "@github.com/" + opt.Directory + "/" + opt.Repository + ".git"
 }
 
 // AddTeamRepo implements the SCM interface.
@@ -204,6 +226,15 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 		return err
 	}
 	return nil
+}
+
+// GetUserName implements the SCM interface.
+func (s *GithubSCM) GetUserName(ctx context.Context) (string, error) {
+	user, _, err := s.client.Users.Get(ctx, "")
+	if err != nil {
+		return "", err
+	}
+	return user.GetLogin(), nil
 }
 
 // GetUserNameByID implements the SCM interface.

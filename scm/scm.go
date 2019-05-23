@@ -16,6 +16,13 @@ type SCM interface {
 	CreateDirectory(context.Context, *CreateDirectoryOptions) (*pb.Directory, error)
 	// Gets a directory.
 	GetDirectory(context.Context, uint64) (*pb.Directory, error)
+	// CreateRepoAndTeam invokes the SCM to create a repository and team for the
+	// specified namespace (typically the course name), the path of the repository
+	// (typically the name of the student with a '-labs' suffix or the group name).
+	// The team name is usually the student name or group name, whereas the git
+	// user names are the members of the team. For single student repositories,
+	// the git user names are typically just the one student.
+	CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within directory.
@@ -34,10 +41,12 @@ type SCM interface {
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember as a member to a team.
 	// AddTeamMember(context.Context, *AddMemberOptions) error
-	// Retrieves user by remoteID
+	// GetUserName returns the currently logged in user's login name.
+	GetUserName(context.Context) (string, error)
+	// GetUserNameByID returns the login name of user with the given remoteID.
 	GetUserNameByID(context.Context, uint64) (string, error)
-	// Returns a provider spesefic clone path.
-	CreateCloneURL(context.Context, *CreateClonePathOptions) (string, error)
+	// Returns a provider specific clone path.
+	CreateCloneURL(*CreateClonePathOptions) string
 	// Fetch current payment plan
 	GetPaymentPlan(context.Context, uint64) (*PaymentPlan, error)
 }
@@ -113,7 +122,7 @@ type CreateHookOptions struct {
 
 // CreateTeamOptions contains information about the team and the users of the team.
 type CreateTeamOptions struct {
-	Directory *Directory
+	Directory *pb.Directory
 	TeamName  string
 	Users     []string
 }
@@ -125,6 +134,7 @@ type ErrNotSupported struct {
 	Method string
 }
 
+// CreateClonePathOptions holds elements used when constructing a clone URL string.
 type CreateClonePathOptions struct {
 	UserToken  string
 	Directory  string
@@ -147,6 +157,7 @@ type Team struct {
 	URL  string
 }
 
+// PaymentPlan represents the payment plan to use.
 type PaymentPlan struct {
 	Name         string
 	PrivateRepos uint64

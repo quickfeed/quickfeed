@@ -3,37 +3,31 @@ package web
 import (
 	"context"
 	"log"
-	"strings"
-	"sync"
-	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/yamlparser"
+	"net/http"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 )
 
-// MaxWait is the maximum time a request is allowed to stay open before
-// aborting.
-const MaxWait = 10 * time.Minute
+/*
 
-// BaseHookOptions contains options shared among all webhooks.
-type BaseHookOptions struct {
-	BaseURL string
-	// Secret is used to verify that the event received is legit. GitHub
-	// sends back a signature of the payload, while GitLab just sends back
-	// the secret. This is all handled by the
-	// gopkg.in/go-playground/webhooks.v3 package.
-	Secret string
-}
+// NewCourseRequest represents a request for a new course.
+type NewCourseRequest struct {
+	Name string `json:"name"`
+	Code string `json:"code"`
+	Year uint   `json:"year"`
+	Tag  string `json:"tag"`
+
+	Provider    string `json:"provider"`
+	DirectoryID uint64 `json:"directoryid"`
+}*/
 
 func validCourse(c *pb.Course) bool {
 	return c != nil &&
@@ -45,6 +39,13 @@ func validCourse(c *pb.Course) bool {
 		c.Tag != ""
 }
 
+func validEnrollment(req *pb.ActionRequest) bool {
+	return req.Status < pb.Enrollment_TEACHER &&
+		req.UserId != 0 &&
+		req.CourseId != 0
+}
+
+/*
 // EnrollUserRequest represent a request for enrolling a user to a course.
 type EnrollUserRequest struct {
 	Status uint `json:"status"`
@@ -52,7 +53,7 @@ type EnrollUserRequest struct {
 
 func (eur *EnrollUserRequest) valid() bool {
 	return eur.Status <= models.Teacher
-}
+}*/
 
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) (*pb.Courses, error) {
@@ -85,6 +86,9 @@ func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assig
 
 // NewCourse creates a new course and associates it with a directory (organization in github)
 // and creates the repositories for the course.
+//TODO(meling) refactor this to separate out business logic
+//TODO(meling) remove logger from method, and use c.Logger() instead
+// Problem: (the echo.Logger is not compatible with logrus.FieldLogger)
 func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions, currentUser *pb.User) (*pb.Course, error) {
 	if !validCourse(request) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
@@ -92,6 +96,11 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 
 	contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
+
+	if !currentUser.IsAdmin {
+		// Only teacher with admin rights can create a new course
+		return nil, status.Errorf(codes.PermissionDenied, "user must be admin to create a new course")
+	}
 
 	directory, err := s.GetDirectory(contextWithTimeout, request.DirectoryId)
 	if err != nil {
@@ -133,6 +142,7 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 			}
 			log.Println("Created new repository")
 		}
+
 		hooks, err := s.ListHooks(contextWithTimeout, repo)
 		if err != nil {
 			log.Println("Failed to list hooks for repository")
@@ -159,23 +169,12 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 			}
 			log.Println("Created new webhook for repository: ", path)
 		}
-		var repoType pb.Repository_RepoType
-		switch path {
-		case InfoRepo:
-			repoType = pb.Repository_COURSEINFO
-		case AssignmentRepo:
-			repoType = pb.Repository_ASSIGNMENT
-		case TestsRepo:
-			repoType = pb.Repository_TESTS
-		case SolutionsRepo:
-			repoType = pb.Repository_SOLUTION
-		}
 
 		dbRepo := pb.Repository{
 			DirectoryId:  directory.Id,
 			RepositoryId: repo.ID,
 			HtmlUrl:      repo.WebURL,
-			RepoType:     repoType,
+			RepoType:     repoType(path),
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return nil, err
@@ -195,10 +194,24 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 
 }
 
+func repoType(path string) (repoType pb.Repository_RepoType) {
+	switch path {
+	case InfoRepo:
+		repoType = pb.Repository_COURSEINFO
+	case AssignmentRepo:
+		repoType = pb.Repository_ASSIGNMENT
+	case TestsRepo:
+		repoType = pb.Repository_TESTS
+	case SolutionsRepo:
+		repoType = pb.Repository_SOLUTION
+	}
+	return
+}
+
 // CreateEnrollment enrolls a user in a course.
 func CreateEnrollment(request *pb.ActionRequest, db database.Database) (*pb.StatusCode, error) {
 
-	if request.Status > pb.Enrollment_TEACHER || request.UserId == 0 || request.CourseId == 0 {
+	if !validEnrollment(request) {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid payload")
 	}
 
@@ -211,16 +224,48 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) (*pb.Stat
 	if err := db.CreateEnrollment(&enrollment); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return &pb.StatusCode{StatusCode: int32(codes.NotFound)}, status.Errorf(codes.NotFound, "Record not found")
+
 		}
 		return &pb.StatusCode{StatusCode: int32(codes.Aborted)}, err
 	}
 	return &pb.StatusCode{StatusCode: int32(codes.OK)}, nil
 }
 
+/*
+courseRepo := &models.Repository{
+	DirectoryID:  directory.ID,
+	RepositoryID: repo.ID,
+	HTMLURL:      repo.WebURL,
+	Type:         repoType(path),
+}
+if err := db.CreateRepository(courseRepo); err != nil {
+	return err
+}
+
+course := models.Course{
+			Name:            cr.Name,
+			CourseCreatorID: user.ID,
+			Code:            cr.Code,
+			Year:            cr.Year,
+			Tag:             cr.Tag,
+			Provider:        cr.Provider,
+			DirectoryID:     directory.ID,
+		}
+		if err := db.CreateCourse(user.ID, &course); err != nil {
+			//TODO(meling) Should we even communicate bad request to the client?
+			// We should log errors and debug it on the server side instead.
+			// If clients make mistakes, there is nothing it can do with the error message.
+			if err == database.ErrCourseExists {
+				return c.JSONPretty(http.StatusBadRequest, err.Error(), "\t")
+			}
+			return err
+
+}*/
+
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
 func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM, currentUser *pb.User) (*pb.StatusCode, error) {
 
-	if request.Status > pb.Enrollment_TEACHER || request.UserId == 0 || request.CourseId == 0 {
+	if !validEnrollment(request) {
 		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
@@ -249,34 +294,14 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			return nil, err
 		}
 
-		contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
-		defer cancel()
-
-		dir, err := s.GetDirectory(contextWithTimeout, course.DirectoryId)
-		if err != nil {
-			return nil, err
-		}
 		student, err := db.GetUser(request.UserId)
 		if err != nil {
 			return nil, err
 		}
-		// Find out what the current plan is to set repo/team as private if not(?) do not create the repo
-		// TODO Decide which provider/remoteIdentity is being used,
-		gitUserName, err := s.GetUserNameByID(contextWithTimeout, student.RemoteIdentities[0].RemoteId)
-		if err != nil {
-			return nil, err
-		}
-		// Creating repository
-		studentName := strings.Replace(gitUserName, " ", "", -1)
-		pathName := studentName + "-labs"
-		repo, err := s.CreateRepository(contextWithTimeout, &scm.CreateRepositoryOptions{
-			Directory: dir,
-			Path:      pathName,
-			Private:   true,
-		})
-		if err != nil {
-			return nil, err
-		}
+		//create user repo and team on SCM
+		repo, err := createUserRepoAndTeam(ctx, s, course, student)
+
+		// add student repo to database if SCM interaction was successful
 		dbRepo := pb.Repository{
 			DirectoryId:  course.DirectoryId,
 			RepositoryId: repo.ID,
@@ -287,25 +312,6 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return nil, err
 		}
-		// Creating team
-		team, err := s.CreateTeam(contextWithTimeout, &scm.CreateTeamOptions{
-			Directory: &scm.Directory{Path: dir.Path},
-			TeamName:  studentName,
-			Users:     []string{gitUserName},
-		})
-		if err != nil {
-			return nil, err
-		}
-		if team != nil {
-			err = s.AddTeamRepo(contextWithTimeout, &scm.AddTeamRepoOptions{
-				TeamID: team.ID,
-				Owner:  repo.Owner,
-				Repo:   repo.Path,
-			})
-			if err != nil {
-				return nil, err
-			}
-		}
 	case pb.Enrollment_TEACHER:
 		err = db.EnrollTeacher(request.UserId, request.CourseId)
 	case pb.Enrollment_REJECTED:
@@ -314,12 +320,37 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		err = db.SetPendingEnrollment(request.UserId, request.CourseId)
 	}
 	if err != nil {
-		return nil, err
-	}
-	if err != nil {
 		return &pb.StatusCode{StatusCode: int32(codes.Aborted)}, err
 	}
 	return &pb.StatusCode{StatusCode: int32(codes.OK)}, nil
+}
+
+func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, error) {
+
+	ctx, cancel := context.WithTimeout(c, MaxWait)
+	defer cancel()
+
+	dir, err := s.GetDirectory(ctx, course.DirectoryId)
+	if err != nil {
+		return nil, err
+	}
+
+	gitUserNames, err := fetchGitUserNames(ctx, s, course, student)
+	if err != nil {
+		return nil, err
+	}
+	if len(gitUserNames) > 1 || len(gitUserNames) == 0 {
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+	}
+	// the student's git user name is the same as the team name
+	teamName := gitUserNames[0]
+
+	opt := &scm.CreateRepositoryOptions{
+		Directory: dir,
+		Path:      StudentRepoName(teamName),
+		Private:   true,
+	}
+	return s.CreateRepoAndTeam(ctx, opt, teamName, gitUserNames)
 }
 
 // GetCourse find course by id and return JSON object.
@@ -336,7 +367,7 @@ func GetCourse(query *pb.RecordRequest, db database.Database) (*pb.Course, error
 	return course, nil
 }
 
-// RefreshCourse refreshes the information to a course
+// RefreshCourse updates the course assignments (and possibly other course information).
 func RefreshCourse(ctx context.Context, request *pb.RecordRequest, s scm.SCM, db database.Database, currentUser *pb.User) (*pb.Assignments, error) {
 
 	course, err := db.GetCourse(request.Id)
@@ -344,139 +375,29 @@ func RefreshCourse(ctx context.Context, request *pb.RecordRequest, s scm.SCM, db
 		return nil, err
 	}
 
-	remoteID, err := getRemoteIDFor(currentUser, course.Provider)
-	if err != nil {
-		return nil, err
-	}
-
 	if currentUser.IsAdmin {
+		// Only admin users should be able to update repos to private, if they are public.
+		//TODO(meling) remove this; we should prevent creating public repos in the first place
+		// and instead only if the teacher specifically requests public repo from the frontend
 		updateRepoToPrivate(ctx, db, s, course.DirectoryId)
 	}
 
-	assignments, err := RefreshCourseInformation(ctx, db, course, remoteID, s)
+	assignments, err := FetchAssignments(ctx, s, course)
 	if err != nil {
 		return nil, err
 	}
+
+	if err = db.UpdateAssignments(assignments); err != nil {
+		return nil, err
+	}
+	//TODO(meling) Are the assignments (previously it was yamlparser.NewAssignmentRequest)
+	// needed by the frontend? Or can we use models.Assignment instead through db.GetAssignmentsByCourse()?
+	// Currently the frontend looks faulty, i.e. doesn't use the returned results from this
+	// function; see 'refreshCoursesFor(courseID: number): Promise<any>' in ServerProvider.ts,
+	// which does a 'return this.makeUserInfo(result.data);', indicating that the result is
+	// converted into a UserInfo type, which probably fails??
 
 	return &pb.Assignments{Assignments: assignments}, nil
-}
-
-var runLock sync.Mutex
-
-func RefreshCourseInformation(ctx context.Context, db database.Database, course *pb.Course, remoteID *pb.RemoteIdentity, s scm.SCM) ([]*pb.Assignment, error) {
-	runLock.Lock()
-	defer runLock.Unlock()
-
-	contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
-	defer cancel()
-
-	directory, err := s.GetDirectory(contextWithTimeout, course.DirectoryId)
-	if err != nil {
-		log.Println("Problem fetching Directory")
-		return nil, err
-	}
-
-	path, err := s.CreateCloneURL(contextWithTimeout, &scm.CreateClonePathOptions{
-		Directory:  directory.Path,
-		Repository: "tests.git",
-		UserToken:  remoteID.AccessToken,
-	})
-	if err != nil {
-		log.Println("Problem Creating clone URL")
-		return nil, err
-	}
-
-	runner := ci.Local{}
-
-	cloneDirectory := "agclonepath"
-
-	// Clone all tests from tests repositry
-	job := &ci.Job{
-		Commands: []string{
-			"mkdir " + cloneDirectory,
-			"cd " + cloneDirectory,
-			"git clone " + path,
-		},
-	}
-
-	log.Println("Running Job ", job)
-	_, err = runner.Run(ctx, job)
-	if err != nil {
-		log.Println("Problem Running CI runner")
-		runner.Run(ctx, &ci.Job{
-			Commands: []string{
-				"yes | rm -r " + cloneDirectory,
-			},
-		})
-		return nil, err
-	}
-	// Parse assignments in the test directory
-	assignments, err := yamlparser.Parse("agclonepath/tests")
-	if err != nil {
-		log.Println("Problem getting assignments")
-		return nil, err
-	}
-
-	// Cleanup downloaded
-	runner.Run(ctx, &ci.Job{
-		Commands: []string{
-			"yes | rm -r " + cloneDirectory,
-		},
-	})
-
-	for _, v := range assignments {
-		assignment, err := createAssignment(v, course)
-		if err != nil {
-			log.Println("Problem createing assignment")
-			return nil, err
-		}
-		// a hack to avoid error messages
-
-		ass := pb.Assignment{
-			Id:         assignment.Id,
-			CourseId:   assignment.CourseId,
-			IsGrouplab: assignment.IsGrouplab,
-			Language:   assignment.Language,
-		}
-
-		if err := db.CreateAssignment(&ass); err != nil {
-
-			// end of the hack
-
-			log.Println("Problem adding assignment to DB")
-			return nil, err
-		}
-
-	}
-
-	return assignments, nil
-}
-
-func getRemoteIDFor(user *pb.User, provider string) (*pb.RemoteIdentity, error) {
-	var remoteID *pb.RemoteIdentity
-	for _, v := range user.RemoteIdentities {
-		if v.Provider == provider {
-			remoteID = v
-			break
-		}
-	}
-	if remoteID == nil {
-		return nil, echo.ErrNotFound
-	}
-	return remoteID, nil
-}
-
-func createAssignment(request *pb.Assignment, course *pb.Course) (*pb.Assignment, error) {
-
-	return &pb.Assignment{
-		AutoApprove: request.AutoApprove,
-		CourseId:    course.Id,
-		Deadline:    request.Deadline,
-		Language:    request.Language,
-		Name:        request.Name,
-		Order:       uint32(request.Id),
-		IsGrouplab:  request.IsGrouplab,
-	}, nil
 }
 
 // GetSubmission returns a single submission for a assignment and a user
@@ -580,42 +501,43 @@ func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.
 }
 
 // GetCourseInformationURL returns the course information html as string
+//(meling): merge this functionality with func below into a single func.
+// Use only one db call as well. Make sure the db can only return one repo
 func GetCourseInformationURL(request *pb.RecordRequest, db database.Database) (*pb.URLResponse, error) {
 
-	courseInfoRepo, err := db.GetRepositoriesByCourseIDAndType(request.Id, pb.Repository_COURSEINFO)
+	courseInfoRepo, err := db.GetRepositoriesByCourseAndType(request.Id, pb.Repository_COURSEINFO)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "No repository found")
+		return nil, status.Errorf(codes.NotFound, "could not retrieve any course information repos")
 	}
 	if len(courseInfoRepo) > 1 {
-		return nil, status.Errorf(codes.Internal, "Too many information repositories exist")
+		return nil, status.Errorf(codes.Internal, "too many information repositories exist")
 	} else if len(courseInfoRepo) < 1 {
-		return nil, status.Errorf(codes.Internal, "No information repository found")
+		return nil, status.Errorf(codes.Internal, "no repository found")
 	}
 	return &pb.URLResponse{Url: courseInfoRepo[0].HtmlUrl}, nil
 }
 
 // GetRepositoryURL returns the repository information
 func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db database.Database) (*pb.URLResponse, error) {
-	// One course can have many user repos, but only one of every other repo type
-	log.Println("GetRepoURL: requested type is ", request.Type)
+
+	var repos []*pb.Repository
 	if request.Type == pb.Repository_USER {
 
-		if currentUser == nil {
-			return nil, status.Errorf(codes.Unauthenticated, "user not registered")
-		}
+		// current user will never be set to nil, otherwise the function would not be called
+		/*
+			if currentUser == nil {
+				return nil, status.Errorf(codes.Unauthenticated, "user not registered")
+			}*/
 
-		userRepo, err := db.GetRepoByCourseIDUserIDandType(request.CourseId, currentUser.Id, request.Type)
+		userRepo, err := db.GetRepositoryByCourseUserType(request.CourseId, currentUser.Id, request.Type)
 		if err != nil {
-			log.Println("GetRepoURL fails getRepoByCourseIDUserIDandType")
 			return nil, err
 		}
 		return &pb.URLResponse{Url: userRepo.HtmlUrl}, nil
 	}
-	repos, err := db.GetRepositoriesByCourseIDAndType(request.CourseId, request.Type)
+	repos, err := db.GetRepositoriesByCourseAndType(request.CourseId, request.Type)
 
 	if err != nil {
-		log.Println("GetRepoURL gets fails getRepoByCourseIDandType")
-
 		return nil, err
 	}
 	if len(repos) > 1 {
@@ -627,6 +549,9 @@ func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db da
 	return &pb.URLResponse{Url: repos[0].HtmlUrl}, nil
 }
 
+//TODO(meling) there are no error handling here; also add tests
+//TODO(meling) this method should probably not be necessary because we shouldn't let the frontend
+// create non-private repos unless this action is specifically specified in the CreateRepository call.
 func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, directoryID uint64) {
 	repositories, err := db.GetRepositoriesByDirectory(directoryID)
 	if err != nil {

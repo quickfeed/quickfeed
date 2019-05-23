@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
@@ -342,9 +343,9 @@ func TestAccessControl(t *testing.T) {
 	defer cleanup()
 
 	// Create a new user.
-	if err := db.CreateUserFromRemoteIdentity(&models.User{}, &models.RemoteIdentity{
+	if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
 		Provider:    provider,
-		RemoteID:    remoteID,
+		RemoteId:    remoteID,
 		AccessToken: secret,
 	}); err != nil {
 		t.Fatal(err)

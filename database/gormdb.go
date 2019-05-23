@@ -3,12 +3,27 @@ package database
 import (
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 
 	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
+)
+
+var (
+	// ErrDuplicateIdentity is returned when trying to associate a remote identity
+	// with a user account and the identity is already in use.
+	ErrDuplicateIdentity = errors.New("remote identity register with another user")
+	// ErrDuplicateGroup is returned when trying to create a group with the same
+	// name as a previously registered group.
+	ErrDuplicateGroup = errors.New("group name already registered")
+	// ErrCourseExists is returned when trying to create an association in
+	// the database for a DirectoryId that already exists in the database.
+	ErrCourseExists = errors.New("course already exists on git provider")
+	// ErrInsufficientAccess is returned when trying to update database
+	// with insufficient access priviledges.
+	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
 )
 
 // GormDB implements the Database interface.
@@ -54,28 +69,22 @@ func (db *GormDB) GetUser(uid uint64) (*pb.User, error) {
 }
 
 // GetUserByRemoteIdentity implements the Database interface.
-func (db *GormDB) GetUserByRemoteIdentity(provider string, rid uint64, accessToken string) (*pb.User, error) {
+func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, error) {
 	tx := db.conn.Begin()
 
 	// Get the remote identity.
 	var remoteIdentity pb.RemoteIdentity
 	if err := tx.
 		Where(&pb.RemoteIdentity{
-			Provider: provider,
-			RemoteId: rid,
+			Provider: remote.Provider,
+			RemoteId: remote.RemoteId,
 		}).
 		First(&remoteIdentity).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
-	// Update the access token.
-	if err := tx.Model(&remoteIdentity).Update("access_token", accessToken).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	// Get the user
+	// Get the user.
 	var user pb.User
 	if err := tx.Preload("RemoteIdentities").First(&user, remoteIdentity.UserId).Error; err != nil {
 		tx.Rollback()
@@ -87,12 +96,37 @@ func (db *GormDB) GetUserByRemoteIdentity(provider string, rid uint64, accessTok
 	return &user, nil
 }
 
+// UpdateAccessToken implements the Database interface.
+func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
+	tx := db.conn.Begin()
+
+	// Get the remote identity.
+	var remoteIdentity models.RemoteIdentity
+	if err := tx.
+		Where(&pb.RemoteIdentity{
+			Provider: remote.Provider,
+			RemoteId: remote.RemoteId,
+		}).
+		First(&remoteIdentity).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Update the access token.
+	if err := tx.Model(&remoteIdentity).Update("access_token", remote.AccessToken).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
+}
+
 // GetUsers implements the Database interface.
 func (db *GormDB) GetUsers(uids ...uint64) ([]*pb.User, error) {
 	m := db.conn
 	if len(uids) > 0 {
 		m = m.Where(uids)
 	}
+	m = m.Preload("RemoteIdentities")
 
 	var users []*pb.User
 	if err := m.Find(&users).Error; err != nil {
@@ -112,7 +146,6 @@ func (db *GormDB) SetAdmin(uid uint64) error {
 	if err := db.conn.First(&user, uid).Error; err != nil {
 		return err
 	}
-	//var admin bool
 	admin := true
 	user.IsAdmin = admin
 	return db.conn.Save(&user).Error
@@ -149,21 +182,6 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb
 	return nil
 }
 
-var (
-	// ErrDuplicateIdentity is returned when trying to associate a remote identity
-	// with a user account and the identity is already in use.
-	ErrDuplicateIdentity = errors.New("remote identity register with another user")
-	// ErrDuplicateGroup is returned when trying to create a group with the same
-	// name as a previously registered group.
-	ErrDuplicateGroup = errors.New("group name already registered")
-	// ErrCourseExists is returned when trying to create an association in
-	// the database for a DirectoryID that already exists in the database.
-	ErrCourseExists = errors.New("course already exists on git provider")
-	// ErrInsufficientAccess is returned when trying to update database
-	// with insufficient access priviledges.
-	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
-)
-
 // AssociateUserWithRemoteIdentity implements the Database interface.
 func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error {
 	var count uint64
@@ -177,8 +195,6 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 			UserId: uid,
 		}).
 		Count(&count).Error; err != nil {
-		//HACK: logging
-		log.Println("GORM: associateUserWithRemoteIdentity fails with error ", err.Error())
 		return err
 	}
 	if count > 0 {
@@ -186,8 +202,6 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 	}
 
 	var remoteIdentity pb.RemoteIdentity
-	//HACK: logging
-	log.Println("GORM: associateUserWithRemoteIdentity finished")
 	return db.conn.
 		Where(pb.RemoteIdentity{Provider: provider, RemoteId: rid, UserId: uid}).
 		Assign(pb.RemoteIdentity{AccessToken: accessToken}).
@@ -449,6 +463,18 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 		}).FirstOrCreate(assignment).Error
 }
 
+// UpdateAssignments implements the Database interface.
+func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
+	//TODO Updating the database may need locking??
+	for _, v := range assignments {
+		// this will create or update an existing assignment
+		if err := db.CreateAssignment(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // CreateEnrollment implements the Database interface.
 // This method will overwrite the status field with models.Pending.
 func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
@@ -661,12 +687,12 @@ func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
 	if err := db.conn.Preload("Enrollments").First(&group, gid).Error; err != nil {
 		return nil, err
 	}
-	var userIDs []uint64
+	var userIds []uint64
 	for _, enrollment := range group.Enrollments {
-		userIDs = append(userIDs, enrollment.UserId)
+		userIds = append(userIds, enrollment.UserId)
 	}
-	if len(userIDs) > 0 {
-		users, err := db.GetUsers(userIDs...)
+	if len(userIds) > 0 {
+		users, err := db.GetUsers(userIds...)
 		if err != nil {
 			return nil, err
 		}
@@ -681,6 +707,8 @@ func (db *GormDB) UpdateGroupStatus(group *pb.Group) error {
 }
 
 // GetGroupsByCourse returns a list of groups
+//TODO(meling) add test for this method
+//TODO(meling) can this also Preload("Users") to avoid the GetUsers below.
 func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
 	var groups []*pb.Group
 	if err := db.conn.
@@ -693,18 +721,17 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
 	}
 
 	for _, group := range groups {
-		var userIDs []uint64
+		var userIds []uint64
 		for _, enrollment := range group.Enrollments {
-			userIDs = append(userIDs, enrollment.UserId)
+			userIds = append(userIds, enrollment.UserId)
 		}
-		if len(userIDs) > 0 {
-			users, err := db.GetUsers(userIDs...)
+		if len(userIds) > 0 {
+			users, err := db.GetUsers(userIds...)
 			if err != nil {
 				return nil, err
 			}
 			group.Users = users
 		}
-
 	}
 	return groups, nil
 
@@ -733,14 +760,25 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 // CreateRepository implements the Database interface
 func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	if repo.DirectoryId == 0 || repo.RepositoryId == 0 {
-		return gorm.ErrRecordNotFound
+		return fmt.Errorf("both DirectoryId and RepositoryId must be provided for repository")
 	}
 
-	if repo.UserId > 0 {
+	switch {
+	case repo.UserId > 0:
+		// check that user exists creating repo in database
 		err := db.conn.First(&pb.User{}, repo.UserId).Error
 		if err != nil {
 			return err
 		}
+	case repo.GroupId > 0:
+		// check that group exists creating repo in database
+		err := db.conn.First(&pb.Group{}, repo.GroupId).Error
+		if err != nil {
+			return err
+		}
+	case !repo.RepoType.IsCourseRepo():
+		// if both user and group are unset, the repository belongs to the course
+		return fmt.Errorf("either UserId, GroupId or a course repository Type must be provided")
 	}
 
 	return db.conn.Create(repo).Error
@@ -759,23 +797,8 @@ func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
 	return &repo, nil
 }
 
-// GetRepositoriesByCourseIDandUserID Fetches Repo based on courseid, userid and type
-func (db *GormDB) GetRepositoriesByCourseIDandUserID(cid uint64, uid uint64) (*pb.Repository, error) {
-	course, err := db.GetCourse(cid)
-	if err != nil {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	var repo pb.Repository
-	if err := db.conn.First(&repo, &pb.Repository{DirectoryId: course.DirectoryId, UserId: uid}).Error; err != nil {
-		return nil, err
-	}
-
-	return &repo, nil
-}
-
-// GetRepoByCourseIDUserIDandType Fetches Repo based on courseid, userid and type
-func (db *GormDB) GetRepoByCourseIDUserIDandType(cid uint64, uid uint64, repoType pb.Repository_RepoType) (*pb.Repository, error) {
+// GetRepositoryByCourseUserType implements the database interface
+func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType pb.Repository_RepoType) (*pb.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
 		return nil, gorm.ErrRecordNotFound
@@ -853,9 +876,8 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	return nil
 }
 
-// GetRepositoriesByCourseIDAndType returns repos beloning to directoryID and with repo type
-func (db *GormDB) GetRepositoriesByCourseIDAndType(cid uint64, repoType pb.Repository_RepoType) ([]*pb.Repository, error) {
-
+// GetRepositoriesByCourseAndType implements the database interface
+func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType pb.Repository_RepoType) ([]*pb.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
 		return nil, gorm.ErrRecordNotFound

@@ -9,10 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strconv"
 	"testing"
 
-	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
@@ -56,21 +54,6 @@ var allCourses = []*models.Course{
 		Provider:        "fake",
 		DirectoryID:     4,
 	},
-}
-
-// createFakeUser is a test helper to create a user in the database
-// with the given remote id and the fake scm provider.
-func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *models.User {
-	var user models.User
-	err := db.CreateUserFromRemoteIdentity(&user,
-		&models.RemoteIdentity{
-			Provider: "fake",
-			RemoteID: remoteID,
-		})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return &user
 }
 
 func TestListCourses(t *testing.T) {
@@ -123,7 +106,7 @@ func TestNewCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user := createFakeUser(t, db, 1)
+	adminUser := createFakeUser(t, db, 1)
 
 	testCourse := *allCourses[0]
 
@@ -149,7 +132,7 @@ func TestNewCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 	c.Set(fake, f)
-	c.Set(auth.UserKey, &models.User{ID: user.ID})
+	c.Set(auth.UserKey, adminUser)
 
 	h := web.NewCourse(nullLogger(), db, &web.BaseHookOptions{})
 	if err := h(c); err != nil {
@@ -176,14 +159,14 @@ func TestNewCourse(t *testing.T) {
 		t.Errorf("have response course %+v want %+v", &respCourse, course)
 	}
 
-	enrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, user.ID)
+	enrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, adminUser.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantEnrollment := &models.Enrollment{
 		ID:       enrollment.ID,
 		CourseID: testCourse.ID,
-		UserID:   user.ID,
+		UserID:   adminUser.ID,
 		Status:   models.Teacher,
 	}
 	if !reflect.DeepEqual(enrollment, wantEnrollment) {
@@ -222,14 +205,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	requestURL := fmt.Sprintf("/courses/%d/users/%d", testCourse.ID, user.ID)
 
 	// Add the route to handler.
-	router.Add(http.MethodPut, route, web.CreateEnrollment(db))
-	r := httptest.NewRequest(http.MethodPut, requestURL, requestBody)
+	router.Add(http.MethodPost, route, web.CreateEnrollment(db))
+	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
 	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
 	// Prepare context with user request.
 	c.Set(auth.UserKey, user)
-	router.Find(http.MethodPut, requestURL, c)
+	router.Find(http.MethodPost, requestURL, c)
 
 	// Invoke the prepared handler. This will attempt to create an
 	// enrollment for the user in the chosen course.
@@ -367,7 +350,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
 
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses"
+	requestURL := fmt.Sprintf("/users/%d/courses", user.ID)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -454,7 +437,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
 
-	requestURL := "/users/" + strconv.FormatUint(user.ID, 10) + "/courses" + query
+	requestURL := fmt.Sprintf("/users/%d/courses%s", user.ID, query)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -501,7 +484,7 @@ func TestGetCourse(t *testing.T) {
 	// Add the route to handler.
 	router.Add(http.MethodGet, route, web.GetCourse(db))
 
-	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10)
+	requestURL := fmt.Sprintf("/courses/%d", course.ID)
 	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
 	w := httptest.NewRecorder()
 	c := e.NewContext(r, w)
@@ -523,260 +506,6 @@ func TestGetCourse(t *testing.T) {
 	}
 
 	assertCode(t, w.Code, http.StatusOK)
-}
-
-func TestNewGroup(t *testing.T) {
-	const route = "/courses/:cid/groups"
-
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	admin := createFakeUser(t, db, 1)
-	var course models.Course
-	course.Provider = "fake"
-	// only created 1 directory, if we had created two directories ID would be 2
-	course.DirectoryID = 1
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-	user := createFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
-		t.Fatal(err)
-	}
-
-	// Only single member group for now.
-	newGroupReq := web.NewGroupRequest{
-		Name:     "Hein's Group",
-		CourseID: course.ID,
-		UserIDs:  []uint64{user.ID},
-	}
-	b, err := json.Marshal(newGroupReq)
-	if err != nil {
-		t.Fatal(err)
-	}
-	requestBody := bytes.NewReader(b)
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodPost, route, web.NewGroup(db))
-
-	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10) + "/groups"
-	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-
-	// Prepare provider
-	fakeProvider, err := scm.NewSCMClient("fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fakeProvider.CreateDirectory(c.Request().Context(),
-		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
-	)
-	c.Set("fake", fakeProvider)
-
-	// Prepare context with user request.
-	c.Set("user", user)
-	router.Find(http.MethodPost, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusCreated)
-
-	var respGroup models.Group
-	if err := json.Unmarshal(w.Body.Bytes(), &respGroup); err != nil {
-		t.Fatal(err)
-	}
-
-	group, err := db.GetGroup(respGroup.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// JSON marshalling removes the enrollment field from respGroup,
-	// so we remove group.Enrollments obtained from the database before comparing.
-	group.Enrollments = nil
-	if !reflect.DeepEqual(&respGroup, group) {
-		t.Errorf("have response group %+v, while database has %+v", &respGroup, group)
-	}
-}
-
-func TestNewGroupTeacherCreator(t *testing.T) {
-	const route = "/courses/:cid/groups"
-
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	admin := createFakeUser(t, db, 1)
-	var course models.Course
-	course.Provider = "fake"
-	// only created 1 directory, if we had created two directories ID would be 2
-	course.DirectoryID = 1
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-
-	teacher := createFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&models.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
-		t.Fatal(err)
-	}
-
-	user := createFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
-		t.Fatal(err)
-	}
-
-	// Only single member group for now.
-	newGroupReq := web.NewGroupRequest{
-		Name:     "Hein's Group",
-		CourseID: course.ID,
-		UserIDs:  []uint64{user.ID},
-	}
-	b, err := json.Marshal(newGroupReq)
-	if err != nil {
-		t.Fatal(err)
-	}
-	requestBody := bytes.NewReader(b)
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodPost, route, web.NewGroup(db))
-
-	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10) + "/groups"
-	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-
-	// Prepare provider
-	fakeProvider, err := scm.NewSCMClient("fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fakeProvider.CreateDirectory(c.Request().Context(),
-		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
-	)
-	c.Set("fake", fakeProvider)
-
-	// Prepare context with user request.
-	c.Set("user", teacher)
-	router.Find(http.MethodPost, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusCreated)
-
-	var respGroup models.Group
-	if err := json.Unmarshal(w.Body.Bytes(), &respGroup); err != nil {
-		t.Fatal(err)
-	}
-
-	group, err := db.GetGroup(respGroup.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// JSON marshalling removes the enrollment field from respGroup,
-	// so we remove group.Enrollments obtained from the database before comparing.
-	group.Enrollments = nil
-	if !reflect.DeepEqual(&respGroup, group) {
-		t.Errorf("have response group %+v, while database has %+v", &respGroup, group)
-	}
-}
-
-func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
-	const route = "/courses/:cid/groups"
-
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	admin := createFakeUser(t, db, 1)
-	var course models.Course
-	course.Provider = "fake"
-	// only created 1 directory, if we had created two directories ID would be 2
-	course.DirectoryID = 1
-	if err := db.CreateCourse(admin.ID, &course); err != nil {
-		t.Fatal(err)
-	}
-
-	teacher := createFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&models.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
-		t.Fatal(err)
-	}
-
-	user := createFakeUser(t, db, 3)
-	if err := db.CreateEnrollment(&models.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
-		t.Fatal(err)
-	}
-
-	// Only single member group for now.
-	newGroupReq := web.NewGroupRequest{
-		Name:     "Hein's Group",
-		CourseID: course.ID,
-		UserIDs:  []uint64{user.ID, teacher.ID},
-	}
-	b, err := json.Marshal(newGroupReq)
-	if err != nil {
-		t.Fatal(err)
-	}
-	requestBody := bytes.NewReader(b)
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodPost, route, web.NewGroup(db))
-
-	requestURL := "/courses/" + strconv.FormatUint(course.ID, 10) + "/groups"
-	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-
-	// Prepare provider
-	fakeProvider, err := scm.NewSCMClient("fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fakeProvider.CreateDirectory(c.Request().Context(),
-		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
-	)
-	c.Set("fake", fakeProvider)
-
-	// Prepare context with user request.
-	c.Set("user", user)
-	router.Find(http.MethodPost, requestURL, c)
-
-	// Invoke the prepared handler.
-	// We want error to occure, as this is a bad request.
-	if err := c.Handler()(c); err == nil {
-		t.Error("Student trying to enroll teacher should not be possible!")
-	}
-
 }
 
 func courseToRequest(t *testing.T, course *models.Course) (cr web.NewCourseRequest) {
