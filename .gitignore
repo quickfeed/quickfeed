@@ -5,12 +5,10 @@ node_modules
 !public/.vscode/tasks.json
 .idea
 debug
-github-meling.sh
 public/dist/bundle.js
 public/dist/bundle.js.map
 tunnel.1.sh
 aguis
-cyclone.sh
+ag-setup.sh
 ag.db
-
 
