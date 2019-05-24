@@ -66,6 +66,7 @@ func NewSCMClient(provider, token string) (SCM, error) {
 
 // Directory represents an entity which is capable of managing source code
 // repositories as well as user access to those repositories.
+//TODO(meling) remove this struct, since it is now in ag.proto
 type Directory struct {
 	ID     uint64 `json:"id"`
 	Path   string `json:"path"`
