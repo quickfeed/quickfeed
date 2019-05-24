@@ -6,6 +6,9 @@ import (
 	"sort"
 	"strings"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
@@ -285,9 +288,9 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Ass
 		var sub *pb.Submission
 		switch {
 		case v.IsGrouplab && gid > 0:
-			sub, err = db.GetSubmissionForGroup(v.CourseId, gid)
+			sub, err = db.GetSubmissionForGroup(v.Id, gid)
 		case !v.IsGrouplab && uid > 0:
-			sub, err = db.GetSubmissionForUser(v.CourseId, uid)
+			sub, err = db.GetSubmissionForUser(v.Id, uid)
 		default:
 			// This is when uid or gid is set to 0, but there is a group or user lab
 			// TODO: Fix so uid always is included and gid is optional
@@ -324,8 +327,6 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	switch {
 	case submission.UserId > 0 && submission.GroupId > 0:
 		return gorm.ErrRecordNotFound
-
-	// TODO: change to pb.User, pb.Group
 	case submission.UserId > 0:
 		m = db.conn.First(&pb.User{Id: submission.UserId})
 	case submission.GroupId > 0:
@@ -825,7 +826,8 @@ func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*pb.Repository, erro
 // UpdateGroup updates a group
 func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	if group.CourseId == 0 {
-		return gorm.ErrRecordNotFound
+		//return gorm.ErrRecordNotFound
+		return status.Errorf(codes.NotFound, "failed to retrieve course")
 	}
 	tx := db.conn.Begin()
 	var course uint64
@@ -835,7 +837,8 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 		return err
 	}
 	if course != 1 {
-		return gorm.ErrRecordNotFound
+		//return gorm.ErrRecordNotFound
+		return status.Errorf(codes.Aborted, "course not foung")
 	}
 	if err := tx.Model(&pb.Group{}).Updates(group).Error; err != nil {
 		tx.Rollback()
@@ -869,7 +872,8 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 
 	if query.RowsAffected != int64(len(userids)) {
 		tx.Rollback()
-		return gorm.ErrRecordNotFound
+		//return gorm.ErrRecordNotFound
+		return status.Errorf(codes.Aborted, "failed to update group")
 	}
 
 	tx.Commit()

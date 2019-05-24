@@ -3,7 +3,10 @@ package grpc_service
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+
 	"github.com/autograde/aguis/web"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
@@ -175,7 +178,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.StatusCode, error) {
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.PermissionDenied, "invalid user ID")
 	}
 	crs, err := web.GetCourse(&pb.RecordRequest{Id: in.CourseId}, s.db)
 	if err != nil {
@@ -202,7 +205,7 @@ func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group)
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateGroup(ctx, in, s.db, usr, scm)
+	return web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
 // DeleteGroup removes group record from the database

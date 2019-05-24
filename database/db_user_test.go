@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/autograde/aguis/models"
+	pb "github.com/autograde/aguis/ag"
 )
 
 func TestGormDBUpdateAccessToken(t *testing.T) {
@@ -19,20 +19,20 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	)
 	admin := true
 	var (
-		wantUser = &models.User{
-			ID:      uID,
-			IsAdmin: &admin, // first user is always admin
-			RemoteIdentities: []*models.RemoteIdentity{{
-				ID:          rID,
+		wantUser = &pb.User{
+			Id:      uID,
+			IsAdmin: admin, // first user is always admin
+			RemoteIdentities: []*pb.RemoteIdentity{{
+				Id:          rID,
 				Provider:    provider,
-				RemoteID:    remoteID,
+				RemoteId:    remoteID,
 				AccessToken: accessToken,
-				UserID:      uID,
+				UserId:      uID,
 			}},
 		}
-		updateAccessToken = &models.RemoteIdentity{
+		updateAccessToken = &pb.RemoteIdentity{
 			Provider:    provider,
-			RemoteID:    remoteID,
+			RemoteId:    remoteID,
 			AccessToken: accessToken,
 		}
 	)
@@ -40,12 +40,12 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
+	var user pb.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
-		&models.RemoteIdentity{
+		&pb.RemoteIdentity{
 			Provider: provider,
-			RemoteID: remoteID,
+			RemoteId: remoteID,
 		},
 	); err != nil {
 		t.Fatal(err)
@@ -54,7 +54,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err := db.UpdateAccessToken(updateAccessToken); err != nil {
 		t.Error(err)
 	}
-	updatedUser, err := db.GetUser(user.ID)
+	updatedUser, err := db.GetUser(user.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err := db.UpdateAccessToken(updateAccessToken); err != nil {
 		t.Error(err)
 	}
-	updatedUser, err = db.GetUser(user.ID)
+	updatedUser, err = db.GetUser(user.Id)
 	if err != nil {
 		t.Fatal(err)
 	}

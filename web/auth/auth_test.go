@@ -10,7 +10,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
@@ -169,9 +168,9 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 	defer cleanup()
 
 	if existingUser {
-		if err := db.CreateUserFromRemoteIdentity(&models.User{}, &models.RemoteIdentity{
+		if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
 			Provider:    provider,
-			RemoteID:    remoteID,
+			RemoteId:    remoteID,
 			AccessToken: secret,
 		}); err != nil {
 			t.Fatal(err)
@@ -300,9 +299,9 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	defer cleanup()
 
 	if existingUser {
-		if err := db.CreateUserFromRemoteIdentity(&models.User{}, &models.RemoteIdentity{
+		if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
 			Provider:    provider,
-			RemoteID:    remoteID,
+			RemoteId:    remoteID,
 			AccessToken: secret,
 		}); err != nil {
 			t.Fatal(err)

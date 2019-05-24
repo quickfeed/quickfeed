@@ -1,58 +1,55 @@
 package web_test
 
 import (
-	"bytes"
 	"context"
-	"encoding/gob"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
+	"strconv"
 	"testing"
 
-	"github.com/autograde/aguis/models"
+	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/web/grpc_service"
+	"github.com/google/go-cmp/cmp"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
-	"github.com/autograde/aguis/web/auth"
-	"github.com/labstack/echo"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var allCourses = []*models.Course{
+var allCourses = []*pb.Course{
 	{
 		Name:            "Distributed Systems",
-		CourseCreatorID: 1,
+		CoursecreatorId: 1,
 		Code:            "DAT520",
 		Year:            2018,
 		Tag:             "Spring",
 		Provider:        "fake",
-		DirectoryID:     1,
+		DirectoryId:     1,
 	},
 	{
 		Name:            "Operating Systems",
-		CourseCreatorID: 1,
+		CoursecreatorId: 1,
 		Code:            "DAT320",
 		Year:            2017,
 		Tag:             "Fall",
 		Provider:        "fake",
-		DirectoryID:     2,
+		DirectoryId:     2,
 	}, {
 		Name:            "New Systems",
-		CourseCreatorID: 1,
+		CoursecreatorId: 1,
 		Code:            "DATx20",
 		Year:            2019,
 		Tag:             "Fall",
 		Provider:        "fake",
-		DirectoryID:     3,
+		DirectoryId:     3,
 	}, {
 		Name:            "Hyped Systems",
-		CourseCreatorID: 1,
+		CoursecreatorId: 1,
 		Code:            "DATx20",
 		Year:            2019,
 		Tag:             "Fall",
 		Provider:        "fake",
-		DirectoryID:     4,
+		DirectoryId:     4,
 	},
 }
 
@@ -63,38 +60,27 @@ func TestListCourses(t *testing.T) {
 	defer cleanup()
 
 	user := createFakeUser(t, db, 1)
-	var testCourses []*models.Course
+	var testCourses []*pb.Course
 	for _, course := range allCourses {
 		testCourse := *course
-		err := db.CreateCourse(user.ID, &testCourse)
+		err := db.CreateCourse(user.Id, &testCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
 		testCourses = append(testCourses, &testCourse)
 	}
 
-	r := httptest.NewRequest(http.MethodGet, route, nil)
-	w := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(r, w)
-
-	coursesHandler := web.ListCourses(db)
-	if err := coursesHandler(c); err != nil {
+	foundCourses, err := web.ListCourses(db)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	var foundCourses []*models.Course
-	if err := json.Unmarshal(w.Body.Bytes(), &foundCourses); err != nil {
-		t.Fatal(err)
-	}
-
-	for i, course := range foundCourses {
+	for i, course := range foundCourses.Courses {
 		if !reflect.DeepEqual(course, testCourses[i]) {
 			t.Errorf("have course %+v want %+v", course, testCourses[i])
 		}
 	}
 
-	assertCode(t, w.Code, http.StatusOK)
 }
 
 func TestNewCourse(t *testing.T) {
@@ -106,298 +92,222 @@ func TestNewCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	adminUser := createFakeUser(t, db, 1)
+	adminUser := createFakeUser(t, db, 10)
+	testscms := make(map[string]scm.SCM)
 
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+
+	user := createFakeUser(t, db, 11)
 	testCourse := *allCourses[0]
+	/*
+		dbUser, err := db.GetUserByRemoteIdentity(&pb.RemoteIdentity{RemoteId: 10})
+		if err != nil {
+			t.Fatal(err)
+		}*/
+	// create metadata for user imitating contect coming from the browser
+	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(adminUser.Id))})
+	cont := metadata.NewIncomingContext(context.Background(), meta)
 
-	// Convert course to course request, this allows us to verify that the
-	// course we get from the database is correct.
-	cr := courseToRequest(t, &testCourse)
-
-	b, err := json.Marshal(cr)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	r := httptest.NewRequest(http.MethodPost, route, bytes.NewReader(b))
-	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(r, w)
-	f := scm.NewFakeSCMClient()
-	if _, err := f.CreateDirectory(context.Background(), &scm.CreateDirectoryOptions{
+	test_scm := scm.NewFakeSCMClient()
+	if _, err := test_scm.CreateDirectory(cont, &scm.CreateDirectoryOptions{
 		Name: testCourse.Code,
 		Path: testCourse.Code,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	c.Set(fake, f)
-	c.Set(auth.UserKey, adminUser)
+	// add the fake scm to the scm map with the fake token as key
+	testscms["token"] = test_scm
 
-	h := web.NewCourse(nullLogger(), db, &web.BaseHookOptions{})
-	if err := h(c); err != nil {
-		t.Fatal(err)
-	}
-	assertCode(t, w.Code, http.StatusCreated)
-
-	var respCourse models.Course
-	if err := json.Unmarshal(w.Body.Bytes(), &respCourse); err != nil {
-		t.Fatal(err)
-	}
-
-	course, err := db.GetCourse(respCourse.ID)
+	respCourse, err := test_ag.CreateCourse(cont, &testCourse)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	testCourse.ID = respCourse.ID
+	enrollRequest := pb.ActionRequest{UserId: user.Id, CourseId: respCourse.Id}
+	if _, err = test_ag.CreateEnrollment(cont, &enrollRequest); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = db.EnrollTeacher(user.Id, respCourse.Id); err != nil {
+		t.Fatal(err)
+	}
+
+	course, err := db.GetCourse(respCourse.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testCourse.Id = respCourse.Id
 	if !reflect.DeepEqual(course, &testCourse) {
 		t.Errorf("have database course %+v want %+v", course, &testCourse)
 	}
 
-	if !reflect.DeepEqual(&respCourse, course) {
+	if !reflect.DeepEqual(respCourse, course) {
 		t.Errorf("have response course %+v want %+v", &respCourse, course)
 	}
 
-	enrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, adminUser.ID)
+	enrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.Id, user.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment := &models.Enrollment{
-		ID:       enrollment.ID,
-		CourseID: testCourse.ID,
-		UserID:   adminUser.ID,
-		Status:   models.Teacher,
+	wantEnrollment := &pb.Enrollment{
+		Id:       enrollment.Id,
+		CourseId: testCourse.Id,
+		UserId:   user.Id,
+		Status:   pb.Enrollment_TEACHER,
 	}
-	if !reflect.DeepEqual(enrollment, wantEnrollment) {
+	if !cmp.Equal(enrollment, wantEnrollment) {
 		t.Errorf("have enrollment %+v want %+v", enrollment, wantEnrollment)
 	}
 
-	if len(f.Hooks) != 4 {
-		t.Errorf("have %d hooks want %d", len(f.Hooks), 4)
+	if len(test_scm.Hooks) != 4 {
+		t.Errorf("have %d hooks want %d", len(test_scm.Hooks), 4)
 	}
 }
 
 func TestEnrollmentProcess(t *testing.T) {
-	const (
-		route = "/courses/:cid/users/:uid"
-	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+
 	admin := createFakeUser(t, db, 1)
 	user := createFakeUser(t, db, 2)
 	testCourse := *allCourses[0]
-	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
+	if err := db.CreateCourse(admin.Id, &testCourse); err != nil {
 		t.Fatal(err)
 	}
 
-	// Prepare request payload.
-	b, err := json.Marshal(&web.EnrollUserRequest{})
+	enroll_request := &pb.ActionRequest{CourseId: testCourse.Id, UserId: user.Id}
+
+	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(admin.Id))})
+	cont := metadata.NewIncomingContext(context.Background(), meta)
+
+	_, err := test_ag.CreateEnrollment(cont, enroll_request)
 	if err != nil {
 		t.Fatal(err)
 	}
-	requestBody := bytes.NewReader(b)
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-	requestURL := fmt.Sprintf("/courses/%d/users/%d", testCourse.ID, user.ID)
-
-	// Add the route to handler.
-	router.Add(http.MethodPost, route, web.CreateEnrollment(db))
-	r := httptest.NewRequest(http.MethodPost, requestURL, requestBody)
-	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	// Prepare context with user request.
-	c.Set(auth.UserKey, user)
-	router.Find(http.MethodPost, requestURL, c)
-
-	// Invoke the prepared handler. This will attempt to create an
-	// enrollment for the user in the chosen course.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusCreated)
-
 	// Verify that an appropriate enrollment was indeed created.
-	pendingEnrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, user.ID)
+	pendingEnrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.Id, user.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment := &models.Enrollment{
-		ID:       pendingEnrollment.ID,
-		CourseID: testCourse.ID,
-		UserID:   user.ID,
+	wantEnrollment := &pb.Enrollment{
+		Id:       pendingEnrollment.Id,
+		CourseId: testCourse.Id,
+		UserId:   user.Id,
 	}
 	if !reflect.DeepEqual(pendingEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment\n %+v\n want\n %+v", pendingEnrollment, wantEnrollment)
 	}
 
-	// Prepare request payload.
-	b, err = json.Marshal(&web.EnrollUserRequest{
-		Status: models.Student,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	requestBody.Reset(b)
-
-	e = echo.New()
-	router = echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodPatch, route, web.UpdateEnrollment(db))
-	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
-	r.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	qv := r.URL.Query()
-	qv.Set("status", "student")
-	r.URL.RawQuery = qv.Encode()
-	w = httptest.NewRecorder()
-	c.Reset(r, w)
-	// Prepare context with user request.
-	c.Set(auth.UserKey, user)
-	router.Find(http.MethodPatch, requestURL, c)
-
-	// Invoke the prepared handler. This will attempt to accept the
-	// previously created enrollment. This should fail with a 401
-	// Unauthorized as the user is not an administrator.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusUnauthorized)
-
-	requestBody.Reset(b)
-	w = httptest.NewRecorder()
-	c.Reset(r, w)
-	c.Set(auth.UserKey, admin)
 	fakeProvider, err := scm.NewSCMClient("fake", "token")
 	if err != nil {
 		t.Fatal(err)
 	}
-	fakeProvider.CreateDirectory(c.Request().Context(),
+	fakeProvider.CreateDirectory(cont,
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
 	)
-	c.Set("fake", fakeProvider)
-	router.Find(http.MethodPatch, requestURL, c)
+	testscms["token"] = fakeProvider
 
-	// Invoke the prepared handler. This will attempt to accept the
-	// previously created enrollment. This should succeed with a 200 OK as
-	// the current user is an administrator.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusOK)
-
-	// Verify that the enrollment have been accepted.
-	acceptedEnrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.ID, user.ID)
+	enroll_request.Status = pb.Enrollment_STUDENT
+	_, err = test_ag.UpdateEnrollment(cont, enroll_request)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment.Status = models.Student
-	if !reflect.DeepEqual(acceptedEnrollment, wantEnrollment) {
+
+	// Verify that the enrollment have been accepted.
+	acceptedEnrollment, err := db.GetEnrollmentByCourseAndUser(testCourse.Id, user.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantEnrollment.Status = pb.Enrollment_STUDENT
+	if !cmp.Equal(acceptedEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
 	}
 }
 
 func TestListCoursesWithEnrollment(t *testing.T) {
-	const route = "/users/:uid/courses"
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
-	var testCourses []*models.Course
+	user := createFakeUser(t, db, 2)
+
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+
+	var testCourses []*pb.Course
 	for _, course := range allCourses {
 		testCourse := *course
-		err := db.CreateCourse(admin.ID, &testCourse)
+		err := db.CreateCourse(admin.Id, &testCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
 		testCourses = append(testCourses, &testCourse)
 	}
 
-	user := createFakeUser(t, db, 2)
-	if err := db.CreateEnrollment(&models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[0].ID,
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserId:   user.Id,
+		CourseId: testCourses[0].Id,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[1].ID,
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserId:   user.Id,
+		CourseId: testCourses[1].Id,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[2].ID,
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserId:   user.Id,
+		CourseId: testCourses[2].Id,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
+	if err := db.RejectEnrollment(user.Id, testCourses[1].Id); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, testCourses[2].ID); err != nil {
-		t.Fatal(err)
-	}
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
-
-	requestURL := fmt.Sprintf("/users/%d/courses", user.ID)
-	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	// Prepare context with user request.
-	router.Find(http.MethodGet, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-
-	var courses []*models.Course
-	if err := json.Unmarshal(w.Body.Bytes(), &courses); err != nil {
+	if err := db.EnrollStudent(user.Id, testCourses[2].Id); err != nil {
 		t.Fatal(err)
 	}
 
-	assertCode(t, w.Code, http.StatusOK)
-	wantCourses := []*models.Course{
-		{ID: testCourses[0].ID, Enrolled: int(models.Pending)},
-		{ID: testCourses[1].ID, Enrolled: int(models.Rejected)},
-		{ID: testCourses[2].ID, Enrolled: int(models.Student)},
-		{ID: testCourses[3].ID, Enrolled: models.None},
+	courses_request := &pb.RecordRequest{Id: user.Id}
+	courses, err := test_ag.GetCoursesWithEnrollment(context.Background(), courses_request)
+
+	if err != nil {
+		t.Fatal(err)
 	}
-	for i := range courses {
-		if courses[i].ID != wantCourses[i].ID {
-			t.Errorf("have course %+v want %+v", courses[i].ID, wantCourses[i].ID)
+
+	wantCourses := []*pb.Course{
+		{Id: testCourses[0].Id, Enrolled: pb.Enrollment_PENDING},
+		{Id: testCourses[1].Id, Enrolled: pb.Enrollment_REJECTED},
+		{Id: testCourses[2].Id, Enrolled: pb.Enrollment_STUDENT},
+		{Id: testCourses[3].Id, Enrolled: -1},
+	}
+	for i, course := range courses.Courses {
+		if course.Id != wantCourses[i].Id {
+			t.Errorf("have course %+v want %+v", course.Id, wantCourses[i].Id)
 		}
-		if courses[i].Enrolled != wantCourses[i].Enrolled {
-			t.Errorf("have course %+v want %+v", courses[i].Enrolled, wantCourses[i].Enrolled)
+		if course.Enrolled != wantCourses[i].Enrolled {
+			t.Errorf("have course %+v want %+v", course.Enrolled, wantCourses[i].Enrolled)
 		}
 	}
 }
 
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
-	const (
-		query = "?status=student,rejected"
-		route = "/users/:uid/courses" + query
-	)
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
-	var testCourses []*models.Course
+	var testCourses []*pb.Course
 	for _, course := range allCourses {
 		testCourse := *course
-		err := db.CreateCourse(admin.ID, &testCourse)
+		err := db.CreateCourse(admin.Id, &testCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -406,117 +316,74 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	user := createFakeUser(t, db, 2)
 
-	if err := db.CreateEnrollment(&models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[0].ID,
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserId:   user.Id,
+		CourseId: testCourses[0].Id,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[1].ID,
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserId:   user.Id,
+		CourseId: testCourses[1].Id,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.CreateEnrollment(&models.Enrollment{
-		UserID:   user.ID,
-		CourseID: testCourses[2].ID,
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserId:   user.Id,
+		CourseId: testCourses[2].Id,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
+
+	// user enrollment is rejected for course 1 and enrolled for course 2, still pending for course 0
+	if err := db.RejectEnrollment(user.Id, testCourses[1].Id); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, testCourses[2].ID); err != nil {
-		t.Fatal(err)
-	}
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodGet, route, web.ListCoursesWithEnrollment(db))
-
-	requestURL := fmt.Sprintf("/users/%d/courses%s", user.ID, query)
-	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	// Prepare context with user request.
-	router.Find(http.MethodGet, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-
-	var courses []*models.Course
-	if err := json.Unmarshal(w.Body.Bytes(), &courses); err != nil {
+	if err := db.EnrollStudent(user.Id, testCourses[2].Id); err != nil {
 		t.Fatal(err)
 	}
 
-	assertCode(t, w.Code, http.StatusOK)
-	wantCourses, err := db.GetCoursesByUser(user.ID, models.Rejected, models.Student)
+	stats := make([]pb.Enrollment_UserStatus, 0)
+	stats = append(stats, pb.Enrollment_REJECTED, pb.Enrollment_STUDENT)
+	course_req := &pb.RecordRequest{Id: user.Id, Statuses: stats}
+	courses, err := test_ag.GetCoursesWithEnrollment(context.Background(), course_req)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(courses, wantCourses) {
+	wantCourses, err := db.GetCoursesByUser(user.Id, pb.Enrollment_REJECTED, pb.Enrollment_STUDENT)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(courses.Courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
 	}
 
 }
 
 func TestGetCourse(t *testing.T) {
-	const route = "/courses/:cid"
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
-	var course models.Course
-	err := db.CreateCourse(admin.ID, &course)
+	course := *allCourses[0]
+	err := db.CreateCourse(admin.Id, &course)
+	if err != nil {
+		t.Fatal(err)
+	}
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+
+	foundCourse, err := test_ag.GetCourse(context.Background(), &pb.RecordRequest{Id: course.Id})
+
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodGet, route, web.GetCourse(db))
-
-	requestURL := fmt.Sprintf("/courses/%d", course.ID)
-	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	// Prepare context with course request.
-	router.Find(http.MethodGet, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Fatal(err)
+	if !cmp.Equal(foundCourse, &course) {
+		t.Errorf("have course %+v want %+v", foundCourse, course)
 	}
-
-	var foundCourse models.Course
-	if err := json.Unmarshal(w.Body.Bytes(), &foundCourse); err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(&foundCourse, &course) {
-		t.Errorf("have course %+v want %+v", &foundCourse, &course)
-	}
-
-	assertCode(t, w.Code, http.StatusOK)
-}
-
-func courseToRequest(t *testing.T, course *models.Course) (cr web.NewCourseRequest) {
-	var b bytes.Buffer
-	enc := gob.NewEncoder(&b)
-	if err := enc.Encode(course); err != nil {
-		t.Fatal(err)
-	}
-	dec := gob.NewDecoder(&b)
-	if err := dec.Decode(&cr); err != nil {
-		t.Fatal(err)
-	}
-	return
 }

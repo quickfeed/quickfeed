@@ -75,7 +75,7 @@ func GetUsers(db database.Database) (*pb.Users, error) {
 func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
 	updateUser, err := db.GetUser(request.Id)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "user not found")
 	}
 
 	if request.Name != "" {

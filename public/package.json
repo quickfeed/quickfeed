@@ -14,6 +14,7 @@
     "@types/react-dom": "^16.0.6",
     "fs": "0.0.1-security",
     "google-protobuf": "^3.7.1",
+    "grpc-web": "^1.0.4",
     "react": "^16.4.1",
     "react-dom": "^16.4.1"
   },

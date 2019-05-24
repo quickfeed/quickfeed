@@ -3,7 +3,7 @@ package database_test
 import (
 	"testing"
 
-	"github.com/autograde/aguis/models"
+	pb "github.com/autograde/aguis/ag"
 )
 
 func TestGetNextAssignment(t *testing.T) {
@@ -16,111 +16,112 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	// Create course
-	course := models.Course{
+	course := pb.Course{
 		Name:        "Distributed Systems",
 		Code:        "DAT520",
 		Year:        2018,
 		Tag:         "Spring",
 		Provider:    "fake",
-		DirectoryID: 1,
+		DirectoryId: 1,
 	}
 
 	// Create course as teacher
 	teacher := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(teacher.ID, &course); err != nil {
+	if err := db.CreateCourse(teacher.Id, &course); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create and enroll user as student
 	user := createFakeUser(t, db, 11)
-	if err := db.CreateEnrollment(&models.Enrollment{CourseID: course.ID, UserID: user.ID}); err != nil {
+	if err := db.CreateEnrollment(&pb.Enrollment{CourseId: course.Id, UserId: user.Id}); err != nil {
 		t.Fatal(err)
 	}
-	if err = db.EnrollStudent(user.ID, course.ID); err != nil {
+	if err = db.EnrollStudent(user.Id, course.Id); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create group
-	group := models.Group{
-		CourseID: course.ID,
-		Users: []*models.User{
-			{ID: user.ID},
+	group := pb.Group{
+		CourseId: course.Id,
+		Users: []*pb.User{
+			{Id: user.Id},
 		},
 	}
 	if err := db.CreateGroup(&group); err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
+	_, err = db.GetNextAssignment(course.Id, user.Id, group.Id)
 	if err == nil {
 		t.Fatal("expected error 'no assignments found for course 1'")
 	}
 
 	// Create assignments
-	assigment1 := models.Assignment{CourseID: course.ID, Order: 1}
+	assigment1 := pb.Assignment{CourseId: course.Id, Order: 1}
 	if err := db.CreateAssignment(&assigment1); err != nil {
 		t.Fatal(err)
 	}
-	assigment2 := models.Assignment{CourseID: course.ID, Order: 2}
+	assigment2 := pb.Assignment{CourseId: course.Id, Order: 2}
 	if err := db.CreateAssignment(&assigment2); err != nil {
 		t.Fatal(err)
 	}
-	assigment3 := models.Assignment{CourseID: course.ID, Order: 3, IsGroupLab: true}
+	assigment3 := pb.Assignment{CourseId: course.Id, Order: 3, IsGrouplab: true}
 	if err := db.CreateAssignment(&assigment3); err != nil {
 		t.Fatal(err)
 	}
-	assigment4 := models.Assignment{CourseID: course.ID, Order: 4}
+	assigment4 := pb.Assignment{CourseId: course.Id, Order: 4}
 	if err := db.CreateAssignment(&assigment4); err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = db.GetNextAssignment(course.ID, 0, 0)
+	_, err = db.GetNextAssignment(course.Id, 0, 0)
 	if err == nil {
 		t.Fatal("expected error 'record not found'")
 	}
 
-	nxtUnapproved, err := db.GetNextAssignment(course.ID, user.ID, 0)
+	nxtUnapproved, err := db.GetNextAssignment(course.Id, user.Id, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if nxtUnapproved.ID != assigment1.ID {
-		t.Errorf("expected unapproved assignment to be %v, got %v", assigment1.ID, nxtUnapproved.ID)
+	if nxtUnapproved.Id != assigment1.Id {
+		t.Errorf("expected unapproved assignment to be %v, got %v", assigment1.Id, nxtUnapproved.Id)
 	}
 
 	// send new submission for assignment1
-	submission1 := models.Submission{AssignmentID: assigment1.ID, UserID: user.ID}
+	submission1 := pb.Submission{AssignmentId: assigment1.Id, UserId: user.Id}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
 	}
 	// send another submission for assignment1
-	submission2 := models.Submission{AssignmentID: assigment1.ID, UserID: user.ID}
+	submission2 := pb.Submission{AssignmentId: assigment1.Id, UserId: user.Id}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
 	}
 	// send new submission for assignment2
-	submission3 := models.Submission{AssignmentID: assigment2.ID, UserID: user.ID}
+	submission3 := pb.Submission{AssignmentId: assigment2.Id, UserId: user.Id}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
 	}
+
 	// send new submission for assignment3
-	// submission4 := models.Submission{AssignmentID: assigment3.ID, UserID: user.ID, GroupID: group.ID}
-	submission4 := models.Submission{AssignmentID: assigment3.ID, GroupID: group.ID}
+	// submission4 := models.Submission{AssignmentId: assigment3.Id, UserId: user.Id, GroupId: group.Id}
+	submission4 := pb.Submission{AssignmentId: assigment3.Id, GroupId: group.Id}
 	if err := db.CreateSubmission(&submission4); err != nil {
 		t.Fatal(err)
 	}
 
 	// we haven't approved any of the submissions yet; expect same result as above
 
-	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
+	nxtUnapproved, err = db.GetNextAssignment(course.Id, user.Id, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if nxtUnapproved.ID != assigment1.ID {
-		t.Errorf("expected unapproved assignment to be %v, got %v", assigment1.ID, nxtUnapproved.ID)
+	if nxtUnapproved.Id != assigment1.Id {
+		t.Errorf("expected unapproved assignment to be %v, got %v", assigment1.Id, nxtUnapproved.Id)
 	}
 
 	// approve submission1
-	if err := db.UpdateSubmissionByID(submission1.ID, true); err != nil {
+	if err := db.UpdateSubmissionByID(submission1.Id, true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -129,102 +130,102 @@ func TestGetNextAssignment(t *testing.T) {
 	// TODO Is this the desired semantics for this??
 	// That is, it seems more reasonable to have a function ApproveAssignment(assignment, user)
 	// that finds the latest submission for the user and marks it approved.
-	// That is, maybe the UpdateSubmissionByID shouldn't be exported.
+	// That is, maybe the UpdateSubmissionById shouldn't be exported.
 
-	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
+	nxtUnapproved, err = db.GetNextAssignment(course.Id, user.Id, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if nxtUnapproved.ID != assigment1.ID {
-		t.Errorf("expected unapproved assignment to be %v, got %v", assigment1.ID, nxtUnapproved.ID)
+	if nxtUnapproved.Id != assigment1.Id {
+		t.Errorf("expected unapproved assignment to be %v, got %v", assigment1.Id, nxtUnapproved.Id)
 	}
 
 	// approve submission2
-	if err := db.UpdateSubmissionByID(submission2.ID, true); err != nil {
+	if err := db.UpdateSubmissionByID(submission2.Id, true); err != nil {
 		t.Fatal(err)
 	}
 
 	// now the first assignment is approved, moving on to the second
 
-	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
+	nxtUnapproved, err = db.GetNextAssignment(course.Id, user.Id, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if nxtUnapproved.ID != assigment2.ID {
-		t.Errorf("expected unapproved assignment to be %v, got %v", assigment2.ID, nxtUnapproved.ID)
+	if nxtUnapproved.Id != assigment2.Id {
+		t.Errorf("expected unapproved assignment to be %v, got %v", assigment2.Id, nxtUnapproved.Id)
 	}
 
 	// approve submission3
-	if err := db.UpdateSubmissionByID(submission3.ID, true); err != nil {
+	if err := db.UpdateSubmissionByID(submission3.Id, true); err != nil {
 		t.Fatal(err)
 	}
 
 	// now the second assignment is approved, moving on to the third
 	// this fails because the next assignment to approve is a group lab,
-	// and we don't provide a group id.
+	// and we don't provIde a group Id.
 
-	_, err = db.GetNextAssignment(course.ID, user.ID, 0)
+	_, err = db.GetNextAssignment(course.Id, user.Id, 0)
 	//TODO(meling) GetNextAssignment semantics has changed; needs to be updated when we understand better what is needed
 	// if err == nil {
 	// 	t.Fatal("expected error 'record not found'")
 	// }
 
-	// moving on to the third assignment, using the group id this time.
-	// fails because user id must be provided.
+	// moving on to the third assignment, using the group Id this time.
+	// fails because user Id must be provIded.
 
-	_, err = db.GetNextAssignment(course.ID, 0, group.ID)
+	_, err = db.GetNextAssignment(course.Id, 0, group.Id)
 	//TODO(meling) GetNextAssignment semantics has changed; needs to be updated when we understand better what is needed
 	// if err == nil {
-	// 	t.Fatal("expected error 'user id must be provided'")
+	// 	t.Fatal("expected error 'user Id must be provIded'")
 	// }
 
-	// moving on to the third assignment, using both user id and group id this time.
+	// moving on to the third assignment, using both user Id and group Id this time.
 
-	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
+	nxtUnapproved, err = db.GetNextAssignment(course.Id, user.Id, group.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if nxtUnapproved.ID != assigment3.ID {
-		t.Errorf("expected unapproved assignment to be %v, got %v", assigment3.ID, nxtUnapproved.ID)
+	if nxtUnapproved.Id != assigment3.Id {
+		t.Errorf("expected unapproved assignment to be %v, got %v", assigment3.Id, nxtUnapproved.Id)
 	}
 
 	// approve submission4 for assignment3 (the group lab)
-	if err := db.UpdateSubmissionByID(submission4.ID, true); err != nil {
+	if err := db.UpdateSubmissionByID(submission4.Id, true); err != nil {
 		t.Fatal(err)
 	}
 
 	// approving the 4th submission (for assignment3, which is a group lab),
-	// should fail because we only provide user id, and no group.ID.
+	// should fail because we only provIde user Id, and no group.Id.
 
-	_, err = db.GetNextAssignment(course.ID, user.ID, 0)
+	_, err = db.GetNextAssignment(course.Id, user.Id, 0)
 	//TODO(meling) GetNextAssignment semantics has changed; needs to be updated when we understand better what is needed
 	// if err == nil {
-	// 	t.Fatal("expected error 'user id must be provided'")
+	// 	t.Fatal("expected error 'user Id must be provIded'")
 	// }
 
-	// here it should pass since we also provide the group id.
+	// here it should pass since we also provIde the group Id.
 
-	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
+	nxtUnapproved, err = db.GetNextAssignment(course.Id, user.Id, group.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if nxtUnapproved.ID != assigment4.ID {
-		t.Errorf("expected unapproved assignment to be %v, got %v", assigment4.ID, nxtUnapproved.ID)
+	if nxtUnapproved.Id != assigment4.Id {
+		t.Errorf("expected unapproved assignment to be %v, got %v", assigment4.Id, nxtUnapproved.Id)
 	}
 
 	// send new submission for assignment4
-	submission5 := models.Submission{AssignmentID: assigment4.ID, UserID: user.ID}
+	submission5 := pb.Submission{AssignmentId: assigment4.Id, UserId: user.Id}
 	if err := db.CreateSubmission(&submission5); err != nil {
 		t.Fatal(err)
 	}
 	// approve submission5
-	if err := db.UpdateSubmissionByID(submission5.ID, true); err != nil {
+	if err := db.UpdateSubmissionByID(submission5.Id, true); err != nil {
 		t.Fatal(err)
 	}
 
 	// all assignments have been approved
 
-	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
+	nxtUnapproved, err = db.GetNextAssignment(course.Id, user.Id, group.Id)
 	if nxtUnapproved != nil || err == nil {
 		t.Fatal("expected error 'all assignments approved'")
 	}

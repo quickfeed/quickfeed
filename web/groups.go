@@ -62,7 +62,7 @@ func GetGroup(request *pb.RecordRequest, db database.Database) (*pb.Group, error
 // GetGroupByUserAndCourse returns a single group of a user for a course
 func GetGroupByUserAndCourse(request *pb.ActionRequest, db database.Database) (*pb.Group, error) {
 
-	enrollment, err := db.GetEnrollmentByCourseAndUser(request.UserId, request.CourseId)
+	enrollment, err := db.GetEnrollmentByCourseAndUser(request.CourseId, request.UserId)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "user not enrolled in course")
@@ -126,7 +126,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 
 	// validating received group request
 	if !validGroup(request) {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid payload: validation")
 	}
 
 	// make a sclice of IDs from the pb.User slice
@@ -141,7 +141,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 	}
 
 	if len(users) != len(request.Users) {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid payload: users")
 	}
 
 	// signed in student must be member of the group
@@ -212,7 +212,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 
 	// validate request fields
 	if !validGroup(request) {
-		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "Invalid payload")
+		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
 	// course must exist in the database
@@ -230,7 +230,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		if err == gorm.ErrRecordNotFound {
 			return &pb.StatusCode{StatusCode: int32(codes.NotFound)}, status.Errorf(codes.NotFound, "group not found")
 		}
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "no group in database")
 	}
 
 	// if the group is rejected or deleted, it is enough to update its entry in the database

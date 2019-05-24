@@ -5,8 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/autograde/aguis/models"
-
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 )
@@ -40,14 +39,14 @@ func TestFetchAssignments(t *testing.T) {
 		}
 		for _, dir := range dirs {
 			if dir.Path == gitHubTestOrg {
-				courseDirID = dir.ID
-				t.Logf("To speed up test; update const to 'gitHubTestOrgID = %v'", dir.ID)
+				courseDirID = dir.Id
+				t.Logf("To speed up test; update const to 'gitHubTestOrgID = %v'", dir.Id)
 			}
 		}
 	}
-	course := &models.Course{
+	course := &pb.Course{
 		Name:        "Autograder Test Course",
-		DirectoryID: courseDirID,
+		DirectoryId: courseDirID,
 	}
 
 	assignments, err := web.FetchAssignments(ctx, s, course)

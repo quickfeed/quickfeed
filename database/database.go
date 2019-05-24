@@ -85,8 +85,8 @@ type Database interface {
 	GetRepository(uint64) (*pb.Repository, error)
 	//TODO(meling) this is only used by courses.go:updateRepoToPrivate(), which should be removed; hence do we need this method?
 	GetRepositoriesByDirectory(uint64) ([]*pb.Repository, error)
-	//TODO(Vera): chech if still used
-	GetRepositoriesByCourseIDandUserID(uint64, uint64) (*pb.Repository, error)
+	//TODO(Vera): check if still used
+	//GetRepositoriesByCourseIDandUserID(uint64, uint64) (*pb.Repository, error)
 
 	// GetRepositoryByCourseUserType returns the repository
 	// for the given course ID, user ID and repository type.

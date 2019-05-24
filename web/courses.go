@@ -218,6 +218,7 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) (*pb.Stat
 	enrollment := pb.Enrollment{
 		UserId:   request.UserId,
 		CourseId: request.CourseId,
+		Status:   pb.Enrollment_PENDING,
 	}
 
 	log.Println(enrollment.UserId)
@@ -359,9 +360,9 @@ func GetCourse(query *pb.RecordRequest, db database.Database) (*pb.Course, error
 	course, err := db.GetCourse(query.Id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "Course not found")
+			return nil, status.Errorf(codes.NotFound, "course not found")
 		}
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "failed to get course from database")
 
 	}
 	return course, nil
