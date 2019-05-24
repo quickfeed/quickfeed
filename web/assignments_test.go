@@ -15,10 +15,14 @@ const (
 	gitHubTestOrgID = 30462712
 )
 
+// To enable this test, please see instructions in the developer guide (dev.md).
+// You will also need access to the autograder-test organization; you may request
+// access by sending your GitHub username to hein.meling at uis.no.
+
 func TestFetchAssignments(t *testing.T) {
 	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
 	if len(accessToken) < 1 {
-		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' for the 'autograder-test' GitHub organization")
+		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")
 	}
 	provider := "github"
 
