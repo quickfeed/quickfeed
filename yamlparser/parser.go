@@ -5,12 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"time"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/models"
 	tspb "github.com/golang/protobuf/ptypes"
 
 	"gopkg.in/yaml.v2"
@@ -18,8 +15,11 @@ import (
 
 const target = "assignment.yml"
 
-// NewAssignmentRequest represents a request for a new assignment.
-type NewAssignmentRequest struct {
+// assignmentData holds information about a single assignment.
+// This is only used for parsing the 'assignment.yml' file.
+// Note that the struct can be private, but the fields must be
+// public to allow parsing.
+type assignmentData struct {
 	AssignmentID uint   `yaml:"assignmentid"`
 	Name         string `yaml:"name"`
 	Language     string `yaml:"language"`
@@ -41,39 +41,36 @@ func Parse(dir string, courseID uint64) ([]*pb.Assignment, error) {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			if filename == target {
-				var tempAssignment *models.Assignment
+				var newAssignment assignmentData
 				source, err := ioutil.ReadFile(path)
 				if err != nil {
 					return err
 				}
-				err = yaml.Unmarshal(source, &tempAssignment)
+				err = yaml.Unmarshal(source, &newAssignment)
 				if err != nil {
 					return err
 				}
 
-				// convert to lowercase to normalize language name
-				tempAssignment.Language = strings.ToLower(tempAssignment.Language)
-
-				//deadline, err := time.Parse("02-01-2006 15:04", tempAssignment.Deadline)
-				/*if err != nil {
-					return err
-				}*/
-				tempAssignment.CourseID = courseID
-
-				tstamp, err := tspb.TimestampProto(tempAssignment.Deadline)
+				// we need to parse the deadline in two stages;
+				// first regular Go time.Time and then protobuf timestamp
+				d, err := time.Parse("02-01-2006 15:04", newAssignment.Deadline)
 				if err != nil {
-					return status.Errorf(codes.Aborted, "cannot parse assignment deadline")
+					return err
+				}
+				deadline, err := tspb.TimestampProto(d)
+				if err != nil {
+					return err
 				}
 
 				assignment := &pb.Assignment{
-					Id:          tempAssignment.ID,
+					Id:          uint64(newAssignment.AssignmentID),
 					CourseId:    courseID,
-					Deadline:    tstamp,
-					Language:    tempAssignment.Language,
-					Name:        tempAssignment.Name,
-					Order:       uint32(tempAssignment.ID),
-					AutoApprove: tempAssignment.AutoApprove,
-					IsGrouplab:  tempAssignment.IsGroupLab,
+					Deadline:    deadline,
+					Language:    strings.ToLower(newAssignment.Language),
+					Name:        newAssignment.Name,
+					Order:       uint32(newAssignment.AssignmentID),
+					AutoApprove: newAssignment.AutoApprove,
+					IsGrouplab:  newAssignment.IsGroupLab,
 				}
 
 				assignments = append(assignments, assignment)
