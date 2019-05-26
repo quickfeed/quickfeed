@@ -82,11 +82,17 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	if err != nil {
 		return nil, err
 	}
+	// only teacher with admin rights can create a new course
+	if !usr.IsAdmin {
+		return nil, status.Errorf(codes.PermissionDenied, "user must be admin to create a new course")
+	}
 	scm, err := getSCM(ctx, s.scms, s.db, in.Provider)
 	if err != nil {
 		return nil, err
 	}
-	return web.NewCourse(ctx, in, s.db, scm, s.bh, usr)
+	// make sure that the current user is set as course creator
+	in.CoursecreatorId = usr.GetId()
+	return web.NewCourse(ctx, in, s.db, scm, s.bh)
 }
 
 // GetCourse returns course information

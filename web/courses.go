@@ -40,7 +40,7 @@ func validCourse(c *pb.Course) bool {
 }
 
 func validEnrollment(req *pb.ActionRequest) bool {
-	return req.Status < pb.Enrollment_TEACHER &&
+	return req.Status <= pb.Enrollment_TEACHER &&
 		req.UserId != 0 &&
 		req.CourseId != 0
 }
@@ -89,18 +89,13 @@ func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assig
 //TODO(meling) refactor this to separate out business logic
 //TODO(meling) remove logger from method, and use c.Logger() instead
 // Problem: (the echo.Logger is not compatible with logrus.FieldLogger)
-func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions, currentUser *pb.User) (*pb.Course, error) {
+func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
 	if !validCourse(request) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
 	contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
-
-	if !currentUser.IsAdmin {
-		// Only teacher with admin rights can create a new course
-		return nil, status.Errorf(codes.PermissionDenied, "user must be admin to create a new course")
-	}
 
 	directory, err := s.GetDirectory(contextWithTimeout, request.DirectoryId)
 	if err != nil {
@@ -181,17 +176,15 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		}
 	}
 
-	request.CoursecreatorId = currentUser.Id
 	request.DirectoryId = directory.Id
 
-	if err := db.CreateCourse(currentUser.Id, request); err != nil {
+	if err := db.CreateCourse(request.GetCoursecreatorId(), request); err != nil {
 		//TODO(meling) Should we even communicate bad request to the client?
 		// We should log errors and debug it on the server side instead.
 		// If clients make mistakes, there is nothing it can do with the
 		return nil, err
 	}
 	return request, nil
-
 }
 
 func repoType(path string) (repoType pb.Repository_RepoType) {
@@ -265,7 +258,6 @@ course := models.Course{
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
 func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM, currentUser *pb.User) (*pb.StatusCode, error) {
-
 	if !validEnrollment(request) {
 		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
