@@ -1,4 +1,4 @@
-package yamlparser_test
+package web_test
 
 import (
 	"context"
@@ -12,13 +12,12 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/web"
-	"github.com/autograde/aguis/yamlparser"
 	tspb "github.com/golang/protobuf/ptypes"
 )
 
 func TestParseWithInvalidDir(t *testing.T) {
 	const dir = "invalid/dir"
-	_, err := yamlparser.Parse(dir, 0)
+	_, err := web.ParseAssignments(dir, 0)
 	if err == nil {
 		t.Errorf("want no such file or directory error, got nil")
 	}
@@ -101,7 +100,7 @@ func TestParse(t *testing.T) {
 		Order:       2,
 	}
 
-	assignments, err := yamlparser.Parse(testsDir, 0)
+	assignments, err := web.ParseAssignments(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-package yamlparser
+package web
 
 import (
 	"io/ioutil"
@@ -28,9 +28,9 @@ type assignmentData struct {
 	IsGroupLab   bool   `yaml:"isgrouplab"`
 }
 
-// Parse recursively walks the given directory and parses any yaml files found
-// and returns an array of assignments.
-func Parse(dir string, courseID uint64) ([]*pb.Assignment, error) {
+// ParseAssignments recursively walks the given directory and parses
+// any 'assignment.yml' files found and returns an array of assignments.
+func ParseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, err

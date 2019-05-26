@@ -8,7 +8,6 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/scm"
-	"github.com/autograde/aguis/yamlparser"
 )
 
 // FetchAssignments returns a list of assignments for the given course, by
@@ -57,7 +56,7 @@ func FetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.As
 	}
 
 	// parse assignments found in the cloned tests directory
-	return yamlparser.Parse(cloneDir, course.Id)
+	return ParseAssignments(cloneDir, course.Id)
 }
 
 func createAssignment(request *pb.Assignment, course *pb.Course) (*pb.Assignment, error) {
