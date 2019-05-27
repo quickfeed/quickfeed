@@ -62,7 +62,7 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := db.GetGroup(respGroup.ID)
+	group, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestNewGroup(t *testing.T) {
 	// so we remove group.Enrollments obtained from the database before comparing.
 	//group.Enrollments = nil
 	if !reflect.DeepEqual(&respGroup, &group) {
-		t.Errorf("have response group %+v, while database has %+v", &respGroup, group)
+		t.Errorf("have response group %+v, while database has %+v", respGroup, group)
 	}
 }
 
@@ -130,7 +130,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := db.GetGroup(respGroup.ID)
+	group, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,7 +273,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := db.GetGroup(respGroup.ID)
+	group, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -623,7 +623,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Error(err)
 	}
 
-	dbGroup, err := db.GetGroup(group.ID)
+	dbGroup, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	}

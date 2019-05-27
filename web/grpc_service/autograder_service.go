@@ -174,7 +174,7 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 		return nil, err
 	}
 	for _, user := range group.Users {
-		user.RemoteIdentities = nil
+		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	}
 	return group, nil
 }
@@ -187,7 +187,7 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 	}
 	for _, group := range groups.Groups {
 		for _, user := range group.Users {
-			user.RemoteIdentities = nil
+			user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 		}
 	}
 	return groups, nil
@@ -200,8 +200,11 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 		return nil, err
 	}
 	group, err := web.NewGroup(in, s.db, usr)
+	if err != nil {
+		return nil, err
+	}
 	for _, user := range group.Users {
-		user.RemoteIdentities = nil
+		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	}
 	return group, nil
 }
@@ -298,7 +301,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 		return nil, err
 	}
 	for _, user := range group.Users {
-		user.RemoteIdentities = nil
+		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	}
 	return group, nil
 }

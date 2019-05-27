@@ -605,7 +605,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if user.IAdmin() {
+	if user.IsAdmin {
 		t.Error("user should not yet be an administrator")
 	}
 
@@ -618,7 +618,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !admin.IAdmin() {
+	if !admin.IsAdmin {
 		t.Error("user should be an administrator")
 	}
 }
