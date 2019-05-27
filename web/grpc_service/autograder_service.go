@@ -157,18 +157,39 @@ func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User,
 	if err != nil {
 		return nil, err
 	}
-	return web.GetUser(&pb.RecordRequest{Id: currentUser.Id}, s.db)
+	user, err := web.GetUser(&pb.RecordRequest{Id: currentUser.Id}, s.db)
+	if err != nil {
+		return nil, err
+	}
+	user.RemoteIdentities = nil
+	return user, nil
 }
 
 //TODO(Vera): groups should not return remote identities
 // GetGroup returns information about a group
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
-	return web.GetGroup(in, s.db)
+	group, err := web.GetGroup(in, s.db)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range group.Users {
+		user.RemoteIdentities = nil
+	}
+	return group, nil
 }
 
 // GetGroups returns a list of student groups created for the course
 func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest) (*pb.Groups, error) {
-	return web.GetGroups(in, s.db)
+	groups, err := web.GetGroups(in, s.db)
+	if err != nil {
+		return nil, err
+	}
+	for _, group := range groups.Groups {
+		for _, user := range group.Users {
+			user.RemoteIdentities = nil
+		}
+	}
+	return groups, nil
 }
 
 // CreateGroup makes a new group
@@ -177,7 +198,11 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	return web.NewGroup(in, s.db, usr)
+	group, err := web.NewGroup(in, s.db, usr)
+	for _, user := range group.Users {
+		user.RemoteIdentities = nil
+	}
+	return group, nil
 }
 
 // UpdateGroup is called by UpdateGroup client method, changes group information
@@ -267,7 +292,14 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 
 // GetGroupByUserAndCourse returns a student group
 func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.ActionRequest) (*pb.Group, error) {
-	return web.GetGroupByUserAndCourse(in, s.db)
+	group, err := web.GetGroupByUserAndCourse(in, s.db)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range group.Users {
+		user.RemoteIdentities = nil
+	}
+	return group, nil
 }
 
 // GetProviders returns a list of providers
