@@ -27,6 +27,7 @@ func NewAutograderService(db *database.GormDB, scms map[string]scm.SCM, bh web.B
 		scms: scms,
 		bh:   bh,
 	}
+
 }
 
 // GetRepositoryURL returns a repository of requested type
@@ -101,12 +102,12 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 }
 
 // UpdateCourse is used to change the course information
-func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.StatusCode, error) {
+func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
 	scm, err := getSCM(ctx, s.scms, s.db, in.Provider)
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateCourse(ctx, in, s.db, scm)
+	return pb.Void{}, web.UpdateCourse(ctx, in, s.db, scm)
 }
 
 // GetCourses returns a list with all courses
@@ -130,12 +131,12 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.R
 }
 
 // CreateEnrollment inserts a new student enrollment
-func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.StatusCode, error) {
-	return web.CreateEnrollment(in, s.db)
+func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.Void, error) {
+	return pb.Void{}, web.CreateEnrollment(in, s.db)
 }
 
 // UpdateEnrollment is used to change an enrollment status of a student
-func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.StatusCode, error) {
+func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.Void, error) {
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, err
@@ -148,7 +149,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateEnrollment(ctx, in, s.db, scm, usr)
+	return pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm, usr)
 }
 
 // GetSelf returns information about the user with user ID sent in the context
@@ -165,7 +166,6 @@ func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User,
 	return user, nil
 }
 
-//TODO(Vera): groups should not return remote identities
 // GetGroup returns information about a group
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
 	group, err := web.GetGroup(in, s.db)
@@ -206,7 +206,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 }
 
 // UpdateGroup is called by UpdateGroup client method, changes group information
-func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.StatusCode, error) {
+func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, status.Errorf(codes.PermissionDenied, "invalid user ID")
@@ -219,11 +219,11 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateGroup(ctx, in, s.db, scm, usr)
+	return pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
 // UpdateGroupStatus is called by UpdateGroupStatus client method, changes group enrollment status
-func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group) (*pb.StatusCode, error) {
+func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, err
@@ -236,12 +236,12 @@ func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group)
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateGroup(ctx, in, s.db, scm, usr)
+	return pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
 // DeleteGroup removes group record from the database
-func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.StatusCode, error) {
-	return web.DeleteGroup(in, s.db)
+func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
+	return pb.Void{}, web.DeleteGroup(in, s.db)
 }
 
 // GetSubmission returns a student submission

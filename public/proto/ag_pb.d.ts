@@ -443,21 +443,6 @@ export namespace RepositoryRequest {
   }
 }
 
-export class StatusCode {
-  constructor ();
-  getStatusCode(): number;
-  setStatusCode(a: number): void;
-  toObject(): StatusCode.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => StatusCode;
-}
-
-export namespace StatusCode {
-  export type AsObject = {
-    StatusCode: number;
-  }
-}
-
 export class Submission {
   constructor ();
   getId(): number;

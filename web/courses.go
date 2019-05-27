@@ -163,10 +163,10 @@ func repoType(path string) (repoType pb.Repository_RepoType) {
 }
 
 // CreateEnrollment enrolls a user in a course.
-func CreateEnrollment(request *pb.ActionRequest, db database.Database) (*pb.StatusCode, error) {
+func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 
 	if !request.IsValidEnrollment() {
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid payload")
+		return status.Errorf(codes.InvalidArgument, "Invalid payload")
 	}
 
 	enrollment := pb.Enrollment{
@@ -178,60 +178,29 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) (*pb.Stat
 	log.Println(enrollment.UserId)
 	if err := db.CreateEnrollment(&enrollment); err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return &pb.StatusCode{StatusCode: int32(codes.NotFound)}, status.Errorf(codes.NotFound, "Record not found")
+			return status.Errorf(codes.NotFound, "Record not found")
 
 		}
-		return &pb.StatusCode{StatusCode: int32(codes.Aborted)}, err
+		return err
 	}
-	return &pb.StatusCode{StatusCode: int32(codes.OK)}, nil
+	return nil
 }
-
-/*
-courseRepo := &models.Repository{
-	DirectoryID:  directory.ID,
-	RepositoryID: repo.ID,
-	HTMLURL:      repo.WebURL,
-	Type:         repoType(path),
-}
-if err := db.CreateRepository(courseRepo); err != nil {
-	return err
-}
-
-course := models.Course{
-			Name:            cr.Name,
-			CourseCreatorID: user.ID,
-			Code:            cr.Code,
-			Year:            cr.Year,
-			Tag:             cr.Tag,
-			Provider:        cr.Provider,
-			DirectoryID:     directory.ID,
-		}
-		if err := db.CreateCourse(user.ID, &course); err != nil {
-			//TODO(meling) Should we even communicate bad request to the client?
-			// We should log errors and debug it on the server side instead.
-			// If clients make mistakes, there is nothing it can do with the error message.
-			if err == database.ErrCourseExists {
-				return c.JSONPretty(http.StatusBadRequest, err.Error(), "\t")
-			}
-			return err
-
-}*/
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
-func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM, currentUser *pb.User) (*pb.StatusCode, error) {
+func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM, currentUser *pb.User) error {
 	if !request.IsValidEnrollment() {
-		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "invalid payload")
+		return status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
 	if _, err := db.GetEnrollmentByCourseAndUser(request.CourseId, request.UserId); err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return &pb.StatusCode{StatusCode: int32(codes.NotFound)}, status.Errorf(codes.NotFound, "not found")
+			return status.Errorf(codes.NotFound, "not found")
 		}
-		return &pb.StatusCode{StatusCode: int32(codes.Aborted)}, err
+		return err
 	}
 
 	if !currentUser.IsAdmin {
-		return &pb.StatusCode{StatusCode: int32(codes.PermissionDenied)}, status.Errorf(codes.PermissionDenied, "unauthorized")
+		return status.Errorf(codes.PermissionDenied, "unauthorized")
 	}
 
 	// TODO If the enrollment is accepted, create repositories and permissions for them with webooks.
@@ -241,16 +210,16 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		// Update enrollment for student in DB.
 		err = db.EnrollStudent(request.UserId, request.CourseId)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		course, err := db.GetCourse(request.CourseId)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		student, err := db.GetUser(request.UserId)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		//create user repo and team on SCM
 		repo, err := createUserRepoAndTeam(ctx, s, course, student)
@@ -264,7 +233,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			UserId:       request.UserId,
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
-			return nil, err
+			return err
 		}
 	case pb.Enrollment_TEACHER:
 		err = db.EnrollTeacher(request.UserId, request.CourseId)
@@ -274,9 +243,9 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		err = db.SetPendingEnrollment(request.UserId, request.CourseId)
 	}
 	if err != nil {
-		return &pb.StatusCode{StatusCode: int32(codes.Aborted)}, err
+		return err
 	}
-	return &pb.StatusCode{StatusCode: int32(codes.OK)}, nil
+	return nil
 }
 
 func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, error) {
@@ -382,17 +351,17 @@ func ListSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submi
 }
 
 // UpdateCourse updates an existing course
-func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM) (*pb.StatusCode, error) {
+func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM) error {
 	_, err := db.GetCourse(request.Id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return &pb.StatusCode{StatusCode: int32(codes.NotFound)}, status.Errorf(codes.NotFound, "Course not found")
+			return status.Errorf(codes.NotFound, "Course not found")
 		}
-		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, err
+		return err
 	}
 
 	if !request.IsValidCourse() {
-		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "invalid payload")
+		return status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
 	contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
@@ -401,13 +370,13 @@ func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database,
 	// Check that the directory exists.
 	_, err = s.GetDirectory(contextWithTimeout, request.DirectoryId)
 	if err != nil {
-		return &pb.StatusCode{StatusCode: int32(codes.Aborted)}, err
+		return status.Errorf(codes.Aborted, "no directory found")
 	}
 
 	if err := db.UpdateCourse(request); err != nil {
-		return &pb.StatusCode{StatusCode: int32(codes.Aborted)}, err
+		return status.Errorf(codes.Aborted, "could not create course")
 	}
-	return &pb.StatusCode{StatusCode: int32(codes.OK)}, nil
+	return nil
 }
 
 // GetEnrollmentsByCourse get all enrollments for a course.

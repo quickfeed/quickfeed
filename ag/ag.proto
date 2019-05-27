@@ -197,9 +197,10 @@ message URLResponse {
     string url = 1;
 }
 
+/*
 message StatusCode {
     int32 status_code = 1;
-}
+}*/
 
 message Void {}
 
@@ -235,8 +236,8 @@ service AutograderService {
     // enrollments //
 
     rpc GetEnrollmentsByCourse(RecordRequest) returns (Enrollments) {}
-    rpc CreateEnrollment(ActionRequest) returns (StatusCode) {} 
-    rpc UpdateEnrollment(ActionRequest) returns (StatusCode) {} 
+    rpc CreateEnrollment(ActionRequest) returns (Void) {} 
+    rpc UpdateEnrollment(ActionRequest) returns (Void) {} 
 
     // submissions //
 

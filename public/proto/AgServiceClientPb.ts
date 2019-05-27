@@ -26,7 +26,6 @@ import {
   RemoteIdentity,
   Repository,
   RepositoryRequest,
-  StatusCode,
   Submission,
   Submissions,
   URLResponse,
@@ -230,18 +229,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateGroup = new grpcWeb.AbstractClientBase.MethodInfo(
-    StatusCode,
+    Void,
     (request: Group) => {
       return request.serializeBinary();
     },
-    StatusCode.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateGroup(
     request: Group,
     metadata: grpcWeb.Metadata,
     callback: (err: grpcWeb.Error,
-               response: StatusCode) => void) {
+               response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateGroup',
@@ -252,18 +251,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateGroupStatus = new grpcWeb.AbstractClientBase.MethodInfo(
-    StatusCode,
+    Void,
     (request: Group) => {
       return request.serializeBinary();
     },
-    StatusCode.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateGroupStatus(
     request: Group,
     metadata: grpcWeb.Metadata,
     callback: (err: grpcWeb.Error,
-               response: StatusCode) => void) {
+               response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateGroupStatus',
@@ -274,18 +273,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(
-    StatusCode,
+    Void,
     (request: Group) => {
       return request.serializeBinary();
     },
-    StatusCode.deserializeBinary
+    Void.deserializeBinary
   );
 
   deleteGroup(
     request: Group,
     metadata: grpcWeb.Metadata,
     callback: (err: grpcWeb.Error,
-               response: StatusCode) => void) {
+               response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/DeleteGroup',
@@ -406,18 +405,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    StatusCode,
+    Void,
     (request: Course) => {
       return request.serializeBinary();
     },
-    StatusCode.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateCourse(
     request: Course,
     metadata: grpcWeb.Metadata,
     callback: (err: grpcWeb.Error,
-               response: StatusCode) => void) {
+               response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateCourse',
@@ -472,18 +471,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoCreateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
-    StatusCode,
+    Void,
     (request: ActionRequest) => {
       return request.serializeBinary();
     },
-    StatusCode.deserializeBinary
+    Void.deserializeBinary
   );
 
   createEnrollment(
     request: ActionRequest,
     metadata: grpcWeb.Metadata,
     callback: (err: grpcWeb.Error,
-               response: StatusCode) => void) {
+               response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/CreateEnrollment',
@@ -494,18 +493,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
-    StatusCode,
+    Void,
     (request: ActionRequest) => {
       return request.serializeBinary();
     },
-    StatusCode.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateEnrollment(
     request: ActionRequest,
     metadata: grpcWeb.Metadata,
     callback: (err: grpcWeb.Error,
-               response: StatusCode) => void) {
+               response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateEnrollment',
