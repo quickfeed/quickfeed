@@ -89,7 +89,7 @@ func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assig
 //TODO(meling) refactor this to separate out business logic
 //TODO(meling) remove logger from method, and use c.Logger() instead
 // Problem: (the echo.Logger is not compatible with logrus.FieldLogger)
-func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
+func oldNewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
 	if !validCourse(request) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
