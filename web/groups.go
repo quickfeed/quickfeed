@@ -14,39 +14,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// NewGroup creates a new group for the given course cid.
-// This function is typically called by a student when creating
-// a group, which will later be (optionally) edited and approved
-// by a teacher of the course using the UpdateGroup function below.
-
-/*
-// NewGroupRequest represents a new group.
-type NewGroupRequest struct {
-	Name     string   `json:"name"`
-	CourseID uint64   `json:"courseid"`
-	UserIDs  []uint64 `json:"userids"`
-}
-
-func (grp *NewGroupRequest) valid() bool {
-	return grp != nil &&
-		grp.Name != "" &&
-		len(grp.UserIDs) > 0
-}
-
-// UpdateGroupRequest updates group
-type UpdateGroupRequest struct {
-	//TODO(meling) make separate GroupStatus iota for group (to make type safe use??)
-	Status uint `json:"status"`
-} */
-
-// group request validation
-//TODO(Vera): reimplement as a part of general validation procedure
-func validGroup(grp *pb.Group) bool {
-	return grp != nil &&
-		grp.Name != "" &&
-		len(grp.Users) > 0
-}
-
 // GetGroup returns the group for the given gid.
 func GetGroup(request *pb.RecordRequest, db database.Database) (*pb.Group, error) {
 	group, err := db.GetGroup(request.Id)
@@ -125,7 +92,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 	}
 
 	// validating received group request
-	if !validGroup(request) {
+	if !request.IsValidGroup() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload: validation")
 	}
 
@@ -211,7 +178,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	}
 
 	// validate request fields
-	if !validGroup(request) {
+	if !request.IsValidGroup() {
 		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 

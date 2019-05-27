@@ -16,45 +16,6 @@ import (
 	"github.com/labstack/echo"
 )
 
-/*
-
-// NewCourseRequest represents a request for a new course.
-type NewCourseRequest struct {
-	Name string `json:"name"`
-	Code string `json:"code"`
-	Year uint   `json:"year"`
-	Tag  string `json:"tag"`
-
-	Provider    string `json:"provider"`
-	DirectoryID uint64 `json:"directoryid"`
-}*/
-
-func validCourse(c *pb.Course) bool {
-	return c != nil &&
-		c.Name != "" &&
-		c.Code != "" &&
-		(c.Provider == "github" || c.Provider == "gitlab" || c.Provider == "fake") &&
-		c.DirectoryId != 0 &&
-		c.Year != 0 &&
-		c.Tag != ""
-}
-
-func validEnrollment(req *pb.ActionRequest) bool {
-	return req.Status <= pb.Enrollment_TEACHER &&
-		req.UserId != 0 &&
-		req.CourseId != 0
-}
-
-/*
-// EnrollUserRequest represent a request for enrolling a user to a course.
-type EnrollUserRequest struct {
-	Status uint `json:"status"`
-}
-
-func (eur *EnrollUserRequest) valid() bool {
-	return eur.Status <= models.Teacher
-}*/
-
 // ListCourses returns a JSON object containing all the courses in the database.
 func ListCourses(db database.Database) (*pb.Courses, error) {
 	courses, err := db.GetCourses()
@@ -90,7 +51,7 @@ func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assig
 //TODO(meling) remove logger from method, and use c.Logger() instead
 // Problem: (the echo.Logger is not compatible with logrus.FieldLogger)
 func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
-	if !validCourse(request) {
+	if !request.IsValidCourse() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
@@ -204,7 +165,7 @@ func repoType(path string) (repoType pb.Repository_RepoType) {
 // CreateEnrollment enrolls a user in a course.
 func CreateEnrollment(request *pb.ActionRequest, db database.Database) (*pb.StatusCode, error) {
 
-	if !validEnrollment(request) {
+	if !request.IsValidEnrollment() {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid payload")
 	}
 
@@ -258,7 +219,7 @@ course := models.Course{
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
 func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM, currentUser *pb.User) (*pb.StatusCode, error) {
-	if !validEnrollment(request) {
+	if !request.IsValidEnrollment() {
 		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
@@ -430,7 +391,7 @@ func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database,
 		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, err
 	}
 
-	if !validCourse(request) {
+	if !request.IsValidCourse() {
 		return &pb.StatusCode{StatusCode: int32(codes.InvalidArgument)}, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 

@@ -48,14 +48,6 @@ func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) 
 		}
 		return nil, err
 	}
-
-	//TODO(vera): this can be removed - remote identities will not be sent over http
-	/*
-		// Remove access token for user because otherhewise anyone can get access to user tokens
-		for _, remoteID := range user.GetRemoteIdentities() {
-			remoteID.AccessToken = ""
-		}*/
-
 	return user, nil
 }
 
@@ -71,7 +63,7 @@ func GetUsers(db database.Database) (*pb.Users, error) {
 	return &pb.Users{Users: users}, nil
 }
 
-// UpdateUser promotes a user to an administrator or makes other changes to the user database entry.
+// PatchUser promotes a user to an administrator or makes other changes to the user database entry.
 func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
 	updateUser, err := db.GetUser(request.Id)
 	if err != nil {
