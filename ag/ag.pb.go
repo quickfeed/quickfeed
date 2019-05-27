@@ -4,10 +4,12 @@
 package ag
 
 import (
+	context "context"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	types "github.com/gogo/protobuf/types"
+	grpc "google.golang.org/grpc"
 	io "io"
 	math "math"
 )
@@ -1958,6 +1960,1039 @@ var fileDescriptor_7a984e8f57169aa1 = []byte{
 	0x1c, 0x22, 0xae, 0xc6, 0x16, 0x77, 0x93, 0x3b, 0xe6, 0x2a, 0xe2, 0xd5, 0x8e, 0xdc, 0xbf, 0xbd,
 	0xdc, 0xb5, 0xfe, 0xf1, 0x72, 0xd7, 0xfa, 0xd7, 0xcb, 0x5d, 0xeb, 0xa2, 0x8d, 0x7f, 0x1b, 0x3e,
 	0xfa, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x54, 0x01, 0x83, 0xf5, 0x63, 0x14, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// AutograderServiceClient is the client API for AutograderService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type AutograderServiceClient interface {
+	GetSelf(ctx context.Context, in *Void, opts ...grpc.CallOption) (*User, error)
+	GetUser(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*User, error)
+	GetUsers(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Users, error)
+	UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
+	GetGroup(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Group, error)
+	GetGroupByUserAndCourse(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Group, error)
+	GetGroups(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Groups, error)
+	CreateGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Group, error)
+	UpdateGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Void, error)
+	UpdateGroupStatus(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Void, error)
+	DeleteGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Void, error)
+	GetCourse(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Course, error)
+	GetCourses(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Courses, error)
+	GetCoursesWithEnrollment(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Courses, error)
+	GetCourseInformationURL(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*URLResponse, error)
+	CreateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Course, error)
+	UpdateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Void, error)
+	RefreshCourse(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Assignments, error)
+	GetEnrollmentsByCourse(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Enrollments, error)
+	CreateEnrollment(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Void, error)
+	UpdateEnrollment(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Void, error)
+	GetSubmissions(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Submissions, error)
+	GetSubmission(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Submission, error)
+	GetGroupSubmissions(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Submissions, error)
+	UpdateSubmission(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Void, error)
+	GetAssignments(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Assignments, error)
+	GetRepositoryURL(ctx context.Context, in *RepositoryRequest, opts ...grpc.CallOption) (*URLResponse, error)
+	GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error)
+	GetDirectories(ctx context.Context, in *DirectoryRequest, opts ...grpc.CallOption) (*Directories, error)
+	// The sole purpose of this RPC is to provide a reference to Repository type to TypeScript client
+	// Might later be used as a more general type for retrieval of repo information
+	GetRepository(ctx context.Context, in *RepositoryRequest, opts ...grpc.CallOption) (*Repository, error)
+}
+
+type autograderServiceClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewAutograderServiceClient(cc *grpc.ClientConn) AutograderServiceClient {
+	return &autograderServiceClient{cc}
+}
+
+func (c *autograderServiceClient) GetSelf(ctx context.Context, in *Void, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetSelf", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetUser(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetUsers(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Users, error) {
+	out := new(Users)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetUsers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetGroup(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Group, error) {
+	out := new(Group)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetGroupByUserAndCourse(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Group, error) {
+	out := new(Group)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetGroupByUserAndCourse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetGroups(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Groups, error) {
+	out := new(Groups)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetGroups", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) CreateGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Group, error) {
+	out := new(Group)
+	err := c.cc.Invoke(ctx, "/AutograderService/CreateGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateGroupStatus(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateGroupStatus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) DeleteGroup(ctx context.Context, in *Group, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/DeleteGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetCourse(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Course, error) {
+	out := new(Course)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetCourse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetCourses(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Courses, error) {
+	out := new(Courses)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetCourses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetCoursesWithEnrollment(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Courses, error) {
+	out := new(Courses)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetCoursesWithEnrollment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetCourseInformationURL(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*URLResponse, error) {
+	out := new(URLResponse)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetCourseInformationURL", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) CreateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Course, error) {
+	out := new(Course)
+	err := c.cc.Invoke(ctx, "/AutograderService/CreateCourse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateCourse(ctx context.Context, in *Course, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateCourse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) RefreshCourse(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Assignments, error) {
+	out := new(Assignments)
+	err := c.cc.Invoke(ctx, "/AutograderService/RefreshCourse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetEnrollmentsByCourse(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Enrollments, error) {
+	out := new(Enrollments)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetEnrollmentsByCourse", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) CreateEnrollment(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/CreateEnrollment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateEnrollment(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateEnrollment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetSubmissions(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Submissions, error) {
+	out := new(Submissions)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetSubmissions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetSubmission(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Submission, error) {
+	out := new(Submission)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetSubmission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetGroupSubmissions(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*Submissions, error) {
+	out := new(Submissions)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetGroupSubmissions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateSubmission(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateSubmission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetAssignments(ctx context.Context, in *RecordRequest, opts ...grpc.CallOption) (*Assignments, error) {
+	out := new(Assignments)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetAssignments", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetRepositoryURL(ctx context.Context, in *RepositoryRequest, opts ...grpc.CallOption) (*URLResponse, error) {
+	out := new(URLResponse)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetRepositoryURL", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error) {
+	out := new(Providers)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetProviders", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetDirectories(ctx context.Context, in *DirectoryRequest, opts ...grpc.CallOption) (*Directories, error) {
+	out := new(Directories)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetDirectories", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetRepository(ctx context.Context, in *RepositoryRequest, opts ...grpc.CallOption) (*Repository, error) {
+	out := new(Repository)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetRepository", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AutograderServiceServer is the server API for AutograderService service.
+type AutograderServiceServer interface {
+	GetSelf(context.Context, *Void) (*User, error)
+	GetUser(context.Context, *RecordRequest) (*User, error)
+	GetUsers(context.Context, *Void) (*Users, error)
+	UpdateUser(context.Context, *User) (*User, error)
+	GetGroup(context.Context, *RecordRequest) (*Group, error)
+	GetGroupByUserAndCourse(context.Context, *ActionRequest) (*Group, error)
+	GetGroups(context.Context, *RecordRequest) (*Groups, error)
+	CreateGroup(context.Context, *Group) (*Group, error)
+	UpdateGroup(context.Context, *Group) (*Void, error)
+	UpdateGroupStatus(context.Context, *Group) (*Void, error)
+	DeleteGroup(context.Context, *Group) (*Void, error)
+	GetCourse(context.Context, *RecordRequest) (*Course, error)
+	GetCourses(context.Context, *Void) (*Courses, error)
+	GetCoursesWithEnrollment(context.Context, *RecordRequest) (*Courses, error)
+	GetCourseInformationURL(context.Context, *RecordRequest) (*URLResponse, error)
+	CreateCourse(context.Context, *Course) (*Course, error)
+	UpdateCourse(context.Context, *Course) (*Void, error)
+	RefreshCourse(context.Context, *RecordRequest) (*Assignments, error)
+	GetEnrollmentsByCourse(context.Context, *RecordRequest) (*Enrollments, error)
+	CreateEnrollment(context.Context, *ActionRequest) (*Void, error)
+	UpdateEnrollment(context.Context, *ActionRequest) (*Void, error)
+	GetSubmissions(context.Context, *ActionRequest) (*Submissions, error)
+	GetSubmission(context.Context, *RecordRequest) (*Submission, error)
+	GetGroupSubmissions(context.Context, *ActionRequest) (*Submissions, error)
+	UpdateSubmission(context.Context, *RecordRequest) (*Void, error)
+	GetAssignments(context.Context, *RecordRequest) (*Assignments, error)
+	GetRepositoryURL(context.Context, *RepositoryRequest) (*URLResponse, error)
+	GetProviders(context.Context, *Void) (*Providers, error)
+	GetDirectories(context.Context, *DirectoryRequest) (*Directories, error)
+	// The sole purpose of this RPC is to provide a reference to Repository type to TypeScript client
+	// Might later be used as a more general type for retrieval of repo information
+	GetRepository(context.Context, *RepositoryRequest) (*Repository, error)
+}
+
+func RegisterAutograderServiceServer(s *grpc.Server, srv AutograderServiceServer) {
+	s.RegisterService(&_AutograderService_serviceDesc, srv)
+}
+
+func _AutograderService_GetSelf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Void)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetSelf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetSelf",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetSelf(ctx, req.(*Void))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetUser(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Void)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetUsers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetUsers(ctx, req.(*Void))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(User)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateUser(ctx, req.(*User))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetGroup(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetGroupByUserAndCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetGroupByUserAndCourse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetGroupByUserAndCourse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetGroupByUserAndCourse(ctx, req.(*ActionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetGroups",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetGroups(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Group)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).CreateGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/CreateGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).CreateGroup(ctx, req.(*Group))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Group)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateGroup(ctx, req.(*Group))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateGroupStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Group)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateGroupStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateGroupStatus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateGroupStatus(ctx, req.(*Group))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_DeleteGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Group)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).DeleteGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/DeleteGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).DeleteGroup(ctx, req.(*Group))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetCourse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetCourse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetCourse(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetCourses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Void)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetCourses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetCourses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetCourses(ctx, req.(*Void))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetCoursesWithEnrollment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetCoursesWithEnrollment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetCoursesWithEnrollment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetCoursesWithEnrollment(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetCourseInformationURL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetCourseInformationURL(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetCourseInformationURL",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetCourseInformationURL(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_CreateCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Course)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).CreateCourse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/CreateCourse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).CreateCourse(ctx, req.(*Course))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Course)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateCourse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateCourse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateCourse(ctx, req.(*Course))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_RefreshCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).RefreshCourse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/RefreshCourse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).RefreshCourse(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetEnrollmentsByCourse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetEnrollmentsByCourse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetEnrollmentsByCourse",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetEnrollmentsByCourse(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_CreateEnrollment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).CreateEnrollment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/CreateEnrollment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).CreateEnrollment(ctx, req.(*ActionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateEnrollment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateEnrollment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateEnrollment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateEnrollment(ctx, req.(*ActionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetSubmissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetSubmissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetSubmissions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetSubmissions(ctx, req.(*ActionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetSubmission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetSubmission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetSubmission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetSubmission(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetGroupSubmissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetGroupSubmissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetGroupSubmissions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetGroupSubmissions(ctx, req.(*ActionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateSubmission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateSubmission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateSubmission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateSubmission(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetAssignments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetAssignments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetAssignments",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetAssignments(ctx, req.(*RecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetRepositoryURL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepositoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetRepositoryURL(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetRepositoryURL",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetRepositoryURL(ctx, req.(*RepositoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Void)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetProviders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetProviders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetProviders(ctx, req.(*Void))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetDirectories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DirectoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetDirectories(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetDirectories",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetDirectories(ctx, req.(*DirectoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetRepository_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepositoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetRepository(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetRepository",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetRepository(ctx, req.(*RepositoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _AutograderService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "AutograderService",
+	HandlerType: (*AutograderServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetSelf",
+			Handler:    _AutograderService_GetSelf_Handler,
+		},
+		{
+			MethodName: "GetUser",
+			Handler:    _AutograderService_GetUser_Handler,
+		},
+		{
+			MethodName: "GetUsers",
+			Handler:    _AutograderService_GetUsers_Handler,
+		},
+		{
+			MethodName: "UpdateUser",
+			Handler:    _AutograderService_UpdateUser_Handler,
+		},
+		{
+			MethodName: "GetGroup",
+			Handler:    _AutograderService_GetGroup_Handler,
+		},
+		{
+			MethodName: "GetGroupByUserAndCourse",
+			Handler:    _AutograderService_GetGroupByUserAndCourse_Handler,
+		},
+		{
+			MethodName: "GetGroups",
+			Handler:    _AutograderService_GetGroups_Handler,
+		},
+		{
+			MethodName: "CreateGroup",
+			Handler:    _AutograderService_CreateGroup_Handler,
+		},
+		{
+			MethodName: "UpdateGroup",
+			Handler:    _AutograderService_UpdateGroup_Handler,
+		},
+		{
+			MethodName: "UpdateGroupStatus",
+			Handler:    _AutograderService_UpdateGroupStatus_Handler,
+		},
+		{
+			MethodName: "DeleteGroup",
+			Handler:    _AutograderService_DeleteGroup_Handler,
+		},
+		{
+			MethodName: "GetCourse",
+			Handler:    _AutograderService_GetCourse_Handler,
+		},
+		{
+			MethodName: "GetCourses",
+			Handler:    _AutograderService_GetCourses_Handler,
+		},
+		{
+			MethodName: "GetCoursesWithEnrollment",
+			Handler:    _AutograderService_GetCoursesWithEnrollment_Handler,
+		},
+		{
+			MethodName: "GetCourseInformationURL",
+			Handler:    _AutograderService_GetCourseInformationURL_Handler,
+		},
+		{
+			MethodName: "CreateCourse",
+			Handler:    _AutograderService_CreateCourse_Handler,
+		},
+		{
+			MethodName: "UpdateCourse",
+			Handler:    _AutograderService_UpdateCourse_Handler,
+		},
+		{
+			MethodName: "RefreshCourse",
+			Handler:    _AutograderService_RefreshCourse_Handler,
+		},
+		{
+			MethodName: "GetEnrollmentsByCourse",
+			Handler:    _AutograderService_GetEnrollmentsByCourse_Handler,
+		},
+		{
+			MethodName: "CreateEnrollment",
+			Handler:    _AutograderService_CreateEnrollment_Handler,
+		},
+		{
+			MethodName: "UpdateEnrollment",
+			Handler:    _AutograderService_UpdateEnrollment_Handler,
+		},
+		{
+			MethodName: "GetSubmissions",
+			Handler:    _AutograderService_GetSubmissions_Handler,
+		},
+		{
+			MethodName: "GetSubmission",
+			Handler:    _AutograderService_GetSubmission_Handler,
+		},
+		{
+			MethodName: "GetGroupSubmissions",
+			Handler:    _AutograderService_GetGroupSubmissions_Handler,
+		},
+		{
+			MethodName: "UpdateSubmission",
+			Handler:    _AutograderService_UpdateSubmission_Handler,
+		},
+		{
+			MethodName: "GetAssignments",
+			Handler:    _AutograderService_GetAssignments_Handler,
+		},
+		{
+			MethodName: "GetRepositoryURL",
+			Handler:    _AutograderService_GetRepositoryURL_Handler,
+		},
+		{
+			MethodName: "GetProviders",
+			Handler:    _AutograderService_GetProviders_Handler,
+		},
+		{
+			MethodName: "GetDirectories",
+			Handler:    _AutograderService_GetDirectories_Handler,
+		},
+		{
+			MethodName: "GetRepository",
+			Handler:    _AutograderService_GetRepository_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "ag.proto",
 }
 
 func (m *User) Marshal() (dAtA []byte, err error) {
