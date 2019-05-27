@@ -76,9 +76,9 @@ func TestGetUser(t *testing.T) {
 
 	testscms := make(map[string]scm.SCM)
 	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.Id))
+	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
 
-	foundUser, err := test_ag.GetUser(cont, &pb.RecordRequest{Id: user.Id})
+	foundUser, err := test_ag.GetUser(cont, &pb.RecordRequest{ID: user.ID})
 	if err != nil {
 		t.Error(err)
 	}
@@ -116,7 +116,7 @@ func TestGetUsers(t *testing.T) {
 
 	testscms := make(map[string]scm.SCM)
 	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user1.Id))
+	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user1.ID))
 
 	foundUsers, err := test_ag.GetUsers(cont, &pb.Void{})
 	if err != nil {
@@ -170,7 +170,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 	admin := users[0]
 	for _, course := range allCourses {
-		err := db.CreateCourse(admin.Id, course)
+		err := db.CreateCourse(admin.ID, course)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -178,7 +178,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	testscms := make(map[string]scm.SCM)
 	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(admin.Id))
+	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(admin.ID))
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
@@ -189,12 +189,12 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 			continue
 		}
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			UserId:   user.Id,
-			CourseId: allCourses[0].Id,
+			User_ID:   user.ID,
+			Course_ID: allCourses[0].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(user.Id, allCourses[0].Id); err != nil {
+		if err := db.EnrollStudent(user.ID, allCourses[0].ID); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -204,17 +204,17 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	osUsers := users[3:7]
 	for _, user := range osUsers {
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			UserId:   user.Id,
-			CourseId: allCourses[1].Id,
+			User_ID:   user.ID,
+			Course_ID: allCourses[1].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(user.Id, allCourses[1].Id); err != nil {
+		if err := db.EnrollStudent(user.ID, allCourses[1].ID); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	foundEnrollments, err := test_ag.GetEnrollmentsByCourse(cont, &pb.RecordRequest{Id: allCourses[0].Id})
+	foundEnrollments, err := test_ag.GetEnrollmentsByCourse(cont, &pb.RecordRequest{ID: allCourses[0].ID})
 	if err != nil {
 		t.Error(err)
 	}
@@ -242,7 +242,7 @@ func TestPatchUser(t *testing.T) {
 
 	db, cleanup := setup(t)
 	defer cleanup()
-	user := &pb.User{Name: "Test User", StudentId: "11", Email: "test@email", AvatarUrl: "url.com"}
+	user := &pb.User{Name: "Test User", Student_ID: "11", Email: "test@email", Avatar_URL: "url.com"}
 	adminUser := createFakeUser(t, db, 1)
 	remoteIdentity := &pb.RemoteIdentity{Provider: "fake", AccessToken: "token"}
 	if err := db.CreateUserFromRemoteIdentity(
@@ -257,7 +257,7 @@ func TestPatchUser(t *testing.T) {
 
 	testscms := make(map[string]scm.SCM)
 	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(adminUser.Id))})
+	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(adminUser.ID))})
 	cont := metadata.NewIncomingContext(context.Background(), meta)
 
 	respUser, err := web.PatchUser(adminUser, user, db)
@@ -265,7 +265,7 @@ func TestPatchUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	admin, err := db.GetUser(user.Id)
+	admin, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -275,30 +275,30 @@ func TestPatchUser(t *testing.T) {
 	}
 
 	namechangeRequest := &pb.User{
-		Id:        respUser.Id,
-		IsAdmin:   respUser.IsAdmin,
-		Name:      "Scrooge McDuck",
-		StudentId: "99",
-		Email:     "test@test.com",
-		AvatarUrl: "www.hello.com",
+		ID:         respUser.ID,
+		IsAdmin:    respUser.IsAdmin,
+		Name:       "Scrooge McDuck",
+		Student_ID: "99",
+		Email:      "test@test.com",
+		Avatar_URL: "www.hello.com",
 	}
 
 	_, err = test_ag.UpdateUser(cont, namechangeRequest)
 	if err != nil {
 		t.Error(err)
 	}
-	withName, err := db.GetUser(user.Id)
+	withName, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	wantAdmin := true
 	wantUser := &pb.User{
-		Id:               withName.Id,
+		ID:               withName.ID,
 		Name:             "Scrooge McDuck",
 		IsAdmin:          wantAdmin,
-		StudentId:        "99",
+		Student_ID:       "99",
 		Email:            "test@test.com",
-		AvatarUrl:        "www.hello.com",
+		Avatar_URL:       "www.hello.com",
 		RemoteIdentities: user.RemoteIdentities,
 	}
 
@@ -314,7 +314,7 @@ func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.Use
 	err := db.CreateUserFromRemoteIdentity(&user,
 		&pb.RemoteIdentity{
 			Provider:    "fake",
-			RemoteId:    remoteID,
+			Remote_ID:   remoteID,
 			AccessToken: "token",
 		})
 	if err != nil {

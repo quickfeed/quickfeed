@@ -2,24 +2,14 @@ package web
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
 )
 
-// ListDirectoriesRequest represents a request to list all directories for a
-// given provider.
-type ListDirectoriesRequest struct {
-	Provider string `json:"provider"`
-}
-
-func (dr *ListDirectoriesRequest) valid() bool {
-	return dr != nil && dr.Provider != ""
-}
-
 // ListDirectories returns all directories which can be used as a course
 // directory from the given provider.
-
 func ListDirectories(ctx context.Context, scm scm.SCM) (*pb.Directories, error) {
 
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
@@ -29,7 +19,19 @@ func ListDirectories(ctx context.Context, scm scm.SCM) (*pb.Directories, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Directories{Directories: directories}, nil
+
+	organizations := make([]*pb.Directory, 0)
+	for _, directory := range directories {
+		plan, err := scm.GetPaymentPlan(ctx, directory.ID)
+		if err != nil {
+			fmt.Println("Error getting payment plan for directory ID: ", directory.ID)
+		}
+		if plan.PrivateRepos > 0 {
+			organizations = append(organizations, directory)
+		}
+	}
+
+	return &pb.Directories{Directories: organizations}, nil
 }
 
 /*

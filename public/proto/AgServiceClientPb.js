@@ -34,15 +34,15 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoCreateGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Group, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Group.deserializeBinary);
-        this.methodInfoUpdateGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.StatusCode, function (request) {
+        this.methodInfoUpdateGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.StatusCode.deserializeBinary);
-        this.methodInfoUpdateGroupStatus = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.StatusCode, function (request) {
+        }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoUpdateGroupStatus = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.StatusCode.deserializeBinary);
-        this.methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.StatusCode, function (request) {
+        }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.StatusCode.deserializeBinary);
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Course, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Course.deserializeBinary);
@@ -58,21 +58,21 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoCreateCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Course, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Course.deserializeBinary);
-        this.methodInfoUpdateCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.StatusCode, function (request) {
+        this.methodInfoUpdateCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.StatusCode.deserializeBinary);
-        this.methodInfoRefreshCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.StatusCode, function (request) {
+        }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoRefreshCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Assignments, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.StatusCode.deserializeBinary);
+        }, ag_pb_1.Assignments.deserializeBinary);
         this.methodInfoGetEnrollmentsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Enrollments, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Enrollments.deserializeBinary);
-        this.methodInfoCreateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.StatusCode, function (request) {
+        this.methodInfoCreateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.StatusCode.deserializeBinary);
-        this.methodInfoUpdateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.StatusCode, function (request) {
+        }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoUpdateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.StatusCode.deserializeBinary);
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submissions, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submissions.deserializeBinary);
@@ -82,9 +82,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetGroupSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submissions, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submissions.deserializeBinary);
-        this.methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.StatusCode, function (request) {
+        this.methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.StatusCode.deserializeBinary);
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Assignments, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Assignments.deserializeBinary);

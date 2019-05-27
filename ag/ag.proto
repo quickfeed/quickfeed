@@ -6,12 +6,12 @@ import "google/protobuf/timestamp.proto";
 //  USERS AND  USERGROUPS   //
 
 message User {
-    uint64 id = 1;
+    uint64 ID = 1;
     bool is_admin = 2;
     string name = 3;
-    string student_id = 4;
+    string student_ID = 4;
     string email = 5;
-    string avatar_url = 6;
+    string avatar_URL = 6;
 
     repeated RemoteIdentity remote_identities = 7;
     repeated Enrollment enrollments = 8;
@@ -22,23 +22,23 @@ message Users {
 }
 
 message RemoteIdentity {
-    uint64 id = 1;
+    uint64 ID = 1;
     string provider = 2 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
-    uint64 remote_id = 3 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
+    uint64 remote_ID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
     string access_token = 4;
-    uint64 user_id = 5;
+    uint64 user_ID = 5;
 }
 
 message Group {
     enum GroupStatus {
-        PENDING_GROUP = 0;
-        REJECTED_GROUP = 1;
-        APPROVED = 2;
-        DELETED = 3;
+        Pending = 0;
+        Rejected = 1;
+        Approved = 2;
+        Deleted = 3;
     }
-    uint64 id = 1;
+    uint64 ID = 1;
     string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
-    uint64 course_id = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
+    uint64 course_ID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
     GroupStatus status = 4;
 
     repeated User users = 5;
@@ -52,14 +52,14 @@ message Groups {
 //   COURSES   //
 
 message Course {
-    uint64 id = 1;
-    uint64 coursecreator_id = 2;
+    uint64 ID = 1;
+    uint64 course_creator_ID = 2;
     string name = 3;
     string code = 4;
     uint32 year = 5;
     string tag = 6;
     string provider = 7;
-    uint64 directory_id = 8;
+    uint64 directory_ID = 8;
     Enrollment.UserStatus enrolled = 9;
 
     repeated Enrollment enrollments = 10;
@@ -68,21 +68,21 @@ message Course {
 }
 
 message Courses {
-    repeated Course Courses = 1;
+    repeated Course courses = 1;
 }
 
 message Enrollment {
     enum UserStatus {
-        PENDING = 0;
-        REJECTED = 1;
-        STUDENT = 2;
-        TEACHER = 3;
+        Pending = 0;
+        Rejected = 1;
+        Student = 2;
+        Teacher = 3;
     }
     
-    uint64 id = 1;
-    uint64 course_id = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
-    uint64 user_id = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
-    uint64 group_id = 4;
+    uint64 ID = 1;
+    uint64 course_ID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
+    uint64 user_ID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
+    uint64 group_ID = 4;
     User user = 5;
     Course course = 6;
     Group group = 7;
@@ -94,14 +94,14 @@ message Enrollments {
 }
 
 message Assignment {
-    uint64 id = 1;
-    uint64 course_id = 2;
+    uint64 ID = 1;
+    uint64 course_ID = 2;
     string name = 3;
     string language = 4;
     google.protobuf.Timestamp deadline = 5; 
     bool auto_approve = 6;
     uint32 order = 7;
-    bool is_grouplab = 8;
+    bool is_group_lab = 8;
     Submission submission = 9;    
 }
 
@@ -110,10 +110,10 @@ message Assignments {
 }
 
 message Submission {
-    uint64 id = 1;
-    uint64 assignment_id = 2;
-    uint64 user_id = 3;
-    uint64 group_id = 4;
+    uint64 ID = 1;
+    uint64 assignment_ID = 2;
+    uint64 user_ID = 3;
+    uint64 group_ID = 4;
     uint32 score = 5;
     string score_objects = 6;
     string build_info = 7;
@@ -127,18 +127,18 @@ message Submissions {
 
 message Repository {
     enum RepoType {
-        USER = 0;
-        ASSIGNMENT = 1;
-        TESTS = 2;
-        SOLUTION = 3;
-        COURSEINFO = 4;
+        User = 0;
+        Assignment = 1;
+        Tests = 2;
+        Solution = 3;
+        CourseInfo = 4;
     }
-    uint64 id = 1;
-    uint64 directory_id = 2;
-    uint64 repository_id = 3;
-    uint64 user_id = 4;
-    uint64 group_id = 5;
-    string html_url = 6;
+    uint64 ID = 1;
+    uint64 directory_ID = 2;
+    uint64 repository_ID = 3;
+    uint64 user_ID = 4;
+    uint64 group_ID = 5;
+    string HTML_URL = 6;
     RepoType repo_type = 7;
 }
 
@@ -147,7 +147,7 @@ message Repositories {
 }
 
 message Directory {
-    uint64 id = 1;
+    uint64 ID = 1;
     string path = 2;
     string avatar = 3;
 }
@@ -159,7 +159,7 @@ message Directories {
 ////    REQUESTS AND RESPONSES      \\\\
 
 message RecordRequest {
-    uint64 id = 1;
+    uint64 ID = 1;
     repeated Enrollment.UserStatus statuses = 2;
     repeated Group.GroupStatus group_statuses = 3;
 }
@@ -167,26 +167,26 @@ message RecordRequest {
 // fields can be empty, do not use fields for user validation, use context
 // can be used in submission, enrollment and group requests, also in requests with multiple IDs
 message ActionRequest {
-    uint64 id = 1;
-    uint64 user_id = 2;
-    uint64 group_id = 3;
-    uint64 course_id = 4;
+    uint64 ID = 1;
+    uint64 user_ID = 2;
+    uint64 group_ID = 3;
+    uint64 course_ID = 4;
     Enrollment.UserStatus status = 5;
     Group.GroupStatus group_status = 6;
 }
 
 message DirectoryRequest {
     string provider = 1;
-    uint64 course_id = 2;
+    uint64 course_ID = 2;
 }
 
 message RepositoryRequest {
-    uint64 id = 1;
+    uint64 ID = 1;
     Repository.RepoType type = 2;
-    uint64 directory_id = 3;
-    uint64 repository_id = 4;
-    uint64 user_id = 5;
-    uint64 course_id = 6;
+    uint64 directory_ID = 3;
+    uint64 repository_ID = 4;
+    uint64 user_ID = 5;
+    uint64 course_ID = 6;
 }
 
 message Providers {
@@ -194,11 +194,7 @@ message Providers {
 }
 
 message URLResponse {
-    string url = 1;
-}
-
-message StatusCode {
-    int32 status_code = 1;
+    string URL = 1;
 }
 
 message Void {}
@@ -235,8 +231,8 @@ service AutograderService {
     // enrollments //
 
     rpc GetEnrollmentsByCourse(RecordRequest) returns (Enrollments) {}
-    rpc CreateEnrollment(ActionRequest) returns (StatusCode) {} 
-    rpc UpdateEnrollment(ActionRequest) returns (StatusCode) {} 
+    rpc CreateEnrollment(ActionRequest) returns (Void) {} 
+    rpc UpdateEnrollment(ActionRequest) returns (Void) {} 
 
     // submissions //
 

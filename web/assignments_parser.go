@@ -8,7 +8,7 @@ import (
 	"time"
 
 	pb "github.com/autograde/aguis/ag"
-	tspb "github.com/golang/protobuf/ptypes"
+	tspb "github.com/gogo/protobuf/types"
 
 	"gopkg.in/yaml.v2"
 )
@@ -25,7 +25,7 @@ type assignmentData struct {
 	Language     string `yaml:"language"`
 	Deadline     string `yaml:"deadline"`
 	AutoApprove  bool   `yaml:"autoapprove"`
-	IsGroupLab   bool   `yaml:"isgrouplab"`
+	IsGroupLab   bool   `yaml:"IsGroupLab"`
 }
 
 // ParseAssignments recursively walks the given directory and parses
@@ -63,14 +63,14 @@ func ParseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				}
 
 				assignment := &pb.Assignment{
-					Id:          uint64(newAssignment.AssignmentID),
-					CourseId:    courseID,
+					ID:          uint64(newAssignment.AssignmentID),
+					Course_ID:   courseID,
 					Deadline:    deadline,
 					Language:    strings.ToLower(newAssignment.Language),
 					Name:        newAssignment.Name,
 					Order:       uint32(newAssignment.AssignmentID),
 					AutoApprove: newAssignment.AutoApprove,
-					IsGrouplab:  newAssignment.IsGroupLab,
+					IsGroupLab:  newAssignment.IsGroupLab,
 				}
 
 				assignments = append(assignments, assignment)

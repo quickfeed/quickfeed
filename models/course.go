@@ -1,5 +1,6 @@
 package models
 
+/*
 // Course represents a course backed by a directory.
 type Course struct {
 	ID              uint64 `json:"id"`
@@ -19,3 +20,4 @@ type Course struct {
 	Assignments []*Assignment `json:"assignments,omitempty"`
 	Groups      []*Group      `json:"groups,omitempty"`
 }
+*/

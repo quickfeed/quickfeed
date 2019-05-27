@@ -43,14 +43,15 @@ func TestFetchAssignments(t *testing.T) {
 		}
 		for _, dir := range dirs {
 			if dir.Path == gitHubTestOrg {
-				courseDirID = dir.Id
-				t.Logf("To speed up test; update const to 'gitHubTestOrgID = %v'", dir.Id)
+				courseDirID = dir.ID
+				t.Logf("To speed up test; update const to 'gitHubTestOrgID = %v'", dir.ID)
 			}
 		}
 	}
+
 	course := &pb.Course{
-		Name:        "Autograder Test Course",
-		DirectoryId: courseDirID,
+		Name:         "Autograder Test Course",
+		Directory_ID: courseDirID,
 	}
 
 	assignments, err := web.FetchAssignments(ctx, s, course)

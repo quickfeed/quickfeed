@@ -33,14 +33,14 @@ var repoNames = fmt.Sprintf("(%s, %s, %s, %s)", InfoRepo, AssignmentRepo, TestsR
 // does not contain the Autograder repositories that will be created.
 //TODO(meling) should have proper logging in these funcs, especially for errors.
 func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
-	if !validCourse(request) {
+	if !request.IsValidCourse() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	directory, err := s.GetDirectory(ctx, request.DirectoryId)
+	directory, err := s.GetDirectory(ctx, request.Directory_ID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,17 +78,17 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		log.Println("Created webhook for repository:", path)
 
 		dbRepo := pb.Repository{
-			DirectoryId:  directory.Id,
-			RepositoryId: repo.ID,
-			HtmlUrl:      repo.WebURL,
-			RepoType:     repoType(path),
+			Directory_ID:  directory.ID,
+			Repository_ID: repo.ID,
+			HTML_URL:      repo.WebURL,
+			RepoType:      repoType(path),
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := db.CreateCourse(request.GetCoursecreatorId(), request); err != nil {
+	if err := db.CreateCourse(request.GetCourseCreator_ID(), request); err != nil {
 		return nil, err
 	}
 	return request, nil

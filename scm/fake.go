@@ -38,11 +38,11 @@ func (s *FakeSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error) 
 func (s *FakeSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*pb.Directory, error) {
 	id := len(s.Directories) + 1
 	dir := &pb.Directory{
-		Id:     uint64(id),
+		ID:     uint64(id),
 		Path:   opt.Path,
 		Avatar: "https://avatars3.githubusercontent.com/u/1000" + strconv.Itoa(id) + "?v=3",
 	}
-	s.Directories[dir.Id] = dir
+	s.Directories[dir.ID] = dir
 	return dir, nil
 }
 
@@ -91,7 +91,7 @@ func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 		WebURL:      "https://example.com/" + opt.Directory.Path + "/" + opt.Path,
 		SSHURL:      "git@example.com:" + opt.Directory.Path + "/" + opt.Path,
 		HTTPURL:     "https://example.com/" + opt.Directory.Path + "/" + opt.Path + ".git",
-		DirectoryID: opt.Directory.Id,
+		DirectoryID: opt.Directory.ID,
 	}
 	s.Repositories[repo.ID] = repo
 	return repo, nil
@@ -101,7 +101,7 @@ func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 func (s *FakeSCM) GetRepositories(ctx context.Context, directory *pb.Directory) ([]*Repository, error) {
 	var repos []*Repository
 	for _, repo := range s.Repositories {
-		if repo.DirectoryID == directory.Id {
+		if repo.DirectoryID == directory.ID {
 			repos = append(repos, repo)
 		}
 	}

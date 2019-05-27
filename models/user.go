@@ -1,5 +1,6 @@
 package models
 
+/*
 // User represents a user account.
 type User struct {
 	ID uint64 `json:"id"`
@@ -46,3 +47,4 @@ func (user *User) GetRemoteIDFor(provider string) *RemoteIdentity {
 func (user *User) IAdmin() bool {
 	return user.IsAdmin != nil && *user.IsAdmin
 }
+*/

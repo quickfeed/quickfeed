@@ -27,6 +27,7 @@ func NewAutograderService(db *database.GormDB, scms map[string]scm.SCM, bh web.B
 		scms: scms,
 		bh:   bh,
 	}
+
 }
 
 // GetRepositoryURL returns a repository of requested type
@@ -90,8 +91,9 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	if err != nil {
 		return nil, err
 	}
+
 	// make sure that the current user is set as course creator
-	in.CoursecreatorId = usr.GetId()
+	in.CourseCreator_ID = usr.GetID()
 	return web.NewCourse(ctx, in, s.db, scm, s.bh)
 }
 
@@ -101,12 +103,12 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 }
 
 // UpdateCourse is used to change the course information
-func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.StatusCode, error) {
+func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
 	scm, err := getSCM(ctx, s.scms, s.db, in.Provider)
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateCourse(ctx, in, s.db, scm)
+	return &pb.Void{}, web.UpdateCourse(ctx, in, s.db, scm)
 }
 
 // GetCourses returns a list with all courses
@@ -130,17 +132,17 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.R
 }
 
 // CreateEnrollment inserts a new student enrollment
-func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.StatusCode, error) {
-	return web.CreateEnrollment(in, s.db)
+func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.Void, error) {
+	return &pb.Void{}, web.CreateEnrollment(in, s.db)
 }
 
 // UpdateEnrollment is used to change an enrollment status of a student
-func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.StatusCode, error) {
+func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.Void, error) {
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, err
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{Id: in.CourseId}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +150,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateEnrollment(ctx, in, s.db, scm, usr)
+	return &pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm, usr)
 }
 
 // GetSelf returns information about the user with user ID sent in the context
@@ -157,18 +159,38 @@ func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User,
 	if err != nil {
 		return nil, err
 	}
-	return web.GetUser(&pb.RecordRequest{Id: currentUser.Id}, s.db)
+	user, err := web.GetUser(&pb.RecordRequest{ID: currentUser.ID}, s.db)
+	if err != nil {
+		return nil, err
+	}
+	user.RemoteIdentities = nil
+	return user, nil
 }
 
-//TODO(Vera): groups should not return remote identities
 // GetGroup returns information about a group
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
-	return web.GetGroup(in, s.db)
+	group, err := web.GetGroup(in, s.db)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range group.Users {
+		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
+	}
+	return group, nil
 }
 
 // GetGroups returns a list of student groups created for the course
 func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest) (*pb.Groups, error) {
-	return web.GetGroups(in, s.db)
+	groups, err := web.GetGroups(in, s.db)
+	if err != nil {
+		return nil, err
+	}
+	for _, group := range groups.Groups {
+		for _, user := range group.Users {
+			user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
+		}
+	}
+	return groups, nil
 }
 
 // CreateGroup makes a new group
@@ -177,16 +199,23 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	return web.NewGroup(in, s.db, usr)
+	group, err := web.NewGroup(in, s.db, usr)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range group.Users {
+		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
+	}
+	return group, nil
 }
 
 // UpdateGroup is called by UpdateGroup client method, changes group information
-func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.StatusCode, error) {
+func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, status.Errorf(codes.PermissionDenied, "invalid user ID")
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{Id: in.CourseId}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -194,16 +223,16 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateGroup(ctx, in, s.db, scm, usr)
+	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
 // UpdateGroupStatus is called by UpdateGroupStatus client method, changes group enrollment status
-func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group) (*pb.StatusCode, error) {
+func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, err
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{Id: in.CourseId}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -211,12 +240,12 @@ func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group)
 	if err != nil {
 		return nil, err
 	}
-	return web.UpdateGroup(ctx, in, s.db, scm, usr)
+	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
 // DeleteGroup removes group record from the database
-func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.StatusCode, error) {
-	return web.DeleteGroup(in, s.db)
+func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
+	return &pb.Void{}, web.DeleteGroup(in, s.db)
 }
 
 // GetSubmission returns a student submission
@@ -267,7 +296,14 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 
 // GetGroupByUserAndCourse returns a student group
 func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.ActionRequest) (*pb.Group, error) {
-	return web.GetGroupByUserAndCourse(in, s.db)
+	group, err := web.GetGroupByUserAndCourse(in, s.db)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range group.Users {
+		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
+	}
+	return group, nil
 }
 
 // GetProviders returns a list of providers

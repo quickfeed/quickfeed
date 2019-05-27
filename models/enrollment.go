@@ -1,5 +1,6 @@
 package models
 
+/*
 // Enrollment status.
 const (
 	Pending uint = iota
@@ -23,4 +24,4 @@ type Enrollment struct {
 	GroupID uint64 `json:"groupid"`
 
 	Status uint `json:"status"`
-}
+}*/

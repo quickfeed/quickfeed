@@ -12,7 +12,7 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/web"
-	tspb "github.com/golang/protobuf/ptypes"
+	tspb "github.com/gogo/protobuf/types"
 )
 
 func TestParseWithInvalidDir(t *testing.T) {
@@ -74,8 +74,9 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	wantAssignment1 := &pb.Assignment{
-		Id:          1,
+		ID:          1,
 		Name:        "For loops",
 		Language:    "go",
 		Deadline:    deadline,
@@ -92,7 +93,7 @@ func TestParse(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantAssignment2 := &pb.Assignment{
-		Id:          2,
+		ID:          2,
 		Name:        "Nested loops",
 		Language:    "java",
 		Deadline:    deadline,
