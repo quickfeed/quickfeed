@@ -50,7 +50,7 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 	}
 	if isDirty(repos) {
 		return nil, status.Errorf(codes.AlreadyExists,
-			"%s contains one or more Autograder repositories %s", directory.GetPath(), repoNames)
+			"'%s' contains one or more Autograder repositories %s", directory.GetPath(), repoNames)
 	}
 
 	for path, private := range RepoPaths {

@@ -9,7 +9,9 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/web/grpc_service"
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
@@ -128,6 +130,32 @@ func TestNewCourse(t *testing.T) {
 		if !reflect.DeepEqual(respCourse, course) {
 			t.Errorf("have response course\n %+v want\n %+v", respCourse, course)
 		}
+	}
+}
+
+func TestNewCourseExistingRepos(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	adminUser := createFakeUser(t, db, 10)
+	ctx := withUserContext(context.Background(), adminUser)
+	scmMap := fakeProviderMap(ctx)
+	fakeProvider := scmMap["token"]
+
+	ags := grpc_service.NewAutograderService(db, scmMap, web.BaseHookOptions{})
+	testCourse := allCourses[0]
+	directory, _ := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
+	for path, private := range web.RepoPaths {
+		repoOptions := &scm.CreateRepositoryOptions{Path: path, Directory: directory, Private: private}
+		fakeProvider.CreateRepository(ctx, repoOptions)
+	}
+
+	respCourse, err := ags.CreateCourse(ctx, testCourse)
+	if respCourse != nil {
+		t.Fatal("expected CreateCourse to fail with AlreadyExists")
+	}
+	if err != nil && status.Code(err) != codes.AlreadyExists {
+		t.Fatalf("expected CreateCourse to fail with AlreadyExists, but got: %v", err)
 	}
 }
 
