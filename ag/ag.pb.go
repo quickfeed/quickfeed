@@ -26,24 +26,24 @@ const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 type Group_GroupStatus int32
 
 const (
-	Group_PENDING_GROUP  Group_GroupStatus = 0
-	Group_REJECTED_GROUP Group_GroupStatus = 1
-	Group_APPROVED       Group_GroupStatus = 2
-	Group_DELETED        Group_GroupStatus = 3
+	Group_Pending  Group_GroupStatus = 0
+	Group_Rejected Group_GroupStatus = 1
+	Group_Approved Group_GroupStatus = 2
+	Group_Deleted  Group_GroupStatus = 3
 )
 
 var Group_GroupStatus_name = map[int32]string{
-	0: "PENDING_GROUP",
-	1: "REJECTED_GROUP",
-	2: "APPROVED",
-	3: "DELETED",
+	0: "Pending",
+	1: "Rejected",
+	2: "Approved",
+	3: "Deleted",
 }
 
 var Group_GroupStatus_value = map[string]int32{
-	"PENDING_GROUP":  0,
-	"REJECTED_GROUP": 1,
-	"APPROVED":       2,
-	"DELETED":        3,
+	"Pending":  0,
+	"Rejected": 1,
+	"Approved": 2,
+	"Deleted":  3,
 }
 
 func (x Group_GroupStatus) String() string {
@@ -57,24 +57,24 @@ func (Group_GroupStatus) EnumDescriptor() ([]byte, []int) {
 type Enrollment_UserStatus int32
 
 const (
-	Enrollment_PENDING  Enrollment_UserStatus = 0
-	Enrollment_REJECTED Enrollment_UserStatus = 1
-	Enrollment_STUDENT  Enrollment_UserStatus = 2
-	Enrollment_TEACHER  Enrollment_UserStatus = 3
+	Enrollment_Pending  Enrollment_UserStatus = 0
+	Enrollment_Rejected Enrollment_UserStatus = 1
+	Enrollment_Student  Enrollment_UserStatus = 2
+	Enrollment_Teacher  Enrollment_UserStatus = 3
 )
 
 var Enrollment_UserStatus_name = map[int32]string{
-	0: "PENDING",
-	1: "REJECTED",
-	2: "STUDENT",
-	3: "TEACHER",
+	0: "Pending",
+	1: "Rejected",
+	2: "Student",
+	3: "Teacher",
 }
 
 var Enrollment_UserStatus_value = map[string]int32{
-	"PENDING":  0,
-	"REJECTED": 1,
-	"STUDENT":  2,
-	"TEACHER":  3,
+	"Pending":  0,
+	"Rejected": 1,
+	"Student":  2,
+	"Teacher":  3,
 }
 
 func (x Enrollment_UserStatus) String() string {
@@ -88,27 +88,27 @@ func (Enrollment_UserStatus) EnumDescriptor() ([]byte, []int) {
 type Repository_RepoType int32
 
 const (
-	Repository_USER       Repository_RepoType = 0
-	Repository_ASSIGNMENT Repository_RepoType = 1
-	Repository_TESTS      Repository_RepoType = 2
-	Repository_SOLUTION   Repository_RepoType = 3
-	Repository_COURSEINFO Repository_RepoType = 4
+	Repository_User       Repository_RepoType = 0
+	Repository_Assignment Repository_RepoType = 1
+	Repository_Tests      Repository_RepoType = 2
+	Repository_Solution   Repository_RepoType = 3
+	Repository_CourseInfo Repository_RepoType = 4
 )
 
 var Repository_RepoType_name = map[int32]string{
-	0: "USER",
-	1: "ASSIGNMENT",
-	2: "TESTS",
-	3: "SOLUTION",
-	4: "COURSEINFO",
+	0: "User",
+	1: "Assignment",
+	2: "Tests",
+	3: "Solution",
+	4: "CourseInfo",
 }
 
 var Repository_RepoType_value = map[string]int32{
-	"USER":       0,
-	"ASSIGNMENT": 1,
-	"TESTS":      2,
-	"SOLUTION":   3,
-	"COURSEINFO": 4,
+	"User":       0,
+	"Assignment": 1,
+	"Tests":      2,
+	"Solution":   3,
+	"CourseInfo": 4,
 }
 
 func (x Repository_RepoType) String() string {
@@ -120,17 +120,14 @@ func (Repository_RepoType) EnumDescriptor() ([]byte, []int) {
 }
 
 type User struct {
-	Id                   uint64            `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	IsAdmin              bool              `protobuf:"varint,2,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
-	Name                 string            `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	StudentId            string            `protobuf:"bytes,4,opt,name=student_id,json=studentId,proto3" json:"student_id,omitempty"`
-	Email                string            `protobuf:"bytes,5,opt,name=email,proto3" json:"email,omitempty"`
-	AvatarUrl            string            `protobuf:"bytes,6,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
-	RemoteIdentities     []*RemoteIdentity `protobuf:"bytes,7,rep,name=remote_identities,json=remoteIdentities,proto3" json:"remote_identities,omitempty"`
-	Enrollments          []*Enrollment     `protobuf:"bytes,8,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
-	XXX_unrecognized     []byte            `json:"-"`
-	XXX_sizecache        int32             `json:"-"`
+	ID               uint64            `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	IsAdmin          bool              `protobuf:"varint,2,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
+	Name             string            `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Student_ID       string            `protobuf:"bytes,4,opt,name=student_ID,json=studentID,proto3" json:"student_ID,omitempty"`
+	Email            string            `protobuf:"bytes,5,opt,name=email,proto3" json:"email,omitempty"`
+	Avatar_URL       string            `protobuf:"bytes,6,opt,name=avatar_URL,json=avatarURL,proto3" json:"avatar_URL,omitempty"`
+	RemoteIdentities []*RemoteIdentity `protobuf:"bytes,7,rep,name=remote_identities,json=remoteIdentities,proto3" json:"remote_identities,omitempty"`
+	Enrollments      []*Enrollment     `protobuf:"bytes,8,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
 }
 
 func (m *User) Reset()         { *m = User{} }
@@ -166,9 +163,9 @@ func (m *User) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_User proto.InternalMessageInfo
 
-func (m *User) GetId() uint64 {
+func (m *User) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
@@ -187,9 +184,9 @@ func (m *User) GetName() string {
 	return ""
 }
 
-func (m *User) GetStudentId() string {
+func (m *User) GetStudent_ID() string {
 	if m != nil {
-		return m.StudentId
+		return m.Student_ID
 	}
 	return ""
 }
@@ -201,9 +198,9 @@ func (m *User) GetEmail() string {
 	return ""
 }
 
-func (m *User) GetAvatarUrl() string {
+func (m *User) GetAvatar_URL() string {
 	if m != nil {
-		return m.AvatarUrl
+		return m.Avatar_URL
 	}
 	return ""
 }
@@ -223,10 +220,7 @@ func (m *User) GetEnrollments() []*Enrollment {
 }
 
 type Users struct {
-	Users                []*User  `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Users []*User `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
 }
 
 func (m *Users) Reset()         { *m = Users{} }
@@ -270,14 +264,11 @@ func (m *Users) GetUsers() []*User {
 }
 
 type RemoteIdentity struct {
-	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Provider             string   `protobuf:"bytes,2,opt,name=provider,proto3" json:"provider,omitempty" gorm:"unique_index:uid_provider_remote_id"`
-	RemoteId             uint64   `protobuf:"varint,3,opt,name=remote_id,json=remoteId,proto3" json:"remote_id,omitempty" gorm:"unique_index:uid_provider_remote_id"`
-	AccessToken          string   `protobuf:"bytes,4,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	UserId               uint64   `protobuf:"varint,5,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID          uint64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Provider    string `protobuf:"bytes,2,opt,name=provider,proto3" json:"provider,omitempty" gorm:"unique_index:uid_provider_remote_id"`
+	Remote_ID   uint64 `protobuf:"varint,3,opt,name=remote_ID,json=remoteID,proto3" json:"remote_ID,omitempty" gorm:"unique_index:uid_provider_remote_id"`
+	AccessToken string `protobuf:"bytes,4,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	User_ID     uint64 `protobuf:"varint,5,opt,name=user_ID,json=userID,proto3" json:"user_ID,omitempty"`
 }
 
 func (m *RemoteIdentity) Reset()         { *m = RemoteIdentity{} }
@@ -313,9 +304,9 @@ func (m *RemoteIdentity) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RemoteIdentity proto.InternalMessageInfo
 
-func (m *RemoteIdentity) GetId() uint64 {
+func (m *RemoteIdentity) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
@@ -327,9 +318,9 @@ func (m *RemoteIdentity) GetProvider() string {
 	return ""
 }
 
-func (m *RemoteIdentity) GetRemoteId() uint64 {
+func (m *RemoteIdentity) GetRemote_ID() uint64 {
 	if m != nil {
-		return m.RemoteId
+		return m.Remote_ID
 	}
 	return 0
 }
@@ -341,23 +332,20 @@ func (m *RemoteIdentity) GetAccessToken() string {
 	return ""
 }
 
-func (m *RemoteIdentity) GetUserId() uint64 {
+func (m *RemoteIdentity) GetUser_ID() uint64 {
 	if m != nil {
-		return m.UserId
+		return m.User_ID
 	}
 	return 0
 }
 
 type Group struct {
-	Id                   uint64            `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name                 string            `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" gorm:"unique_index:idx_unique_group_name"`
-	CourseId             uint64            `protobuf:"varint,3,opt,name=course_id,json=courseId,proto3" json:"course_id,omitempty" gorm:"unique_index:idx_unique_group_name"`
-	Status               Group_GroupStatus `protobuf:"varint,4,opt,name=status,proto3,enum=Group_GroupStatus" json:"status,omitempty"`
-	Users                []*User           `protobuf:"bytes,5,rep,name=users,proto3" json:"users,omitempty"`
-	Enrollments          []*Enrollment     `protobuf:"bytes,6,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
-	XXX_unrecognized     []byte            `json:"-"`
-	XXX_sizecache        int32             `json:"-"`
+	ID          uint64            `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Name        string            `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" gorm:"unique_index:idx_unique_group_name"`
+	Course_ID   uint64            `protobuf:"varint,3,opt,name=course_ID,json=courseID,proto3" json:"course_ID,omitempty" gorm:"unique_index:idx_unique_group_name"`
+	Status      Group_GroupStatus `protobuf:"varint,4,opt,name=status,proto3,enum=Group_GroupStatus" json:"status,omitempty"`
+	Users       []*User           `protobuf:"bytes,5,rep,name=users,proto3" json:"users,omitempty"`
+	Enrollments []*Enrollment     `protobuf:"bytes,6,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
 }
 
 func (m *Group) Reset()         { *m = Group{} }
@@ -393,9 +381,9 @@ func (m *Group) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Group proto.InternalMessageInfo
 
-func (m *Group) GetId() uint64 {
+func (m *Group) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
@@ -407,9 +395,9 @@ func (m *Group) GetName() string {
 	return ""
 }
 
-func (m *Group) GetCourseId() uint64 {
+func (m *Group) GetCourse_ID() uint64 {
 	if m != nil {
-		return m.CourseId
+		return m.Course_ID
 	}
 	return 0
 }
@@ -418,7 +406,7 @@ func (m *Group) GetStatus() Group_GroupStatus {
 	if m != nil {
 		return m.Status
 	}
-	return Group_PENDING_GROUP
+	return Group_Pending
 }
 
 func (m *Group) GetUsers() []*User {
@@ -436,10 +424,7 @@ func (m *Group) GetEnrollments() []*Enrollment {
 }
 
 type Groups struct {
-	Groups               []*Group `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Groups []*Group `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
 }
 
 func (m *Groups) Reset()         { *m = Groups{} }
@@ -483,21 +468,18 @@ func (m *Groups) GetGroups() []*Group {
 }
 
 type Course struct {
-	Id                   uint64                `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	CoursecreatorId      uint64                `protobuf:"varint,2,opt,name=coursecreator_id,json=coursecreatorId,proto3" json:"coursecreator_id,omitempty"`
-	Name                 string                `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Code                 string                `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty"`
-	Year                 uint32                `protobuf:"varint,5,opt,name=year,proto3" json:"year,omitempty"`
-	Tag                  string                `protobuf:"bytes,6,opt,name=tag,proto3" json:"tag,omitempty"`
-	Provider             string                `protobuf:"bytes,7,opt,name=provider,proto3" json:"provider,omitempty"`
-	DirectoryId          uint64                `protobuf:"varint,8,opt,name=directory_id,json=directoryId,proto3" json:"directory_id,omitempty"`
-	Enrolled             Enrollment_UserStatus `protobuf:"varint,9,opt,name=enrolled,proto3,enum=Enrollment_UserStatus" json:"enrolled,omitempty"`
-	Enrollments          []*Enrollment         `protobuf:"bytes,10,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
-	Assignments          []*Assignment         `protobuf:"bytes,12,rep,name=assignments,proto3" json:"assignments,omitempty"`
-	Groups               []*Group              `protobuf:"bytes,13,rep,name=groups,proto3" json:"groups,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	ID               uint64                `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	CourseCreator_ID uint64                `protobuf:"varint,2,opt,name=course_creator_ID,json=courseCreatorID,proto3" json:"course_creator_ID,omitempty"`
+	Name             string                `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Code             string                `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty"`
+	Year             uint32                `protobuf:"varint,5,opt,name=year,proto3" json:"year,omitempty"`
+	Tag              string                `protobuf:"bytes,6,opt,name=tag,proto3" json:"tag,omitempty"`
+	Provider         string                `protobuf:"bytes,7,opt,name=provider,proto3" json:"provider,omitempty"`
+	Directory_ID     uint64                `protobuf:"varint,8,opt,name=directory_ID,json=directoryID,proto3" json:"directory_ID,omitempty"`
+	Enrolled         Enrollment_UserStatus `protobuf:"varint,9,opt,name=enrolled,proto3,enum=Enrollment_UserStatus" json:"enrolled,omitempty"`
+	Enrollments      []*Enrollment         `protobuf:"bytes,10,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
+	Assignments      []*Assignment         `protobuf:"bytes,12,rep,name=assignments,proto3" json:"assignments,omitempty"`
+	Groups           []*Group              `protobuf:"bytes,13,rep,name=groups,proto3" json:"groups,omitempty"`
 }
 
 func (m *Course) Reset()         { *m = Course{} }
@@ -533,16 +515,16 @@ func (m *Course) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Course proto.InternalMessageInfo
 
-func (m *Course) GetId() uint64 {
+func (m *Course) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
 
-func (m *Course) GetCoursecreatorId() uint64 {
+func (m *Course) GetCourseCreator_ID() uint64 {
 	if m != nil {
-		return m.CoursecreatorId
+		return m.CourseCreator_ID
 	}
 	return 0
 }
@@ -582,9 +564,9 @@ func (m *Course) GetProvider() string {
 	return ""
 }
 
-func (m *Course) GetDirectoryId() uint64 {
+func (m *Course) GetDirectory_ID() uint64 {
 	if m != nil {
-		return m.DirectoryId
+		return m.Directory_ID
 	}
 	return 0
 }
@@ -593,7 +575,7 @@ func (m *Course) GetEnrolled() Enrollment_UserStatus {
 	if m != nil {
 		return m.Enrolled
 	}
-	return Enrollment_PENDING
+	return Enrollment_Pending
 }
 
 func (m *Course) GetEnrollments() []*Enrollment {
@@ -618,10 +600,7 @@ func (m *Course) GetGroups() []*Group {
 }
 
 type Courses struct {
-	Courses              []*Course `protobuf:"bytes,1,rep,name=Courses,proto3" json:"Courses,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
-	XXX_unrecognized     []byte    `json:"-"`
-	XXX_sizecache        int32     `json:"-"`
+	Courses []*Course `protobuf:"bytes,1,rep,name=courses,proto3" json:"courses,omitempty"`
 }
 
 func (m *Courses) Reset()         { *m = Courses{} }
@@ -665,17 +644,14 @@ func (m *Courses) GetCourses() []*Course {
 }
 
 type Enrollment struct {
-	Id                   uint64                `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	CourseId             uint64                `protobuf:"varint,2,opt,name=course_id,json=courseId,proto3" json:"course_id,omitempty" gorm:"unique_index:idx_unique_group_name"`
-	UserId               uint64                `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty" gorm:"unique_index:idx_unique_group_name"`
-	GroupId              uint64                `protobuf:"varint,4,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	User                 *User                 `protobuf:"bytes,5,opt,name=user,proto3" json:"user,omitempty"`
-	Course               *Course               `protobuf:"bytes,6,opt,name=course,proto3" json:"course,omitempty"`
-	Group                *Group                `protobuf:"bytes,7,opt,name=group,proto3" json:"group,omitempty"`
-	Status               Enrollment_UserStatus `protobuf:"varint,8,opt,name=status,proto3,enum=Enrollment_UserStatus" json:"status,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	ID        uint64                `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Course_ID uint64                `protobuf:"varint,2,opt,name=course_ID,json=courseID,proto3" json:"course_ID,omitempty" gorm:"unique_index:idx_unique_group_name"`
+	User_ID   uint64                `protobuf:"varint,3,opt,name=user_ID,json=userID,proto3" json:"user_ID,omitempty" gorm:"unique_index:idx_unique_group_name"`
+	Group_ID  uint64                `protobuf:"varint,4,opt,name=group_ID,json=groupID,proto3" json:"group_ID,omitempty"`
+	User      *User                 `protobuf:"bytes,5,opt,name=user,proto3" json:"user,omitempty"`
+	Course    *Course               `protobuf:"bytes,6,opt,name=course,proto3" json:"course,omitempty"`
+	Group     *Group                `protobuf:"bytes,7,opt,name=group,proto3" json:"group,omitempty"`
+	Status    Enrollment_UserStatus `protobuf:"varint,8,opt,name=status,proto3,enum=Enrollment_UserStatus" json:"status,omitempty"`
 }
 
 func (m *Enrollment) Reset()         { *m = Enrollment{} }
@@ -711,30 +687,30 @@ func (m *Enrollment) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Enrollment proto.InternalMessageInfo
 
-func (m *Enrollment) GetId() uint64 {
+func (m *Enrollment) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
 
-func (m *Enrollment) GetCourseId() uint64 {
+func (m *Enrollment) GetCourse_ID() uint64 {
 	if m != nil {
-		return m.CourseId
+		return m.Course_ID
 	}
 	return 0
 }
 
-func (m *Enrollment) GetUserId() uint64 {
+func (m *Enrollment) GetUser_ID() uint64 {
 	if m != nil {
-		return m.UserId
+		return m.User_ID
 	}
 	return 0
 }
 
-func (m *Enrollment) GetGroupId() uint64 {
+func (m *Enrollment) GetGroup_ID() uint64 {
 	if m != nil {
-		return m.GroupId
+		return m.Group_ID
 	}
 	return 0
 }
@@ -764,14 +740,11 @@ func (m *Enrollment) GetStatus() Enrollment_UserStatus {
 	if m != nil {
 		return m.Status
 	}
-	return Enrollment_PENDING
+	return Enrollment_Pending
 }
 
 type Enrollments struct {
-	Enrollments          []*Enrollment `protobuf:"bytes,1,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
-	XXX_unrecognized     []byte        `json:"-"`
-	XXX_sizecache        int32         `json:"-"`
+	Enrollments []*Enrollment `protobuf:"bytes,1,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
 }
 
 func (m *Enrollments) Reset()         { *m = Enrollments{} }
@@ -815,18 +788,15 @@ func (m *Enrollments) GetEnrollments() []*Enrollment {
 }
 
 type Assignment struct {
-	Id                   uint64           `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	CourseId             uint64           `protobuf:"varint,2,opt,name=course_id,json=courseId,proto3" json:"course_id,omitempty"`
-	Name                 string           `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Language             string           `protobuf:"bytes,4,opt,name=language,proto3" json:"language,omitempty"`
-	Deadline             *types.Timestamp `protobuf:"bytes,5,opt,name=deadline,proto3" json:"deadline,omitempty"`
-	AutoApprove          bool             `protobuf:"varint,6,opt,name=auto_approve,json=autoApprove,proto3" json:"auto_approve,omitempty"`
-	Order                uint32           `protobuf:"varint,7,opt,name=order,proto3" json:"order,omitempty"`
-	IsGrouplab           bool             `protobuf:"varint,8,opt,name=is_grouplab,json=isGrouplab,proto3" json:"is_grouplab,omitempty"`
-	Submission           *Submission      `protobuf:"bytes,9,opt,name=submission,proto3" json:"submission,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
-	XXX_unrecognized     []byte           `json:"-"`
-	XXX_sizecache        int32            `json:"-"`
+	ID          uint64           `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Course_ID   uint64           `protobuf:"varint,2,opt,name=course_ID,json=courseID,proto3" json:"course_ID,omitempty"`
+	Name        string           `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Language    string           `protobuf:"bytes,4,opt,name=language,proto3" json:"language,omitempty"`
+	Deadline    *types.Timestamp `protobuf:"bytes,5,opt,name=deadline,proto3" json:"deadline,omitempty"`
+	AutoApprove bool             `protobuf:"varint,6,opt,name=auto_approve,json=autoApprove,proto3" json:"auto_approve,omitempty"`
+	Order       uint32           `protobuf:"varint,7,opt,name=order,proto3" json:"order,omitempty"`
+	IsGroupLab  bool             `protobuf:"varint,8,opt,name=is_group_lab,json=isGroupLab,proto3" json:"is_group_lab,omitempty"`
+	Submission  *Submission      `protobuf:"bytes,9,opt,name=submission,proto3" json:"submission,omitempty"`
 }
 
 func (m *Assignment) Reset()         { *m = Assignment{} }
@@ -862,16 +832,16 @@ func (m *Assignment) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Assignment proto.InternalMessageInfo
 
-func (m *Assignment) GetId() uint64 {
+func (m *Assignment) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
 
-func (m *Assignment) GetCourseId() uint64 {
+func (m *Assignment) GetCourse_ID() uint64 {
 	if m != nil {
-		return m.CourseId
+		return m.Course_ID
 	}
 	return 0
 }
@@ -911,9 +881,9 @@ func (m *Assignment) GetOrder() uint32 {
 	return 0
 }
 
-func (m *Assignment) GetIsGrouplab() bool {
+func (m *Assignment) GetIsGroupLab() bool {
 	if m != nil {
-		return m.IsGrouplab
+		return m.IsGroupLab
 	}
 	return false
 }
@@ -926,10 +896,7 @@ func (m *Assignment) GetSubmission() *Submission {
 }
 
 type Assignments struct {
-	Assignments          []*Assignment `protobuf:"bytes,1,rep,name=assignments,proto3" json:"assignments,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
-	XXX_unrecognized     []byte        `json:"-"`
-	XXX_sizecache        int32         `json:"-"`
+	Assignments []*Assignment `protobuf:"bytes,1,rep,name=assignments,proto3" json:"assignments,omitempty"`
 }
 
 func (m *Assignments) Reset()         { *m = Assignments{} }
@@ -973,18 +940,15 @@ func (m *Assignments) GetAssignments() []*Assignment {
 }
 
 type Submission struct {
-	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	AssignmentId         uint64   `protobuf:"varint,2,opt,name=assignment_id,json=assignmentId,proto3" json:"assignment_id,omitempty"`
-	UserId               uint64   `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	GroupId              uint64   `protobuf:"varint,4,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	Score                uint32   `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
-	ScoreObjects         string   `protobuf:"bytes,6,opt,name=score_objects,json=scoreObjects,proto3" json:"score_objects,omitempty"`
-	BuildInfo            string   `protobuf:"bytes,7,opt,name=build_info,json=buildInfo,proto3" json:"build_info,omitempty"`
-	CommitHash           string   `protobuf:"bytes,8,opt,name=commit_hash,json=commitHash,proto3" json:"commit_hash,omitempty"`
-	Approved             bool     `protobuf:"varint,9,opt,name=approved,proto3" json:"approved,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID            uint64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Assignment_ID uint64 `protobuf:"varint,2,opt,name=assignment_ID,json=assignmentID,proto3" json:"assignment_ID,omitempty"`
+	User_ID       uint64 `protobuf:"varint,3,opt,name=user_ID,json=userID,proto3" json:"user_ID,omitempty"`
+	Group_ID      uint64 `protobuf:"varint,4,opt,name=group_ID,json=groupID,proto3" json:"group_ID,omitempty"`
+	Score         uint32 `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
+	ScoreObjects  string `protobuf:"bytes,6,opt,name=score_objects,json=scoreObjects,proto3" json:"score_objects,omitempty"`
+	BuildInfo     string `protobuf:"bytes,7,opt,name=build_info,json=buildInfo,proto3" json:"build_info,omitempty"`
+	CommitHash    string `protobuf:"bytes,8,opt,name=commit_hash,json=commitHash,proto3" json:"commit_hash,omitempty"`
+	Approved      bool   `protobuf:"varint,9,opt,name=approved,proto3" json:"approved,omitempty"`
 }
 
 func (m *Submission) Reset()         { *m = Submission{} }
@@ -1020,30 +984,30 @@ func (m *Submission) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Submission proto.InternalMessageInfo
 
-func (m *Submission) GetId() uint64 {
+func (m *Submission) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
 
-func (m *Submission) GetAssignmentId() uint64 {
+func (m *Submission) GetAssignment_ID() uint64 {
 	if m != nil {
-		return m.AssignmentId
+		return m.Assignment_ID
 	}
 	return 0
 }
 
-func (m *Submission) GetUserId() uint64 {
+func (m *Submission) GetUser_ID() uint64 {
 	if m != nil {
-		return m.UserId
+		return m.User_ID
 	}
 	return 0
 }
 
-func (m *Submission) GetGroupId() uint64 {
+func (m *Submission) GetGroup_ID() uint64 {
 	if m != nil {
-		return m.GroupId
+		return m.Group_ID
 	}
 	return 0
 }
@@ -1084,10 +1048,7 @@ func (m *Submission) GetApproved() bool {
 }
 
 type Submissions struct {
-	Submissions          []*Submission `protobuf:"bytes,1,rep,name=submissions,proto3" json:"submissions,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
-	XXX_unrecognized     []byte        `json:"-"`
-	XXX_sizecache        int32         `json:"-"`
+	Submissions []*Submission `protobuf:"bytes,1,rep,name=submissions,proto3" json:"submissions,omitempty"`
 }
 
 func (m *Submissions) Reset()         { *m = Submissions{} }
@@ -1131,16 +1092,13 @@ func (m *Submissions) GetSubmissions() []*Submission {
 }
 
 type Repository struct {
-	Id                   uint64              `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	DirectoryId          uint64              `protobuf:"varint,2,opt,name=directory_id,json=directoryId,proto3" json:"directory_id,omitempty"`
-	RepositoryId         uint64              `protobuf:"varint,3,opt,name=repository_id,json=repositoryId,proto3" json:"repository_id,omitempty"`
-	UserId               uint64              `protobuf:"varint,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	GroupId              uint64              `protobuf:"varint,5,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	HtmlUrl              string              `protobuf:"bytes,6,opt,name=html_url,json=htmlUrl,proto3" json:"html_url,omitempty"`
-	RepoType             Repository_RepoType `protobuf:"varint,7,opt,name=repo_type,json=repoType,proto3,enum=Repository_RepoType" json:"repo_type,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
-	XXX_unrecognized     []byte              `json:"-"`
-	XXX_sizecache        int32               `json:"-"`
+	ID            uint64              `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Directory_ID  uint64              `protobuf:"varint,2,opt,name=directory_ID,json=directoryID,proto3" json:"directory_ID,omitempty"`
+	Repository_ID uint64              `protobuf:"varint,3,opt,name=repository_ID,json=repositoryID,proto3" json:"repository_ID,omitempty"`
+	User_ID       uint64              `protobuf:"varint,4,opt,name=user_ID,json=userID,proto3" json:"user_ID,omitempty"`
+	Group_ID      uint64              `protobuf:"varint,5,opt,name=group_ID,json=groupID,proto3" json:"group_ID,omitempty"`
+	HTML_URL      string              `protobuf:"bytes,6,opt,name=HTML_URL,json=HTMLURL,proto3" json:"HTML_URL,omitempty"`
+	RepoType      Repository_RepoType `protobuf:"varint,7,opt,name=repo_type,json=repoType,proto3,enum=Repository_RepoType" json:"repo_type,omitempty"`
 }
 
 func (m *Repository) Reset()         { *m = Repository{} }
@@ -1176,44 +1134,44 @@ func (m *Repository) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Repository proto.InternalMessageInfo
 
-func (m *Repository) GetId() uint64 {
+func (m *Repository) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
 
-func (m *Repository) GetDirectoryId() uint64 {
+func (m *Repository) GetDirectory_ID() uint64 {
 	if m != nil {
-		return m.DirectoryId
+		return m.Directory_ID
 	}
 	return 0
 }
 
-func (m *Repository) GetRepositoryId() uint64 {
+func (m *Repository) GetRepository_ID() uint64 {
 	if m != nil {
-		return m.RepositoryId
+		return m.Repository_ID
 	}
 	return 0
 }
 
-func (m *Repository) GetUserId() uint64 {
+func (m *Repository) GetUser_ID() uint64 {
 	if m != nil {
-		return m.UserId
+		return m.User_ID
 	}
 	return 0
 }
 
-func (m *Repository) GetGroupId() uint64 {
+func (m *Repository) GetGroup_ID() uint64 {
 	if m != nil {
-		return m.GroupId
+		return m.Group_ID
 	}
 	return 0
 }
 
-func (m *Repository) GetHtmlUrl() string {
+func (m *Repository) GetHTML_URL() string {
 	if m != nil {
-		return m.HtmlUrl
+		return m.HTML_URL
 	}
 	return ""
 }
@@ -1222,14 +1180,11 @@ func (m *Repository) GetRepoType() Repository_RepoType {
 	if m != nil {
 		return m.RepoType
 	}
-	return Repository_USER
+	return Repository_User
 }
 
 type Repositories struct {
-	Repositories         []*Repository `protobuf:"bytes,1,rep,name=repositories,proto3" json:"repositories,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
-	XXX_unrecognized     []byte        `json:"-"`
-	XXX_sizecache        int32         `json:"-"`
+	Repositories []*Repository `protobuf:"bytes,1,rep,name=repositories,proto3" json:"repositories,omitempty"`
 }
 
 func (m *Repositories) Reset()         { *m = Repositories{} }
@@ -1273,12 +1228,9 @@ func (m *Repositories) GetRepositories() []*Repository {
 }
 
 type Directory struct {
-	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Path                 string   `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	Avatar               string   `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID     uint64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Path   string `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Avatar string `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"`
 }
 
 func (m *Directory) Reset()         { *m = Directory{} }
@@ -1314,9 +1266,9 @@ func (m *Directory) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Directory proto.InternalMessageInfo
 
-func (m *Directory) GetId() uint64 {
+func (m *Directory) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
@@ -1336,10 +1288,7 @@ func (m *Directory) GetAvatar() string {
 }
 
 type Directories struct {
-	Directories          []*Directory `protobuf:"bytes,1,rep,name=directories,proto3" json:"directories,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
-	XXX_unrecognized     []byte       `json:"-"`
-	XXX_sizecache        int32        `json:"-"`
+	Directories []*Directory `protobuf:"bytes,1,rep,name=directories,proto3" json:"directories,omitempty"`
 }
 
 func (m *Directories) Reset()         { *m = Directories{} }
@@ -1383,12 +1332,9 @@ func (m *Directories) GetDirectories() []*Directory {
 }
 
 type RecordRequest struct {
-	Id                   uint64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Statuses             []Enrollment_UserStatus `protobuf:"varint,2,rep,packed,name=statuses,proto3,enum=Enrollment_UserStatus" json:"statuses,omitempty"`
-	GroupStatuses        []Group_GroupStatus     `protobuf:"varint,3,rep,packed,name=group_statuses,json=groupStatuses,proto3,enum=Group_GroupStatus" json:"group_statuses,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
-	XXX_unrecognized     []byte                  `json:"-"`
-	XXX_sizecache        int32                   `json:"-"`
+	ID            uint64                  `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Statuses      []Enrollment_UserStatus `protobuf:"varint,2,rep,packed,name=statuses,proto3,enum=Enrollment_UserStatus" json:"statuses,omitempty"`
+	GroupStatuses []Group_GroupStatus     `protobuf:"varint,3,rep,packed,name=group_statuses,json=groupStatuses,proto3,enum=Group_GroupStatus" json:"group_statuses,omitempty"`
 }
 
 func (m *RecordRequest) Reset()         { *m = RecordRequest{} }
@@ -1424,9 +1370,9 @@ func (m *RecordRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RecordRequest proto.InternalMessageInfo
 
-func (m *RecordRequest) GetId() uint64 {
+func (m *RecordRequest) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
@@ -1448,15 +1394,12 @@ func (m *RecordRequest) GetGroupStatuses() []Group_GroupStatus {
 // fields can be empty, do not use fields for user validation, use context
 // can be used in submission, enrollment and group requests, also in requests with multiple IDs
 type ActionRequest struct {
-	Id                   uint64                `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId               uint64                `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	GroupId              uint64                `protobuf:"varint,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	CourseId             uint64                `protobuf:"varint,4,opt,name=course_id,json=courseId,proto3" json:"course_id,omitempty"`
-	Status               Enrollment_UserStatus `protobuf:"varint,5,opt,name=status,proto3,enum=Enrollment_UserStatus" json:"status,omitempty"`
-	GroupStatus          Group_GroupStatus     `protobuf:"varint,6,opt,name=group_status,json=groupStatus,proto3,enum=Group_GroupStatus" json:"group_status,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	ID          uint64                `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	User_ID     uint64                `protobuf:"varint,2,opt,name=user_ID,json=userID,proto3" json:"user_ID,omitempty"`
+	Group_ID    uint64                `protobuf:"varint,3,opt,name=group_ID,json=groupID,proto3" json:"group_ID,omitempty"`
+	Course_ID   uint64                `protobuf:"varint,4,opt,name=course_ID,json=courseID,proto3" json:"course_ID,omitempty"`
+	Status      Enrollment_UserStatus `protobuf:"varint,5,opt,name=status,proto3,enum=Enrollment_UserStatus" json:"status,omitempty"`
+	GroupStatus Group_GroupStatus     `protobuf:"varint,6,opt,name=group_status,json=groupStatus,proto3,enum=Group_GroupStatus" json:"group_status,omitempty"`
 }
 
 func (m *ActionRequest) Reset()         { *m = ActionRequest{} }
@@ -1492,30 +1435,30 @@ func (m *ActionRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ActionRequest proto.InternalMessageInfo
 
-func (m *ActionRequest) GetId() uint64 {
+func (m *ActionRequest) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
 
-func (m *ActionRequest) GetUserId() uint64 {
+func (m *ActionRequest) GetUser_ID() uint64 {
 	if m != nil {
-		return m.UserId
+		return m.User_ID
 	}
 	return 0
 }
 
-func (m *ActionRequest) GetGroupId() uint64 {
+func (m *ActionRequest) GetGroup_ID() uint64 {
 	if m != nil {
-		return m.GroupId
+		return m.Group_ID
 	}
 	return 0
 }
 
-func (m *ActionRequest) GetCourseId() uint64 {
+func (m *ActionRequest) GetCourse_ID() uint64 {
 	if m != nil {
-		return m.CourseId
+		return m.Course_ID
 	}
 	return 0
 }
@@ -1524,22 +1467,19 @@ func (m *ActionRequest) GetStatus() Enrollment_UserStatus {
 	if m != nil {
 		return m.Status
 	}
-	return Enrollment_PENDING
+	return Enrollment_Pending
 }
 
 func (m *ActionRequest) GetGroupStatus() Group_GroupStatus {
 	if m != nil {
 		return m.GroupStatus
 	}
-	return Group_PENDING_GROUP
+	return Group_Pending
 }
 
 type DirectoryRequest struct {
-	Provider             string   `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
-	CourseId             uint64   `protobuf:"varint,2,opt,name=course_id,json=courseId,proto3" json:"course_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Provider  string `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	Course_ID uint64 `protobuf:"varint,2,opt,name=course_ID,json=courseID,proto3" json:"course_ID,omitempty"`
 }
 
 func (m *DirectoryRequest) Reset()         { *m = DirectoryRequest{} }
@@ -1582,23 +1522,20 @@ func (m *DirectoryRequest) GetProvider() string {
 	return ""
 }
 
-func (m *DirectoryRequest) GetCourseId() uint64 {
+func (m *DirectoryRequest) GetCourse_ID() uint64 {
 	if m != nil {
-		return m.CourseId
+		return m.Course_ID
 	}
 	return 0
 }
 
 type RepositoryRequest struct {
-	Id                   uint64              `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Type                 Repository_RepoType `protobuf:"varint,2,opt,name=type,proto3,enum=Repository_RepoType" json:"type,omitempty"`
-	DirectoryId          uint64              `protobuf:"varint,3,opt,name=directory_id,json=directoryId,proto3" json:"directory_id,omitempty"`
-	RepositoryId         uint64              `protobuf:"varint,4,opt,name=repository_id,json=repositoryId,proto3" json:"repository_id,omitempty"`
-	UserId               uint64              `protobuf:"varint,5,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	CourseId             uint64              `protobuf:"varint,6,opt,name=course_id,json=courseId,proto3" json:"course_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
-	XXX_unrecognized     []byte              `json:"-"`
-	XXX_sizecache        int32               `json:"-"`
+	ID            uint64              `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Type          Repository_RepoType `protobuf:"varint,2,opt,name=type,proto3,enum=Repository_RepoType" json:"type,omitempty"`
+	Directory_ID  uint64              `protobuf:"varint,3,opt,name=directory_ID,json=directoryID,proto3" json:"directory_ID,omitempty"`
+	Repository_ID uint64              `protobuf:"varint,4,opt,name=repository_ID,json=repositoryID,proto3" json:"repository_ID,omitempty"`
+	User_ID       uint64              `protobuf:"varint,5,opt,name=user_ID,json=userID,proto3" json:"user_ID,omitempty"`
+	Course_ID     uint64              `protobuf:"varint,6,opt,name=course_ID,json=courseID,proto3" json:"course_ID,omitempty"`
 }
 
 func (m *RepositoryRequest) Reset()         { *m = RepositoryRequest{} }
@@ -1634,9 +1571,9 @@ func (m *RepositoryRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RepositoryRequest proto.InternalMessageInfo
 
-func (m *RepositoryRequest) GetId() uint64 {
+func (m *RepositoryRequest) GetID() uint64 {
 	if m != nil {
-		return m.Id
+		return m.ID
 	}
 	return 0
 }
@@ -1645,42 +1582,39 @@ func (m *RepositoryRequest) GetType() Repository_RepoType {
 	if m != nil {
 		return m.Type
 	}
-	return Repository_USER
+	return Repository_User
 }
 
-func (m *RepositoryRequest) GetDirectoryId() uint64 {
+func (m *RepositoryRequest) GetDirectory_ID() uint64 {
 	if m != nil {
-		return m.DirectoryId
+		return m.Directory_ID
 	}
 	return 0
 }
 
-func (m *RepositoryRequest) GetRepositoryId() uint64 {
+func (m *RepositoryRequest) GetRepository_ID() uint64 {
 	if m != nil {
-		return m.RepositoryId
+		return m.Repository_ID
 	}
 	return 0
 }
 
-func (m *RepositoryRequest) GetUserId() uint64 {
+func (m *RepositoryRequest) GetUser_ID() uint64 {
 	if m != nil {
-		return m.UserId
+		return m.User_ID
 	}
 	return 0
 }
 
-func (m *RepositoryRequest) GetCourseId() uint64 {
+func (m *RepositoryRequest) GetCourse_ID() uint64 {
 	if m != nil {
-		return m.CourseId
+		return m.Course_ID
 	}
 	return 0
 }
 
 type Providers struct {
-	Providers            []string `protobuf:"bytes,1,rep,name=providers,proto3" json:"providers,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Providers []string `protobuf:"bytes,1,rep,name=providers,proto3" json:"providers,omitempty"`
 }
 
 func (m *Providers) Reset()         { *m = Providers{} }
@@ -1724,10 +1658,7 @@ func (m *Providers) GetProviders() []string {
 }
 
 type URLResponse struct {
-	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	URL string `protobuf:"bytes,1,opt,name=URL,proto3" json:"URL,omitempty"`
 }
 
 func (m *URLResponse) Reset()         { *m = URLResponse{} }
@@ -1763,17 +1694,14 @@ func (m *URLResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_URLResponse proto.InternalMessageInfo
 
-func (m *URLResponse) GetUrl() string {
+func (m *URLResponse) GetURL() string {
 	if m != nil {
-		return m.Url
+		return m.URL
 	}
 	return ""
 }
 
 type Void struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *Void) Reset()         { *m = Void{} }
@@ -1842,125 +1770,123 @@ func init() {
 func init() { proto.RegisterFile("ag.proto", fileDescriptor_7a984e8f57169aa1) }
 
 var fileDescriptor_7a984e8f57169aa1 = []byte{
-	// 1884 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x57, 0x4f, 0x6f, 0x1b, 0xc7,
-	0x15, 0xe7, 0xf2, 0xef, 0xf2, 0x71, 0xa9, 0xac, 0xa6, 0x86, 0xc3, 0xc8, 0xae, 0x24, 0xaf, 0x83,
-	0x42, 0x8e, 0xe3, 0x75, 0xab, 0x20, 0x46, 0x93, 0x06, 0x28, 0x68, 0x89, 0x61, 0xe8, 0x28, 0x92,
-	0x30, 0x24, 0xd3, 0x23, 0xb1, 0xe2, 0x8e, 0xa8, 0x69, 0xc9, 0x5d, 0x66, 0x67, 0xd7, 0x88, 0xae,
-	0x3d, 0xf4, 0x54, 0xf4, 0xdc, 0x43, 0x3f, 0x40, 0xbf, 0x40, 0xbf, 0x43, 0x81, 0x5e, 0x7a, 0xeb,
-	0x2d, 0x28, 0xfc, 0x05, 0x0a, 0x18, 0xe8, 0xbd, 0x98, 0x3f, 0xbb, 0x3b, 0xe4, 0x4a, 0xb4, 0xdd,
-	0x5c, 0x88, 0x99, 0xdf, 0xbc, 0x37, 0xfb, 0xde, 0xef, 0xfd, 0x99, 0x47, 0x30, 0xbd, 0x99, 0xbb,
-	0x8c, 0xc2, 0x38, 0xdc, 0x79, 0x32, 0xa3, 0xf1, 0x55, 0x72, 0xe1, 0x4e, 0xc3, 0xc5, 0xd3, 0x59,
-	0x38, 0x0b, 0x9f, 0x0a, 0xf8, 0x22, 0xb9, 0x14, 0x3b, 0xb1, 0x11, 0x2b, 0x25, 0xbe, 0x37, 0x0b,
-	0xc3, 0xd9, 0x9c, 0xe4, 0x52, 0x31, 0x5d, 0x10, 0x16, 0x7b, 0x8b, 0xa5, 0x14, 0x70, 0xfe, 0x50,
-	0x86, 0xea, 0x98, 0x91, 0x08, 0x6d, 0x41, 0x99, 0xfa, 0x1d, 0x63, 0xdf, 0x38, 0xa8, 0xe2, 0x32,
-	0xf5, 0xd1, 0x07, 0x60, 0x52, 0x36, 0xf1, 0xfc, 0x05, 0x0d, 0x3a, 0xe5, 0x7d, 0xe3, 0xc0, 0xc4,
-	0x0d, 0xca, 0xba, 0x7c, 0x8b, 0x10, 0x54, 0x03, 0x6f, 0x41, 0x3a, 0x95, 0x7d, 0xe3, 0xa0, 0x89,
-	0xc5, 0x1a, 0xfd, 0x14, 0x80, 0xc5, 0x89, 0x4f, 0x82, 0x78, 0x42, 0xfd, 0x4e, 0x55, 0x9c, 0x34,
-	0x15, 0x32, 0xf0, 0xd1, 0x1d, 0xa8, 0x91, 0x85, 0x47, 0xe7, 0x9d, 0x9a, 0x38, 0x91, 0x1b, 0xae,
-	0xe4, 0xbd, 0xf4, 0x62, 0x2f, 0x9a, 0x24, 0xd1, 0xbc, 0x53, 0x97, 0x4a, 0x12, 0x19, 0x47, 0x73,
-	0xf4, 0x05, 0x6c, 0x47, 0x64, 0x11, 0xc6, 0x64, 0x42, 0xf9, 0x35, 0x34, 0xa6, 0x84, 0x75, 0x1a,
-	0xfb, 0x95, 0x83, 0xd6, 0xe1, 0x7b, 0x2e, 0x16, 0x27, 0x03, 0x79, 0x70, 0x8d, 0xed, 0x48, 0xdf,
-	0x53, 0xc2, 0xd0, 0x13, 0x68, 0x91, 0x20, 0x0a, 0xe7, 0xf3, 0x05, 0x09, 0x62, 0xd6, 0x31, 0x85,
-	0x5e, 0xcb, 0xed, 0x65, 0x18, 0xd6, 0xcf, 0x9d, 0x0f, 0xa1, 0xc6, 0x79, 0x60, 0xe8, 0x1e, 0xd4,
-	0x12, 0xbe, 0xe8, 0x18, 0x42, 0xa3, 0xe6, 0x72, 0x18, 0x4b, 0xcc, 0xf9, 0xaf, 0x01, 0x5b, 0xab,
-	0x5f, 0x2e, 0x10, 0xf7, 0x02, 0xcc, 0x65, 0x14, 0xbe, 0xa4, 0x3e, 0x89, 0x04, 0x71, 0xcd, 0xe7,
-	0xee, 0xeb, 0x1f, 0xf6, 0x3e, 0x9a, 0x85, 0xd1, 0xe2, 0x73, 0x27, 0x09, 0xe8, 0x77, 0x09, 0x99,
-	0xd0, 0xc0, 0x27, 0xdf, 0x7f, 0x9e, 0x50, 0x7f, 0x92, 0x8a, 0x4e, 0x32, 0x4f, 0x1d, 0x9c, 0xe9,
-	0xa3, 0xaf, 0xa1, 0x99, 0xe1, 0x82, 0xee, 0xea, 0xbb, 0x5f, 0x96, 0x12, 0x83, 0x1e, 0x80, 0xe5,
-	0x4d, 0xa7, 0x84, 0xb1, 0x49, 0x1c, 0xfe, 0x8e, 0x04, 0x2a, 0x48, 0x2d, 0x89, 0x8d, 0x38, 0x84,
-	0xde, 0x87, 0x06, 0xf7, 0x93, 0x7f, 0xad, 0x26, 0x1c, 0xaa, 0xf3, 0xed, 0xc0, 0x77, 0xfe, 0x53,
-	0x86, 0x5a, 0x3f, 0x0a, 0x93, 0x65, 0xc1, 0xdd, 0xae, 0x4a, 0x06, 0xe9, 0xea, 0x93, 0xd7, 0x3f,
-	0xec, 0x3d, 0xba, 0xc1, 0x3a, 0xea, 0x7f, 0x3f, 0x51, 0xc0, 0x8c, 0x5f, 0x33, 0xe1, 0x3a, 0x8e,
-	0xca, 0x9d, 0x17, 0xd0, 0x9c, 0x86, 0x49, 0xc4, 0x34, 0x2f, 0xdf, 0xf1, 0x1e, 0x53, 0xea, 0x0f,
-	0x7c, 0xf4, 0x11, 0xd4, 0x59, 0xec, 0xc5, 0x09, 0x13, 0xee, 0x6d, 0x1d, 0x22, 0x57, 0x98, 0x2d,
-	0x7f, 0x87, 0xe2, 0x04, 0x2b, 0x89, 0x3c, 0xd2, 0xb5, 0x62, 0xa4, 0xd7, 0xd3, 0xa7, 0xfe, 0x86,
-	0xf4, 0x39, 0x83, 0x96, 0xf6, 0x09, 0xb4, 0x0d, 0xed, 0xf3, 0xde, 0xe9, 0xf1, 0xe0, 0xb4, 0x3f,
-	0xe9, 0xe3, 0xb3, 0xf1, 0xb9, 0x5d, 0x42, 0x08, 0xb6, 0x70, 0xef, 0x45, 0xef, 0x68, 0xd4, 0x3b,
-	0x56, 0x98, 0x81, 0x2c, 0x30, 0xbb, 0xe7, 0xe7, 0xf8, 0xec, 0xdb, 0xde, 0xb1, 0x5d, 0x46, 0x2d,
-	0x68, 0x1c, 0xf7, 0x4e, 0x7a, 0xa3, 0xde, 0xb1, 0x5d, 0x71, 0x0e, 0xa0, 0x2e, 0x2e, 0x64, 0x68,
-	0x17, 0xea, 0xc2, 0xd7, 0x34, 0x23, 0xeb, 0xd2, 0x19, 0xac, 0x50, 0xe7, 0xf7, 0x15, 0xa8, 0x1f,
-	0x09, 0xff, 0x0b, 0xc1, 0x79, 0x04, 0xb6, 0x64, 0x66, 0x1a, 0x11, 0x2f, 0x0e, 0x45, 0x60, 0xcb,
-	0xe2, 0xf4, 0xbd, 0x15, 0x7c, 0xe0, 0xdf, 0x58, 0xd4, 0x08, 0xaa, 0xd3, 0xd0, 0x27, 0x2a, 0x53,
-	0xc4, 0x9a, 0x63, 0xd7, 0xc4, 0x8b, 0x44, 0x7e, 0xb4, 0xb1, 0x58, 0x23, 0x1b, 0x2a, 0xb1, 0x37,
-	0x53, 0x05, 0xcc, 0x97, 0x68, 0x47, 0x2b, 0x82, 0x86, 0x80, 0xf3, 0xa4, 0x7e, 0x00, 0x96, 0x4f,
-	0x23, 0x32, 0x8d, 0xc3, 0xe8, 0x9a, 0x1b, 0x64, 0x0a, 0x83, 0x5a, 0x19, 0x36, 0xf0, 0xd1, 0x21,
-	0x98, 0x92, 0x5c, 0xe2, 0x77, 0x9a, 0x22, 0x8e, 0x77, 0x35, 0xe6, 0x45, 0x9c, 0x54, 0x2c, 0x33,
-	0xb9, 0xf5, 0x80, 0xc1, 0xe6, 0x80, 0x71, 0x71, 0x8f, 0x31, 0x3a, 0x0b, 0xa4, 0xb8, 0xa5, 0xc4,
-	0xbb, 0x19, 0x86, 0xf5, 0x73, 0x2d, 0x08, 0xed, 0x1b, 0x83, 0xf0, 0x31, 0x34, 0x64, 0x0c, 0x18,
-	0x7a, 0x90, 0x2d, 0x55, 0xc0, 0x1a, 0xae, 0xdc, 0xe3, 0x14, 0x77, 0xfe, 0x5c, 0x01, 0xc8, 0x0d,
-	0xbb, 0xa1, 0x85, 0x68, 0x05, 0x51, 0xfe, 0x71, 0x05, 0xf1, 0x65, 0x5e, 0xd2, 0xff, 0x57, 0x69,
-	0xa9, 0x0e, 0xc0, 0xdf, 0x03, 0x09, 0xab, 0xf6, 0x5e, 0xc5, 0x0d, 0xb1, 0x17, 0x47, 0x55, 0x2e,
-	0x24, 0x52, 0x22, 0x2b, 0x23, 0x01, 0xa1, 0x3d, 0xa8, 0x4b, 0x4b, 0x44, 0x72, 0x68, 0x54, 0x28,
-	0x18, 0xdd, 0x87, 0x9a, 0xb8, 0x46, 0x64, 0x49, 0x4e, 0xab, 0x04, 0x91, 0x9b, 0x55, 0xb3, 0xb9,
-	0x31, 0x0b, 0x94, 0x94, 0xd3, 0x05, 0xc8, 0x51, 0x5e, 0x4f, 0xaa, 0x08, 0xed, 0x12, 0x2f, 0xb5,
-	0xb4, 0xfc, 0x6c, 0x83, 0x1f, 0x0d, 0x47, 0xe3, 0xe3, 0xde, 0xe9, 0x48, 0xd6, 0xdd, 0xa8, 0xd7,
-	0x3d, 0xfa, 0xaa, 0x87, 0xed, 0x8a, 0xf3, 0x05, 0xb4, 0x7a, 0xab, 0x69, 0xa2, 0x67, 0x95, 0xf1,
-	0x86, 0x36, 0xf0, 0xd7, 0x32, 0x40, 0x9e, 0x42, 0x85, 0xc0, 0xde, 0x2b, 0x04, 0x56, 0x8b, 0xd4,
-	0x4d, 0x15, 0xb8, 0x03, 0xe6, 0xdc, 0x0b, 0x66, 0x89, 0x37, 0x4b, 0xab, 0x30, 0xdb, 0xa3, 0x67,
-	0x60, 0xfa, 0xc4, 0xf3, 0xe7, 0x34, 0x20, 0x8a, 0xfa, 0x1d, 0x57, 0x3e, 0xf7, 0x6e, 0xfa, 0xdc,
-	0xbb, 0xa3, 0xf4, 0xb9, 0xc7, 0x99, 0xac, 0x78, 0x07, 0x92, 0x38, 0x9c, 0x78, 0x4b, 0x5e, 0x92,
-	0x32, 0x32, 0x26, 0x6e, 0x71, 0xac, 0x2b, 0x21, 0xfe, 0x5c, 0x87, 0x51, 0x5a, 0xbb, 0x6d, 0x2c,
-	0x37, 0x68, 0x0f, 0x5a, 0x94, 0xc9, 0xe4, 0x98, 0x7b, 0x17, 0x22, 0x24, 0x26, 0x06, 0xca, 0xfa,
-	0x0a, 0x41, 0x8f, 0x01, 0x58, 0x72, 0xb1, 0xa0, 0x8c, 0xd1, 0x30, 0x10, 0x85, 0xcb, 0xb9, 0x1a,
-	0x66, 0x10, 0xd6, 0x8e, 0x39, 0xd1, 0x5d, 0xad, 0xc0, 0xd6, 0xea, 0xd1, 0xd8, 0x5c, 0x8f, 0xce,
-	0x1f, 0xcb, 0x00, 0xf9, 0xc5, 0x05, 0xa2, 0x1f, 0x42, 0x3b, 0x97, 0xce, 0xc9, 0xb6, 0x72, 0x70,
-	0xe0, 0xeb, 0xaf, 0x5d, 0x45, 0x7f, 0xed, 0x36, 0xe5, 0xfa, 0x1d, 0xa8, 0xb1, 0x69, 0x18, 0x11,
-	0xd5, 0xff, 0xe4, 0x86, 0x7f, 0x4e, 0x2c, 0x26, 0xe1, 0xc5, 0x6f, 0xc9, 0x54, 0x3c, 0x17, 0x3c,
-	0x56, 0x96, 0x00, 0xcf, 0x24, 0xc6, 0xa7, 0x9d, 0x8b, 0x84, 0xce, 0xfd, 0x09, 0x0d, 0x2e, 0x43,
-	0xd5, 0x15, 0x9b, 0x02, 0x19, 0x04, 0x97, 0x21, 0x67, 0x77, 0x1a, 0x2e, 0x16, 0x34, 0x9e, 0x5c,
-	0x79, 0xec, 0x4a, 0xb0, 0xdb, 0xc4, 0x20, 0xa1, 0xaf, 0x3c, 0x76, 0xc5, 0x73, 0x41, 0x85, 0x4c,
-	0x36, 0x45, 0x13, 0x67, 0x7b, 0x4e, 0x66, 0xce, 0x86, 0x20, 0x33, 0x67, 0x3a, 0x27, 0x53, 0x8b,
-	0x84, 0x7e, 0xee, 0xfc, 0xad, 0x0c, 0x80, 0xc9, 0x32, 0x64, 0x94, 0xf7, 0xdf, 0x02, 0x99, 0xeb,
-	0x0d, 0xbb, 0x5c, 0x6c, 0xd8, 0x0f, 0xa1, 0x1d, 0x65, 0x17, 0xe4, 0x84, 0x5a, 0x39, 0xb8, 0xca,
-	0x77, 0xf5, 0x56, 0xbe, 0x6b, 0xeb, 0xbd, 0xc5, 0xbc, 0x8a, 0x17, 0x73, 0x6d, 0x40, 0x6c, 0xf0,
-	0x3d, 0x1f, 0x0f, 0x7f, 0xc1, 0x87, 0xa3, 0x65, 0x38, 0x89, 0xaf, 0x97, 0x44, 0xd0, 0xb9, 0x75,
-	0x78, 0xc7, 0xcd, 0xdd, 0x10, 0xcb, 0xd1, 0xf5, 0x92, 0xf0, 0x11, 0x48, 0xae, 0x9c, 0x6f, 0xc0,
-	0x4c, 0x51, 0x64, 0x42, 0x75, 0x3c, 0xec, 0x61, 0xbb, 0x84, 0xb6, 0x00, 0xba, 0xc3, 0xe1, 0xa0,
-	0x7f, 0xfa, 0x0d, 0xef, 0x07, 0x06, 0x6a, 0x42, 0x6d, 0xd4, 0x1b, 0x8e, 0x86, 0x76, 0x99, 0x77,
-	0x8d, 0xe1, 0xd9, 0xc9, 0x78, 0x34, 0x38, 0x3b, 0xb5, 0x2b, 0x5c, 0xf0, 0xe8, 0x6c, 0x8c, 0x87,
-	0xbd, 0xc1, 0xe9, 0x97, 0x67, 0x76, 0xd5, 0xf9, 0x35, 0x58, 0xd9, 0xf7, 0xf8, 0xc8, 0xf9, 0x14,
-	0x72, 0x87, 0x29, 0xc9, 0x79, 0xcf, 0x8d, 0xc2, 0x2b, 0x02, 0x4e, 0x1f, 0x9a, 0xc7, 0x29, 0x8b,
-	0x05, 0xda, 0x11, 0x54, 0x97, 0x5e, 0x7c, 0x25, 0x27, 0x2b, 0x2c, 0xd6, 0xe8, 0x2e, 0xd4, 0xe5,
-	0x7c, 0xac, 0xba, 0x84, 0xda, 0x39, 0xbf, 0x82, 0x56, 0x7a, 0x11, 0x37, 0xe4, 0x63, 0xc8, 0xa2,
-	0x93, 0xdb, 0x01, 0x6e, 0xf6, 0x2d, 0xac, 0x1f, 0x3b, 0x7f, 0x32, 0xa0, 0x8d, 0xc9, 0x34, 0x8c,
-	0x7c, 0x4c, 0xbe, 0x4b, 0x08, 0x2b, 0xf6, 0xad, 0x43, 0x30, 0x65, 0x87, 0x25, 0xac, 0x53, 0xde,
-	0xaf, 0x6c, 0x7a, 0x8f, 0x53, 0x39, 0xf4, 0x19, 0x6c, 0xc9, 0xa0, 0x66, 0x9a, 0x15, 0xa1, 0x79,
-	0xd3, 0x44, 0xd6, 0x9e, 0xe5, 0x1b, 0xc2, 0x9c, 0x7f, 0x19, 0xd0, 0xee, 0x4e, 0x63, 0x9e, 0xa7,
-	0xb7, 0x18, 0xa4, 0xa5, 0x52, 0xf9, 0xd6, 0x54, 0xaa, 0xac, 0xa6, 0xd2, 0x4a, 0xf3, 0xad, 0xae,
-	0x35, 0xdf, 0xfc, 0xa5, 0xa9, 0xbd, 0xcd, 0x4b, 0x83, 0x3e, 0x05, 0x4b, 0xf7, 0x4e, 0xe4, 0xe6,
-	0xcd, 0xbe, 0xb5, 0x34, 0xdf, 0x9c, 0xaf, 0xc1, 0xce, 0x83, 0xa0, 0x7c, 0xd3, 0x67, 0x25, 0x63,
-	0x6d, 0x56, 0xda, 0xf4, 0x60, 0x38, 0xff, 0x30, 0x60, 0x5b, 0x4b, 0xad, 0x5b, 0xa8, 0x3a, 0x80,
-	0xaa, 0xa8, 0x90, 0xf2, 0x86, 0x0a, 0x11, 0x12, 0x85, 0x3a, 0xaf, 0xbc, 0x45, 0x9d, 0x57, 0x37,
-	0xd7, 0xf9, 0xca, 0xbf, 0x88, 0x55, 0x6f, 0xea, 0x6b, 0xde, 0x3c, 0x82, 0xe6, 0xb9, 0x72, 0x9b,
-	0xa1, 0xfb, 0xd0, 0x4c, 0x39, 0x90, 0xe9, 0xdb, 0xc4, 0x39, 0xe0, 0xec, 0x41, 0x6b, 0x8c, 0x4f,
-	0x30, 0x61, 0xcb, 0x30, 0x60, 0x84, 0x8f, 0x9f, 0xbc, 0x3d, 0x48, 0xee, 0xf8, 0xd2, 0xa9, 0x43,
-	0xf5, 0xdb, 0x90, 0xfa, 0x87, 0x7f, 0x01, 0xd8, 0xee, 0x26, 0x71, 0x38, 0x8b, 0x3c, 0x9f, 0x44,
-	0x43, 0x12, 0xbd, 0xa4, 0x53, 0x82, 0x3e, 0x80, 0x46, 0x9f, 0xc4, 0x43, 0x32, 0xbf, 0x44, 0x35,
-	0x97, 0xcb, 0xed, 0xc8, 0x99, 0xc5, 0x29, 0x21, 0x47, 0x1c, 0xc9, 0x3f, 0xc4, 0xee, 0x4a, 0x4d,
-	0xe4, 0x32, 0xf7, 0xc0, 0x54, 0x32, 0x2c, 0xd5, 0xaf, 0x8b, 0x33, 0xe6, 0x94, 0xd0, 0x7d, 0x80,
-	0xf1, 0xd2, 0xf7, 0x62, 0x22, 0xee, 0x90, 0x3a, 0xb9, 0xea, 0x87, 0x42, 0x55, 0xfd, 0x91, 0x5a,
-	0xbb, 0x5f, 0x8d, 0x3e, 0x4e, 0x09, 0x7d, 0x02, 0xef, 0xa7, 0x52, 0xcf, 0xaf, 0xb9, 0x66, 0x37,
-	0xf0, 0xd3, 0x01, 0xdf, 0x5d, 0xa9, 0x0b, 0x4d, 0xe9, 0x67, 0xd0, 0x4c, 0x95, 0x58, 0xe1, 0xee,
-	0x86, 0x14, 0xe3, 0x06, 0xee, 0x41, 0xeb, 0x88, 0x0f, 0xfd, 0x44, 0x5a, 0xa1, 0x2e, 0xd0, 0x2e,
-	0xda, 0x85, 0x96, 0xf4, 0x60, 0x55, 0x40, 0x7a, 0x2a, 0x7c, 0xd8, 0xd6, 0xce, 0xd5, 0xa8, 0x55,
-	0x90, 0xda, 0x85, 0xd6, 0x31, 0x99, 0x93, 0x5b, 0x6f, 0x91, 0xe6, 0x66, 0x5e, 0xad, 0x9b, 0x2b,
-	0x0f, 0x84, 0xb9, 0x90, 0xc9, 0x65, 0x74, 0x9b, 0x6e, 0x3a, 0x48, 0x97, 0xd0, 0x33, 0xe8, 0xe4,
-	0x02, 0xbf, 0xa1, 0xf1, 0x95, 0x3e, 0x57, 0xaf, 0xdd, 0xab, 0xeb, 0x7d, 0x26, 0x48, 0x96, 0x7b,
-	0xfe, 0xfe, 0x46, 0x0b, 0x8f, 0x13, 0x3b, 0xc6, 0x27, 0x05, 0x35, 0xcb, 0xd5, 0xb2, 0x4d, 0x24,
-	0x89, 0x25, 0x29, 0x54, 0xe6, 0xa7, 0xe6, 0xea, 0x76, 0xef, 0x83, 0x25, 0x59, 0x5a, 0x97, 0xc9,
-	0x18, 0x78, 0xca, 0x9b, 0xee, 0x65, 0x44, 0xd8, 0xd5, 0x2d, 0x2c, 0x58, 0xda, 0xf0, 0xc3, 0x2d,
-	0xfe, 0x25, 0xdc, 0xed, 0x93, 0x58, 0x1b, 0x4e, 0x9f, 0x5f, 0xdf, 0xaa, 0xa9, 0x49, 0x39, 0x25,
-	0xf4, 0x18, 0x6c, 0x69, 0xf0, 0x0a, 0x37, 0xab, 0x99, 0x94, 0xd9, 0xf5, 0x18, 0x6c, 0x69, 0xf9,
-	0xdb, 0x08, 0xff, 0x1c, 0xb6, 0x78, 0x29, 0x69, 0xa3, 0xc7, 0xba, 0xa8, 0xa5, 0x4d, 0x1d, 0xdc,
-	0x16, 0x17, 0xda, 0x2b, 0x1a, 0x05, 0xe3, 0xf5, 0x31, 0xc5, 0x29, 0xa1, 0x4f, 0xe1, 0x27, 0x69,
-	0x5e, 0xbf, 0xcb, 0x67, 0x32, 0x2f, 0x36, 0x7c, 0x69, 0xcd, 0x0b, 0x7d, 0x1a, 0x7d, 0x53, 0x2c,
-	0x9e, 0x81, 0xdd, 0x27, 0x71, 0xde, 0x4a, 0x79, 0xda, 0x20, 0xb7, 0xd0, 0x8c, 0x0b, 0xa9, 0xf3,
-	0x10, 0xac, 0x3e, 0x89, 0xf3, 0x3e, 0xa7, 0x12, 0x1a, 0xdc, 0x0c, 0x12, 0xf5, 0xcf, 0xcd, 0xd1,
-	0xdf, 0xf3, 0x6d, 0x77, 0xfd, 0xd5, 0xd8, 0xb1, 0x5c, 0x4d, 0xc0, 0x29, 0xa1, 0x43, 0xc1, 0xab,
-	0x36, 0xc5, 0xdd, 0x64, 0x8e, 0x3e, 0x8a, 0x38, 0xa5, 0xe7, 0xd6, 0xdf, 0x5f, 0xed, 0x1a, 0xff,
-	0x7c, 0xb5, 0x6b, 0xfc, 0xfb, 0xd5, 0xae, 0x71, 0x51, 0x17, 0xff, 0x1a, 0x3e, 0xf9, 0x5f, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0xa0, 0xe6, 0x51, 0x09, 0x6d, 0x14, 0x00, 0x00,
+	// 1853 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x57, 0x4f, 0x8f, 0xdb, 0xc6,
+	0x15, 0x17, 0xf5, 0x97, 0x7a, 0xa4, 0x36, 0xda, 0xa9, 0xe1, 0x28, 0x6b, 0x57, 0xbb, 0xa6, 0x83,
+	0x62, 0x63, 0xc7, 0x74, 0xbb, 0x41, 0x8c, 0x26, 0x0d, 0x50, 0xc8, 0x56, 0xba, 0x51, 0xb2, 0x41,
+	0x83, 0xd9, 0xdd, 0xf6, 0x28, 0x70, 0xc5, 0x59, 0x2d, 0x5b, 0x89, 0xa3, 0x70, 0x48, 0x23, 0x7b,
+	0x2e, 0xd0, 0x53, 0x51, 0xf4, 0xd8, 0x43, 0xbf, 0x40, 0x3f, 0x40, 0xbf, 0x43, 0x81, 0x5e, 0x72,
+	0x6b, 0x4f, 0x41, 0x61, 0x7f, 0x83, 0x00, 0xbd, 0x17, 0xf3, 0x87, 0x9c, 0x11, 0xa9, 0x95, 0xed,
+	0xf6, 0x22, 0xcc, 0xbc, 0x7f, 0x7c, 0xef, 0xf7, 0xfe, 0xcc, 0x13, 0xd8, 0xc1, 0xdc, 0x5f, 0x25,
+	0x34, 0xa5, 0x7b, 0x8f, 0xe6, 0x51, 0x7a, 0x95, 0x5d, 0xf8, 0x33, 0xba, 0x7c, 0x3c, 0xa7, 0x73,
+	0xfa, 0x58, 0x90, 0x2f, 0xb2, 0x4b, 0x71, 0x13, 0x17, 0x71, 0x52, 0xe2, 0xfb, 0x73, 0x4a, 0xe7,
+	0x0b, 0xa2, 0xa5, 0xd2, 0x68, 0x49, 0x58, 0x1a, 0x2c, 0x57, 0x52, 0xc0, 0xfb, 0x7d, 0x1d, 0x9a,
+	0xe7, 0x8c, 0x24, 0x68, 0x07, 0xea, 0x93, 0xf1, 0xc0, 0x3a, 0xb0, 0x0e, 0x9b, 0xb8, 0x3e, 0x19,
+	0xa3, 0x77, 0xc0, 0x8e, 0xd8, 0x34, 0x08, 0x97, 0x51, 0x3c, 0xa8, 0x1f, 0x58, 0x87, 0x36, 0xee,
+	0x44, 0x6c, 0xc4, 0xaf, 0x08, 0x41, 0x33, 0x0e, 0x96, 0x64, 0xd0, 0x38, 0xb0, 0x0e, 0xbb, 0x58,
+	0x9c, 0xd1, 0x0f, 0x01, 0x58, 0x9a, 0x85, 0x24, 0x4e, 0xa7, 0x93, 0xf1, 0xa0, 0x29, 0x38, 0x5d,
+	0x45, 0x99, 0x8c, 0xd1, 0x2d, 0x68, 0x91, 0x65, 0x10, 0x2d, 0x06, 0x2d, 0xc1, 0x91, 0x17, 0xae,
+	0x14, 0x3c, 0x0f, 0xd2, 0x20, 0x99, 0x9e, 0xe3, 0x93, 0x41, 0x5b, 0x2a, 0x49, 0xca, 0x39, 0x3e,
+	0x41, 0x9f, 0xc0, 0x6e, 0x42, 0x96, 0x34, 0x25, 0xd3, 0x88, 0x9b, 0x89, 0xd2, 0x88, 0xb0, 0x41,
+	0xe7, 0xa0, 0x71, 0xe8, 0x1c, 0xbd, 0xe5, 0x63, 0xc1, 0x99, 0x48, 0xc6, 0x35, 0xee, 0x27, 0xe6,
+	0x3d, 0x22, 0x0c, 0x3d, 0x02, 0x87, 0xc4, 0x09, 0x5d, 0x2c, 0x96, 0x24, 0x4e, 0xd9, 0xc0, 0x16,
+	0x7a, 0x8e, 0xff, 0x69, 0x41, 0xc3, 0x26, 0xdf, 0x7b, 0x17, 0x5a, 0x1c, 0x07, 0x86, 0xee, 0x40,
+	0x2b, 0xe3, 0x87, 0x81, 0x25, 0x34, 0x5a, 0x3e, 0x27, 0x63, 0x49, 0xf3, 0xfe, 0x63, 0xc1, 0xce,
+	0xfa, 0x97, 0x2b, 0xc0, 0x7d, 0x0e, 0xf6, 0x2a, 0xa1, 0xcf, 0xa3, 0x90, 0x24, 0x02, 0xb8, 0xee,
+	0x53, 0xff, 0xfb, 0xef, 0xf6, 0x1f, 0xcc, 0x69, 0xb2, 0xfc, 0xd8, 0xcb, 0xe2, 0xe8, 0xeb, 0x8c,
+	0x4c, 0xa3, 0x38, 0x24, 0xdf, 0x7c, 0x9c, 0x45, 0xe1, 0x34, 0x17, 0x9d, 0x16, 0x91, 0x7a, 0xb8,
+	0xd0, 0x47, 0x5f, 0x40, 0x57, 0xd1, 0x27, 0x63, 0x01, 0x77, 0xf3, 0xcd, 0x8d, 0x29, 0x60, 0xc6,
+	0xe8, 0x1e, 0xb8, 0xc1, 0x6c, 0x46, 0x18, 0x9b, 0xa6, 0xf4, 0xb7, 0x24, 0x56, 0x49, 0x72, 0x24,
+	0xed, 0x8c, 0x93, 0xd0, 0xdb, 0xd0, 0xe1, 0x71, 0xf2, 0xaf, 0xb5, 0x44, 0x40, 0x6d, 0x7e, 0x9d,
+	0x8c, 0xbd, 0x97, 0x75, 0x68, 0x1d, 0x27, 0x34, 0x5b, 0x55, 0xc2, 0x1d, 0xa9, 0x62, 0x90, 0xa1,
+	0x3e, 0xfa, 0xfe, 0xbb, 0xfd, 0xf7, 0x36, 0x78, 0x17, 0x85, 0xdf, 0x4c, 0x15, 0x61, 0xce, 0xcd,
+	0x4c, 0xb9, 0x8e, 0xa7, 0x6a, 0xe7, 0x73, 0xe8, 0xce, 0x68, 0x96, 0x30, 0x23, 0xca, 0x37, 0xb4,
+	0x63, 0x4b, 0xfd, 0xc9, 0x18, 0x3d, 0x80, 0x36, 0x4b, 0x83, 0x34, 0x63, 0x22, 0xbc, 0x9d, 0x23,
+	0xe4, 0x0b, 0xb7, 0xe5, 0xef, 0xa9, 0xe0, 0x60, 0x25, 0xa1, 0x33, 0xdd, 0xaa, 0x66, 0xba, 0x5c,
+	0x3e, 0xed, 0x57, 0x94, 0xcf, 0x33, 0x70, 0x8c, 0x4f, 0x20, 0x07, 0x3a, 0x5f, 0x91, 0x38, 0x8c,
+	0xe2, 0x79, 0xbf, 0x86, 0x5c, 0xb0, 0x31, 0xf9, 0x0d, 0x99, 0xa5, 0x24, 0xec, 0x5b, 0xfc, 0x36,
+	0x5a, 0xf1, 0x4c, 0x91, 0xb0, 0x5f, 0xe7, 0x82, 0x63, 0xb2, 0x20, 0x9c, 0xd5, 0xf0, 0x0e, 0xa1,
+	0x2d, 0x8c, 0x30, 0x34, 0x84, 0xb6, 0x88, 0x2f, 0xaf, 0xc2, 0xb6, 0x0c, 0x00, 0x2b, 0xaa, 0xf7,
+	0xbb, 0x06, 0xb4, 0x9f, 0x89, 0x98, 0x2b, 0x09, 0x79, 0x00, 0xbb, 0x0a, 0xcd, 0x59, 0x42, 0x82,
+	0x94, 0x8a, 0x6c, 0xd6, 0x05, 0xfb, 0x2d, 0xc9, 0x78, 0x26, 0xe9, 0x93, 0xf1, 0xc6, 0x4e, 0x46,
+	0xd0, 0x9c, 0xd1, 0x90, 0xa8, 0xf2, 0x10, 0x67, 0x4e, 0xbb, 0x26, 0x41, 0x22, 0x8a, 0xa2, 0x87,
+	0xc5, 0x19, 0xf5, 0xa1, 0x91, 0x06, 0x73, 0xd5, 0xb5, 0xfc, 0x88, 0xf6, 0x8c, 0xca, 0xef, 0x08,
+	0xb2, 0xae, 0xe4, 0x7b, 0xe0, 0x86, 0x51, 0x42, 0x66, 0x29, 0x4d, 0xae, 0xb9, 0x43, 0xb6, 0x70,
+	0xc8, 0x29, 0x68, 0x93, 0x31, 0x3a, 0x02, 0x5b, 0x22, 0x4a, 0xc2, 0x41, 0x57, 0x24, 0xef, 0xb6,
+	0x01, 0xb7, 0x48, 0x8e, 0x4a, 0x60, 0x21, 0x57, 0xce, 0x12, 0x6c, 0xcf, 0x12, 0x17, 0x0f, 0x18,
+	0x8b, 0xe6, 0xb1, 0x14, 0x77, 0x95, 0xf8, 0xa8, 0xa0, 0x61, 0x93, 0x6f, 0x64, 0xa1, 0xb7, 0x31,
+	0x0b, 0xef, 0x43, 0x47, 0x26, 0x81, 0xa1, 0x7b, 0xd0, 0x91, 0xe0, 0xe6, 0x19, 0xeb, 0xf8, 0x92,
+	0x85, 0x73, 0xba, 0xf7, 0xe7, 0x06, 0x80, 0x76, 0x6c, 0xc3, 0xdc, 0x30, 0xba, 0xa0, 0xfe, 0xff,
+	0x75, 0xc1, 0x2f, 0x74, 0x1f, 0xff, 0x4f, 0xfd, 0xa4, 0xda, 0x9e, 0x3f, 0x02, 0x92, 0xac, 0x66,
+	0x7a, 0x13, 0x77, 0xc4, 0x5d, 0xb0, 0x9a, 0x5c, 0x48, 0x94, 0x44, 0xd1, 0x3b, 0x82, 0x84, 0xf6,
+	0xa1, 0x2d, 0x3d, 0x11, 0xc5, 0x61, 0x40, 0xa1, 0xc8, 0xe8, 0x2e, 0xb4, 0x84, 0x19, 0x51, 0x25,
+	0x1a, 0x56, 0x49, 0x44, 0x7e, 0xd1, 0xc2, 0xf6, 0xd6, 0x2a, 0x50, 0x52, 0xde, 0x08, 0x40, 0x53,
+	0xb7, 0x75, 0x9e, 0x03, 0x9d, 0x53, 0xf9, 0x22, 0xc9, 0xc6, 0x3b, 0x23, 0xc1, 0xec, 0x8a, 0x24,
+	0xfd, 0x86, 0xf7, 0x09, 0x38, 0x9f, 0xae, 0x97, 0x89, 0x59, 0x55, 0xd6, 0x2b, 0x7a, 0xff, 0xaf,
+	0x75, 0x00, 0x5d, 0x42, 0x95, 0xc4, 0xde, 0xa9, 0x24, 0xd6, 0xc8, 0xd4, 0xa6, 0x0e, 0xdc, 0x03,
+	0x7b, 0x11, 0xc4, 0xf3, 0x2c, 0x98, 0xe7, 0x5d, 0x58, 0xdc, 0xd1, 0x13, 0xb0, 0x43, 0x12, 0x84,
+	0x8b, 0x28, 0x26, 0x0a, 0xfa, 0x3d, 0x5f, 0xbe, 0xf1, 0x7e, 0xfe, 0xc6, 0xfb, 0x67, 0xf9, 0x1b,
+	0x8f, 0x0b, 0x59, 0x31, 0xfc, 0xb3, 0x94, 0x4e, 0x03, 0x39, 0x7a, 0x44, 0x66, 0x6c, 0xec, 0x70,
+	0x9a, 0x9a, 0x46, 0xfc, 0x8d, 0xa6, 0x49, 0xde, 0xbb, 0x3d, 0x2c, 0x2f, 0xe8, 0x00, 0xdc, 0x88,
+	0xa9, 0xe2, 0x58, 0x04, 0x17, 0x22, 0x27, 0x36, 0x86, 0x88, 0x89, 0x9c, 0x9d, 0x04, 0x17, 0xe8,
+	0x21, 0x00, 0xcb, 0x2e, 0x96, 0x11, 0x63, 0x11, 0x8d, 0x45, 0xe7, 0x72, 0xb0, 0x4e, 0x0b, 0x12,
+	0x36, 0xd8, 0x1c, 0xe9, 0x91, 0xd1, 0x61, 0xa5, 0x86, 0xb4, 0xb6, 0x37, 0xa4, 0xf7, 0x87, 0x3a,
+	0x80, 0x36, 0x5c, 0x41, 0xfa, 0x3e, 0xf4, 0xb4, 0xb4, 0x46, 0xdb, 0xd5, 0xc4, 0xc9, 0xd8, 0x7c,
+	0xe3, 0x1a, 0xe6, 0x1b, 0xb7, 0xad, 0xd8, 0x6f, 0x41, 0x8b, 0xcd, 0x68, 0x42, 0xd4, 0x00, 0x94,
+	0x17, 0xfe, 0x39, 0x71, 0x98, 0xd2, 0x0b, 0x5e, 0x63, 0x4c, 0xcd, 0x42, 0x57, 0x10, 0x7f, 0x29,
+	0x69, 0x7c, 0xc7, 0xb9, 0xc8, 0xa2, 0x45, 0x38, 0x8d, 0xe2, 0x4b, 0xaa, 0xc6, 0x62, 0x57, 0x50,
+	0x26, 0xf1, 0x25, 0x45, 0xfb, 0xe0, 0xcc, 0xe8, 0x72, 0x19, 0xa5, 0xd3, 0xab, 0x80, 0x5d, 0x09,
+	0x74, 0xbb, 0x18, 0x24, 0xe9, 0xb3, 0x80, 0x5d, 0xf1, 0x62, 0x50, 0x39, 0x93, 0x53, 0xd1, 0xc6,
+	0xc5, 0x9d, 0x83, 0xa9, 0xd1, 0x10, 0x60, 0x6a, 0xa4, 0x35, 0x98, 0x46, 0x26, 0x4c, 0xbe, 0xf7,
+	0xb7, 0x3a, 0x00, 0x26, 0x2b, 0xca, 0x22, 0x3e, 0x80, 0x2b, 0x60, 0x96, 0x27, 0x76, 0xbd, 0x3a,
+	0xb1, 0xef, 0x43, 0x2f, 0x29, 0x0c, 0x68, 0x40, 0x5d, 0x4d, 0x5c, 0xc7, 0xbb, 0x79, 0x23, 0xde,
+	0xad, 0xf2, 0x70, 0xb1, 0x3f, 0x3b, 0xfb, 0xf2, 0xc4, 0x58, 0x0b, 0x3b, 0xfc, 0xce, 0x97, 0xc2,
+	0x9f, 0xf0, 0x95, 0x68, 0x45, 0xa7, 0xe9, 0xf5, 0x8a, 0x08, 0x38, 0x77, 0x8e, 0x6e, 0xf9, 0x3a,
+	0x0c, 0x71, 0x3c, 0xbb, 0x5e, 0x11, 0xbe, 0xf8, 0xc8, 0x93, 0xf7, 0x25, 0x9f, 0x02, 0xf2, 0x8c,
+	0x6c, 0xb9, 0xee, 0xf6, 0x6b, 0x68, 0xc7, 0x6c, 0xda, 0xbe, 0x85, 0xba, 0xd0, 0x3a, 0x23, 0x2c,
+	0x65, 0xfd, 0x3a, 0x1f, 0x1b, 0xa7, 0x74, 0x91, 0xa5, 0x11, 0x8d, 0xfb, 0x0d, 0x2e, 0x28, 0xe7,
+	0x17, 0x4f, 0x58, 0xbf, 0xe9, 0xfd, 0x1c, 0xdc, 0xe2, 0x7b, 0x7c, 0xd1, 0x7c, 0x0c, 0x3a, 0xe0,
+	0x88, 0x68, 0xdc, 0xb5, 0x53, 0x78, 0x4d, 0xc0, 0x3b, 0x86, 0xee, 0x38, 0x47, 0xb1, 0x02, 0x3b,
+	0x82, 0xe6, 0x2a, 0x48, 0xaf, 0xe4, 0x3e, 0x85, 0xc5, 0x19, 0xdd, 0x86, 0xb6, 0xdc, 0x8a, 0xd5,
+	0x98, 0x50, 0x37, 0xef, 0x67, 0xe0, 0xe4, 0x86, 0xb8, 0x23, 0xef, 0x43, 0x91, 0x1d, 0xed, 0x07,
+	0xf8, 0xc5, 0xb7, 0xb0, 0xc9, 0xf6, 0xfe, 0x68, 0x41, 0x0f, 0x93, 0x19, 0x4d, 0x42, 0x4c, 0xbe,
+	0xce, 0x08, 0xab, 0x0e, 0xae, 0x23, 0xb0, 0xe5, 0x88, 0x25, 0x6c, 0x50, 0x3f, 0x68, 0x6c, 0x7b,
+	0x90, 0x73, 0x39, 0xf4, 0x11, 0xec, 0xc8, 0xa4, 0x16, 0x9a, 0x0d, 0xa1, 0xb9, 0x69, 0x0f, 0xeb,
+	0xcd, 0xf5, 0x85, 0x30, 0xef, 0x9f, 0x16, 0xf4, 0x46, 0x33, 0x0e, 0xfa, 0x4d, 0x0e, 0x19, 0xa5,
+	0x54, 0xbf, 0xb1, 0x94, 0x1a, 0xeb, 0xa5, 0xb4, 0x36, 0x7d, 0x9b, 0xa5, 0xe9, 0xab, 0x9f, 0x9a,
+	0xd6, 0xeb, 0x3c, 0x35, 0xe8, 0x43, 0x70, 0xcd, 0xe8, 0x44, 0x6d, 0x6e, 0x8e, 0xcd, 0x31, 0x62,
+	0xf3, 0xbe, 0x80, 0xbe, 0x4e, 0x82, 0x8a, 0xcd, 0x5c, 0x96, 0xac, 0xd2, 0xb2, 0xb4, 0xed, 0xc5,
+	0xf0, 0xfe, 0x61, 0xc1, 0xae, 0x51, 0x5a, 0x37, 0x40, 0x75, 0x08, 0x4d, 0xd1, 0x21, 0xf5, 0x2d,
+	0x1d, 0x22, 0x24, 0x2a, 0x7d, 0xde, 0x78, 0x8d, 0x3e, 0x6f, 0x6e, 0xef, 0xf3, 0xb5, 0xff, 0x0e,
+	0xeb, 0xd1, 0xb4, 0x4b, 0xd1, 0xbc, 0x07, 0xdd, 0xaf, 0x54, 0xd8, 0x0c, 0xdd, 0x85, 0x6e, 0x8e,
+	0x81, 0x2c, 0xdf, 0x2e, 0xd6, 0x04, 0x6f, 0x1f, 0x9c, 0x73, 0x7c, 0x82, 0x09, 0x5b, 0xd1, 0x98,
+	0x11, 0xbe, 0x7f, 0xf2, 0xf1, 0x20, 0xb1, 0xe3, 0x47, 0xaf, 0x0d, 0xcd, 0x5f, 0xd1, 0x28, 0x3c,
+	0xfa, 0x0b, 0xc0, 0xee, 0x28, 0x4b, 0xe9, 0x3c, 0x09, 0x42, 0x92, 0x9c, 0x92, 0xe4, 0x79, 0x34,
+	0x23, 0xe8, 0x1d, 0xe8, 0x1c, 0x93, 0xf4, 0x94, 0x2c, 0x2e, 0x51, 0xcb, 0xe7, 0x72, 0x7b, 0x72,
+	0x69, 0xf1, 0x6a, 0xc8, 0x13, 0x2c, 0xf9, 0x37, 0xd8, 0x5f, 0xeb, 0x09, 0x2d, 0x73, 0x07, 0x6c,
+	0x25, 0xc3, 0x72, 0xfd, 0xb6, 0xe0, 0x31, 0xaf, 0x86, 0xee, 0x02, 0x9c, 0xaf, 0xc2, 0x20, 0x25,
+	0xc2, 0x86, 0xd4, 0xd1, 0xaa, 0xef, 0x0a, 0x55, 0xf5, 0xf7, 0xa9, 0x64, 0x5f, 0xed, 0x3e, 0x5e,
+	0x0d, 0x7d, 0x00, 0x6f, 0xe7, 0x52, 0x4f, 0xaf, 0xb9, 0xe6, 0x28, 0x0e, 0xf3, 0x15, 0xdf, 0x5f,
+	0xeb, 0x0b, 0x43, 0xe9, 0x47, 0xd0, 0xcd, 0x95, 0x58, 0xc5, 0x76, 0x47, 0x8a, 0x71, 0x07, 0xf7,
+	0xc1, 0x11, 0x5b, 0x3f, 0x91, 0x5e, 0x28, 0x03, 0x86, 0xa1, 0x21, 0x38, 0x32, 0x82, 0x75, 0x01,
+	0x19, 0xa9, 0x88, 0x61, 0xd7, 0xe0, 0xab, 0x5d, 0xab, 0x22, 0x35, 0x04, 0x47, 0xfe, 0x9b, 0xb9,
+	0xc1, 0x8a, 0x74, 0xb7, 0x88, 0xaa, 0xec, 0xae, 0x64, 0x08, 0x77, 0xa1, 0x90, 0x2b, 0xe0, 0xb6,
+	0x15, 0x9f, 0xc7, 0xf3, 0x04, 0x06, 0x5a, 0xe0, 0xd7, 0x51, 0x7a, 0x65, 0x2e, 0xd6, 0x25, 0xbb,
+	0xa6, 0xde, 0x47, 0x02, 0x64, 0x3d, 0xce, 0x93, 0x65, 0xc0, 0x81, 0xe5, 0x0f, 0x4b, 0x59, 0xcd,
+	0xf5, 0x8d, 0x6a, 0x13, 0x45, 0xe2, 0x4a, 0x08, 0x95, 0xfb, 0xb9, 0xbb, 0xa6, 0xdf, 0x07, 0xe0,
+	0x4a, 0x94, 0xca, 0x32, 0x05, 0x02, 0x8f, 0xf9, 0xd0, 0xbd, 0x4c, 0x08, 0xbb, 0xba, 0x01, 0x05,
+	0xd7, 0x58, 0x7e, 0xb8, 0xc7, 0x3f, 0x85, 0xdb, 0xc7, 0x24, 0x35, 0xb6, 0xd3, 0xa7, 0xd7, 0x37,
+	0x6a, 0x1a, 0x52, 0x5e, 0x0d, 0x3d, 0x84, 0xbe, 0x74, 0x78, 0x0d, 0x9b, 0xf5, 0x4a, 0x2a, 0xfc,
+	0x7a, 0x08, 0x7d, 0xe9, 0xf9, 0xeb, 0x08, 0xff, 0x18, 0x76, 0x78, 0x2b, 0x19, 0xab, 0x47, 0x59,
+	0xd4, 0x35, 0xb6, 0x0e, 0xee, 0x8b, 0x0f, 0xbd, 0x35, 0x8d, 0x8a, 0xf3, 0xe6, 0x9a, 0xe2, 0xd5,
+	0xd0, 0x87, 0xf0, 0x83, 0xbc, 0xae, 0xdf, 0xe4, 0x33, 0x45, 0x14, 0x5b, 0xbe, 0x54, 0x8a, 0xc2,
+	0xdc, 0x46, 0x5f, 0x95, 0x8b, 0x27, 0xd0, 0x3f, 0x26, 0xa9, 0x1e, 0xa5, 0xbc, 0x6c, 0x90, 0x5f,
+	0x19, 0xc6, 0x95, 0xd2, 0xb9, 0x0f, 0xee, 0x31, 0x49, 0xf5, 0x9c, 0x53, 0x05, 0x0d, 0x7e, 0x41,
+	0x12, 0xfd, 0xcf, 0xdd, 0x31, 0xdf, 0xf3, 0x5d, 0xbf, 0xfc, 0x6a, 0xec, 0xb9, 0xbe, 0x21, 0xe0,
+	0xd5, 0xd0, 0x91, 0xc0, 0xd5, 0xd8, 0xe2, 0x36, 0xb9, 0x63, 0xae, 0x22, 0x5e, 0xed, 0xe9, 0xe0,
+	0xef, 0x2f, 0x86, 0xd6, 0xb7, 0x2f, 0x86, 0xd6, 0xbf, 0x5f, 0x0c, 0xad, 0x3f, 0xbd, 0x1c, 0xd6,
+	0xbe, 0x7d, 0x39, 0xac, 0xfd, 0xeb, 0xe5, 0xb0, 0x76, 0xd1, 0x16, 0x7f, 0x21, 0x3e, 0xf8, 0x6f,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0x9d, 0x7c, 0xee, 0x0f, 0x6f, 0x14, 0x00, 0x00,
 }
 
 func (m *User) Marshal() (dAtA []byte, err error) {
@@ -1978,10 +1904,10 @@ func (m *User) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
 	if m.IsAdmin {
 		dAtA[i] = 0x10
@@ -1999,11 +1925,11 @@ func (m *User) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAg(dAtA, i, uint64(len(m.Name)))
 		i += copy(dAtA[i:], m.Name)
 	}
-	if len(m.StudentId) > 0 {
+	if len(m.Student_ID) > 0 {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(len(m.StudentId)))
-		i += copy(dAtA[i:], m.StudentId)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.Student_ID)))
+		i += copy(dAtA[i:], m.Student_ID)
 	}
 	if len(m.Email) > 0 {
 		dAtA[i] = 0x2a
@@ -2011,11 +1937,11 @@ func (m *User) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAg(dAtA, i, uint64(len(m.Email)))
 		i += copy(dAtA[i:], m.Email)
 	}
-	if len(m.AvatarUrl) > 0 {
+	if len(m.Avatar_URL) > 0 {
 		dAtA[i] = 0x32
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(len(m.AvatarUrl)))
-		i += copy(dAtA[i:], m.AvatarUrl)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.Avatar_URL)))
+		i += copy(dAtA[i:], m.Avatar_URL)
 	}
 	if len(m.RemoteIdentities) > 0 {
 		for _, msg := range m.RemoteIdentities {
@@ -2040,9 +1966,6 @@ func (m *User) MarshalTo(dAtA []byte) (int, error) {
 			}
 			i += n
 		}
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -2074,9 +1997,6 @@ func (m *Users) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2095,10 +2015,10 @@ func (m *RemoteIdentity) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
 	if len(m.Provider) > 0 {
 		dAtA[i] = 0x12
@@ -2106,10 +2026,10 @@ func (m *RemoteIdentity) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAg(dAtA, i, uint64(len(m.Provider)))
 		i += copy(dAtA[i:], m.Provider)
 	}
-	if m.RemoteId != 0 {
+	if m.Remote_ID != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.RemoteId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Remote_ID))
 	}
 	if len(m.AccessToken) > 0 {
 		dAtA[i] = 0x22
@@ -2117,13 +2037,10 @@ func (m *RemoteIdentity) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAg(dAtA, i, uint64(len(m.AccessToken)))
 		i += copy(dAtA[i:], m.AccessToken)
 	}
-	if m.UserId != 0 {
+	if m.User_ID != 0 {
 		dAtA[i] = 0x28
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.UserId))
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+		i = encodeVarintAg(dAtA, i, uint64(m.User_ID))
 	}
 	return i, nil
 }
@@ -2143,10 +2060,10 @@ func (m *Group) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
 	if len(m.Name) > 0 {
 		dAtA[i] = 0x12
@@ -2154,10 +2071,10 @@ func (m *Group) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAg(dAtA, i, uint64(len(m.Name)))
 		i += copy(dAtA[i:], m.Name)
 	}
-	if m.CourseId != 0 {
+	if m.Course_ID != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.CourseId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Course_ID))
 	}
 	if m.Status != 0 {
 		dAtA[i] = 0x20
@@ -2187,9 +2104,6 @@ func (m *Group) MarshalTo(dAtA []byte) (int, error) {
 			}
 			i += n
 		}
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -2221,9 +2135,6 @@ func (m *Groups) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2242,15 +2153,15 @@ func (m *Course) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
-	if m.CoursecreatorId != 0 {
+	if m.CourseCreator_ID != 0 {
 		dAtA[i] = 0x10
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.CoursecreatorId))
+		i = encodeVarintAg(dAtA, i, uint64(m.CourseCreator_ID))
 	}
 	if len(m.Name) > 0 {
 		dAtA[i] = 0x1a
@@ -2281,10 +2192,10 @@ func (m *Course) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAg(dAtA, i, uint64(len(m.Provider)))
 		i += copy(dAtA[i:], m.Provider)
 	}
-	if m.DirectoryId != 0 {
+	if m.Directory_ID != 0 {
 		dAtA[i] = 0x40
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.DirectoryId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Directory_ID))
 	}
 	if m.Enrolled != 0 {
 		dAtA[i] = 0x48
@@ -2327,9 +2238,6 @@ func (m *Course) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2360,9 +2268,6 @@ func (m *Courses) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2381,25 +2286,25 @@ func (m *Enrollment) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
-	if m.CourseId != 0 {
+	if m.Course_ID != 0 {
 		dAtA[i] = 0x10
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.CourseId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Course_ID))
 	}
-	if m.UserId != 0 {
+	if m.User_ID != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.UserId))
+		i = encodeVarintAg(dAtA, i, uint64(m.User_ID))
 	}
-	if m.GroupId != 0 {
+	if m.Group_ID != 0 {
 		dAtA[i] = 0x20
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.GroupId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Group_ID))
 	}
 	if m.User != nil {
 		dAtA[i] = 0x2a
@@ -2436,9 +2341,6 @@ func (m *Enrollment) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAg(dAtA, i, uint64(m.Status))
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2469,9 +2371,6 @@ func (m *Enrollments) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2490,15 +2389,15 @@ func (m *Assignment) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
-	if m.CourseId != 0 {
+	if m.Course_ID != 0 {
 		dAtA[i] = 0x10
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.CourseId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Course_ID))
 	}
 	if len(m.Name) > 0 {
 		dAtA[i] = 0x1a
@@ -2537,10 +2436,10 @@ func (m *Assignment) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAg(dAtA, i, uint64(m.Order))
 	}
-	if m.IsGrouplab {
+	if m.IsGroupLab {
 		dAtA[i] = 0x40
 		i++
-		if m.IsGrouplab {
+		if m.IsGroupLab {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -2556,9 +2455,6 @@ func (m *Assignment) MarshalTo(dAtA []byte) (int, error) {
 			return 0, err
 		}
 		i += n5
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -2590,9 +2486,6 @@ func (m *Assignments) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2611,25 +2504,25 @@ func (m *Submission) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
-	if m.AssignmentId != 0 {
+	if m.Assignment_ID != 0 {
 		dAtA[i] = 0x10
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.AssignmentId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Assignment_ID))
 	}
-	if m.UserId != 0 {
+	if m.User_ID != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.UserId))
+		i = encodeVarintAg(dAtA, i, uint64(m.User_ID))
 	}
-	if m.GroupId != 0 {
+	if m.Group_ID != 0 {
 		dAtA[i] = 0x20
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.GroupId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Group_ID))
 	}
 	if m.Score != 0 {
 		dAtA[i] = 0x28
@@ -2664,9 +2557,6 @@ func (m *Submission) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i++
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2697,9 +2587,6 @@ func (m *Submissions) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2718,44 +2605,41 @@ func (m *Repository) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
-	if m.DirectoryId != 0 {
+	if m.Directory_ID != 0 {
 		dAtA[i] = 0x10
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.DirectoryId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Directory_ID))
 	}
-	if m.RepositoryId != 0 {
+	if m.Repository_ID != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.RepositoryId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Repository_ID))
 	}
-	if m.UserId != 0 {
+	if m.User_ID != 0 {
 		dAtA[i] = 0x20
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.UserId))
+		i = encodeVarintAg(dAtA, i, uint64(m.User_ID))
 	}
-	if m.GroupId != 0 {
+	if m.Group_ID != 0 {
 		dAtA[i] = 0x28
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.GroupId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Group_ID))
 	}
-	if len(m.HtmlUrl) > 0 {
+	if len(m.HTML_URL) > 0 {
 		dAtA[i] = 0x32
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(len(m.HtmlUrl)))
-		i += copy(dAtA[i:], m.HtmlUrl)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.HTML_URL)))
+		i += copy(dAtA[i:], m.HTML_URL)
 	}
 	if m.RepoType != 0 {
 		dAtA[i] = 0x38
 		i++
 		i = encodeVarintAg(dAtA, i, uint64(m.RepoType))
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -2787,9 +2671,6 @@ func (m *Repositories) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2808,10 +2689,10 @@ func (m *Directory) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
 	if len(m.Path) > 0 {
 		dAtA[i] = 0x12
@@ -2824,9 +2705,6 @@ func (m *Directory) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAg(dAtA, i, uint64(len(m.Avatar)))
 		i += copy(dAtA[i:], m.Avatar)
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -2858,9 +2736,6 @@ func (m *Directories) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2879,10 +2754,10 @@ func (m *RecordRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
 	if len(m.Statuses) > 0 {
 		dAtA7 := make([]byte, len(m.Statuses)*10)
@@ -2918,9 +2793,6 @@ func (m *RecordRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAg(dAtA, i, uint64(j8))
 		i += copy(dAtA[i:], dAtA9[:j8])
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -2939,25 +2811,25 @@ func (m *ActionRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
-	if m.UserId != 0 {
+	if m.User_ID != 0 {
 		dAtA[i] = 0x10
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.UserId))
+		i = encodeVarintAg(dAtA, i, uint64(m.User_ID))
 	}
-	if m.GroupId != 0 {
+	if m.Group_ID != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.GroupId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Group_ID))
 	}
-	if m.CourseId != 0 {
+	if m.Course_ID != 0 {
 		dAtA[i] = 0x20
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.CourseId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Course_ID))
 	}
 	if m.Status != 0 {
 		dAtA[i] = 0x28
@@ -2968,9 +2840,6 @@ func (m *ActionRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x30
 		i++
 		i = encodeVarintAg(dAtA, i, uint64(m.GroupStatus))
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	return i, nil
 }
@@ -2996,13 +2865,10 @@ func (m *DirectoryRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAg(dAtA, i, uint64(len(m.Provider)))
 		i += copy(dAtA[i:], m.Provider)
 	}
-	if m.CourseId != 0 {
+	if m.Course_ID != 0 {
 		dAtA[i] = 0x10
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.CourseId))
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+		i = encodeVarintAg(dAtA, i, uint64(m.Course_ID))
 	}
 	return i, nil
 }
@@ -3022,38 +2888,35 @@ func (m *RepositoryRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Id != 0 {
+	if m.ID != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.Id))
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
 	}
 	if m.Type != 0 {
 		dAtA[i] = 0x10
 		i++
 		i = encodeVarintAg(dAtA, i, uint64(m.Type))
 	}
-	if m.DirectoryId != 0 {
+	if m.Directory_ID != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.DirectoryId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Directory_ID))
 	}
-	if m.RepositoryId != 0 {
+	if m.Repository_ID != 0 {
 		dAtA[i] = 0x20
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.RepositoryId))
+		i = encodeVarintAg(dAtA, i, uint64(m.Repository_ID))
 	}
-	if m.UserId != 0 {
+	if m.User_ID != 0 {
 		dAtA[i] = 0x28
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.UserId))
+		i = encodeVarintAg(dAtA, i, uint64(m.User_ID))
 	}
-	if m.CourseId != 0 {
+	if m.Course_ID != 0 {
 		dAtA[i] = 0x30
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(m.CourseId))
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+		i = encodeVarintAg(dAtA, i, uint64(m.Course_ID))
 	}
 	return i, nil
 }
@@ -3088,9 +2951,6 @@ func (m *Providers) MarshalTo(dAtA []byte) (int, error) {
 			i += copy(dAtA[i:], s)
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -3109,14 +2969,11 @@ func (m *URLResponse) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Url) > 0 {
+	if len(m.URL) > 0 {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintAg(dAtA, i, uint64(len(m.Url)))
-		i += copy(dAtA[i:], m.Url)
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.URL)))
+		i += copy(dAtA[i:], m.URL)
 	}
 	return i, nil
 }
@@ -3136,9 +2993,6 @@ func (m *Void) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
 	return i, nil
 }
 
@@ -3157,8 +3011,8 @@ func (m *User) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
 	if m.IsAdmin {
 		n += 2
@@ -3167,7 +3021,7 @@ func (m *User) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
-	l = len(m.StudentId)
+	l = len(m.Student_ID)
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
@@ -3175,7 +3029,7 @@ func (m *User) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
-	l = len(m.AvatarUrl)
+	l = len(m.Avatar_URL)
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
@@ -3190,9 +3044,6 @@ func (m *User) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovAg(uint64(l))
 		}
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -3209,9 +3060,6 @@ func (m *Users) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3221,25 +3069,22 @@ func (m *RemoteIdentity) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
 	l = len(m.Provider)
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
-	if m.RemoteId != 0 {
-		n += 1 + sovAg(uint64(m.RemoteId))
+	if m.Remote_ID != 0 {
+		n += 1 + sovAg(uint64(m.Remote_ID))
 	}
 	l = len(m.AccessToken)
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
-	if m.UserId != 0 {
-		n += 1 + sovAg(uint64(m.UserId))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
+	if m.User_ID != 0 {
+		n += 1 + sovAg(uint64(m.User_ID))
 	}
 	return n
 }
@@ -3250,15 +3095,15 @@ func (m *Group) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
 	l = len(m.Name)
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
-	if m.CourseId != 0 {
-		n += 1 + sovAg(uint64(m.CourseId))
+	if m.Course_ID != 0 {
+		n += 1 + sovAg(uint64(m.Course_ID))
 	}
 	if m.Status != 0 {
 		n += 1 + sovAg(uint64(m.Status))
@@ -3275,9 +3120,6 @@ func (m *Group) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3293,9 +3135,6 @@ func (m *Groups) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3305,11 +3144,11 @@ func (m *Course) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
-	if m.CoursecreatorId != 0 {
-		n += 1 + sovAg(uint64(m.CoursecreatorId))
+	if m.CourseCreator_ID != 0 {
+		n += 1 + sovAg(uint64(m.CourseCreator_ID))
 	}
 	l = len(m.Name)
 	if l > 0 {
@@ -3330,8 +3169,8 @@ func (m *Course) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
-	if m.DirectoryId != 0 {
-		n += 1 + sovAg(uint64(m.DirectoryId))
+	if m.Directory_ID != 0 {
+		n += 1 + sovAg(uint64(m.Directory_ID))
 	}
 	if m.Enrolled != 0 {
 		n += 1 + sovAg(uint64(m.Enrolled))
@@ -3354,9 +3193,6 @@ func (m *Course) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3372,9 +3208,6 @@ func (m *Courses) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3384,17 +3217,17 @@ func (m *Enrollment) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
-	if m.CourseId != 0 {
-		n += 1 + sovAg(uint64(m.CourseId))
+	if m.Course_ID != 0 {
+		n += 1 + sovAg(uint64(m.Course_ID))
 	}
-	if m.UserId != 0 {
-		n += 1 + sovAg(uint64(m.UserId))
+	if m.User_ID != 0 {
+		n += 1 + sovAg(uint64(m.User_ID))
 	}
-	if m.GroupId != 0 {
-		n += 1 + sovAg(uint64(m.GroupId))
+	if m.Group_ID != 0 {
+		n += 1 + sovAg(uint64(m.Group_ID))
 	}
 	if m.User != nil {
 		l = m.User.Size()
@@ -3411,9 +3244,6 @@ func (m *Enrollment) Size() (n int) {
 	if m.Status != 0 {
 		n += 1 + sovAg(uint64(m.Status))
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3429,9 +3259,6 @@ func (m *Enrollments) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3441,11 +3268,11 @@ func (m *Assignment) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
-	if m.CourseId != 0 {
-		n += 1 + sovAg(uint64(m.CourseId))
+	if m.Course_ID != 0 {
+		n += 1 + sovAg(uint64(m.Course_ID))
 	}
 	l = len(m.Name)
 	if l > 0 {
@@ -3465,15 +3292,12 @@ func (m *Assignment) Size() (n int) {
 	if m.Order != 0 {
 		n += 1 + sovAg(uint64(m.Order))
 	}
-	if m.IsGrouplab {
+	if m.IsGroupLab {
 		n += 2
 	}
 	if m.Submission != nil {
 		l = m.Submission.Size()
 		n += 1 + l + sovAg(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -3490,9 +3314,6 @@ func (m *Assignments) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3502,17 +3323,17 @@ func (m *Submission) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
-	if m.AssignmentId != 0 {
-		n += 1 + sovAg(uint64(m.AssignmentId))
+	if m.Assignment_ID != 0 {
+		n += 1 + sovAg(uint64(m.Assignment_ID))
 	}
-	if m.UserId != 0 {
-		n += 1 + sovAg(uint64(m.UserId))
+	if m.User_ID != 0 {
+		n += 1 + sovAg(uint64(m.User_ID))
 	}
-	if m.GroupId != 0 {
-		n += 1 + sovAg(uint64(m.GroupId))
+	if m.Group_ID != 0 {
+		n += 1 + sovAg(uint64(m.Group_ID))
 	}
 	if m.Score != 0 {
 		n += 1 + sovAg(uint64(m.Score))
@@ -3532,9 +3353,6 @@ func (m *Submission) Size() (n int) {
 	if m.Approved {
 		n += 2
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3550,9 +3368,6 @@ func (m *Submissions) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3562,30 +3377,27 @@ func (m *Repository) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
-	if m.DirectoryId != 0 {
-		n += 1 + sovAg(uint64(m.DirectoryId))
+	if m.Directory_ID != 0 {
+		n += 1 + sovAg(uint64(m.Directory_ID))
 	}
-	if m.RepositoryId != 0 {
-		n += 1 + sovAg(uint64(m.RepositoryId))
+	if m.Repository_ID != 0 {
+		n += 1 + sovAg(uint64(m.Repository_ID))
 	}
-	if m.UserId != 0 {
-		n += 1 + sovAg(uint64(m.UserId))
+	if m.User_ID != 0 {
+		n += 1 + sovAg(uint64(m.User_ID))
 	}
-	if m.GroupId != 0 {
-		n += 1 + sovAg(uint64(m.GroupId))
+	if m.Group_ID != 0 {
+		n += 1 + sovAg(uint64(m.Group_ID))
 	}
-	l = len(m.HtmlUrl)
+	l = len(m.HTML_URL)
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
 	if m.RepoType != 0 {
 		n += 1 + sovAg(uint64(m.RepoType))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -3602,9 +3414,6 @@ func (m *Repositories) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3614,8 +3423,8 @@ func (m *Directory) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
 	l = len(m.Path)
 	if l > 0 {
@@ -3624,9 +3433,6 @@ func (m *Directory) Size() (n int) {
 	l = len(m.Avatar)
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -3643,9 +3449,6 @@ func (m *Directories) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3655,8 +3458,8 @@ func (m *RecordRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
 	if len(m.Statuses) > 0 {
 		l = 0
@@ -3672,9 +3475,6 @@ func (m *RecordRequest) Size() (n int) {
 		}
 		n += 1 + sovAg(uint64(l)) + l
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3684,26 +3484,23 @@ func (m *ActionRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
-	if m.UserId != 0 {
-		n += 1 + sovAg(uint64(m.UserId))
+	if m.User_ID != 0 {
+		n += 1 + sovAg(uint64(m.User_ID))
 	}
-	if m.GroupId != 0 {
-		n += 1 + sovAg(uint64(m.GroupId))
+	if m.Group_ID != 0 {
+		n += 1 + sovAg(uint64(m.Group_ID))
 	}
-	if m.CourseId != 0 {
-		n += 1 + sovAg(uint64(m.CourseId))
+	if m.Course_ID != 0 {
+		n += 1 + sovAg(uint64(m.Course_ID))
 	}
 	if m.Status != 0 {
 		n += 1 + sovAg(uint64(m.Status))
 	}
 	if m.GroupStatus != 0 {
 		n += 1 + sovAg(uint64(m.GroupStatus))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -3718,11 +3515,8 @@ func (m *DirectoryRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
-	if m.CourseId != 0 {
-		n += 1 + sovAg(uint64(m.CourseId))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
+	if m.Course_ID != 0 {
+		n += 1 + sovAg(uint64(m.Course_ID))
 	}
 	return n
 }
@@ -3733,26 +3527,23 @@ func (m *RepositoryRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Id != 0 {
-		n += 1 + sovAg(uint64(m.Id))
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
 	}
 	if m.Type != 0 {
 		n += 1 + sovAg(uint64(m.Type))
 	}
-	if m.DirectoryId != 0 {
-		n += 1 + sovAg(uint64(m.DirectoryId))
+	if m.Directory_ID != 0 {
+		n += 1 + sovAg(uint64(m.Directory_ID))
 	}
-	if m.RepositoryId != 0 {
-		n += 1 + sovAg(uint64(m.RepositoryId))
+	if m.Repository_ID != 0 {
+		n += 1 + sovAg(uint64(m.Repository_ID))
 	}
-	if m.UserId != 0 {
-		n += 1 + sovAg(uint64(m.UserId))
+	if m.User_ID != 0 {
+		n += 1 + sovAg(uint64(m.User_ID))
 	}
-	if m.CourseId != 0 {
-		n += 1 + sovAg(uint64(m.CourseId))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
+	if m.Course_ID != 0 {
+		n += 1 + sovAg(uint64(m.Course_ID))
 	}
 	return n
 }
@@ -3769,9 +3560,6 @@ func (m *Providers) Size() (n int) {
 			n += 1 + l + sovAg(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3781,12 +3569,9 @@ func (m *URLResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Url)
+	l = len(m.URL)
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -3797,9 +3582,6 @@ func (m *Void) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
 	return n
 }
 
@@ -3847,9 +3629,9 @@ func (m *User) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -3859,7 +3641,7 @@ func (m *User) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3918,7 +3700,7 @@ func (m *User) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field StudentId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Student_ID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3946,7 +3728,7 @@ func (m *User) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.StudentId = string(dAtA[iNdEx:postIndex])
+			m.Student_ID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -3982,7 +3764,7 @@ func (m *User) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AvatarUrl", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Avatar_URL", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4010,7 +3792,7 @@ func (m *User) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AvatarUrl = string(dAtA[iNdEx:postIndex])
+			m.Avatar_URL = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
@@ -4095,7 +3877,6 @@ func (m *User) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -4183,7 +3964,6 @@ func (m *Users) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -4224,9 +4004,9 @@ func (m *RemoteIdentity) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -4236,7 +4016,7 @@ func (m *RemoteIdentity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4275,9 +4055,9 @@ func (m *RemoteIdentity) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RemoteId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Remote_ID", wireType)
 			}
-			m.RemoteId = 0
+			m.Remote_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -4287,7 +4067,7 @@ func (m *RemoteIdentity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.RemoteId |= uint64(b&0x7F) << shift
+				m.Remote_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4326,9 +4106,9 @@ func (m *RemoteIdentity) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field User_ID", wireType)
 			}
-			m.UserId = 0
+			m.User_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -4338,7 +4118,7 @@ func (m *RemoteIdentity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UserId |= uint64(b&0x7F) << shift
+				m.User_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4358,7 +4138,6 @@ func (m *RemoteIdentity) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -4399,9 +4178,9 @@ func (m *Group) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -4411,7 +4190,7 @@ func (m *Group) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4450,9 +4229,9 @@ func (m *Group) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CourseId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Course_ID", wireType)
 			}
-			m.CourseId = 0
+			m.Course_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -4462,7 +4241,7 @@ func (m *Group) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CourseId |= uint64(b&0x7F) << shift
+				m.Course_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4569,7 +4348,6 @@ func (m *Group) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -4657,7 +4435,6 @@ func (m *Groups) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -4698,9 +4475,9 @@ func (m *Course) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -4710,16 +4487,16 @@ func (m *Course) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CoursecreatorId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CourseCreator_ID", wireType)
 			}
-			m.CoursecreatorId = 0
+			m.CourseCreator_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -4729,7 +4506,7 @@ func (m *Course) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CoursecreatorId |= uint64(b&0x7F) << shift
+				m.CourseCreator_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4883,9 +4660,9 @@ func (m *Course) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 8:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DirectoryId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Directory_ID", wireType)
 			}
-			m.DirectoryId = 0
+			m.Directory_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -4895,7 +4672,7 @@ func (m *Course) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DirectoryId |= uint64(b&0x7F) << shift
+				m.Directory_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5036,7 +4813,6 @@ func (m *Course) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5124,7 +4900,6 @@ func (m *Courses) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5165,9 +4940,9 @@ func (m *Enrollment) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5177,16 +4952,16 @@ func (m *Enrollment) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CourseId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Course_ID", wireType)
 			}
-			m.CourseId = 0
+			m.Course_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5196,16 +4971,16 @@ func (m *Enrollment) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CourseId |= uint64(b&0x7F) << shift
+				m.Course_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field User_ID", wireType)
 			}
-			m.UserId = 0
+			m.User_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5215,16 +4990,16 @@ func (m *Enrollment) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UserId |= uint64(b&0x7F) << shift
+				m.User_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Group_ID", wireType)
 			}
-			m.GroupId = 0
+			m.Group_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5234,7 +5009,7 @@ func (m *Enrollment) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.GroupId |= uint64(b&0x7F) << shift
+				m.Group_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5381,7 +5156,6 @@ func (m *Enrollment) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5469,7 +5243,6 @@ func (m *Enrollments) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5510,9 +5283,9 @@ func (m *Assignment) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5522,16 +5295,16 @@ func (m *Assignment) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CourseId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Course_ID", wireType)
 			}
-			m.CourseId = 0
+			m.Course_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5541,7 +5314,7 @@ func (m *Assignment) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CourseId |= uint64(b&0x7F) << shift
+				m.Course_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5687,7 +5460,7 @@ func (m *Assignment) Unmarshal(dAtA []byte) error {
 			}
 		case 8:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IsGrouplab", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field IsGroupLab", wireType)
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
@@ -5704,7 +5477,7 @@ func (m *Assignment) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.IsGrouplab = bool(v != 0)
+			m.IsGroupLab = bool(v != 0)
 		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Submission", wireType)
@@ -5756,7 +5529,6 @@ func (m *Assignment) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5844,7 +5616,6 @@ func (m *Assignments) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5885,9 +5656,9 @@ func (m *Submission) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5897,16 +5668,16 @@ func (m *Submission) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssignmentId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Assignment_ID", wireType)
 			}
-			m.AssignmentId = 0
+			m.Assignment_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5916,16 +5687,16 @@ func (m *Submission) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AssignmentId |= uint64(b&0x7F) << shift
+				m.Assignment_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field User_ID", wireType)
 			}
-			m.UserId = 0
+			m.User_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5935,16 +5706,16 @@ func (m *Submission) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UserId |= uint64(b&0x7F) << shift
+				m.User_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Group_ID", wireType)
 			}
-			m.GroupId = 0
+			m.Group_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -5954,7 +5725,7 @@ func (m *Submission) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.GroupId |= uint64(b&0x7F) << shift
+				m.Group_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6109,7 +5880,6 @@ func (m *Submission) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6197,7 +5967,6 @@ func (m *Submissions) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6238,9 +6007,9 @@ func (m *Repository) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6250,16 +6019,16 @@ func (m *Repository) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DirectoryId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Directory_ID", wireType)
 			}
-			m.DirectoryId = 0
+			m.Directory_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6269,16 +6038,16 @@ func (m *Repository) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DirectoryId |= uint64(b&0x7F) << shift
+				m.Directory_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RepositoryId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Repository_ID", wireType)
 			}
-			m.RepositoryId = 0
+			m.Repository_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6288,16 +6057,16 @@ func (m *Repository) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.RepositoryId |= uint64(b&0x7F) << shift
+				m.Repository_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field User_ID", wireType)
 			}
-			m.UserId = 0
+			m.User_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6307,16 +6076,16 @@ func (m *Repository) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UserId |= uint64(b&0x7F) << shift
+				m.User_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 5:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Group_ID", wireType)
 			}
-			m.GroupId = 0
+			m.Group_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6326,14 +6095,14 @@ func (m *Repository) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.GroupId |= uint64(b&0x7F) << shift
+				m.Group_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HtmlUrl", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field HTML_URL", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -6361,7 +6130,7 @@ func (m *Repository) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.HtmlUrl = string(dAtA[iNdEx:postIndex])
+			m.HTML_URL = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 7:
 			if wireType != 0 {
@@ -6397,7 +6166,6 @@ func (m *Repository) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6485,7 +6253,6 @@ func (m *Repositories) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6526,9 +6293,9 @@ func (m *Directory) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6538,7 +6305,7 @@ func (m *Directory) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6622,7 +6389,6 @@ func (m *Directory) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6710,7 +6476,6 @@ func (m *Directories) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6751,9 +6516,9 @@ func (m *RecordRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6763,7 +6528,7 @@ func (m *RecordRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6921,7 +6686,6 @@ func (m *RecordRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6962,9 +6726,9 @@ func (m *ActionRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6974,16 +6738,16 @@ func (m *ActionRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field User_ID", wireType)
 			}
-			m.UserId = 0
+			m.User_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -6993,16 +6757,16 @@ func (m *ActionRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UserId |= uint64(b&0x7F) << shift
+				m.User_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Group_ID", wireType)
 			}
-			m.GroupId = 0
+			m.Group_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -7012,16 +6776,16 @@ func (m *ActionRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.GroupId |= uint64(b&0x7F) << shift
+				m.Group_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CourseId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Course_ID", wireType)
 			}
-			m.CourseId = 0
+			m.Course_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -7031,7 +6795,7 @@ func (m *ActionRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CourseId |= uint64(b&0x7F) << shift
+				m.Course_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7089,7 +6853,6 @@ func (m *ActionRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7162,9 +6925,9 @@ func (m *DirectoryRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CourseId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Course_ID", wireType)
 			}
-			m.CourseId = 0
+			m.Course_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -7174,7 +6937,7 @@ func (m *DirectoryRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CourseId |= uint64(b&0x7F) << shift
+				m.Course_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7194,7 +6957,6 @@ func (m *DirectoryRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7235,9 +6997,9 @@ func (m *RepositoryRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			m.Id = 0
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -7247,7 +7009,7 @@ func (m *RepositoryRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Id |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7273,9 +7035,9 @@ func (m *RepositoryRequest) Unmarshal(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DirectoryId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Directory_ID", wireType)
 			}
-			m.DirectoryId = 0
+			m.Directory_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -7285,16 +7047,16 @@ func (m *RepositoryRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.DirectoryId |= uint64(b&0x7F) << shift
+				m.Directory_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RepositoryId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Repository_ID", wireType)
 			}
-			m.RepositoryId = 0
+			m.Repository_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -7304,16 +7066,16 @@ func (m *RepositoryRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.RepositoryId |= uint64(b&0x7F) << shift
+				m.Repository_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 5:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field User_ID", wireType)
 			}
-			m.UserId = 0
+			m.User_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -7323,16 +7085,16 @@ func (m *RepositoryRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UserId |= uint64(b&0x7F) << shift
+				m.User_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 6:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CourseId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Course_ID", wireType)
 			}
-			m.CourseId = 0
+			m.Course_ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAg
@@ -7342,7 +7104,7 @@ func (m *RepositoryRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CourseId |= uint64(b&0x7F) << shift
+				m.Course_ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7362,7 +7124,6 @@ func (m *RepositoryRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7448,7 +7209,6 @@ func (m *Providers) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7489,7 +7249,7 @@ func (m *URLResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Url", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field URL", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -7517,7 +7277,7 @@ func (m *URLResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Url = string(dAtA[iNdEx:postIndex])
+			m.URL = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -7534,7 +7294,6 @@ func (m *URLResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7588,7 +7347,6 @@ func (m *Void) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}

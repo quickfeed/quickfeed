@@ -1,5 +1,6 @@
 package models
 
+/*
 // Group represents a student group in a course
 type Group struct {
 	ID uint64 `json:"id"`
@@ -10,3 +11,4 @@ type Group struct {
 	Users       []*User       `json:"users,omitempty"`
 	Enrollments []*Enrollment `json:"-"`
 }
+*/

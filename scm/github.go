@@ -34,7 +34,7 @@ func (s *GithubSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error
 	var directories []*pb.Directory
 	for _, org := range orgs {
 		directories = append(directories, &pb.Directory{
-			Id:     uint64(org.Organization.GetID()),
+			ID:     uint64(org.Organization.GetID()),
 			Path:   org.Organization.GetLogin(),
 			Avatar: org.Organization.GetAvatarURL(),
 		})
@@ -58,7 +58,7 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory,
 	}
 
 	return &pb.Directory{
-		Id:     uint64(org.GetID()),
+		ID:     uint64(org.GetID()),
 		Path:   org.GetLogin(),
 		Avatar: org.GetAvatarURL(),
 	}, nil
@@ -108,7 +108,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		WebURL:      repo.GetHTMLURL(),
 		SSHURL:      repo.GetSSHURL(),
 		HTTPURL:     repo.GetCloneURL(),
-		DirectoryID: opt.Directory.Id,
+		DirectoryID: opt.Directory.ID,
 	}, nil
 }
 
@@ -118,7 +118,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, directory *pb.Directory
 	if directory.Path != "" {
 		path = directory.Path
 	} else {
-		directory, err := s.GetDirectory(ctx, directory.Id)
+		directory, err := s.GetDirectory(ctx, directory.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -139,7 +139,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, directory *pb.Directory
 			WebURL:      repo.GetHTMLURL(),
 			SSHURL:      repo.GetSSHURL(),
 			HTTPURL:     repo.GetCloneURL(),
-			DirectoryID: directory.Id,
+			DirectoryID: directory.ID,
 		})
 	}
 

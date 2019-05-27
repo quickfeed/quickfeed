@@ -1,7 +1,6 @@
 package models
 
-import "time"
-
+/*
 // Assignment represents a single assignment
 type Assignment struct {
 	ID          uint64      `json:"id"`
@@ -27,3 +26,4 @@ type Submission struct {
 	CommitHash   string `json:"commithash"`
 	Approved     bool   `json:"approved"`
 }
+*/

@@ -10,7 +10,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/sirupsen/logrus"
@@ -77,26 +76,26 @@ func TestGormDBUpdateUser(t *testing.T) {
 	admin := true
 	var (
 		wantUser = &pb.User{
-			Id:        uID,
-			IsAdmin:   admin, // first user is always admin
-			Name:      "Scrooge McDuck",
-			StudentId: "22",
-			Email:     "scrooge@mc.duck",
-			AvatarUrl: "https://github.com",
+			ID:         uID,
+			IsAdmin:    admin, // first user is always admin
+			Name:       "Scrooge McDuck",
+			Student_ID: "22",
+			Email:      "scrooge@mc.duck",
+			Avatar_URL: "https://github.com",
 			RemoteIdentities: []*pb.RemoteIdentity{{
-				Id:          rID,
+				ID:          rID,
 				Provider:    provider,
-				RemoteId:    remoteID,
+				Remote_ID:   remoteID,
 				AccessToken: secret,
-				UserId:      uID,
+				User_ID:     uID,
 			}},
 		}
 		updates = &pb.User{
-			Id:        uID,
-			Name:      "Scrooge McDuck",
-			StudentId: "22",
-			Email:     "scrooge@mc.duck",
-			AvatarUrl: "https://github.com",
+			ID:         uID,
+			Name:       "Scrooge McDuck",
+			Student_ID: "22",
+			Email:      "scrooge@mc.duck",
+			Avatar_URL: "https://github.com",
 		}
 	)
 
@@ -108,7 +107,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 		&user,
 		&pb.RemoteIdentity{
 			Provider:    provider,
-			RemoteId:    remoteID,
+			Remote_ID:   remoteID,
 			AccessToken: secret,
 		},
 	); err != nil {
@@ -119,7 +118,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 		t.Error(err)
 	}
 
-	updatedUser, err := db.GetUser(user.Id)
+	updatedUser, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,18 +133,18 @@ func TestGormDBGetCourses(t *testing.T) {
 	defer cleanup()
 
 	user := createFakeUser(t, db, 10)
-	c1 := pb.Course{DirectoryId: 1}
-	if err := db.CreateCourse(user.Id, &c1); err != nil {
+	c1 := pb.Course{Directory_ID: 1}
+	if err := db.CreateCourse(user.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
 
-	c2 := pb.Course{DirectoryId: 2}
-	if err := db.CreateCourse(user.Id, &c2); err != nil {
+	c2 := pb.Course{Directory_ID: 2}
+	if err := db.CreateCourse(user.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
 
-	c3 := pb.Course{DirectoryId: 3}
-	if err := db.CreateCourse(user.Id, &c3); err != nil {
+	c3 := pb.Course{Directory_ID: 3}
+	if err := db.CreateCourse(user.ID, &c3); err != nil {
 		t.Fatal(err)
 	}
 
@@ -167,7 +166,7 @@ func TestGormDBGetCourses(t *testing.T) {
 		t.Errorf("have %v want %v", coursesNoArg, wantCourses)
 	}
 
-	course1, err := db.GetCourses(c1.Id)
+	course1, err := db.GetCourses(c1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,7 +175,7 @@ func TestGormDBGetCourses(t *testing.T) {
 		t.Errorf("have %v want %v", course1, wantCourse1)
 	}
 
-	course1and2, err := db.GetCourses(c1.Id, c2.Id)
+	course1and2, err := db.GetCourses(c1.ID, c2.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,8 +199,8 @@ func TestGormDBCreateAssignmentNoRecord(t *testing.T) {
 	defer cleanup()
 
 	assignment := pb.Assignment{
-		CourseId: 1,
-		Name:     "Lab 1",
+		Course_ID: 1,
+		Name:      "Lab 1",
 	}
 
 	// Should fail as course 1 does not exist.
@@ -215,13 +214,13 @@ func TestGormDBCreateAssignment(t *testing.T) {
 	defer cleanup()
 
 	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.Id, &pb.Course{}); err != nil {
+	if err := db.CreateCourse(user.ID, &pb.Course{}); err != nil {
 		t.Fatal(err)
 	}
 
 	assignment := pb.Assignment{
-		CourseId: 1,
-		Order:    1,
+		Course_ID: 1,
+		Order:     1,
 	}
 
 	if err := db.CreateAssignment(&assignment); err != nil {
@@ -252,8 +251,8 @@ func TestGormDBCreateEnrollmentNoRecord(t *testing.T) {
 	defer cleanup()
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   userId,
-		CourseId: courseId,
+		User_ID:   userId,
+		Course_ID: courseId,
 	}); err != gorm.ErrRecordNotFound {
 		t.Errorf("expected error '%v' have '%v'", gorm.ErrRecordNotFound, err)
 	}
@@ -265,21 +264,21 @@ func TestGormDBCreateEnrollment(t *testing.T) {
 
 	teacher := createFakeUser(t, db, 1)
 	var course pb.Course
-	if err := db.CreateCourse(teacher.Id, &course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
 	user := createFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   user.Id,
-		CourseId: course.Id,
+		User_ID:   user.ID,
+		Course_ID: course.ID,
 	}); err != nil {
 		t.Error(err)
 	}
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   user.Id,
-		CourseId: course.Id,
+		User_ID:   user.ID,
+		Course_ID: course.ID,
 	}); err == nil {
 		t.Fatal("expected duplicate enrollment creation to fail")
 	}
@@ -291,55 +290,55 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 
 	teacher := createFakeUser(t, db, 1)
 	var course pb.Course
-	if err := db.CreateCourse(teacher.Id, &course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
 	user := createFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   user.Id,
-		CourseId: course.Id,
+		User_ID:   user.ID,
+		Course_ID: course.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get course's pending enrollments.
-	pendingEnrollments, err := db.GetEnrollmentsByCourse(course.Id, pb.Enrollment_PENDING)
+	pendingEnrollments, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_Pending)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(pendingEnrollments) != 1 && pendingEnrollments[0].Status == pb.Enrollment_PENDING {
+	if len(pendingEnrollments) != 1 && pendingEnrollments[0].Status == pb.Enrollment_Pending {
 		t.Fatalf("have %v want 1 pending enrollment", pendingEnrollments)
 	}
 
 	// Accept enrollment.
-	if err := db.EnrollStudent(user.Id, course.Id); err != nil {
+	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get course's accepted enrollments.
-	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.Id, pb.Enrollment_STUDENT)
+	acceptedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_Student)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == pb.Enrollment_STUDENT {
+	if len(acceptedEnrollments) != 1 && acceptedEnrollments[0].Status == pb.Enrollment_Student {
 		t.Fatalf("have %v want 1 accepted enrollment", acceptedEnrollments)
 	}
 
 	// Reject enrollment.
-	if err := db.RejectEnrollment(user.Id, course.Id); err != nil {
+	if err := db.RejectEnrollment(user.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get course's rejected enrollments.
-	rejectedEnrollments, err := db.GetEnrollmentsByCourse(course.Id, pb.Enrollment_REJECTED)
+	rejectedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_Rejected)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(rejectedEnrollments) != 1 && rejectedEnrollments[0].Status == pb.Enrollment_REJECTED {
+	if len(rejectedEnrollments) != 1 && rejectedEnrollments[0].Status == pb.Enrollment_Rejected {
 		t.Fatalf("have %v want 1 rejected enrollment", rejectedEnrollments)
 	}
 }
@@ -349,62 +348,62 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	defer cleanup()
 
 	teacher := createFakeUser(t, db, 1)
-	c1 := pb.Course{DirectoryId: 1}
-	if err := db.CreateCourse(teacher.Id, &c1); err != nil {
+	c1 := pb.Course{Directory_ID: 1}
+	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
 
-	c2 := pb.Course{DirectoryId: 2}
-	if err := db.CreateCourse(teacher.Id, &c2); err != nil {
+	c2 := pb.Course{Directory_ID: 2}
+	if err := db.CreateCourse(teacher.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
 
-	c3 := pb.Course{DirectoryId: 3}
-	if err := db.CreateCourse(teacher.Id, &c3); err != nil {
+	c3 := pb.Course{Directory_ID: 3}
+	if err := db.CreateCourse(teacher.ID, &c3); err != nil {
 		t.Fatal(err)
 	}
 
-	c4 := pb.Course{DirectoryId: 4}
-	if err := db.CreateCourse(teacher.Id, &c4); err != nil {
+	c4 := pb.Course{Directory_ID: 4}
+	if err := db.CreateCourse(teacher.ID, &c4); err != nil {
 		t.Fatal(err)
 	}
 
 	user := createFakeUser(t, db, 10)
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   user.Id,
-		CourseId: c1.Id,
+		User_ID:   user.ID,
+		Course_ID: c1.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   user.Id,
-		CourseId: c2.Id,
+		User_ID:   user.ID,
+		Course_ID: c2.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   user.Id,
-		CourseId: c3.Id,
+		User_ID:   user.ID,
+		Course_ID: c3.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.RejectEnrollment(user.Id, c2.Id); err != nil {
+	if err := db.RejectEnrollment(user.ID, c2.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.Id, c3.Id); err != nil {
+	if err := db.EnrollStudent(user.ID, c3.ID); err != nil {
 		t.Fatal(err)
 	}
 
-	courses, err := db.GetCoursesByUser(user.Id)
+	courses, err := db.GetCoursesByUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	wantCourses := []*pb.Course{
-		{Id: c1.Id, DirectoryId: 1, Enrolled: pb.Enrollment_PENDING},
-		{Id: c2.Id, DirectoryId: 2, Enrolled: pb.Enrollment_REJECTED},
-		{Id: c3.Id, DirectoryId: 3, Enrolled: pb.Enrollment_STUDENT},
-		{Id: c4.Id, DirectoryId: 4, Enrolled: -1},
+		{ID: c1.ID, Directory_ID: 1, Enrolled: pb.Enrollment_Pending},
+		{ID: c2.ID, Directory_ID: 2, Enrolled: pb.Enrollment_Rejected},
+		{ID: c3.ID, Directory_ID: 3, Enrolled: pb.Enrollment_Student},
+		{ID: c4.ID, Directory_ID: 4, Enrolled: -1},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
@@ -424,8 +423,8 @@ func TestGetRemoteIdentity(t *testing.T) {
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
 		&pb.RemoteIdentity{
-			Provider: provider,
-			RemoteId: remoteID,
+			Provider:  provider,
+			Remote_ID: remoteID,
 		},
 	); err != nil {
 		t.Fatal(err)
@@ -480,32 +479,32 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 
 	var (
 		wantUser1 = &pb.User{
-			Id: uID,
+			ID: uID,
 			RemoteIdentities: []*pb.RemoteIdentity{{
-				Id:          rID1,
+				ID:          rID1,
 				Provider:    provider1,
-				RemoteId:    remoteID1,
+				Remote_ID:   remoteID1,
 				AccessToken: secret1,
-				UserId:      uID,
+				User_ID:     uID,
 			}},
 		}
 
 		wantUser2 = &pb.User{
-			Id: uID,
+			ID: uID,
 			RemoteIdentities: []*pb.RemoteIdentity{
 				{
-					Id:          rID1,
+					ID:          rID1,
 					Provider:    provider1,
-					RemoteId:    remoteID1,
+					Remote_ID:   remoteID1,
 					AccessToken: secret1,
-					UserId:      uID,
+					User_ID:     uID,
 				},
 				{
-					Id:          rID2,
+					ID:          rID2,
 					Provider:    provider2,
-					RemoteId:    remoteID2,
+					Remote_ID:   remoteID2,
 					AccessToken: secret2,
-					UserId:      uID,
+					User_ID:     uID,
 				},
 			},
 		}
@@ -527,7 +526,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		&user1,
 		&pb.RemoteIdentity{
 			Provider:    provider1,
-			RemoteId:    remoteID1,
+			Remote_ID:   remoteID1,
 			AccessToken: secret1,
 		},
 	); err != nil {
@@ -538,7 +537,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		t.Errorf("have user %+v want %+v", &user1, wantUser1)
 	}
 
-	if err := db.AssociateUserWithRemoteIdentity(user1.Id, provider2, remoteID2, secret2); err != nil {
+	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret2); err != nil {
 		t.Fatal(err)
 	}
 
@@ -551,7 +550,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 		t.Errorf("have user %+v want %+v", user2, wantUser2)
 	}
 
-	if err := db.AssociateUserWithRemoteIdentity(user1.Id, provider2, remoteID2, secret3); err != nil {
+	if err := db.AssociateUserWithRemoteIdentity(user1.ID, provider2, remoteID2, secret3); err != nil {
 		t.Fatal(err)
 	}
 
@@ -610,11 +609,11 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Error("user should not yet be an administrator")
 	}
 
-	if err := db.SetAdmin(user.Id); err != nil {
+	if err := db.SetAdmin(user.ID); err != nil {
 		t.Error(err)
 	}
 
-	admin, err := db.GetUser(user.Id)
+	admin, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -634,16 +633,16 @@ func TestGormDBCreateCourse(t *testing.T) {
 		Year: 2017,
 		Tag:  "tag",
 
-		Provider:    "github",
-		DirectoryId: 1,
+		Provider:     "github",
+		Directory_ID: 1,
 	}
 
 	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.Id, &course); err != nil {
+	if err := db.CreateCourse(user.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 
-	if course.Id == 0 {
+	if course.ID == 0 {
 		t.Error("expected id to be set")
 	}
 }
@@ -653,36 +652,36 @@ func TestGormDBCreateCourseNonAdmin(t *testing.T) {
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(admin.Id, &pb.Course{}); err != nil {
+	if err := db.CreateCourse(admin.ID, &pb.Course{}); err != nil {
 		t.Fatal(err)
 	}
 	nonAdmin := createFakeUser(t, db, 11)
 	// the following should fail to create a course
-	if err := db.CreateCourse(nonAdmin.Id, &pb.Course{}); err == nil {
+	if err := db.CreateCourse(nonAdmin.ID, &pb.Course{}); err == nil {
 		t.Fatal(err)
 	}
 }
 
 func TestGormDBGetCourse(t *testing.T) {
 	course := &pb.Course{
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryId: 1234,
+		Name:         "Test Course",
+		Code:         "DAT100",
+		Year:         2017,
+		Tag:          "Spring",
+		Provider:     "github",
+		Directory_ID: 1234,
 	}
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.Id, course); err != nil {
+	if err := db.CreateCourse(user.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get the created course.
-	createdCourse, err := db.GetCourse(course.Id)
+	createdCourse, err := db.GetCourse(course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -695,24 +694,24 @@ func TestGormDBGetCourse(t *testing.T) {
 
 func TestGormDBGetCourseByDirectory(t *testing.T) {
 	course := &pb.Course{
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryId: 1234,
+		Name:         "Test Course",
+		Code:         "DAT100",
+		Year:         2017,
+		Tag:          "Spring",
+		Provider:     "github",
+		Directory_ID: 1234,
 	}
 
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.Id, course); err != nil {
+	if err := db.CreateCourse(user.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get the created course.
-	createdCourse, err := db.GetCourseByDirectoryID(course.DirectoryId)
+	createdCourse, err := db.GetCourseByDirectoryID(course.Directory_ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -736,20 +735,20 @@ func TestGormDBGetCourseNoRecord(t *testing.T) {
 func TestGormDBUpdateCourse(t *testing.T) {
 	var (
 		course = &pb.Course{
-			Name:        "Test Course",
-			Code:        "DAT100",
-			Year:        2017,
-			Tag:         "Spring",
-			Provider:    "github",
-			DirectoryId: 1234,
+			Name:         "Test Course",
+			Code:         "DAT100",
+			Year:         2017,
+			Tag:          "Spring",
+			Provider:     "github",
+			Directory_ID: 1234,
 		}
 		updates = &pb.Course{
-			Name:        "Test Course Edit",
-			Code:        "DAT100-1",
-			Year:        2018,
-			Tag:         "Autumn",
-			Provider:    "gitlab",
-			DirectoryId: 12345,
+			Name:         "Test Course Edit",
+			Code:         "DAT100-1",
+			Year:         2018,
+			Tag:          "Autumn",
+			Provider:     "gitlab",
+			Directory_ID: 12345,
 		}
 	)
 
@@ -757,17 +756,17 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	defer cleanup()
 
 	user := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(user.Id, course); err != nil {
+	if err := db.CreateCourse(user.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
-	updates.Id = course.Id
+	updates.ID = course.ID
 	if err := db.UpdateCourse(updates); err != nil {
 		t.Fatal(err)
 	}
 
 	// Get the updated course.
-	updatedCourse, err := db.GetCourse(course.Id)
+	updatedCourse, err := db.GetCourse(course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -810,8 +809,8 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	defer cleanup()
 
 	if err := db.CreateSubmission(&pb.Submission{
-		AssignmentId: 1,
-		UserId:       1,
+		Assignment_ID: 1,
+		User_ID:       1,
 	}); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
 	}
@@ -819,12 +818,12 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	teacher := createFakeUser(t, db, 10)
 	// create a course and an assignment
 	var course pb.Course
-	if err := db.CreateCourse(teacher.Id, &course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 	assigment := pb.Assignment{
-		CourseId: course.Id,
-		Order:    1,
+		Course_ID: course.ID,
+		Order:     1,
 	}
 	if err := db.CreateAssignment(&assigment); err != nil {
 		t.Fatal(err)
@@ -832,8 +831,8 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 
 	// create a submission for the assignment; should fail
 	if err := db.CreateSubmission(&pb.Submission{
-		AssignmentId: assigment.Id,
-		UserId:       2,
+		Assignment_ID: assigment.ID,
+		User_ID:       2,
 	}); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
 	}
@@ -841,25 +840,25 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	// create user and enroll as student
 	user := createFakeUser(t, db, 11)
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   user.Id,
-		CourseId: course.Id,
+		User_ID:   user.ID,
+		Course_ID: course.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.Id, course.Id); err != nil {
+	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
 
 	// create another submission for the assignment; now it should succeed
 	if err := db.CreateSubmission(&pb.Submission{
-		AssignmentId: assigment.Id,
-		UserId:       user.Id,
+		Assignment_ID: assigment.ID,
+		User_ID:       user.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	// confirm that the submission is in the database
-	submissions, err := db.GetSubmissions(course.Id, user.Id)
+	submissions, err := db.GetSubmissions(course.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -867,9 +866,9 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		t.Fatalf("have %d submissions want %d", len(submissions), 1)
 	}
 	want := &pb.Submission{
-		Id:           submissions[0].Id,
-		AssignmentId: assigment.Id,
-		UserId:       user.Id,
+		ID:            submissions[0].ID,
+		Assignment_ID: assigment.ID,
+		User_ID:       user.ID,
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
@@ -882,12 +881,12 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	teacher := createFakeUser(t, db, 10)
 	// Create course c1 and c2
-	c1 := pb.Course{DirectoryId: 1}
-	if err := db.CreateCourse(teacher.Id, &c1); err != nil {
+	c1 := pb.Course{Directory_ID: 1}
+	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
-	c2 := pb.Course{DirectoryId: 2}
-	if err := db.CreateCourse(teacher.Id, &c2); err != nil {
+	c2 := pb.Course{Directory_ID: 2}
+	if err := db.CreateCourse(teacher.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
 
@@ -896,33 +895,33 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	// enroll student in course c1
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserId:   user.Id,
-		CourseId: c1.Id,
+		User_ID:   user.ID,
+		Course_ID: c1.ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.Id, c1.Id); err != nil {
+	if err := db.EnrollStudent(user.ID, c1.ID); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create some assignments
 	assignment1 := pb.Assignment{
-		Order:    1,
-		CourseId: c1.Id,
+		Order:     1,
+		Course_ID: c1.ID,
 	}
 	if err := db.CreateAssignment(&assignment1); err != nil {
 		t.Fatal(err)
 	}
 	assignment2 := pb.Assignment{
-		Order:    2,
-		CourseId: c1.Id,
+		Order:     2,
+		Course_ID: c1.ID,
 	}
 	if err := db.CreateAssignment(&assignment2); err != nil {
 		t.Fatal(err)
 	}
 	assignment3 := pb.Assignment{
-		Order:    1,
-		CourseId: c2.Id,
+		Order:     1,
+		Course_ID: c2.ID,
 	}
 	if err := db.CreateAssignment(&assignment3); err != nil {
 		t.Fatal(err)
@@ -930,22 +929,22 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	// Create some submissions
 	submission1 := pb.Submission{
-		UserId:       user.Id,
-		AssignmentId: assignment1.Id,
+		User_ID:       user.ID,
+		Assignment_ID: assignment1.ID,
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
 	}
 	submission2 := pb.Submission{
-		UserId:       user.Id,
-		AssignmentId: assignment1.Id,
+		User_ID:       user.ID,
+		Assignment_ID: assignment1.ID,
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
 	}
 	submission3 := pb.Submission{
-		UserId:       user.Id,
-		AssignmentId: assignment2.Id,
+		User_ID:       user.ID,
+		Assignment_ID: assignment2.ID,
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
@@ -953,7 +952,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	// Even if there is three submission, only the latest for each assignment should be returned
 
-	submissions, err := db.GetSubmissions(c1.Id, user.Id)
+	submissions, err := db.GetSubmissions(c1.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -964,14 +963,14 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		}
 		t.Errorf("have %#v want %#v", submissions, want)
 	}
-	data, err := db.GetSubmissions(c1.Id, user.Id)
+	data, err := db.GetSubmissions(c1.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetSubmissions(c2.Id, user.Id)
+	data, err = db.GetSubmissions(c2.ID, user.ID)
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {
@@ -999,7 +998,7 @@ var createGroupTests = []struct {
 	{
 		name: "course not found",
 		getGroup: func(uint64, ...uint64) *pb.Group {
-			return &pb.Group{CourseId: 999}
+			return &pb.Group{Course_ID: 999}
 		},
 		err: gorm.ErrRecordNotFound,
 	},
@@ -1010,7 +1009,7 @@ var createGroupTests = []struct {
 	{
 		name: "course found",
 		getGroup: func(cid uint64, _ ...uint64) *pb.Group {
-			return &pb.Group{CourseId: cid}
+			return &pb.Group{Course_ID: cid}
 		},
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
@@ -1019,15 +1018,15 @@ var createGroupTests = []struct {
 		name: "with non existing users",
 		getGroup: func(cid uint64, _ ...uint64) *pb.Group {
 			return &pb.Group{
-				CourseId: cid,
+				Course_ID: cid,
 				Users: []*pb.User{
-					{Id: 101},
-					{Id: 102},
+					{ID: 101},
+					{ID: 102},
 				},
 			}
 		},
 
-		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
+		enrollments: []uint{uint(pb.Enrollment_Pending), uint(pb.Enrollment_Pending)},
 		err:         gorm.ErrRecordNotFound,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
@@ -1037,14 +1036,14 @@ var createGroupTests = []struct {
 		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
 			var users []*pb.User
 			for _, uid := range uids {
-				users = append(users, &pb.User{Id: uid})
+				users = append(users, &pb.User{ID: uid})
 			}
 			return &pb.Group{
-				CourseId: cid,
-				Users:    users,
+				Course_ID: cid,
+				Users:     users,
 			}
 		},
-		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
+		enrollments: []uint{uint(pb.Enrollment_Pending), uint(pb.Enrollment_Pending)},
 		err:         gorm.ErrRecordNotFound,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
@@ -1054,14 +1053,14 @@ var createGroupTests = []struct {
 		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
 			var users []*pb.User
 			for _, uid := range uids {
-				users = append(users, &pb.User{Id: uid})
+				users = append(users, &pb.User{ID: uid})
 			}
 			return &pb.Group{
-				CourseId: cid,
-				Users:    users,
+				Course_ID: cid,
+				Users:     users,
 			}
 		},
-		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
+		enrollments: []uint{uint(pb.Enrollment_Pending), uint(pb.Enrollment_Pending)},
 		err:         gorm.ErrRecordNotFound,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
@@ -1071,14 +1070,14 @@ var createGroupTests = []struct {
 		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
 			var users []*pb.User
 			for _, uid := range uids {
-				users = append(users, &pb.User{Id: uid})
+				users = append(users, &pb.User{ID: uid})
 			}
 			return &pb.Group{
-				CourseId: cid,
-				Users:    users,
+				Course_ID: cid,
+				Users:     users,
 			}
 		},
-		enrollments: []uint{uint(pb.Enrollment_REJECTED), uint(pb.Enrollment_REJECTED)},
+		enrollments: []uint{uint(pb.Enrollment_Rejected), uint(pb.Enrollment_Rejected)},
 		err:         gorm.ErrRecordNotFound,
 	},
 	// Should pass as the user exists and is enrolled in the course.
@@ -1087,14 +1086,14 @@ var createGroupTests = []struct {
 		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
 			var users []*pb.User
 			for _, uid := range uids {
-				users = append(users, &pb.User{Id: uid})
+				users = append(users, &pb.User{ID: uid})
 			}
 			return &pb.Group{
-				CourseId: cid,
-				Users:    users,
+				Course_ID: cid,
+				Users:     users,
 			}
 		},
-		enrollments: []uint{uint(pb.Enrollment_STUDENT)},
+		enrollments: []uint{uint(pb.Enrollment_Student)},
 	},
 	// Should pass as the users exists and are enrolled in the course.
 	{
@@ -1102,14 +1101,14 @@ var createGroupTests = []struct {
 		getGroup: func(cid uint64, uids ...uint64) *pb.Group {
 			var users []*pb.User
 			for _, uid := range uids {
-				users = append(users, &pb.User{Id: uid})
+				users = append(users, &pb.User{ID: uid})
 			}
 			return &pb.Group{
-				CourseId: cid,
-				Users:    users,
+				Course_ID: cid,
+				Users:     users,
 			}
 		},
-		enrollments: []uint{uint(pb.Enrollment_STUDENT), uint(pb.Enrollment_STUDENT)},
+		enrollments: []uint{uint(pb.Enrollment_Student), uint(pb.Enrollment_Student)},
 	},
 }
 
@@ -1120,33 +1119,33 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 
 			teacher := createFakeUser(t, db, 10)
 			var course pb.Course
-			if err := db.CreateCourse(teacher.Id, &course); err != nil {
+			if err := db.CreateCourse(teacher.ID, &course); err != nil {
 				t.Fatal(err)
 			}
 			var uids []uint64
 			// create as many users as the desired number of enrollments
 			for i := 0; i < len(test.enrollments); i++ {
 				user := createFakeUser(t, db, uint64(i))
-				uids = append(uids, user.Id)
+				uids = append(uids, user.ID)
 			}
 			// enroll users in course
 			//TODO(meling) this loop and the one above can be merged, I think
 			for i := 0; i < len(uids); i++ {
-				if test.enrollments[i] == uint(pb.Enrollment_PENDING) {
+				if test.enrollments[i] == uint(pb.Enrollment_Pending) {
 					continue
 				}
 				if err := db.CreateEnrollment(&pb.Enrollment{
-					CourseId: course.Id,
-					UserId:   uids[i],
+					Course_ID: course.ID,
+					User_ID:   uids[i],
 				}); err != nil {
 					t.Fatal(err)
 				}
 				err := errors.New("enrollment status not implemented")
 				switch test.enrollments[i] {
-				case uint(pb.Enrollment_REJECTED):
-					err = db.RejectEnrollment(uids[i], course.Id)
-				case uint(pb.Enrollment_STUDENT):
-					err = db.EnrollStudent(uids[i], course.Id)
+				case uint(pb.Enrollment_Rejected):
+					err = db.RejectEnrollment(uids[i], course.ID)
+				case uint(pb.Enrollment_Student):
+					err = db.EnrollStudent(uids[i], course.ID)
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -1154,7 +1153,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 
 			// Test.
-			group := test.getGroup(course.Id, uids...)
+			group := test.getGroup(course.ID, uids...)
 			if err := db.CreateGroup(group); err != test.err {
 				t.Errorf("have error '%v' want '%v'", err, test.err)
 			}
@@ -1163,7 +1162,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 
 			// Verify.
-			enrollments, err := db.GetEnrollmentsByCourse(course.Id, pb.Enrollment_STUDENT)
+			enrollments, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_Student)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1172,15 +1171,15 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 			sorted := make(map[uint64]*pb.Enrollment)
 			for _, enrollment := range enrollments {
-				sorted[enrollment.UserId] = enrollment
+				sorted[enrollment.User_ID] = enrollment
 			}
 			for _, user := range group.Users {
-				if _, ok := sorted[user.Id]; !ok {
-					t.Errorf("have no enrollment for user %d", user.Id)
+				if _, ok := sorted[user.ID]; !ok {
+					t.Errorf("have no enrollment for user %d", user.ID)
 				}
 			}
 
-			have, err := db.GetGroup(group.Id)
+			have, err := db.GetGroup(group.ID)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1205,11 +1204,11 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 
 	teacher := createFakeUser(t, db, 10)
 	var course pb.Course
-	if err := db.CreateCourse(teacher.Id, &course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 	var users []*pb.User
-	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_STUDENT}
+	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_Student, pb.Enrollment_Student}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
 		user := createFakeUser(t, db, uint64(i))
@@ -1217,19 +1216,19 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	}
 	// enroll users in course
 	for i := 0; i < len(users); i++ {
-		if enrollments[i] == pb.Enrollment_PENDING {
+		if enrollments[i] == pb.Enrollment_Pending {
 			continue
 		}
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			CourseId: course.Id,
-			UserId:   users[i].Id,
+			Course_ID: course.ID,
+			User_ID:   users[i].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
-		case pb.Enrollment_STUDENT:
-			err = db.EnrollStudent(users[i].Id, course.Id)
+		case pb.Enrollment_Student:
+			err = db.EnrollStudent(users[i].ID, course.ID)
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -1239,9 +1238,9 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 	// Try to create two identical groups. The first should succeed while
 	// further attempts should fail with ErrDuplicateGroup.
 	identical := &pb.Group{
-		Name:     "SameNameGroup",
-		CourseId: course.Id,
-		Users:    users,
+		Name:      "SameNameGroup",
+		Course_ID: course.ID,
+		Users:     users,
 	}
 	if err := db.CreateGroup(identical); err != nil {
 		t.Fatal(err)
@@ -1265,8 +1264,8 @@ func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.Use
 	var user pb.User
 	err := db.CreateUserFromRemoteIdentity(&user,
 		&pb.RemoteIdentity{
-			Provider: "fake",
-			RemoteId: remoteID,
+			Provider:  "fake",
+			Remote_ID: remoteID,
 		})
 	if err != nil {
 		t.Fatal(err)
@@ -1280,16 +1279,16 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 
 	user := createFakeUser(t, db, 10)
 	repo := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 100,
-		UserId:       user.Id,
+		Repository_ID: 100,
+		User_ID:       user.ID,
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := db.GetRepository(repo.RepositoryId); err != nil {
+	if _, err := db.GetRepository(repo.Repository_ID); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -1299,10 +1298,10 @@ func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
 	defer cleanup()
 
 	repo := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 100,
-		UserId:       20,
+		Repository_ID: 100,
+		User_ID:       20,
 	}
 	if err := db.CreateRepository(&repo); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
@@ -1314,21 +1313,21 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 	defer cleanup()
 
 	repo := pb.Repository{
-		DirectoryId:  120,
-		RepositoryId: 100,
-		RepoType:     pb.Repository_COURSEINFO,
+		Directory_ID:  120,
+		Repository_ID: 100,
+		RepoType:      pb.Repository_CourseInfo,
 		// Name:         "Name",
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
 	}
 
-	gotRepo, err := db.GetRepository(repo.RepositoryId)
+	gotRepo, err := db.GetRepository(repo.Repository_ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !gotRepo.RepoType.IsCourseRepo() {
-		t.Fatalf("Expected course info repo (%v), but got: %v", models.CourseInfoRepo, gotRepo.RepoType)
+		t.Fatalf("Expected course info repo (%v), but got: %v", pb.Repository_CourseInfo, gotRepo.RepoType)
 	}
 }
 
@@ -1347,17 +1346,17 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	defer cleanup()
 
 	teacher := createFakeUser(t, db, 10)
-	course := pb.Course{DirectoryId: 1}
-	if err := db.CreateCourse(teacher.Id, &course); err != nil {
+	course := pb.Course{Directory_ID: 1}
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	courseTwo := pb.Course{DirectoryId: 2}
-	if err := db.CreateCourse(teacher.Id, &courseTwo); err != nil {
+	courseTwo := pb.Course{Directory_ID: 2}
+	if err := db.CreateCourse(teacher.ID, &courseTwo); err != nil {
 		t.Fatal(err)
 	}
 
 	var users []*pb.User
-	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_STUDENT}
+	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_Student, pb.Enrollment_Student}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
 		user := createFakeUser(t, db, uint64(i))
@@ -1365,19 +1364,19 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 	// enroll users in course
 	for i := 0; i < len(users); i++ {
-		if enrollments[i] == pb.Enrollment_PENDING {
+		if enrollments[i] == pb.Enrollment_Pending {
 			continue
 		}
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			CourseId: course.Id,
-			UserId:   users[i].Id,
+			Course_ID: course.ID,
+			User_ID:   users[i].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
-		case pb.Enrollment_STUDENT:
-			err = db.EnrollStudent(users[i].Id, course.Id)
+		case pb.Enrollment_Student:
+			err = db.EnrollStudent(users[i].ID, course.ID)
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -1386,9 +1385,9 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 
 	// Creating Group
 	group := &pb.Group{
-		Name:     "SameNameGroup",
-		CourseId: course.Id,
-		Users:    users,
+		Name:      "SameNameGroup",
+		Course_ID: course.ID,
+		Users:     users,
 	}
 	if err := db.CreateGroup(group); err != nil {
 		t.Fatal(err)
@@ -1397,24 +1396,24 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	// Create Assignments
 	assignment1 := pb.Assignment{
 		Order:      1,
-		CourseId:   course.Id,
-		IsGrouplab: true,
+		Course_ID:  course.ID,
+		IsGroupLab: true,
 	}
 	if err := db.CreateAssignment(&assignment1); err != nil {
 		t.Fatal(err)
 	}
 	assignment2 := pb.Assignment{
 		Order:      2,
-		CourseId:   course.Id,
-		IsGrouplab: true,
+		Course_ID:  course.ID,
+		IsGroupLab: true,
 	}
 	if err := db.CreateAssignment(&assignment2); err != nil {
 		t.Fatal(err)
 	}
 	assignment3 := pb.Assignment{
 		Order:      1,
-		CourseId:   courseTwo.Id,
-		IsGrouplab: false,
+		Course_ID:  courseTwo.ID,
+		IsGroupLab: false,
 	}
 	if err := db.CreateAssignment(&assignment3); err != nil {
 		t.Fatal(err)
@@ -1422,29 +1421,29 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 
 	// Create some submissions
 	submission1 := pb.Submission{
-		GroupId:      group.Id,
-		AssignmentId: assignment1.Id,
+		Group_ID:      group.ID,
+		Assignment_ID: assignment1.ID,
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
 	}
 	submission2 := pb.Submission{
-		GroupId:      group.Id,
-		AssignmentId: assignment1.Id,
+		Group_ID:      group.ID,
+		Assignment_ID: assignment1.ID,
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
 	}
 	submission3 := pb.Submission{
-		GroupId:      group.Id,
-		AssignmentId: assignment2.Id,
+		Group_ID:      group.ID,
+		Assignment_ID: assignment2.ID,
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
 	}
 	submission4 := pb.Submission{
-		UserId:       users[0].Id,
-		AssignmentId: assignment3.Id,
+		User_ID:       users[0].ID,
+		Assignment_ID: assignment3.ID,
 	}
 	if err := db.CreateSubmission(&submission4); err != nil {
 		t.Fatal(err)
@@ -1452,7 +1451,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 
 	// Even if there is three submission, only the latest for each assignment should be returned
 
-	submissions, err := db.GetGroupSubmissions(course.Id, group.Id)
+	submissions, err := db.GetGroupSubmissions(course.ID, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1463,14 +1462,14 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		}
 		t.Errorf("have %#v want %#v", submissions, want)
 	}
-	data, err := db.GetGroupSubmissions(course.Id, group.Id)
+	data, err := db.GetGroupSubmissions(course.ID, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetGroupSubmissions(courseTwo.Id, group.Id)
+	data, err = db.GetGroupSubmissions(courseTwo.ID, group.ID)
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {
@@ -1483,16 +1482,16 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryId: 1234,
+		Name:         "Test Course",
+		Code:         "DAT100",
+		Year:         2017,
+		Tag:          "Spring",
+		Provider:     "github",
+		Directory_ID: 1234,
 	}
 
 	teacher := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(teacher.Id, course); err != nil {
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1500,12 +1499,12 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 100,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_COURSEINFO,
-		HtmlUrl:      "http://repoCourseInfo.com/",
+		Repository_ID: 100,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_CourseInfo,
+		HTML_URL:      "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -1513,12 +1512,12 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 
 	// Creating solution
 	repoSolution := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 101,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_SOLUTION,
-		HtmlUrl:      "http://repoSolution.com/",
+		Repository_ID: 101,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_Solution,
+		HTML_URL:      "http://repoSolution.com/",
 	}
 	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
@@ -1526,12 +1525,12 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 102,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_ASSIGNMENT,
-		HtmlUrl:      "http://repoAssignment.com/",
+		Repository_ID: 102,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_Assignment,
+		HTML_URL:      "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -1562,11 +1561,11 @@ func TestDeleteGroup(t *testing.T) {
 
 	teacher := createFakeUser(t, db, 10)
 	var course pb.Course
-	if err := db.CreateCourse(teacher.Id, &course); err != nil {
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
 	var users []*pb.User
-	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_STUDENT}
+	enrollments := []pb.Enrollment_UserStatus{pb.Enrollment_Student, pb.Enrollment_Student}
 	// create as many users as the desired number of enrollments
 	for i := 0; i < len(enrollments); i++ {
 		user := createFakeUser(t, db, uint64(i))
@@ -1574,19 +1573,19 @@ func TestDeleteGroup(t *testing.T) {
 	}
 	// enroll users in course
 	for i := 0; i < len(users); i++ {
-		if enrollments[i] == pb.Enrollment_PENDING {
+		if enrollments[i] == pb.Enrollment_Pending {
 			continue
 		}
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			CourseId: course.Id,
-			UserId:   users[i].Id,
+			Course_ID: course.ID,
+			User_ID:   users[i].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
-		case pb.Enrollment_STUDENT:
-			err = db.EnrollStudent(users[i].Id, course.Id)
+		case pb.Enrollment_Student:
+			err = db.EnrollStudent(users[i].ID, course.ID)
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -1594,10 +1593,10 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	group := &pb.Group{
-		Name:     "SameNameGroup",
-		CourseId: course.Id,
-		Users:    users,
-		Id:       1,
+		Name:      "SameNameGroup",
+		Course_ID: course.ID,
+		Users:     users,
+		ID:        1,
 	}
 	if err := db.CreateGroup(group); err != nil {
 		t.Fatal(err)
@@ -1608,7 +1607,7 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotModels, _ := db.GetGroup(group.Id)
+	gotModels, _ := db.GetGroup(group.ID)
 	if gotModels != nil {
 		t.Errorf("Got %+v wanted None", gotModels)
 	}
@@ -1619,17 +1618,17 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryId: 1234,
-		Id:          1,
+		Name:         "Test Course",
+		Code:         "DAT100",
+		Year:         2017,
+		Tag:          "Spring",
+		Provider:     "github",
+		Directory_ID: 1234,
+		ID:           1,
 	}
 
 	teacher := createFakeUser(t, db, 10)
-	if err := db.CreateCourse(teacher.Id, course); err != nil {
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1637,12 +1636,12 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
-		DirectoryId: 1234,
+		Directory_ID: 1234,
 		// Name:         "Name",
-		RepositoryId: 100,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_COURSEINFO,
-		HtmlUrl:      "http://repoCourseInfo.com/",
+		Repository_ID: 100,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_CourseInfo,
+		HTML_URL:      "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -1650,12 +1649,12 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	// Creating solution
 	repoSolution := pb.Repository{
-		DirectoryId: 1234,
+		Directory_ID: 1234,
 		// Name:         "Name",
-		RepositoryId: 101,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_SOLUTION,
-		HtmlUrl:      "http://repoSolution.com/",
+		Repository_ID: 101,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_Solution,
+		HTML_URL:      "http://repoSolution.com/",
 	}
 	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
@@ -1663,12 +1662,12 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
-		DirectoryId: 1234,
+		Directory_ID: 1234,
 		// Name:         "Name",
-		RepositoryId: 102,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_ASSIGNMENT,
-		HtmlUrl:      "http://repoAssignment.com/",
+		Repository_ID: 102,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_Assignment,
+		HTML_URL:      "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -1676,7 +1675,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	want := []*pb.Repository{&repoCourseInfo}
 
-	gotRepo, err := db.GetRepositoriesByCourseAndType(course.Id, pb.Repository_COURSEINFO)
+	gotRepo, err := db.GetRepositoriesByCourseAndType(course.ID, pb.Repository_CourseInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1698,17 +1697,17 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{
-		Id:          1234,
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryId: 120,
+		ID:           1234,
+		Name:         "Test Course",
+		Code:         "DAT100",
+		Year:         2017,
+		Tag:          "Spring",
+		Provider:     "github",
+		Directory_ID: 120,
 	}
 
 	teacher := createFakeUser(t, db, 1)
-	if err := db.CreateCourse(teacher.Id, course); err != nil {
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1717,12 +1716,12 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 100,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_COURSEINFO,
-		HtmlUrl:      "http://repoCourseInfo.com/",
+		Repository_ID: 100,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_CourseInfo,
+		HTML_URL:      "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -1730,12 +1729,12 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating solution
 	repoSolution := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 101,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_SOLUTION,
-		HtmlUrl:      "http://repoSolution.com/",
+		Repository_ID: 101,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_Solution,
+		HTML_URL:      "http://repoSolution.com/",
 	}
 	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
@@ -1743,12 +1742,12 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 102,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_ASSIGNMENT,
-		HtmlUrl:      "http://repoAssignment.com/",
+		Repository_ID: 102,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_Assignment,
+		HTML_URL:      "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -1756,12 +1755,12 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating UserRepo for user
 	repoUser := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 103,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_USER,
-		HtmlUrl:      "http://repoAssignment.com/",
+		Repository_ID: 103,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_User,
+		HTML_URL:      "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUser); err != nil {
 		t.Fatal(err)
@@ -1769,12 +1768,12 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating UserRepo for userTwo
 	repoUserTwo := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 104,
-		UserId:       userTwo.Id,
-		RepoType:     pb.Repository_USER,
-		HtmlUrl:      "http://repoAssignment.com/",
+		Repository_ID: 104,
+		User_ID:       userTwo.ID,
+		RepoType:      pb.Repository_User,
+		HTML_URL:      "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUserTwo); err != nil {
 		t.Fatal(err)
@@ -1782,7 +1781,7 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	want := &repoUserTwo
 
-	gotRepo, err := db.GetRepositoryByCourseUserType(course.Id, userTwo.Id, pb.Repository_USER)
+	gotRepo, err := db.GetRepositoryByCourseUserType(course.ID, userTwo.ID, pb.Repository_User)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1798,17 +1797,17 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{
-		Id:          1234,
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryId: 120,
+		ID:           1234,
+		Name:         "Test Course",
+		Code:         "DAT100",
+		Year:         2017,
+		Tag:          "Spring",
+		Provider:     "github",
+		Directory_ID: 120,
 	}
 
 	teacher := createFakeUser(t, db, 1)
-	if err := db.CreateCourse(teacher.Id, course); err != nil {
+	if err := db.CreateCourse(teacher.ID, course); err != nil {
 		t.Fatal(err)
 	}
 	user := createFakeUser(t, db, 10)
@@ -1816,12 +1815,12 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 100,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_COURSEINFO,
-		HtmlUrl:      "http://repoCourseInfo.com/",
+		Repository_ID: 100,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_CourseInfo,
+		HTML_URL:      "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -1829,12 +1828,12 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 
 	// Creating solution
 	repoSolution := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 101,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_SOLUTION,
-		HtmlUrl:      "http://repoSolution.com/",
+		Repository_ID: 101,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_Solution,
+		HTML_URL:      "http://repoSolution.com/",
 	}
 	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
@@ -1842,12 +1841,12 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 102,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_ASSIGNMENT,
-		HtmlUrl:      "http://repoAssignment.com/",
+		Repository_ID: 102,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_Assignment,
+		HTML_URL:      "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -1855,12 +1854,12 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 
 	// Creating UserRepo for user
 	repoUser := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 103,
-		UserId:       user.Id,
-		RepoType:     pb.Repository_USER,
-		HtmlUrl:      "http://repoAssignment.com/",
+		Repository_ID: 103,
+		User_ID:       user.ID,
+		RepoType:      pb.Repository_User,
+		HTML_URL:      "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUser); err != nil {
 		t.Fatal(err)
@@ -1868,12 +1867,12 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 
 	// Creating UserRepo for userTwo
 	repoUserTwo := pb.Repository{
-		DirectoryId: 120,
+		Directory_ID: 120,
 		// Name:         "Name",
-		RepositoryId: 104,
-		UserId:       userTwo.Id,
-		RepoType:     pb.Repository_USER,
-		HtmlUrl:      "http://repoAssignment.com/",
+		Repository_ID: 104,
+		User_ID:       userTwo.ID,
+		RepoType:      pb.Repository_User,
+		HTML_URL:      "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUserTwo); err != nil {
 		t.Fatal(err)
@@ -1881,7 +1880,7 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 
 	want := &repoUserTwo
 
-	gotRepo, err := db.GetRepositoryByCourseUserType(course.Id, userTwo.Id, pb.Repository_USER)
+	gotRepo, err := db.GetRepositoryByCourseUserType(course.ID, userTwo.ID, pb.Repository_User)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,10 +1,6 @@
 package models
 
-import (
-	"errors"
-	"strconv"
-)
-
+/*
 // RepoType represents the type of repsitory.
 type RepoType uint
 
@@ -80,3 +76,4 @@ func (t RepoType) IsStudentRepo() bool {
 func (t RepoType) IsCourseRepo() bool {
 	return t == CourseInfoRepo || t == TestsRepo || t == SolutionsRepo || t == AssignmentsRepo
 }
+*/

@@ -89,7 +89,7 @@ func refreshAssignmentsFromTestsRepo(logger logrus.FieldLogger, db database.Data
 		return
 	}
 
-	course, err := db.GetCourseByDirectoryID(repo.DirectoryId)
+	course, err := db.GetCourseByDirectoryID(repo.Directory_ID)
 	if err != nil {
 		logger.WithError(err).Error("Failed to get course from database")
 		return
@@ -108,30 +108,30 @@ func refreshAssignmentsFromTestsRepo(logger logrus.FieldLogger, db database.Data
 func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner, repo *pb.Repository,
 	getURL string, commitHash string, scriptPath string) {
 
-	course, err := db.GetCourseByDirectoryID(repo.DirectoryId)
+	course, err := db.GetCourseByDirectoryID(repo.Directory_ID)
 	if err != nil {
 		logger.WithError(err).Error("Failed to get course from database")
 		return
 	}
 
-	courseCreator, err := db.GetUser(course.CoursecreatorId)
+	courseCreator, err := db.GetUser(course.CourseCreator_ID)
 	if err != nil || len(courseCreator.RemoteIdentities) < 1 {
 		logger.WithError(err).Error("Failed to fetch course creator")
 	}
 
-	selectedAssignment, err := db.GetNextAssignment(course.Id, repo.UserId, repo.GroupId)
+	selectedAssignment, err := db.GetNextAssignment(course.ID, repo.User_ID, repo.Group_ID)
 	if err != nil {
 		logger.WithError(err).Error("Failed to find a next unapproved assignment")
 		return
 	}
 	logger.WithField("Assignment", selectedAssignment).Info("Found assignment")
 
-	testRepos, err := db.GetRepositoriesByCourseAndType(course.Id, pb.Repository_TESTS)
+	testRepos, err := db.GetRepositoriesByCourseAndType(course.ID, pb.Repository_Tests)
 	if err != nil || len(testRepos) < 1 {
 		logger.WithError(err).Error("Failed to find test repository in database")
 		return
 	}
-	getURLTest := testRepos[0].HtmlUrl
+	getURLTest := testRepos[0].HTML_URL
 	logger.WithField("url", getURL).Info("Code Repository")
 	logger.WithField("url", getURLTest).Info("Test repository")
 
@@ -173,13 +173,13 @@ func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner,
 	logger.WithField("result", result).Info("Extracted results")
 
 	err = db.CreateSubmission(&pb.Submission{
-		AssignmentId: selectedAssignment.Id,
-		BuildInfo:    buildInfo,
-		CommitHash:   commitHash,
-		Score:        uint32(result.TotalScore()),
-		ScoreObjects: scores,
-		UserId:       repo.UserId,
-		GroupId:      repo.GroupId,
+		Assignment_ID: selectedAssignment.ID,
+		BuildInfo:     buildInfo,
+		CommitHash:    commitHash,
+		Score:         uint32(result.TotalScore()),
+		ScoreObjects:  scores,
+		User_ID:       repo.User_ID,
+		Group_ID:      repo.Group_ID,
 	})
 	if err != nil {
 		logger.WithError(err).Error("Failed to add submission to database")
@@ -193,7 +193,7 @@ func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remote
 	// Add repository url to repository table in database to prevent requestion the data every time we need it.
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: remoteIdentity.AccessToken})
 	client := gh.NewClient(oauth2.NewClient(context.Background(), ts))
-	allRepos, err := db.GetRepositoriesByDirectory(repo.DirectoryId)
+	allRepos, err := db.GetRepositoriesByDirectory(repo.Directory_ID)
 	if err != nil {
 		logger.WithError(err).Error("Problem with requesting repositories")
 		return "", err

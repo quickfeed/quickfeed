@@ -25,7 +25,7 @@ func FetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.As
 	ctx, cancel := context.WithTimeout(c, MaxWait)
 	defer cancel()
 
-	directory, err := s.GetDirectory(ctx, course.DirectoryId)
+	directory, err := s.GetDirectory(ctx, course.Directory_ID)
 	if err != nil {
 		return nil, err
 	}
@@ -56,18 +56,18 @@ func FetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.As
 	}
 
 	// parse assignments found in the cloned tests directory
-	return ParseAssignments(cloneDir, course.Id)
+	return ParseAssignments(cloneDir, course.ID)
 }
 
 func createAssignment(request *pb.Assignment, course *pb.Course) (*pb.Assignment, error) {
 
 	return &pb.Assignment{
 		AutoApprove: request.AutoApprove,
-		CourseId:    course.Id,
+		Course_ID:   course.ID,
 		Deadline:    request.Deadline,
 		Language:    request.Language,
 		Name:        request.Name,
-		Order:       uint32(request.Id),
-		IsGrouplab:  request.IsGrouplab,
+		Order:       uint32(request.ID),
+		IsGroupLab:  request.IsGroupLab,
 	}, nil
 }

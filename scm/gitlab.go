@@ -30,7 +30,7 @@ func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error
 	var directories []*pb.Directory
 	for _, group := range groups {
 		directories = append(directories, &pb.Directory{
-			Id:     uint64(group.ID),
+			ID:     uint64(group.ID),
 			Path:   group.Path,
 			Avatar: group.AvatarURL,
 		})
@@ -50,7 +50,7 @@ func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 	}
 
 	return &pb.Directory{
-		Id:     uint64(group.ID),
+		ID:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
@@ -64,7 +64,7 @@ func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory,
 	}
 
 	return &pb.Directory{
-		Id:     uint64(group.ID),
+		ID:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
@@ -78,7 +78,7 @@ func (s *GitlabSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepository
 
 // CreateRepository implements the SCM interface.
 func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	directoryID := int(opt.Directory.Id)
+	directoryID := int(opt.Directory.ID)
 	repo, _, err := s.client.Projects.CreateProject(
 		&gitlab.CreateProjectOptions{
 			Path:        &opt.Path,
@@ -96,7 +96,7 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		WebURL:      repo.WebURL,
 		SSHURL:      repo.SSHURLToRepo,
 		HTTPURL:     repo.HTTPURLToRepo,
-		DirectoryID: opt.Directory.Id,
+		DirectoryID: opt.Directory.ID,
 	}, nil
 }
 
@@ -106,7 +106,7 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Directory
 	if directory.Path != "" {
 		gid = directory.Path
 	} else {
-		gid = strconv.FormatUint(directory.Id, 10)
+		gid = strconv.FormatUint(directory.ID, 10)
 	}
 
 	repos, _, err := s.client.Groups.ListGroupProjects(gid, nil, gitlab.WithContext(ctx))
@@ -122,7 +122,7 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Directory
 			WebURL:      repo.WebURL,
 			SSHURL:      repo.SSHURLToRepo,
 			HTTPURL:     repo.HTTPURLToRepo,
-			DirectoryID: directory.Id,
+			DirectoryID: directory.ID,
 		})
 	}
 

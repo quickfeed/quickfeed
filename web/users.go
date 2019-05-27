@@ -13,22 +13,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-/*
-// Updaterequestuest updates a user object in the database.
-type Updaterequestuest struct {
-	Name      string `json:"name"`
-	StudentID string `json:"studentid"`
-	Email     string `json:"email"`
-	AvatarURL string `json:"avatarurl"`
-	IsAdmin   *bool  `json:"isadmin"`
-}*/
-
 // GetSelf redirects to GetUser with the current user's id.
 func GetSelf(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		usr := c.Get("user").(*pb.User)
-		user, err := db.GetUser(usr.GetId())
+		user, err := db.GetUser(usr.ID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
@@ -41,7 +31,7 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 
 // GetUser returns information about the provided user id.
 func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) {
-	user, err := db.GetUser(request.Id)
+	user, err := db.GetUser(request.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "user not found")
@@ -65,7 +55,7 @@ func GetUsers(db database.Database) (*pb.Users, error) {
 
 // PatchUser promotes a user to an administrator or makes other changes to the user database entry.
 func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
-	updateUser, err := db.GetUser(request.Id)
+	updateUser, err := db.GetUser(request.ID)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "user not found")
 	}
@@ -73,14 +63,14 @@ func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*p
 	if request.Name != "" {
 		updateUser.Name = request.Name
 	}
-	if request.StudentId != "" {
-		updateUser.StudentId = request.StudentId
+	if request.Student_ID != "" {
+		updateUser.Student_ID = request.Student_ID
 	}
 	if request.Email != "" {
 		updateUser.Email = request.Email
 	}
-	if request.AvatarUrl != "" {
-		updateUser.AvatarUrl = request.AvatarUrl
+	if request.Avatar_URL != "" {
+		updateUser.Avatar_URL = request.Avatar_URL
 	}
 
 	// no need to check IsAdmin field for nil any more, it is type safe - it is always boolean and cannot be nil

@@ -752,7 +752,7 @@ proto.User.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.User.prototype.getId = function() {
@@ -799,7 +799,7 @@ proto.User.prototype.setName = function(value) {
 
 
 /**
- * optional string student_id = 4;
+ * optional string student_ID = 4;
  * @return {string}
  */
 proto.User.prototype.getStudentId = function() {
@@ -829,7 +829,7 @@ proto.User.prototype.setEmail = function(value) {
 
 
 /**
- * optional string avatar_url = 6;
+ * optional string avatar_URL = 6;
  * @return {string}
  */
 proto.User.prototype.getAvatarUrl = function() {
@@ -1224,7 +1224,7 @@ proto.RemoteIdentity.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.RemoteIdentity.prototype.getId = function() {
@@ -1254,7 +1254,7 @@ proto.RemoteIdentity.prototype.setProvider = function(value) {
 
 
 /**
- * optional uint64 remote_id = 3;
+ * optional uint64 remote_ID = 3;
  * @return {number}
  */
 proto.RemoteIdentity.prototype.getRemoteId = function() {
@@ -1284,7 +1284,7 @@ proto.RemoteIdentity.prototype.setAccessToken = function(value) {
 
 
 /**
- * optional uint64 user_id = 5;
+ * optional uint64 user_ID = 5;
  * @return {number}
  */
 proto.RemoteIdentity.prototype.getUserId = function() {
@@ -1485,14 +1485,14 @@ proto.Group.serializeBinaryToWriter = function(message, writer) {
  * @enum {number}
  */
 proto.Group.GroupStatus = {
-  PENDING_GROUP: 0,
-  REJECTED_GROUP: 1,
+  PENDING: 0,
+  REJECTED: 1,
   APPROVED: 2,
   DELETED: 3
 };
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.Group.prototype.getId = function() {
@@ -1522,7 +1522,7 @@ proto.Group.prototype.setName = function(value) {
 
 
 /**
- * optional uint64 course_id = 3;
+ * optional uint64 course_ID = 3;
  * @return {number}
  */
 proto.Group.prototype.getCourseId = function() {
@@ -1811,7 +1811,7 @@ proto.Course.prototype.toObject = function(opt_includeInstance) {
 proto.Course.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    coursecreatorId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    courseCreatorId: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
     code: jspb.Message.getFieldWithDefault(msg, 4, ""),
     year: jspb.Message.getFieldWithDefault(msg, 5, 0),
@@ -1867,7 +1867,7 @@ proto.Course.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCoursecreatorId(value);
+      msg.setCourseCreatorId(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
@@ -1948,7 +1948,7 @@ proto.Course.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCoursecreatorId();
+  f = message.getCourseCreatorId();
   if (f !== 0) {
     writer.writeUint64(
       2,
@@ -2032,7 +2032,7 @@ proto.Course.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.Course.prototype.getId = function() {
@@ -2047,16 +2047,16 @@ proto.Course.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 coursecreator_id = 2;
+ * optional uint64 course_creator_ID = 2;
  * @return {number}
  */
-proto.Course.prototype.getCoursecreatorId = function() {
+proto.Course.prototype.getCourseCreatorId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.Course.prototype.setCoursecreatorId = function(value) {
+proto.Course.prototype.setCourseCreatorId = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
@@ -2137,7 +2137,7 @@ proto.Course.prototype.setProvider = function(value) {
 
 
 /**
- * optional uint64 directory_id = 8;
+ * optional uint64 directory_ID = 8;
  * @return {number}
  */
 proto.Course.prototype.getDirectoryId = function() {
@@ -2389,7 +2389,7 @@ proto.Courses.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * repeated Course Courses = 1;
+ * repeated Course courses = 1;
  * @return {!Array<!proto.Course>}
  */
 proto.Courses.prototype.getCoursesList = function() {
@@ -2633,7 +2633,7 @@ proto.Enrollment.UserStatus = {
 };
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.Enrollment.prototype.getId = function() {
@@ -2648,7 +2648,7 @@ proto.Enrollment.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 course_id = 2;
+ * optional uint64 course_ID = 2;
  * @return {number}
  */
 proto.Enrollment.prototype.getCourseId = function() {
@@ -2663,7 +2663,7 @@ proto.Enrollment.prototype.setCourseId = function(value) {
 
 
 /**
- * optional uint64 user_id = 3;
+ * optional uint64 user_ID = 3;
  * @return {number}
  */
 proto.Enrollment.prototype.getUserId = function() {
@@ -2678,7 +2678,7 @@ proto.Enrollment.prototype.setUserId = function(value) {
 
 
 /**
- * optional uint64 group_id = 4;
+ * optional uint64 group_ID = 4;
  * @return {number}
  */
 proto.Enrollment.prototype.getGroupId = function() {
@@ -2997,7 +2997,7 @@ proto.Assignment.toObject = function(includeInstance, msg) {
     deadline: (f = msg.getDeadline()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     autoApprove: jspb.Message.getFieldWithDefault(msg, 6, false),
     order: jspb.Message.getFieldWithDefault(msg, 7, 0),
-    isGrouplab: jspb.Message.getFieldWithDefault(msg, 8, false),
+    isGroupLab: jspb.Message.getFieldWithDefault(msg, 8, false),
     submission: (f = msg.getSubmission()) && proto.Submission.toObject(includeInstance, f)
   };
 
@@ -3066,7 +3066,7 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 8:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setIsGrouplab(value);
+      msg.setIsGroupLab(value);
       break;
     case 9:
       var value = new proto.Submission;
@@ -3152,7 +3152,7 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getIsGrouplab();
+  f = message.getIsGroupLab();
   if (f) {
     writer.writeBool(
       8,
@@ -3171,7 +3171,7 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.Assignment.prototype.getId = function() {
@@ -3186,7 +3186,7 @@ proto.Assignment.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 course_id = 2;
+ * optional uint64 course_ID = 2;
  * @return {number}
  */
 proto.Assignment.prototype.getCourseId = function() {
@@ -3296,18 +3296,18 @@ proto.Assignment.prototype.setOrder = function(value) {
 
 
 /**
- * optional bool is_grouplab = 8;
+ * optional bool is_group_lab = 8;
  * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
  * You should avoid comparisons like {@code val === true/false} in those cases.
  * @return {boolean}
  */
-proto.Assignment.prototype.getIsGrouplab = function() {
+proto.Assignment.prototype.getIsGroupLab = function() {
   return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 8, false));
 };
 
 
 /** @param {boolean} value */
-proto.Assignment.prototype.setIsGrouplab = function(value) {
+proto.Assignment.prototype.setIsGroupLab = function(value) {
   jspb.Message.setProto3BooleanField(this, 8, value);
 };
 
@@ -3706,7 +3706,7 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.Submission.prototype.getId = function() {
@@ -3721,7 +3721,7 @@ proto.Submission.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 assignment_id = 2;
+ * optional uint64 assignment_ID = 2;
  * @return {number}
  */
 proto.Submission.prototype.getAssignmentId = function() {
@@ -3736,7 +3736,7 @@ proto.Submission.prototype.setAssignmentId = function(value) {
 
 
 /**
- * optional uint64 user_id = 3;
+ * optional uint64 user_ID = 3;
  * @return {number}
  */
 proto.Submission.prototype.getUserId = function() {
@@ -3751,7 +3751,7 @@ proto.Submission.prototype.setUserId = function(value) {
 
 
 /**
- * optional uint64 group_id = 4;
+ * optional uint64 group_ID = 4;
  * @return {number}
  */
 proto.Submission.prototype.getGroupId = function() {
@@ -4190,7 +4190,7 @@ proto.Repository.RepoType = {
 };
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.Repository.prototype.getId = function() {
@@ -4205,7 +4205,7 @@ proto.Repository.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 directory_id = 2;
+ * optional uint64 directory_ID = 2;
  * @return {number}
  */
 proto.Repository.prototype.getDirectoryId = function() {
@@ -4220,7 +4220,7 @@ proto.Repository.prototype.setDirectoryId = function(value) {
 
 
 /**
- * optional uint64 repository_id = 3;
+ * optional uint64 repository_ID = 3;
  * @return {number}
  */
 proto.Repository.prototype.getRepositoryId = function() {
@@ -4235,7 +4235,7 @@ proto.Repository.prototype.setRepositoryId = function(value) {
 
 
 /**
- * optional uint64 user_id = 4;
+ * optional uint64 user_ID = 4;
  * @return {number}
  */
 proto.Repository.prototype.getUserId = function() {
@@ -4250,7 +4250,7 @@ proto.Repository.prototype.setUserId = function(value) {
 
 
 /**
- * optional uint64 group_id = 5;
+ * optional uint64 group_ID = 5;
  * @return {number}
  */
 proto.Repository.prototype.getGroupId = function() {
@@ -4265,7 +4265,7 @@ proto.Repository.prototype.setGroupId = function(value) {
 
 
 /**
- * optional string html_url = 6;
+ * optional string HTML_URL = 6;
  * @return {string}
  */
 proto.Repository.prototype.getHtmlUrl = function() {
@@ -4583,7 +4583,7 @@ proto.Directory.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.Directory.prototype.getId = function() {
@@ -4923,7 +4923,7 @@ proto.RecordRequest.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.RecordRequest.prototype.getId = function() {
@@ -5172,7 +5172,7 @@ proto.ActionRequest.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.ActionRequest.prototype.getId = function() {
@@ -5187,7 +5187,7 @@ proto.ActionRequest.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 user_id = 2;
+ * optional uint64 user_ID = 2;
  * @return {number}
  */
 proto.ActionRequest.prototype.getUserId = function() {
@@ -5202,7 +5202,7 @@ proto.ActionRequest.prototype.setUserId = function(value) {
 
 
 /**
- * optional uint64 group_id = 3;
+ * optional uint64 group_ID = 3;
  * @return {number}
  */
 proto.ActionRequest.prototype.getGroupId = function() {
@@ -5217,7 +5217,7 @@ proto.ActionRequest.prototype.setGroupId = function(value) {
 
 
 /**
- * optional uint64 course_id = 4;
+ * optional uint64 course_ID = 4;
  * @return {number}
  */
 proto.ActionRequest.prototype.getCourseId = function() {
@@ -5399,7 +5399,7 @@ proto.DirectoryRequest.prototype.setProvider = function(value) {
 
 
 /**
- * optional uint64 course_id = 2;
+ * optional uint64 course_ID = 2;
  * @return {number}
  */
 proto.DirectoryRequest.prototype.getCourseId = function() {
@@ -5584,7 +5584,7 @@ proto.RepositoryRequest.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional uint64 id = 1;
+ * optional uint64 ID = 1;
  * @return {number}
  */
 proto.RepositoryRequest.prototype.getId = function() {
@@ -5614,7 +5614,7 @@ proto.RepositoryRequest.prototype.setType = function(value) {
 
 
 /**
- * optional uint64 directory_id = 3;
+ * optional uint64 directory_ID = 3;
  * @return {number}
  */
 proto.RepositoryRequest.prototype.getDirectoryId = function() {
@@ -5629,7 +5629,7 @@ proto.RepositoryRequest.prototype.setDirectoryId = function(value) {
 
 
 /**
- * optional uint64 repository_id = 4;
+ * optional uint64 repository_ID = 4;
  * @return {number}
  */
 proto.RepositoryRequest.prototype.getRepositoryId = function() {
@@ -5644,7 +5644,7 @@ proto.RepositoryRequest.prototype.setRepositoryId = function(value) {
 
 
 /**
- * optional uint64 user_id = 5;
+ * optional uint64 user_ID = 5;
  * @return {number}
  */
 proto.RepositoryRequest.prototype.getUserId = function() {
@@ -5659,7 +5659,7 @@ proto.RepositoryRequest.prototype.setUserId = function(value) {
 
 
 /**
- * optional uint64 course_id = 6;
+ * optional uint64 course_ID = 6;
  * @return {number}
  */
 proto.RepositoryRequest.prototype.getCourseId = function() {
@@ -5933,7 +5933,7 @@ proto.URLResponse.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string url = 1;
+ * optional string URL = 1;
  * @return {string}
  */
 proto.URLResponse.prototype.getUrl = function() {

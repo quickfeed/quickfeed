@@ -44,8 +44,8 @@ export class Assignment {
   setAutoApprove(a: boolean): void;
   getOrder(): number;
   setOrder(a: number): void;
-  getIsGrouplab(): boolean;
-  setIsGrouplab(a: boolean): void;
+  getIsGroupLab(): boolean;
+  setIsGroupLab(a: boolean): void;
   getSubmission(): Submission;
   setSubmission(a: Submission): void;
   toObject(): Assignment.AsObject;
@@ -62,7 +62,7 @@ export namespace Assignment {
     Deadline: Timestamp;
     AutoApprove: boolean;
     Order: number;
-    IsGrouplab: boolean;
+    IsGroupLab: boolean;
     Submission: Submission;
   }
 }
@@ -86,8 +86,8 @@ export class Course {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getCoursecreatorId(): number;
-  setCoursecreatorId(a: number): void;
+  getCourseCreatorId(): number;
+  setCourseCreatorId(a: number): void;
   getName(): string;
   setName(a: string): void;
   getCode(): string;
@@ -116,7 +116,7 @@ export class Course {
 export namespace Course {
   export type AsObject = {
     Id: number;
-    CoursecreatorId: number;
+    CourseCreatorId: number;
     Name: string;
     Code: string;
     Year: number;
@@ -235,10 +235,10 @@ export namespace Enrollment {
   }
 
   export enum UserStatus { 
-    PENDING = 0,
-    REJECTED = 1,
-    STUDENT = 2,
-    TEACHER = 3,
+    Pending = 0,
+    Rejected = 1,
+    Student = 2,
+    Teacher = 3,
   }
 }
 
@@ -287,10 +287,10 @@ export namespace Group {
   }
 
   export enum GroupStatus { 
-    PENDING_GROUP = 0,
-    REJECTED_GROUP = 1,
-    APPROVED = 2,
-    DELETED = 3,
+    Pending = 0,
+    Rejected = 1,
+    Approved = 2,
+    Deleted = 3,
   }
 }
 
@@ -405,11 +405,11 @@ export namespace Repository {
   }
 
   export enum RepoType { 
-    USER = 0,
-    ASSIGNMENT = 1,
-    TESTS = 2,
-    SOLUTION = 3,
-    COURSEINFO = 4,
+    User = 0,
+    Assignment = 1,
+    Tests = 2,
+    Solution = 3,
+    CourseInfo = 4,
   }
 }
 

@@ -1,5 +1,6 @@
 package models_test
 
+/*
 import (
 	"testing"
 
@@ -28,3 +29,4 @@ func TestIsCourseRepo(t *testing.T) {
 		t.Fatal("expected IsCourseRepo to return true for TestsRepo")
 	}
 }
+*/

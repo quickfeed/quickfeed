@@ -20,19 +20,19 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	admin := true
 	var (
 		wantUser = &pb.User{
-			Id:      uID,
+			ID:      uID,
 			IsAdmin: admin, // first user is always admin
 			RemoteIdentities: []*pb.RemoteIdentity{{
-				Id:          rID,
+				ID:          rID,
 				Provider:    provider,
-				RemoteId:    remoteID,
+				Remote_ID:   remoteID,
 				AccessToken: accessToken,
-				UserId:      uID,
+				User_ID:     uID,
 			}},
 		}
 		updateAccessToken = &pb.RemoteIdentity{
 			Provider:    provider,
-			RemoteId:    remoteID,
+			Remote_ID:   remoteID,
 			AccessToken: accessToken,
 		}
 	)
@@ -44,8 +44,8 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
 		&pb.RemoteIdentity{
-			Provider: provider,
-			RemoteId: remoteID,
+			Provider:  provider,
+			Remote_ID: remoteID,
 		},
 	); err != nil {
 		t.Fatal(err)
@@ -54,7 +54,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err := db.UpdateAccessToken(updateAccessToken); err != nil {
 		t.Error(err)
 	}
-	updatedUser, err := db.GetUser(user.Id)
+	updatedUser, err := db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err := db.UpdateAccessToken(updateAccessToken); err != nil {
 		t.Error(err)
 	}
-	updatedUser, err = db.GetUser(user.Id)
+	updatedUser, err = db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

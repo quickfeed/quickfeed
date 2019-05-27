@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/autograde/aguis/models"
+	pb "github.com/autograde/aguis/ag"
 	"github.com/labstack/echo"
 )
 
@@ -46,13 +46,13 @@ func parseEnrollmentStatus(s string) ([]uint, error) {
 	for _, s := range ss {
 		switch s {
 		case "pending":
-			statuses = append(statuses, models.Pending)
+			statuses = append(statuses, uint(pb.Enrollment_Pending))
 		case "rejected":
-			statuses = append(statuses, models.Rejected)
+			statuses = append(statuses, uint(pb.Enrollment_Rejected))
 		case "student":
-			statuses = append(statuses, models.Student)
+			statuses = append(statuses, uint(pb.Enrollment_Student))
 		case "teacher":
-			statuses = append(statuses, models.Teacher)
+			statuses = append(statuses, uint(pb.Enrollment_Teacher))
 		default:
 			return []uint{}, errInvalidStatus
 		}
