@@ -170,7 +170,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 	if existingUser {
 		if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
 			Provider:    provider,
-			RemoteId:    remoteID,
+			Remote_ID:   remoteID,
 			AccessToken: secret,
 		}); err != nil {
 			t.Fatal(err)
@@ -301,7 +301,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 	if existingUser {
 		if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
 			Provider:    provider,
-			RemoteId:    remoteID,
+			Remote_ID:   remoteID,
 			AccessToken: secret,
 		}); err != nil {
 			t.Fatal(err)
@@ -344,7 +344,7 @@ func TestAccessControl(t *testing.T) {
 	// Create a new user.
 	if err := db.CreateUserFromRemoteIdentity(&pb.User{}, &pb.RemoteIdentity{
 		Provider:    provider,
-		RemoteId:    remoteID,
+		Remote_ID:   remoteID,
 		AccessToken: secret,
 	}); err != nil {
 		t.Fatal(err)

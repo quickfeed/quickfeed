@@ -91,8 +91,9 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	if err != nil {
 		return nil, err
 	}
+
 	// make sure that the current user is set as course creator
-	in.CoursecreatorId = usr.GetId()
+	in.CourseCreator_ID = usr.GetID()
 	return web.NewCourse(ctx, in, s.db, scm, s.bh)
 }
 
@@ -107,7 +108,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 	if err != nil {
 		return nil, err
 	}
-	return pb.Void{}, web.UpdateCourse(ctx, in, s.db, scm)
+	return &pb.Void{}, web.UpdateCourse(ctx, in, s.db, scm)
 }
 
 // GetCourses returns a list with all courses
@@ -132,7 +133,7 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.R
 
 // CreateEnrollment inserts a new student enrollment
 func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.ActionRequest) (*pb.Void, error) {
-	return pb.Void{}, web.CreateEnrollment(in, s.db)
+	return &pb.Void{}, web.CreateEnrollment(in, s.db)
 }
 
 // UpdateEnrollment is used to change an enrollment status of a student
@@ -141,7 +142,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{Id: in.CourseId}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +150,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
-	return pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm, usr)
+	return &pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm, usr)
 }
 
 // GetSelf returns information about the user with user ID sent in the context
@@ -158,7 +159,7 @@ func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User,
 	if err != nil {
 		return nil, err
 	}
-	user, err := web.GetUser(&pb.RecordRequest{Id: currentUser.Id}, s.db)
+	user, err := web.GetUser(&pb.RecordRequest{ID: currentUser.ID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +212,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, status.Errorf(codes.PermissionDenied, "invalid user ID")
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{Id: in.CourseId}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +220,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	return pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
+	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
 // UpdateGroupStatus is called by UpdateGroupStatus client method, changes group enrollment status
@@ -228,7 +229,7 @@ func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group)
 	if err != nil {
 		return nil, err
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{Id: in.CourseId}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -236,12 +237,12 @@ func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group)
 	if err != nil {
 		return nil, err
 	}
-	return pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
+	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
 // DeleteGroup removes group record from the database
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
-	return pb.Void{}, web.DeleteGroup(in, s.db)
+	return &pb.Void{}, web.DeleteGroup(in, s.db)
 }
 
 // GetSubmission returns a student submission

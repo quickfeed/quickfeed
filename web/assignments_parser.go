@@ -8,7 +8,7 @@ import (
 	"time"
 
 	pb "github.com/autograde/aguis/ag"
-	tspb "github.com/golang/protobuf/ptypes"
+	tspb "github.com/gogo/protobuf/types"
 
 	"gopkg.in/yaml.v2"
 )

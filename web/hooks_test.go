@@ -35,7 +35,7 @@ func TestGithubHook(t *testing.T) {
 		&user,
 		&pb.RemoteIdentity{
 			Provider:    "github",
-			RemoteId:    0,
+			Remote_ID:   0,
 			AccessToken: "",
 		},
 	); err != nil {
