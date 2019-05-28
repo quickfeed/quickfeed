@@ -1,9 +1,9 @@
 import * as React from "react";
 
+import { Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { CourseGroupStatus, ICourse, ICourseGroup, IUser } from "../../models";
-import { User, Group } from "../../../proto/ag_pb";
 
 import { bindFunc, RProp } from "../../helper";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
@@ -97,8 +97,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
         return <ul className="nav nav-pills">
             <LiDropDownMenu
                 links={links}
-                onClick={(link) => this.handleActionOnClick(group, link)}
-            >
+                onClick={(link) => this.handleActionOnClick(group, link)}>
                 <span className="glyphicon glyphicon-option-vertical" />
             </LiDropDownMenu>
         </ul>;

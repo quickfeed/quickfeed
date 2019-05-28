@@ -1,7 +1,7 @@
 import * as React from "react";
-import { UserManager } from "../../managers";
-//import { IUser } from "../../models";
 import { User } from "../../../proto/ag_pb";
+import { UserManager } from "../../managers";
+// import { IUser } from "../../models";
 
 import { bindFunc, copy, RProp } from "../../helper";
 
@@ -108,27 +108,27 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
 
     public renderValue(field: string, obj: any) {
         // grpc class has no public fields, to use a right getter check what value is rendering
-        let renderString = ""
-            switch (field) {
-                case "name": {
-                    renderString = (obj as User).getName();
-                    break;
-                }
-                case "email": {
-                    renderString = (obj as User).getEmail();
-                    break;
-                }
-                case "studentid": {
-                    renderString = (obj as User).getStudentid();
-                    break;
-                }
-                default: {
-                    console.log("UserProfile: unknown field name when rendering user fields: " + field);
-                    break;
-                }
+        let renderString = "";
+        switch (field) {
+            case "name": {
+                renderString = (obj as User).getName();
+                break;
             }
+            case "email": {
+                renderString = (obj as User).getEmail();
+                break;
+            }
+            case "studentid": {
+                renderString = (obj as User).getStudentid();
+                break;
+            }
+            default: {
+                console.log("UserProfile: unknown field name when rendering user fields: " + field);
+                break;
+            }
+        }
 
-        if (this.state.editMode) {            
+        if (this.state.editMode) {
             return <input
                 className="form-control"
                 name={field}
@@ -145,7 +145,7 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         const curUser = this.state.curUser;
         if (curUser) {
             const newUser: User = new User();
-            newUser.setId(curUser.getId())
+            newUser.setId(curUser.getId());
             newUser.setName(curUser.getName());
             newUser.setStudentid(curUser.getStudentid());
             newUser.setEmail(curUser.getEmail());
@@ -153,7 +153,7 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
             newUser.setIsadmin(curUser.getIsadmin());
             newUser.setRemoteidentitiesList(curUser.getRemoteidentitiesList());
             newUser.setEnrollmentsList(curUser.getEnrollmentsList());
-            switch(name) {
+            switch (name) {
                 case "name": {
                     newUser.setName(event.target.value);
                     break;
@@ -171,8 +171,6 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
                     break;
                 }
             }
-        
-        
 
             this.setState({
                 curUser: newUser,

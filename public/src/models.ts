@@ -1,5 +1,6 @@
-import {User, Enrollment, Group} from "../proto/ag_pb";
+import { Enrollment, Group, User } from "../proto/ag_pb";
 
+// TODO(meling) can we delete these types, and instead use types from ag.proto?
 
 export interface IUser {
     id: number;
@@ -15,6 +16,7 @@ export interface IGroup {
     name: string;
 
 }
+
 /**
  * Checks if value is compatible with the ICourse interface
  * @param value A value to check if it is an ICourse
@@ -61,6 +63,7 @@ export interface IUserCourse extends ICourseLinkAssignment {
 export interface IGroupCourse extends ICourseLinkAssignment {
     link?: ICourseGroupLink;
 }
+
 /**
  * Function to find out if object is a instance of IUserCourse.
  * Will return false if link is missing.
@@ -70,6 +73,7 @@ export function isIUserCourse(test: IUserCourse | IGroupCourse | ICourseLinkAssi
     const inter = test as IUserCourse;
     return inter.link ? (inter.link as ICourseUserLink).userid !== undefined : false;
 }
+
 /**
  * An IUserCourse instance which also contains the user it
  * is related to.
@@ -79,6 +83,7 @@ export interface IUserCourseWithUser {
     user: User;
     course: IUserCourse;
 }
+
 /**
  * An ICourseGroup instance which also contains the group it
  * is related to.
@@ -88,6 +93,7 @@ export interface IGroupCourseWithGroup {
     group: ICourseGroup;
     course: IGroupCourse;
 }
+
 /**
  * An interface which contains an assignment and the latest submission
  * for a spessific user.
@@ -114,6 +120,7 @@ export interface ICourseGroupRelation {
     group: ICourseGroup;
     link: ICourseGroupLink;
 }
+
 // Browser only objects END
 
 /**
@@ -326,12 +333,14 @@ export interface INewGroup {
 export interface IStatusCode {
     statusCode: number;
 }
+
 /**
  * IError represents server side error object
  */
 export interface IError extends IStatusCode {
     data?: any;
 }
+
 /**
  * Checks if value is compatible with the IError interface
  * @param item A value to check if it is an IError
