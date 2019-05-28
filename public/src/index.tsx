@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
@@ -12,7 +11,7 @@ import { StudentPage } from "./pages/StudentPage";
 import { TeacherPage } from "./pages/TeacherPage";
 import { ViewPage } from "./pages/ViewPage";
 
-import {User} from "../proto/ag_pb";
+import { User } from "../proto/ag_pb";
 import { AdminPage } from "./pages/AdminPage";
 
 import { NavBarLogin } from "./components/navigation/NavBarLogin";
@@ -140,7 +139,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     public checkloggedInUser(): boolean {
-        
         const cur = this.userMan.getCurrentUser();
         if (cur) {
             return this.userMan.isValidUser(cur);
@@ -261,11 +259,9 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 );
                 break;
         }
-        let currentLinks: ILink[] = [];
+        let currentLinks = userLinks;
         if (this.state.curUser && this.state.curUser.getIsadmin()) {
             currentLinks = adminLinks;
-        } else {
-            currentLinks = userLinks;
         }
         return (
             <div>
@@ -286,9 +282,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                     <AddMenu
                         user={this.state.curUser}
                         links={dropDownMenuLinks}
-                        onClick={(link) => this.handleClick(link)}
-                    >
-
+                        onClick={(link) => this.handleClick(link)}>
                     </AddMenu>
                 </NavBar>
                 <PageInfo entry={this.state.curMessage} onclose={async () => {
@@ -304,13 +298,12 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 }
 
 /**
- * @description The main entry point for the application. No other code should be executet outside this function
+ * @description The main entry point for the application.
+ * No other code should be executed outside this function.
  */
 async function main(): Promise<void> {
     const DEBUG_BROWSER = "DEBUG_BROWSER";
     const DEBUG_SERVER = "DEBUG_SERVER";
-
-    
 
     let curRunning: string;
     curRunning = DEBUG_SERVER;
@@ -326,7 +319,6 @@ async function main(): Promise<void> {
     let courseMan: CourseManager;
     const logMan = new LogManager();
     const navMan: NavigationManager = new NavigationManager(history, logMan.createLogger("NavigationManager"));
-    
 
     if (curRunning === DEBUG_SERVER) {
 
@@ -346,12 +338,7 @@ async function main(): Promise<void> {
         const user = await userMan.tryLogin("test@testersen.no", "1234");
     }
 
-    
-
     await userMan.checkUserLoggedIn();
-    
-    
-
 
     (window as any).debugData = { tempData, userMan, courseMan, navMan, logMan };
 
