@@ -39,7 +39,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
                 ActionType.Menu,
                 (user: IUserRelation) => {
                     const links = [];
-                    if (user.link.state === Enrollment.UserStatus.REJECTED) {
+                    if (user.link.state === Enrollment.UserStatus.Rejected) {
                         links.push({ name: "Set pending", uri: "remove", extra: "primary" });
                     }
                     return links;
@@ -55,7 +55,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
             ActionType.Menu,
             (user: IUserRelation) => {
                 const links = [];
-                if (user.link.state === Enrollment.UserStatus.TEACHER) {
+                if (user.link.state === Enrollment.UserStatus.Teacher) {
                     links.push({ name: "This is a teacher", extra: "primary" });
                 } else {
                     links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });
@@ -94,10 +94,10 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
     public handleAction(userRel: IUserRelation, link: ILink) {
         switch (link.uri) {
             case "accept":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.Student);
                 break;
             case "reject":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.Rejected);
                 break;
             case "teacher":
                 if (confirm(
@@ -105,11 +105,11 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
                     Do you want to continue assigning:
                     ${userRel.user.getName()} as a teacher?`,
                 )) {
-                    this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
+                    this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.Teacher);
                 }
                 break;
             case "remove":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.Pending);
                 break;
         }
         this.props.navMan.refresh();

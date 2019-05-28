@@ -6,7 +6,7 @@ import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
-import {StatusCode, Directory } from "../../../proto/ag_pb"
+import {Directory, Void } from "../../../proto/ag_pb"
 
 interface ICourseFormProps<T> {
     className?: string;
@@ -184,7 +184,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         }
     }
 
-    private async updateCourse(courseId: number): Promise<StatusCode | IError> {
+    private async updateCourse(courseId: number): Promise<Void | IError> {
         const courseData: ICourse = {
             id: courseId,
             name: this.state.name,

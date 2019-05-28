@@ -28,11 +28,11 @@ class GroupInfo extends React.Component<IGroupPro, any> {
 
     private getStatus(): string {
         switch (this.props.group.status) {
-            case Group.GroupStatus.APPROVED:
+            case Group.GroupStatus.Approved:
                 return "Appproved";
-            case Group.GroupStatus.PENDING_GROUP:
+            case Group.GroupStatus.Pending:
                 return "Pending";
-            case Group.GroupStatus.REJECTED_GROUP:
+            case Group.GroupStatus.Rejected:
                 return "Rejected";
             default:
                 return "N/A";

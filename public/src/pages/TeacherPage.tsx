@@ -135,8 +135,8 @@ export class TeacherPage extends ViewPage {
 
             const students = await this.courseMan.getUsersForCourse(course, this.userMan,
                 [
-                    Enrollment.UserStatus.STUDENT,
-                    Enrollment.UserStatus.TEACHER,
+                    Enrollment.UserStatus.Student,
+                    Enrollment.UserStatus.Teacher,
                 ]);
             const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
@@ -196,13 +196,13 @@ export class TeacherPage extends ViewPage {
             const rejectedGroups: ICourseGroup[] = [];
             for (const grp of groups) {
                 switch (grp.status) {
-                    case Group.GroupStatus.APPROVED:
+                    case Group.GroupStatus.Approved:
                         approvedGroups.push(grp);
                         break;
-                    case Group.GroupStatus.PENDING_GROUP:
+                    case Group.GroupStatus.Pending:
                         pendingGroups.push(grp);
                         break;
-                    case Group.GroupStatus.REJECTED_GROUP:
+                    case Group.GroupStatus.Rejected:
                         rejectedGroups.push(grp);
                         break;
                 }
@@ -227,7 +227,7 @@ export class TeacherPage extends ViewPage {
         const group: ICourseGroup | null = await this.courseMan.getGroup(groupId);
         if (course && curUser && group) {
             const students = await this.courseMan
-                .getUsersForCourse(course, this.userMan, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                .getUsersForCourse(course, this.userMan, [Enrollment.UserStatus.Student, Enrollment.UserStatus.Teacher]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -252,14 +252,14 @@ export class TeacherPage extends ViewPage {
             // TODO: Maybe move this to the Members view
             all.forEach((user, id) => {
                 switch (user.link.state) {
-                    case Enrollment.UserStatus.TEACHER:
-                    case Enrollment.UserStatus.STUDENT:
+                    case Enrollment.UserStatus.Teacher:
+                    case Enrollment.UserStatus.Student:
                         acceptedUsers.push(user);
                         break;
-                    case Enrollment.UserStatus.PENDING:
+                    case Enrollment.UserStatus.Pending:
                         pendingUsers.push(user);
                         break;
-                    case Enrollment.UserStatus.REJECTED:
+                    case Enrollment.UserStatus.Rejected:
                         rejectedUsers.push(user);
                         break;
                 }
@@ -379,10 +379,10 @@ export class TeacherPage extends ViewPage {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
             if (menu === 0) {
-                const states = [Enrollment.UserStatus.TEACHER];
+                const states = [Enrollment.UserStatus.Teacher];
                 if (this.userMan.isAdmin(curUser)) {
-                    states.push(Enrollment.UserStatus.PENDING);
-                    states.push(Enrollment.UserStatus.STUDENT);
+                    states.push(Enrollment.UserStatus.Pending);
+                    states.push(Enrollment.UserStatus.Student);
                 }
                 const courses = await this.courseMan.getCoursesFor(curUser, states);
                 // const courses = await this.courseMan.getActiveCoursesFor(curUser);

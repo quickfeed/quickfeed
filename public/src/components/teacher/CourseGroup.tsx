@@ -117,7 +117,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                             group.name,
                             this.getMembers(group.users),
                             <span>
-                                <UpdateButton type="danger" group={group} status={Group.GroupStatus.DELETED}>
+                                <UpdateButton type="danger" group={group} status={Group.GroupStatus.Deleted}>
                                     Remove
                                 </UpdateButton>
                             </span>,
@@ -148,7 +148,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
     }
 
     private async handleUpdateStatus(gid: number, status: Group.GroupStatus): Promise<void> {
-        const result = status === Group.GroupStatus.DELETED ?
+        const result = status === Group.GroupStatus.Deleted ?
             await this.props.courseMan.deleteGroup(gid) :
             await this.props.courseMan.updateGroupStatus(gid, status);
         if (result) {
@@ -159,10 +159,10 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
     private async handleActionOnClick(group: ICourseGroup, link: ILink): Promise<void> {
         switch (link.uri) {
             case "approve":
-                await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.APPROVED);
+                await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.Approved);
                 break;
             case "reject":
-                await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.REJECTED_GROUP);
+                await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.Rejected);
                 break;
             case "edit":
                 this.props.navMan

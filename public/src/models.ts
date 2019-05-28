@@ -204,13 +204,13 @@ export enum RepositoryType {
 export function courseUserStateToString(state: Enrollment.UserStatus[]): string {
     return state.map((sta) => {
         switch (sta) {
-            case Enrollment.UserStatus.PENDING:
+            case Enrollment.UserStatus.Pending:
                 return "pending";
-            case Enrollment.UserStatus.REJECTED:
+            case Enrollment.UserStatus.Rejected:
                 return "rejected";
-            case Enrollment.UserStatus.STUDENT:
+            case Enrollment.UserStatus.Student:
                 return "student";
-            case Enrollment.UserStatus.TEACHER:
+            case Enrollment.UserStatus.Teacher:
                 return "teacher";
             default:
                 return "";
@@ -221,13 +221,13 @@ export function courseUserStateToString(state: Enrollment.UserStatus[]): string 
 export function courseGroupStateToString(state: Group.GroupStatus[]): string {
     return state.map((sta) => {
         switch (sta) {
-            case Group.GroupStatus.PENDING_GROUP:
+            case Group.GroupStatus.Pending:
                 return "pending";
-            case Group.GroupStatus.REJECTED_GROUP:
+            case Group.GroupStatus.Rejected:
                 return "rejected";
-            case Group.GroupStatus.APPROVED:
+            case Group.GroupStatus.Approved:
                 return "approved";
-            case Group.GroupStatus.DELETED:
+            case Group.GroupStatus.Deleted:
                 return "deleted";
             default:
                 return "";

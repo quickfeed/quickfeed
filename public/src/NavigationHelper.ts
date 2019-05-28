@@ -7,6 +7,7 @@ export interface ITypeMap {
     number: number;
 }
 
+
 export function trimChars(str: string, char: string): string {
     if (str.length === 0) {
         return "";

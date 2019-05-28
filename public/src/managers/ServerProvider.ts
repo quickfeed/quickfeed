@@ -3,13 +3,13 @@ import {Assignment,
         Enrollment, 
         User, 
         Timestamp, 
-        StatusCode, 
         Group, 
         Submission, 
         Directories,
         Directory,
         ActionRequest,
-        RecordRequest} from "../../proto/ag_pb";
+        RecordRequest,
+        Void} from "../../proto/ag_pb";
 import {
     CourseGroupStatus,
     CourseUserState,
@@ -207,15 +207,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
 
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<StatusCode | IError> {
+    public async updateCourse(courseId: number, courseData: ICourse): Promise<Void | IError> {
         const result = await this.grpcHelper.updateCourse(courseData);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "updateCourse");
             return this.parseError(result);
         }
-        const scode = new StatusCode();
-        scode.setStatusCode(0);
-        return scode;
+        const voidy = new Void();
+        return voidy;
      }
 
     public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
@@ -291,7 +290,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result, "getGroup");
             return this.parseError(result);
         }
-        const code: IStatusCode = {statusCode: result.data.getStatusCode()};
+        const code: IStatusCode = {statusCode: result.statusCode};
         return code;
     }
 
@@ -598,7 +597,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             courseid: assg.getCourseId(),
             deadline: date,
             language: assg.getLanguage(),
-            isgrouplab: assg.getIsGrouplab()
+            isgrouplab: assg.getIsGroupLab()
         };
         return  iassgn;
     }

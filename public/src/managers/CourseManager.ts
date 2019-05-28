@@ -24,7 +24,7 @@ import {
 
 import { UserManager } from "../managers";
 import { ILogger } from "./LogManager";
-import {Assignment, Course, Enrollment, User, Timestamp, Directory, Directories, StatusCode, Group} from "../../proto/ag_pb";
+import {Assignment, Course, Enrollment, User, Timestamp, Directory, Directories, Group, Void} from "../../proto/ag_pb";
 
 export interface ICourseProvider {
     getCourses(): Promise<ICourse[]>;
@@ -38,7 +38,7 @@ export interface ICourseProvider {
 
     createNewCourse(courseData: INewCourse): Promise<ICourse | IError>;
     getCourse(id: number): Promise<ICourse | null>;
-    updateCourse(courseID: number, courseData: ICourse): Promise<StatusCode | IError>;
+    updateCourse(courseID: number, courseData: ICourse): Promise<Void | IError>;
 
     getCourseGroups(courseID: number): Promise<ICourseGroup[]>;
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
@@ -210,7 +210,7 @@ export class CourseManager {
      * Updates a course with new information
      * @param courseData The new information for the course
      */
-    public async updateCourse(courseID: number, courseData: ICourse): Promise<StatusCode | IError> {
+    public async updateCourse(courseID: number, courseData: ICourse): Promise<Void | IError> {
         return await this.courseProvider.updateCourse(courseID, courseData);
     }
 

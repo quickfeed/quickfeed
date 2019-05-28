@@ -260,11 +260,11 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
             errors.push("Group mush have members.");
         }
         if (this.state.curUser
-            && (this.state.curUser.link.state === Enrollment.UserStatus.STUDENT
-                || this.state.curUser.link.state === Enrollment.UserStatus.TEACHER)
+            && (this.state.curUser.link.state === Enrollment.UserStatus.Student
+                || this.state.curUser.link.state === Enrollment.UserStatus.Teacher)
             && !this.isCurrentStudentSelected(this.state.curUser)) {
 
-            if (this.state.curUser.link.state !== Enrollment.UserStatus.TEACHER) {
+            if (this.state.curUser.link.state !== Enrollment.UserStatus.Teacher) {
                 errors.push("You must be a member of the group");
             }
         }
