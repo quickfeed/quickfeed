@@ -97,10 +97,10 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                 }
                 const iCell: ICellElement = {
                     value: <a className="lab-result-cell"
-                    onClick={() => this.handleOnclick(e)}
-                    href="#">
-                {e.latest ? (e.latest.score + "%") : "N/A"}</a>,
-                className: approvedCss
+                        onClick={() => this.handleOnclick(e)}
+                        href="#">
+                        {e.latest ? (e.latest.score + "%") : "N/A"}</a>,
+                    className: approvedCss,
                 };
                 return iCell;
             }));

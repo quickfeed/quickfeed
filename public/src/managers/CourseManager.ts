@@ -24,7 +24,7 @@ import {
 
 import { UserManager } from "../managers";
 import { ILogger } from "./LogManager";
-import {Assignment, Course, Enrollment, User, Timestamp, Directory, Directories, Group, Void} from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, User, Timestamp, Directory, Directories, Group, Void } from "../../proto/ag_pb";
 
 export interface ICourseProvider {
     getCourses(): Promise<ICourse[]>;
@@ -314,7 +314,7 @@ export class CourseManager {
             };
         });
     }
-    
+
     public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
         return await this.courseProvider.createGroup(groupData, courseID);
     }
@@ -351,7 +351,7 @@ export class CourseManager {
     }
 
     public async getGroupCourseForTeacher(group: ICourseGroup, course: ICourse, assignments: IAssignment[]): Promise<IGroupCourse | null> {
-        // Fetching group enrollment status        
+        // Fetching group enrollment status
         if (group.courseid === course.id) {
             const groupCourse: IGroupCourse = {
                 link: { groupid: group.id, courseId: course.id, state: group.status },
@@ -440,7 +440,7 @@ export class CourseManager {
         if (!groupCourse.link) {
             return;
         }
-        if (!assignments){
+        if (!assignments) {
             assignments = await this.getAssignments(groupCourse.course.id);
         }
         if (assignments.length > 0) {
