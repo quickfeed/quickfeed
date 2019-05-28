@@ -78,8 +78,8 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 	var remoteIdentity pb.RemoteIdentity
 	if err := tx.
 		Where(&pb.RemoteIdentity{
-			Provider:  remote.Provider,
-			Remote_ID: remote.Remote_ID,
+			Provider: remote.Provider,
+			RemoteID: remote.RemoteID,
 		}).
 		First(&remoteIdentity).Error; err != nil {
 		tx.Rollback()
@@ -88,7 +88,7 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 
 	// Get the user.
 	var user pb.User
-	if err := tx.Preload("RemoteIdentities").First(&user, remoteIdentity.User_ID).Error; err != nil {
+	if err := tx.Preload("RemoteIdentities").First(&user, remoteIdentity.UserID).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -106,8 +106,8 @@ func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
 	var remoteIdentity pb.RemoteIdentity
 	if err := tx.
 		Where(&pb.RemoteIdentity{
-			Provider:  remote.Provider,
-			Remote_ID: remote.Remote_ID,
+			Provider: remote.Provider,
+			RemoteID: remote.RemoteID,
 		}).
 		First(&remoteIdentity).Error; err != nil {
 		tx.Rollback()
@@ -158,8 +158,8 @@ func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*pb.RemoteIden
 	var remoteIdentity pb.RemoteIdentity
 	if err := db.conn.Model(&pb.RemoteIdentity{}).
 		Where(&pb.RemoteIdentity{
-			Provider:  provider,
-			Remote_ID: rid,
+			Provider: provider,
+			RemoteID: rid,
 		}).
 		First(&remoteIdentity).Error; err != nil {
 		return nil, err
@@ -190,11 +190,11 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 	if err := db.conn.
 		Model(&pb.RemoteIdentity{}).
 		Where(&pb.RemoteIdentity{
-			Provider:  provider,
-			Remote_ID: rid,
+			Provider: provider,
+			RemoteID: rid,
 		}).
 		Not(&pb.RemoteIdentity{
-			User_ID: uid,
+			UserID: uid,
 		}).
 		Count(&count).Error; err != nil {
 		return err
@@ -205,7 +205,7 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 
 	var remoteIdentity pb.RemoteIdentity
 	return db.conn.
-		Where(pb.RemoteIdentity{Provider: provider, Remote_ID: rid, User_ID: uid}).
+		Where(pb.RemoteIdentity{Provider: provider, RemoteID: rid, UserID: uid}).
 		Assign(pb.RemoteIdentity{AccessToken: accessToken}).
 		FirstOrCreate(&remoteIdentity).Error
 }
@@ -223,7 +223,7 @@ func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 
 	var courses uint64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
-		Directory_ID: course.Directory_ID,
+		DirectoryID: course.DirectoryID,
 	}).Count(&courses).Error; err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 	if err := db.conn.Create(course).Error; err != nil {
 		return err
 	}
-	if err := db.CreateEnrollment(&pb.Enrollment{User_ID: uid, Course_ID: course.ID}); err != nil {
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: uid, CourseID: course.ID}); err != nil {
 		return err
 	}
 	if err := db.EnrollTeacher(uid, course.ID); err != nil {
@@ -317,19 +317,19 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Ass
 // enrolled in the course the assignment belongs to
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// Primary key must be greater than 0.
-	if submission.Assignment_ID < 1 {
+	if submission.AssignmentID < 1 {
 		return gorm.ErrRecordNotFound
 	}
 
 	// Either user or group id must be set, but not both.
 	var m *gorm.DB
 	switch {
-	case submission.User_ID > 0 && submission.Group_ID > 0:
+	case submission.UserID > 0 && submission.GroupID > 0:
 		return gorm.ErrRecordNotFound
-	case submission.User_ID > 0:
-		m = db.conn.First(&pb.User{ID: submission.User_ID})
-	case submission.Group_ID > 0:
-		m = db.conn.First(&pb.Group{ID: submission.Group_ID})
+	case submission.UserID > 0:
+		m = db.conn.First(&pb.User{ID: submission.UserID})
+	case submission.GroupID > 0:
+		m = db.conn.First(&pb.Group{ID: submission.GroupID})
 	default:
 		return gorm.ErrRecordNotFound
 	}
@@ -343,7 +343,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// Checks that the assignment exists.
 	var assignment uint64
 	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
-		ID: submission.Assignment_ID,
+		ID: submission.AssignmentID,
 	}).Count(&assignment).Error; err != nil {
 		return err
 	}
@@ -357,7 +357,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 // GetSubmissionForUser implements the Database interface
 func (db *GormDB) GetSubmissionForUser(aid uint64, uid uint64) (*pb.Submission, error) {
 	var submission pb.Submission
-	if err := db.conn.Where(&pb.Submission{Assignment_ID: aid, User_ID: uid}).Last(&submission).Error; err != nil {
+	if err := db.conn.Where(&pb.Submission{AssignmentID: aid, UserID: uid}).Last(&submission).Error; err != nil {
 		return nil, err
 	}
 	return &submission, nil
@@ -366,7 +366,7 @@ func (db *GormDB) GetSubmissionForUser(aid uint64, uid uint64) (*pb.Submission, 
 // GetSubmissionForGroup implements the Database interface
 func (db *GormDB) GetSubmissionForGroup(aid uint64, gid uint64) (*pb.Submission, error) {
 	var submission pb.Submission
-	if err := db.conn.Where(&pb.Submission{Assignment_ID: aid, Group_ID: gid}).Last(&submission).Error; err != nil {
+	if err := db.conn.Where(&pb.Submission{AssignmentID: aid, GroupID: gid}).Last(&submission).Error; err != nil {
 		return nil, err
 	}
 	return &submission, nil
@@ -436,13 +436,13 @@ func (db *GormDB) GetGroupSubmissions(cid uint64, gid uint64) ([]*pb.Submission,
 // CreateAssignment implements the Database interface
 func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 	// Course id and assignment order must be given.
-	if assignment.Course_ID < 1 || assignment.Order < 1 {
+	if assignment.CourseID < 1 || assignment.Order < 1 {
 		return gorm.ErrRecordNotFound
 	}
 
 	var course uint64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
-		ID: assignment.Course_ID,
+		ID: assignment.CourseID,
 	}).Count(&course).Error; err != nil {
 		return err
 	}
@@ -452,8 +452,8 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 
 	return db.conn.
 		Where(pb.Assignment{
-			Course_ID: assignment.Course_ID,
-			Order:     assignment.Order,
+			CourseID: assignment.CourseID,
+			Order:    assignment.Order,
 		}).
 		Assign(pb.Assignment{
 			Name:        assignment.Name,
@@ -480,12 +480,12 @@ func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 	var user, course uint64
 	if err := db.conn.Model(&pb.User{}).Where(&pb.User{
-		ID: enrollment.User_ID,
+		ID: enrollment.UserID,
 	}).Count(&user).Error; err != nil {
 		return err
 	}
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
-		ID: enrollment.Course_ID,
+		ID: enrollment.CourseID,
 	}).Count(&course).Error; err != nil {
 		return err
 	}
@@ -548,8 +548,8 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enro
 	var enrollment pb.Enrollment
 	if err := db.conn.
 		Where(&pb.Enrollment{
-			Course_ID: cid,
-			User_ID:   uid,
+			CourseID: cid,
+			UserID:   uid,
 		}).
 		First(&enrollment).Error; err != nil {
 		return nil, err
@@ -564,7 +564,7 @@ func (db *GormDB) setEnrollment(uid, cid uint64, status pb.Enrollment_UserStatus
 
 	return db.conn.
 		Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{Course_ID: cid, User_ID: uid}).
+		Where(&pb.Enrollment{CourseID: cid, UserID: uid}).
 		Update(&pb.Enrollment{Status: status}).Error
 }
 
@@ -581,8 +581,8 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserSta
 	var courseIDs []uint64
 	m := make(map[uint64]*pb.Enrollment)
 	for _, enrollment := range enrollments {
-		m[enrollment.Course_ID] = enrollment
-		courseIDs = append(courseIDs, enrollment.Course_ID)
+		m[enrollment.CourseID] = enrollment
+		courseIDs = append(courseIDs, enrollment.CourseID)
 	}
 
 	if len(statuses) == 0 {
@@ -618,7 +618,7 @@ func (db *GormDB) GetCourse(cid uint64) (*pb.Course, error) {
 // GetCourseByDirectoryID implements the Database interface
 func (db *GormDB) GetCourseByDirectoryID(did uint64) (*pb.Course, error) {
 	var course pb.Course
-	if err := db.conn.First(&course, &pb.Course{Directory_ID: did}).Error; err != nil {
+	if err := db.conn.First(&course, &pb.Course{DirectoryID: did}).Error; err != nil {
 		return nil, err
 	}
 	return &course, nil
@@ -631,14 +631,14 @@ func (db *GormDB) UpdateCourse(course *pb.Course) error {
 
 // CreateGroup creates a new group and assign users to newly created group
 func (db *GormDB) CreateGroup(group *pb.Group) error {
-	if group.Course_ID == 0 {
+	if group.CourseID == 0 {
 		return gorm.ErrRecordNotFound
 	}
 
 	tx := db.conn.Begin()
 	var course uint64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
-		ID: group.Course_ID,
+		ID: group.CourseID,
 	}).Count(&course).Error; err != nil {
 		return err
 	}
@@ -659,12 +659,12 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 	}
 	query := tx.Model(&pb.Enrollment{}).
 		Where(&pb.Enrollment{
-			Course_ID: group.Course_ID,
+			CourseID: group.CourseID,
 		}).
-		Where("user_id IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
+		Where("userid IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
 			pb.Enrollment_Student, pb.Enrollment_Teacher}).
 		Updates(&pb.Enrollment{
-			Group_ID: group.ID,
+			GroupID: group.ID,
 		})
 
 	if query.Error != nil {
@@ -689,7 +689,7 @@ func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
 	}
 	var userIds []uint64
 	for _, enrollment := range group.Enrollments {
-		userIds = append(userIds, enrollment.User_ID)
+		userIds = append(userIds, enrollment.UserID)
 	}
 	if len(userIds) > 0 {
 		users, err := db.GetUsers(userIds...)
@@ -714,7 +714,7 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
 	if err := db.conn.
 		Preload("Enrollments").
 		Where(&pb.Group{
-			Course_ID: cid,
+			CourseID: cid,
 		}).
 		Find(&groups).Error; err != nil {
 		return nil, err
@@ -723,7 +723,7 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
 	for _, group := range groups {
 		var userIds []uint64
 		for _, enrollment := range group.Enrollments {
-			userIds = append(userIds, enrollment.User_ID)
+			userIds = append(userIds, enrollment.UserID)
 		}
 		if len(userIds) > 0 {
 			users, err := db.GetUsers(userIds...)
@@ -749,7 +749,7 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 		tx.Rollback()
 		return err
 	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, gid).Error; err != nil {
+	if err := tx.Exec("UPDATE enrollments SET groupid= ? WHERE groupid= ?", 0, gid).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -759,26 +759,26 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 
 // CreateRepository implements the Database interface
 func (db *GormDB) CreateRepository(repo *pb.Repository) error {
-	if repo.Directory_ID == 0 || repo.Repository_ID == 0 {
-		return fmt.Errorf("both DirectoryId and Repository_ID must be provided for repository")
+	if repo.DirectoryID == 0 || repo.RepositoryID == 0 {
+		return fmt.Errorf("both DirectoryId and RepositoryID must be provided for repository")
 	}
 
 	switch {
-	case repo.User_ID > 0:
+	case repo.UserID > 0:
 		// check that user exists creating repo in database
-		err := db.conn.First(&pb.User{}, repo.User_ID).Error
+		err := db.conn.First(&pb.User{}, repo.UserID).Error
 		if err != nil {
 			return err
 		}
-	case repo.Group_ID > 0:
+	case repo.GroupID > 0:
 		// check that group exists creating repo in database
-		err := db.conn.First(&pb.Group{}, repo.Group_ID).Error
+		err := db.conn.First(&pb.Group{}, repo.GroupID).Error
 		if err != nil {
 			return err
 		}
 	case !repo.RepoType.IsCourseRepo():
 		// if both user and group are unset, the repository belongs to the course
-		return fmt.Errorf("either UserId, Group_ID or a course repository Type must be provided")
+		return fmt.Errorf("either UserId, GroupID or a course repository Type must be provided")
 	}
 
 	return db.conn.Create(repo).Error
@@ -790,7 +790,7 @@ func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
 	// the id of the entry in the database
 	var repo pb.Repository
 
-	if err := db.conn.First(&repo, &pb.Repository{Repository_ID: rid}).Error; err != nil {
+	if err := db.conn.First(&repo, &pb.Repository{RepositoryID: rid}).Error; err != nil {
 		return nil, err
 	}
 
@@ -805,7 +805,7 @@ func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType
 	}
 
 	var repo pb.Repository
-	if err := db.conn.First(&repo, &pb.Repository{Directory_ID: course.Directory_ID, User_ID: uid, RepoType: repoType}).Error; err != nil {
+	if err := db.conn.First(&repo, &pb.Repository{DirectoryID: course.DirectoryID, UserID: uid, RepoType: repoType}).Error; err != nil {
 		return nil, err
 	}
 
@@ -816,7 +816,7 @@ func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType
 func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*pb.Repository, error) {
 
 	var repos []*pb.Repository
-	if err := db.conn.Find(&repos, &pb.Repository{Directory_ID: did}).Error; err != nil {
+	if err := db.conn.Find(&repos, &pb.Repository{DirectoryID: did}).Error; err != nil {
 		return nil, err
 	}
 	return repos, nil
@@ -824,14 +824,14 @@ func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*pb.Repository, erro
 
 // UpdateGroup updates a group
 func (db *GormDB) UpdateGroup(group *pb.Group) error {
-	if group.Course_ID == 0 {
+	if group.CourseID == 0 {
 		//return gorm.ErrRecordNotFound
 		return status.Errorf(codes.NotFound, "failed to retrieve course")
 	}
 	tx := db.conn.Begin()
 	var course uint64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
-		ID: group.Course_ID,
+		ID: group.CourseID,
 	}).Count(&course).Error; err != nil {
 		return err
 	}
@@ -846,7 +846,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 		}
 		return err
 	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.ID).Error; err != nil {
+	if err := tx.Exec("UPDATE enrollments SET groupid= ? WHERE groupid= ?", 0, group.ID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -856,12 +856,12 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	}
 	query := tx.Model(&pb.Enrollment{}).
 		Where(&pb.Enrollment{
-			Course_ID: group.Course_ID,
+			CourseID: group.CourseID,
 		}).
-		Where("user_id IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
+		Where("userid IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
 			pb.Enrollment_Student, pb.Enrollment_Teacher}).
 		Updates(&pb.Enrollment{
-			Group_ID: group.ID,
+			GroupID: group.ID,
 		})
 
 	if query.Error != nil {
@@ -887,7 +887,7 @@ func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType pb.Reposit
 	}
 
 	var repos []*pb.Repository
-	if err := db.conn.Find(&repos, &pb.Repository{Directory_ID: course.Directory_ID, RepoType: repoType}).Error; err != nil {
+	if err := db.conn.Find(&repos, &pb.Repository{DirectoryID: course.DirectoryID, RepoType: repoType}).Error; err != nil {
 		return nil, err
 	}
 	return repos, nil

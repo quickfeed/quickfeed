@@ -50,8 +50,8 @@ func TestFetchAssignments(t *testing.T) {
 	}
 
 	course := &pb.Course{
-		Name:         "Autograder Test Course",
-		Directory_ID: courseDirID,
+		Name:        "Autograder Test Course",
+		DirectoryID: courseDirID,
 	}
 
 	assignments, err := web.FetchAssignments(ctx, s, course)

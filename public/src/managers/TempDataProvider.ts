@@ -202,7 +202,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeAdminRole(user: User): Promise<boolean> {
-        user.setIsAdmin(!user.getIsAdmin());
+        user.setIsadmin(!user.getIsadmin());
         return true;
     }
 
@@ -289,8 +289,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         if (tempUser) {
             tempUser.user.setName(user.getName());
             tempUser.user.setEmail(user.getEmail());
-            tempUser.user.setStudentId(user.getStudentId());
-            tempUser.user.setIsAdmin(user.getIsAdmin());
+            tempUser.user.setStudentid(user.getStudentid());
+            tempUser.user.setIsadmin(user.getIsadmin());
         }
 
         return Promise.resolve(true);
@@ -312,40 +312,40 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         tempUser.setId(999);
         tempUser.setName("Test Testersen");
         tempUser.setEmail("test@testersen.no");
-        tempUser.setStudentId("9999");
-        tempUser.setIsAdmin(true);
+        tempUser.setStudentid("9999");
+        tempUser.setIsadmin(true);
         let tempDummy = {user: tempUser, password: "1234"} as IGrpcDummyUser;
         dummyUsers.push(tempDummy);
 
         tempUser.setId(1000);
         tempUser.setName("Admin Admin");
         tempUser.setEmail("admin@admin");
-        tempUser.setStudentId("1000");
-        tempUser.setIsAdmin(true);
+        tempUser.setStudentid("1000");
+        tempUser.setIsadmin(true);
         let tempDummy1 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
         dummyUsers.push(tempDummy1);
 
         tempUser.setId(1);
         tempUser.setName("Per Pettersen");
         tempUser.setEmail("per@pettersen.no");
-        tempUser.setStudentId("1234");
-        tempUser.setIsAdmin(true);
+        tempUser.setStudentid("1234");
+        tempUser.setIsadmin(true);
         let tempDummy2 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
         dummyUsers.push(tempDummy2);
 
         tempUser.setId(2);
         tempUser.setName("Bob Bobsen");
         tempUser.setEmail("bob@bobsen.no");
-        tempUser.setStudentId("1234");
-        tempUser.setIsAdmin(true);
+        tempUser.setStudentid("1234");
+        tempUser.setIsadmin(true);
         let tempDummy3 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
         dummyUsers.push(tempDummy3);
 
         tempUser.setId(3);
         tempUser.setName("Petter Pan");
         tempUser.setEmail("petter@pan.no");
-        tempUser.setStudentId("1234");
-        tempUser.setIsAdmin(true);
+        tempUser.setStudentid("1234");
+        tempUser.setIsadmin(true);
         let tempDummy4 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
         dummyUsers.push(tempDummy4);
 

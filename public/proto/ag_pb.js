@@ -582,12 +582,12 @@ proto.User.prototype.toObject = function(opt_includeInstance) {
 proto.User.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    isAdmin: jspb.Message.getFieldWithDefault(msg, 2, false),
+    isadmin: jspb.Message.getFieldWithDefault(msg, 2, false),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    studentId: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    studentid: jspb.Message.getFieldWithDefault(msg, 4, ""),
     email: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    avatarUrl: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    remoteIdentitiesList: jspb.Message.toObjectList(msg.getRemoteIdentitiesList(),
+    avatarurl: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    remoteidentitiesList: jspb.Message.toObjectList(msg.getRemoteidentitiesList(),
     proto.RemoteIdentity.toObject, includeInstance),
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
     proto.Enrollment.toObject, includeInstance)
@@ -633,7 +633,7 @@ proto.User.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setIsAdmin(value);
+      msg.setIsadmin(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
@@ -641,7 +641,7 @@ proto.User.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 4:
       var value = /** @type {string} */ (reader.readString());
-      msg.setStudentId(value);
+      msg.setStudentid(value);
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
@@ -649,12 +649,12 @@ proto.User.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 6:
       var value = /** @type {string} */ (reader.readString());
-      msg.setAvatarUrl(value);
+      msg.setAvatarurl(value);
       break;
     case 7:
       var value = new proto.RemoteIdentity;
       reader.readMessage(value,proto.RemoteIdentity.deserializeBinaryFromReader);
-      msg.addRemoteIdentities(value);
+      msg.addRemoteidentities(value);
       break;
     case 8:
       var value = new proto.Enrollment;
@@ -697,7 +697,7 @@ proto.User.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getIsAdmin();
+  f = message.getIsadmin();
   if (f) {
     writer.writeBool(
       2,
@@ -711,7 +711,7 @@ proto.User.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getStudentId();
+  f = message.getStudentid();
   if (f.length > 0) {
     writer.writeString(
       4,
@@ -725,14 +725,14 @@ proto.User.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getAvatarUrl();
+  f = message.getAvatarurl();
   if (f.length > 0) {
     writer.writeString(
       6,
       f
     );
   }
-  f = message.getRemoteIdentitiesList();
+  f = message.getRemoteidentitiesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       7,
@@ -767,18 +767,18 @@ proto.User.prototype.setId = function(value) {
 
 
 /**
- * optional bool is_admin = 2;
+ * optional bool isAdmin = 2;
  * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
  * You should avoid comparisons like {@code val === true/false} in those cases.
  * @return {boolean}
  */
-proto.User.prototype.getIsAdmin = function() {
+proto.User.prototype.getIsadmin = function() {
   return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 2, false));
 };
 
 
 /** @param {boolean} value */
-proto.User.prototype.setIsAdmin = function(value) {
+proto.User.prototype.setIsadmin = function(value) {
   jspb.Message.setProto3BooleanField(this, 2, value);
 };
 
@@ -799,16 +799,16 @@ proto.User.prototype.setName = function(value) {
 
 
 /**
- * optional string student_ID = 4;
+ * optional string studentID = 4;
  * @return {string}
  */
-proto.User.prototype.getStudentId = function() {
+proto.User.prototype.getStudentid = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
 /** @param {string} value */
-proto.User.prototype.setStudentId = function(value) {
+proto.User.prototype.setStudentid = function(value) {
   jspb.Message.setProto3StringField(this, 4, value);
 };
 
@@ -829,32 +829,32 @@ proto.User.prototype.setEmail = function(value) {
 
 
 /**
- * optional string avatar_URL = 6;
+ * optional string avatarURL = 6;
  * @return {string}
  */
-proto.User.prototype.getAvatarUrl = function() {
+proto.User.prototype.getAvatarurl = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
 /** @param {string} value */
-proto.User.prototype.setAvatarUrl = function(value) {
+proto.User.prototype.setAvatarurl = function(value) {
   jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
 /**
- * repeated RemoteIdentity remote_identities = 7;
+ * repeated RemoteIdentity remoteIdentities = 7;
  * @return {!Array<!proto.RemoteIdentity>}
  */
-proto.User.prototype.getRemoteIdentitiesList = function() {
+proto.User.prototype.getRemoteidentitiesList = function() {
   return /** @type{!Array<!proto.RemoteIdentity>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.RemoteIdentity, 7));
 };
 
 
 /** @param {!Array<!proto.RemoteIdentity>} value */
-proto.User.prototype.setRemoteIdentitiesList = function(value) {
+proto.User.prototype.setRemoteidentitiesList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 7, value);
 };
 
@@ -864,7 +864,7 @@ proto.User.prototype.setRemoteIdentitiesList = function(value) {
  * @param {number=} opt_index
  * @return {!proto.RemoteIdentity}
  */
-proto.User.prototype.addRemoteIdentities = function(opt_value, opt_index) {
+proto.User.prototype.addRemoteidentities = function(opt_value, opt_index) {
   return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.RemoteIdentity, opt_index);
 };
 
@@ -872,8 +872,8 @@ proto.User.prototype.addRemoteIdentities = function(opt_value, opt_index) {
 /**
  * Clears the list making it empty but non-null.
  */
-proto.User.prototype.clearRemoteIdentitiesList = function() {
-  this.setRemoteIdentitiesList([]);
+proto.User.prototype.clearRemoteidentitiesList = function() {
+  this.setRemoteidentitiesList([]);
 };
 
 
@@ -1097,9 +1097,9 @@ proto.RemoteIdentity.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     provider: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    remoteId: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    accessToken: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    userId: jspb.Message.getFieldWithDefault(msg, 5, 0)
+    remoteid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    accesstoken: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    userid: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -1146,15 +1146,15 @@ proto.RemoteIdentity.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setRemoteId(value);
+      msg.setRemoteid(value);
       break;
     case 4:
       var value = /** @type {string} */ (reader.readString());
-      msg.setAccessToken(value);
+      msg.setAccesstoken(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setUserId(value);
+      msg.setUserid(value);
       break;
     default:
       reader.skipField();
@@ -1199,21 +1199,21 @@ proto.RemoteIdentity.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getRemoteId();
+  f = message.getRemoteid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getAccessToken();
+  f = message.getAccesstoken();
   if (f.length > 0) {
     writer.writeString(
       4,
       f
     );
   }
-  f = message.getUserId();
+  f = message.getUserid();
   if (f !== 0) {
     writer.writeUint64(
       5,
@@ -1254,46 +1254,46 @@ proto.RemoteIdentity.prototype.setProvider = function(value) {
 
 
 /**
- * optional uint64 remote_ID = 3;
+ * optional uint64 remoteID = 3;
  * @return {number}
  */
-proto.RemoteIdentity.prototype.getRemoteId = function() {
+proto.RemoteIdentity.prototype.getRemoteid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.RemoteIdentity.prototype.setRemoteId = function(value) {
+proto.RemoteIdentity.prototype.setRemoteid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string access_token = 4;
+ * optional string accessToken = 4;
  * @return {string}
  */
-proto.RemoteIdentity.prototype.getAccessToken = function() {
+proto.RemoteIdentity.prototype.getAccesstoken = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
 /** @param {string} value */
-proto.RemoteIdentity.prototype.setAccessToken = function(value) {
+proto.RemoteIdentity.prototype.setAccesstoken = function(value) {
   jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
 /**
- * optional uint64 user_ID = 5;
+ * optional uint64 userID = 5;
  * @return {number}
  */
-proto.RemoteIdentity.prototype.getUserId = function() {
+proto.RemoteIdentity.prototype.getUserid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
 /** @param {number} value */
-proto.RemoteIdentity.prototype.setUserId = function(value) {
+proto.RemoteIdentity.prototype.setUserid = function(value) {
   jspb.Message.setProto3IntField(this, 5, value);
 };
 
@@ -1337,7 +1337,7 @@ proto.Group.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     name: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    courseId: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    courseid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     status: jspb.Message.getFieldWithDefault(msg, 4, 0),
     usersList: jspb.Message.toObjectList(msg.getUsersList(),
     proto.User.toObject, includeInstance),
@@ -1389,7 +1389,7 @@ proto.Group.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseId(value);
+      msg.setCourseid(value);
       break;
     case 4:
       var value = /** @type {!proto.Group.GroupStatus} */ (reader.readEnum());
@@ -1448,7 +1448,7 @@ proto.Group.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCourseId();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       3,
@@ -1522,16 +1522,16 @@ proto.Group.prototype.setName = function(value) {
 
 
 /**
- * optional uint64 course_ID = 3;
+ * optional uint64 courseID = 3;
  * @return {number}
  */
-proto.Group.prototype.getCourseId = function() {
+proto.Group.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.Group.prototype.setCourseId = function(value) {
+proto.Group.prototype.setCourseid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
@@ -1811,13 +1811,13 @@ proto.Course.prototype.toObject = function(opt_includeInstance) {
 proto.Course.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    courseCreatorId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    coursecreatorid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
     code: jspb.Message.getFieldWithDefault(msg, 4, ""),
     year: jspb.Message.getFieldWithDefault(msg, 5, 0),
     tag: jspb.Message.getFieldWithDefault(msg, 6, ""),
     provider: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    directoryId: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    directoryid: jspb.Message.getFieldWithDefault(msg, 8, 0),
     enrolled: jspb.Message.getFieldWithDefault(msg, 9, 0),
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
     proto.Enrollment.toObject, includeInstance),
@@ -1867,7 +1867,7 @@ proto.Course.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseCreatorId(value);
+      msg.setCoursecreatorid(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
@@ -1891,7 +1891,7 @@ proto.Course.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 8:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setDirectoryId(value);
+      msg.setDirectoryid(value);
       break;
     case 9:
       var value = /** @type {!proto.Enrollment.UserStatus} */ (reader.readEnum());
@@ -1948,7 +1948,7 @@ proto.Course.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCourseCreatorId();
+  f = message.getCoursecreatorid();
   if (f !== 0) {
     writer.writeUint64(
       2,
@@ -1990,7 +1990,7 @@ proto.Course.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getDirectoryId();
+  f = message.getDirectoryid();
   if (f !== 0) {
     writer.writeUint64(
       8,
@@ -2047,16 +2047,16 @@ proto.Course.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 course_creator_ID = 2;
+ * optional uint64 courseCreatorID = 2;
  * @return {number}
  */
-proto.Course.prototype.getCourseCreatorId = function() {
+proto.Course.prototype.getCoursecreatorid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.Course.prototype.setCourseCreatorId = function(value) {
+proto.Course.prototype.setCoursecreatorid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
@@ -2137,16 +2137,16 @@ proto.Course.prototype.setProvider = function(value) {
 
 
 /**
- * optional uint64 directory_ID = 8;
+ * optional uint64 directoryID = 8;
  * @return {number}
  */
-proto.Course.prototype.getDirectoryId = function() {
+proto.Course.prototype.getDirectoryid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
 };
 
 
 /** @param {number} value */
-proto.Course.prototype.setDirectoryId = function(value) {
+proto.Course.prototype.setDirectoryid = function(value) {
   jspb.Message.setProto3IntField(this, 8, value);
 };
 
@@ -2453,9 +2453,9 @@ proto.Enrollment.prototype.toObject = function(opt_includeInstance) {
 proto.Enrollment.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    courseId: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    userId: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    groupId: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    groupid: jspb.Message.getFieldWithDefault(msg, 4, 0),
     user: (f = msg.getUser()) && proto.User.toObject(includeInstance, f),
     course: (f = msg.getCourse()) && proto.Course.toObject(includeInstance, f),
     group: (f = msg.getGroup()) && proto.Group.toObject(includeInstance, f),
@@ -2502,15 +2502,15 @@ proto.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseId(value);
+      msg.setCourseid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setUserId(value);
+      msg.setUserid(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setGroupId(value);
+      msg.setGroupid(value);
       break;
     case 5:
       var value = new proto.User;
@@ -2567,21 +2567,21 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCourseId();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getUserId();
+  f = message.getUserid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getGroupId();
+  f = message.getGroupid();
   if (f !== 0) {
     writer.writeUint64(
       4,
@@ -2648,46 +2648,46 @@ proto.Enrollment.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 course_ID = 2;
+ * optional uint64 courseID = 2;
  * @return {number}
  */
-proto.Enrollment.prototype.getCourseId = function() {
+proto.Enrollment.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.Enrollment.prototype.setCourseId = function(value) {
+proto.Enrollment.prototype.setCourseid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional uint64 user_ID = 3;
+ * optional uint64 userID = 3;
  * @return {number}
  */
-proto.Enrollment.prototype.getUserId = function() {
+proto.Enrollment.prototype.getUserid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.Enrollment.prototype.setUserId = function(value) {
+proto.Enrollment.prototype.setUserid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional uint64 group_ID = 4;
+ * optional uint64 groupID = 4;
  * @return {number}
  */
-proto.Enrollment.prototype.getGroupId = function() {
+proto.Enrollment.prototype.getGroupid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /** @param {number} value */
-proto.Enrollment.prototype.setGroupId = function(value) {
+proto.Enrollment.prototype.setGroupid = function(value) {
   jspb.Message.setProto3IntField(this, 4, value);
 };
 
@@ -2991,13 +2991,13 @@ proto.Assignment.prototype.toObject = function(opt_includeInstance) {
 proto.Assignment.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    courseId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
     language: jspb.Message.getFieldWithDefault(msg, 4, ""),
     deadline: (f = msg.getDeadline()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
-    autoApprove: jspb.Message.getFieldWithDefault(msg, 6, false),
+    autoapprove: jspb.Message.getFieldWithDefault(msg, 6, false),
     order: jspb.Message.getFieldWithDefault(msg, 7, 0),
-    isGroupLab: jspb.Message.getFieldWithDefault(msg, 8, false),
+    isgrouplab: jspb.Message.getFieldWithDefault(msg, 8, false),
     submission: (f = msg.getSubmission()) && proto.Submission.toObject(includeInstance, f)
   };
 
@@ -3041,7 +3041,7 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseId(value);
+      msg.setCourseid(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
@@ -3058,7 +3058,7 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 6:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setAutoApprove(value);
+      msg.setAutoapprove(value);
       break;
     case 7:
       var value = /** @type {number} */ (reader.readUint32());
@@ -3066,7 +3066,7 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 8:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setIsGroupLab(value);
+      msg.setIsgrouplab(value);
       break;
     case 9:
       var value = new proto.Submission;
@@ -3109,7 +3109,7 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCourseId();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       2,
@@ -3138,7 +3138,7 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
   }
-  f = message.getAutoApprove();
+  f = message.getAutoapprove();
   if (f) {
     writer.writeBool(
       6,
@@ -3152,7 +3152,7 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getIsGroupLab();
+  f = message.getIsgrouplab();
   if (f) {
     writer.writeBool(
       8,
@@ -3186,16 +3186,16 @@ proto.Assignment.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 course_ID = 2;
+ * optional uint64 courseID = 2;
  * @return {number}
  */
-proto.Assignment.prototype.getCourseId = function() {
+proto.Assignment.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.Assignment.prototype.setCourseId = function(value) {
+proto.Assignment.prototype.setCourseid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
@@ -3264,18 +3264,18 @@ proto.Assignment.prototype.hasDeadline = function() {
 
 
 /**
- * optional bool auto_approve = 6;
+ * optional bool autoApprove = 6;
  * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
  * You should avoid comparisons like {@code val === true/false} in those cases.
  * @return {boolean}
  */
-proto.Assignment.prototype.getAutoApprove = function() {
+proto.Assignment.prototype.getAutoapprove = function() {
   return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 6, false));
 };
 
 
 /** @param {boolean} value */
-proto.Assignment.prototype.setAutoApprove = function(value) {
+proto.Assignment.prototype.setAutoapprove = function(value) {
   jspb.Message.setProto3BooleanField(this, 6, value);
 };
 
@@ -3296,18 +3296,18 @@ proto.Assignment.prototype.setOrder = function(value) {
 
 
 /**
- * optional bool is_group_lab = 8;
+ * optional bool isGroupLab = 8;
  * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
  * You should avoid comparisons like {@code val === true/false} in those cases.
  * @return {boolean}
  */
-proto.Assignment.prototype.getIsGroupLab = function() {
+proto.Assignment.prototype.getIsgrouplab = function() {
   return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 8, false));
 };
 
 
 /** @param {boolean} value */
-proto.Assignment.prototype.setIsGroupLab = function(value) {
+proto.Assignment.prototype.setIsgrouplab = function(value) {
   jspb.Message.setProto3BooleanField(this, 8, value);
 };
 
@@ -3530,13 +3530,13 @@ proto.Submission.prototype.toObject = function(opt_includeInstance) {
 proto.Submission.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    assignmentId: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    userId: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    groupId: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    groupid: jspb.Message.getFieldWithDefault(msg, 4, 0),
     score: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    scoreObjects: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    buildInfo: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    commitHash: jspb.Message.getFieldWithDefault(msg, 8, ""),
+    scoreobjects: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    buildinfo: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    commithash: jspb.Message.getFieldWithDefault(msg, 8, ""),
     approved: jspb.Message.getFieldWithDefault(msg, 9, false)
   };
 
@@ -3580,15 +3580,15 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setAssignmentId(value);
+      msg.setAssignmentid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setUserId(value);
+      msg.setUserid(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setGroupId(value);
+      msg.setGroupid(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readUint32());
@@ -3596,15 +3596,15 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 6:
       var value = /** @type {string} */ (reader.readString());
-      msg.setScoreObjects(value);
+      msg.setScoreobjects(value);
       break;
     case 7:
       var value = /** @type {string} */ (reader.readString());
-      msg.setBuildInfo(value);
+      msg.setBuildinfo(value);
       break;
     case 8:
       var value = /** @type {string} */ (reader.readString());
-      msg.setCommitHash(value);
+      msg.setCommithash(value);
       break;
     case 9:
       var value = /** @type {boolean} */ (reader.readBool());
@@ -3646,21 +3646,21 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getAssignmentId();
+  f = message.getAssignmentid();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getUserId();
+  f = message.getUserid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getGroupId();
+  f = message.getGroupid();
   if (f !== 0) {
     writer.writeUint64(
       4,
@@ -3674,21 +3674,21 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getScoreObjects();
+  f = message.getScoreobjects();
   if (f.length > 0) {
     writer.writeString(
       6,
       f
     );
   }
-  f = message.getBuildInfo();
+  f = message.getBuildinfo();
   if (f.length > 0) {
     writer.writeString(
       7,
       f
     );
   }
-  f = message.getCommitHash();
+  f = message.getCommithash();
   if (f.length > 0) {
     writer.writeString(
       8,
@@ -3721,46 +3721,46 @@ proto.Submission.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 assignment_ID = 2;
+ * optional uint64 assignmentID = 2;
  * @return {number}
  */
-proto.Submission.prototype.getAssignmentId = function() {
+proto.Submission.prototype.getAssignmentid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.Submission.prototype.setAssignmentId = function(value) {
+proto.Submission.prototype.setAssignmentid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional uint64 user_ID = 3;
+ * optional uint64 userID = 3;
  * @return {number}
  */
-proto.Submission.prototype.getUserId = function() {
+proto.Submission.prototype.getUserid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.Submission.prototype.setUserId = function(value) {
+proto.Submission.prototype.setUserid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional uint64 group_ID = 4;
+ * optional uint64 groupID = 4;
  * @return {number}
  */
-proto.Submission.prototype.getGroupId = function() {
+proto.Submission.prototype.getGroupid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /** @param {number} value */
-proto.Submission.prototype.setGroupId = function(value) {
+proto.Submission.prototype.setGroupid = function(value) {
   jspb.Message.setProto3IntField(this, 4, value);
 };
 
@@ -3781,46 +3781,46 @@ proto.Submission.prototype.setScore = function(value) {
 
 
 /**
- * optional string score_objects = 6;
+ * optional string scoreObjects = 6;
  * @return {string}
  */
-proto.Submission.prototype.getScoreObjects = function() {
+proto.Submission.prototype.getScoreobjects = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
 /** @param {string} value */
-proto.Submission.prototype.setScoreObjects = function(value) {
+proto.Submission.prototype.setScoreobjects = function(value) {
   jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
 /**
- * optional string build_info = 7;
+ * optional string buildInfo = 7;
  * @return {string}
  */
-proto.Submission.prototype.getBuildInfo = function() {
+proto.Submission.prototype.getBuildinfo = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
 
 /** @param {string} value */
-proto.Submission.prototype.setBuildInfo = function(value) {
+proto.Submission.prototype.setBuildinfo = function(value) {
   jspb.Message.setProto3StringField(this, 7, value);
 };
 
 
 /**
- * optional string commit_hash = 8;
+ * optional string commitHash = 8;
  * @return {string}
  */
-proto.Submission.prototype.getCommitHash = function() {
+proto.Submission.prototype.getCommithash = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
 };
 
 
 /** @param {string} value */
-proto.Submission.prototype.setCommitHash = function(value) {
+proto.Submission.prototype.setCommithash = function(value) {
   jspb.Message.setProto3StringField(this, 8, value);
 };
 
@@ -4027,12 +4027,12 @@ proto.Repository.prototype.toObject = function(opt_includeInstance) {
 proto.Repository.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    directoryId: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    repositoryId: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    userId: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    groupId: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    htmlUrl: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    repoType: jspb.Message.getFieldWithDefault(msg, 7, 0)
+    directoryid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    repositoryid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    userid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    groupid: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    htmlurl: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    repotype: jspb.Message.getFieldWithDefault(msg, 7, 0)
   };
 
   if (includeInstance) {
@@ -4075,27 +4075,27 @@ proto.Repository.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setDirectoryId(value);
+      msg.setDirectoryid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setRepositoryId(value);
+      msg.setRepositoryid(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setUserId(value);
+      msg.setUserid(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setGroupId(value);
+      msg.setGroupid(value);
       break;
     case 6:
       var value = /** @type {string} */ (reader.readString());
-      msg.setHtmlUrl(value);
+      msg.setHtmlurl(value);
       break;
     case 7:
       var value = /** @type {!proto.Repository.RepoType} */ (reader.readEnum());
-      msg.setRepoType(value);
+      msg.setRepotype(value);
       break;
     default:
       reader.skipField();
@@ -4133,42 +4133,42 @@ proto.Repository.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getDirectoryId();
+  f = message.getDirectoryid();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getRepositoryId();
+  f = message.getRepositoryid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getUserId();
+  f = message.getUserid();
   if (f !== 0) {
     writer.writeUint64(
       4,
       f
     );
   }
-  f = message.getGroupId();
+  f = message.getGroupid();
   if (f !== 0) {
     writer.writeUint64(
       5,
       f
     );
   }
-  f = message.getHtmlUrl();
+  f = message.getHtmlurl();
   if (f.length > 0) {
     writer.writeString(
       6,
       f
     );
   }
-  f = message.getRepoType();
+  f = message.getRepotype();
   if (f !== 0.0) {
     writer.writeEnum(
       7,
@@ -4205,91 +4205,91 @@ proto.Repository.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 directory_ID = 2;
+ * optional uint64 directoryID = 2;
  * @return {number}
  */
-proto.Repository.prototype.getDirectoryId = function() {
+proto.Repository.prototype.getDirectoryid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.Repository.prototype.setDirectoryId = function(value) {
+proto.Repository.prototype.setDirectoryid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional uint64 repository_ID = 3;
+ * optional uint64 repositoryID = 3;
  * @return {number}
  */
-proto.Repository.prototype.getRepositoryId = function() {
+proto.Repository.prototype.getRepositoryid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.Repository.prototype.setRepositoryId = function(value) {
+proto.Repository.prototype.setRepositoryid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional uint64 user_ID = 4;
+ * optional uint64 userID = 4;
  * @return {number}
  */
-proto.Repository.prototype.getUserId = function() {
+proto.Repository.prototype.getUserid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /** @param {number} value */
-proto.Repository.prototype.setUserId = function(value) {
+proto.Repository.prototype.setUserid = function(value) {
   jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional uint64 group_ID = 5;
+ * optional uint64 groupID = 5;
  * @return {number}
  */
-proto.Repository.prototype.getGroupId = function() {
+proto.Repository.prototype.getGroupid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
 /** @param {number} value */
-proto.Repository.prototype.setGroupId = function(value) {
+proto.Repository.prototype.setGroupid = function(value) {
   jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional string HTML_URL = 6;
+ * optional string HTMLURL = 6;
  * @return {string}
  */
-proto.Repository.prototype.getHtmlUrl = function() {
+proto.Repository.prototype.getHtmlurl = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
 /** @param {string} value */
-proto.Repository.prototype.setHtmlUrl = function(value) {
+proto.Repository.prototype.setHtmlurl = function(value) {
   jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
 /**
- * optional RepoType repo_type = 7;
+ * optional RepoType repoType = 7;
  * @return {!proto.Repository.RepoType}
  */
-proto.Repository.prototype.getRepoType = function() {
+proto.Repository.prototype.getRepotype = function() {
   return /** @type {!proto.Repository.RepoType} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
 };
 
 
 /** @param {!proto.Repository.RepoType} value */
-proto.Repository.prototype.setRepoType = function(value) {
+proto.Repository.prototype.setRepotype = function(value) {
   jspb.Message.setProto3EnumField(this, 7, value);
 };
 
@@ -4820,7 +4820,7 @@ proto.RecordRequest.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     statusesList: jspb.Message.getRepeatedField(msg, 2),
-    groupStatusesList: jspb.Message.getRepeatedField(msg, 3)
+    groupstatusesList: jspb.Message.getRepeatedField(msg, 3)
   };
 
   if (includeInstance) {
@@ -4867,7 +4867,7 @@ proto.RecordRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {!Array<!proto.Group.GroupStatus>} */ (reader.readPackedEnum());
-      msg.setGroupStatusesList(value);
+      msg.setGroupstatusesList(value);
       break;
     default:
       reader.skipField();
@@ -4912,7 +4912,7 @@ proto.RecordRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getGroupStatusesList();
+  f = message.getGroupstatusesList();
   if (f.length > 0) {
     writer.writePackedEnum(
       3,
@@ -4970,16 +4970,16 @@ proto.RecordRequest.prototype.clearStatusesList = function() {
 
 
 /**
- * repeated Group.GroupStatus group_statuses = 3;
+ * repeated Group.GroupStatus groupStatuses = 3;
  * @return {!Array<!proto.Group.GroupStatus>}
  */
-proto.RecordRequest.prototype.getGroupStatusesList = function() {
+proto.RecordRequest.prototype.getGroupstatusesList = function() {
   return /** @type {!Array<!proto.Group.GroupStatus>} */ (jspb.Message.getRepeatedField(this, 3));
 };
 
 
 /** @param {!Array<!proto.Group.GroupStatus>} value */
-proto.RecordRequest.prototype.setGroupStatusesList = function(value) {
+proto.RecordRequest.prototype.setGroupstatusesList = function(value) {
   jspb.Message.setField(this, 3, value || []);
 };
 
@@ -4988,7 +4988,7 @@ proto.RecordRequest.prototype.setGroupStatusesList = function(value) {
  * @param {!proto.Group.GroupStatus} value
  * @param {number=} opt_index
  */
-proto.RecordRequest.prototype.addGroupStatuses = function(value, opt_index) {
+proto.RecordRequest.prototype.addGroupstatuses = function(value, opt_index) {
   jspb.Message.addToRepeatedField(this, 3, value, opt_index);
 };
 
@@ -4996,8 +4996,8 @@ proto.RecordRequest.prototype.addGroupStatuses = function(value, opt_index) {
 /**
  * Clears the list making it empty but non-null.
  */
-proto.RecordRequest.prototype.clearGroupStatusesList = function() {
-  this.setGroupStatusesList([]);
+proto.RecordRequest.prototype.clearGroupstatusesList = function() {
+  this.setGroupstatusesList([]);
 };
 
 
@@ -5032,11 +5032,11 @@ proto.ActionRequest.prototype.toObject = function(opt_includeInstance) {
 proto.ActionRequest.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    userId: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    groupId: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    courseId: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    userid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    groupid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    courseid: jspb.Message.getFieldWithDefault(msg, 4, 0),
     status: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    groupStatus: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    groupstatus: jspb.Message.getFieldWithDefault(msg, 6, 0)
   };
 
   if (includeInstance) {
@@ -5079,15 +5079,15 @@ proto.ActionRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setUserId(value);
+      msg.setUserid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setGroupId(value);
+      msg.setGroupid(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseId(value);
+      msg.setCourseid(value);
       break;
     case 5:
       var value = /** @type {!proto.Enrollment.UserStatus} */ (reader.readEnum());
@@ -5095,7 +5095,7 @@ proto.ActionRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 6:
       var value = /** @type {!proto.Group.GroupStatus} */ (reader.readEnum());
-      msg.setGroupStatus(value);
+      msg.setGroupstatus(value);
       break;
     default:
       reader.skipField();
@@ -5133,21 +5133,21 @@ proto.ActionRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getUserId();
+  f = message.getUserid();
   if (f !== 0) {
     writer.writeUint64(
       2,
       f
     );
   }
-  f = message.getGroupId();
+  f = message.getGroupid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getCourseId();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       4,
@@ -5161,7 +5161,7 @@ proto.ActionRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getGroupStatus();
+  f = message.getGroupstatus();
   if (f !== 0.0) {
     writer.writeEnum(
       6,
@@ -5187,46 +5187,46 @@ proto.ActionRequest.prototype.setId = function(value) {
 
 
 /**
- * optional uint64 user_ID = 2;
+ * optional uint64 userID = 2;
  * @return {number}
  */
-proto.ActionRequest.prototype.getUserId = function() {
+proto.ActionRequest.prototype.getUserid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.ActionRequest.prototype.setUserId = function(value) {
+proto.ActionRequest.prototype.setUserid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional uint64 group_ID = 3;
+ * optional uint64 groupID = 3;
  * @return {number}
  */
-proto.ActionRequest.prototype.getGroupId = function() {
+proto.ActionRequest.prototype.getGroupid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.ActionRequest.prototype.setGroupId = function(value) {
+proto.ActionRequest.prototype.setGroupid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional uint64 course_ID = 4;
+ * optional uint64 courseID = 4;
  * @return {number}
  */
-proto.ActionRequest.prototype.getCourseId = function() {
+proto.ActionRequest.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /** @param {number} value */
-proto.ActionRequest.prototype.setCourseId = function(value) {
+proto.ActionRequest.prototype.setCourseid = function(value) {
   jspb.Message.setProto3IntField(this, 4, value);
 };
 
@@ -5247,16 +5247,16 @@ proto.ActionRequest.prototype.setStatus = function(value) {
 
 
 /**
- * optional Group.GroupStatus group_status = 6;
+ * optional Group.GroupStatus groupStatus = 6;
  * @return {!proto.Group.GroupStatus}
  */
-proto.ActionRequest.prototype.getGroupStatus = function() {
+proto.ActionRequest.prototype.getGroupstatus = function() {
   return /** @type {!proto.Group.GroupStatus} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
 
 /** @param {!proto.Group.GroupStatus} value */
-proto.ActionRequest.prototype.setGroupStatus = function(value) {
+proto.ActionRequest.prototype.setGroupstatus = function(value) {
   jspb.Message.setProto3EnumField(this, 6, value);
 };
 
@@ -5292,7 +5292,7 @@ proto.DirectoryRequest.prototype.toObject = function(opt_includeInstance) {
 proto.DirectoryRequest.toObject = function(includeInstance, msg) {
   var obj = {
     provider: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    courseId: jspb.Message.getFieldWithDefault(msg, 2, 0)
+    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -5335,7 +5335,7 @@ proto.DirectoryRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseId(value);
+      msg.setCourseid(value);
       break;
     default:
       reader.skipField();
@@ -5373,7 +5373,7 @@ proto.DirectoryRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCourseId();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       2,
@@ -5399,16 +5399,16 @@ proto.DirectoryRequest.prototype.setProvider = function(value) {
 
 
 /**
- * optional uint64 course_ID = 2;
+ * optional uint64 courseID = 2;
  * @return {number}
  */
-proto.DirectoryRequest.prototype.getCourseId = function() {
+proto.DirectoryRequest.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.DirectoryRequest.prototype.setCourseId = function(value) {
+proto.DirectoryRequest.prototype.setCourseid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
@@ -5445,10 +5445,10 @@ proto.RepositoryRequest.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     type: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    directoryId: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    repositoryId: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    userId: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    courseId: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    directoryid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    repositoryid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    userid: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    courseid: jspb.Message.getFieldWithDefault(msg, 6, 0)
   };
 
   if (includeInstance) {
@@ -5495,19 +5495,19 @@ proto.RepositoryRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setDirectoryId(value);
+      msg.setDirectoryid(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setRepositoryId(value);
+      msg.setRepositoryid(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setUserId(value);
+      msg.setUserid(value);
       break;
     case 6:
       var value = /** @type {number} */ (reader.readUint64());
-      msg.setCourseId(value);
+      msg.setCourseid(value);
       break;
     default:
       reader.skipField();
@@ -5552,28 +5552,28 @@ proto.RepositoryRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getDirectoryId();
+  f = message.getDirectoryid();
   if (f !== 0) {
     writer.writeUint64(
       3,
       f
     );
   }
-  f = message.getRepositoryId();
+  f = message.getRepositoryid();
   if (f !== 0) {
     writer.writeUint64(
       4,
       f
     );
   }
-  f = message.getUserId();
+  f = message.getUserid();
   if (f !== 0) {
     writer.writeUint64(
       5,
       f
     );
   }
-  f = message.getCourseId();
+  f = message.getCourseid();
   if (f !== 0) {
     writer.writeUint64(
       6,
@@ -5614,61 +5614,61 @@ proto.RepositoryRequest.prototype.setType = function(value) {
 
 
 /**
- * optional uint64 directory_ID = 3;
+ * optional uint64 directoryID = 3;
  * @return {number}
  */
-proto.RepositoryRequest.prototype.getDirectoryId = function() {
+proto.RepositoryRequest.prototype.getDirectoryid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.RepositoryRequest.prototype.setDirectoryId = function(value) {
+proto.RepositoryRequest.prototype.setDirectoryid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional uint64 repository_ID = 4;
+ * optional uint64 repositoryID = 4;
  * @return {number}
  */
-proto.RepositoryRequest.prototype.getRepositoryId = function() {
+proto.RepositoryRequest.prototype.getRepositoryid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /** @param {number} value */
-proto.RepositoryRequest.prototype.setRepositoryId = function(value) {
+proto.RepositoryRequest.prototype.setRepositoryid = function(value) {
   jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional uint64 user_ID = 5;
+ * optional uint64 userID = 5;
  * @return {number}
  */
-proto.RepositoryRequest.prototype.getUserId = function() {
+proto.RepositoryRequest.prototype.getUserid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
 /** @param {number} value */
-proto.RepositoryRequest.prototype.setUserId = function(value) {
+proto.RepositoryRequest.prototype.setUserid = function(value) {
   jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional uint64 course_ID = 6;
+ * optional uint64 courseID = 6;
  * @return {number}
  */
-proto.RepositoryRequest.prototype.getCourseId = function() {
+proto.RepositoryRequest.prototype.getCourseid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
 
 /** @param {number} value */
-proto.RepositoryRequest.prototype.setCourseId = function(value) {
+proto.RepositoryRequest.prototype.setCourseid = function(value) {
   jspb.Message.setProto3IntField(this, 6, value);
 };
 

@@ -53,7 +53,7 @@ export class UserManager {
     public isValidUser(user: User): boolean {
         return user.getEmail().length > 0
             && user.getName().length > 0
-            && user.getStudentId().length > 0;
+            && user.getStudentid().length > 0;
     }
 
     /**
@@ -105,8 +105,8 @@ export class UserManager {
      * @returns Returns true if admin. False otherwise
      */
     public isAdmin(user: User): boolean {
-        if (user.getIsAdmin()) {
-            return user.getIsAdmin();
+        if (user.getIsadmin()) {
+            return user.getIsadmin();
         }
         return false;
     }
@@ -117,7 +117,7 @@ export class UserManager {
      * @returns Returns true if user is teacher in one or more courses
      */
     public async isTeacher(user: User): Promise<boolean> {
-        return user.getIsAdmin();
+        return user.getIsadmin();
     }
 
     /**

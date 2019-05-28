@@ -81,7 +81,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         }
         selector.push(
             <a href={"mailto:" + user.user.getEmail()}>{user.user.getEmail()}</a>,
-            user.user.getStudentId().toString(),
+            user.user.getStudentid().toString(),
         );
         const temp = this.renderActions(user);
         if (Array.isArray(temp) && temp.length > 0) {
@@ -145,7 +145,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         this.props.users.forEach((user) => {
             if (user.user.getName().toLowerCase().indexOf(query) !== -1
                 || user.user.getEmail().toLowerCase().indexOf(query) !== -1
-                || user.user.getStudentId().toString().indexOf(query) !== -1
+                || user.user.getStudentid().toString().indexOf(query) !== -1
             ) {
                 filteredData.push(user);
             }

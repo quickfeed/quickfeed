@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/web/grpc_service"
+	"github.com/autograde/aguis/web/grpcservice"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -20,38 +20,38 @@ import (
 
 var allCourses = []*pb.Course{
 	{
-		Name:             "Distributed Systems",
-		CourseCreator_ID: 1,
-		Code:             "DAT520",
-		Year:             2018,
-		Tag:              "Spring",
-		Provider:         "fake",
-		Directory_ID:     1,
+		Name:            "Distributed Systems",
+		CourseCreatorID: 1,
+		Code:            "DAT520",
+		Year:            2018,
+		Tag:             "Spring",
+		Provider:        "fake",
+		DirectoryID:     1,
 	},
 	{
-		Name:             "Operating Systems",
-		CourseCreator_ID: 1,
-		Code:             "DAT320",
-		Year:             2017,
-		Tag:              "Fall",
-		Provider:         "fake",
-		Directory_ID:     2,
+		Name:            "Operating Systems",
+		CourseCreatorID: 1,
+		Code:            "DAT320",
+		Year:            2017,
+		Tag:             "Fall",
+		Provider:        "fake",
+		DirectoryID:     2,
 	}, {
-		Name:             "New Systems",
-		CourseCreator_ID: 1,
-		Code:             "DATx20",
-		Year:             2019,
-		Tag:              "Fall",
-		Provider:         "fake",
-		Directory_ID:     3,
+		Name:            "New Systems",
+		CourseCreatorID: 1,
+		Code:            "DATx20",
+		Year:            2019,
+		Tag:             "Fall",
+		Provider:        "fake",
+		DirectoryID:     3,
 	}, {
-		Name:             "Hyped Systems",
-		CourseCreator_ID: 1,
-		Code:             "DATx20",
-		Year:             2019,
-		Tag:              "Fall",
-		Provider:         "fake",
-		Directory_ID:     4,
+		Name:            "Hyped Systems",
+		CourseCreatorID: 1,
+		Code:            "DATx20",
+		Year:            2019,
+		Tag:             "Fall",
+		Provider:        "fake",
+		DirectoryID:     4,
 	},
 }
 
@@ -85,8 +85,8 @@ func TestListCourses(t *testing.T) {
 // withUserContext is a test helper function to create metadata for the
 // given user mimicking the context coming from the browser.
 func withUserContext(ctx context.Context, user *pb.User) context.Context {
-	user_User_ID := strconv.Itoa(int(user.GetID()))
-	meta := metadata.New(map[string]string{"user": user_User_ID})
+	user_UserID := strconv.Itoa(int(user.GetID()))
+	meta := metadata.New(map[string]string{"user": user_UserID})
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
@@ -108,7 +108,7 @@ func TestNewCourse(t *testing.T) {
 	scmMap := fakeProviderMap(ctx)
 	fakeProvider := scmMap["token"]
 
-	ags := grpc_service.NewAutograderService(db, scmMap, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(db, scmMap, web.BaseHookOptions{})
 	for _, testCourse := range allCourses {
 		// each course needs a separate directory
 		fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
@@ -142,7 +142,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	scmMap := fakeProviderMap(ctx)
 	fakeProvider := scmMap["token"]
 
-	ags := grpc_service.NewAutograderService(db, scmMap, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(db, scmMap, web.BaseHookOptions{})
 	testCourse := allCourses[0]
 	directory, _ := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
@@ -169,14 +169,14 @@ func TestEnrollmentProcess(t *testing.T) {
 	fakeProvider := scmMap["token"]
 	fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
 
-	ags := grpc_service.NewAutograderService(db, scmMap, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(db, scmMap, web.BaseHookOptions{})
 	course, err := ags.CreateCourse(ctx, allCourses[0])
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	stud1 := createFakeUser(t, db, 2)
-	enrollStud1 := &pb.ActionRequest{Course_ID: course.ID, User_ID: stud1.ID}
+	enrollStud1 := &pb.ActionRequest{CourseID: course.ID, UserID: stud1.ID}
 	if _, err = ags.CreateEnrollment(ctx, enrollStud1); err != nil {
 		t.Fatal(err)
 	}
@@ -187,9 +187,9 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantEnrollment := &pb.Enrollment{
-		ID:        pendingEnrollment.ID,
-		Course_ID: course.ID,
-		User_ID:   stud1.ID,
+		ID:       pendingEnrollment.ID,
+		CourseID: course.ID,
+		UserID:   stud1.ID,
 	}
 	if !cmp.Equal(pendingEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment\n %+v\n want\n %+v", pendingEnrollment, wantEnrollment)
@@ -213,7 +213,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// create another user and enroll as student
 
 	stud2 := createFakeUser(t, db, 3)
-	enrollStud2 := &pb.ActionRequest{Course_ID: course.ID, User_ID: stud2.ID}
+	enrollStud2 := &pb.ActionRequest{CourseID: course.ID, UserID: stud2.ID}
 	if _, err = ags.CreateEnrollment(ctx, enrollStud2); err != nil {
 		t.Fatal(err)
 	}
@@ -228,7 +228,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	wantEnrollment.ID = acceptedEnrollment.ID
 	wantEnrollment.Status = pb.Enrollment_Student
-	wantEnrollment.User_ID = stud2.ID
+	wantEnrollment.UserID = stud2.ID
 	if !cmp.Equal(acceptedEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
 	}
@@ -260,7 +260,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	user := createFakeUser(t, db, 2)
 
 	testscms := make(map[string]scm.SCM)
-	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
 
 	var testCourses []*pb.Course
 	for _, course := range allCourses {
@@ -273,20 +273,20 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		User_ID:   user.ID,
-		Course_ID: testCourses[0].ID,
+		UserID:   user.ID,
+		CourseID: testCourses[0].ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		User_ID:   user.ID,
-		Course_ID: testCourses[1].ID,
+		UserID:   user.ID,
+		CourseID: testCourses[1].ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		User_ID:   user.ID,
-		Course_ID: testCourses[2].ID,
+		UserID:   user.ID,
+		CourseID: testCourses[2].ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -339,23 +339,23 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	user := createFakeUser(t, db, 2)
 
 	testscms := make(map[string]scm.SCM)
-	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		User_ID:   user.ID,
-		Course_ID: testCourses[0].ID,
+		UserID:   user.ID,
+		CourseID: testCourses[0].ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		User_ID:   user.ID,
-		Course_ID: testCourses[1].ID,
+		UserID:   user.ID,
+		CourseID: testCourses[1].ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
-		User_ID:   user.ID,
-		Course_ID: testCourses[2].ID,
+		UserID:   user.ID,
+		CourseID: testCourses[2].ID,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -397,7 +397,7 @@ func TestGetCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 	testscms := make(map[string]scm.SCM)
-	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
 
 	foundCourse, err := test_ag.GetCourse(context.Background(), &pb.RecordRequest{ID: course.ID})
 

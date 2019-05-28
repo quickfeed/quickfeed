@@ -208,7 +208,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 
 		remote := &pb.RemoteIdentity{
 			Provider:    provider,
-			Remote_ID:   remoteID,
+			RemoteID:    remoteID,
 			AccessToken: externalUser.AccessToken,
 		}
 		// Try to get user from database.
@@ -220,9 +220,9 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		case err == gorm.ErrRecordNotFound:
 			// user not in database; create new user
 			user = &pb.User{
-				Name:       externalUser.Name,
-				Email:      externalUser.Email,
-				Avatar_URL: externalUser.AvatarURL,
+				Name:      externalUser.Name,
+				Email:     externalUser.Email,
+				AvatarURL: externalUser.AvatarURL,
 			}
 			err = db.CreateUserFromRemoteIdentity(user, remote)
 		}

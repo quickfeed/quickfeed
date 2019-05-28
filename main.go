@@ -16,7 +16,7 @@ import (
 	"github.com/autograde/aguis/scm"
 
 	"github.com/autograde/aguis/logger"
-	"github.com/autograde/aguis/web/grpc_service"
+	"github.com/autograde/aguis/web/grpcservice"
 
 	http "github.com/autograde/aguis/web/webserver"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -94,7 +94,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterAutograderServiceServer(grpcServer, grpc_service.NewAutograderService(db, scms, bh))
+	pb.RegisterAutograderServiceServer(grpcServer, grpcservice.NewAutograderService(db, scms, bh))
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

@@ -314,7 +314,7 @@ export class CourseManager {
             };
         });
     }
-
+    
     public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
         return await this.courseProvider.createGroup(groupData, courseID);
     }

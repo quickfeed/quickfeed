@@ -40,7 +40,7 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
                             onClick={(e) => { this.toggleMenu(e); }}
                             aria-haspopup="true"
                             aria-expanded="false">
-                            <img className="img-rounded" src={this.props.user.getAvatarUrl()} width="20" height="20" />
+                            <img className="img-rounded" src={this.props.user.getAvatarurl()} width="20" height="20" />
                             <span className="caret"></span>
                         </a>
                         <NavMenuDropdown links={this.props.userLinks}

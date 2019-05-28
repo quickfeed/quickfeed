@@ -2,16 +2,16 @@ export class ActionRequest {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getUserId(): number;
-  setUserId(a: number): void;
-  getGroupId(): number;
-  setGroupId(a: number): void;
-  getCourseId(): number;
-  setCourseId(a: number): void;
+  getUserid(): number;
+  setUserid(a: number): void;
+  getGroupid(): number;
+  setGroupid(a: number): void;
+  getCourseid(): number;
+  setCourseid(a: number): void;
   getStatus(): Enrollment.UserStatus;
   setStatus(a: Enrollment.UserStatus): void;
-  getGroupStatus(): Group.GroupStatus;
-  setGroupStatus(a: Group.GroupStatus): void;
+  getGroupstatus(): Group.GroupStatus;
+  setGroupstatus(a: Group.GroupStatus): void;
   toObject(): ActionRequest.AsObject;
   serializeBinary(): Uint8Array;
   static deserializeBinary: (bytes: {}) => ActionRequest;
@@ -20,11 +20,11 @@ export class ActionRequest {
 export namespace ActionRequest {
   export type AsObject = {
     Id: number;
-    UserId: number;
-    GroupId: number;
-    CourseId: number;
+    Userid: number;
+    Groupid: number;
+    Courseid: number;
     Status: Enrollment.UserStatus;
-    GroupStatus: Group.GroupStatus;
+    Groupstatus: Group.GroupStatus;
   }
 }
 
@@ -32,20 +32,20 @@ export class Assignment {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getCourseId(): number;
-  setCourseId(a: number): void;
+  getCourseid(): number;
+  setCourseid(a: number): void;
   getName(): string;
   setName(a: string): void;
   getLanguage(): string;
   setLanguage(a: string): void;
   getDeadline(): Timestamp;
   setDeadline(a: Timestamp): void;
-  getAutoApprove(): boolean;
-  setAutoApprove(a: boolean): void;
+  getAutoapprove(): boolean;
+  setAutoapprove(a: boolean): void;
   getOrder(): number;
   setOrder(a: number): void;
-  getIsGroupLab(): boolean;
-  setIsGroupLab(a: boolean): void;
+  getIsgrouplab(): boolean;
+  setIsgrouplab(a: boolean): void;
   getSubmission(): Submission;
   setSubmission(a: Submission): void;
   toObject(): Assignment.AsObject;
@@ -56,13 +56,13 @@ export class Assignment {
 export namespace Assignment {
   export type AsObject = {
     Id: number;
-    CourseId: number;
+    Courseid: number;
     Name: string;
     Language: string;
     Deadline: Timestamp;
-    AutoApprove: boolean;
+    Autoapprove: boolean;
     Order: number;
-    IsGroupLab: boolean;
+    Isgrouplab: boolean;
     Submission: Submission;
   }
 }
@@ -86,8 +86,8 @@ export class Course {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getCourseCreatorId(): number;
-  setCourseCreatorId(a: number): void;
+  getCoursecreatorid(): number;
+  setCoursecreatorid(a: number): void;
   getName(): string;
   setName(a: string): void;
   getCode(): string;
@@ -98,8 +98,8 @@ export class Course {
   setTag(a: string): void;
   getProvider(): string;
   setProvider(a: string): void;
-  getDirectoryId(): number;
-  setDirectoryId(a: number): void;
+  getDirectoryid(): number;
+  setDirectoryid(a: number): void;
   getEnrolled(): Enrollment.UserStatus;
   setEnrolled(a: Enrollment.UserStatus): void;
   getEnrollmentsList(): Enrollment[];
@@ -116,13 +116,13 @@ export class Course {
 export namespace Course {
   export type AsObject = {
     Id: number;
-    CourseCreatorId: number;
+    Coursecreatorid: number;
     Name: string;
     Code: string;
     Year: number;
     Tag: string;
     Provider: string;
-    DirectoryId: number;
+    Directoryid: number;
     Enrolled: Enrollment.UserStatus;
     EnrollmentsList: Enrollment[];
     AssignmentsList: Assignment[];
@@ -185,8 +185,8 @@ export class DirectoryRequest {
   constructor ();
   getProvider(): string;
   setProvider(a: string): void;
-  getCourseId(): number;
-  setCourseId(a: number): void;
+  getCourseid(): number;
+  setCourseid(a: number): void;
   toObject(): DirectoryRequest.AsObject;
   serializeBinary(): Uint8Array;
   static deserializeBinary: (bytes: {}) => DirectoryRequest;
@@ -195,7 +195,7 @@ export class DirectoryRequest {
 export namespace DirectoryRequest {
   export type AsObject = {
     Provider: string;
-    CourseId: number;
+    Courseid: number;
   }
 }
 
@@ -203,12 +203,12 @@ export class Enrollment {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getCourseId(): number;
-  setCourseId(a: number): void;
-  getUserId(): number;
-  setUserId(a: number): void;
-  getGroupId(): number;
-  setGroupId(a: number): void;
+  getCourseid(): number;
+  setCourseid(a: number): void;
+  getUserid(): number;
+  setUserid(a: number): void;
+  getGroupid(): number;
+  setGroupid(a: number): void;
   getUser(): User;
   setUser(a: User): void;
   getCourse(): Course;
@@ -225,9 +225,9 @@ export class Enrollment {
 export namespace Enrollment {
   export type AsObject = {
     Id: number;
-    CourseId: number;
-    UserId: number;
-    GroupId: number;
+    Courseid: number;
+    Userid: number;
+    Groupid: number;
     User: User;
     Course: Course;
     Group: Group;
@@ -263,8 +263,8 @@ export class Group {
   setId(a: number): void;
   getName(): string;
   setName(a: string): void;
-  getCourseId(): number;
-  setCourseId(a: number): void;
+  getCourseid(): number;
+  setCourseid(a: number): void;
   getStatus(): Group.GroupStatus;
   setStatus(a: Group.GroupStatus): void;
   getUsersList(): User[];
@@ -280,7 +280,7 @@ export namespace Group {
   export type AsObject = {
     Id: number;
     Name: string;
-    CourseId: number;
+    Courseid: number;
     Status: Group.GroupStatus;
     UsersList: User[];
     EnrollmentsList: Enrollment[];
@@ -330,8 +330,8 @@ export class RecordRequest {
   setId(a: number): void;
   getStatusesList(): Enrollment.UserStatus[];
   setStatusesList(a: Enrollment.UserStatus[]): void;
-  getGroupStatusesList(): Group.GroupStatus[];
-  setGroupStatusesList(a: Group.GroupStatus[]): void;
+  getGroupstatusesList(): Group.GroupStatus[];
+  setGroupstatusesList(a: Group.GroupStatus[]): void;
   toObject(): RecordRequest.AsObject;
   serializeBinary(): Uint8Array;
   static deserializeBinary: (bytes: {}) => RecordRequest;
@@ -341,7 +341,7 @@ export namespace RecordRequest {
   export type AsObject = {
     Id: number;
     StatusesList: Enrollment.UserStatus[];
-    GroupStatusesList: Group.GroupStatus[];
+    GroupstatusesList: Group.GroupStatus[];
   }
 }
 
@@ -351,12 +351,12 @@ export class RemoteIdentity {
   setId(a: number): void;
   getProvider(): string;
   setProvider(a: string): void;
-  getRemoteId(): number;
-  setRemoteId(a: number): void;
-  getAccessToken(): string;
-  setAccessToken(a: string): void;
-  getUserId(): number;
-  setUserId(a: number): void;
+  getRemoteid(): number;
+  setRemoteid(a: number): void;
+  getAccesstoken(): string;
+  setAccesstoken(a: string): void;
+  getUserid(): number;
+  setUserid(a: number): void;
   toObject(): RemoteIdentity.AsObject;
   serializeBinary(): Uint8Array;
   static deserializeBinary: (bytes: {}) => RemoteIdentity;
@@ -366,9 +366,9 @@ export namespace RemoteIdentity {
   export type AsObject = {
     Id: number;
     Provider: string;
-    RemoteId: number;
-    AccessToken: string;
-    UserId: number;
+    Remoteid: number;
+    Accesstoken: string;
+    Userid: number;
   }
 }
 
@@ -376,18 +376,18 @@ export class Repository {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getDirectoryId(): number;
-  setDirectoryId(a: number): void;
-  getRepositoryId(): number;
-  setRepositoryId(a: number): void;
-  getUserId(): number;
-  setUserId(a: number): void;
-  getGroupId(): number;
-  setGroupId(a: number): void;
-  getHtmlUrl(): string;
-  setHtmlUrl(a: string): void;
-  getRepoType(): Repository.RepoType;
-  setRepoType(a: Repository.RepoType): void;
+  getDirectoryid(): number;
+  setDirectoryid(a: number): void;
+  getRepositoryid(): number;
+  setRepositoryid(a: number): void;
+  getUserid(): number;
+  setUserid(a: number): void;
+  getGroupid(): number;
+  setGroupid(a: number): void;
+  getHtmlurl(): string;
+  setHtmlurl(a: string): void;
+  getRepotype(): Repository.RepoType;
+  setRepotype(a: Repository.RepoType): void;
   toObject(): Repository.AsObject;
   serializeBinary(): Uint8Array;
   static deserializeBinary: (bytes: {}) => Repository;
@@ -396,12 +396,12 @@ export class Repository {
 export namespace Repository {
   export type AsObject = {
     Id: number;
-    DirectoryId: number;
-    RepositoryId: number;
-    UserId: number;
-    GroupId: number;
-    HtmlUrl: string;
-    RepoType: Repository.RepoType;
+    Directoryid: number;
+    Repositoryid: number;
+    Userid: number;
+    Groupid: number;
+    Htmlurl: string;
+    Repotype: Repository.RepoType;
   }
 
   export enum RepoType { 
@@ -419,14 +419,14 @@ export class RepositoryRequest {
   setId(a: number): void;
   getType(): Repository.RepoType;
   setType(a: Repository.RepoType): void;
-  getDirectoryId(): number;
-  setDirectoryId(a: number): void;
-  getRepositoryId(): number;
-  setRepositoryId(a: number): void;
-  getUserId(): number;
-  setUserId(a: number): void;
-  getCourseId(): number;
-  setCourseId(a: number): void;
+  getDirectoryid(): number;
+  setDirectoryid(a: number): void;
+  getRepositoryid(): number;
+  setRepositoryid(a: number): void;
+  getUserid(): number;
+  setUserid(a: number): void;
+  getCourseid(): number;
+  setCourseid(a: number): void;
   toObject(): RepositoryRequest.AsObject;
   serializeBinary(): Uint8Array;
   static deserializeBinary: (bytes: {}) => RepositoryRequest;
@@ -436,10 +436,10 @@ export namespace RepositoryRequest {
   export type AsObject = {
     Id: number;
     Type: Repository.RepoType;
-    DirectoryId: number;
-    RepositoryId: number;
-    UserId: number;
-    CourseId: number;
+    Directoryid: number;
+    Repositoryid: number;
+    Userid: number;
+    Courseid: number;
   }
 }
 
@@ -447,20 +447,20 @@ export class Submission {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getAssignmentId(): number;
-  setAssignmentId(a: number): void;
-  getUserId(): number;
-  setUserId(a: number): void;
-  getGroupId(): number;
-  setGroupId(a: number): void;
+  getAssignmentid(): number;
+  setAssignmentid(a: number): void;
+  getUserid(): number;
+  setUserid(a: number): void;
+  getGroupid(): number;
+  setGroupid(a: number): void;
   getScore(): number;
   setScore(a: number): void;
-  getScoreObjects(): string;
-  setScoreObjects(a: string): void;
-  getBuildInfo(): string;
-  setBuildInfo(a: string): void;
-  getCommitHash(): string;
-  setCommitHash(a: string): void;
+  getScoreobjects(): string;
+  setScoreobjects(a: string): void;
+  getBuildinfo(): string;
+  setBuildinfo(a: string): void;
+  getCommithash(): string;
+  setCommithash(a: string): void;
   getApproved(): boolean;
   setApproved(a: boolean): void;
   toObject(): Submission.AsObject;
@@ -471,13 +471,13 @@ export class Submission {
 export namespace Submission {
   export type AsObject = {
     Id: number;
-    AssignmentId: number;
-    UserId: number;
-    GroupId: number;
+    Assignmentid: number;
+    Userid: number;
+    Groupid: number;
     Score: number;
-    ScoreObjects: string;
-    BuildInfo: string;
-    CommitHash: string;
+    Scoreobjects: string;
+    Buildinfo: string;
+    Commithash: string;
     Approved: boolean;
   }
 }
@@ -516,18 +516,18 @@ export class User {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getIsAdmin(): boolean;
-  setIsAdmin(a: boolean): void;
+  getIsadmin(): boolean;
+  setIsadmin(a: boolean): void;
   getName(): string;
   setName(a: string): void;
-  getStudentId(): string;
-  setStudentId(a: string): void;
+  getStudentid(): string;
+  setStudentid(a: string): void;
   getEmail(): string;
   setEmail(a: string): void;
-  getAvatarUrl(): string;
-  setAvatarUrl(a: string): void;
-  getRemoteIdentitiesList(): RemoteIdentity[];
-  setRemoteIdentitiesList(a: RemoteIdentity[]): void;
+  getAvatarurl(): string;
+  setAvatarurl(a: string): void;
+  getRemoteidentitiesList(): RemoteIdentity[];
+  setRemoteidentitiesList(a: RemoteIdentity[]): void;
   getEnrollmentsList(): Enrollment[];
   setEnrollmentsList(a: Enrollment[]): void;
   toObject(): User.AsObject;
@@ -538,12 +538,12 @@ export class User {
 export namespace User {
   export type AsObject = {
     Id: number;
-    IsAdmin: boolean;
+    Isadmin: boolean;
     Name: string;
-    StudentId: string;
+    Studentid: string;
     Email: string;
-    AvatarUrl: string;
-    RemoteIdentitiesList: RemoteIdentity[];
+    Avatarurl: string;
+    RemoteidentitiesList: RemoteIdentity[];
     EnrollmentsList: Enrollment[];
   }
 }

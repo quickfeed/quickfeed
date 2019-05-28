@@ -25,7 +25,7 @@ func FetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.As
 	ctx, cancel := context.WithTimeout(c, MaxWait)
 	defer cancel()
 
-	directory, err := s.GetDirectory(ctx, course.Directory_ID)
+	directory, err := s.GetDirectory(ctx, course.DirectoryID)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func createAssignment(request *pb.Assignment, course *pb.Course) (*pb.Assignment
 
 	return &pb.Assignment{
 		AutoApprove: request.AutoApprove,
-		Course_ID:   course.ID,
+		CourseID:    course.ID,
 		Deadline:    request.Deadline,
 		Language:    request.Language,
 		Name:        request.Name,

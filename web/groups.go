@@ -29,7 +29,7 @@ func GetGroup(request *pb.RecordRequest, db database.Database) (*pb.Group, error
 // GetGroupByUserAndCourse returns a single group of a user for a course
 func GetGroupByUserAndCourse(request *pb.ActionRequest, db database.Database) (*pb.Group, error) {
 
-	enrollment, err := db.GetEnrollmentByCourseAndUser(request.Course_ID, request.User_ID)
+	enrollment, err := db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "user not enrolled in course")
@@ -37,8 +37,8 @@ func GetGroupByUserAndCourse(request *pb.ActionRequest, db database.Database) (*
 		return nil, err
 
 	}
-	if enrollment.Group_ID > 0 {
-		group, err := db.GetGroup(enrollment.Group_ID)
+	if enrollment.GroupID > 0 {
+		group, err := db.GetGroup(enrollment.GroupID)
 		if err != nil {
 			return nil, status.Errorf(codes.NotFound, "group not found")
 		}
@@ -84,7 +84,7 @@ func DeleteGroup(request *pb.Group, db database.Database) error {
 // by a teacher of the course using the UpdateGroup function below.
 func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*pb.Group, error) {
 
-	if _, err := db.GetCourse(request.Course_ID); err != nil {
+	if _, err := db.GetCourse(request.CourseID); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "course not found")
 		}
@@ -112,7 +112,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 	}
 
 	// signed in student must be member of the group
-	signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(request.Course_ID, currentUser.ID)
+	signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(request.CourseID, currentUser.ID)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "unable to retreive enrollment for signed in user")
 	}
@@ -121,13 +121,13 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 	// only enrolled students can join a group
 	// prevent group override if a student is already in a group in this course
 	for _, user := range users {
-		enrollment, err := db.GetEnrollmentByCourseAndUser(request.Course_ID, user.ID)
+		enrollment, err := db.GetEnrollmentByCourseAndUser(request.CourseID, user.ID)
 		switch {
 		case err == gorm.ErrRecordNotFound:
 			return nil, status.Errorf(codes.NotFound, "user not enrolled in this course")
 		case err != nil:
 			return nil, err
-		case enrollment.Group_ID > 0:
+		case enrollment.GroupID > 0:
 			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")
 		case enrollment.Status < pb.Enrollment_Student:
 			return nil, status.Errorf(codes.InvalidArgument, "user not yet accepted for this course")
@@ -146,7 +146,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 		return nil, status.Errorf(codes.FailedPrecondition, "student must be member of new group")
 	}
 
-	// CreateGroup creates a new group and update group_id in enrollment table
+	// CreateGroup creates a new group and update groupid in enrollment table
 	if err := db.CreateGroup(request); err != nil {
 		if err == database.ErrDuplicateGroup {
 			return nil, status.Errorf(codes.InvalidArgument, err.Error())
@@ -169,7 +169,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s scm.SCM, currentUser *pb.User) error {
 
 	// only admin or course teacher are allowed to update groups
-	signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(request.Course_ID, currentUser.ID)
+	signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(request.CourseID, currentUser.ID)
 	if err != nil {
 		return status.Errorf(codes.NotFound, "user not enrolled in the course")
 	}
@@ -183,7 +183,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	}
 
 	// course must exist in the database
-	course, err := db.GetCourse(request.Course_ID)
+	course, err := db.GetCourse(request.CourseID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "course not found")
@@ -222,13 +222,13 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 
 	// check that each user is enrolled in the course, enrollment is accepted and user is not a member of another group
 	for _, user := range request.Users {
-		enrollment, err := db.GetEnrollmentByCourseAndUser(request.Course_ID, user.ID)
+		enrollment, err := db.GetEnrollmentByCourseAndUser(request.CourseID, user.ID)
 		switch {
 		case err == gorm.ErrRecordNotFound:
 			return status.Errorf(codes.NotFound, "user not enrolled in this course")
 		case err != nil:
 			return err
-		case enrollment.Group_ID > 0 && enrollment.Group_ID != request.ID:
+		case enrollment.GroupID > 0 && enrollment.GroupID != request.ID:
 			return status.Errorf(codes.InvalidArgument, "user already in another group")
 		case enrollment.Status < pb.Enrollment_Student:
 			return status.Errorf(codes.InvalidArgument, "user not yet accepted to this course")
@@ -243,12 +243,12 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 
 	// create database entry for group repository
 	groupRepo := &pb.Repository{
-		Directory_ID:  course.Directory_ID,
-		Repository_ID: repo.ID,
-		User_ID:       0,
-		Group_ID:      request.ID,
-		HTML_URL:      repo.WebURL,
-		RepoType:      pb.Repository_User, // TODO(meling) should we distinguish GroupRepo?
+		DirectoryID:  course.DirectoryID,
+		RepositoryID: repo.ID,
+		UserID:       0,
+		GroupID:      request.ID,
+		HTMLURL:      repo.WebURL,
+		RepoType:     pb.Repository_User, // TODO(meling) should we distinguish GroupRepo?
 	}
 	if err := db.CreateRepository(groupRepo); err != nil {
 		return err
@@ -256,11 +256,11 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 
 	// update group
 	if err := db.UpdateGroup(&pb.Group{
-		ID:        request.ID,
-		Name:      request.Name,
-		Course_ID: request.Course_ID,
-		Users:     users,
-		Status:    pb.Group_Approved,
+		ID:       request.ID,
+		Name:     request.Name,
+		CourseID: request.CourseID,
+		Users:    users,
+		Status:   pb.Group_Approved,
 	}); err != nil {
 		return err
 	}
@@ -276,7 +276,7 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	dir, err := s.GetDirectory(ctx, course.Directory_ID)
+	dir, err := s.GetDirectory(ctx, course.DirectoryID)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +302,7 @@ func fetchGitUserNames(ctx context.Context, s scm.SCM, course *pb.Course, users 
 			return nil, echo.ErrNotFound
 		}
 		// note this requires one git call per user in the group
-		userName, err := s.GetUserNameByID(ctx, remote.Remote_ID)
+		userName, err := s.GetUserNameByID(ctx, remote.RemoteID)
 		if err != nil {
 			return nil, err
 		}
@@ -345,7 +345,7 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 		}
 
 		// get users from database based on NewGroupRequst submitted by teacher
-		grpUsers, err := db.GetUsers(false, grp.User_IDs...)
+		grpUsers, err := db.GetUsers(false, grp.UserIDs...)
 		if err != nil {
 			return err
 		}
@@ -353,7 +353,7 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 		if err := db.UpdateGroup(&models.Group{
 			ID:       gid,
 			Name:     grp.Name,
-			Course_ID: cid,
+			CourseID: cid,
 			Users:    grpUsers,
 		}); err != nil {
 			if err == database.ErrDuplicateGroup {
@@ -389,7 +389,7 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 
 		// sanity check: after updating database with teacher approved group members,
 		// the group should have same number of members as in the NewGroupRequest.
-		if len(group.Users) != len(grp.User_IDs) {
+		if len(group.Users) != len(grp.UserIDs) {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 		}
 
@@ -402,7 +402,7 @@ func UpdateGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFu
 				return echo.NewHTTPError(http.StatusNotFound, "user is not enrolled to this course")
 			case err != nil:
 				return err
-			case enrollment.Group_ID > 0 && enrollment.Group_ID != giD:
+			case enrollment.GroupID > 0 && enrollment.GroupID != giD:
 				return echo.NewHTTPError(http.StatusBadRequest, "user is already in another group")
 			case enrollment.Status < models.Student:
 				return echo.NewHTTPError(http.StatusBadRequest, "user is not yet accepted to this course")
@@ -472,7 +472,7 @@ func PatchGroup(logger logrus.FieldLogger, db database.Database) echo.HandlerFun
 			}
 			return err
 		}
-		course, err := db.GetCourse(oldgrp.Course_ID)
+		course, err := db.GetCourse(oldgrp.CourseID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return echo.NewHTTPError(http.StatusNotFound, "course not found")

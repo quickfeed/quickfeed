@@ -7,13 +7,13 @@ import "google/protobuf/timestamp.proto";
 
 message User {
     uint64 ID = 1;
-    bool is_admin = 2;
+    bool isAdmin = 2;
     string name = 3;
-    string student_ID = 4;
+    string studentID = 4;
     string email = 5;
-    string avatar_URL = 6;
+    string avatarURL = 6;
 
-    repeated RemoteIdentity remote_identities = 7;
+    repeated RemoteIdentity remoteIdentities = 7;
     repeated Enrollment enrollments = 8;
 }
 
@@ -24,9 +24,9 @@ message Users {
 message RemoteIdentity {
     uint64 ID = 1;
     string provider = 2 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
-    uint64 remote_ID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
-    string access_token = 4;
-    uint64 user_ID = 5;
+    uint64 remoteID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
+    string accessToken = 4;
+    uint64 userID = 5;
 }
 
 message Group {
@@ -38,7 +38,7 @@ message Group {
     }
     uint64 ID = 1;
     string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
-    uint64 course_ID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
+    uint64 courseID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
     GroupStatus status = 4;
 
     repeated User users = 5;
@@ -53,13 +53,13 @@ message Groups {
 
 message Course {
     uint64 ID = 1;
-    uint64 course_creator_ID = 2;
+    uint64 courseCreatorID = 2;
     string name = 3;
     string code = 4;
     uint32 year = 5;
     string tag = 6;
     string provider = 7;
-    uint64 directory_ID = 8;
+    uint64 directoryID = 8;
     Enrollment.UserStatus enrolled = 9;
 
     repeated Enrollment enrollments = 10;
@@ -80,9 +80,9 @@ message Enrollment {
     }
     
     uint64 ID = 1;
-    uint64 course_ID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
-    uint64 user_ID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
-    uint64 group_ID = 4;
+    uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
+    uint64 userID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
+    uint64 groupID = 4;
     User user = 5;
     Course course = 6;
     Group group = 7;
@@ -95,13 +95,13 @@ message Enrollments {
 
 message Assignment {
     uint64 ID = 1;
-    uint64 course_ID = 2;
+    uint64 courseID = 2;
     string name = 3;
     string language = 4;
     google.protobuf.Timestamp deadline = 5; 
-    bool auto_approve = 6;
+    bool autoApprove = 6;
     uint32 order = 7;
-    bool is_group_lab = 8;
+    bool isGroupLab = 8;
     Submission submission = 9;    
 }
 
@@ -111,13 +111,13 @@ message Assignments {
 
 message Submission {
     uint64 ID = 1;
-    uint64 assignment_ID = 2;
-    uint64 user_ID = 3;
-    uint64 group_ID = 4;
+    uint64 assignmentID = 2;
+    uint64 userID = 3;
+    uint64 groupID = 4;
     uint32 score = 5;
-    string score_objects = 6;
-    string build_info = 7;
-    string commit_hash = 8;
+    string scoreObjects = 6;
+    string buildInfo = 7;
+    string commitHash = 8;
     bool approved = 9;
 }
 
@@ -134,12 +134,12 @@ message Repository {
         CourseInfo = 4;
     }
     uint64 ID = 1;
-    uint64 directory_ID = 2;
-    uint64 repository_ID = 3;
-    uint64 user_ID = 4;
-    uint64 group_ID = 5;
-    string HTML_URL = 6;
-    RepoType repo_type = 7;
+    uint64 directoryID = 2;
+    uint64 repositoryID = 3;
+    uint64 userID = 4;
+    uint64 groupID = 5;
+    string HTMLURL = 6;
+    RepoType repoType = 7;
 }
 
 message Repositories {
@@ -161,32 +161,32 @@ message Directories {
 message RecordRequest {
     uint64 ID = 1;
     repeated Enrollment.UserStatus statuses = 2;
-    repeated Group.GroupStatus group_statuses = 3;
+    repeated Group.GroupStatus groupStatuses = 3;
 }
 
 // fields can be empty, do not use fields for user validation, use context
 // can be used in submission, enrollment and group requests, also in requests with multiple IDs
 message ActionRequest {
     uint64 ID = 1;
-    uint64 user_ID = 2;
-    uint64 group_ID = 3;
-    uint64 course_ID = 4;
+    uint64 userID = 2;
+    uint64 groupID = 3;
+    uint64 courseID = 4;
     Enrollment.UserStatus status = 5;
-    Group.GroupStatus group_status = 6;
+    Group.GroupStatus groupStatus = 6;
 }
 
 message DirectoryRequest {
     string provider = 1;
-    uint64 course_ID = 2;
+    uint64 courseID = 2;
 }
 
 message RepositoryRequest {
     uint64 ID = 1;
     Repository.RepoType type = 2;
-    uint64 directory_ID = 3;
-    uint64 repository_ID = 4;
-    uint64 user_ID = 5;
-    uint64 course_ID = 6;
+    uint64 directoryID = 3;
+    uint64 repositoryID = 4;
+    uint64 userID = 5;
+    uint64 courseID = 6;
 }
 
 message Providers {

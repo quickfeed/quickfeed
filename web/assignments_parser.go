@@ -64,7 +64,7 @@ func ParseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 
 				assignment := &pb.Assignment{
 					ID:          uint64(newAssignment.AssignmentID),
-					Course_ID:   courseID,
+					CourseID:    courseID,
 					Deadline:    deadline,
 					Language:    strings.ToLower(newAssignment.Language),
 					Name:        newAssignment.Name,

@@ -40,7 +40,7 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	directory, err := s.GetDirectory(ctx, request.Directory_ID)
+	directory, err := s.GetDirectory(ctx, request.DirectoryID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,17 +78,17 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		log.Println("Created webhook for repository:", path)
 
 		dbRepo := pb.Repository{
-			Directory_ID:  directory.ID,
-			Repository_ID: repo.ID,
-			HTML_URL:      repo.WebURL,
-			RepoType:      repoType(path),
+			DirectoryID:  directory.ID,
+			RepositoryID: repo.ID,
+			HTMLURL:      repo.WebURL,
+			RepoType:     repoType(path),
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := db.CreateCourse(request.GetCourseCreator_ID(), request); err != nil {
+	if err := db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
 		return nil, err
 	}
 	return request, nil

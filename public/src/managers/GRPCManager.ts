@@ -76,14 +76,14 @@ export class GrpcManager {
     public updateUser(user: User, isadmin?: boolean): Promise<IGrpcResponse<User>> {
         const requrest = new User();
         requrest.setId(user.getId());
-        requrest.setAvatarUrl(user.getAvatarUrl());
+        requrest.setAvatarurl(user.getAvatarurl());
         requrest.setEmail(user.getEmail());
         requrest.setName(user.getName());
-        requrest.setStudentId(user.getStudentId());
+        requrest.setStudentid(user.getStudentid());
         if (isadmin) {
-            requrest.setIsAdmin(isadmin);
+            requrest.setIsadmin(isadmin);
         } else {
-            requrest.setIsAdmin(user.getIsAdmin());
+            requrest.setIsadmin(user.getIsadmin());
         }
         return this.grpcSend(this.agService.updateUser, requrest);
     }
@@ -96,7 +96,7 @@ export class GrpcManager {
         request.setName(course.name);
         request.setCode(course.code);
         request.setProvider(course.provider);
-        request.setDirectoryId(course.directoryid);
+        request.setDirectoryid(course.directoryid);
         request.setTag(course.tag);
         request.setYear(course.year);
         return this.grpcSend<Course>(this.agService.createCourse, request);
@@ -107,7 +107,7 @@ export class GrpcManager {
         request.setId(course.id);
         request.setName(course.name);
         request.setCode(course.code);
-        request.setDirectoryId(course.directoryid);
+        request.setDirectoryid(course.directoryid);
         request.setProvider(course.provider);
         request.setYear(course.year);
         request.setTag(course.tag);
@@ -163,8 +163,8 @@ export class GrpcManager {
 
     public createEnrollment(userid: number, courseid: number): Promise<IGrpcResponse<Void>> {
         const request = new ActionRequest();
-        request.setUserId(userid);
-        request.setCourseId(courseid);
+        request.setUserid(userid);
+        request.setCourseid(courseid);
         return this.grpcSend<Void>( this.agService.createEnrollment, request);
     }
 
@@ -172,8 +172,8 @@ export class GrpcManager {
                             courseid: number,
                             state: any): Promise<IGrpcResponse<Void>> {
         const request = new ActionRequest();
-        request.setUserId(userid);
-        request.setCourseId(courseid);
+        request.setUserid(userid);
+        request.setCourseid(courseid);
         request.setStatus(state);
         return this.grpcSend<Void>(this.agService.updateEnrollment, request);
     }
@@ -182,14 +182,14 @@ export class GrpcManager {
 
     public getGroup(groupID: number): Promise<IGrpcResponse<Group>> {
         const request = new ActionRequest();
-        request.setGroupId(groupID);
+        request.setGroupid(groupID);
         return this.grpcSend<Group>(this.agService.getGroup, request);
     }
 
     public getGroupByUserAndCourse(userID: number, courseID: number): Promise<IGrpcResponse<Group>> {
         const request = new ActionRequest();
-        request.setUserId(userID);
-        request.setCourseId(courseID);
+        request.setUserid(userID);
+        request.setCourseid(courseID);
         return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse,request);
     }
 
@@ -212,7 +212,7 @@ export class GrpcManager {
     public updateGroup(grp: INewGroup, groupid: number, courseid: number): Promise<IGrpcResponse<Void>> {
         const request = new Group();
         request.setId(groupid);
-        request.setCourseId(courseid);
+        request.setCourseid(courseid);
         request.setName(grp.name);
         const groupUsers: User[] = []
         grp.userids.forEach((ele) => {
@@ -234,7 +234,7 @@ export class GrpcManager {
     public createGroup(igrp: INewGroup, courseid: number): Promise<IGrpcResponse<Group>>  {
         const request = new Group();
         request.setName(igrp.name);
-        request.setCourseId(courseid);
+        request.setCourseid(courseid);
         const grpusers: User[] = [];
         igrp.userids.forEach((ele) => {
             const usr = new User();
@@ -255,15 +255,15 @@ export class GrpcManager {
 
     public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
         const request = new ActionRequest();
-        request.setCourseId(courseID);
-        request.setUserId(userID);
+        request.setCourseid(courseID);
+        request.setUserid(userID);
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request)
     }
 
     public getGroupSubmissions(courseID: number, groupID: number): Promise<IGrpcResponse<Submissions>> {
         const request = new ActionRequest();
-        request.setCourseId(courseID);
-        request.setGroupId(groupID);
+        request.setCourseid(courseID);
+        request.setGroupid(groupID);
         return this.grpcSend<Submissions>(this.agService.getGroupSubmissions, request);
     }
 
@@ -278,7 +278,7 @@ export class GrpcManager {
 
     public getRepositoryURL(courseid: number, repotype: number): Promise<IGrpcResponse<URLResponse>> {
         const request = new RepositoryRequest();
-        request.setCourseId(courseid);
+        request.setCourseid(courseid);
         request.setType(repotype);
         return this.grpcSend<URLResponse>(this.agService.getRepositoryURL, request);
     }
@@ -327,8 +327,7 @@ export class GrpcManager {
                         statusCode: 0,
                     };
                     resolve(temp);
-                }
-                
+                }                
             });
         });
         return grpcPromise;

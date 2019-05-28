@@ -10,7 +10,7 @@ import (
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
-	"github.com/autograde/aguis/web/grpc_service"
+	"github.com/autograde/aguis/web/grpcservice"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -75,7 +75,7 @@ func TestGetUser(t *testing.T) {
 	}
 
 	testscms := make(map[string]scm.SCM)
-	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
 
 	foundUser, err := test_ag.GetUser(cont, &pb.RecordRequest{ID: user.ID})
@@ -115,7 +115,7 @@ func TestGetUsers(t *testing.T) {
 	}
 
 	testscms := make(map[string]scm.SCM)
-	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user1.ID))
 
 	foundUsers, err := test_ag.GetUsers(cont, &pb.Void{})
@@ -177,7 +177,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	testscms := make(map[string]scm.SCM)
-	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(admin.ID))
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -189,8 +189,8 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 			continue
 		}
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			User_ID:   user.ID,
-			Course_ID: allCourses[0].ID,
+			UserID:   user.ID,
+			CourseID: allCourses[0].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
@@ -204,8 +204,8 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	osUsers := users[3:7]
 	for _, user := range osUsers {
 		if err := db.CreateEnrollment(&pb.Enrollment{
-			User_ID:   user.ID,
-			Course_ID: allCourses[1].ID,
+			UserID:   user.ID,
+			CourseID: allCourses[1].ID,
 		}); err != nil {
 			t.Fatal(err)
 		}
@@ -242,7 +242,7 @@ func TestPatchUser(t *testing.T) {
 
 	db, cleanup := setup(t)
 	defer cleanup()
-	user := &pb.User{Name: "Test User", Student_ID: "11", Email: "test@email", Avatar_URL: "url.com"}
+	user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
 	adminUser := createFakeUser(t, db, 1)
 	remoteIdentity := &pb.RemoteIdentity{Provider: "fake", AccessToken: "token"}
 	if err := db.CreateUserFromRemoteIdentity(
@@ -256,7 +256,7 @@ func TestPatchUser(t *testing.T) {
 	}
 
 	testscms := make(map[string]scm.SCM)
-	test_ag := grpc_service.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
 	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(adminUser.ID))})
 	cont := metadata.NewIncomingContext(context.Background(), meta)
 
@@ -275,12 +275,12 @@ func TestPatchUser(t *testing.T) {
 	}
 
 	namechangeRequest := &pb.User{
-		ID:         respUser.ID,
-		IsAdmin:    respUser.IsAdmin,
-		Name:       "Scrooge McDuck",
-		Student_ID: "99",
-		Email:      "test@test.com",
-		Avatar_URL: "www.hello.com",
+		ID:        respUser.ID,
+		IsAdmin:   respUser.IsAdmin,
+		Name:      "Scrooge McDuck",
+		StudentID: "99",
+		Email:     "test@test.com",
+		AvatarURL: "www.hello.com",
 	}
 
 	_, err = test_ag.UpdateUser(cont, namechangeRequest)
@@ -296,9 +296,9 @@ func TestPatchUser(t *testing.T) {
 		ID:               withName.ID,
 		Name:             "Scrooge McDuck",
 		IsAdmin:          wantAdmin,
-		Student_ID:       "99",
+		StudentID:        "99",
 		Email:            "test@test.com",
-		Avatar_URL:       "www.hello.com",
+		AvatarURL:        "www.hello.com",
 		RemoteIdentities: user.RemoteIdentities,
 	}
 
@@ -314,7 +314,7 @@ func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.Use
 	err := db.CreateUserFromRemoteIdentity(&user,
 		&pb.RemoteIdentity{
 			Provider:    "fake",
-			Remote_ID:   remoteID,
+			RemoteID:    remoteID,
 			AccessToken: "token",
 		})
 	if err != nil {

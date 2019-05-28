@@ -21,10 +21,10 @@ export class UserPage extends ViewPage {
         const noUser: User = new User();
         noUser.setName("");
         noUser.setEmail("");
-        noUser.setAvatarUrl("");
-        noUser.setIsAdmin(false);
+        noUser.setAvatarurl("");
+        noUser.setIsadmin(false);
         noUser.setId(0);
-        noUser.setStudentId("");
+        noUser.setStudentid("");
         this.curUser = this.userMan.getCurrentUser() || noUser;
     }
 
@@ -32,10 +32,10 @@ export class UserPage extends ViewPage {
         const noUser: User = new User();
         noUser.setName("");
         noUser.setEmail("");
-        noUser.setAvatarUrl("");
-        noUser.setIsAdmin(false);
+        noUser.setAvatarurl("");
+        noUser.setIsadmin(false);
         noUser.setId(0);
-        noUser.setStudentId("");
+        noUser.setStudentid("");
         this.curUser = this.userMan.getCurrentUser() || noUser;
         this.navMan.refresh();
     }

@@ -16,12 +16,12 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	course := pb.Course{
-		Name:         "Distributed Systems",
-		Code:         "DAT520",
-		Year:         2018,
-		Tag:          "Spring",
-		Provider:     "fake",
-		Directory_ID: 1,
+		Name:        "Distributed Systems",
+		Code:        "DAT520",
+		Year:        2018,
+		Tag:         "Spring",
+		Provider:    "fake",
+		DirectoryID: 1,
 	}
 
 	// create course as teacher
@@ -32,7 +32,7 @@ func TestGetNextAssignment(t *testing.T) {
 
 	// create and enroll user as student
 	user := createFakeUser(t, db, 11)
-	if err := db.CreateEnrollment(&pb.Enrollment{Course_ID: course.ID, User_ID: user.ID}); err != nil {
+	if err := db.CreateEnrollment(&pb.Enrollment{CourseID: course.ID, UserID: user.ID}); err != nil {
 		t.Fatal(err)
 	}
 	if err = db.EnrollStudent(user.ID, course.ID); err != nil {
@@ -41,7 +41,7 @@ func TestGetNextAssignment(t *testing.T) {
 
 	// create group with single student
 	group := pb.Group{
-		Course_ID: course.ID,
+		CourseID: course.ID,
 		Users: []*pb.User{
 			{ID: user.ID},
 		},
@@ -56,19 +56,19 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	// create assignments for course
-	assignment1 := pb.Assignment{Course_ID: course.ID, Order: 1}
+	assignment1 := pb.Assignment{CourseID: course.ID, Order: 1}
 	if err := db.CreateAssignment(&assignment1); err != nil {
 		t.Fatal(err)
 	}
-	assignment2 := pb.Assignment{Course_ID: course.ID, Order: 2}
+	assignment2 := pb.Assignment{CourseID: course.ID, Order: 2}
 	if err := db.CreateAssignment(&assignment2); err != nil {
 		t.Fatal(err)
 	}
-	assignment3 := pb.Assignment{Course_ID: course.ID, Order: 3, IsGroupLab: true}
+	assignment3 := pb.Assignment{CourseID: course.ID, Order: 3, IsGroupLab: true}
 	if err := db.CreateAssignment(&assignment3); err != nil {
 		t.Fatal(err)
 	}
-	assignment4 := pb.Assignment{Course_ID: course.ID, Order: 4}
+	assignment4 := pb.Assignment{CourseID: course.ID, Order: 4}
 	if err := db.CreateAssignment(&assignment4); err != nil {
 		t.Fatal(err)
 	}
@@ -87,22 +87,22 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	// send new submission for assignment1
-	submission1 := pb.Submission{Assignment_ID: assignment1.ID, User_ID: user.ID}
+	submission1 := pb.Submission{AssignmentID: assignment1.ID, UserID: user.ID}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
 	}
 	// send another submission for assignment1
-	submission2 := pb.Submission{Assignment_ID: assignment1.ID, User_ID: user.ID}
+	submission2 := pb.Submission{AssignmentID: assignment1.ID, UserID: user.ID}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
 	}
 	// send new submission for assignment2
-	submission3 := pb.Submission{Assignment_ID: assignment2.ID, User_ID: user.ID}
+	submission3 := pb.Submission{AssignmentID: assignment2.ID, UserID: user.ID}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
 	}
 	// send new submission for assignment3
-	submission4 := pb.Submission{Assignment_ID: assignment3.ID, Group_ID: group.ID}
+	submission4 := pb.Submission{AssignmentID: assignment3.ID, GroupID: group.ID}
 	if err := db.CreateSubmission(&submission4); err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	// send new submission for assignment4
-	submission5 := pb.Submission{Assignment_ID: assignment4.ID, User_ID: user.ID}
+	submission5 := pb.Submission{AssignmentID: assignment4.ID, UserID: user.ID}
 	if err := db.CreateSubmission(&submission5); err != nil {
 		t.Fatal(err)
 	}

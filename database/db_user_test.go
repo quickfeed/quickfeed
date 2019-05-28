@@ -25,14 +25,14 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 			RemoteIdentities: []*pb.RemoteIdentity{{
 				ID:          rID,
 				Provider:    provider,
-				Remote_ID:   remoteID,
+				RemoteID:    remoteID,
 				AccessToken: accessToken,
-				User_ID:     uID,
+				UserID:      uID,
 			}},
 		}
 		updateAccessToken = &pb.RemoteIdentity{
 			Provider:    provider,
-			Remote_ID:   remoteID,
+			RemoteID:    remoteID,
 			AccessToken: accessToken,
 		}
 	)
@@ -44,8 +44,8 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
 		&pb.RemoteIdentity{
-			Provider:  provider,
-			Remote_ID: remoteID,
+			Provider: provider,
+			RemoteID: remoteID,
 		},
 	); err != nil {
 		t.Fatal(err)

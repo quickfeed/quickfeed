@@ -32,10 +32,3 @@ func (user User) GetRemoteIDFor(provider string) *RemoteIdentity {
 	}
 	return remoteID
 }
-
-/* no longer needed
-// IAdmin returns true only if this user is admin.
-func (user *User) IAdmin() bool {
-	return user.IsAdmin
-}
-*/

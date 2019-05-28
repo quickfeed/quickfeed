@@ -63,14 +63,14 @@ func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*p
 	if request.Name != "" {
 		updateUser.Name = request.Name
 	}
-	if request.Student_ID != "" {
-		updateUser.Student_ID = request.Student_ID
+	if request.StudentID != "" {
+		updateUser.StudentID = request.StudentID
 	}
 	if request.Email != "" {
 		updateUser.Email = request.Email
 	}
-	if request.Avatar_URL != "" {
-		updateUser.Avatar_URL = request.Avatar_URL
+	if request.AvatarURL != "" {
+		updateUser.AvatarURL = request.AvatarURL
 	}
 
 	// no need to check IsAdmin field for nil any more, it is type safe - it is always boolean and cannot be nil

@@ -1,4 +1,4 @@
-package grpc_service
+package grpcservice
 
 import (
 	"context"
@@ -93,7 +93,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	}
 
 	// make sure that the current user is set as course creator
-	in.CourseCreator_ID = usr.GetID()
+	in.CourseCreatorID = usr.GetID()
 	return web.NewCourse(ctx, in, s.db, scm, s.bh)
 }
 
@@ -142,7 +142,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, status.Errorf(codes.PermissionDenied, "invalid user ID")
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group)
 	if err != nil {
 		return nil, err
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.Course_ID}, s.db)
+	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
 	if err != nil {
 		return nil, err
 	}

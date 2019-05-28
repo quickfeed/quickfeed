@@ -23,8 +23,6 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
     constructor(props: IUserProfileProps, context: any) {
         super(props, context);
         const curUser = props.userMan.getCurrentUser();
-        //HACK: logging
-        console.log("UserProfile: setting current user: " + curUser);
         if (curUser) {
             this.state = {
                 curUser,
@@ -113,22 +111,15 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         let renderString = ""
             switch (field) {
                 case "name": {
-                    //HACK: logging
-                    console.log("UserProfile renderValue: rendering name: " + (obj as User).getName());
                     renderString = (obj as User).getName();
                     break;
                 }
                 case "email": {
-                    //HACK: logging
-                    console.log("UserProfile renderValue: rendering email: " + (obj as User).getEmail());
-
                     renderString = (obj as User).getEmail();
                     break;
                 }
                 case "studentid": {
-                    //HACK: logging
-                    console.log("UserProfile renderValue: rendering student id: " + (obj as User).getStudentId())
-                    renderString = (obj as User).getStudentId();
+                    renderString = (obj as User).getStudentid();
                     break;
                 }
                 default: {
@@ -151,25 +142,17 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
 
     private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         const name = event.target.name;
-        //HACK: logging
-        console.log("UserProfile: handleChange. event.target.name is " + name);
         const curUser = this.state.curUser;
-        //HACK: logging
-        console.log("UserProfile: handleChange for current user " + curUser);
         if (curUser) {
             const newUser: User = new User();
             newUser.setId(curUser.getId())
             newUser.setName(curUser.getName());
-            newUser.setStudentId(curUser.getStudentId());
+            newUser.setStudentid(curUser.getStudentid());
             newUser.setEmail(curUser.getEmail());
-            newUser.setAvatarUrl(curUser.getAvatarUrl());
-            newUser.setIsAdmin(curUser.getIsAdmin());
-            newUser.setRemoteIdentitiesList(curUser.getRemoteIdentitiesList());
+            newUser.setAvatarurl(curUser.getAvatarurl());
+            newUser.setIsadmin(curUser.getIsadmin());
+            newUser.setRemoteidentitiesList(curUser.getRemoteidentitiesList());
             newUser.setEnrollmentsList(curUser.getEnrollmentsList());
-            //HACK: logging
-        console.log("UserProfile: handleChange for new user " + newUser);
-        //HACK: logging
-        console.log("UserProfile: handleChange tries to assign value " + event.target.value + " to new user");
             switch(name) {
                 case "name": {
                     newUser.setName(event.target.value);
@@ -180,7 +163,7 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
                     break;
                 }
                 case "studentid": {
-                    newUser.setStudentId(event.target.value);
+                    newUser.setStudentid(event.target.value);
                     break;
                 }
                 default: {

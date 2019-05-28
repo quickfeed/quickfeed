@@ -419,11 +419,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result, "getLoggedInUser");
             const usr: User = new User();
             usr.setId(iusr.id);
-            usr.setStudentId(iusr.studentid);
+            usr.setStudentid(iusr.studentid);
             usr.setName(iusr.name);
             usr.setEmail(iusr.email);
-            usr.setAvatarUrl(iusr.avatarurl);
-            usr.setIsAdmin(iusr.isadmin);
+            usr.setAvatarurl(iusr.avatarurl);
+            usr.setIsadmin(iusr.isadmin);
             return this.makeUserInfo(usr);
         }
         return this.makeUserInfo(grpcResult.data);
@@ -509,7 +509,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             tag: course.getTag(),
             year: course.getYear(),
             provider: course.getProvider(),
-            directoryid: course.getDirectoryId(),
+            directoryid: course.getDirectoryid(),
         };
 
         return icourse;
@@ -520,7 +520,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const igroup: ICourseGroup = {
             id: grp.getId(),
             name: grp.getName(),
-            courseid: grp.getCourseId(),
+            courseid: grp.getCourseid(),
             status: grp.getStatus().valueOf(),
             users: grp.getUsersList(),
         }
@@ -530,11 +530,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     private toISUbmission(sbm: Submission): ISubmission {      
         let buildInfoAsString = "";
         let scoreInfoAsString = "";
-        if (sbm.getBuildInfo() && (sbm.getBuildInfo().trim().length > 2)) {
-            buildInfoAsString = sbm.getBuildInfo();
+        if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {
+            buildInfoAsString = sbm.getBuildinfo();
         }
-        if (sbm.getScoreObjects() && (sbm.getScoreObjects().trim().length > 2)) {
-            scoreInfoAsString = sbm.getScoreObjects();
+        if (sbm.getScoreobjects() && (sbm.getScoreobjects().trim().length > 2)) {
+            scoreInfoAsString = sbm.getScoreobjects();
         }
         let buildInfo: IBuildInfo;
         let scoreObj: ITestCases[];
@@ -564,9 +564,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         });
         const isbm: ISubmission = {
             id: sbm.getId(),
-            userid: sbm.getUserId(),
-            groupid: sbm.getGroupId(),
-            assignmentid: sbm.getAssignmentId(),
+            userid: sbm.getUserid(),
+            groupid: sbm.getGroupid(),
+            assignmentid: sbm.getAssignmentid(),
             passedTests: passed,
             failedTests: failed,
             score: sbm.getScore(),
@@ -594,10 +594,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const iassgn: IAssignment = {
             id: assg.getId(),
             name: assg.getName(),
-            courseid: assg.getCourseId(),
+            courseid: assg.getCourseid(),
             deadline: date,
             language: assg.getLanguage(),
-            isgrouplab: assg.getIsGroupLab()
+            isgrouplab: assg.getIsgrouplab()
         };
         return  iassgn;
     }
@@ -605,8 +605,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     // this method convert a grpc Enrollment to IEnrollment
     private toIEnrollment(enrollment: Enrollment): IEnrollment {
         const ienroll: IEnrollment =  {
-            userid: enrollment.getUserId(),
-            courseid: enrollment.getCourseId(),
+            userid: enrollment.getUserid(),
+            courseid: enrollment.getCourseid(),
         };
         if (enrollment.getStatus() !== undefined) {
             ienroll.status = enrollment.getStatus().valueOf();

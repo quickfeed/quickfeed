@@ -216,7 +216,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         const dropDownMenuLinks: ILink[] = [
             { name: "Join Course", uri: "app/student/enroll" },
         ];
-        if (this.state.curUser && this.state.curUser.getIsAdmin()) {
+        if (this.state.curUser && this.state.curUser.getIsadmin()) {
             dropDownMenuLinks.push({ name: "New Course", uri: "app/admin/courses/new" });
         }
         const userLinks: ILink[] = [
@@ -262,7 +262,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 break;
         }
         let currentLinks: ILink[] = [];
-        if (this.state.curUser && this.state.curUser.getIsAdmin()) {
+        if (this.state.curUser && this.state.curUser.getIsadmin()) {
             currentLinks = adminLinks;
         } else {
             currentLinks = userLinks;
