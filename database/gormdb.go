@@ -661,7 +661,7 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 		Where(&pb.Enrollment{
 			CourseID: group.CourseID,
 		}).
-		Where("userid IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
+		Where("user_id IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
 			pb.Enrollment_Student, pb.Enrollment_Teacher}).
 		Updates(&pb.Enrollment{
 			GroupID: group.ID,
@@ -749,7 +749,7 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 		tx.Rollback()
 		return err
 	}
-	if err := tx.Exec("UPDATE enrollments SET groupid= ? WHERE groupid= ?", 0, gid).Error; err != nil {
+	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, gid).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -846,7 +846,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 		}
 		return err
 	}
-	if err := tx.Exec("UPDATE enrollments SET groupid= ? WHERE groupid= ?", 0, group.ID).Error; err != nil {
+	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.ID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -858,7 +858,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 		Where(&pb.Enrollment{
 			CourseID: group.CourseID,
 		}).
-		Where("userid IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
+		Where("user_id IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
 			pb.Enrollment_Student, pb.Enrollment_Teacher}).
 		Updates(&pb.Enrollment{
 			GroupID: group.ID,
