@@ -31,9 +31,10 @@ BAZEL_FILES=$(find "${REPO_DIR}" \
     -not -path "${REPO_DIR}/third_party/*" -and \
     \( -name "BUILD.bazel" -o -name "*.bzl" \))
 ./buildifier -mode check ${BAZEL_FILES[@]}
+rm ./buildifier
 
 # These programs need to be already installed
-progs=(docker docker-compose bazel npm curl)
+progs=(docker docker-compose npm curl)
 for p in "${progs[@]}"
 do
   command -v "$p" > /dev/null 2>&1 || \
@@ -48,28 +49,12 @@ BAZEL_VERSION=0.23.1
 wget https://github.com/bazelbuild/bazel/releases/download/"${BAZEL_VERSION}"/bazel-"${BAZEL_VERSION}"-installer-linux-x86_64.sh
 chmod +x ./bazel-"${BAZEL_VERSION}"-installer-linux-x86_64.sh
 ./bazel-"${BAZEL_VERSION}"-installer-linux-x86_64.sh --user
-$HOME/bin/bazel version
-
-# Run the bazel test command multiple times because of some flaky
-# behavior with libssl.so
-tries=15
-set +e
-for ((i=1;i<=$tries;i++));
-do
-  $HOME/bin/bazel clean
-  $HOME/bin/bazel test --cache_test_results=no \
-    //javascript/net/grpc/web/... \
-    //net/grpc/gateway/examples/...
-  ret=$?
-  if [ $ret -eq 0 ]; then
-    break
-  elif [ $i -eq $tries ]; then
-    exit 1
-  fi
-done
-set -e
-rm ./buildifier
 rm ./bazel-"${BAZEL_VERSION}"-installer-linux-x86_64.sh
+$HOME/bin/bazel version
+$HOME/bin/bazel clean
+$HOME/bin/bazel test \
+  //javascript/net/grpc/web/... \
+  //net/grpc/gateway/examples/...
 
 # Build the grpc-web npm package
 cd packages/grpc-web && \
