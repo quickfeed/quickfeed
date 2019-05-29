@@ -35,9 +35,6 @@ var repoNames = fmt.Sprintf("(%s, %s, %s, %s)",
 //TODO(meling) should have proper logging in these funcs, especially for errors.
 func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, MaxWait)
-	defer cancel()
-
 	directory, err := s.GetDirectory(ctx, request.DirectoryID)
 	if err != nil {
 		return nil, err

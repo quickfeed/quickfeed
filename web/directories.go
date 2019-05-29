@@ -13,9 +13,6 @@ import (
 // directory from the given provider.
 func ListDirectories(ctx context.Context, db database.Database, scm scm.SCM) (*pb.Directories, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, MaxWait)
-	defer cancel()
-
 	directories, err := scm.ListDirectories(ctx)
 	if err != nil {
 		return nil, err

@@ -68,17 +68,13 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 }
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
-func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM, currentUser *pb.User) error {
+func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM) error {
 
 	if _, err := db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "not found")
 		}
 		return err
-	}
-
-	if !currentUser.IsAdmin {
-		return status.Errorf(codes.PermissionDenied, "unauthorized")
 	}
 
 	// TODO If the enrollment is accepted, create repositories and permissions for them with webooks.
@@ -238,11 +234,8 @@ func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database,
 		return err
 	}
 
-	contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
-	defer cancel()
-
 	// Check that the directory exists.
-	_, err = s.GetDirectory(contextWithTimeout, request.DirectoryID)
+	_, err = s.GetDirectory(ctx, request.DirectoryID)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "no directory found")
 	}

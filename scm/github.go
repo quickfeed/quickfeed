@@ -2,6 +2,7 @@ package scm
 
 import (
 	"context"
+	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/google/go-github/github"
@@ -202,6 +203,7 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 			"insecure_ssl": "0",
 		},
 	})
+	log.Println("GitHub SCM: CreateHook for repository ", opt.Repository.Path, " resulted in error: ", err.Error())
 	return
 }
 

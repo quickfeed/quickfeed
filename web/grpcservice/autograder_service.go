@@ -2,7 +2,6 @@ package grpcservice
 
 import (
 	"context"
-	"log"
 
 	"google.golang.org/grpc/codes"
 
@@ -105,6 +104,8 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 		return nil, err
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
 	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
 	return web.NewCourse(ctx, in, s.db, scm, s.bh)
@@ -127,6 +128,8 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 	if err != nil {
 		return nil, err
 	}
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
 	return &pb.Void{}, web.UpdateCourse(ctx, in, s.db, scm)
 }
 
@@ -140,7 +143,6 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	log.Println("AutograderService: GetCoursesWithEnrollment got request with ID: ", in.ID)
 	return web.ListCoursesWithEnrollment(in, s.db)
 }
 
@@ -177,6 +179,9 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
+	if !usr.IsAdmin {
+		return nil, status.Errorf(codes.PermissionDenied, "unauthorized")
+	}
 	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
 	if err != nil {
 		return nil, err
@@ -185,7 +190,9 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm, usr)
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
+	return &pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm)
 }
 
 // GetSelf returns information about the user with user ID sent in the context
@@ -270,6 +277,8 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
 	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
@@ -297,7 +306,7 @@ func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group)
 
 // DeleteGroup removes group record from the database
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
-	if in.ID < 1 {
+	if in.GetID() < 1 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 	return &pb.Void{}, web.DeleteGroup(in, s.db)
@@ -393,10 +402,12 @@ func (s *AutograderService) GetDirectories(ctx context.Context, in *pb.Directory
 	if err != nil {
 		return nil, err
 	}
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
 	return web.ListDirectories(ctx, s.db, scm)
 }
 
 // GetRepository is not yet implemented
 func (s *AutograderService) GetRepository(ctx context.Context, in *pb.RepositoryRequest) (*pb.Repository, error) {
-	return nil, nil
+	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
