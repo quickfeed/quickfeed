@@ -53,7 +53,6 @@ func ListDirectories(ctx context.Context, db database.Database, scm scm.SCM) (*p
 func hasCourseRepo(repos []*scm.Repository) bool {
 	hasRepo := false
 	for _, repo := range repos {
-		log.Println("hasCourse repo checks repo path: ", repo.Path, " on url ", repo.WebURL)
 		if repo.Path == "course-info" {
 			hasRepo = true
 		}

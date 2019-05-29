@@ -11,6 +11,7 @@ import (
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/grpcservice"
+	"github.com/google/go-cmp/cmp"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -29,7 +30,7 @@ func TestGetSelf(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	user := &models.User{ID: 1}
+	user := &pb.User{ID: 1}
 	c.Set(auth.UserKey, user)
 
 	userHandler := web.GetSelf(db)
@@ -88,9 +89,7 @@ func TestGetUser(t *testing.T) {
 	}
 }
 
-/*
 func TestGetUsers(t *testing.T) {
-	const route = "/users"
 
 	db, cleanup := setup(t)
 	defer cleanup()
@@ -124,8 +123,8 @@ func TestGetUsers(t *testing.T) {
 	}
 
 	// Remote identities should not be loaded.
-	user1.RemoteIdentities = nil
-	user2.RemoteIdentities = nil
+	user1.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
+	user2.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	// First user should be admin.
 	admin := true
 	user1.IsAdmin = admin
@@ -137,8 +136,7 @@ func TestGetUsers(t *testing.T) {
 	if !cmp.Equal(gotUsers, wantUsers) {
 		t.Errorf("have users %+v want %+v", foundUsers.Users, wantUsers)
 	}
-
-}*/
+}
 
 var allUsers = []struct {
 	provider string
