@@ -2,15 +2,16 @@ package web
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 )
 
 // ListDirectories returns all directories which can be used as a course
 // directory from the given provider.
-func ListDirectories(ctx context.Context, scm scm.SCM) (*pb.Directories, error) {
+func ListDirectories(ctx context.Context, db database.Database, scm scm.SCM) (*pb.Directories, error) {
 
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
@@ -21,12 +22,26 @@ func ListDirectories(ctx context.Context, scm scm.SCM) (*pb.Directories, error) 
 	}
 
 	organizations := make([]*pb.Directory, 0)
-	for _, directory := range directories {
+	for i, directory := range directories {
+		log.Println("ListDirectories: organization ", i, " found: ", directory.ID)
 		plan, err := scm.GetPaymentPlan(ctx, directory.ID)
 		if err != nil {
-			fmt.Println("Error getting payment plan for directory ID: ", directory.ID)
+			log.Println("ListDirectories: Error getting payment plan for organization: ", directory.GetPath())
+			return nil, err
 		}
-		if plan.PrivateRepos > 0 {
+		log.Println("ListDirectories: plan for Organization: ", directory.Path, " is ", plan.Name, " includes ", plan.PrivateRepos, " private repos")
+		repos, err := scm.GetRepositories(ctx, directory)
+		if err != nil {
+			log.Println("ListDirectories: Error getting repos for organization: ", directory.GetPath())
+			return nil, err
+		}
+		for i, repo := range repos {
+			log.Println(i, ": repo ", repo.Path, " with url ", repo.WebURL)
+		}
+		// check that course for that organization does not exist in the database
+		course, _ := db.GetCourseByDirectoryID(directory.ID)
+
+		if plan.Name != "free" && !hasCourseRepo(repos) && course == nil {
 			organizations = append(organizations, directory)
 		}
 	}
@@ -34,32 +49,14 @@ func ListDirectories(ctx context.Context, scm scm.SCM) (*pb.Directories, error) 
 	return &pb.Directories{Directories: organizations}, nil
 }
 
-/*
-func ListDirectories() echo.HandlerFunc {
-	return func(c echo.Context) error {
-
-		log.Println("Listing directories: still REST")
-		var dr ListDirectoriesRequest
-		if err := c.Bind(&dr); err != nil {
-			return err
+// test function for fake database, can use IsDirty on real database
+func hasCourseRepo(repos []*scm.Repository) bool {
+	hasRepo := false
+	for _, repo := range repos {
+		log.Println("hasCourse repo checks repo path: ", repo.Path, " on url ", repo.WebURL)
+		if repo.Path == "course-info" {
+			hasRepo = true
 		}
-		if !dr.valid() {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-
-		s, err := getSCM(c, dr.Provider)
-		if err != nil {
-			return err
-		}
-
-		ctx, cancel := context.WithTimeout(c.Request().Context(), MaxWait)
-		defer cancel()
-
-		directories, err := s.ListDirectories(ctx)
-		if err != nil {
-			return err
-		}
-
-		return c.JSONPretty(http.StatusOK, directories, "\t")
 	}
-}*/
+	return hasRepo
+}

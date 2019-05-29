@@ -393,7 +393,7 @@ func (s *AutograderService) GetDirectories(ctx context.Context, in *pb.Directory
 	if err != nil {
 		return nil, err
 	}
-	return web.ListDirectories(ctx, scm)
+	return web.ListDirectories(ctx, s.db, scm)
 }
 
 // GetRepository is not yet implemented
