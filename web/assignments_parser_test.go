@@ -39,7 +39,7 @@ autoapprove: false
 )
 
 func TestParse(t *testing.T) {
-	testsDir, err := ioutil.TempDir("", web.TestsRepo)
+	testsDir, err := ioutil.TempDir("", pb.TestsRepo)
 	if err != nil {
 		t.Fatal(err)
 	}

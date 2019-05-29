@@ -32,10 +32,10 @@ func FetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.As
 
 	cloneURL := s.CreateCloneURL(&scm.CreateClonePathOptions{
 		Directory:  directory.Path,
-		Repository: TestsRepo,
+		Repository: pb.TestsRepo,
 	})
 
-	cloneDir, err := ioutil.TempDir("", TestsRepo)
+	cloneDir, err := ioutil.TempDir("", pb.TestsRepo)
 	if err != nil {
 		return nil, err
 	}

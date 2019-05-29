@@ -20,13 +20,14 @@ const (
 // RepoPaths maps from Autograder repository path names to a boolean indicating
 // whether or not the repository should be create as public or private.
 var RepoPaths = map[string]bool{
-	InfoRepo:       public,
-	AssignmentRepo: private,
-	TestsRepo:      private,
-	SolutionsRepo:  private,
+	pb.InfoRepo:       public,
+	pb.AssignmentRepo: private,
+	pb.TestsRepo:      private,
+	pb.SolutionsRepo:  private,
 }
 
-var repoNames = fmt.Sprintf("(%s, %s, %s, %s)", InfoRepo, AssignmentRepo, TestsRepo, SolutionsRepo)
+var repoNames = fmt.Sprintf("(%s, %s, %s, %s)",
+	pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo, pb.SolutionsRepo)
 
 // NewCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
@@ -78,7 +79,7 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 			DirectoryID:  directory.ID,
 			RepositoryID: repo.ID,
 			HTMLURL:      repo.WebURL,
-			RepoType:     repoType(path),
+			RepoType:     pb.RepoType(path),
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return nil, err

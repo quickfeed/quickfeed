@@ -47,120 +47,6 @@ func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assig
 	return &pb.Assignments{Assignments: assignments}, nil
 }
 
-// NewCourse creates a new course and associates it with a directory (organization in github)
-// and creates the repositories for the course.
-//TODO(meling) refactor this to separate out business logic
-//TODO(meling) remove logger from method, and use c.Logger() instead
-// Problem: (the echo.Logger is not compatible with logrus.FieldLogger)
-func oldNewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
-
-	contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
-	defer cancel()
-
-	directory, err := s.GetDirectory(contextWithTimeout, request.DirectoryID)
-	if err != nil {
-		return nil, err
-	}
-
-	repos, err := s.GetRepositories(contextWithTimeout, directory)
-	if err != nil {
-		return nil, err
-	}
-
-	existing := make(map[string]*scm.Repository)
-	for _, repo := range repos {
-		existing[repo.Path] = repo
-	}
-
-	var paths = []string{InfoRepo, AssignmentRepo, TestsRepo, SolutionsRepo}
-	for _, path := range paths {
-
-		var repo *scm.Repository
-		var ok bool
-		if repo, ok = existing[path]; !ok {
-			privRepo := false
-			if path == TestsRepo {
-				privRepo = true
-			}
-			var err error
-			repo, err = s.CreateRepository(
-				ctx,
-				&scm.CreateRepositoryOptions{
-					Path:      path,
-					Directory: directory,
-					Private:   privRepo},
-			)
-
-			if err != nil {
-				log.Println("NewCourse: failed to create repository")
-				return nil, err
-			}
-			log.Println("Created new repository")
-		}
-
-		hooks, err := s.ListHooks(contextWithTimeout, repo)
-		if err != nil {
-			log.Println("Failed to list hooks for repository")
-			return nil, err
-		}
-
-		hasAGWebHook := false
-		for _, hook := range hooks {
-			log.Println("Hook for repository: ", hook.ID, " ", hook.Name, " ", hook.URL)
-			// TODO this check is specific for the github implementation ; fix this
-			if hook.Name == "web" {
-				hasAGWebHook = true
-				break
-			}
-		}
-		if !hasAGWebHook {
-			if err := s.CreateHook(contextWithTimeout, &scm.CreateHookOptions{
-				URL:        GetEventsURL(bh.BaseURL, request.Provider),
-				Secret:     bh.Secret,
-				Repository: repo,
-			}); err != nil {
-				log.Println("Failed to create webhook for repository: ", path)
-				return nil, err
-			}
-			log.Println("Created new webhook for repository: ", path)
-		}
-
-		dbRepo := pb.Repository{
-			DirectoryID:  directory.ID,
-			RepositoryID: repo.ID,
-			HTMLURL:      repo.WebURL,
-			RepoType:     repoType(path),
-		}
-		if err := db.CreateRepository(&dbRepo); err != nil {
-			return nil, err
-		}
-	}
-
-	request.DirectoryID = directory.ID
-
-	if err := db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
-		//TODO(meling) Should we even communicate bad request to the client?
-		// We should log errors and debug it on the server side instead.
-		// If clients make mistakes, there is nothing it can do with the
-		return nil, err
-	}
-	return request, nil
-}
-
-func repoType(path string) (repoType pb.Repository_RepoType) {
-	switch path {
-	case InfoRepo:
-		repoType = pb.Repository_CourseInfo
-	case AssignmentRepo:
-		repoType = pb.Repository_Assignment
-	case TestsRepo:
-		repoType = pb.Repository_Tests
-	case SolutionsRepo:
-		repoType = pb.Repository_Solution
-	}
-	return
-}
-
 // CreateEnrollment enrolls a user in a course.
 func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 
@@ -262,7 +148,7 @@ func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, stud
 
 	opt := &scm.CreateRepositoryOptions{
 		Directory: dir,
-		Path:      StudentRepoName(teamName),
+		Path:      pb.StudentRepoName(teamName),
 		Private:   true,
 	}
 	return s.CreateRepoAndTeam(ctx, opt, teamName, gitUserNames)
