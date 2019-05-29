@@ -406,16 +406,24 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
       
         const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
 
+        console.log("ServerProvider: getLoggedInUser() starts");
         if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
+
+        console.log("ServerProvider: getLoggedInUser() got no user in response");
             this.handleError(result, "getLoggedInUser");
             return null;
         }
         const iusr = result.data;
 
+        console.log("ServerProvider: getLoggedInUser() got user in response" );
         // We want a user with full information provided to be set as currentUser 
         // Such user is retrieved by GRPC method getUser
         const grpcResult = await this.grpcHelper.getUser(iusr.id);
+        //console.log("ServerProvider: getLoggedInUser() requests GRPC getUser with ID: " + iusr.id);
+
         if (grpcResult.statusCode !== 0 || !grpcResult.data) {
+            console.log("ServerProvider: getLoggedInUser() got no data from GRPC getUser, status code: " + grpcResult.statusCode);
+
             this.handleError(result, "getLoggedInUser");
             const usr: User = new User();
             usr.setId(iusr.id);
@@ -428,6 +436,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         return this.makeUserInfo(grpcResult.data);
     }
+
 
     public async refreshCoursesFor(courseID: number): Promise<any> {
         const result = await this.grpcHelper.refreshCourse(courseID);

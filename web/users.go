@@ -1,6 +1,8 @@
 package web
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	pb "github.com/autograde/aguis/ag"
@@ -13,24 +15,45 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// User is a test model to improve marshalling of user structure for authentication
+type User struct {
+	ID uint64 `json:"id"`
+
+	IsAdmin *bool `json:"isadmin"`
+
+	Name      string `json:"name"`
+	StudentID string `json:"studentid"`
+	Email     string `json:"email"`
+	AvatarURL string `json:"avatarurl"`
+}
+
 // GetSelf redirects to GetUser with the current user's id.
 func GetSelf(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		usr := c.Get("user").(*pb.User)
+		fmt.Println("GetSelf got user from session context: ", usr.ID)
 		user, err := db.GetUser(usr.ID)
+		fmt.Println("GetSelf got user from the database with ID: ", usr.ID)
+
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
 			}
 			return err
 		}
-		return c.JSONPretty(http.StatusFound, user, "\t")
+		jsonUser := User{ID: user.ID, IsAdmin: &user.IsAdmin, Name: user.Name, StudentID: user.StudentID, Email: user.Email, AvatarURL: user.AvatarURL}
+		log.Println("Marshalled user is ", jsonUser)
+		return c.JSONPretty(http.StatusFound, jsonUser, "\t")
 	}
 }
 
 // GetUser returns information about the provided user id.
 func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) {
+	if request.ID < 1 {
+		fmt.Println("GetUser requested user with ID: ", request.ID)
+		return nil, status.Errorf(codes.Aborted, "invalid argument")
+	}
 	user, err := db.GetUser(request.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
