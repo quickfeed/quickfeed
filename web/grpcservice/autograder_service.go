@@ -2,6 +2,7 @@ package grpcservice
 
 import (
 	"context"
+	"log"
 
 	"google.golang.org/grpc/codes"
 
@@ -118,6 +119,10 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 
 // GetCoursesWithEnrollment returns all courses for the user where user enrollment is of a certain type
 func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.RecordRequest) (*pb.Courses, error) {
+	if in.ID < 1 {
+		return nil, status.Errorf(codes.Aborted, "invalid payload")
+	}
+	log.Println("AutograderService: GetCoursesWithEnrollment got request with ID: ", in.ID)
 	return web.ListCoursesWithEnrollment(in, s.db)
 }
 
@@ -128,6 +133,9 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordReq
 
 // GetEnrollmentsByCourse returns all existing enrollments for a course
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.RecordRequest) (*pb.Enrollments, error) {
+	if in.ID < 1 {
+		return nil, status.Errorf(codes.Aborted, "invalid payload")
+	}
 	return web.GetEnrollmentsByCourse(in, s.db)
 }
 

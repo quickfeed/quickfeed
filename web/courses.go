@@ -29,7 +29,9 @@ func ListCourses(db database.Database) (*pb.Courses, error) {
 // enrollment status.
 // If status query param is provided, lists only courses of the student filtered by the query param.
 func ListCoursesWithEnrollment(request *pb.RecordRequest, db database.Database) (*pb.Courses, error) {
+	log.Println("Courses.go: ListCoursesWithEnrollment: request is ", request, " request ID is ", request.ID, " request statuses are ", request.Statuses)
 	courses, err := db.GetCoursesByUser(request.ID, request.Statuses...)
+	log.Println("Courses.go: ListCoursesWithEnrollment: got courses: ", len(courses))
 	if err != nil {
 		return nil, err
 	}
