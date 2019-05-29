@@ -23,17 +23,17 @@ func StartEnvoy() {
 	}
 
 	// removes all stopped containers
-	_, er := cli.ContainersPrune(ctx, filters.Args{})
-	if er != nil {
-		log.Println("Envoy: error attempting to prune unused containers: ", err.Error())
+	_, err = cli.ContainersPrune(ctx, filters.Args{})
+	if err != nil {
+		log.Println("Envoy: error attempting to prune unused containers:", err.Error())
 	}
-	log.Println("Envoy: prunning unused containers. ")
+	log.Println("Envoy: prunning unused containers.")
 
 	// looks at existing containers to check whether Envoy is already running
 	containerRuns := false
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
-		log.Println("Envoy: cannot retrieve docker container list: ", err.Error())
+		log.Println("Envoy: cannot retrieve docker container list:", err.Error())
 	}
 	for i, container := range containers {
 		if container.Names[0] == "/envoy" {
@@ -42,8 +42,8 @@ func StartEnvoy() {
 		}
 	}
 
-	log.Println("Envoy: no container found, starting build...")
 	if !containerRuns {
+		log.Println("Envoy: no running container found, starting build...")
 		images, err := cli.ImageList(ctx, types.ImageListOptions{})
 		if err != nil {
 			log.Panicln("Envoy: cannot retrieve docker image list: ", err.Error())
@@ -62,14 +62,14 @@ func StartEnvoy() {
 		if !imgExists {
 			log.Println("Envoy image building... ")
 			out, err := exec.Command("/bin/sh", "./envoy/envoy.sh", "build").Output()
-			log.Println("Envoy: started bash script with argument to build Envoy image, result: ", out)
+			log.Println("Envoy: started bash script with argument to build Envoy image, result: ", string(out))
 			if err != nil {
 				log.Println("Envoy: error when executing bash script: ", err.Error())
 			}
 		}
 		log.Println("Envoy: starting container... ")
 		out, err := exec.Command("/bin/sh", "./envoy/envoy.sh").Output()
-		log.Println("Envoy: script resulted in: ", out)
+		log.Println("Envoy: script resulted in: ", string(out))
 		if err != nil {
 			log.Println("Envoy: error when executing bash script: ", err.Error())
 		}
