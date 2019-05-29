@@ -11,10 +11,11 @@ import (
 	"github.com/docker/docker/client"
 )
 
-/* creates a Docker API client. If envoy container is not running, starts it from image.
-If no image exists, pulls Envoy image from docker and builds it with envoy.yaml options */
+// StartEnvoy creates a Docker API client. If an envoy container is not running,
+// it will be started from an image. If no image exists, it will pull an Envoy
+// image from docker and build it with options from envoy.yaml.
+//TODO(meling) should have proper logging in these funcs, especially for errors.
 func StartEnvoy() {
-
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {
@@ -56,6 +57,7 @@ func StartEnvoy() {
 				imgExists = true
 			}
 		}
+
 		// if there is no active Envoy image
 		if !imgExists {
 			log.Println("Envoy image building... ")
@@ -64,7 +66,6 @@ func StartEnvoy() {
 			if err != nil {
 				log.Println("Envoy: error when executing bash script: ", err.Error())
 			}
-
 		}
 		log.Println("Envoy: starting container... ")
 		out, err := exec.Command("/bin/sh", "./envoy/envoy.sh").Output()
@@ -72,7 +73,6 @@ func StartEnvoy() {
 		if err != nil {
 			log.Println("Envoy: error when executing bash script: ", err.Error())
 		}
-
 	} else {
 		log.Println("Envoy: done")
 	}

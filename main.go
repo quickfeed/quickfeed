@@ -44,18 +44,13 @@ func init() {
 
 func main() {
 	var (
-		httpAddr = flag.String("http.addr", ":8081", "HTTP listen address")
-		public   = flag.String("http.public", "public", "directory to server static files from")
-
-		buildscripts = flag.String("script.path", "buildscripts", "Directory with docker build scripts")
-
-		dbFile = flag.String("database.file", tempFile("ag.db"), "database file")
-
-		baseURL = flag.String("service.url", "localhost", "service base url")
-
-		fake = flag.Bool("provider.fake", false, "enable fake provider")
-
-		grpcAddr = flag.String("grpc.addr", ":9090", "gRPC listen address")
+		httpAddr  = flag.String("http.addr", ":8081", "HTTP listen address")
+		public    = flag.String("http.public", "public", "directory to server static files from")
+		ciScripts = flag.String("script.path", "ci/scripts", "Directory with docker CI scripts")
+		dbFile    = flag.String("database.file", tempFile("ag.db"), "database file")
+		baseURL   = flag.String("service.url", "localhost", "service base url")
+		fake      = flag.Bool("provider.fake", false, "enable fake provider")
+		grpcAddr  = flag.String("grpc.addr", ":9090", "gRPC listen address")
 	)
 	flag.Parse()
 
@@ -72,12 +67,8 @@ func main() {
 		}
 	}()
 
-	/* Will start envoy in a docker container from image unless it is already running,
-	if there is no image, will pull the envoy docker image, build a local envoy image with options from envoy.yaml
-	 and start a container from the new image */
-	go func() {
-		envoy.StartEnvoy()
-	}()
+	// start envoy in a docker container; fetch envoy docker image if necessary
+	go envoy.StartEnvoy()
 
 	// holds references for activated providers for current user token
 	scms := make(map[string]scm.SCM)
@@ -85,9 +76,7 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
-	go func() {
-		http.NewWebServer(db, bh, l, *public, *httpAddr, *baseURL, *fake, *buildscripts, scms)
-	}()
+	go http.NewWebServer(db, bh, l, *public, *httpAddr, *baseURL, *fake, *ciScripts, scms)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {
@@ -98,7 +87,6 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-
 }
 
 func tempFile(name string) string {
