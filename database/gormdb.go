@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -73,6 +74,7 @@ func (db *GormDB) GetUser(uid uint64) (*pb.User, error) {
 // GetUserByRemoteIdentity implements the Database interface.
 func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, error) {
 	tx := db.conn.Begin()
+	log.Println("Gormdb: getUserByRemoteIdentity started")
 
 	// Get the remote identity.
 	var remoteIdentity pb.RemoteIdentity
@@ -85,6 +87,7 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 		tx.Rollback()
 		return nil, err
 	}
+	log.Println("Gormdb: getUserByRemoteIdentity got remote ID for user ID: ", remoteIdentity.UserID)
 
 	// Get the user.
 	var user pb.User
@@ -92,6 +95,8 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 		tx.Rollback()
 		return nil, err
 	}
+	log.Println("Gormdb: getUserByRemoteIdentity got User by remote ID, user ID: ", user.ID)
+
 	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}

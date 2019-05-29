@@ -53,9 +53,6 @@ func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assig
 //TODO(meling) remove logger from method, and use c.Logger() instead
 // Problem: (the echo.Logger is not compatible with logrus.FieldLogger)
 func oldNewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
-	if !request.IsValidCourse() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
-	}
 
 	contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
@@ -167,10 +164,6 @@ func repoType(path string) (repoType pb.Repository_RepoType) {
 // CreateEnrollment enrolls a user in a course.
 func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 
-	if !request.IsValidEnrollment() {
-		return status.Errorf(codes.InvalidArgument, "Invalid payload")
-	}
-
 	enrollment := pb.Enrollment{
 		UserID:   request.UserID,
 		CourseID: request.CourseID,
@@ -190,9 +183,6 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
 func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM, currentUser *pb.User) error {
-	if !request.IsValidEnrollment() {
-		return status.Errorf(codes.InvalidArgument, "invalid payload")
-	}
 
 	if _, err := db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID); err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -362,10 +352,6 @@ func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database,
 		return err
 	}
 
-	if !request.IsValidCourse() {
-		return status.Errorf(codes.InvalidArgument, "invalid payload")
-	}
-
 	contextWithTimeout, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
@@ -447,12 +433,6 @@ func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db da
 
 	var repos []*pb.Repository
 	if request.Type == pb.Repository_User {
-
-		// current user will never be set to nil, otherwise the function would not be called
-		/*
-			if currentUser == nil {
-				return nil, status.Errorf(codes.Unauthenticated, "user not registered")
-			}*/
 
 		userRepo, err := db.GetRepositoryByCourseUserType(request.CourseID, currentUser.ID, request.Type)
 		if err != nil {

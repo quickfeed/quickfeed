@@ -15,8 +15,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// User is a test model to improve marshalling of user structure for authentication
-type User struct {
+// JSONuser is a model to improve marshalling of user structure for authentication
+type JSONuser struct {
 	ID uint64 `json:"id"`
 
 	IsAdmin *bool `json:"isadmin"`
@@ -42,7 +42,7 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 			}
 			return err
 		}
-		jsonUser := User{ID: user.ID, IsAdmin: &user.IsAdmin, Name: user.Name, StudentID: user.StudentID, Email: user.Email, AvatarURL: user.AvatarURL}
+		jsonUser := JSONuser{ID: user.ID, IsAdmin: &user.IsAdmin, Name: user.Name, StudentID: user.StudentID, Email: user.Email, AvatarURL: user.AvatarURL}
 		log.Println("Marshalled user is ", jsonUser)
 		return c.JSONPretty(http.StatusFound, jsonUser, "\t")
 	}

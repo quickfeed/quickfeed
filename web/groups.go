@@ -90,12 +90,6 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 		}
 		return nil, err
 	}
-
-	// validating received group request
-	if !request.IsValidGroup() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid payload: validation")
-	}
-
 	// make a sclice of IDs from the pb.User slice
 	var userIds []uint64
 	for _, user := range request.Users {
@@ -175,11 +169,6 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	}
 	if signedInUserEnrollment.Status != pb.Enrollment_Teacher && !currentUser.IsAdmin {
 		return status.Errorf(codes.PermissionDenied, "only teacher or admin can update groups")
-	}
-
-	// validate request fields
-	if !request.IsValidGroup() {
-		return status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 
 	// course must exist in the database

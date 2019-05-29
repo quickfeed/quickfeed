@@ -33,9 +33,6 @@ var repoNames = fmt.Sprintf("(%s, %s, %s, %s)", InfoRepo, AssignmentRepo, TestsR
 // does not contain the Autograder repositories that will be created.
 //TODO(meling) should have proper logging in these funcs, especially for errors.
 func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
-	if !request.IsValidCourse() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
-	}
 
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
