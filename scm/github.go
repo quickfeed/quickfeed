@@ -173,7 +173,7 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, e
 	return hooks, err
 }
 
-const autograderHookName = "aghook"
+const autograderHookName = "web"
 
 // GetAutograderHook implements the SCM interface.
 //TODO(meling) currently unused; remove if not needed
@@ -203,7 +203,9 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 			"insecure_ssl": "0",
 		},
 	})
-	log.Println("GitHub SCM: CreateHook for repository ", opt.Repository.Path, " resulted in error: ", err.Error())
+	if err != nil {
+		log.Println("GitHub SCM: CreateHook for repository ", opt.Repository.Path, " resulted in error: ", err.Error())
+	}
 	return
 }
 
