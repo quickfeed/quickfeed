@@ -106,18 +106,20 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
         const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
+        //log
+        console.log("ServerProvider: getCoursesFor user ID: " + user.getId());
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCoursesFor");
             return [];
         }
-
+        console.log("ServerProvide: getCoursesFor returned courses: " + result.data);
         const arr: ICourseEnrollment[] = [];
         result.data.getCoursesList().forEach((ele) => {
             const course = this.toICourse(ele);
-            const enroll: number = ele.getEnrolled();
+            //const enroll: number = ele.getEnrolled();
             arr.push({
                 course,
-                status: enroll,
+                status: ele.getEnrolled(),
                 courseid: course.id,
                 userid: user.getId(),
                 user,

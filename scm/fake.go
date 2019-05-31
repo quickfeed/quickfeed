@@ -138,6 +138,12 @@ func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team
 	return &Team{ID: 1, Name: "", URL: ""}, nil
 }
 
+// UpdateTeamMembers implements the SCM interface.
+func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // CreateCloneURL implements the SCM interface.
 func (s *FakeSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 	return ""

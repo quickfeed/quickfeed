@@ -1,8 +1,12 @@
 package scm
 
 import (
+	"google.golang.org/grpc/status"
+
 	"context"
 	"log"
+
+	"google.golang.org/grpc/codes"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/google/go-github/github"
@@ -228,6 +232,73 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 		Name: t.GetName(),
 		URL:  t.GetURL(),
 	}, nil
+}
+
+// UpdateTeamMembers implements the SCM interface
+func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
+	// get all teams for org
+
+	teams, _, err := s.client.Organizations.ListTeams(ctx, opt.Directory.Path, nil)
+	if err != nil {
+		log.Println("GitHub UpdateTeamMembers could not list teams: ", err.Error())
+
+		return err
+	}
+	var groupTeam *github.Team
+	groupTeam = nil
+	for _, team := range teams {
+		if team.GetName() == opt.TeamName {
+			log.Println("GitHub UpdateTeamMembers found the team: ", team.GetName())
+			groupTeam = team
+		}
+	}
+	if groupTeam == nil {
+		log.Println("GitHub UpdateTeamMembers could not found the team ")
+		return status.Errorf(codes.NotFound, "team not found")
+	}
+
+	// check whether group members are already in team, if not - add
+	for _, member := range opt.Users {
+		isMember, _, err := s.client.Organizations.IsTeamMember(ctx, groupTeam.GetID(), member)
+		if err != nil {
+			log.Println("GitHub UpdateTeamMembers could not check user against the team: ", err.Error())
+			return err
+		}
+		if !isMember {
+			log.Println("GitHub UpdateTeamMembers: group member ", member, " is not in the team")
+			_, _, err = s.client.Organizations.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
+			if err != nil {
+				log.Println("GitHub UpdateTeamMembers could not add user ", member, " to the team ", groupTeam.GetName(), ": ", err.Error())
+				return err
+			}
+		}
+	}
+
+	// remove deleted members
+	oldUsers, _, err := s.client.Organizations.ListTeamMembers(ctx, groupTeam.GetID(), nil)
+	if err != nil {
+		log.Println("GitHub UpdateTeamMembers could not list team members: ", err.Error())
+		return err
+	}
+	// check if all the team members are in the new group. If not - delete
+	for _, teamMember := range oldUsers {
+		toRemove := true
+		for _, groupMember := range opt.Users {
+			if teamMember.GetLogin() == groupMember {
+				toRemove = false
+			}
+		}
+		if toRemove {
+			_, err = s.client.Organizations.RemoveTeamMembership(ctx, groupTeam.GetID(), teamMember.GetLogin())
+			if err != nil {
+				log.Println("GitHub UpdateTeamMembers could not remove user ", teamMember.GetLogin(), " from team ", groupTeam.GetName(), ": ", err.Error())
+				return err
+			}
+		}
+	}
+	log.Println("GitHub UpdateTeamMembers done")
+
+	return nil
 }
 
 // CreateCloneURL implements the SCM interface.

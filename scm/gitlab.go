@@ -156,6 +156,12 @@ func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 	return nil, nil
 }
 
+// UpdateTeamMembers implements the SCM interface
+func (s *GitlabSCM) UpdateTeamMembers(context.Context, *CreateTeamOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // AddTeamRepo implements the SCM interface.
 func (s *GitlabSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	// TODO no implementation provided yet
