@@ -2626,10 +2626,11 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
  * @enum {number}
  */
 proto.Enrollment.UserStatus = {
-  PENDING: 0,
-  REJECTED: 1,
-  STUDENT: 2,
-  TEACHER: 3
+  NONE: 0,
+  PENDING: 1,
+  REJECTED: 2,
+  STUDENT: 3,
+  TEACHER: 4
 };
 
 /**

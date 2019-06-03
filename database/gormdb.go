@@ -602,8 +602,7 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserSta
 	}
 
 	for _, course := range courses {
-		// wants to have course.Enrolled = Enrollment.NONE, but conflicts with front-end where there is no NONE value
-		course.Enrolled = -1
+		course.Enrolled = pb.Enrollment_NONE
 		if enrollment, ok := m[course.ID]; ok {
 			course.Enrolled = enrollment.Status
 		}
