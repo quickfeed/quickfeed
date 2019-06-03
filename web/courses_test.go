@@ -181,7 +181,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// verify that an appropriate enrollment was indeed created.
+	// verify that a pending enrollment was indeed created.
 	pendingEnrollment, err := db.GetEnrollmentByCourseAndUser(course.ID, stud1.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -190,6 +190,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		ID:       pendingEnrollment.ID,
 		CourseID: course.ID,
 		UserID:   stud1.ID,
+		Status:   pb.Enrollment_PENDING,
 	}
 	if !cmp.Equal(pendingEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment\n %+v\n want\n %+v", pendingEnrollment, wantEnrollment)
@@ -308,7 +309,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 		{ID: testCourses[0].ID, Enrolled: pb.Enrollment_PENDING},
 		{ID: testCourses[1].ID, Enrolled: pb.Enrollment_REJECTED},
 		{ID: testCourses[2].ID, Enrolled: pb.Enrollment_STUDENT},
-		{ID: testCourses[3].ID, Enrolled: -1},
+		{ID: testCourses[3].ID, Enrolled: pb.Enrollment_NONE},
 	}
 	for i, course := range courses.Courses {
 		if course.ID != wantCourses[i].ID {
