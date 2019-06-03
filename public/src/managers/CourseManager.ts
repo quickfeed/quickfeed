@@ -24,7 +24,7 @@ import {
 
 import { UserManager } from "../managers";
 import { ILogger } from "./LogManager";
-import { Assignment, Course, Enrollment, User, Timestamp, Directory, Directories, Group, Void } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, User, Directory, Directories, Group, Void } from "../../proto/ag_pb";
 
 export interface ICourseProvider {
     getCourses(): Promise<ICourse[]>;

@@ -31,10 +31,10 @@ message RemoteIdentity {
 
 message Group {
     enum GroupStatus {
-        Pending = 0;
-        Rejected = 1;
-        Approved = 2;
-        Deleted = 3;
+        PENDING = 0;
+        REJECTED = 1;
+        APPROVED = 2;
+        DELETED = 3;
     }
     uint64 ID = 1;
     string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
@@ -73,10 +73,10 @@ message Courses {
 
 message Enrollment {
     enum UserStatus {
-        Pending = 0;
-        Rejected = 1;
-        Student = 2;
-        Teacher = 3;
+        PENDING = 0;
+        REJECTED = 1;
+        STUDENT = 2;
+        TEACHER = 3;
     }
     
     uint64 ID = 1;
@@ -126,12 +126,12 @@ message Submissions {
 }
 
 message Repository {
-    enum RepoType {
-        User = 0;
-        Assignment = 1;
-        Tests = 2;
-        Solution = 3;
-        CourseInfo = 4;
+    enum Type {
+        USER = 0;
+        ASSIGNMENTS = 1;
+        TESTS = 2;
+        SOLUTIONS = 3;
+        COURSEINFO = 4;
     }
     uint64 ID = 1;
     uint64 directoryID = 2;
@@ -139,7 +139,7 @@ message Repository {
     uint64 userID = 4;
     uint64 groupID = 5;
     string HTMLURL = 6;
-    RepoType repoType = 7;
+    Type repoType = 7;
 }
 
 message Repositories {
@@ -182,7 +182,7 @@ message DirectoryRequest {
 
 message RepositoryRequest {
     uint64 ID = 1;
-    Repository.RepoType type = 2;
+    Repository.Type type = 2;
     uint64 directoryID = 3;
     uint64 repositoryID = 4;
     uint64 userID = 5;

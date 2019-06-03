@@ -324,7 +324,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup.Name = updateGroupReq.Name
 	wantGroup.Users = grpUsers
 	// UpdateGroup will autoApprove group on update
-	wantGroup.Status = pb.Group_Approved
+	wantGroup.Status = pb.Group_APPROVED
 	haveGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
 	if !cmp.Equal(haveGroup, wantGroup) {
@@ -369,7 +369,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup.Name = updateGroupReq1.Name
 	wantGroup.Users = grpUsers
 	// UpdateGroup will autoApprove group on update
-	wantGroup.Status = pb.Group_Approved
+	wantGroup.Status = pb.Group_APPROVED
 	haveGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
 	if !reflect.DeepEqual(wantGroup, haveGroup) {
@@ -541,7 +541,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	prePatchGroup.Status = pb.Group_Approved
+	prePatchGroup.Status = pb.Group_APPROVED
 	_, err = test_ag.UpdateGroupStatus(cont, prePatchGroup)
 	if err != nil {
 		t.Error(err)
@@ -557,7 +557,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	wantGroup := prePatchGroup
-	wantGroup.Status = pb.Group_Approved
+	wantGroup.Status = pb.Group_APPROVED
 	if !reflect.DeepEqual(wantGroup, haveGroup) {
 		t.Errorf("have group %+v want %+v", haveGroup, wantGroup)
 	}

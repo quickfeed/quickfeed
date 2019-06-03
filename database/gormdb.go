@@ -498,28 +498,28 @@ func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	enrollment.Status = pb.Enrollment_Pending
+	enrollment.Status = pb.Enrollment_PENDING
 	return db.conn.Create(&enrollment).Error
 }
 
 // EnrollStudent implements the Database interface.
 func (db *GormDB) EnrollStudent(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, pb.Enrollment_Student)
+	return db.setEnrollment(uid, cid, pb.Enrollment_STUDENT)
 }
 
 // RejectEnrollment implements the Database interface.
 func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, pb.Enrollment_Rejected)
+	return db.setEnrollment(uid, cid, pb.Enrollment_REJECTED)
 }
 
 // EnrollTeacher implements the Database interface.
 func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, pb.Enrollment_Teacher)
+	return db.setEnrollment(uid, cid, pb.Enrollment_TEACHER)
 }
 
 // SetPendingEnrollment implements the Database interface.
 func (db *GormDB) SetPendingEnrollment(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, pb.Enrollment_Pending)
+	return db.setEnrollment(uid, cid, pb.Enrollment_PENDING)
 }
 
 // GetEnrollmentsByCourse implements the Database interface.
@@ -531,10 +531,10 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 
 	if len(statuses) == 0 {
 		statuses = []pb.Enrollment_UserStatus{
-			pb.Enrollment_Pending,
-			pb.Enrollment_Rejected,
-			pb.Enrollment_Student,
-			pb.Enrollment_Teacher,
+			pb.Enrollment_PENDING,
+			pb.Enrollment_REJECTED,
+			pb.Enrollment_STUDENT,
+			pb.Enrollment_TEACHER,
 		}
 	}
 	var enrollments []*pb.Enrollment
@@ -563,7 +563,7 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enro
 }
 
 func (db *GormDB) setEnrollment(uid, cid uint64, status pb.Enrollment_UserStatus) error {
-	if status > pb.Enrollment_Teacher {
+	if status > pb.Enrollment_TEACHER {
 		panic("invalid status")
 	}
 
@@ -667,7 +667,7 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 			CourseID: group.CourseID,
 		}).
 		Where("user_id IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
-			pb.Enrollment_Student, pb.Enrollment_Teacher}).
+			pb.Enrollment_STUDENT, pb.Enrollment_TEACHER}).
 		Updates(&pb.Enrollment{
 			GroupID: group.ID,
 		})
@@ -803,7 +803,7 @@ func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
 }
 
 // GetRepositoryByCourseUserType implements the database interface
-func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType pb.Repository_RepoType) (*pb.Repository, error) {
+func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType pb.Repository_Type) (*pb.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
 		return nil, gorm.ErrRecordNotFound
@@ -864,7 +864,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 			CourseID: group.CourseID,
 		}).
 		Where("user_id IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
-			pb.Enrollment_Student, pb.Enrollment_Teacher}).
+			pb.Enrollment_STUDENT, pb.Enrollment_TEACHER}).
 		Updates(&pb.Enrollment{
 			GroupID: group.ID,
 		})
@@ -885,7 +885,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 }
 
 // GetRepositoriesByCourseAndType implements the database interface
-func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType pb.Repository_RepoType) ([]*pb.Repository, error) {
+func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType pb.Repository_Type) ([]*pb.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
 		return nil, gorm.ErrRecordNotFound

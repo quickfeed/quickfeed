@@ -126,7 +126,7 @@ func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner,
 	}
 	logger.WithField("Assignment", selectedAssignment).Info("Found assignment")
 
-	testRepos, err := db.GetRepositoriesByCourseAndType(course.ID, pb.Repository_Tests)
+	testRepos, err := db.GetRepositoriesByCourseAndType(course.ID, pb.Repository_TESTS)
 	if err != nil || len(testRepos) < 1 {
 		logger.WithError(err).Error("Failed to find test repository in database")
 		return

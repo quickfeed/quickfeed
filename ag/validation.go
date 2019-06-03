@@ -24,7 +24,7 @@ func (u User) IsValidUser() bool {
 
 // IsValidEnrollment checks required fields of an enrollment request
 func (req ActionRequest) IsValidEnrollment() bool {
-	return req.GetStatus() <= Enrollment_Teacher &&
+	return req.GetStatus() <= Enrollment_TEACHER &&
 		req.GetUserID() != 0 &&
 		req.GetCourseID() != 0
 }
@@ -37,7 +37,7 @@ func (req RecordRequest) IsValidRequest() bool {
 // IsValidRepoRequest checks required fields of a repository request
 func (req RepositoryRequest) IsValidRepoRequest() bool {
 	return req.GetCourseID() > 0 &&
-		req.GetType() <= Repository_CourseInfo
+		req.GetType() <= Repository_COURSEINFO
 }
 
 // IsValidRequest checks required fields of an update group request

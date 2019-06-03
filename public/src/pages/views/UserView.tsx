@@ -74,7 +74,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private renderRow(user: IUserRelation): Array<string | JSX.Element> {
         const selector: Array<string | JSX.Element> = [];
-        if (user.link.state === Enrollment.UserStatus.Teacher) {
+        if (user.link.state === Enrollment.UserStatus.TEACHER) {
             selector.push(<span className="text-muted">{user.user.getName()}</span>);
         } else {
             selector.push(user.user.getName());

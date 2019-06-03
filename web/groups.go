@@ -69,7 +69,7 @@ func DeleteGroup(request *pb.Group, db database.Database) error {
 		}
 		return err
 	}
-	if group.Status > pb.Group_Rejected {
+	if group.Status > pb.Group_REJECTED {
 		return status.Errorf(codes.Aborted, "accepted group cannot be deleted")
 	}
 	if err := db.DeleteGroup(request.ID); err != nil {
@@ -123,17 +123,17 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 			return nil, err
 		case enrollment.GroupID > 0:
 			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")
-		case enrollment.Status < pb.Enrollment_Student:
+		case enrollment.Status < pb.Enrollment_STUDENT:
 			return nil, status.Errorf(codes.InvalidArgument, "user not yet accepted for this course")
-		case enrollment.Status == pb.Enrollment_Teacher && signedInUserEnrollment.Status != pb.Enrollment_Teacher:
+		case enrollment.Status == pb.Enrollment_TEACHER && signedInUserEnrollment.Status != pb.Enrollment_TEACHER:
 			return nil, status.Errorf(codes.InvalidArgument, "only teachers can create group with a teacher")
-		case currentUser.ID == user.ID && enrollment.Status == pb.Enrollment_Student:
+		case currentUser.ID == user.ID && enrollment.Status == pb.Enrollment_STUDENT:
 			signedInUserInGroup = true
 		}
 	}
 
 	// if signed in user is teacher we proceed to create group with the enrolled users
-	if signedInUserEnrollment.Status == pb.Enrollment_Teacher {
+	if signedInUserEnrollment.Status == pb.Enrollment_TEACHER {
 		signedInUserInGroup = true
 	}
 	if !signedInUserInGroup {
@@ -167,7 +167,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	if err != nil {
 		return status.Errorf(codes.NotFound, "user not enrolled in the course")
 	}
-	if signedInUserEnrollment.Status != pb.Enrollment_Teacher && !currentUser.IsAdmin {
+	if signedInUserEnrollment.Status != pb.Enrollment_TEACHER && !currentUser.IsAdmin {
 		return status.Errorf(codes.PermissionDenied, "only teacher or admin can update groups")
 	}
 
@@ -191,7 +191,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 
 	// if the group is rejected or deleted, it is enough to update its entry in the database
 	// if the group is being updated or approved, group repository will be created and group status set to approved
-	if request.Status == pb.Group_Rejected || request.Status == pb.Group_Deleted {
+	if request.Status == pb.Group_REJECTED || request.Status == pb.Group_DELETED {
 		if err := db.UpdateGroupStatus(request); err != nil {
 			return status.Errorf(codes.Aborted, "failed to update group status in database")
 		}
@@ -219,7 +219,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 			return err
 		case enrollment.GroupID > 0 && enrollment.GroupID != request.ID:
 			return status.Errorf(codes.InvalidArgument, "user already in another group")
-		case enrollment.Status < pb.Enrollment_Student:
+		case enrollment.Status < pb.Enrollment_STUDENT:
 			return status.Errorf(codes.InvalidArgument, "user not yet accepted to this course")
 		}
 	}
@@ -237,7 +237,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		UserID:       0,
 		GroupID:      request.ID,
 		HTMLURL:      repo.WebURL,
-		RepoType:     pb.Repository_User, // TODO(meling) should we distinguish GroupRepo?
+		RepoType:     pb.Repository_USER, // TODO(meling) should we distinguish GroupRepo?
 	}
 	if err := db.CreateRepository(groupRepo); err != nil {
 		return err
@@ -249,7 +249,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		Name:     request.Name,
 		CourseID: request.CourseID,
 		Users:    users,
-		Status:   pb.Group_Approved,
+		Status:   pb.Group_APPROVED,
 	}); err != nil {
 		return err
 	}

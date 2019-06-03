@@ -32,7 +32,7 @@ goog.exportSymbol('proto.RecordRequest', null, global);
 goog.exportSymbol('proto.RemoteIdentity', null, global);
 goog.exportSymbol('proto.Repositories', null, global);
 goog.exportSymbol('proto.Repository', null, global);
-goog.exportSymbol('proto.Repository.RepoType', null, global);
+goog.exportSymbol('proto.Repository.Type', null, global);
 goog.exportSymbol('proto.RepositoryRequest', null, global);
 goog.exportSymbol('proto.Submission', null, global);
 goog.exportSymbol('proto.Submissions', null, global);
@@ -4094,7 +4094,7 @@ proto.Repository.deserializeBinaryFromReader = function(msg, reader) {
       msg.setHtmlurl(value);
       break;
     case 7:
-      var value = /** @type {!proto.Repository.RepoType} */ (reader.readEnum());
+      var value = /** @type {!proto.Repository.Type} */ (reader.readEnum());
       msg.setRepotype(value);
       break;
     default:
@@ -4181,11 +4181,11 @@ proto.Repository.serializeBinaryToWriter = function(message, writer) {
 /**
  * @enum {number}
  */
-proto.Repository.RepoType = {
+proto.Repository.Type = {
   USER: 0,
-  ASSIGNMENT: 1,
+  ASSIGNMENTS: 1,
   TESTS: 2,
-  SOLUTION: 3,
+  SOLUTIONS: 3,
   COURSEINFO: 4
 };
 
@@ -4280,15 +4280,15 @@ proto.Repository.prototype.setHtmlurl = function(value) {
 
 
 /**
- * optional RepoType repoType = 7;
- * @return {!proto.Repository.RepoType}
+ * optional Type repoType = 7;
+ * @return {!proto.Repository.Type}
  */
 proto.Repository.prototype.getRepotype = function() {
-  return /** @type {!proto.Repository.RepoType} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+  return /** @type {!proto.Repository.Type} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
 };
 
 
-/** @param {!proto.Repository.RepoType} value */
+/** @param {!proto.Repository.Type} value */
 proto.Repository.prototype.setRepotype = function(value) {
   jspb.Message.setProto3EnumField(this, 7, value);
 };
@@ -5490,7 +5490,7 @@ proto.RepositoryRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setId(value);
       break;
     case 2:
-      var value = /** @type {!proto.Repository.RepoType} */ (reader.readEnum());
+      var value = /** @type {!proto.Repository.Type} */ (reader.readEnum());
       msg.setType(value);
       break;
     case 3:
@@ -5599,15 +5599,15 @@ proto.RepositoryRequest.prototype.setId = function(value) {
 
 
 /**
- * optional Repository.RepoType type = 2;
- * @return {!proto.Repository.RepoType}
+ * optional Repository.Type type = 2;
+ * @return {!proto.Repository.Type}
  */
 proto.RepositoryRequest.prototype.getType = function() {
-  return /** @type {!proto.Repository.RepoType} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+  return /** @type {!proto.Repository.Type} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
-/** @param {!proto.Repository.RepoType} value */
+/** @param {!proto.Repository.Type} value */
 proto.RepositoryRequest.prototype.setType = function(value) {
   jspb.Message.setProto3EnumField(this, 2, value);
 };

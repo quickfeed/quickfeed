@@ -53,7 +53,7 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 	enrollment := pb.Enrollment{
 		UserID:   request.UserID,
 		CourseID: request.CourseID,
-		Status:   pb.Enrollment_Pending,
+		Status:   pb.Enrollment_PENDING,
 	}
 
 	log.Println(enrollment.UserID)
@@ -80,7 +80,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 	// TODO If the enrollment is accepted, create repositories and permissions for them with webooks.
 	var err error
 	switch request.Status {
-	case pb.Enrollment_Student:
+	case pb.Enrollment_STUDENT:
 		// Update enrollment for student in DB.
 		err = db.EnrollStudent(request.UserID, request.CourseID)
 		if err != nil {
@@ -103,17 +103,17 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			DirectoryID:  course.DirectoryID,
 			RepositoryID: repo.ID,
 			HTMLURL:      repo.WebURL,
-			RepoType:     pb.Repository_User,
+			RepoType:     pb.Repository_USER,
 			UserID:       request.UserID,
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return err
 		}
-	case pb.Enrollment_Teacher:
+	case pb.Enrollment_TEACHER:
 		err = db.EnrollTeacher(request.UserID, request.CourseID)
-	case pb.Enrollment_Rejected:
+	case pb.Enrollment_REJECTED:
 		err = db.RejectEnrollment(request.UserID, request.CourseID)
-	case pb.Enrollment_Pending:
+	case pb.Enrollment_PENDING:
 		err = db.SetPendingEnrollment(request.UserID, request.CourseID)
 	}
 	if err != nil {
@@ -295,7 +295,7 @@ func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.
 // Use only one db call as well. Make sure the db can only return one repo
 func GetCourseInformationURL(request *pb.RecordRequest, db database.Database) (*pb.URLResponse, error) {
 
-	courseInfoRepo, err := db.GetRepositoriesByCourseAndType(request.ID, pb.Repository_CourseInfo)
+	courseInfoRepo, err := db.GetRepositoriesByCourseAndType(request.ID, pb.Repository_COURSEINFO)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "could not retrieve any course information repos")
 	}
@@ -311,7 +311,7 @@ func GetCourseInformationURL(request *pb.RecordRequest, db database.Database) (*
 func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db database.Database) (*pb.URLResponse, error) {
 
 	var repos []*pb.Repository
-	if request.Type == pb.Repository_User {
+	if request.Type == pb.Repository_USER {
 
 		userRepo, err := db.GetRepositoryByCourseUserType(request.CourseID, currentUser.ID, request.Type)
 		if err != nil {
@@ -345,9 +345,9 @@ func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, d
 	// If privaterepos is bigger than 0, we know that the org/team is paid for.
 	if payment.PrivateRepos > 0 {
 		for _, repo := range repositories {
-			if repo.RepoType != pb.Repository_Assignment &&
-				repo.RepoType != pb.Repository_CourseInfo &&
-				repo.RepoType != pb.Repository_Solution {
+			if repo.RepoType != pb.Repository_ASSIGNMENTS &&
+				repo.RepoType != pb.Repository_COURSEINFO &&
+				repo.RepoType != pb.Repository_SOLUTIONS {
 
 				scmRepo := &scm.Repository{
 					DirectoryID: repo.DirectoryID,

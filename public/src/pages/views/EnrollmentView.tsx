@@ -21,9 +21,9 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     public createEnrollmentRow(studentCourses: IUserCourse[], course: IUserCourse): Array<string | JSX.Element> {
         const base: Array<string | JSX.Element> = [course.course.code, course.course.name];
         if (course.link) {
-            if (course.link.state === Enrollment.UserStatus.Student || course.link.state === Enrollment.UserStatus.Teacher) {
+            if (course.link.state === Enrollment.UserStatus.STUDENT || course.link.state === Enrollment.UserStatus.TEACHER) {
                 base.push("Enrolled");
-            } else if (course.link.state === Enrollment.UserStatus.Pending) {
+            } else if (course.link.state === Enrollment.UserStatus.PENDING) {
                 base.push("Pending");
             } else {
                 base.push(

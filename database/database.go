@@ -90,7 +90,7 @@ type Database interface {
 
 	// GetRepositoryByCourseUserType returns the repository
 	// for the given course ID, user ID and repository type.
-	GetRepositoryByCourseUserType(uint64, uint64, pb.Repository_RepoType) (*pb.Repository, error)
+	GetRepositoryByCourseUserType(uint64, uint64, pb.Repository_Type) (*pb.Repository, error)
 	// GetRepositoriesByCourseAndType returns repositories for the given course and repository type.
-	GetRepositoriesByCourseAndType(uint64, pb.Repository_RepoType) ([]*pb.Repository, error)
+	GetRepositoriesByCourseAndType(uint64, pb.Repository_Type) ([]*pb.Repository, error)
 }

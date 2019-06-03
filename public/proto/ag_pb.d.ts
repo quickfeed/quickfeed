@@ -235,10 +235,10 @@ export namespace Enrollment {
   }
 
   export enum UserStatus { 
-    Pending = 0,
-    Rejected = 1,
-    Student = 2,
-    Teacher = 3,
+    PENDING = 0,
+    REJECTED = 1,
+    STUDENT = 2,
+    TEACHER = 3,
   }
 }
 
@@ -287,10 +287,10 @@ export namespace Group {
   }
 
   export enum GroupStatus { 
-    Pending = 0,
-    Rejected = 1,
-    Approved = 2,
-    Deleted = 3,
+    PENDING = 0,
+    REJECTED = 1,
+    APPROVED = 2,
+    DELETED = 3,
   }
 }
 
@@ -386,8 +386,8 @@ export class Repository {
   setGroupid(a: number): void;
   getHtmlurl(): string;
   setHtmlurl(a: string): void;
-  getRepotype(): Repository.RepoType;
-  setRepotype(a: Repository.RepoType): void;
+  getRepotype(): Repository.Type;
+  setRepotype(a: Repository.Type): void;
   toObject(): Repository.AsObject;
   serializeBinary(): Uint8Array;
   static deserializeBinary: (bytes: {}) => Repository;
@@ -401,15 +401,15 @@ export namespace Repository {
     Userid: number;
     Groupid: number;
     Htmlurl: string;
-    Repotype: Repository.RepoType;
+    Repotype: Repository.Type;
   }
 
-  export enum RepoType { 
-    User = 0,
-    Assignment = 1,
-    Tests = 2,
-    Solution = 3,
-    CourseInfo = 4,
+  export enum Type { 
+    USER = 0,
+    ASSIGNMENTS = 1,
+    TESTS = 2,
+    SOLUTIONS = 3,
+    COURSEINFO = 4,
   }
 }
 
@@ -417,8 +417,8 @@ export class RepositoryRequest {
   constructor ();
   getId(): number;
   setId(a: number): void;
-  getType(): Repository.RepoType;
-  setType(a: Repository.RepoType): void;
+  getType(): Repository.Type;
+  setType(a: Repository.Type): void;
   getDirectoryid(): number;
   setDirectoryid(a: number): void;
   getRepositoryid(): number;
@@ -435,7 +435,7 @@ export class RepositoryRequest {
 export namespace RepositoryRequest {
   export type AsObject = {
     Id: number;
-    Type: Repository.RepoType;
+    Type: Repository.Type;
     Directoryid: number;
     Repositoryid: number;
     Userid: number;

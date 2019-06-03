@@ -133,7 +133,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.localCourseStudent.push({
             courseId: course.id,
             userid: user.getId(),
-            state: Enrollment.UserStatus.Pending,
+            state: Enrollment.UserStatus.PENDING,
         });
         return true;
     }
@@ -146,7 +146,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async getUserLinksForCourse(course: ICourse, state?: Enrollment.UserStatus[]): Promise<ICourseUserLink[]> {
         const users: ICourseUserLink[] = [];
         for (const c of await this.getCoursesStudent()) {
-            if (course.id === c.courseId && (state === undefined || c.state === Enrollment.UserStatus.Student)) {
+            if (course.id === c.courseId && (state === undefined || c.state === Enrollment.UserStatus.STUDENT)) {
                 users.push(c);
             }
         }
@@ -233,7 +233,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         const cLinks: ICourseUserLink[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
-            if (user.getId() === c.userid && (state === undefined || c.state === Enrollment.UserStatus.Student)) {
+            if (user.getId() === c.userid && (state === undefined || c.state === Enrollment.UserStatus.STUDENT)) {
                 cLinks.push(c);
             }
         }

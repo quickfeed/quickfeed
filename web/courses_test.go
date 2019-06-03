@@ -195,7 +195,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Errorf("have enrollment\n %+v\n want\n %+v", pendingEnrollment, wantEnrollment)
 	}
 
-	enrollStud1.Status = pb.Enrollment_Student
+	enrollStud1.Status = pb.Enrollment_STUDENT
 	if _, err = ags.UpdateEnrollment(ctx, enrollStud1); err != nil {
 		t.Fatal(err)
 	}
@@ -205,7 +205,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantEnrollment.Status = pb.Enrollment_Student
+	wantEnrollment.Status = pb.Enrollment_STUDENT
 	if !cmp.Equal(acceptedEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
 	}
@@ -217,7 +217,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	if _, err = ags.CreateEnrollment(ctx, enrollStud2); err != nil {
 		t.Fatal(err)
 	}
-	enrollStud2.Status = pb.Enrollment_Student
+	enrollStud2.Status = pb.Enrollment_STUDENT
 	if _, err = ags.UpdateEnrollment(ctx, enrollStud2); err != nil {
 		t.Fatal(err)
 	}
@@ -227,7 +227,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantEnrollment.ID = acceptedEnrollment.ID
-	wantEnrollment.Status = pb.Enrollment_Student
+	wantEnrollment.Status = pb.Enrollment_STUDENT
 	wantEnrollment.UserID = stud2.ID
 	if !cmp.Equal(acceptedEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
@@ -235,7 +235,7 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	// promote stud2 to teaching assistant
 
-	enrollStud2.Status = pb.Enrollment_Teacher
+	enrollStud2.Status = pb.Enrollment_TEACHER
 	if _, err = ags.UpdateEnrollment(ctx, enrollStud2); err != nil {
 		t.Fatal(err)
 	}
@@ -245,7 +245,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantEnrollment.ID = acceptedEnrollment.ID
-	wantEnrollment.Status = pb.Enrollment_Teacher
+	wantEnrollment.Status = pb.Enrollment_TEACHER
 	if !cmp.Equal(acceptedEnrollment, wantEnrollment) {
 		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
 	}
@@ -305,9 +305,9 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}
 
 	wantCourses := []*pb.Course{
-		{ID: testCourses[0].ID, Enrolled: pb.Enrollment_Pending},
-		{ID: testCourses[1].ID, Enrolled: pb.Enrollment_Rejected},
-		{ID: testCourses[2].ID, Enrolled: pb.Enrollment_Student},
+		{ID: testCourses[0].ID, Enrolled: pb.Enrollment_PENDING},
+		{ID: testCourses[1].ID, Enrolled: pb.Enrollment_REJECTED},
+		{ID: testCourses[2].ID, Enrolled: pb.Enrollment_STUDENT},
 		{ID: testCourses[3].ID, Enrolled: -1},
 	}
 	for i, course := range courses.Courses {
@@ -369,13 +369,13 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}
 
 	stats := make([]pb.Enrollment_UserStatus, 0)
-	stats = append(stats, pb.Enrollment_Rejected, pb.Enrollment_Student)
+	stats = append(stats, pb.Enrollment_REJECTED, pb.Enrollment_STUDENT)
 	course_req := &pb.RecordRequest{ID: user.ID, Statuses: stats}
 	courses, err := test_ag.GetCoursesWithEnrollment(context.Background(), course_req)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourses, err := db.GetCoursesByUser(user.ID, pb.Enrollment_Rejected, pb.Enrollment_Student)
+	wantCourses, err := db.GetCoursesByUser(user.ID, pb.Enrollment_REJECTED, pb.Enrollment_STUDENT)
 	if err != nil {
 		t.Fatal(err)
 	}
