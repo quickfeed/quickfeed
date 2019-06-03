@@ -403,7 +403,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		{ID: c1.ID, DirectoryID: 1, Enrolled: pb.Enrollment_PENDING},
 		{ID: c2.ID, DirectoryID: 2, Enrolled: pb.Enrollment_REJECTED},
 		{ID: c3.ID, DirectoryID: 3, Enrolled: pb.Enrollment_STUDENT},
-		{ID: c4.ID, DirectoryID: 4, Enrolled: -1},
+		{ID: c4.ID, DirectoryID: 4, Enrolled: pb.Enrollment_NONE},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
