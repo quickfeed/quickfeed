@@ -8,22 +8,21 @@
 
 
 import * as grpcWeb from 'grpc-web';
+
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
+
 import {
   ActionRequest,
-  Assignment,
   Assignments,
   Course,
   Courses,
   Directories,
-  Directory,
   DirectoryRequest,
-  Enrollment,
   Enrollments,
   Group,
   Groups,
   Providers,
   RecordRequest,
-  RemoteIdentity,
   Repository,
   RepositoryRequest,
   Submission,
@@ -31,8 +30,7 @@ import {
   URLResponse,
   User,
   Users,
-  Void,
-  Timestamp} from './ag_pb';
+  Void} from './ag_pb';
 
 export class AutograderServiceClient {
   client_: grpcWeb.AbstractClientBase;
@@ -62,14 +60,14 @@ export class AutograderServiceClient {
 
   getSelf(
     request: Void,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: User) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetSelf',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetSelf,
       callback);
   }
@@ -84,14 +82,14 @@ export class AutograderServiceClient {
 
   getUser(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: User) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetUser',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetUser,
       callback);
   }
@@ -106,14 +104,14 @@ export class AutograderServiceClient {
 
   getUsers(
     request: Void,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Users) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetUsers',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetUsers,
       callback);
   }
@@ -128,14 +126,14 @@ export class AutograderServiceClient {
 
   updateUser(
     request: User,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: User) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateUser',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoUpdateUser,
       callback);
   }
@@ -150,14 +148,14 @@ export class AutograderServiceClient {
 
   getGroup(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Group) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetGroup',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetGroup,
       callback);
   }
@@ -172,14 +170,14 @@ export class AutograderServiceClient {
 
   getGroupByUserAndCourse(
     request: ActionRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Group) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetGroupByUserAndCourse',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetGroupByUserAndCourse,
       callback);
   }
@@ -194,14 +192,14 @@ export class AutograderServiceClient {
 
   getGroups(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Groups) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetGroups',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetGroups,
       callback);
   }
@@ -216,14 +214,14 @@ export class AutograderServiceClient {
 
   createGroup(
     request: Group,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Group) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/CreateGroup',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoCreateGroup,
       callback);
   }
@@ -238,14 +236,14 @@ export class AutograderServiceClient {
 
   updateGroup(
     request: Group,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateGroup',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoUpdateGroup,
       callback);
   }
@@ -260,14 +258,14 @@ export class AutograderServiceClient {
 
   updateGroupStatus(
     request: Group,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateGroupStatus',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoUpdateGroupStatus,
       callback);
   }
@@ -282,14 +280,14 @@ export class AutograderServiceClient {
 
   deleteGroup(
     request: Group,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/DeleteGroup',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoDeleteGroup,
       callback);
   }
@@ -304,14 +302,14 @@ export class AutograderServiceClient {
 
   getCourse(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Course) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetCourse',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetCourse,
       callback);
   }
@@ -326,14 +324,14 @@ export class AutograderServiceClient {
 
   getCourses(
     request: Void,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Courses) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetCourses',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetCourses,
       callback);
   }
@@ -348,14 +346,14 @@ export class AutograderServiceClient {
 
   getCoursesWithEnrollment(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Courses) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetCoursesWithEnrollment',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetCoursesWithEnrollment,
       callback);
   }
@@ -370,14 +368,14 @@ export class AutograderServiceClient {
 
   getCourseInformationURL(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: URLResponse) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetCourseInformationURL',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetCourseInformationURL,
       callback);
   }
@@ -392,14 +390,14 @@ export class AutograderServiceClient {
 
   createCourse(
     request: Course,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Course) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/CreateCourse',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoCreateCourse,
       callback);
   }
@@ -414,14 +412,14 @@ export class AutograderServiceClient {
 
   updateCourse(
     request: Course,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateCourse',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoUpdateCourse,
       callback);
   }
@@ -436,14 +434,14 @@ export class AutograderServiceClient {
 
   refreshCourse(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Assignments) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/RefreshCourse',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoRefreshCourse,
       callback);
   }
@@ -458,14 +456,14 @@ export class AutograderServiceClient {
 
   getEnrollmentsByCourse(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Enrollments) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetEnrollmentsByCourse',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetEnrollmentsByCourse,
       callback);
   }
@@ -480,14 +478,14 @@ export class AutograderServiceClient {
 
   createEnrollment(
     request: ActionRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/CreateEnrollment',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoCreateEnrollment,
       callback);
   }
@@ -502,14 +500,14 @@ export class AutograderServiceClient {
 
   updateEnrollment(
     request: ActionRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateEnrollment',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoUpdateEnrollment,
       callback);
   }
@@ -524,14 +522,14 @@ export class AutograderServiceClient {
 
   getSubmissions(
     request: ActionRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Submissions) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetSubmissions',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetSubmissions,
       callback);
   }
@@ -546,14 +544,14 @@ export class AutograderServiceClient {
 
   getSubmission(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Submission) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetSubmission',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetSubmission,
       callback);
   }
@@ -568,14 +566,14 @@ export class AutograderServiceClient {
 
   getGroupSubmissions(
     request: ActionRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Submissions) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetGroupSubmissions',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetGroupSubmissions,
       callback);
   }
@@ -590,14 +588,14 @@ export class AutograderServiceClient {
 
   updateSubmission(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateSubmission',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoUpdateSubmission,
       callback);
   }
@@ -612,14 +610,14 @@ export class AutograderServiceClient {
 
   getAssignments(
     request: RecordRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Assignments) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetAssignments',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetAssignments,
       callback);
   }
@@ -634,14 +632,14 @@ export class AutograderServiceClient {
 
   getRepositoryURL(
     request: RepositoryRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: URLResponse) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetRepositoryURL',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetRepositoryURL,
       callback);
   }
@@ -656,14 +654,14 @@ export class AutograderServiceClient {
 
   getProviders(
     request: Void,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Providers) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetProviders',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetProviders,
       callback);
   }
@@ -678,14 +676,14 @@ export class AutograderServiceClient {
 
   getDirectories(
     request: DirectoryRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Directories) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetDirectories',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetDirectories,
       callback);
   }
@@ -700,14 +698,14 @@ export class AutograderServiceClient {
 
   getRepository(
     request: RepositoryRequest,
-    metadata: grpcWeb.Metadata,
+    metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Repository) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetRepository',
       request,
-      metadata,
+      metadata || {},
       this.methodInfoGetRepository,
       callback);
   }

@@ -1,289 +1,150 @@
-export class ActionRequest {
-  constructor ();
-  getId(): number;
-  setId(a: number): void;
-  getUserid(): number;
-  setUserid(a: number): void;
-  getGroupid(): number;
-  setGroupid(a: number): void;
-  getCourseid(): number;
-  setCourseid(a: number): void;
-  getStatus(): Enrollment.UserStatus;
-  setStatus(a: Enrollment.UserStatus): void;
-  getGroupstatus(): Group.GroupStatus;
-  setGroupstatus(a: Group.GroupStatus): void;
-  toObject(): ActionRequest.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => ActionRequest;
-}
+import * as jspb from "google-protobuf"
 
-export namespace ActionRequest {
-  export type AsObject = {
-    Id: number;
-    Userid: number;
-    Groupid: number;
-    Courseid: number;
-    Status: Enrollment.UserStatus;
-    Groupstatus: Group.GroupStatus;
-  }
-}
+import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
-export class Assignment {
-  constructor ();
+export class User extends jspb.Message {
   getId(): number;
-  setId(a: number): void;
-  getCourseid(): number;
-  setCourseid(a: number): void;
+  setId(value: number): void;
+
+  getIsadmin(): boolean;
+  setIsadmin(value: boolean): void;
+
   getName(): string;
-  setName(a: string): void;
-  getLanguage(): string;
-  setLanguage(a: string): void;
-  getDeadline(): Timestamp;
-  setDeadline(a: Timestamp): void;
-  getAutoapprove(): boolean;
-  setAutoapprove(a: boolean): void;
-  getOrder(): number;
-  setOrder(a: number): void;
-  getIsgrouplab(): boolean;
-  setIsgrouplab(a: boolean): void;
-  getSubmission(): Submission;
-  setSubmission(a: Submission): void;
-  toObject(): Assignment.AsObject;
+  setName(value: string): void;
+
+  getStudentid(): string;
+  setStudentid(value: string): void;
+
+  getEmail(): string;
+  setEmail(value: string): void;
+
+  getAvatarurl(): string;
+  setAvatarurl(value: string): void;
+
+  getRemoteidentitiesList(): Array<RemoteIdentity>;
+  setRemoteidentitiesList(value: Array<RemoteIdentity>): void;
+  clearRemoteidentitiesList(): void;
+  addRemoteidentities(value?: RemoteIdentity, index?: number): RemoteIdentity;
+
+  getEnrollmentsList(): Array<Enrollment>;
+  setEnrollmentsList(value: Array<Enrollment>): void;
+  clearEnrollmentsList(): void;
+  addEnrollments(value?: Enrollment, index?: number): Enrollment;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Assignment;
+  toObject(includeInstance?: boolean): User.AsObject;
+  static toObject(includeInstance: boolean, msg: User): User.AsObject;
+  static serializeBinaryToWriter(message: User, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): User;
+  static deserializeBinaryFromReader(message: User, reader: jspb.BinaryReader): User;
 }
 
-export namespace Assignment {
+export namespace User {
   export type AsObject = {
-    Id: number;
-    Courseid: number;
-    Name: string;
-    Language: string;
-    Deadline: Timestamp;
-    Autoapprove: boolean;
-    Order: number;
-    Isgrouplab: boolean;
-    Submission: Submission;
+    id: number,
+    isadmin: boolean,
+    name: string,
+    studentid: string,
+    email: string,
+    avatarurl: string,
+    remoteidentitiesList: Array<RemoteIdentity.AsObject>,
+    enrollmentsList: Array<Enrollment.AsObject>,
   }
 }
 
-export class Assignments {
-  constructor ();
-  getAssignmentsList(): Assignment[];
-  setAssignmentsList(a: Assignment[]): void;
-  toObject(): Assignments.AsObject;
+export class Users extends jspb.Message {
+  getUsersList(): Array<User>;
+  setUsersList(value: Array<User>): void;
+  clearUsersList(): void;
+  addUsers(value?: User, index?: number): User;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Assignments;
+  toObject(includeInstance?: boolean): Users.AsObject;
+  static toObject(includeInstance: boolean, msg: Users): Users.AsObject;
+  static serializeBinaryToWriter(message: Users, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Users;
+  static deserializeBinaryFromReader(message: Users, reader: jspb.BinaryReader): Users;
 }
 
-export namespace Assignments {
+export namespace Users {
   export type AsObject = {
-    AssignmentsList: Assignment[];
+    usersList: Array<User.AsObject>,
   }
 }
 
-export class Course {
-  constructor ();
+export class RemoteIdentity extends jspb.Message {
   getId(): number;
-  setId(a: number): void;
-  getCoursecreatorid(): number;
-  setCoursecreatorid(a: number): void;
-  getName(): string;
-  setName(a: string): void;
-  getCode(): string;
-  setCode(a: string): void;
-  getYear(): number;
-  setYear(a: number): void;
-  getTag(): string;
-  setTag(a: string): void;
+  setId(value: number): void;
+
   getProvider(): string;
-  setProvider(a: string): void;
-  getDirectoryid(): number;
-  setDirectoryid(a: number): void;
-  getEnrolled(): Enrollment.UserStatus;
-  setEnrolled(a: Enrollment.UserStatus): void;
-  getEnrollmentsList(): Enrollment[];
-  setEnrollmentsList(a: Enrollment[]): void;
-  getAssignmentsList(): Assignment[];
-  setAssignmentsList(a: Assignment[]): void;
-  getGroupsList(): Group[];
-  setGroupsList(a: Group[]): void;
-  toObject(): Course.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Course;
-}
+  setProvider(value: string): void;
 
-export namespace Course {
-  export type AsObject = {
-    Id: number;
-    Coursecreatorid: number;
-    Name: string;
-    Code: string;
-    Year: number;
-    Tag: string;
-    Provider: string;
-    Directoryid: number;
-    Enrolled: Enrollment.UserStatus;
-    EnrollmentsList: Enrollment[];
-    AssignmentsList: Assignment[];
-    GroupsList: Group[];
-  }
-}
+  getRemoteid(): number;
+  setRemoteid(value: number): void;
 
-export class Courses {
-  constructor ();
-  getCoursesList(): Course[];
-  setCoursesList(a: Course[]): void;
-  toObject(): Courses.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Courses;
-}
+  getAccesstoken(): string;
+  setAccesstoken(value: string): void;
 
-export namespace Courses {
-  export type AsObject = {
-    CoursesList: Course[];
-  }
-}
-
-export class Directories {
-  constructor ();
-  getDirectoriesList(): Directory[];
-  setDirectoriesList(a: Directory[]): void;
-  toObject(): Directories.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Directories;
-}
-
-export namespace Directories {
-  export type AsObject = {
-    DirectoriesList: Directory[];
-  }
-}
-
-export class Directory {
-  constructor ();
-  getId(): number;
-  setId(a: number): void;
-  getPath(): string;
-  setPath(a: string): void;
-  getAvatar(): string;
-  setAvatar(a: string): void;
-  toObject(): Directory.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Directory;
-}
-
-export namespace Directory {
-  export type AsObject = {
-    Id: number;
-    Path: string;
-    Avatar: string;
-  }
-}
-
-export class DirectoryRequest {
-  constructor ();
-  getProvider(): string;
-  setProvider(a: string): void;
-  getCourseid(): number;
-  setCourseid(a: number): void;
-  toObject(): DirectoryRequest.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => DirectoryRequest;
-}
-
-export namespace DirectoryRequest {
-  export type AsObject = {
-    Provider: string;
-    Courseid: number;
-  }
-}
-
-export class Enrollment {
-  constructor ();
-  getId(): number;
-  setId(a: number): void;
-  getCourseid(): number;
-  setCourseid(a: number): void;
   getUserid(): number;
-  setUserid(a: number): void;
-  getGroupid(): number;
-  setGroupid(a: number): void;
-  getUser(): User;
-  setUser(a: User): void;
-  getCourse(): Course;
-  setCourse(a: Course): void;
-  getGroup(): Group;
-  setGroup(a: Group): void;
-  getStatus(): Enrollment.UserStatus;
-  setStatus(a: Enrollment.UserStatus): void;
-  toObject(): Enrollment.AsObject;
+  setUserid(value: number): void;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Enrollment;
+  toObject(includeInstance?: boolean): RemoteIdentity.AsObject;
+  static toObject(includeInstance: boolean, msg: RemoteIdentity): RemoteIdentity.AsObject;
+  static serializeBinaryToWriter(message: RemoteIdentity, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RemoteIdentity;
+  static deserializeBinaryFromReader(message: RemoteIdentity, reader: jspb.BinaryReader): RemoteIdentity;
 }
 
-export namespace Enrollment {
+export namespace RemoteIdentity {
   export type AsObject = {
-    Id: number;
-    Courseid: number;
-    Userid: number;
-    Groupid: number;
-    User: User;
-    Course: Course;
-    Group: Group;
-    Status: Enrollment.UserStatus;
-  }
-
-  export enum UserStatus { 
-    PENDING = 0,
-    REJECTED = 1,
-    STUDENT = 2,
-    TEACHER = 3,
+    id: number,
+    provider: string,
+    remoteid: number,
+    accesstoken: string,
+    userid: number,
   }
 }
 
-export class Enrollments {
-  constructor ();
-  getEnrollmentsList(): Enrollment[];
-  setEnrollmentsList(a: Enrollment[]): void;
-  toObject(): Enrollments.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Enrollments;
-}
-
-export namespace Enrollments {
-  export type AsObject = {
-    EnrollmentsList: Enrollment[];
-  }
-}
-
-export class Group {
-  constructor ();
+export class Group extends jspb.Message {
   getId(): number;
-  setId(a: number): void;
+  setId(value: number): void;
+
   getName(): string;
-  setName(a: string): void;
+  setName(value: string): void;
+
   getCourseid(): number;
-  setCourseid(a: number): void;
+  setCourseid(value: number): void;
+
   getStatus(): Group.GroupStatus;
-  setStatus(a: Group.GroupStatus): void;
-  getUsersList(): User[];
-  setUsersList(a: User[]): void;
-  getEnrollmentsList(): Enrollment[];
-  setEnrollmentsList(a: Enrollment[]): void;
-  toObject(): Group.AsObject;
+  setStatus(value: Group.GroupStatus): void;
+
+  getUsersList(): Array<User>;
+  setUsersList(value: Array<User>): void;
+  clearUsersList(): void;
+  addUsers(value?: User, index?: number): User;
+
+  getEnrollmentsList(): Array<Enrollment>;
+  setEnrollmentsList(value: Array<Enrollment>): void;
+  clearEnrollmentsList(): void;
+  addEnrollments(value?: Enrollment, index?: number): Enrollment;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Group;
+  toObject(includeInstance?: boolean): Group.AsObject;
+  static toObject(includeInstance: boolean, msg: Group): Group.AsObject;
+  static serializeBinaryToWriter(message: Group, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Group;
+  static deserializeBinaryFromReader(message: Group, reader: jspb.BinaryReader): Group;
 }
 
 export namespace Group {
   export type AsObject = {
-    Id: number;
-    Name: string;
-    Courseid: number;
-    Status: Group.GroupStatus;
-    UsersList: User[];
-    EnrollmentsList: Enrollment[];
+    id: number,
+    name: string,
+    courseid: number,
+    status: Group.GroupStatus,
+    usersList: Array<User.AsObject>,
+    enrollmentsList: Array<Enrollment.AsObject>,
   }
 
   export enum GroupStatus { 
@@ -294,114 +155,376 @@ export namespace Group {
   }
 }
 
-export class Groups {
-  constructor ();
-  getGroupsList(): Group[];
-  setGroupsList(a: Group[]): void;
-  toObject(): Groups.AsObject;
+export class Groups extends jspb.Message {
+  getGroupsList(): Array<Group>;
+  setGroupsList(value: Array<Group>): void;
+  clearGroupsList(): void;
+  addGroups(value?: Group, index?: number): Group;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Groups;
+  toObject(includeInstance?: boolean): Groups.AsObject;
+  static toObject(includeInstance: boolean, msg: Groups): Groups.AsObject;
+  static serializeBinaryToWriter(message: Groups, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Groups;
+  static deserializeBinaryFromReader(message: Groups, reader: jspb.BinaryReader): Groups;
 }
 
 export namespace Groups {
   export type AsObject = {
-    GroupsList: Group[];
+    groupsList: Array<Group.AsObject>,
   }
 }
 
-export class Providers {
-  constructor ();
-  getProvidersList(): string[];
-  setProvidersList(a: string[]): void;
-  toObject(): Providers.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Providers;
-}
-
-export namespace Providers {
-  export type AsObject = {
-    ProvidersList: string[];
-  }
-}
-
-export class RecordRequest {
-  constructor ();
+export class Course extends jspb.Message {
   getId(): number;
-  setId(a: number): void;
-  getStatusesList(): Enrollment.UserStatus[];
-  setStatusesList(a: Enrollment.UserStatus[]): void;
-  getGroupstatusesList(): Group.GroupStatus[];
-  setGroupstatusesList(a: Group.GroupStatus[]): void;
-  toObject(): RecordRequest.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => RecordRequest;
-}
+  setId(value: number): void;
 
-export namespace RecordRequest {
-  export type AsObject = {
-    Id: number;
-    StatusesList: Enrollment.UserStatus[];
-    GroupstatusesList: Group.GroupStatus[];
-  }
-}
+  getCoursecreatorid(): number;
+  setCoursecreatorid(value: number): void;
 
-export class RemoteIdentity {
-  constructor ();
-  getId(): number;
-  setId(a: number): void;
+  getName(): string;
+  setName(value: string): void;
+
+  getCode(): string;
+  setCode(value: string): void;
+
+  getYear(): number;
+  setYear(value: number): void;
+
+  getTag(): string;
+  setTag(value: string): void;
+
   getProvider(): string;
-  setProvider(a: string): void;
-  getRemoteid(): number;
-  setRemoteid(a: number): void;
-  getAccesstoken(): string;
-  setAccesstoken(a: string): void;
-  getUserid(): number;
-  setUserid(a: number): void;
-  toObject(): RemoteIdentity.AsObject;
+  setProvider(value: string): void;
+
+  getDirectoryid(): number;
+  setDirectoryid(value: number): void;
+
+  getEnrolled(): Enrollment.UserStatus;
+  setEnrolled(value: Enrollment.UserStatus): void;
+
+  getEnrollmentsList(): Array<Enrollment>;
+  setEnrollmentsList(value: Array<Enrollment>): void;
+  clearEnrollmentsList(): void;
+  addEnrollments(value?: Enrollment, index?: number): Enrollment;
+
+  getAssignmentsList(): Array<Assignment>;
+  setAssignmentsList(value: Array<Assignment>): void;
+  clearAssignmentsList(): void;
+  addAssignments(value?: Assignment, index?: number): Assignment;
+
+  getGroupsList(): Array<Group>;
+  setGroupsList(value: Array<Group>): void;
+  clearGroupsList(): void;
+  addGroups(value?: Group, index?: number): Group;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => RemoteIdentity;
+  toObject(includeInstance?: boolean): Course.AsObject;
+  static toObject(includeInstance: boolean, msg: Course): Course.AsObject;
+  static serializeBinaryToWriter(message: Course, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Course;
+  static deserializeBinaryFromReader(message: Course, reader: jspb.BinaryReader): Course;
 }
 
-export namespace RemoteIdentity {
+export namespace Course {
   export type AsObject = {
-    Id: number;
-    Provider: string;
-    Remoteid: number;
-    Accesstoken: string;
-    Userid: number;
+    id: number,
+    coursecreatorid: number,
+    name: string,
+    code: string,
+    year: number,
+    tag: string,
+    provider: string,
+    directoryid: number,
+    enrolled: Enrollment.UserStatus,
+    enrollmentsList: Array<Enrollment.AsObject>,
+    assignmentsList: Array<Assignment.AsObject>,
+    groupsList: Array<Group.AsObject>,
   }
 }
 
-export class Repository {
-  constructor ();
-  getId(): number;
-  setId(a: number): void;
-  getDirectoryid(): number;
-  setDirectoryid(a: number): void;
-  getRepositoryid(): number;
-  setRepositoryid(a: number): void;
-  getUserid(): number;
-  setUserid(a: number): void;
-  getGroupid(): number;
-  setGroupid(a: number): void;
-  getHtmlurl(): string;
-  setHtmlurl(a: string): void;
-  getRepotype(): Repository.Type;
-  setRepotype(a: Repository.Type): void;
-  toObject(): Repository.AsObject;
+export class Courses extends jspb.Message {
+  getCoursesList(): Array<Course>;
+  setCoursesList(value: Array<Course>): void;
+  clearCoursesList(): void;
+  addCourses(value?: Course, index?: number): Course;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Repository;
+  toObject(includeInstance?: boolean): Courses.AsObject;
+  static toObject(includeInstance: boolean, msg: Courses): Courses.AsObject;
+  static serializeBinaryToWriter(message: Courses, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Courses;
+  static deserializeBinaryFromReader(message: Courses, reader: jspb.BinaryReader): Courses;
+}
+
+export namespace Courses {
+  export type AsObject = {
+    coursesList: Array<Course.AsObject>,
+  }
+}
+
+export class Enrollment extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  getUser(): User | undefined;
+  setUser(value?: User): void;
+  hasUser(): boolean;
+  clearUser(): void;
+
+  getCourse(): Course | undefined;
+  setCourse(value?: Course): void;
+  hasCourse(): boolean;
+  clearCourse(): void;
+
+  getGroup(): Group | undefined;
+  setGroup(value?: Group): void;
+  hasGroup(): boolean;
+  clearGroup(): void;
+
+  getStatus(): Enrollment.UserStatus;
+  setStatus(value: Enrollment.UserStatus): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Enrollment.AsObject;
+  static toObject(includeInstance: boolean, msg: Enrollment): Enrollment.AsObject;
+  static serializeBinaryToWriter(message: Enrollment, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Enrollment;
+  static deserializeBinaryFromReader(message: Enrollment, reader: jspb.BinaryReader): Enrollment;
+}
+
+export namespace Enrollment {
+  export type AsObject = {
+    id: number,
+    courseid: number,
+    userid: number,
+    groupid: number,
+    user?: User.AsObject,
+    course?: Course.AsObject,
+    group?: Group.AsObject,
+    status: Enrollment.UserStatus,
+  }
+
+  export enum UserStatus { 
+    PENDING = 0,
+    REJECTED = 1,
+    STUDENT = 2,
+    TEACHER = 3,
+  }
+}
+
+export class Enrollments extends jspb.Message {
+  getEnrollmentsList(): Array<Enrollment>;
+  setEnrollmentsList(value: Array<Enrollment>): void;
+  clearEnrollmentsList(): void;
+  addEnrollments(value?: Enrollment, index?: number): Enrollment;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Enrollments.AsObject;
+  static toObject(includeInstance: boolean, msg: Enrollments): Enrollments.AsObject;
+  static serializeBinaryToWriter(message: Enrollments, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Enrollments;
+  static deserializeBinaryFromReader(message: Enrollments, reader: jspb.BinaryReader): Enrollments;
+}
+
+export namespace Enrollments {
+  export type AsObject = {
+    enrollmentsList: Array<Enrollment.AsObject>,
+  }
+}
+
+export class Assignment extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getName(): string;
+  setName(value: string): void;
+
+  getLanguage(): string;
+  setLanguage(value: string): void;
+
+  getDeadline(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setDeadline(value?: google_protobuf_timestamp_pb.Timestamp): void;
+  hasDeadline(): boolean;
+  clearDeadline(): void;
+
+  getAutoapprove(): boolean;
+  setAutoapprove(value: boolean): void;
+
+  getOrder(): number;
+  setOrder(value: number): void;
+
+  getIsgrouplab(): boolean;
+  setIsgrouplab(value: boolean): void;
+
+  getSubmission(): Submission | undefined;
+  setSubmission(value?: Submission): void;
+  hasSubmission(): boolean;
+  clearSubmission(): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Assignment.AsObject;
+  static toObject(includeInstance: boolean, msg: Assignment): Assignment.AsObject;
+  static serializeBinaryToWriter(message: Assignment, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Assignment;
+  static deserializeBinaryFromReader(message: Assignment, reader: jspb.BinaryReader): Assignment;
+}
+
+export namespace Assignment {
+  export type AsObject = {
+    id: number,
+    courseid: number,
+    name: string,
+    language: string,
+    deadline?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    autoapprove: boolean,
+    order: number,
+    isgrouplab: boolean,
+    submission?: Submission.AsObject,
+  }
+}
+
+export class Assignments extends jspb.Message {
+  getAssignmentsList(): Array<Assignment>;
+  setAssignmentsList(value: Array<Assignment>): void;
+  clearAssignmentsList(): void;
+  addAssignments(value?: Assignment, index?: number): Assignment;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Assignments.AsObject;
+  static toObject(includeInstance: boolean, msg: Assignments): Assignments.AsObject;
+  static serializeBinaryToWriter(message: Assignments, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Assignments;
+  static deserializeBinaryFromReader(message: Assignments, reader: jspb.BinaryReader): Assignments;
+}
+
+export namespace Assignments {
+  export type AsObject = {
+    assignmentsList: Array<Assignment.AsObject>,
+  }
+}
+
+export class Submission extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getAssignmentid(): number;
+  setAssignmentid(value: number): void;
+
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  getScore(): number;
+  setScore(value: number): void;
+
+  getScoreobjects(): string;
+  setScoreobjects(value: string): void;
+
+  getBuildinfo(): string;
+  setBuildinfo(value: string): void;
+
+  getCommithash(): string;
+  setCommithash(value: string): void;
+
+  getApproved(): boolean;
+  setApproved(value: boolean): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Submission.AsObject;
+  static toObject(includeInstance: boolean, msg: Submission): Submission.AsObject;
+  static serializeBinaryToWriter(message: Submission, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Submission;
+  static deserializeBinaryFromReader(message: Submission, reader: jspb.BinaryReader): Submission;
+}
+
+export namespace Submission {
+  export type AsObject = {
+    id: number,
+    assignmentid: number,
+    userid: number,
+    groupid: number,
+    score: number,
+    scoreobjects: string,
+    buildinfo: string,
+    commithash: string,
+    approved: boolean,
+  }
+}
+
+export class Submissions extends jspb.Message {
+  getSubmissionsList(): Array<Submission>;
+  setSubmissionsList(value: Array<Submission>): void;
+  clearSubmissionsList(): void;
+  addSubmissions(value?: Submission, index?: number): Submission;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Submissions.AsObject;
+  static toObject(includeInstance: boolean, msg: Submissions): Submissions.AsObject;
+  static serializeBinaryToWriter(message: Submissions, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Submissions;
+  static deserializeBinaryFromReader(message: Submissions, reader: jspb.BinaryReader): Submissions;
+}
+
+export namespace Submissions {
+  export type AsObject = {
+    submissionsList: Array<Submission.AsObject>,
+  }
+}
+
+export class Repository extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getDirectoryid(): number;
+  setDirectoryid(value: number): void;
+
+  getRepositoryid(): number;
+  setRepositoryid(value: number): void;
+
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  getHtmlurl(): string;
+  setHtmlurl(value: string): void;
+
+  getRepotype(): Repository.Type;
+  setRepotype(value: Repository.Type): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Repository.AsObject;
+  static toObject(includeInstance: boolean, msg: Repository): Repository.AsObject;
+  static serializeBinaryToWriter(message: Repository, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Repository;
+  static deserializeBinaryFromReader(message: Repository, reader: jspb.BinaryReader): Repository;
 }
 
 export namespace Repository {
   export type AsObject = {
-    Id: number;
-    Directoryid: number;
-    Repositoryid: number;
-    Userid: number;
-    Groupid: number;
-    Htmlurl: string;
-    Repotype: Repository.Type;
+    id: number,
+    directoryid: number,
+    repositoryid: number,
+    userid: number,
+    groupid: number,
+    htmlurl: string,
+    repotype: Repository.Type,
   }
 
   export enum Type { 
@@ -413,183 +536,249 @@ export namespace Repository {
   }
 }
 
-export class RepositoryRequest {
-  constructor ();
-  getId(): number;
-  setId(a: number): void;
-  getType(): Repository.Type;
-  setType(a: Repository.Type): void;
-  getDirectoryid(): number;
-  setDirectoryid(a: number): void;
-  getRepositoryid(): number;
-  setRepositoryid(a: number): void;
-  getUserid(): number;
-  setUserid(a: number): void;
-  getCourseid(): number;
-  setCourseid(a: number): void;
-  toObject(): RepositoryRequest.AsObject;
+export class Repositories extends jspb.Message {
+  getRepositoriesList(): Array<Repository>;
+  setRepositoriesList(value: Array<Repository>): void;
+  clearRepositoriesList(): void;
+  addRepositories(value?: Repository, index?: number): Repository;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => RepositoryRequest;
+  toObject(includeInstance?: boolean): Repositories.AsObject;
+  static toObject(includeInstance: boolean, msg: Repositories): Repositories.AsObject;
+  static serializeBinaryToWriter(message: Repositories, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Repositories;
+  static deserializeBinaryFromReader(message: Repositories, reader: jspb.BinaryReader): Repositories;
+}
+
+export namespace Repositories {
+  export type AsObject = {
+    repositoriesList: Array<Repository.AsObject>,
+  }
+}
+
+export class Directory extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getPath(): string;
+  setPath(value: string): void;
+
+  getAvatar(): string;
+  setAvatar(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Directory.AsObject;
+  static toObject(includeInstance: boolean, msg: Directory): Directory.AsObject;
+  static serializeBinaryToWriter(message: Directory, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Directory;
+  static deserializeBinaryFromReader(message: Directory, reader: jspb.BinaryReader): Directory;
+}
+
+export namespace Directory {
+  export type AsObject = {
+    id: number,
+    path: string,
+    avatar: string,
+  }
+}
+
+export class Directories extends jspb.Message {
+  getDirectoriesList(): Array<Directory>;
+  setDirectoriesList(value: Array<Directory>): void;
+  clearDirectoriesList(): void;
+  addDirectories(value?: Directory, index?: number): Directory;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Directories.AsObject;
+  static toObject(includeInstance: boolean, msg: Directories): Directories.AsObject;
+  static serializeBinaryToWriter(message: Directories, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Directories;
+  static deserializeBinaryFromReader(message: Directories, reader: jspb.BinaryReader): Directories;
+}
+
+export namespace Directories {
+  export type AsObject = {
+    directoriesList: Array<Directory.AsObject>,
+  }
+}
+
+export class RecordRequest extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getStatusesList(): Array<Enrollment.UserStatus>;
+  setStatusesList(value: Array<Enrollment.UserStatus>): void;
+  clearStatusesList(): void;
+  addStatuses(value: Enrollment.UserStatus, index?: number): void;
+
+  getGroupstatusesList(): Array<Group.GroupStatus>;
+  setGroupstatusesList(value: Array<Group.GroupStatus>): void;
+  clearGroupstatusesList(): void;
+  addGroupstatuses(value: Group.GroupStatus, index?: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RecordRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: RecordRequest): RecordRequest.AsObject;
+  static serializeBinaryToWriter(message: RecordRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RecordRequest;
+  static deserializeBinaryFromReader(message: RecordRequest, reader: jspb.BinaryReader): RecordRequest;
+}
+
+export namespace RecordRequest {
+  export type AsObject = {
+    id: number,
+    statusesList: Array<Enrollment.UserStatus>,
+    groupstatusesList: Array<Group.GroupStatus>,
+  }
+}
+
+export class ActionRequest extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getStatus(): Enrollment.UserStatus;
+  setStatus(value: Enrollment.UserStatus): void;
+
+  getGroupstatus(): Group.GroupStatus;
+  setGroupstatus(value: Group.GroupStatus): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ActionRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ActionRequest): ActionRequest.AsObject;
+  static serializeBinaryToWriter(message: ActionRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ActionRequest;
+  static deserializeBinaryFromReader(message: ActionRequest, reader: jspb.BinaryReader): ActionRequest;
+}
+
+export namespace ActionRequest {
+  export type AsObject = {
+    id: number,
+    userid: number,
+    groupid: number,
+    courseid: number,
+    status: Enrollment.UserStatus,
+    groupstatus: Group.GroupStatus,
+  }
+}
+
+export class DirectoryRequest extends jspb.Message {
+  getProvider(): string;
+  setProvider(value: string): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DirectoryRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DirectoryRequest): DirectoryRequest.AsObject;
+  static serializeBinaryToWriter(message: DirectoryRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DirectoryRequest;
+  static deserializeBinaryFromReader(message: DirectoryRequest, reader: jspb.BinaryReader): DirectoryRequest;
+}
+
+export namespace DirectoryRequest {
+  export type AsObject = {
+    provider: string,
+    courseid: number,
+  }
+}
+
+export class RepositoryRequest extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getType(): Repository.Type;
+  setType(value: Repository.Type): void;
+
+  getDirectoryid(): number;
+  setDirectoryid(value: number): void;
+
+  getRepositoryid(): number;
+  setRepositoryid(value: number): void;
+
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RepositoryRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: RepositoryRequest): RepositoryRequest.AsObject;
+  static serializeBinaryToWriter(message: RepositoryRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RepositoryRequest;
+  static deserializeBinaryFromReader(message: RepositoryRequest, reader: jspb.BinaryReader): RepositoryRequest;
 }
 
 export namespace RepositoryRequest {
   export type AsObject = {
-    Id: number;
-    Type: Repository.Type;
-    Directoryid: number;
-    Repositoryid: number;
-    Userid: number;
-    Courseid: number;
+    id: number,
+    type: Repository.Type,
+    directoryid: number,
+    repositoryid: number,
+    userid: number,
+    courseid: number,
   }
 }
 
-export class Submission {
-  constructor ();
-  getId(): number;
-  setId(a: number): void;
-  getAssignmentid(): number;
-  setAssignmentid(a: number): void;
-  getUserid(): number;
-  setUserid(a: number): void;
-  getGroupid(): number;
-  setGroupid(a: number): void;
-  getScore(): number;
-  setScore(a: number): void;
-  getScoreobjects(): string;
-  setScoreobjects(a: string): void;
-  getBuildinfo(): string;
-  setBuildinfo(a: string): void;
-  getCommithash(): string;
-  setCommithash(a: string): void;
-  getApproved(): boolean;
-  setApproved(a: boolean): void;
-  toObject(): Submission.AsObject;
+export class Providers extends jspb.Message {
+  getProvidersList(): Array<string>;
+  setProvidersList(value: Array<string>): void;
+  clearProvidersList(): void;
+  addProviders(value: string, index?: number): void;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Submission;
+  toObject(includeInstance?: boolean): Providers.AsObject;
+  static toObject(includeInstance: boolean, msg: Providers): Providers.AsObject;
+  static serializeBinaryToWriter(message: Providers, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Providers;
+  static deserializeBinaryFromReader(message: Providers, reader: jspb.BinaryReader): Providers;
 }
 
-export namespace Submission {
+export namespace Providers {
   export type AsObject = {
-    Id: number;
-    Assignmentid: number;
-    Userid: number;
-    Groupid: number;
-    Score: number;
-    Scoreobjects: string;
-    Buildinfo: string;
-    Commithash: string;
-    Approved: boolean;
+    providersList: Array<string>,
   }
 }
 
-export class Submissions {
-  constructor ();
-  getSubmissionsList(): Submission[];
-  setSubmissionsList(a: Submission[]): void;
-  toObject(): Submissions.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Submissions;
-}
-
-export namespace Submissions {
-  export type AsObject = {
-    SubmissionsList: Submission[];
-  }
-}
-
-export class URLResponse {
-  constructor ();
+export class URLResponse extends jspb.Message {
   getUrl(): string;
-  setUrl(a: string): void;
-  toObject(): URLResponse.AsObject;
+  setUrl(value: string): void;
+
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => URLResponse;
+  toObject(includeInstance?: boolean): URLResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: URLResponse): URLResponse.AsObject;
+  static serializeBinaryToWriter(message: URLResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): URLResponse;
+  static deserializeBinaryFromReader(message: URLResponse, reader: jspb.BinaryReader): URLResponse;
 }
 
 export namespace URLResponse {
   export type AsObject = {
-    Url: string;
+    url: string,
   }
 }
 
-export class User {
-  constructor ();
-  getId(): number;
-  setId(a: number): void;
-  getIsadmin(): boolean;
-  setIsadmin(a: boolean): void;
-  getName(): string;
-  setName(a: string): void;
-  getStudentid(): string;
-  setStudentid(a: string): void;
-  getEmail(): string;
-  setEmail(a: string): void;
-  getAvatarurl(): string;
-  setAvatarurl(a: string): void;
-  getRemoteidentitiesList(): RemoteIdentity[];
-  setRemoteidentitiesList(a: RemoteIdentity[]): void;
-  getEnrollmentsList(): Enrollment[];
-  setEnrollmentsList(a: Enrollment[]): void;
-  toObject(): User.AsObject;
+export class Void extends jspb.Message {
   serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => User;
-}
-
-export namespace User {
-  export type AsObject = {
-    Id: number;
-    Isadmin: boolean;
-    Name: string;
-    Studentid: string;
-    Email: string;
-    Avatarurl: string;
-    RemoteidentitiesList: RemoteIdentity[];
-    EnrollmentsList: Enrollment[];
-  }
-}
-
-export class Users {
-  constructor ();
-  getUsersList(): User[];
-  setUsersList(a: User[]): void;
-  toObject(): Users.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Users;
-}
-
-export namespace Users {
-  export type AsObject = {
-    UsersList: User[];
-  }
-}
-
-export class Void {
-  constructor ();
-  toObject(): Void.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Void;
+  toObject(includeInstance?: boolean): Void.AsObject;
+  static toObject(includeInstance: boolean, msg: Void): Void.AsObject;
+  static serializeBinaryToWriter(message: Void, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Void;
+  static deserializeBinaryFromReader(message: Void, reader: jspb.BinaryReader): Void;
 }
 
 export namespace Void {
   export type AsObject = {
-  }
-}
-
-export class Timestamp {
-  constructor ();
-  getSeconds(): number;
-  setSeconds(a: number): void;
-  getNanos(): number;
-  setNanos(a: number): void;
-  toObject(): Timestamp.AsObject;
-  serializeBinary(): Uint8Array;
-  static deserializeBinary: (bytes: {}) => Timestamp;
-}
-
-export namespace Timestamp {
-  export type AsObject = {
-    Seconds: number;
-    Nanos: number;
   }
 }
 
