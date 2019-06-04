@@ -1,7 +1,7 @@
 import * as React from "react";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
-import { CourseUserState, IUser, IUserRelation } from "../../models";
+import { IUserRelation } from "../../models";
 import {User, Enrollment} from "../../../proto/ag_pb";
 
 

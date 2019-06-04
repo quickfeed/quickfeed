@@ -10,8 +10,6 @@ import { INavInfo } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
-    CourseGroupStatus,
-    CourseUserState,
     IAssignment,
     ICourse,
     ICourseGroup,
@@ -20,9 +18,8 @@ import {
     IUser,
     IUserCourseWithUser,
     IUserRelation,
-    RepositoryType,
 } from "../models";
-import {User, Group, Enrollment} from "../../proto/ag_pb";
+import {User, Group, Enrollment, Repository} from "../../proto/ag_pb";
 
 
 import { GroupResults } from "../components/teacher/GroupResults";
@@ -316,7 +313,7 @@ export class TeacherPage extends ViewPage {
     public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
         const courseId = parseInt(navInfo.params.cid, 10);
         const assignmentURL = await this.courseMan.getRepositoryURL(courseId,
-            RepositoryType.AssignmentsRepo);
+            Repository.Type.ASSIGNMENTS);
         if (assignmentURL === "") {
             return <div> 404 not found</div>;
         }
@@ -336,7 +333,7 @@ export class TeacherPage extends ViewPage {
 
     public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
         const courseId = parseInt(navInfo.params.cid, 10);
-        const testInformationURL = await this.courseMan.getRepositoryURL(courseId, RepositoryType.TestsRepo);
+        const testInformationURL = await this.courseMan.getRepositoryURL(courseId, Repository.Type.TESTS);
         if (testInformationURL === "") {
             return <div> 404 not found</div>;
         }
@@ -357,7 +354,7 @@ export class TeacherPage extends ViewPage {
     public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
         const courseId = parseInt(navInfo.params.cid, 10);
         const solutionURL = await this.courseMan.getRepositoryURL(courseId,
-            RepositoryType.SolutionsRepo);
+            Repository.Type.SOLUTIONS);
         if (solutionURL === "") {
             return <div> 404 not found</div>;
         }

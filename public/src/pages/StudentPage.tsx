@@ -6,14 +6,14 @@ import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
 import {
-    CourseUserState, ICourse, ICourseGroup,
+    ICourse, ICourseGroup,
     ICourseLinkAssignment, IGroupCourse, IStudentSubmission,
-    IUserCourse, RepositoryType,
+    IUserCourse, 
 
 } from "../models";
 
 
-import {Enrollment, User} from "../../proto/ag_pb"
+import {Enrollment, Repository} from "../../proto/ag_pb"
 
 import { View, ViewPage } from "./ViewPage";
 
@@ -206,9 +206,9 @@ export class StudentPage extends ViewPage {
                 allLinks.push(...gLabs);
                 allLinks.push({ name: "Repositories" });
 
-                const userRepoURL = await this.courseMan.getRepositoryURL(course.course.id, RepositoryType.UserRepo);
+                const userRepoURL = await this.courseMan.getRepositoryURL(course.course.id, Repository.Type.USER);
                 const informationURL = await this.courseMan.getCourseInformationURL(course.course.id);
-                const assignmentURL = await this.courseMan.getRepositoryURL(course.course.id, RepositoryType.AssignmentsRepo);
+                const assignmentURL = await this.courseMan.getRepositoryURL(course.course.id, Repository.Type.ASSIGNMENTS);
 
                 allLinks.push({ name: "User Repository", uri: userRepoURL, absolute: true });
                 allLinks.push({ name: "Course Info", uri: informationURL, absolute: true });

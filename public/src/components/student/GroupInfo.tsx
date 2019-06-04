@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { CourseGroupStatus, ICourse, ICourseGroup } from "../../models";
+import { ICourse, ICourseGroup } from "../../models";
 import { Group } from "../../../proto/ag_pb";
 
 interface IGroupPro {

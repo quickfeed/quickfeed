@@ -1,7 +1,5 @@
 import * as Models from "../models";
 import {
-    CourseGroupStatus,
-    CourseUserState,
     IAssignment,
     ICourse,
     ICourseGroup,
@@ -9,9 +7,8 @@ import {
     ICourseWithEnrollStatus,
     IError,
     INewGroup,
-    IOrganization, IStatusCode,
+    IStatusCode,
     ISubmission,
-    IUser,
 } from "../models";
 import { ICourseProvider } from "./CourseManager";
 

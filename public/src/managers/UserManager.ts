@@ -2,7 +2,6 @@ import { IEventData, newEvent } from "../event";
 import {Assignment, Course, Enrollment, User, Group, Submission, ActionRequest} from "../../proto/ag_pb";
 
 import { IMap, MapHelper } from "../map";
-import { IUser } from "../models";
 import { ILogger } from "./LogManager";
 import { isNullOrUndefined } from "util";
 

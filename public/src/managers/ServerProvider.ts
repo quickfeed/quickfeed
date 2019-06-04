@@ -10,8 +10,6 @@ import {Assignment,
         RecordRequest,
         Void} from "../../proto/ag_pb";
 import {
-    CourseGroupStatus,
-    CourseUserState,
     courseUserStateToString,
     IAssignment,
     IBuildInfo,
@@ -21,7 +19,7 @@ import {
     ICourseWithEnrollStatus,
     IError, INewCourse,
     INewGroup,
-    IOrganization, IStatusCode,
+    IStatusCode,
     ISubmission,
     ITestCases,
     IUser,

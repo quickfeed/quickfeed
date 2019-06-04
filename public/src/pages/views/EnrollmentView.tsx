@@ -1,6 +1,6 @@
 import * as React from "react";
 import { DynamicTable } from "../../components";
-import { CourseUserState, ICourse, ICourseWithEnrollStatus, IUserCourse } from "../../models";
+import { ICourse, ICourseWithEnrollStatus, IUserCourse } from "../../models";
 import { Enrollment } from "../../../proto/ag_pb";
 
 export interface IEnrollmentViewProps {

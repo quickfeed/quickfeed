@@ -1,7 +1,5 @@
 import { IMap, MapHelper } from "../map";
 import {
-    CourseGroupStatus,
-    CourseUserState,
     IAssignment,
     ICourse,
     ICourseGroup,
@@ -11,12 +9,11 @@ import {
     IError,
     IGroupCourse,
     INewCourse,
-    INewGroup, IOrganization,
+    INewGroup,
     isCourse,
     IStatusCode,
     IStudentSubmission,
     ISubmission,
-    IUser,
     IUserCourse,
     IUserRelation,
 

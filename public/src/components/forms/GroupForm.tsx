@@ -3,8 +3,8 @@ import * as React from "react";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 import {
-    CourseUserState, ICourse, ICourseGroup, IError,
-    INewGroup, isError, IStatusCode, IUser, IUserRelation,
+    ICourse, ICourseGroup, IError,
+    INewGroup, isError, IStatusCode, IUserRelation,
 } from "../../models";
 import { User, Enrollment } from "../../../proto/ag_pb";
 import { Search } from "../../components";

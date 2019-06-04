@@ -3,7 +3,7 @@ import * as React from "react";
 import { Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
-import { CourseGroupStatus, ICourse, ICourseGroup, IUser } from "../../models";
+import { ICourse, ICourseGroup, } from "../../models";
 
 import { bindFunc, RProp } from "../../helper";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";

@@ -177,29 +177,33 @@ export interface IAssignmentGroup {
     required: number;
 }
 
+//TODO(vera): replacing these with protobuf enums
 /**
  * A description of the relation between a user and a course
  */
+/*
 export enum CourseUserState {
     pending = 0,
     rejected = 1,
     student = 2,
     teacher = 3,
 }
-
+*/
 /**
  * Status of a course group
  */
+/*
 export enum CourseGroupStatus {
     pending = 0,
     rejected = 1,
     approved = 2,
     deleted = 3,
-}
+}*/
 
 /**
  * Status of a course group
  */
+/*
 export enum RepositoryType {
     UserRepo = 0,
     AssignmentsRepo = 1,
@@ -207,7 +211,7 @@ export enum RepositoryType {
     SolutionsRepo = 3,
     CourseInfoRepo = 4,
 }
-
+*/
 export function courseUserStateToString(state: Enrollment.UserStatus[]): string {
     return state.map((sta) => {
         switch (sta) {
@@ -303,11 +307,13 @@ export interface ICoursesWithAssignments {
 /**
  * Description of an organization from the git web page
  */
+/*
 export interface IOrganization {
     id: number;
     path: string;
     avatar: string;
 }
+*/
 /**
  * ICourseGroup represents a student group in a course
  */
