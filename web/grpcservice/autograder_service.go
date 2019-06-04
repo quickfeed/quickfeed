@@ -51,7 +51,7 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 	if err != nil {
 		return nil, err
 	}
-	usr.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
+	usr.RemoveRemoteID()
 	return usr, nil
 }
 
@@ -61,11 +61,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 	if err != nil {
 		return nil, err
 	}
-	if len(usrs.Users) > 0 {
-		for _, usr := range usrs.Users {
-			usr.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
-		}
-	}
+	usrs.RemoveRemoteIDs()
 	return usrs, nil
 }
 
@@ -82,7 +78,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	if err != nil {
 		return nil, err
 	}
-	usr.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
+	usr.RemoveRemoteID()
 	return usr, nil
 }
 
@@ -206,7 +202,7 @@ func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User,
 	if err != nil {
 		return nil, err
 	}
-	user.RemoteIdentities = nil
+	user.RemoveRemoteID()
 	return user, nil
 }
 
@@ -219,9 +215,7 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 	if err != nil {
 		return nil, err
 	}
-	for _, user := range group.Users {
-		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
-	}
+	group.RemoveRemoteIDs()
 	return group, nil
 }
 
@@ -234,11 +228,7 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 	if err != nil {
 		return nil, err
 	}
-	for _, group := range groups.Groups {
-		for _, user := range group.Users {
-			user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
-		}
-	}
+	groups.RemoveRemoteIDs()
 	return groups, nil
 }
 
@@ -255,9 +245,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	for _, user := range group.Users {
-		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
-	}
+	group.RemoveRemoteIDs()
 	return group, nil
 }
 
@@ -266,6 +254,9 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if !in.IsValidGroup() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
+
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, status.Errorf(codes.PermissionDenied, "invalid user ID")
@@ -278,8 +269,6 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
-	defer cancel()
 	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
@@ -386,9 +375,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 	if err != nil {
 		return nil, err
 	}
-	for _, user := range group.Users {
-		user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
-	}
+	group.RemoveRemoteIDs()
 	return group, nil
 }
 
@@ -399,12 +386,12 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 
 // GetDirectories returns a list of directories for a course
 func (s *AutograderService) GetDirectories(ctx context.Context, in *pb.DirectoryRequest) (*pb.Directories, error) {
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
 	scm, err := getSCM(ctx, s.scms, s.db, in.Provider)
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
-	defer cancel()
 	return web.ListDirectories(ctx, s.db, scm)
 }
 
