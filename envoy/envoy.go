@@ -2,10 +2,10 @@ package envoy
 
 import (
 	"context"
-	"log"
 	"os/exec"
 
 	"github.com/docker/docker/api/types/filters"
+	"go.uber.org/zap"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -14,68 +14,52 @@ import (
 // StartEnvoy creates a Docker API client. If an envoy container is not running,
 // it will be started from an image. If no image exists, it will pull an Envoy
 // image from docker and build it with options from envoy.yaml.
-//TODO(meling) should have proper logging in these funcs, especially for errors.
-func StartEnvoy() {
+//TODO(meling) since this runs in a separate goroutine it is actually bad practice
+//to Panic or Fatal on error, since other goroutines may not exit cleanly.
+//Instead it would be better to return an error and run synchronously.
+func StartEnvoy(l *zap.Logger) {
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {
-		log.Panicln("Envoy: docker client failed to start: ", err.Error())
+		l.Fatal("failed to start docker client", zap.Error(err))
 	}
 
 	// removes all stopped containers
 	_, err = cli.ContainersPrune(ctx, filters.Args{})
 	if err != nil {
-		log.Println("Envoy: error attempting to prune unused containers:", err.Error())
+		//
+		l.Info("failed to prune unused containers", zap.Error(err))
 	}
-	log.Println("Envoy: prunning unused containers.")
 
-	// looks at existing containers to check whether Envoy is already running
-	containerRuns := false
+	// check for existing Envoy containers
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
-		log.Println("Envoy: cannot retrieve docker container list:", err.Error())
+		l.Fatal("failed to retrieve docker container list", zap.Error(err))
 	}
-	for i, container := range containers {
+	for _, container := range containers {
 		if container.Names[0] == "/envoy" {
-			log.Println("Envoy container is already running", i)
-			containerRuns = true
+			l.Info("Envoy container is already running")
+			return
 		}
 	}
 
-	if !containerRuns {
-		log.Println("Envoy: no running container found, starting build...")
-		images, err := cli.ImageList(ctx, types.ImageListOptions{})
+	if !hasEnvoyImage(ctx, l, cli) {
+		// if there is no active Envoy image, we build it
+		l.Info("building Envoy image...")
+		//TODO(meling) use docker api to build image: "docker build -t ag_envoy -f ./envoy/envoy.Dockerfile ."
+		out, err := exec.Command("/bin/sh", "./envoy/envoy.sh", "build").Output()
 		if err != nil {
-			log.Panicln("Envoy: cannot retrieve docker image list: ", err.Error())
+			l.Fatal("failed to execute bash script", zap.Error(err))
 		}
-		log.Println("Envoy: checking images")
-		imgExists := false
-		for _, img := range images {
-			log.Println("Found image: ", img.RepoTags)
-			if img.RepoTags[0] == "ag_envoy:latest" {
-				log.Println("Envoy image already exists")
-				imgExists = true
-			}
-		}
-
-		// if there is no active Envoy image
-		if !imgExists {
-			log.Println("Envoy image building... ")
-			out, err := exec.Command("/bin/sh", "./envoy/envoy.sh", "build").Output()
-			log.Println("Envoy: started bash script with argument to build Envoy image, result: ", string(out))
-			if err != nil {
-				log.Println("Envoy: error when executing bash script: ", err.Error())
-			}
-		}
-		log.Println("Envoy: starting container... ")
-		out, err := exec.Command("/bin/sh", "./envoy/envoy.sh").Output()
-		log.Println("Envoy: script resulted in: ", string(out))
-		if err != nil {
-			log.Println("Envoy: error when executing bash script: ", err.Error())
-		}
-	} else {
-		log.Println("Envoy: done")
+		l.Debug("envoy.sh build", zap.String("output", string(out)))
 	}
+	l.Info("starting Envoy container...")
+	//TODO(meling) use docker api to run image: "docker run --name=envoy -p 8080:8080 --net=host ag_envoy"
+	out, err := exec.Command("/bin/sh", "./envoy/envoy.sh").Output()
+	if err != nil {
+		l.Fatal("failed to execute bash script", zap.Error(err))
+	}
+	l.Debug("envoy.sh", zap.String("output", string(out)))
 
 	/*
 		if !imgExists {
@@ -102,4 +86,22 @@ func StartEnvoy() {
 		}
 	*/
 
+}
+
+// hasEnvoyImage returns true if the docker client has the latest Envoy image.
+func hasEnvoyImage(ctx context.Context, l *zap.Logger, cli *client.Client) bool {
+	l.Debug("no running Envoy container found")
+	images, err := cli.ImageList(ctx, types.ImageListOptions{})
+	if err != nil {
+		l.Fatal("failed to retrieve docker image list", zap.Error(err))
+	}
+	l.Debug("checking for Autograder's Envoy image")
+	for _, img := range images {
+		l.Debug("found image", zap.Strings("repo", img.RepoTags))
+		if img.RepoTags[0] == "ag_envoy:latest" {
+			l.Debug("found Envoy image")
+			return true
+		}
+	}
+	return false
 }

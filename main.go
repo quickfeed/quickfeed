@@ -9,13 +9,14 @@ import (
 	"path/filepath"
 
 	"github.com/autograde/aguis/envoy"
+	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/web"
+	"go.uber.org/zap"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 
-	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/web/grpcservice"
 
 	http "github.com/autograde/aguis/web/webserver"
@@ -54,21 +55,29 @@ func main() {
 	)
 	flag.Parse()
 
+	//TODO(meling) make dev flag to switch between dev/production logging
+	// lg, err := zap.NewProduction()
+	lg, err := zap.NewDevelopment()
+	if err != nil {
+		log.Fatalf("can't initialize logger: %v\n", err)
+	}
+	defer lg.Sync()
+
 	l := logrus.New()
 	l.Formatter = logger.NewDevFormatter(l.Formatter)
 
 	db, err := database.NewGormDB("sqlite3", *dbFile, database.Logger{Logger: l})
 	if err != nil {
-		l.WithError(err).Fatal("could not connect to db")
+		log.Fatalf("can't connect to database: %v\n", err)
 	}
 	defer func() {
 		if dbErr := db.Close(); dbErr != nil {
-			l.WithError(dbErr).Warn("error closing database")
+			log.Printf("error closing database: %v\n", dbErr)
 		}
 	}()
 
 	// start envoy in a docker container; fetch envoy docker image if necessary
-	go envoy.StartEnvoy()
+	go envoy.StartEnvoy(lg)
 
 	// holds references for activated providers for current user token
 	scms := make(map[string]scm.SCM)
@@ -80,12 +89,12 @@ func main() {
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
 	grpcServer := grpc.NewServer()
 	pb.RegisterAutograderServiceServer(grpcServer, grpcservice.NewAutograderService(db, scms, bh))
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		log.Fatalf("failed to start grpc server: %v\n", err)
 	}
 }
 
