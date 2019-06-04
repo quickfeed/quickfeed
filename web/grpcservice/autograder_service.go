@@ -175,6 +175,8 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if !in.IsValidEnrollment() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, err
@@ -190,8 +192,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
-	defer cancel()
+
 	return &pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm)
 }
 

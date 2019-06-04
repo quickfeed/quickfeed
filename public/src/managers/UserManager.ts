@@ -81,8 +81,6 @@ export class UserManager {
         if (result) {
             this.currentUser = result;
             this.onLogin({ target: this, user: this.currentUser });
-        } else {
-            console.log("Try remote login (userMan) - result is empty");
         }
         return result;
     }

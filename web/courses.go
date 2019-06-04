@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,9 +28,7 @@ func ListCourses(db database.Database) (*pb.Courses, error) {
 // enrollment status.
 // If status query param is provided, lists only courses of the student filtered by the query param.
 func ListCoursesWithEnrollment(request *pb.RecordRequest, db database.Database) (*pb.Courses, error) {
-	log.Println("Courses.go: ListCoursesWithEnrollment: request is ", request, " request ID is ", request.ID, " request statuses are ", request.Statuses)
 	courses, err := db.GetCoursesByUser(request.ID, request.Statuses...)
-	log.Println("Courses.go: ListCoursesWithEnrollment: got courses: ", len(courses))
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +53,6 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 		Status:   pb.Enrollment_PENDING,
 	}
 
-	log.Println(enrollment.UserID)
 	if err := db.CreateEnrollment(&enrollment); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "Record not found")
@@ -95,20 +91,28 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if err != nil {
 			return err
 		}
-		//create user repo and team on SCM
-		repo, err := createUserRepoAndTeam(ctx, s, course, student)
+		// check whether user repo already exists (happens when accepting prevoiusly rejected student)
+		if _, err = db.GetRepositoryByCourseUserType(request.CourseID, request.UserID, pb.Repository_USER); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				//create user repo and team on SCM
+				repo, err := createUserRepoAndTeam(ctx, s, course, student)
+				if err != nil {
+					return err
+				}
+				// add student repo to database if SCM interaction was successful
+				dbRepo := pb.Repository{
+					DirectoryID:  course.DirectoryID,
+					RepositoryID: repo.ID,
+					HTMLURL:      repo.WebURL,
+					RepoType:     pb.Repository_USER,
+					UserID:       request.UserID,
+				}
+				if err := db.CreateRepository(&dbRepo); err != nil {
+					return err
+				}
+			}
+		}
 
-		// add student repo to database if SCM interaction was successful
-		dbRepo := pb.Repository{
-			DirectoryID:  course.DirectoryID,
-			RepositoryID: repo.ID,
-			HTMLURL:      repo.WebURL,
-			RepoType:     pb.Repository_USER,
-			UserID:       request.UserID,
-		}
-		if err := db.CreateRepository(&dbRepo); err != nil {
-			return err
-		}
 	case pb.Enrollment_TEACHER:
 		err = db.EnrollTeacher(request.UserID, request.CourseID)
 	case pb.Enrollment_REJECTED:

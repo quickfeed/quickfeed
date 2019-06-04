@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/gob"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -152,18 +151,15 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 // OAuth2Callback handles the callback from an oauth2 provider.
 func OAuth2Callback(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		log.Println("OAuth2Callback: starts")
 		w := c.Response()
 		r := c.Request()
 
 		qv := r.URL.Query()
 		redirect, teacher := extractState(r, State)
-		log.Println("OAuth2Callback: teacher: ", teacher)
 		provider, err := gothic.GetProviderName(r)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
-		log.Println("OAuth2Callback: got provider: ", provider)
 		// Add teacher suffix if upgrading scope.
 		if teacher {
 			qv.Set("provider", provider+TeacherSuffix)
@@ -172,7 +168,6 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 
 		// Complete authentication.
 		externalUser, err := gothic.CompleteUserAuth(w, r)
-		log.Println("OAuth2Callback: gothic external user: ", externalUser.NickName)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
@@ -181,7 +176,6 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		log.Println("OAuth2Callback: parsed remote ID: ", remoteID)
 
 		sess, err := session.Get(SessionKey, c)
 		if err != nil {
@@ -190,10 +184,8 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 
 		// Try to get already logged in user.
 		if sess.Values[UserKey] != nil {
-			log.Println("OAuth2Callback: active session found")
 			i, ok := sess.Values[UserKey]
 			if !ok {
-				log.Println("OAuth2Callback: no user info in session")
 				return OAuth2Logout()(c)
 			}
 
@@ -205,18 +197,15 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			); err != nil {
 				return err
 			}
-			log.Println("OAuth2Callback: associated user with remoteIdentity")
 
 			// Enable provider in session.
 			us.enableProvider(provider)
 			if err := sess.Save(r, w); err != nil {
 				return err
 			}
-			log.Println("OAuth2Callback: enabled provider")
 			return c.Redirect(http.StatusFound, redirect)
 		}
 
-		log.Println("OAuth2Callback: no active session found")
 		remote := &pb.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    remoteID,
@@ -224,14 +213,11 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		}
 		// Try to get user from database.
 		user, err := db.GetUserByRemoteIdentity(remote)
-		log.Println("OAuth2Callback: checking user in the database")
 		switch {
 		case err == nil:
 			// found user in database; update access token
-			log.Println("OAuth2Callback: user found, updating token")
 			err = db.UpdateAccessToken(remote)
 		case err == gorm.ErrRecordNotFound:
-			log.Println("OAuth2Callback: user not found, making new user from remote id")
 			// user not in database; create new user
 			user = &pb.User{
 				Name:      externalUser.Name,
@@ -245,7 +231,6 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
-		log.Println("OAuth2Callback: got created user from the db, user ID: ", user.ID)
 
 		// Register user session.
 		us := newUserSession(user.ID)
@@ -264,7 +249,6 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 func AccessControl(db database.Database, scms map[string]scm.SCM) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			log.Println("Echo AccessControl started")
 			sess, err := session.Get(SessionKey, c)
 			if err != nil {
 				// Save fixes the session if it has been modified
@@ -299,7 +283,6 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 					}
 					scms[remoteIdentity.AccessToken] = client
 				}
-				log.Println("Echo AccessControl set new scm client")
 				c.Set(remoteIdentity.Provider, scms[remoteIdentity.AccessToken])
 			}
 

@@ -103,13 +103,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
         const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
-        //log
-        console.log("ServerProvider: getCoursesFor user ID: " + user.getId());
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCoursesFor");
             return [];
         }
-        console.log("ServerProvide: getCoursesFor returned courses: " + result.data);
         const arr: ICourseEnrollment[] = [];
         result.data.getCoursesList().forEach((ele) => {
             const course = this.toICourse(ele);
@@ -404,25 +401,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getLoggedInUser(): Promise<User | null> {
       
         const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
-
-        console.log("ServerProvider: getLoggedInUser() starts");
         if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
-
-        console.log("ServerProvider: getLoggedInUser() got no user in response");
             this.handleError(result, "getLoggedInUser");
             return null;
         }
         const iusr = result.data;
 
-        console.log("ServerProvider: getLoggedInUser() got user in response" );
         // We want a user with full information provided to be set as currentUser 
         // Such user is retrieved by GRPC method getUser
         const grpcResult = await this.grpcHelper.getUser(iusr.id);
-        //console.log("ServerProvider: getLoggedInUser() requests GRPC getUser with ID: " + iusr.id);
 
         if (grpcResult.statusCode !== 0 || !grpcResult.data) {
-            console.log("ServerProvider: getLoggedInUser() got no data from GRPC getUser, status code: " + grpcResult.statusCode);
-
             this.handleError(result, "getLoggedInUser");
             const usr: User = new User();
             usr.setId(iusr.id);

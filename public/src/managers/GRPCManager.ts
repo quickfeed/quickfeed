@@ -26,7 +26,7 @@ import {
     DirectoryRequest,
     URLResponse,
 } from "../../proto/ag_pb";
-import { ICourse, INewCourse, INewGroup, IUser, ICourseGroup } from "../models";
+import { ICourse, INewCourse, INewGroup } from "../models";
 import { InitialLetterAlignProperty } from "csstype";
 import { Context } from "vm";
 import { UserManager } from "./UserManager";

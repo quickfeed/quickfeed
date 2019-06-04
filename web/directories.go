@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
@@ -19,21 +18,14 @@ func ListDirectories(ctx context.Context, db database.Database, scm scm.SCM) (*p
 	}
 
 	organizations := make([]*pb.Directory, 0)
-	for i, directory := range directories {
-		log.Println("ListDirectories: organization ", i, " found: ", directory.ID)
+	for _, directory := range directories {
 		plan, err := scm.GetPaymentPlan(ctx, directory.ID)
 		if err != nil {
-			log.Println("ListDirectories: Error getting payment plan for organization: ", directory.GetPath())
 			return nil, err
 		}
-		log.Println("ListDirectories: plan for Organization: ", directory.Path, " is ", plan.Name, " includes ", plan.PrivateRepos, " private repos")
 		repos, err := scm.GetRepositories(ctx, directory)
 		if err != nil {
-			log.Println("ListDirectories: Error getting repos for organization: ", directory.GetPath())
 			return nil, err
-		}
-		for i, repo := range repos {
-			log.Println(i, ": repo ", repo.Path, " with url ", repo.WebURL)
 		}
 		// check that course for that organization does not exist in the database
 		course, _ := db.GetCourseByDirectoryID(directory.ID)

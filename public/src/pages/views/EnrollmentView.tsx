@@ -25,6 +25,13 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
                 base.push("Enrolled");
             } else if (course.link.state === Enrollment.UserStatus.PENDING) {
                 base.push("Pending");
+            } else if (course.link.state === Enrollment.UserStatus.NONE) {
+                base.push(
+                    <button
+                        onClick={() => { this.props.onEnrollmentClick(course.course); }}
+                        className="btn btn-primary">
+                        Enroll
+                    </button>);
             } else {
                 base.push(
                     <span style={{ padding: "7px", verticalAlign: "middle" }} className="bg-danger">
