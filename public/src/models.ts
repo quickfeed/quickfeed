@@ -90,7 +90,7 @@ export interface IUserCourseWithUser {
  * @see ICourseGroup
  */
 export interface IGroupCourseWithGroup {
-    group: ICourseGroup;
+    group: Group;
     course: IGroupCourse;
 }
 
@@ -117,7 +117,7 @@ export interface IUserRelation {
  * Usualy returned when a course is given.
  */
 export interface ICourseGroupRelation {
-    group: ICourseGroup;
+    group: Group;
     link: ICourseGroupLink;
 }
 
@@ -317,13 +317,14 @@ export interface IOrganization {
 /**
  * ICourseGroup represents a student group in a course
  */
+/*
 export interface ICourseGroup {
     id: number;
     name: string;
     status: Group.GroupStatus;
     courseid: number;
     users: User[];
-}
+}*/
 
 /**
  * INewGroup represent data structure for a new group

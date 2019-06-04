@@ -12,7 +12,6 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import {
     IAssignment,
     ICourse,
-    ICourseGroup,
     ICourseUserLink,
     IGroupCourseWithGroup,
     IUser,
@@ -188,11 +187,11 @@ export class TeacherPage extends ViewPage {
     public async groups(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const groups = await this.courseMan.getCourseGroups(course.id);
-            const approvedGroups: ICourseGroup[] = [];
-            const pendingGroups: ICourseGroup[] = [];
-            const rejectedGroups: ICourseGroup[] = [];
+            const approvedGroups: Group[] = [];
+            const pendingGroups: Group[] = [];
+            const rejectedGroups: Group[] = [];
             for (const grp of groups) {
-                switch (grp.status) {
+                switch (grp.getStatus()) {
                     case Group.GroupStatus.APPROVED:
                         approvedGroups.push(grp);
                         break;
@@ -218,10 +217,12 @@ export class TeacherPage extends ViewPage {
 
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
         const courseId = parseInt(info.params.cid, 10);
-        const groupId = parseInt(info.params.gid, 10);
+        const groupId = parseInt(info.params.gid, 10);  
+        console.log("TeachePage: editGroup with ID: " + groupId);
+
         const course = await this.courseMan.getCourse(courseId);
         const curUser = this.userMan.getCurrentUser();
-        const group: ICourseGroup | null = await this.courseMan.getGroup(groupId);
+        const group: Group | null = await this.courseMan.getGroup(groupId);
         if (course && curUser && group) {
             const students = await this.courseMan
                 .getUsersForCourse(course, this.userMan, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
@@ -231,6 +232,7 @@ export class TeacherPage extends ViewPage {
                 course={course}
                 curUser={curUser}
                 courseMan={this.courseMan}
+                userMan={this.userMan}
                 navMan={this.navMan}
                 pagePath={this.pagePath}
                 groupData={group}

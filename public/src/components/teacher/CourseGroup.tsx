@@ -3,7 +3,7 @@ import * as React from "react";
 import { Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
-import { ICourse, ICourseGroup, } from "../../models";
+import { ICourse,} from "../../models";
 
 import { bindFunc, RProp } from "../../helper";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
@@ -11,9 +11,9 @@ import { BootstrapClass } from "../bootstrap/BootstrapButton";
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 
 interface ICourseGroupProp {
-    approvedGroups: ICourseGroup[];
-    pendingGroups: ICourseGroup[];
-    rejectedGroups: ICourseGroup[];
+    approvedGroups: Group[];
+    pendingGroups: Group[];
+    rejectedGroups: Group[];
     course: ICourse;
     navMan: NavigationManager;
     courseMan: CourseManager;
@@ -57,9 +57,9 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                     header={["Name", "Members"]}
                     data={this.props.approvedGroups}
                     selector={
-                        (group: ICourseGroup) => [
-                            group.name,
-                            this.getMembers(group.users),
+                        (group: Group) => [
+                            group.getName(),
+                            this.getMembers(group.getUsersList()),
                         ]}
                 />
             </div>
@@ -74,21 +74,21 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                 <DynamicTable
                     header={["Name", "Members", "Actions"]}
                     data={this.props.pendingGroups}
-                    selector={(group: ICourseGroup) => this.renderRow(group)}
+                    selector={(group: Group) => this.renderRow(group)}
                 />
             </div>
         );
     }
 
-    private renderRow(group: ICourseGroup): Array<string | JSX.Element> {
+    private renderRow(group: Group): Array<string | JSX.Element> {
         const selector: Array<string | JSX.Element> = [];
-        selector.push(group.name, this.getMembers(group.users));
+        selector.push(group.getName(), this.getMembers(group.getUsersList()));
         const dropdownMenu = this.renderDropdownMenu(group);
         selector.push(dropdownMenu);
         return selector;
     }
 
-    private renderDropdownMenu(group: ICourseGroup): JSX.Element {
+    private renderDropdownMenu(group: Group): JSX.Element {
         const links = [];
         links.push({ name: "Approve", uri: "approve", extra: "primary" });
         links.push({ name: "Edit", uri: "edit", extra: "primary" });
@@ -112,9 +112,9 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                     header={["Name", "Members", "Action"]}
                     data={this.props.rejectedGroups}
                     selector={
-                        (group: ICourseGroup) => [
-                            group.name,
-                            this.getMembers(group.users),
+                        (group: Group) => [
+                            group.getName(),
+                            this.getMembers(group.getUsersList()),
                             <span>
                                 <UpdateButton type="danger" group={group} status={Group.GroupStatus.DELETED}>
                                     Remove
@@ -128,11 +128,11 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
 
     private updateButton(props: RProp<{
         type: BootstrapClass,
-        group: ICourseGroup,
+        group: Group,
         status: Group.GroupStatus,
     }>) {
         return <BootstrapButton
-            onClick={(e) => this.handleUpdateStatus(props.group.id, props.status)}
+            onClick={(e) => this.handleUpdateStatus(props.group.getId(), props.status)}
             classType={props.type}>
             {props.children}
         </BootstrapButton>;
@@ -155,26 +155,30 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
         }
     }
 
-    private async handleActionOnClick(group: ICourseGroup, link: ILink): Promise<void> {
+    private async handleActionOnClick(group: Group, link: ILink): Promise<void> {
         switch (link.uri) {
             case "approve":
-                await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.APPROVED);
+                group.setStatus(Group.GroupStatus.APPROVED);
+                await this.props.courseMan.updateGroup(group);
+                //await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.APPROVED);
                 break;
             case "reject":
-                await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.REJECTED);
+                group.setStatus(Group.GroupStatus.REJECTED);
+                await this.props.courseMan.updateGroup(group);
                 break;
             case "edit":
+                console.log("CourseGroup: handleActionOnClick attempts to edit group " + group);
                 this.props.navMan
-                    .navigateTo(this.props.pagePath + "/courses/" + group.courseid + "/groups/" + group.id + "/edit");
+                    .navigateTo(this.props.pagePath + "/courses/" + group.getCourseid() + "/groups/" + group.getId() + "/edit");
                 break;
             case "delete":
                 if (confirm(
                     `Warning! This action is irreversible!
 
 Do you want to delete group:
-${group.name}?`,
+${group.getName()}?`,
                 )) {
-                    await this.props.courseMan.deleteGroup(group.id);
+                    await this.props.courseMan.deleteGroup(group.getId());
                     break;
                 }
         }

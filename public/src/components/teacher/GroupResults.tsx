@@ -86,7 +86,7 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
 
     private getGroupResultSelector(group: IGroupCourseWithGroup): Array<string | JSX.Element> {
         const slipdayPlaceholder = "5";
-        let selector: Array<string | JSX.Element> = [group.group.name, slipdayPlaceholder];
+        let selector: Array<string | JSX.Element> = [group.group.getName(), slipdayPlaceholder];
         selector = selector.concat(group.course.assignments.filter((e) => e.assignment.isgrouplab).map((e) => {
             let approvedCss;
             if (e.latest) {
@@ -111,7 +111,7 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
         query = query.toLowerCase();
         const filteredData: IGroupCourseWithGroup[] = [];
         this.props.groups.forEach((std) => {
-            if (std.group.name.toLowerCase().indexOf(query) !== -1) {
+            if (std.group.getName().toLowerCase().indexOf(query) !== -1) {
                 filteredData.push(std);
             }
         });

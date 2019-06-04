@@ -6,14 +6,14 @@ import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
 import {
-    ICourse, ICourseGroup,
+    ICourse,
     ICourseLinkAssignment, IGroupCourse, IStudentSubmission,
     IUserCourse, 
 
 } from "../models";
 
 
-import {Enrollment, Repository} from "../../proto/ag_pb"
+import {Enrollment, Repository, Group} from "../../proto/ag_pb"
 
 import { View, ViewPage } from "./ViewPage";
 
@@ -157,7 +157,7 @@ export class StudentPage extends ViewPage {
         const course = await this.courseMan.getCourse(courseId);
         const curUser = this.userMan.getCurrentUser();
         if (course && curUser) {
-            const grp: ICourseGroup | null = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.id);
+            const grp: Group | null = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.id);
             if (grp) {
                 return <GroupInfo group={grp} course={course} />;
             } else {
@@ -168,6 +168,7 @@ export class StudentPage extends ViewPage {
                     course={course}
                     curUser={curUser}
                     courseMan={this.courseMan}
+                    userMan={this.userMan}
                     navMan={this.navMan}
                     pagePath={this.pagePath} />;
             }

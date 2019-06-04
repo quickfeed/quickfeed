@@ -2,7 +2,6 @@ import { IMap, MapHelper } from "../map";
 import {
     IAssignment,
     ICourse,
-    ICourseGroup,
     ICourseLinkAssignment,
     ICourseUserLink,
     ICourseWithEnrollStatus,
@@ -37,13 +36,13 @@ export interface ICourseProvider {
     getCourse(id: number): Promise<ICourse | null>;
     updateCourse(courseID: number, courseData: ICourse): Promise<Void | IError>;
 
-    getCourseGroups(courseID: number): Promise<ICourseGroup[]>;
+    getCourseGroups(courseID: number): Promise<Group[]>;
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
-    createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError>;
-    getGroup(groupID: number): Promise<ICourseGroup | null>;
+    createGroup(groupData: INewGroup, courseId: number): Promise<Group | IError>;
+    getGroup(groupID: number): Promise<Group | null>;
     deleteGroup(groupID: number): Promise<boolean>;
-    getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
-    updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError>;
+    getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null>;
+    updateGroup(groupData: Group): Promise<IStatusCode | IError>;
     // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(courseID: number, userId: number): Promise<IMap<ISubmission>>;
@@ -312,19 +311,19 @@ export class CourseManager {
         });
     }
 
-    public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
+    public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | IError> {
         return await this.courseProvider.createGroup(groupData, courseID);
     }
 
-    public async updateGroup(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
-        return await this.courseProvider.updateGroup(groupData, groupID, courseID);
+    public async updateGroup(groupData: Group): Promise<IStatusCode | IError> {
+        return await this.courseProvider.updateGroup(groupData);
     }
 
     /**
      * getCourseGroup returns all the groups under a course
      * @param courseID course id of a course
      */
-    public async getCourseGroups(courseID: number): Promise<ICourseGroup[]> {
+    public async getCourseGroups(courseID: number): Promise<Group[]> {
         return await this.courseProvider.getCourseGroups(courseID);
     }
 
@@ -333,11 +332,11 @@ export class CourseManager {
      * @param group The group the information should be retrived from
      * @param course The course the data should be loaded for
      */
-    public async getGroupCourse(group: ICourseGroup, course: ICourse): Promise<IGroupCourse | null> {
+    public async getGroupCourse(group: Group, course: ICourse): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
-        if (group.courseid === course.id) {
+        if (group.getCourseid() === course.id) {
             const groupCourse: IGroupCourse = {
-                link: { groupid: group.id, courseId: course.id, state: group.status },
+                link: { groupid: group.getId(), courseId: course.id, state: group.getStatus()},
                 assignments: [],
                 course,
             };
@@ -347,11 +346,11 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupCourseForTeacher(group: ICourseGroup, course: ICourse, assignments: IAssignment[]): Promise<IGroupCourse | null> {
+    public async getGroupCourseForTeacher(group: Group, course: ICourse, assignments: IAssignment[]): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
-        if (group.courseid === course.id) {
+        if (group.getCourseid() === course.id) {
             const groupCourse: IGroupCourse = {
-                link: { groupid: group.id, courseId: course.id, state: group.status },
+                link: { groupid: group.getId(), courseId: course.id, state: group.getStatus()},
                 assignments: [],
                 course,
             };
@@ -361,7 +360,7 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<ICourseGroup | null> {
+    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<Group | null> {
         return await this.courseProvider.getGroupByUserAndCourse(userID, courseID);
     }
 
@@ -369,7 +368,7 @@ export class CourseManager {
         return await this.courseProvider.updateGroupStatus(groupID, status);
     }
 
-    public async getGroup(groupID: number): Promise<ICourseGroup | null> {
+    public async getGroup(groupID: number): Promise<Group | null> {
         return await this.courseProvider.getGroup(groupID);
     }
 
@@ -433,7 +432,7 @@ export class CourseManager {
      * @param group The group
      * @param groupCourse The group course
      */
-    private async fillLinksGroup(group: ICourseGroup, groupCourse: IGroupCourse, assignments?: IAssignment[]): Promise<void> {
+    private async fillLinksGroup(group: Group, groupCourse: IGroupCourse, assignments?: IAssignment[]): Promise<void> {
         if (!groupCourse.link) {
             return;
         }
@@ -442,7 +441,7 @@ export class CourseManager {
         }
         if (assignments.length > 0) {
             const submissions = MapHelper.toArray(
-                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.id, group.id));
+                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.id, group.getId()));
 
             for (const a of assignments) {
                 const submission = submissions.find((sub) => sub.assignmentid === a.id);

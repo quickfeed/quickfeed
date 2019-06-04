@@ -14,7 +14,6 @@ import {
     IAssignment,
     IBuildInfo,
     ICourse,
-    ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
     IError, INewCourse,
@@ -213,38 +212,40 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return voidy;
      }
 
-    public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
+    public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | IError> {
         const result = await this.grpcHelper.createGroup(groupData, courseID);
         
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "createGroup");
             return this.parseError(result);
         }
-        return this.toIGroup(result.data);
+        return result.data;
     }
 
 
-    public async getCourseGroups(courseID: number): Promise<ICourseGroup[]> {
+    public async getCourseGroups(courseID: number): Promise<Group[]> {
         const result = await this.grpcHelper.getGroups(courseID);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCourseGroups");
             throw new Error("Problem with the request");
         }
+        /*
         const arr: ICourseGroup[] = [];
         result.data.getGroupsList().forEach((ele) => {
             const grp = this.toIGroup(ele);
             arr.push(grp);
         });
-        return arr;
+        return arr;*/
+        return result.data.getGroupsList();
     }
 
-    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<ICourseGroup | null> {
+    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<Group | null> {
         const result = await this.grpcHelper.getGroupByUserAndCourse(userID, courseID);
         if (result.statusCode !== 0 || !result.data) {
             //this.handleError(result, "getGroupByUserAndCourse");
             return null;
         }
-        return this.toIGroup(result.data);
+        return result.data;
     }
 
 
@@ -259,13 +260,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
 
-    public async getGroup(groupID: number): Promise<ICourseGroup | null> {
+    public async getGroup(groupID: number): Promise<Group | null> {
         const result = await this.grpcHelper.getGroup(groupID);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getGroup");
             return null;
         }
-        return this.toIGroup(result.data);
+        return result.data;
     }
 
 
@@ -280,8 +281,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
 
-    public async updateGroup(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
-        const result = await this.grpcHelper.updateGroup(groupData, groupID, courseID);
+    public async updateGroup(group: Group) {     //(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
+        const result = await this.grpcHelper.updateGroup(group);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getGroup");
             return this.parseError(result);
@@ -511,7 +512,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
         return icourse;
     }
-
+    /*
     private toIGroup(grp: Group): ICourseGroup {
                 
         const igroup: ICourseGroup = {
@@ -522,7 +523,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             users: grp.getUsersList(),
         }
         return igroup;
-    }
+    }*/
 
     private toISUbmission(sbm: Submission): ISubmission {      
         let buildInfoAsString = "";

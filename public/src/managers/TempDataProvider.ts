@@ -2,7 +2,6 @@ import * as Models from "../models";
 import {
     IAssignment,
     ICourse,
-    ICourseGroup,
     ICourseUserLink,
     ICourseWithEnrollStatus,
     IError,
@@ -40,7 +39,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     private localCourses: IMap<ICourse>;
     private localCourseStudent: ICourseUserLink[];
     private localLabInfo: IMap<ISubmission>;
-    private localCourseGroups: ICourseGroup[];
+    private localCourseGroups: Group[];
 
     private currentLoggedIn: User | null = null;
 
@@ -244,10 +243,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         }
         return courses;
     }
-    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError> {
+    public async createGroup(groupData: INewGroup, courseId: number): Promise<Group | IError> {
         throw new Error("Method not implemented");
     }
-    public async getCourseGroups(courseId: number): Promise<ICourseGroup[]> {
+    public async getCourseGroups(courseId: number): Promise<Group[]> {
         return this.localCourseGroups;
     }
 
@@ -255,17 +254,17 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
+    public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null> {
         throw new Error("Method not implemented");
     }
 
     public async updateGroupStatus(groupId: number, status: Group.GroupStatus): Promise<boolean> {
         throw new Error("Method not implemented");
     }
-    public async getGroup(gid: number): Promise<ICourseGroup | null> {
+    public async getGroup(gid: number): Promise<Group | null> {
         throw new Error("Method not implemented");
     }
-    public async updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError> {
+    public async updateGroup(groupData: Group): Promise<IStatusCode | IError> {
         throw new Error("Method not implemented");
     }
     public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<Models.ISubmission>> {
