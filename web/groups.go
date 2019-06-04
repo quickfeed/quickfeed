@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"log"
 
 	"github.com/autograde/aguis/scm"
 	"github.com/labstack/echo"
@@ -83,7 +84,6 @@ func DeleteGroup(request *pb.Group, db database.Database) error {
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the UpdateGroup function below.
 func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*pb.Group, error) {
-
 	if _, err := db.GetCourse(request.CourseID); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "course not found")
@@ -161,7 +161,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
 func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s scm.SCM, currentUser *pb.User) error {
-
+	log.Println("web: UpdateGroup started")
 	// only admin or course teacher are allowed to update groups
 	signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(request.CourseID, currentUser.ID)
 	if err != nil {
@@ -179,7 +179,6 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		}
 		return err
 	}
-
 	// group must exist in the database
 	_, err = db.GetGroup(request.ID)
 	if err != nil {
@@ -224,9 +223,15 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		}
 	}
 
-	// if all checks pass, create group repository
-	repo, err := createGroupRepoAndTeam(ctx, s, course, request)
+	// if group comes directly from the request, it would not have remote identities. Get the actual group from the database
+	dbGroup, err := db.GetGroup(request.GetID())
 	if err != nil {
+		return err
+	}
+	// if all checks pass, create group repository
+	repo, err := createGroupRepoAndTeam(ctx, s, course, dbGroup)
+	if err != nil {
+		log.Println("web: UpdateGroup could not create group repos and team: ", err.Error())
 		return err
 	}
 
@@ -261,17 +266,19 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, group *pb.Group) (*scm.Repository, error) {
-
+	log.Println("web: createGroupRepoAndTeam starts")
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	dir, err := s.GetDirectory(ctx, course.DirectoryID)
 	if err != nil {
+		log.Println("web: createGroupRepoAndTeam error getting directory: ", err.Error())
 		return nil, err
 	}
 
 	gitUserNames, err := fetchGitUserNames(ctx, s, course, group.Users...)
 	if err != nil {
+		log.Println("web: createGroupRepoAndTeam error getting usernames: ", err.Error())
 		return nil, err
 	}
 

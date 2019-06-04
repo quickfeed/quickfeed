@@ -218,10 +218,9 @@ export class TeacherPage extends ViewPage {
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
         const courseId = parseInt(info.params.cid, 10);
         const groupId = parseInt(info.params.gid, 10);  
-        console.log("TeachePage: editGroup with ID: " + groupId);
 
         const course = await this.courseMan.getCourse(courseId);
-        const curUser = this.userMan.getCurrentUser();
+        const curUser = await this.userMan.getCurrentUser();
         const group: Group | null = await this.courseMan.getGroup(groupId);
         if (course && curUser && group) {
             const students = await this.courseMan

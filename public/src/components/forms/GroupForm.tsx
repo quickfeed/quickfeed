@@ -204,10 +204,9 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         groupData.setCourseid(this.props.course.id);
         const groupUsers: User[] = [];  
         formData.userids.forEach((ele) => {
-            const user = this.props.userMan.getUser(ele);
-            console.log("GroupForm: updateGroup pushing users from promise: " + user);
-            user.then((user) => groupUsers.push(user)); 
-            
+            const usr = new User();
+            usr.setId(ele);
+            groupUsers.push(usr);
         });
         groupData.setUsersList(groupUsers);
         return await this.props.courseMan.updateGroup(groupData);

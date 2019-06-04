@@ -173,8 +173,8 @@ export class GrpcManager {
     // /* GROUPS */ //
 
     public getGroup(groupID: number): Promise<IGrpcResponse<Group>> {
-        const request = new ActionRequest();
-        request.setGroupid(groupID);
+        const request = new RecordRequest();
+        request.setId(groupID);
         return this.grpcSend<Group>(this.agService.getGroup, request);
     }
 
@@ -200,17 +200,6 @@ export class GrpcManager {
     }
 
     public updateGroup(grp: Group): Promise<IGrpcResponse<Void>> {
-/*        const request = new Group();
-        request.setId(groupid);
-        request.setCourseid(courseid);
-        request.setName(grp.name);
-        const groupUsers: User[] = [];
-        grp.userids.forEach((ele) => {
-            const usr = new User();
-            usr.setId(ele);
-            groupUsers.push(usr);
-        });
-        request.setUsersList(groupUsers);*/
         return this.grpcSend<Void>(this.agService.updateGroup, grp);
     }
 

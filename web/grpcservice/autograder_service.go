@@ -2,6 +2,7 @@ package grpcservice
 
 import (
 	"context"
+	"log"
 
 	"google.golang.org/grpc/codes"
 
@@ -208,13 +209,18 @@ func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User,
 
 // GetGroup returns information about a group
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
+	log.Println("AG service: getGroup got request with ID ", in.GetID())
 	if !in.IsValidRequest() {
+		log.Println("AG service: getGroup got invalid request")
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
+	log.Println("AG service: getGroup started ")
 	group, err := web.GetGroup(in, s.db)
 	if err != nil {
+		log.Println("AG service: getGroup got no group")
 		return nil, err
 	}
+	log.Println("AG service: getGroup got group")
 	group.RemoveRemoteIDs()
 	return group, nil
 }
@@ -234,6 +240,7 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 
 // CreateGroup makes a new group
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
+	log.Println("AG service: CreateGroup called with group ", in)
 	if !in.IsValidGroup() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
@@ -241,6 +248,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
+	log.Println("AG service: CreateGroup got current user ID: ", usr.ID)
 	group, err := web.NewGroup(in, s.db, usr)
 	if err != nil {
 		return nil, err
@@ -249,26 +257,29 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	return group, nil
 }
 
-// UpdateGroup is called by UpdateGroup client method, changes group information
+// UpdateGroup updates group information
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	if !in.IsValidGroup() {
+		log.Println("AG service UpdateGroup is invalid")
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-
 	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
 	defer cancel()
 	usr, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, status.Errorf(codes.PermissionDenied, "invalid user ID")
 	}
+
 	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
 	if err != nil {
 		return nil, err
 	}
+
 	scm, err := getSCM(ctx, s.scms, s.db, crs.Provider)
 	if err != nil {
 		return nil, err
 	}
+
 	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
@@ -276,6 +287,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 
 // UpdateGroupStatus is called by UpdateGroupStatus client method, changes group enrollment status
 func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group) (*pb.Void, error) {
+	log.Fatalln("AG service: UpdateGroupSattus started. This method should NOT be called EVER")
 	if !in.IsValidGroup() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}

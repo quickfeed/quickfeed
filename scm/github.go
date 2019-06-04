@@ -71,8 +71,10 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory,
 
 // CreateRepoAndTeam implements the SCM interface.
 func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error) {
+	log.Println("scm: createRepoAndTeam starts")
 	repo, err := s.CreateRepository(ctx, opt)
 	if err != nil {
+		log.Println("scm: createRepoAndTeam - error creating repo: ", err.Error())
 		return nil, err
 	}
 
@@ -82,6 +84,7 @@ func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepository
 		Users:     gitUserNames,
 	})
 	if err != nil {
+		log.Println("scm: createRepoAndTeam - error creating team: ", err.Error())
 		return nil, err
 	}
 
@@ -91,6 +94,7 @@ func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepository
 		Repo:   repo.Path,
 	})
 	if err != nil {
+		log.Println("scm: createRepoAndTeam - error adding team repo: ", err.Error())
 		return nil, err
 	}
 	return repo, nil

@@ -542,7 +542,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	prePatchGroup.Status = pb.Group_APPROVED
-	_, err = test_ag.UpdateGroupStatus(cont, prePatchGroup)
+	_, err = test_ag.UpdateGroup(cont, prePatchGroup)
 	if err != nil {
 		t.Error(err)
 	}
