@@ -12,7 +12,6 @@ import (
 	"github.com/autograde/aguis/database"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/sirupsen/logrus"
 )
 
 func setup(t *testing.T) (database.Database, func()) {
@@ -30,7 +29,7 @@ func setup(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(), envSet("LOGDB"))
+	db, err := database.NewGormDB(driver, f.Name(), database.NewGormLogger())
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
@@ -1930,11 +1929,4 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 	if !reflect.DeepEqual(gotRepo, want) {
 		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
 	}
-}
-
-func envSet(env string) database.GormLogger {
-	if os.Getenv(env) != "" {
-		return database.Logger{Logger: logrus.New()}
-	}
-	return nil
 }
