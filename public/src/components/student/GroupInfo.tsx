@@ -10,8 +10,9 @@ interface IGroupPro {
 class GroupInfo extends React.Component<IGroupPro, any> {
     public render() {
         const groupMembers: JSX.Element[] = [];
-        for (let i: number = 0; i < this.props.group.getUsersList().length; i++) {
-            groupMembers.push(<li key={i} className="list-group-item">{this.props.group.getUsersList()[i].getName()}</li>);
+        const users = this.props.group.getUsersList();
+        for (let i: number = 0; i < users.length; i++) {
+            groupMembers.push(<li key={i} className="list-group-item">{users[i].getName()}</li>);
         }
         return (
             <div className="group-info">
