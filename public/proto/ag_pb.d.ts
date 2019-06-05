@@ -21,6 +21,9 @@ export class User extends jspb.Message {
   getAvatarurl(): string;
   setAvatarurl(value: string): void;
 
+  getLogin(): string;
+  setLogin(value: string): void;
+
   getRemoteidentitiesList(): Array<RemoteIdentity>;
   setRemoteidentitiesList(value: Array<RemoteIdentity>): void;
   clearRemoteidentitiesList(): void;
@@ -47,6 +50,7 @@ export namespace User {
     studentid: string,
     email: string,
     avatarurl: string,
+    login: string,
     remoteidentitiesList: Array<RemoteIdentity.AsObject>,
     enrollmentsList: Array<Enrollment.AsObject>,
   }
@@ -116,6 +120,9 @@ export class Group extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
+  getTeamid(): number;
+  setTeamid(value: number): void;
+
   getStatus(): Group.GroupStatus;
   setStatus(value: Group.GroupStatus): void;
 
@@ -142,6 +149,7 @@ export namespace Group {
     id: number,
     name: string,
     courseid: number,
+    teamid: number,
     status: Group.GroupStatus,
     usersList: Array<User.AsObject>,
     enrollmentsList: Array<Enrollment.AsObject>,

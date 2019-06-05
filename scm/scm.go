@@ -22,7 +22,7 @@ type SCM interface {
 	// The team name is usually the student name or group name, whereas the git
 	// user names are the members of the team. For single student repositories,
 	// the git user names are typically just the one student.
-	CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error)
+	CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, *Team, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within directory.

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/gob"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -151,6 +152,7 @@ func OAuth2Login(db database.Database) echo.HandlerFunc {
 // OAuth2Callback handles the callback from an oauth2 provider.
 func OAuth2Callback(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		log.Println("OAuth2Callback: started")
 		w := c.Response()
 		r := c.Request()
 
@@ -158,6 +160,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		redirect, teacher := extractState(r, State)
 		provider, err := gothic.GetProviderName(r)
 		if err != nil {
+			log.Println("OAuth2Callback: getting gothic provider, got ", err.Error())
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 		// Add teacher suffix if upgrading scope.
@@ -169,6 +172,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		// Complete authentication.
 		externalUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
+			log.Println("OAuth2Callback: gothic completeUserAuth got ", err.Error())
 			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
@@ -195,6 +199,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 			if err := db.AssociateUserWithRemoteIdentity(
 				us.ID, provider, remoteID, externalUser.AccessToken,
 			); err != nil {
+				log.Println("OAuth2Callback: error asociating user with remote ID: ", err.Error())
 				return err
 			}
 
@@ -223,8 +228,11 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 				Name:      externalUser.Name,
 				Email:     externalUser.Email,
 				AvatarURL: externalUser.AvatarURL,
+				Login:     externalUser.NickName,
 			}
 			err = db.CreateUserFromRemoteIdentity(user, remote)
+		default:
+			log.Println("OAuth2Callback: error with user association: ", err.Error())
 		}
 		// in case of a new user we need a user object with full information, otherwise frontend will get user object where only name, email and url are set
 		user, err = db.GetUserByRemoteIdentity(remote)

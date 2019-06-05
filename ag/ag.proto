@@ -12,9 +12,10 @@ message User {
     string studentID = 4;
     string email = 5;
     string avatarURL = 6;
+    string login = 7;
 
-    repeated RemoteIdentity remoteIdentities = 7;
-    repeated Enrollment enrollments = 8;
+    repeated RemoteIdentity remoteIdentities = 8;
+    repeated Enrollment enrollments = 9;
 }
 
 message Users {
@@ -39,10 +40,12 @@ message Group {
     uint64 ID = 1;
     string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
     uint64 courseID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
-    GroupStatus status = 4;
+    uint64 teamID = 4;
+    GroupStatus status = 5;
 
-    repeated User users = 5;
-    repeated Enrollment enrollments = 6;
+
+    repeated User users = 6;
+    repeated Enrollment enrollments = 7;
 }
 
 message Groups {

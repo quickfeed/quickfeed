@@ -94,8 +94,8 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		// check whether user repo already exists (happens when accepting prevoiusly rejected student)
 		if _, err = db.GetRepositoryByCourseUserType(request.CourseID, request.UserID, pb.Repository_USER); err != nil {
 			if err == gorm.ErrRecordNotFound {
-				//create user repo and team on SCM
-				repo, err := createUserRepoAndTeam(ctx, s, course, student)
+				//create user repo and team on SCM.
+				repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
 				if err != nil {
 					return err
 				}
@@ -126,22 +126,22 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 	return nil
 }
 
-func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, error) {
+func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, *scm.Team, error) {
 
 	ctx, cancel := context.WithTimeout(c, MaxWait)
 	defer cancel()
 
 	dir, err := s.GetDirectory(ctx, course.DirectoryID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	gitUserNames, err := fetchGitUserNames(ctx, s, course, student)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if len(gitUserNames) > 1 || len(gitUserNames) == 0 {
-		return nil, echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
+		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
 	}
 	// the student's git user name is the same as the team name
 	teamName := gitUserNames[0]

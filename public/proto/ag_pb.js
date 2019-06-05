@@ -550,7 +550,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.User.repeatedFields_ = [7,8];
+proto.User.repeatedFields_ = [8,9];
 
 
 
@@ -587,6 +587,7 @@ proto.User.toObject = function(includeInstance, msg) {
     studentid: jspb.Message.getFieldWithDefault(msg, 4, ""),
     email: jspb.Message.getFieldWithDefault(msg, 5, ""),
     avatarurl: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    login: jspb.Message.getFieldWithDefault(msg, 7, ""),
     remoteidentitiesList: jspb.Message.toObjectList(msg.getRemoteidentitiesList(),
     proto.RemoteIdentity.toObject, includeInstance),
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
@@ -652,11 +653,15 @@ proto.User.deserializeBinaryFromReader = function(msg, reader) {
       msg.setAvatarurl(value);
       break;
     case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setLogin(value);
+      break;
+    case 8:
       var value = new proto.RemoteIdentity;
       reader.readMessage(value,proto.RemoteIdentity.deserializeBinaryFromReader);
       msg.addRemoteidentities(value);
       break;
-    case 8:
+    case 9:
       var value = new proto.Enrollment;
       reader.readMessage(value,proto.Enrollment.deserializeBinaryFromReader);
       msg.addEnrollments(value);
@@ -732,10 +737,17 @@ proto.User.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getLogin();
+  if (f.length > 0) {
+    writer.writeString(
+      7,
+      f
+    );
+  }
   f = message.getRemoteidentitiesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      7,
+      8,
       f,
       proto.RemoteIdentity.serializeBinaryToWriter
     );
@@ -743,7 +755,7 @@ proto.User.serializeBinaryToWriter = function(message, writer) {
   f = message.getEnrollmentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      8,
+      9,
       f,
       proto.Enrollment.serializeBinaryToWriter
     );
@@ -844,18 +856,33 @@ proto.User.prototype.setAvatarurl = function(value) {
 
 
 /**
- * repeated RemoteIdentity remoteIdentities = 7;
+ * optional string login = 7;
+ * @return {string}
+ */
+proto.User.prototype.getLogin = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/** @param {string} value */
+proto.User.prototype.setLogin = function(value) {
+  jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+/**
+ * repeated RemoteIdentity remoteIdentities = 8;
  * @return {!Array<!proto.RemoteIdentity>}
  */
 proto.User.prototype.getRemoteidentitiesList = function() {
   return /** @type{!Array<!proto.RemoteIdentity>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.RemoteIdentity, 7));
+    jspb.Message.getRepeatedWrapperField(this, proto.RemoteIdentity, 8));
 };
 
 
 /** @param {!Array<!proto.RemoteIdentity>} value */
 proto.User.prototype.setRemoteidentitiesList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 7, value);
+  jspb.Message.setRepeatedWrapperField(this, 8, value);
 };
 
 
@@ -865,7 +892,7 @@ proto.User.prototype.setRemoteidentitiesList = function(value) {
  * @return {!proto.RemoteIdentity}
  */
 proto.User.prototype.addRemoteidentities = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.RemoteIdentity, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.RemoteIdentity, opt_index);
 };
 
 
@@ -878,18 +905,18 @@ proto.User.prototype.clearRemoteidentitiesList = function() {
 
 
 /**
- * repeated Enrollment enrollments = 8;
+ * repeated Enrollment enrollments = 9;
  * @return {!Array<!proto.Enrollment>}
  */
 proto.User.prototype.getEnrollmentsList = function() {
   return /** @type{!Array<!proto.Enrollment>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.Enrollment, 8));
+    jspb.Message.getRepeatedWrapperField(this, proto.Enrollment, 9));
 };
 
 
 /** @param {!Array<!proto.Enrollment>} value */
 proto.User.prototype.setEnrollmentsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 8, value);
+  jspb.Message.setRepeatedWrapperField(this, 9, value);
 };
 
 
@@ -899,7 +926,7 @@ proto.User.prototype.setEnrollmentsList = function(value) {
  * @return {!proto.Enrollment}
  */
 proto.User.prototype.addEnrollments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.Enrollment, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.Enrollment, opt_index);
 };
 
 
@@ -1304,7 +1331,7 @@ proto.RemoteIdentity.prototype.setUserid = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.Group.repeatedFields_ = [5,6];
+proto.Group.repeatedFields_ = [6,7];
 
 
 
@@ -1338,7 +1365,8 @@ proto.Group.toObject = function(includeInstance, msg) {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     name: jspb.Message.getFieldWithDefault(msg, 2, ""),
     courseid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    status: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    teamid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    status: jspb.Message.getFieldWithDefault(msg, 5, 0),
     usersList: jspb.Message.toObjectList(msg.getUsersList(),
     proto.User.toObject, includeInstance),
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
@@ -1392,15 +1420,19 @@ proto.Group.deserializeBinaryFromReader = function(msg, reader) {
       msg.setCourseid(value);
       break;
     case 4:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setTeamid(value);
+      break;
+    case 5:
       var value = /** @type {!proto.Group.GroupStatus} */ (reader.readEnum());
       msg.setStatus(value);
       break;
-    case 5:
+    case 6:
       var value = new proto.User;
       reader.readMessage(value,proto.User.deserializeBinaryFromReader);
       msg.addUsers(value);
       break;
-    case 6:
+    case 7:
       var value = new proto.Enrollment;
       reader.readMessage(value,proto.Enrollment.deserializeBinaryFromReader);
       msg.addEnrollments(value);
@@ -1455,17 +1487,24 @@ proto.Group.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getTeamid();
+  if (f !== 0) {
+    writer.writeUint64(
+      4,
+      f
+    );
+  }
   f = message.getStatus();
   if (f !== 0.0) {
     writer.writeEnum(
-      4,
+      5,
       f
     );
   }
   f = message.getUsersList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      5,
+      6,
       f,
       proto.User.serializeBinaryToWriter
     );
@@ -1473,7 +1512,7 @@ proto.Group.serializeBinaryToWriter = function(message, writer) {
   f = message.getEnrollmentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      6,
+      7,
       f,
       proto.Enrollment.serializeBinaryToWriter
     );
@@ -1537,33 +1576,48 @@ proto.Group.prototype.setCourseid = function(value) {
 
 
 /**
- * optional GroupStatus status = 4;
+ * optional uint64 teamID = 4;
+ * @return {number}
+ */
+proto.Group.prototype.getTeamid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/** @param {number} value */
+proto.Group.prototype.setTeamid = function(value) {
+  jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional GroupStatus status = 5;
  * @return {!proto.Group.GroupStatus}
  */
 proto.Group.prototype.getStatus = function() {
-  return /** @type {!proto.Group.GroupStatus} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+  return /** @type {!proto.Group.GroupStatus} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
 /** @param {!proto.Group.GroupStatus} value */
 proto.Group.prototype.setStatus = function(value) {
-  jspb.Message.setProto3EnumField(this, 4, value);
+  jspb.Message.setProto3EnumField(this, 5, value);
 };
 
 
 /**
- * repeated User users = 5;
+ * repeated User users = 6;
  * @return {!Array<!proto.User>}
  */
 proto.Group.prototype.getUsersList = function() {
   return /** @type{!Array<!proto.User>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.User, 5));
+    jspb.Message.getRepeatedWrapperField(this, proto.User, 6));
 };
 
 
 /** @param {!Array<!proto.User>} value */
 proto.Group.prototype.setUsersList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 5, value);
+  jspb.Message.setRepeatedWrapperField(this, 6, value);
 };
 
 
@@ -1573,7 +1627,7 @@ proto.Group.prototype.setUsersList = function(value) {
  * @return {!proto.User}
  */
 proto.Group.prototype.addUsers = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.User, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.User, opt_index);
 };
 
 
@@ -1586,18 +1640,18 @@ proto.Group.prototype.clearUsersList = function() {
 
 
 /**
- * repeated Enrollment enrollments = 6;
+ * repeated Enrollment enrollments = 7;
  * @return {!Array<!proto.Enrollment>}
  */
 proto.Group.prototype.getEnrollmentsList = function() {
   return /** @type{!Array<!proto.Enrollment>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.Enrollment, 6));
+    jspb.Message.getRepeatedWrapperField(this, proto.Enrollment, 7));
 };
 
 
 /** @param {!Array<!proto.Enrollment>} value */
 proto.Group.prototype.setEnrollmentsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 6, value);
+  jspb.Message.setRepeatedWrapperField(this, 7, value);
 };
 
 
@@ -1607,7 +1661,7 @@ proto.Group.prototype.setEnrollmentsList = function(value) {
  * @return {!proto.Enrollment}
  */
 proto.Group.prototype.addEnrollments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.Enrollment, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 7, opt_value, proto.Enrollment, opt_index);
 };
 
 

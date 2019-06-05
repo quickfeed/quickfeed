@@ -229,7 +229,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		return err
 	}
 	// if all checks pass, create group repository
-	repo, err := createGroupRepoAndTeam(ctx, s, course, dbGroup)
+	repo, team, err := createGroupRepoAndTeam(ctx, s, course, dbGroup)
 	if err != nil {
 		log.Println("web: UpdateGroup could not create group repos and team: ", err.Error())
 		return err
@@ -253,6 +253,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		ID:       request.ID,
 		Name:     request.Name,
 		CourseID: request.CourseID,
+		TeamID:   team.ID,
 		Users:    users,
 		Status:   pb.Group_APPROVED,
 	}); err != nil {
@@ -265,7 +266,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 // createGroupRepoAndTeam creates the given group in course on the provided SCM.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, group *pb.Group) (*scm.Repository, error) {
+func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, group *pb.Group) (*scm.Repository, *scm.Team, error) {
 	log.Println("web: createGroupRepoAndTeam starts")
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
@@ -273,13 +274,13 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 	dir, err := s.GetDirectory(ctx, course.DirectoryID)
 	if err != nil {
 		log.Println("web: createGroupRepoAndTeam error getting directory: ", err.Error())
-		return nil, err
+		return nil, nil, err
 	}
 
 	gitUserNames, err := fetchGitUserNames(ctx, s, course, group.Users...)
 	if err != nil {
 		log.Println("web: createGroupRepoAndTeam error getting usernames: ", err.Error())
-		return nil, err
+		return nil, nil, err
 	}
 
 	opt := &scm.CreateRepositoryOptions{
