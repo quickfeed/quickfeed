@@ -268,21 +268,21 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
         let orgMsg: JSX.Element;
         if (this.state.provider === "github") {
-            orgMsg = <p>Select a GitHub organization for your course.
+            orgMsg = <div><p>Select a GitHub organization for your course.
                 (Don't see your organization below? Autograder needs access to your organization.
-                Grant access <a href="https://github.com/settings/applications" target="_blank"> here</a>.)
+                Grant access <a href="https://github.com/settings/applications" target="_blank"> here</a>.)</p>
 
-                For each new semester of a course, Autograder requires a new GitHub organization. 
-                This is to keep the student roster for the different runs of the course separate.
+                <p>For each new semester of a course, Autograder requires a new GitHub organization. 
+                This is to keep the student roster for the different runs of the course separate.</p>
 
-                <b>Create an organization for your course.</b>
-                When you <a href="https://github.com/account/organizations/new" target="_blank">create an organization</a>, be sure to select the “Free Plan.”
+                <p><b>Create an organization for your course.</b>
+                When you <a href="https://github.com/account/organizations/new" target="_blank">create an organization</a>, be sure to select the “Free Plan.”</p>
 
-                <b>Important:</b> <i>Don't create any repositories in your GitHub organization yet; Autograder will create a repository structure for you</i>. 
+                <p><b>Important:</b> <i>Don't create any repositories in your GitHub organization yet; Autograder will create a repository structure for you</i>.</p> 
 
-                <b>Apply for an Educator discount.</b>
-                For teachers, GitHub is happy to upgrade your organization to serve private repositories. Go ahead an apply for <a href="https://education.github.com/discount_requests/new" target="_blank">an Education discount</a> for your GitHub organization.
-
+                <p><b>Apply for an Educator discount.</b>
+                For teachers, GitHub is happy to upgrade your organization to serve private repositories. Go ahead an apply for <a href="https://education.github.com/discount_requests/new" target="_blank">an Education discount</a> for your GitHub organization.</p>
+                <p>
                 <b>Wait for your organization to be upgraded by GitHub.</b>
                 Return to this page when your organization has been upgraded, to create the course. This will allow Autograder to create the appropriate repository structure. 
                 Once these repositories have been created by Autograder:
@@ -298,7 +298,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                 Only the assignments and tests repositories must contain meta-data and tests for Autograder to function. 
                 Please read the documentation for further instructions on how to work with the various repositories.
 
-            </p>;
+            </p></div>;
         } else {
             orgMsg = <p>Select a GitLab group.</p>;
         }
