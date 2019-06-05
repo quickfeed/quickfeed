@@ -1,18 +1,17 @@
 package database
 
 import (
-	"database/sql/driver"
 	"fmt"
-	"reflect"
+	"os"
 	"regexp"
-	"strconv"
+	"runtime"
+	"strings"
 	"time"
 	"unicode"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
-
-var sqlRegexp = regexp.MustCompile(`(\$\d+)|\?`)
 
 // GormLogger exposes the methods needed for gorm database logging.
 type GormLogger interface {
@@ -21,57 +20,103 @@ type GormLogger interface {
 
 // Logger is an adaption of gorm.Logger that uses logrus.
 type Logger struct {
-	*logrus.Logger
+	*zap.Logger
 }
+
+// GormCallerEncoder finds the file and line number of the first use in gormdb.go.
+// The default caller encoder from zapcore is unreliable. Hence this implementation
+// ignores the caller argument from zap, and instead we create our own caller for Gorm.
+func GormCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	// be careful when modifying these; they have been determined experimentally,
+	// but things may change due to changes both internally and externally to Gorm.
+	const (
+		// lowest is the first stack entry to include in the frame
+		lowestEntry = 8
+		// highest is the stack entry we need to check
+		highestEntry = 28
+	)
+	pc := make([]uintptr, highestEntry)
+	n := runtime.Callers(lowestEntry, pc)
+	frames := runtime.CallersFrames(pc[:n])
+
+	var frame runtime.Frame
+	more := true
+	for more {
+		frame, more = frames.Next()
+		if strings.HasSuffix(frame.File, "database/gormdb.go") {
+			caller = zapcore.EntryCaller{Defined: true, File: frame.File, Line: frame.Line}
+			// we may have multiple stack entries from gormdb,
+			// but we use the first one; the entry point into gormdb.
+			break
+		}
+	}
+	enc.AppendString(caller.TrimmedPath())
+}
+
+// NewGormLogger returns a logger for Gorm. A logger instance is only returned
+// if the LOGDB environment variable is set.
+// This logger should probably not be used in production due to the
+// high volume of SQL queries; it is mainly meant to assist with debugging
+// database query issues.
+func NewGormLogger() GormLogger {
+	if os.Getenv("LOGDB") != "" {
+		cfg := zap.NewDevelopmentConfig()
+		cfg.EncoderConfig.EncodeCaller = GormCallerEncoder
+		l, _ := cfg.Build()
+		return Logger{Logger: l}
+	}
+	return nil
+}
+
+var sqlRegexp = regexp.MustCompile(`(\$\d+)|\?`)
 
 // Print implements the GormLogger interface.
 func (l Logger) Print(values ...interface{}) {
+	// values[0] = level (sql, log)
+	// values[1] = source file:line
+	// values[2] = latency (query execution time)
+	// values[3] = sql query
+	// values[4] = values for query
+	// values[5] = affected-rows (if available)
 	if len(values) > 1 {
-		level := values[0]
-		source := values[1]
-		entry := l.WithField("source", source)
-
-		if level == "sql" {
-			var formattedValues []interface{}
-			for _, value := range values[4].([]interface{}) {
-				indirectValue := reflect.Indirect(reflect.ValueOf(value))
-				if indirectValue.IsValid() {
-					value = indirectValue.Interface()
-					if t, ok := value.(time.Time); ok {
-						formattedValues = append(formattedValues, fmt.Sprintf("'%v'", t.Format(time.RFC3339)))
-					} else if b, ok := value.([]byte); ok {
-						if str := string(b); isPrintable(str) {
-							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", str))
-						} else {
-							formattedValues = append(formattedValues, "'<binary>'")
-						}
-					} else if r, ok := value.(driver.Valuer); ok {
-						if value, err := r.Value(); err == nil && value != nil {
-							formattedValues = append(formattedValues, fmt.Sprintf("'%v'", value))
-						} else {
-							formattedValues = append(formattedValues, "NULL")
-						}
-					} else {
-						formattedValues = append(formattedValues, fmt.Sprintf("'%v'", value))
-					}
-				} else {
-					formattedValues = append(formattedValues, fmt.Sprintf("'%v'", value))
-				}
+		level := values[0].(string)
+		switch level {
+		case "sql":
+			formattedValues := getFormattedValues(values)
+			sql := fmt.Sprintf(sqlRegexp.ReplaceAllString(values[3].(string), "%v"), formattedValues...)
+			l := l.With(zap.Any("latency", values[2]))
+			if len(values) > 5 {
+				l = l.With(zap.Any("affected-rows", values[5]))
 			}
-
-			latency := values[2]
-			entry.WithFields(logrus.Fields{
-				"time_rfc3339":  time.Now().Format(time.RFC3339),
-				"latency_human": latency,
-				"latency":       strconv.FormatInt(latency.(time.Duration).Nanoseconds()/1000, 10),
-			}).Print(fmt.Sprintf(sqlRegexp.ReplaceAllString(values[3].(string), "%v"), formattedValues...))
-
-		} else {
-			l.Error(values[2:]...)
+			l.Debug(sql)
+		default:
+			l.Sugar().Info(values[2:]...)
 		}
-	} else {
-		l.Error(values...)
 	}
+}
+
+func getFormattedValues(values []interface{}) []interface{} {
+	rawValues := values[4].([]interface{})
+	formattedValues := make([]interface{}, 0, len(rawValues))
+	for _, value := range rawValues {
+		switch v := value.(type) {
+		case time.Time:
+			formattedValues = append(formattedValues, fmt.Sprint(v))
+		case []byte:
+			if str := string(v); isPrintable(str) {
+				formattedValues = append(formattedValues, fmt.Sprint(str))
+			} else {
+				formattedValues = append(formattedValues, "<binary>")
+			}
+		default:
+			str := "NULL"
+			if v != nil {
+				str = fmt.Sprint(v)
+			}
+			formattedValues = append(formattedValues, str)
+		}
+	}
+	return formattedValues
 }
 
 func isPrintable(s string) bool {
