@@ -18,7 +18,7 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
         const groupCourses = this.props.groupCourseOverview ? this.props.groupCourseOverview : null;
         const courses = this.props.courseOverview.map((val, key) => {
             const courseAssignments: IStudentSubmission[] = val.assignments;
-            if (groupCourses && groupCourses[key] && groupCourses[key].course.id === val.course.id) {
+            if (groupCourses && groupCourses[key] && groupCourses[key].course.getId() === val.course.getId()) {
 
                 for (let iter = 0; iter < courseAssignments.length; iter++) {
                     if (courseAssignments[iter].assignment.isgrouplab) {

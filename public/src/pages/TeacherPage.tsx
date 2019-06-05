@@ -11,14 +11,12 @@ import { INavInfo } from "../NavigationHelper";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
     IAssignment,
-    ICourse,
     ICourseUserLink,
     IGroupCourseWithGroup,
-    IUser,
     IUserCourseWithUser,
     IUserRelation,
 } from "../models";
-import {User, Group, Enrollment, Repository} from "../../proto/ag_pb";
+import {User, Course, Group, Enrollment, Repository} from "../../proto/ag_pb";
 
 
 import { GroupResults } from "../components/teacher/GroupResults";
@@ -29,7 +27,7 @@ export class TeacherPage extends ViewPage {
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
-    private courses: ICourse[] = [];
+    private courses: Course[] = [];
 
     private pages: { [name: string]: JSX.Element } = {};
     private curUser: User | null;
@@ -68,7 +66,7 @@ export class TeacherPage extends ViewPage {
 
     public async init(): Promise<void> {
         this.courses = await this.getCourses();
-        this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
+        this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].getId().toString() : "");
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
@@ -84,7 +82,7 @@ export class TeacherPage extends ViewPage {
                         classType="primary"
                         onClick={(e) => {
                             this.refreshState = 1;
-                            this.courseMan.refreshCoursesFor(course.id)
+                            this.courseMan.refreshCoursesFor(course.getId())
                                 .then((value) => {
                                     this.refreshState = 2;
                                     this.navMan.refresh();
@@ -107,7 +105,7 @@ export class TeacherPage extends ViewPage {
                         disabled={false}
                         onClick={(e) => {
                             this.refreshState = 1;
-                            this.courseMan.refreshCoursesFor(course.id)
+                            this.courseMan.refreshCoursesFor(course.getId())
                                 .then((value) => {
                                     this.refreshState = 2;
                                     this.navMan.refresh();
@@ -119,7 +117,7 @@ export class TeacherPage extends ViewPage {
                     break;
             }
             return <div>
-                <h1>Overview for {course.name}</h1>
+                <h1>Overview for {course.getName()}</h1>
                 {button}
             </div>;
         });
@@ -127,7 +125,7 @@ export class TeacherPage extends ViewPage {
 
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
+            const labs: IAssignment[] = await this.courseMan.getAssignments(course.getId());
 
             const students = await this.courseMan.getUsersForCourse(course, this.userMan,
                 [
@@ -157,8 +155,8 @@ export class TeacherPage extends ViewPage {
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const linkedGroups: IGroupCourseWithGroup[] = [];
-            const groupCourses = await this.courseMan.getCourseGroups(course.id);
-            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
+            const groupCourses = await this.courseMan.getCourseGroups(course.getId());
+            const labs: IAssignment[] = await this.courseMan.getAssignments(course.getId());
 
             for (const grpCourse of groupCourses) {
                 const grp = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
@@ -186,7 +184,7 @@ export class TeacherPage extends ViewPage {
 
     public async groups(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const groups = await this.courseMan.getCourseGroups(course.id);
+            const groups = await this.courseMan.getCourseGroups(course.getId());
             const approvedGroups: Group[] = [];
             const pendingGroups: Group[] = [];
             const rejectedGroups: Group[] = [];
@@ -388,8 +386,8 @@ export class TeacherPage extends ViewPage {
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
-                        name: e.code,
-                        uri: this.pagePath + "/courses/" + e.id,
+                        name: e.getCode(),
+                        uri: this.pagePath + "/courses/" + e.getId(),
                     }));
                 });
 
@@ -418,7 +416,7 @@ export class TeacherPage extends ViewPage {
         }
     }
 
-    private async getCourses(): Promise<ICourse[]> {
+    private async getCourses(): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
             return await this.courseMan.getCoursesFor(curUsr);
@@ -426,7 +424,7 @@ export class TeacherPage extends ViewPage {
         return [];
     }
 
-    private async courseFunc(courseParam: string, fn: (course: ICourse) => View): View {
+    private async courseFunc(courseParam: string, fn: (course: Course) => View): View {
         const courseId = parseInt(courseParam, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {

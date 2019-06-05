@@ -2,26 +2,27 @@ import * as React from "react";
 
 import { DynamicTable } from "../../components";
 
-import { IAssignment, ICourse, IStudentSubmission } from "../../models";
+import { IAssignment, IStudentSubmission } from "../../models";
+import { Course } from "../../../proto/ag_pb";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
 interface IPanelProps {
-    course: ICourse;
+    course: Course;
     labs: IStudentSubmission[];
     navMan: NavigationManager;
 }
 class CoursePanel extends React.Component<IPanelProps, any> {
 
     public render() {
-        const labPath: string = "app/student/courses/" + this.props.course.id + "/lab/";
-        const glabPath: string = "app/student/courses/" + this.props.course.id + "/grouplab/";
+        const labPath: string = "app/student/courses/" + this.props.course.getId() + "/lab/";
+        const glabPath: string = "app/student/courses/" + this.props.course.getId() + "/grouplab/";
 
         return (
             <div className="col-lg-3 col-md-6 col-sm-6">
                 <div className="panel panel-primary">
                     <div className="panel-heading clickable"
-                        onClick={() => this.handleCourseClick()}>{this.props.course.name}</div>
+                        onClick={() => this.handleCourseClick()}>{this.props.course.getName()}</div>
                     <div className="panel-body">
                         <DynamicTable
                             header={["Labs", "Score", "Deadline"]}
@@ -51,7 +52,7 @@ class CoursePanel extends React.Component<IPanelProps, any> {
     }
 
     private handleCourseClick() {
-        const uri: string = "app/student/courses/" + this.props.course.id;
+        const uri: string = "app/student/courses/" + this.props.course.getId();
         this.props.navMan.navigateTo(uri);
     }
 }

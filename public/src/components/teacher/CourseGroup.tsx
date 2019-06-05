@@ -1,9 +1,8 @@
 import * as React from "react";
 
-import { Group, User } from "../../../proto/ag_pb";
+import { Course, Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
-import { ICourse,} from "../../models";
 
 import { bindFunc, RProp } from "../../helper";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
@@ -14,7 +13,7 @@ interface ICourseGroupProp {
     approvedGroups: Group[];
     pendingGroups: Group[];
     rejectedGroups: Group[];
-    course: ICourse;
+    course: Course;
     navMan: NavigationManager;
     courseMan: CourseManager;
     pagePath: string;
@@ -40,7 +39,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
         }
         return (
             <div className="group-container">
-                <h1>{this.props.course.name}</h1>
+                <h1>{this.props.course.getName()}</h1>
                 {noGroupsWell}
                 {approvedGroups}
                 {pendingGroups}

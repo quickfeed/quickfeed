@@ -1,10 +1,11 @@
 import * as React from "react";
-import { IAssignment, ICourse, IGroupCourseWithGroup, IStudentSubmission } from "../../models";
+import { IAssignment, IGroupCourseWithGroup, IStudentSubmission } from "../../models";
 
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
+import { Course } from "../../../proto/ag_pb";
 
 interface IResultsProp {
-    course: ICourse;
+    course: Course;
     groups: IGroupCourseWithGroup[];
     labs: IAssignment[];
     onApproveClick: (submissionID: number) => void;
@@ -58,7 +59,7 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
 
         return (
             <div>
-                <h1>Result: {this.props.course.name}</h1>
+                <h1>Result: {this.props.course.getName()}</h1>
                 <Row>
                     <div className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"

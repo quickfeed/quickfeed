@@ -1,9 +1,10 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
-import { ICourse, IStudentSubmission, ISubmission } from "../../models";
+import { IStudentSubmission, ISubmission } from "../../models";
+import { Course } from "../../../proto/ag_pb";
 
 interface ILabInfoProps {
-    course: ICourse;
+    course: Course;
     labInfo: IStudentSubmission;
     showApprove: boolean;
     onApproveClick: () => void;
@@ -26,7 +27,7 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                     <div className="result-content" id="resultview">
                         <section id="result">
                             <LabResult
-                                course_name={this.props.course.name}
+                                course_name={this.props.course.getName()}
                                 lab={this.props.labInfo.assignment.name}
                                 progress={latest.score}
                                 status={this.getSubmissionInfo()}

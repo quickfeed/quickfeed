@@ -98,7 +98,7 @@ export class AdminPage extends ViewPage {
             const e = allCourses[i];
             const labs = await this.courseMan.getAssignments(e);
             tables.push(<div key={i}>
-                <h3>Labs for {e.name} ({e.code})</h3>
+                <h3>Labs for {e.getName()} ({e.getCode()})</h3>
                 <DynamicTable
                     header={["ID", "Name", /*"Start",*/ "Deadline"/*, "End"*/]}
                     data={labs}

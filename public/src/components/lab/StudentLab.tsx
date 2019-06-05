@@ -1,10 +1,10 @@
 import * as React from "react";
-import { IAssignment, ICourse, IStudentSubmission, ISubmission, ITestCases, IUser } from "../../models";
+import { IAssignment, IStudentSubmission, ISubmission, ITestCases, IUser } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
-import { User } from "../../../proto/ag_pb";
+import { Course, User } from "../../../proto/ag_pb";
 
 interface IStudentLabProbs {
-    course: ICourse;
+    course: Course;
     assignment: IStudentSubmission;
     student?: User;
     showApprove: boolean;

@@ -1,11 +1,12 @@
 import * as React from "react";
-import { IAssignment, ICourse, IStudentSubmission, IUser, IUserCourseWithUser } from "../../models";
+import { IAssignment, IStudentSubmission, IUser, IUserCourseWithUser } from "../../models";
 
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { ICellElement } from "../data/DynamicTable";
+import { Course } from "../../../proto/ag_pb";
 
 interface IResultsProp {
-    course: ICourse;
+    course: Course;
     students: IUserCourseWithUser[];
     labs: IAssignment[];
     onApproveClick: (submissionID: number) => void;
@@ -60,7 +61,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
         return (
             <div>
-                <h1>Result: {this.props.course.name}</h1>
+                <h1>Result: {this.props.course.getName()}</h1>
                 <Row>
                     <div className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"

@@ -13,10 +13,8 @@ import {
     courseUserStateToString,
     IAssignment,
     IBuildInfo,
-    ICourse,
     ICourseUserLink,
-    ICourseWithEnrollStatus,
-    IError, INewCourse,
+    IError,
     INewGroup,
     IStatusCode,
     ISubmission,
@@ -87,14 +85,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         this.logger = logger;
     }
 
-    public async getCourses(): Promise<ICourse[]> {
+    public async getCourses(): Promise<Course[]> {
         const result = await this.grpcHelper.getCourses();
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCourses");
             return [];
         }
         const data = result.data.getCoursesList().map((course) => {
-            return this.toICourse(course);
+            return course;
         });
         return data;
     }
@@ -108,11 +106,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         const arr: ICourseEnrollment[] = [];
         result.data.getCoursesList().forEach((ele) => {
-            const course = this.toICourse(ele);
             arr.push({
-                course,
+                course: ele,
                 status: ele.getEnrolled(),
-                courseid: course.id,
+                courseid: ele.getId(),
                 userid: user.getId(),
                 user,
             });
@@ -121,8 +118,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
 
-    public async getUsersForCourse(course: ICourse, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]> {
-        const result = await this.grpcHelper.getEnrollmentsByCourse(course.id, state);
+    public async getUsersForCourse(course: Course, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]> {
+        const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), state);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getUserForCourse");
             return [];
@@ -159,8 +156,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
 
-    public async addUserToCourse(user: User, course: ICourse): Promise<boolean> {
-        const result = await this.grpcHelper.createEnrollment(user.getId(), course.id);
+    public async addUserToCourse(user: User, course: Course): Promise<boolean> {
+        const result = await this.grpcHelper.createEnrollment(user.getId(), course.getId());
         if (result.statusCode === 0) {
             return true;
         } else {
@@ -181,27 +178,27 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
 
 
-    public async createNewCourse(courseData: INewCourse): Promise<ICourse | IError> {
+    public async createNewCourse(courseData: Course): Promise<Course | IError> {
         const result = await this.grpcHelper.createCourse(courseData);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "createNewCourse");
             return this.parseError(result);
         }
-        return this.toICourse(result.data);
+        return result.data;
     }
 
 
-    public async getCourse(id: number): Promise<ICourse | null> {
+    public async getCourse(id: number): Promise<Course | null> {
         const result = await this.grpcHelper.getCourse(id);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getCourse");
             return null;
         }
-        return this.toICourse(result.data);
+        return result.data;
     }
 
 
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<Void | IError> {
+    public async updateCourse(courseId: number, courseData: Course): Promise<Void | IError> {
         const result = await this.grpcHelper.updateCourse(courseData);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "updateCourse");
@@ -489,21 +486,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return url;
     }
 
-    // this method convert a grpc Course to ICourse
-    private toICourse(course: Course): ICourse {
-        const icourse: ICourse = {
-            id: course.getId(),
-            name: course.getName(),
-            code: course.getCode(),
-            tag: course.getTag(),
-            year: course.getYear(),
-            provider: course.getProvider(),
-            directoryid: course.getDirectoryid(),
-        };
-
-        return icourse;
-    }
-
     private toISUbmission(sbm: Submission): ISubmission {      
         let buildInfoAsString = "";
         let scoreInfoAsString = "";
@@ -593,10 +575,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         if (user !== undefined) {
             ienroll.user = user;
         }
-        const course: Course | undefined = enrollment.getCourse();
-        if (course !== undefined) {
-            ienroll.course = this.toICourse(course);
-        }
+        ienroll.course = enrollment.getCourse();
+        
 
         return ienroll as IEnrollment;
     }

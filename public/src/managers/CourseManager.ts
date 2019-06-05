@@ -1,13 +1,10 @@
 import { IMap, MapHelper } from "../map";
 import {
     IAssignment,
-    ICourse,
     ICourseLinkAssignment,
     ICourseUserLink,
-    ICourseWithEnrollStatus,
     IError,
     IGroupCourse,
-    INewCourse,
     INewGroup,
     isCourse,
     IStatusCode,
@@ -23,18 +20,18 @@ import { ILogger } from "./LogManager";
 import { Assignment, Course, Enrollment, User, Directory, Directories, Group, Void } from "../../proto/ag_pb";
 
 export interface ICourseProvider {
-    getCourses(): Promise<ICourse[]>;
+    getCourses(): Promise<Course[]>;
     getAssignments(courseID: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
     getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]>;
-    getUsersForCourse(course: ICourse, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]>;
+    getUsersForCourse(course: Course, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]>;
 
-    addUserToCourse(user: User, course: ICourse): Promise<boolean>;
+    addUserToCourse(user: User, course: Course): Promise<boolean>;
     changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean>;
 
-    createNewCourse(courseData: INewCourse): Promise<ICourse | IError>;
-    getCourse(id: number): Promise<ICourse | null>;
-    updateCourse(courseID: number, courseData: ICourse): Promise<Void | IError>;
+    createNewCourse(courseData: Course): Promise<Course | IError>;
+    getCourse(id: number): Promise<Course | null>;
+    updateCourse(courseID: number, courseData: Course): Promise<Void | IError>;
 
     getCourseGroups(courseID: number): Promise<Group[]>;
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
@@ -71,7 +68,7 @@ export function isCourseEnrollment(enroll: IEnrollment): enroll is IUserEnrollme
 }
 
 export interface ICourseEnrollment extends IEnrollment {
-    course: ICourse;
+    course: Course;
 }
 
 export interface IUserEnrollment extends IEnrollment {
@@ -84,7 +81,7 @@ export interface IEnrollment {
     courseid: number;
     status?: Enrollment.UserStatus;
 
-    course?: ICourse;
+    course?: Course;
     user?: User;
 }
 
@@ -101,7 +98,7 @@ export class CourseManager {
      * @param course The course the user should be added to
      * @returns True if succeeded and false otherwise
      */
-    public async addUserToCourse(user: User, course: ICourse): Promise<boolean> {
+    public async addUserToCourse(user: User, course: Course): Promise<boolean> {
         return this.courseProvider.addUserToCourse(user, course);
     }
 
@@ -109,7 +106,7 @@ export class CourseManager {
      * Get a course from and id
      * @param ID The id of the course
      */
-    public async getCourse(ID: number): Promise<ICourse | null> {
+    public async getCourse(ID: number): Promise<Course | null> {
         // const a = (await this.courseProvider.getCourses())[id];
         // if (a) {
         //     return a;
@@ -121,7 +118,7 @@ export class CourseManager {
     /**
      * Get all the courses available at the server
      */
-    public async getCourses(): Promise<ICourse[]> {
+    public async getCourses(): Promise<Course[]> {
         // return MapHelper.toArray(await this.courseProvider.getCourses());
         return await this.courseProvider.getCourses();
     }
@@ -156,7 +153,7 @@ export class CourseManager {
      * @param user The user to get courses to
      * @param state Optional. The state the relations should be in, all if not present
      */
-    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourse[]> {
+    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<Course[]> {
         return (await this.courseProvider.getCoursesFor(user, state)).map((ele) => ele.course);
     }
 
@@ -165,8 +162,8 @@ export class CourseManager {
      * @param course The course the assignment is in
      * @param assignmentID The id to the assignment
      */
-    public async getAssignment(course: ICourse, assignmentID: number): Promise<IAssignment | null> {
-        const assignments = await this.courseProvider.getAssignments(course.id);
+    public async getAssignment(course: Course, assignmentID: number): Promise<IAssignment | null> {
+        const assignments = await this.courseProvider.getAssignments(course.getId());
         const assign = assignments[assignmentID];
         if (assign) {
             return assign;
@@ -178,9 +175,9 @@ export class CourseManager {
      * Get all assignments in a single course
      * @param courseID The course id or ICourse to retrive assignments from
      */
-    public async getAssignments(courseID: number | ICourse): Promise<IAssignment[]> {
+    public async getAssignments(courseID: number | Course): Promise<IAssignment[]> {
         if (isCourse(courseID)) {
-            courseID = courseID.id;
+            courseID = courseID.getId();
         }
         return MapHelper.toArray(await this.courseProvider.getAssignments(courseID));
     }
@@ -198,7 +195,7 @@ export class CourseManager {
      * Creates a new course in the backend
      * @param courseData The course information to create a course from
      */
-    public async createNewCourse(courseData: INewCourse): Promise<ICourse | IError> {
+    public async createNewCourse(courseData: Course): Promise<Course | IError> {
         return this.courseProvider.createNewCourse(courseData);
     }
 
@@ -206,7 +203,7 @@ export class CourseManager {
      * Updates a course with new information
      * @param courseData The new information for the course
      */
-    public async updateCourse(courseID: number, courseData: ICourse): Promise<Void | IError> {
+    public async updateCourse(courseID: number, courseData: Course): Promise<Void | IError> {
         return await this.courseProvider.updateCourse(courseID, courseData);
     }
 
@@ -215,13 +212,13 @@ export class CourseManager {
      * @param student The student the information should be retrived from
      * @param course The course the data should be loaded for
      */
-    public async getStudentCourse(student: User, course: ICourse): Promise<IUserCourse | null> {
+    public async getStudentCourse(student: User, course: Course): Promise<IUserCourse | null> {
         const courses = await this.courseProvider.getCoursesFor(student);
         for (const crs of courses) {
-            if (crs.courseid === course.id) {
+            if (crs.courseid === course.getId()) {
                 const userCourse: IUserCourse = {
                     link: crs.status !== undefined ?
-                        { userid: student.getId(), courseId: course.id, state: crs.status } : undefined,
+                        { userid: student.getId(), courseId: course.getId(), state: crs.status } : undefined,
                     assignments: [],
                     course,
                 };
@@ -237,9 +234,9 @@ export class CourseManager {
      * @param student The student the information should be retrived from
      * @param course The course the data should be loaded for
      */
-    public async getStudentCourseForTeacher(student: IUserRelation, course: ICourse, assignments: IAssignment[]): Promise<IUserCourse | null> {
+    public async getStudentCourseForTeacher(student: IUserRelation, course: Course, assignments: IAssignment[]): Promise<IUserCourse | null> {
         const userCourse: IUserCourse = {
-            link: { userid: student.user.getId(), courseId: course.id, state: student.link.state },
+            link: { userid: student.user.getId(), courseId: course.getId(), state: student.link.state },
             assignments: [],
             course,
         };
@@ -299,13 +296,13 @@ export class CourseManager {
      * @param state Optional. The state of the user to course relation
      */
     public async getUsersForCourse(
-        course: ICourse,
+        course: Course,
         userMan: UserManager,
         state?: Enrollment.UserStatus[]): Promise<IUserRelation[]> {
 
         return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
             return {
-                link: { courseId: course.id, userid: user.userid, state: user.status },
+                link: { courseId: course.getId(), userid: user.userid, state: user.status },
                 user: user.user,
             };
         });
@@ -332,11 +329,11 @@ export class CourseManager {
      * @param group The group the information should be retrived from
      * @param course The course the data should be loaded for
      */
-    public async getGroupCourse(group: Group, course: ICourse): Promise<IGroupCourse | null> {
+    public async getGroupCourse(group: Group, course: Course): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
-        if (group.getCourseid() === course.id) {
+        if (group.getCourseid() === course.getId()) {
             const groupCourse: IGroupCourse = {
-                link: { groupid: group.getId(), courseId: course.id, state: group.getStatus()},
+                link: { groupid: group.getId(), courseId: course.getId(), state: group.getStatus()},
                 assignments: [],
                 course,
             };
@@ -346,11 +343,11 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupCourseForTeacher(group: Group, course: ICourse, assignments: IAssignment[]): Promise<IGroupCourse | null> {
+    public async getGroupCourseForTeacher(group: Group, course: Course, assignments: IAssignment[]): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
-        if (group.getCourseid() === course.id) {
+        if (group.getCourseid() === course.getId()) {
             const groupCourse: IGroupCourse = {
-                link: { groupid: group.getId(), courseId: course.id, state: group.getStatus()},
+                link: { groupid: group.getId(), courseId: course.getId(), state: group.getStatus()},
                 assignments: [],
                 course,
             };
@@ -414,11 +411,11 @@ export class CourseManager {
             return;
         }
         if (!assignments) {
-            assignments = await this.getAssignments(studentCourse.course.id);
+            assignments = await this.getAssignments(studentCourse.course.getId());
         }
         if (assignments.length > 0) {
             const submissions = MapHelper.toArray(
-                await this.courseProvider.getAllLabInfos(studentCourse.course.id, student.getId()));
+                await this.courseProvider.getAllLabInfos(studentCourse.course.getId(), student.getId()));
 
             for (const a of assignments) {
                 const submission = submissions.find((sub) => sub.assignmentid === a.id);
@@ -437,11 +434,11 @@ export class CourseManager {
             return;
         }
         if (!assignments) {
-            assignments = await this.getAssignments(groupCourse.course.id);
+            assignments = await this.getAssignments(groupCourse.course.getId());
         }
         if (assignments.length > 0) {
             const submissions = MapHelper.toArray(
-                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.id, group.getId()));
+                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.getId(), group.getId()));
 
             for (const a of assignments) {
                 const submission = submissions.find((sub) => sub.assignmentid === a.id);

@@ -58,7 +58,7 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
         });
         return (
             <div>
-                <h1>{this.props.courseAndLabs.course.name}</h1>
+                <h1>{this.props.courseAndLabs.course.getName()}</h1>
                 <div>
                     <ul className="list-group">
                         {labs}

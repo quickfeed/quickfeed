@@ -26,7 +26,7 @@ import {
     DirectoryRequest,
     URLResponse,
 } from "../../proto/ag_pb";
-import { ICourse, INewCourse, INewGroup } from "../models";
+import { INewGroup } from "../models";
 import { InitialLetterAlignProperty } from "csstype";
 import { Context } from "vm";
 import { UserManager } from "./UserManager";
@@ -85,27 +85,14 @@ export class GrpcManager {
 
     // /* COURSES */ //
 
-    public createCourse(course: INewCourse): Promise<IGrpcResponse<Course>> {
-        const request = new Course();
-        request.setName(course.name);
-        request.setCode(course.code);
-        request.setProvider(course.provider);
-        request.setDirectoryid(course.directoryid);
-        request.setTag(course.tag);
-        request.setYear(course.year);
-        return this.grpcSend<Course>(this.agService.createCourse, request);
+    public createCourse(course: Course): Promise<IGrpcResponse<Course>> {
+        console.log("GRPCMan calls createCourse for course " + course.getName());
+        return this.grpcSend<Course>(this.agService.createCourse, course);
     }
 
-    public updateCourse(course: ICourse): Promise<IGrpcResponse<Course>> {
-        const request = new Course();
-        request.setId(course.id);
-        request.setName(course.name);
-        request.setCode(course.code);
-        request.setDirectoryid(course.directoryid);
-        request.setProvider(course.provider);
-        request.setYear(course.year);
-        request.setTag(course.tag);
-        return this.grpcSend<Course>(this.agService.updateCourse, request);
+    public updateCourse(course: Course): Promise<IGrpcResponse<Course>> {
+        console.log("GRPCMan calls updateCourse for course " + course.getName());
+        return this.grpcSend<Course>(this.agService.updateCourse, course);
     }
 
     public refreshCourse(courseID: number): Promise<IGrpcResponse<any>> {

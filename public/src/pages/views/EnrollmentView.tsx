@@ -1,11 +1,11 @@
 import * as React from "react";
 import { DynamicTable } from "../../components";
-import { ICourse, ICourseWithEnrollStatus, IUserCourse } from "../../models";
-import { Enrollment } from "../../../proto/ag_pb";
+import { IUserCourse } from "../../models";
+import { Course, Enrollment } from "../../../proto/ag_pb";
 
 export interface IEnrollmentViewProps {
     courses: IUserCourse[];
-    onEnrollmentClick: (course: ICourse) => void;
+    onEnrollmentClick: (course: Course) => void;
 }
 
 export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
@@ -19,7 +19,7 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     }
 
     public createEnrollmentRow(studentCourses: IUserCourse[], course: IUserCourse): Array<string | JSX.Element> {
-        const base: Array<string | JSX.Element> = [course.course.code, course.course.name];
+        const base: Array<string | JSX.Element> = [course.course.getCode(), course.course.getName()];
         if (course.link) {
             if (course.link.state === Enrollment.UserStatus.STUDENT || course.link.state === Enrollment.UserStatus.TEACHER) {
                 base.push("Enrolled");

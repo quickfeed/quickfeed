@@ -6,14 +6,13 @@ import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 
 import {
-    ICourse,
     ICourseLinkAssignment, IGroupCourse, IStudentSubmission,
     IUserCourse, 
 
 } from "../models";
 
 
-import {Enrollment, Repository, Group} from "../../proto/ag_pb"
+import {Course, Enrollment, Repository, Group} from "../../proto/ag_pb"
 
 import { View, ViewPage } from "./ViewPage";
 
@@ -90,7 +89,7 @@ export class StudentPage extends ViewPage {
             <h1>Enrollment page</h1>
             <EnrollmentView
                 courses={await this.courseMan.getCoursesWithState(curUser)}
-                onEnrollmentClick={(course: ICourse) => {
+                onEnrollmentClick={(course: Course) => {
                     this.courseMan.addUserToCourse(curUser, course);
                     this.navMan.refresh();
                 }}>
@@ -157,7 +156,7 @@ export class StudentPage extends ViewPage {
         const course = await this.courseMan.getCourse(courseId);
         const curUser = this.userMan.getCurrentUser();
         if (course && curUser) {
-            const grp: Group | null = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.id);
+            const grp: Group | null = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.getId());
             if (grp) {
                 return <GroupInfo group={grp} course={course} />;
             } else {
@@ -194,12 +193,12 @@ export class StudentPage extends ViewPage {
                     if (lab.assignment.isgrouplab) {
                         gLabs.push({
                             name: lab.assignment.name,
-                            uri: this.pagePath + "/courses/" + course.course.id + "/grouplab/" + lab.assignment.id,
+                            uri: this.pagePath + "/courses/" + course.course.getId() + "/grouplab/" + lab.assignment.id,
                         });
                     } else {
                         allLinks.push({
                             name: lab.assignment.name,
-                            uri: this.pagePath + "/courses/" + course.course.id + "/lab/" + lab.assignment.id,
+                            uri: this.pagePath + "/courses/" + course.course.getId() + "/lab/" + lab.assignment.id,
                         });
                     }
                 });
@@ -207,9 +206,9 @@ export class StudentPage extends ViewPage {
                 allLinks.push(...gLabs);
                 allLinks.push({ name: "Repositories" });
 
-                const userRepoURL = await this.courseMan.getRepositoryURL(course.course.id, Repository.Type.USER);
-                const informationURL = await this.courseMan.getCourseInformationURL(course.course.id);
-                const assignmentURL = await this.courseMan.getRepositoryURL(course.course.id, Repository.Type.ASSIGNMENTS);
+                const userRepoURL = await this.courseMan.getRepositoryURL(course.course.getId(), Repository.Type.USER);
+                const informationURL = await this.courseMan.getCourseInformationURL(course.course.getId());
+                const assignmentURL = await this.courseMan.getRepositoryURL(course.course.getId(), Repository.Type.ASSIGNMENTS);
 
                 allLinks.push({ name: "User Repository", uri: userRepoURL, absolute: true });
                 allLinks.push({ name: "Course Info", uri: informationURL, absolute: true });
@@ -217,10 +216,10 @@ export class StudentPage extends ViewPage {
 
                 allLinks.push({ name: "Settings" });
                 allLinks.push({
-                    name: "Members", uri: this.pagePath + "/courses/" + course.course.id + "/members",
+                    name: "Members", uri: this.pagePath + "/courses/" + course.course.getId() + "/members",
                 });
                 coursesLinks.push({
-                    item: { name: course.course.code, uri: this.pagePath + "/courses/" + course.course.id },
+                    item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + course.course.getId() },
                     children: allLinks,
                 });
             }
@@ -268,7 +267,7 @@ export class StudentPage extends ViewPage {
             this.GroupUserCourses = [];
 
             for (const course of this.activeUserCourses) {
-                const group = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.course.id);
+                const group = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.course.getId());
                 if (group != null) {
                     const groupCourse = await this.courseMan.getGroupCourse(group, course.course);
                     if (groupCourse) {
@@ -282,13 +281,13 @@ export class StudentPage extends ViewPage {
     private selectCourse(course: number) {
         this.selectedUserCourse = undefined;
         this.selectedUserCourse = this.activeUserCourses.find(
-            (e) => e.course.id === course);
+            (e) => e.course.getId() === course);
     }
 
     private selectGroupCourse(course: number) {
         this.selectedUserGroupCourse = undefined;
         this.selectedUserGroupCourse = this.GroupUserCourses.find(
-            (e) => e.course.id === course);
+            (e) => e.course.getId() === course);
     }
 
     private selectAssignment(labId: number) {

@@ -1,11 +1,10 @@
 import * as React from "react";
 
-import { ICourse } from "../../models";
-import { Group } from "../../../proto/ag_pb";
+import { Course, Group } from "../../../proto/ag_pb";
 
 interface IGroupPro {
     group: Group;
-    course: ICourse;
+    course: Course;
 }
 class GroupInfo extends React.Component<IGroupPro, any> {
     public render() {
@@ -16,7 +15,7 @@ class GroupInfo extends React.Component<IGroupPro, any> {
         }
         return (
             <div className="group-info">
-                <h1>{this.props.course.name}</h1>
+                <h1>{this.props.course.getName()}</h1>
                 <h3>{this.props.group.getName()} - <small>{this.getStatus()}</small></h3>
                 <div className="group-members">
                     <ul className="list-group">

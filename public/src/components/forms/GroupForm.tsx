@@ -3,10 +3,9 @@ import * as React from "react";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 import {
-    ICourse, IError,
-    INewGroup, isError, IStatusCode, IUserRelation,
+    IError, INewGroup, isError, IStatusCode, IUserRelation,
 } from "../../models";
-import { User, Enrollment, Group } from "../../../proto/ag_pb";
+import { Course, User, Enrollment, Group } from "../../../proto/ag_pb";
 import { Search } from "../../components";
 import { UserManager } from "../../managers/UserManager";
 
@@ -18,7 +17,7 @@ interface IGroupProp {
     userMan: UserManager;
     navMan: NavigationManager;
     pagePath: string;
-    course: ICourse;
+    course: Course;
     groupData?: Group;
 }
 interface IGroupState {
@@ -161,8 +160,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 if (this.props.groupData) {
                     if (this.props.groupData.getUsersList().filter((x) => x.getId() === this.props.curUser.getId()).length > 0) {
                         const redirectTo: string = this.props.groupData ?
-                            this.props.pagePath + "/courses/" + this.props.course.id + "/groups"
-                            : this.props.pagePath + "/courses/" + this.props.course.id + "/members";
+                            this.props.pagePath + "/courses/" + this.props.course.getId() + "/groups"
+                            : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
 
                         this.props.navMan.navigateTo(redirectTo);
                     } else {
@@ -194,14 +193,14 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     }
 
     private async createGroup(formData: INewGroup): Promise<Group | IError> {
-        return await this.props.courseMan.createGroup(formData, this.props.course.id);
+        return await this.props.courseMan.createGroup(formData, this.props.course.getId());
     }
 
     private async updateGroup(formData: INewGroup, gid: number): Promise<IStatusCode | IError> {
         const groupData = new Group();
         groupData.setId(gid);
         groupData.setName(formData.name);
-        groupData.setCourseid(this.props.course.id);
+        groupData.setCourseid(this.props.course.getId());
         const groupUsers: User[] = [];  
         formData.userids.forEach((ele) => {
             const usr = new User();

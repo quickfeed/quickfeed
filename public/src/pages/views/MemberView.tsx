@@ -1,10 +1,10 @@
 import * as React from "react";
 import { CourseManager, ILink, NavigationManager, UserManager } from "../../managers";
-import { ICourse, IUserRelation } from "../../models";
+import { IUserRelation } from "../../models";
 
 import { DynamicTable } from "../../components";
 import { ActionType, UserView } from "./UserView";
-import { Enrollment } from "../../../proto/ag_pb";
+import { Course, Enrollment } from "../../../proto/ag_pb";
 
 interface IUserViewerProps {
     navMan: NavigationManager;
@@ -12,7 +12,7 @@ interface IUserViewerProps {
     acceptedUsers: IUserRelation[];
     pendingUsers: IUserRelation[];
     rejectedUsers: IUserRelation[];
-    course: ICourse;
+    course: Course;
 }
 
 export class MemberView extends React.Component<IUserViewerProps, {}> {
@@ -23,7 +23,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
         ];
 
         return <div>
-            <h1>{this.props.course.name}</h1>
+            <h1>{this.props.course.getName()}</h1>
             {this.renderUserView()}
             {this.renderPendingView(pendingActions)}
             {this.renderRejectedView()}

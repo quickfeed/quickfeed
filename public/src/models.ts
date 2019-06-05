@@ -1,4 +1,4 @@
-import { Enrollment, Group, User } from "../proto/ag_pb";
+import { Enrollment, Group, User, Course } from "../proto/ag_pb";
 
 // TODO(meling) can we delete these types, and instead use types from ag.proto?
 
@@ -21,7 +21,7 @@ export interface IGroup {
  * Checks if value is compatible with the ICourse interface
  * @param value A value to check if it is an ICourse
  */
-export function isCourse(value: any): value is ICourse {
+export function isCourse(value: any): value is Course {
     return value
         && typeof value.id === "number"
         && typeof value.name === "string"
@@ -34,7 +34,7 @@ export interface ICourseLinkAssignment {
     /**
      * The course to the group
      */
-    course: ICourse;
+    course: Course;
     /**
      * The relation between the group and the course.
      * Is null if there is none
@@ -123,21 +123,6 @@ export interface ICourseGroupRelation {
 
 // Browser only objects END
 
-/**
- * Information about a single course
- */
-export interface INewCourse {
-    name: string;
-    code: string;
-    tag: string;
-    year: number;
-    provider: string;
-    directoryid: number;
-}
-
-export interface ICourse extends INewCourse {
-    id: number;
-}
 
 export interface IBuildInfo {
     buildid: number;
@@ -146,9 +131,6 @@ export interface IBuildInfo {
     execTime: number;
 }
 
-export interface ICourseWithEnrollStatus extends ICourse {
-    enrolled: Enrollment.UserStatus;
-}
 
 /**
  * Information about a single assignment
@@ -265,7 +247,7 @@ export interface ISubmission {
  * A course description with all related assignments
  */
 export interface ICoursesWithAssignments {
-    course: ICourse;
+    course: Course;
     labs: IAssignment[];
 }
 

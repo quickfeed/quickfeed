@@ -1,9 +1,7 @@
 import * as Models from "../models";
 import {
     IAssignment,
-    ICourse,
     ICourseUserLink,
-    ICourseWithEnrollStatus,
     IError,
     INewGroup,
     IStatusCode,
@@ -15,7 +13,7 @@ import { IMap, MapHelper, mapify } from "../map";
 import { IUserProvider } from "./UserManager";
 
 import { ICourseEnrollment, IUserEnrollment } from "../managers";
-import { Group, Enrollment, User, Directory } from "../../proto/ag_pb";
+import { Course, Group, Enrollment, User, Directory } from "../../proto/ag_pb";
 import { userInfo } from "os";
 import { isNull } from "util";
 
@@ -36,7 +34,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private localUsers: IMap<IGrpcDummyUser>;
     private localAssignments: IMap<IAssignment>;
-    private localCourses: IMap<ICourse>;
+    private localCourses: IMap<Course>;
     private localCourseStudent: ICourseUserLink[];
     private localLabInfo: IMap<ISubmission>;
     private localCourseGroups: Group[];
@@ -69,7 +67,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return users;
     }
 
-    public async getCourses(): Promise<ICourse[]> {
+    public async getCourses(): Promise<Course[]> {
         // return this.localCourses;
         return MapHelper.toArray(this.localCourses);
     }
@@ -125,9 +123,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async addUserToCourse(user: User, course: ICourse): Promise<boolean> {
+    public async addUserToCourse(user: User, course: Course): Promise<boolean> {
         this.localCourseStudent.push({
-            courseId: course.id,
+            courseId: course.getId(),
             userid: user.getId(),
             state: Enrollment.UserStatus.PENDING,
         });
@@ -139,10 +137,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
      * @param course The course userlinks should be retrived from
      * @param state Optinal. The state of the relation, all if not present
      */
-    public async getUserLinksForCourse(course: ICourse, state?: Enrollment.UserStatus[]): Promise<ICourseUserLink[]> {
+    public async getUserLinksForCourse(course: Course, state?: Enrollment.UserStatus[]): Promise<ICourseUserLink[]> {
         const users: ICourseUserLink[] = [];
         for (const c of await this.getCoursesStudent()) {
-            if (course.id === c.courseId && (state === undefined || c.state === Enrollment.UserStatus.STUDENT)) {
+            if (course.getId() === c.courseId && (state === undefined || c.state === Enrollment.UserStatus.STUDENT)) {
                 users.push(c);
             }
         }
@@ -161,7 +159,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Models.ICourse, state?: Enrollment.UserStatus[])
+    public async getUsersForCourse(course: Course, state?: Enrollment.UserStatus[])
         : Promise<IUserEnrollment[]> {
         const courseStds: ICourseUserLink[] =
             await this.getUserLinksForCourse(course, state);
@@ -176,19 +174,19 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    public async createNewCourse(course: any): Promise<ICourse | IError> {
+    public async createNewCourse(course: any): Promise<Course | IError> {
         throw new Error("Method not implemented");
     }
 
-    public async getCourse(id: number): Promise<ICourse | null> {
-        const course: ICourse | undefined = this.localCourses[id];
+    public async getCourse(id: number): Promise<Course | null> {
+        const course: Course | undefined = this.localCourses[id];
         if (course) {
             return course;
         }
         return null;
     }
 
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError> {
+    public async updateCourse(courseId: number, courseData: Course): Promise<IStatusCode | IError> {
         throw new Error("Method not implemented");
     }
 
@@ -442,54 +440,61 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalCourses() {
-        this.localCourses = mapify([
-            {
-                id: 0,
-                name: "Object Oriented Programming",
-                code: "DAT100",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650610,
 
-            },
-            {
-                id: 1,
-                name: "Algorithms and Datastructures",
-                code: "DAT200",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650611,
-            },
-            {
-                id: 2,
-                name: "Databases",
-                code: "DAT220",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650612,
-            },
-            {
-                id: 3,
-                name: "Communication Technology",
-                code: "DAT230",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650613,
-            },
-            {
-                id: 4,
-                name: "Operating Systems",
-                code: "DAT320",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650614,
-            },
-        ] as ICourse[], (ele) => ele.id);
+        const tempCourses: Course[] = [];
+        const course0 = new Course();
+        const course1 = new Course();
+        const course2 = new Course();
+        const course3 = new Course();
+        const course4 = new Course();
+
+        course0.setId(0);
+        course0.setName("Object Oriented Programming");
+        course0.setCode("DAT100");
+        course0.setTag("Spring");
+        course0.setYear(2017);
+        course0.setProvider("github");
+        course0.setDirectoryid(23650610);
+
+        course1.setId(1);
+        course1.setName("Algorithms and Datastructures");
+        course1.setCode("DAT200");
+        course1.setTag("Spring");
+        course1.setYear(2017);
+        course1.setProvider("github");
+        course1.setDirectoryid(23650611);
+
+        course2.setId(2);
+        course2.setName("Databases");
+        course2.setCode("DAT220");
+        course2.setTag("Spring");
+        course2.setYear(2017);
+        course2.setProvider("github");
+        course2.setDirectoryid(23650612);
+
+        course3.setId(3);
+        course3.setName("Communication Technology");
+        course3.setCode("DAT230");
+        course3.setTag("Spring");
+        course3.setYear(2017);
+        course3.setProvider("github");
+        course3.setDirectoryid(23650613);
+
+        course4.setId(4);
+        course4.setName("Operating Systems");
+        course4.setCode("DAT320");
+        course4.setTag("Spring");
+        course4.setYear(2017);
+        course4.setProvider("github");
+        course4.setDirectoryid(23650614);
+
+        tempCourses.push(course0);
+        tempCourses.push(course1);
+        tempCourses.push(course2);
+        tempCourses.push(course3);
+        tempCourses.push(course4);
+       
+        this.localCourses = mapify(tempCourses, (ele) => ele.getId());
     }
 
     private addLocalCourseStudent() {

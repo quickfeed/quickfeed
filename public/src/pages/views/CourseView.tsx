@@ -1,14 +1,14 @@
 import * as React from "react";
 import { DynamicTable, Search } from "../../components";
-import { ICourse } from "../../models";
+import { Course } from "../../../proto/ag_pb";
 
 interface ICourseViewProp {
-    courses: ICourse[];
+    courses: Course[];
     onEditClick: (id: number) => void;
 }
 
 interface ICourseViewState {
-    courses: ICourse[];
+    courses: Course[];
 }
 
 export class CourseView extends React.Component<ICourseViewProp, ICourseViewState> {
@@ -30,10 +30,10 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
                 <DynamicTable
                     header={["ID", "Name", "Course Code", "Year", "Semester", "Action"]}
                     data={this.state.courses}
-                    selector={(e: ICourse) => [e.id.toString(), e.name, e.code, e.year.toString(), e.tag,
+                    selector={(e: Course) => [e.getId().toString(), e.getName(), e.getCode(), e.getYear().toString(), e.getTag(),
                     <span>
                         <button className="btn btn-primary"
-                            onClick={() => this.props.onEditClick(e.id)}>Edit</button>
+                            onClick={() => this.props.onEditClick(e.getId())}>Edit</button>
                     </span>,
                     ]}
                 >
@@ -44,11 +44,11 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
 
     private handleSearch(query: string): void {
         query = query.toLowerCase();
-        const filteredData: ICourse[] = [];
+        const filteredData: Course[] = [];
         this.props.courses.forEach((course) => {
-            if (course.name.toLowerCase().indexOf(query) !== -1
-                || course.code.toLowerCase().indexOf(query) !== -1
-                || course.year.toString().indexOf(query) !== -1
+            if (course.getName().toLowerCase().indexOf(query) !== -1
+                || course.getCode().toLowerCase().indexOf(query) !== -1
+                || course.getYear().toString().indexOf(query) !== -1
             ) {
                 filteredData.push(course);
             }

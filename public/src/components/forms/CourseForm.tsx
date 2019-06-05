@@ -1,19 +1,19 @@
 import * as React from "react";
 import { BootstrapButton } from "../../components";
-import { ICourse, IError, INewCourse, isError, IStatusCode } from "../../models";
+import { IError, isError, IStatusCode } from "../../models";
 
 import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
-import {Directory, Void } from "../../../proto/ag_pb"
+import { Course, Directory, Void } from "../../../proto/ag_pb"
 
 interface ICourseFormProps<T> {
     className?: string;
     courseMan: CourseManager;
     navMan: NavigationManager;
     pagePath: string;
-    courseData?: ICourse; // for editing an existing course
+    courseData?: Course; // for editing an existing course
     providers: string[];
 }
 
@@ -42,12 +42,12 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     constructor(props: any) {
         super(props);
         this.state = {
-            name: this.props.courseData ? this.props.courseData.name : "",
-            code: this.props.courseData ? this.props.courseData.code : "",
-            tag: this.props.courseData ? this.props.courseData.tag : "",
-            year: this.props.courseData ? this.props.courseData.year.toString() : "",
-            provider: this.props.courseData ? this.props.courseData.provider : "",
-            directoryid: this.props.courseData ? this.props.courseData.directoryid : 0,
+            name: this.props.courseData ? this.props.courseData.getName() : "",
+            code: this.props.courseData ? this.props.courseData.getCode() : "",
+            tag: this.props.courseData ? this.props.courseData.getTag() : "",
+            year: this.props.courseData ? this.props.courseData.getYear().toString() : "",
+            provider: this.props.courseData ? this.props.courseData.getProvider() : "",
+            directoryid: this.props.courseData ? this.props.courseData.getDirectoryid() : 0,
             organisations: null,
             errorFlash: null,
         };
@@ -112,7 +112,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                         name="provider"
                         value={provider}
                         defaultChecked={this.props.courseData
-                            && this.props.courseData.provider === provider ? true : false}
+                            && this.props.courseData.getProvider() === provider ? true : false}
                         onClick={() => this.getOrganizations(provider)}
                     />{provider}
                 </label>;
@@ -163,7 +163,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             });
         } else {
             const result = this.props.courseData ?
-                await this.updateCourse(this.props.courseData.id) : await this.createNewCourse();
+                await this.updateCourse(this.props.courseData.getId()) : await this.createNewCourse();
 
             if (isError(result) && result.data) {
                 const errMsg = result.data.message;
@@ -185,30 +185,29 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     }
 
     private async updateCourse(courseId: number): Promise<Void | IError> {
-        const courseData: ICourse = {
-            id: courseId,
-            name: this.state.name,
-            code: this.state.code,
-            tag: this.state.tag,
-            year: parseInt(this.state.year, 10),
-            provider: this.state.provider,
-            directoryid: this.state.directoryid,
-        };
+        const courseData = new Course();
+        courseData.setId(courseId);
+        courseData.setName(this.state.name);
+        courseData.setCode(this.state.code);
+        courseData.setTag(this.state.tag);
+        courseData.setYear(parseInt(this.state.year, 10));
+        courseData.setProvider(this.state.provider);
+        courseData.setDirectoryid(this.state.directoryid);
+       
         return await this.props.courseMan.updateCourse(courseId, courseData);
 
     }
 
-    private async createNewCourse(): Promise<ICourse | IError> {
-        const courseData: INewCourse = {
-            name: this.state.name,
-            code: this.state.code,
-            tag: this.state.tag,
-            year: parseInt(this.state.year, 10),
-            provider: this.state.provider,
-            directoryid: this.state.directoryid,
-        };
-        return await this.props.courseMan.createNewCourse(courseData);
+    private async createNewCourse(): Promise<Course | IError> {
+        const courseData = new Course();
+        courseData.setName(this.state.name);
+        courseData.setCode(this.state.code);
+        courseData.setTag(this.state.tag);
+        courseData.setYear(parseInt(this.state.year, 10));
+        courseData.setProvider(this.state.provider);
+        courseData.setDirectoryid(this.state.directoryid);
 
+        return await this.props.courseMan.createNewCourse(courseData);
     }
 
     private handleInputChange(e: React.FormEvent<any>) {
