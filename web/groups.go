@@ -222,17 +222,11 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		}
 	}
 
-	// if group comes directly from the request, it would not have remote identities. Get the actual group from the database
-	dbGroup, err := db.GetGroup(request.GetID())
-	if err != nil {
-		return err
-	}
-
 	// check whether the group repo already exists
-	if _, err = db.GetRepositoryByCourseGroup(course.ID, dbGroup.ID); err == gorm.ErrRecordNotFound {
+	if _, err = db.GetRepositoryByCourseGroup(course.ID, request.ID); err == gorm.ErrRecordNotFound {
 		// if not - we will create team and repo
 		// if all checks pass, create group repository
-		repo, team, err := createGroupRepoAndTeam(ctx, s, course, dbGroup)
+		repo, team, err := createGroupRepoAndTeam(ctx, s, course, request)
 		if err != nil {
 			log.Println("web: UpdateGroup could not create group repos and team: ", err.Error())
 			return err
@@ -254,7 +248,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	} else {
 		log.Println("UpdateGroup updates team members")
 		// if the github team already exists, update its members
-		if err := updateGroupTeam(ctx, s, course, dbGroup); err != nil {
+		if err := updateGroupTeam(ctx, s, course, request); err != nil {
 			log.Println("groups.go: updateGroupTeam failed: ", err.Error())
 		}
 	}
@@ -301,11 +295,8 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) error {
 
 	// make list with github username strings
-	//TODO(vera): refactor it to a separate method
-	usernames := make([]string, 0)
-	for _, usr := range g.Users {
-		usernames = append(usernames, usr.Login)
-	}
+	usernames := fetchGitUserNames(g)
+
 	dir, err := s.GetDirectory(ctx, c.DirectoryID)
 	if err != nil {
 		log.Println("web: updateGroupTeam error getting directory: ", err.Error())
