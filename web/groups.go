@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/autograde/aguis/scm"
-	"github.com/labstack/echo"
 
 	"google.golang.org/grpc/codes"
 
@@ -253,6 +252,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		request.TeamID = team.ID
 
 	} else {
+		log.Println("UpdateGroup updates team members")
 		// if the github team already exists, update its members
 		if err := updateGroupTeam(ctx, s, course, dbGroup); err != nil {
 			log.Println("groups.go: updateGroupTeam failed: ", err.Error())
@@ -288,11 +288,7 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 		return nil, nil, err
 	}
 
-	gitUserNames, err := fetchGitUserNames(ctx, s, course, group.Users...)
-	if err != nil {
-		log.Println("web: createGroupRepoAndTeam error getting usernames: ", err.Error())
-		return nil, nil, err
-	}
+	gitUserNames := fetchGitUserNames(group)
 
 	opt := &scm.CreateRepositoryOptions{
 		Directory: dir,
@@ -331,19 +327,10 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) 
 	return nil
 }
 
-func fetchGitUserNames(ctx context.Context, s scm.SCM, course *pb.Course, users ...*pb.User) ([]string, error) {
+func fetchGitUserNames(g *pb.Group) []string {
 	var gitUserNames []string
-	for _, user := range users {
-		remote := user.GetRemoteIDFor(course.Provider)
-		if remote == nil {
-			return nil, echo.ErrNotFound
-		}
-		// note this requires one git call per user in the group
-		userName, err := s.GetUserNameByID(ctx, remote.RemoteID)
-		if err != nil {
-			return nil, err
-		}
-		gitUserNames = append(gitUserNames, userName)
+	for _, user := range g.Users {
+		gitUserNames = append(gitUserNames, user.Login)
 	}
-	return gitUserNames, nil
+	return gitUserNames
 }

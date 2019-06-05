@@ -6,13 +6,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"net/http"
-
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 	"github.com/jinzhu/gorm"
-	"github.com/labstack/echo"
 )
 
 // ListCourses returns a JSON object containing all the courses in the database.
@@ -136,22 +133,16 @@ func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, stud
 		return nil, nil, err
 	}
 
-	gitUserNames, err := fetchGitUserNames(ctx, s, course, student)
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(gitUserNames) > 1 || len(gitUserNames) == 0 {
-		return nil, nil, echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-	}
 	// the student's git user name is the same as the team name
-	teamName := gitUserNames[0]
+	teamName := student.Login
 
 	opt := &scm.CreateRepositoryOptions{
 		Directory: dir,
 		Path:      pb.StudentRepoName(teamName),
 		Private:   true,
 	}
-	return s.CreateRepoAndTeam(ctx, opt, teamName, gitUserNames)
+
+	return s.CreateRepoAndTeam(ctx, opt, teamName, []string{teamName})
 }
 
 // GetCourse find course by id and return JSON object.
