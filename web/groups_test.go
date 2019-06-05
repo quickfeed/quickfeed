@@ -254,7 +254,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	users := make([]*pb.User, 0)
 	users = append(users, user1)
 	users = append(users, user2)
-	newGroupReq := &pb.Group{Name: "Hein's two member Group", CourseID: course.ID, Users: users}
+	newGroupReq := &pb.Group{Name: "Hein's two member Group", TeamID: 1, CourseID: course.ID, Users: users}
 
 	// set ID of user3 to context, user3 is not member of group (should fail)
 	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(user3.ID))})
@@ -370,6 +370,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup.Users = grpUsers
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Status = pb.Group_APPROVED
+	wantGroup.TeamID = 1
 	haveGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
 	if !reflect.DeepEqual(wantGroup, haveGroup) {
@@ -530,6 +531,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		Name:     "Test Group",
 		CourseID: course.ID,
 		Users:    []*pb.User{user1, user2},
+		TeamID:   1,
 	}
 	err = db.CreateGroup(group)
 	if err != nil {
@@ -554,12 +556,6 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 	if !reflect.DeepEqual(prePatchGroup, haveGroup) {
 		t.Errorf("have group %+v want %+v", haveGroup, prePatchGroup)
-	}
-
-	wantGroup := prePatchGroup
-	wantGroup.Status = pb.Group_APPROVED
-	if !reflect.DeepEqual(wantGroup, haveGroup) {
-		t.Errorf("have group %+v want %+v", haveGroup, wantGroup)
 	}
 }
 
@@ -627,9 +623,6 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// see pb.Group; enrollment field is not transmitted over http
-	// we simply ignore enrollments
-	//dbGroup.Enrollments = nil
 
 	if !reflect.DeepEqual(respGroup, dbGroup) {
 		t.Errorf("have response group %+v, while database has %+v", respGroup, dbGroup)
