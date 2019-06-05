@@ -269,7 +269,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
 
-    public async updateGroup(group: Group) {     //(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
+    public async updateGroup(group: Group): Promise<IStatusCode | IError> {     //(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
         const result = await this.grpcHelper.updateGroup(group);
         if (result.statusCode !== 0 || !result.data) {
             this.handleError(result, "getGroup");
