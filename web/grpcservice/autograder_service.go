@@ -283,29 +283,6 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
-//TODO(vera): this should not be called anymore, but must be removed from the proto first
-
-// UpdateGroupStatus is called by UpdateGroupStatus client method, changes group enrollment status
-func (s *AutograderService) UpdateGroupStatus(ctx context.Context, in *pb.Group) (*pb.Void, error) {
-	log.Fatalln("AG service: UpdateGroupSattus started. This method should NOT be called EVER")
-	if !in.IsValidGroup() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
-	}
-	usr, err := getCurrentUser(ctx, s.db)
-	if err != nil {
-		return nil, err
-	}
-	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
-	if err != nil {
-		return nil, err
-	}
-	scm, err := getSCM(ctx, s.scms, s.db, crs.Provider)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
-}
-
 // DeleteGroup removes group record from the database
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	if in.GetID() < 1 {

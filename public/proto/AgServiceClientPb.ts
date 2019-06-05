@@ -248,28 +248,6 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoUpdateGroupStatus = new grpcWeb.AbstractClientBase.MethodInfo(
-    Void,
-    (request: Group) => {
-      return request.serializeBinary();
-    },
-    Void.deserializeBinary
-  );
-
-  updateGroupStatus(
-    request: Group,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: Void) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/UpdateGroupStatus',
-      request,
-      metadata || {},
-      this.methodInfoUpdateGroupStatus,
-      callback);
-  }
-
   methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
     (request: Group) => {

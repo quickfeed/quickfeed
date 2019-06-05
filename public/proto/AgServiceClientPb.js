@@ -37,9 +37,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
-        this.methodInfoUpdateGroupStatus = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
-            return request.serializeBinary();
-        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
@@ -143,10 +140,6 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.updateGroup = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateGroup', request, metadata || {}, this.methodInfoUpdateGroup, callback);
-    };
-    AutograderServiceClient.prototype.updateGroupStatus = function (request, metadata, callback) {
-        return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/UpdateGroupStatus', request, metadata || {}, this.methodInfoUpdateGroupStatus, callback);
     };
     AutograderServiceClient.prototype.deleteGroup = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
