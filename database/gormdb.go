@@ -813,6 +813,21 @@ func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType
 	return &repo, nil
 }
 
+// GetRepositoryByCourseGroup implements the database interface
+func (db *GormDB) GetRepositoryByCourseGroup(cid uint64, gid uint64) (*pb.Repository, error) {
+	course, err := db.GetCourse(cid)
+	if err != nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var repo pb.Repository
+	if err := db.conn.First(&repo, &pb.Repository{DirectoryID: course.DirectoryID, GroupID: gid}).Error; err != nil {
+		return nil, err
+	}
+
+	return &repo, nil
+}
+
 // GetRepositoriesByDirectory implements the database interface
 func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*pb.Repository, error) {
 

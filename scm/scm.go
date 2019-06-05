@@ -127,6 +127,7 @@ type CreateHookOptions struct {
 type CreateTeamOptions struct {
 	Directory *pb.Directory
 	TeamName  string
+	TeamID    uint64
 	Users     []string
 }
 

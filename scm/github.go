@@ -240,26 +240,30 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
-	// get all teams for org
-	teams, _, err := s.client.Organizations.ListTeams(ctx, opt.Directory.Path, nil)
-	if err != nil {
-		log.Println("GitHub UpdateTeamMembers could not list teams: ", err.Error())
-		return err
-	}
+	/*	// get all teams for org
+		teams, _, err := s.client.Organizations.ListTeams(ctx, opt.Directory.Path, nil)
+		if err != nil {
+			log.Println("GitHub UpdateTeamMembers could not list teams: ", err.Error())
+			return err
+		}*/
 
 	// find team to be updated
-	var groupTeam *github.Team
-	for _, team := range teams {
-		if team.GetName() == opt.TeamName {
-			log.Println("GitHub UpdateTeamMembers found the team: ", team.GetName())
-			groupTeam = team
+	/*	for _, team := range teams {
+			if team.GetName() == opt.TeamName {
+				log.Println("GitHub UpdateTeamMembers found the team: ", team.GetName())
+				groupTeam = team
+			}
 		}
-	}
-	if groupTeam == nil {
-		log.Println("GitHub UpdateTeamMembers could not found the team ")
+		if groupTeam == nil {
+			log.Println("GitHub UpdateTeamMembers could not found the team ")
+			return status.Errorf(codes.NotFound, "team not found")
+		}*/
+	groupTeam, _, err := s.client.Organizations.GetTeam(ctx, int(opt.TeamID))
+	if err != nil {
 		return status.Errorf(codes.NotFound, "team not found")
-	}
 
+	}
+	log.Println("UpdateTeamMembers: got group team, adding new members")
 	// check whether group members are already in team; add missing members
 	for _, member := range opt.Users {
 		isMember, _, err := s.client.Organizations.IsTeamMember(ctx, groupTeam.GetID(), member)
@@ -271,6 +275,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOption
 			log.Println("GitHub UpdateTeamMembers: group member ", member, " is not in the team")
 			_, _, err = s.client.Organizations.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
 			if err != nil {
+
 				log.Println("GitHub UpdateTeamMembers could not add user ", member, " to the team ", groupTeam.GetName(), ": ", err.Error())
 				return err
 			}
@@ -283,7 +288,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOption
 		log.Println("GitHub UpdateTeamMembers could not list team members: ", err.Error())
 		return err
 	}
-
+	log.Println("GitHub UpdateTeamMembers got old users: ", oldUsers)
 	// check if all the team members are in the new group;
 	for _, teamMember := range oldUsers {
 		toRemove := true

@@ -228,24 +228,35 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	if err != nil {
 		return err
 	}
-	// if all checks pass, create group repository
-	repo, team, err := createGroupRepoAndTeam(ctx, s, course, dbGroup)
-	if err != nil {
-		log.Println("web: UpdateGroup could not create group repos and team: ", err.Error())
-		return err
-	}
 
-	// create database entry for group repository
-	groupRepo := &pb.Repository{
-		DirectoryID:  course.DirectoryID,
-		RepositoryID: repo.ID,
-		UserID:       0,
-		GroupID:      request.ID,
-		HTMLURL:      repo.WebURL,
-		RepoType:     pb.Repository_USER, // TODO(meling) should we distinguish GroupRepo?
-	}
-	if err := db.CreateRepository(groupRepo); err != nil {
-		return err
+	// check whether the group repo already exists
+	if _, err = db.GetRepositoryByCourseGroup(course.ID, dbGroup.ID); err == gorm.ErrRecordNotFound {
+		// if not - we will create team and repo
+		// if all checks pass, create group repository
+		repo, team, err := createGroupRepoAndTeam(ctx, s, course, dbGroup)
+		if err != nil {
+			log.Println("web: UpdateGroup could not create group repos and team: ", err.Error())
+			return err
+		}
+		// create database entry for group repository
+		groupRepo := &pb.Repository{
+			DirectoryID:  course.DirectoryID,
+			RepositoryID: repo.ID,
+			UserID:       0,
+			GroupID:      request.ID,
+			HTMLURL:      repo.WebURL,
+			RepoType:     pb.Repository_USER, // TODO(meling) should we distinguish GroupRepo?
+		}
+		if err := db.CreateRepository(groupRepo); err != nil {
+			return err
+		}
+		request.TeamID = team.ID
+
+	} else {
+		// if the github team already exists, update its members
+		if err := updateGroupTeam(ctx, s, course, dbGroup); err != nil {
+			log.Println("groups.go: updateGroupTeam failed: ", err.Error())
+		}
 	}
 
 	// update group
@@ -253,7 +264,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		ID:       request.ID,
 		Name:     request.Name,
 		CourseID: request.CourseID,
-		TeamID:   team.ID,
+		TeamID:   request.TeamID,
 		Users:    users,
 		Status:   pb.Group_APPROVED,
 	}); err != nil {
@@ -289,6 +300,35 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 		Private:   true,
 	}
 	return s.CreateRepoAndTeam(ctx, opt, group.Name, gitUserNames)
+}
+
+func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) error {
+
+	// make list with github username strings
+	//TODO(vera): refactor it to a separate method
+	usernames := make([]string, 0)
+	for _, usr := range g.Users {
+		usernames = append(usernames, usr.Login)
+	}
+	dir, err := s.GetDirectory(ctx, c.DirectoryID)
+	if err != nil {
+		log.Println("web: updateGroupTeam error getting directory: ", err.Error())
+		return err
+	}
+
+	opt := &scm.CreateTeamOptions{
+		Directory: dir,
+		TeamName:  g.Name,
+		TeamID:    g.TeamID,
+		Users:     usernames,
+	}
+
+	if err = s.UpdateTeamMembers(ctx, opt); err != nil {
+		log.Println("updateGroupTeam failed to UpdateTeamMembers: ", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func fetchGitUserNames(ctx context.Context, s scm.SCM, course *pb.Course, users ...*pb.User) ([]string, error) {
