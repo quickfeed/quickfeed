@@ -38,18 +38,6 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
                         Rejected
                     </span>);
             }
-            /*} else {
-                base.push(<div>
-                    <button
-                        onClick={() => { this.props.onEnrollmentClick(course.course); }}
-                        className="btn btn-primary">
-                        Enroll
-                    </button>
-                    <span style={{ padding: "7px", verticalAlign: "middle" }} className="bg-danger">
-                        Rejected
-                    </span>
-                </div>);
-            }*/
         } else {
             base.push(
                 <button

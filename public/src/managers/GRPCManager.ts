@@ -185,7 +185,6 @@ export class GrpcManager {
         return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse, request);
     }
 
-    // HACK: check if really gets groups by course id
     public getGroups(courseid: number): Promise<IGrpcResponse<Groups>> {
         const request = new RecordRequest();
         request.setId(courseid);

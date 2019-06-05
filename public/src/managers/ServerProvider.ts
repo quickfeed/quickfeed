@@ -109,7 +109,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const arr: ICourseEnrollment[] = [];
         result.data.getCoursesList().forEach((ele) => {
             const course = this.toICourse(ele);
-            //const enroll: number = ele.getEnrolled();
             arr.push({
                 course,
                 status: ele.getEnrolled(),
@@ -229,20 +228,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             this.handleError(result, "getCourseGroups");
             throw new Error("Problem with the request");
         }
-        /*
-        const arr: ICourseGroup[] = [];
-        result.data.getGroupsList().forEach((ele) => {
-            const grp = this.toIGroup(ele);
-            arr.push(grp);
-        });
-        return arr;*/
         return result.data.getGroupsList();
     }
 
     public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<Group | null> {
         const result = await this.grpcHelper.getGroupByUserAndCourse(userID, courseID);
         if (result.statusCode !== 0 || !result.data) {
-            //this.handleError(result, "getGroupByUserAndCourse");
             return null;
         }
         return result.data;
@@ -512,18 +503,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
         return icourse;
     }
-    /*
-    private toIGroup(grp: Group): ICourseGroup {
-                
-        const igroup: ICourseGroup = {
-            id: grp.getId(),
-            name: grp.getName(),
-            courseid: grp.getCourseid(),
-            status: grp.getStatus().valueOf(),
-            users: grp.getUsersList(),
-        }
-        return igroup;
-    }*/
 
     private toISUbmission(sbm: Submission): ISubmission {      
         let buildInfoAsString = "";

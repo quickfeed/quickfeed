@@ -838,7 +838,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	}
 	if course != 1 {
 		//return gorm.ErrRecordNotFound
-		return status.Errorf(codes.Aborted, "course not foung")
+		return status.Errorf(codes.Aborted, "course not found")
 	}
 	if err := tx.Model(&pb.Group{}).Updates(group).Error; err != nil {
 		tx.Rollback()
@@ -872,7 +872,6 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 
 	if query.RowsAffected != int64(len(userids)) {
 		tx.Rollback()
-		//return gorm.ErrRecordNotFound
 		return status.Errorf(codes.Aborted, "failed to update group")
 	}
 
