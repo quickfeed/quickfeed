@@ -56,10 +56,12 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                     header={["Name", "Members"]}
                     data={this.props.approvedGroups}
                     selector={
-                        (group: Group) => [
-                            group.getName(),
-                            this.getMembers(group.getUsersList()),
-                        ]}
+                        (group: Group) => //[
+                            //group.getName(),
+                            //this.getMembers(group.getUsersList()),
+                            this.renderRow(group)
+                        //]}
+                    }
                 />
             </div>
         );
