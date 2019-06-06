@@ -27,13 +27,11 @@ import {
     ICourseEnrollment,
     IEnrollment,
     isCourseEnrollment,
-    isUserEnrollment,
     IUserEnrollment,
     IUserProvider,
 } from "../managers";
 import { IMap, mapify } from "../map";
 import { ILogger } from "./LogManager";
-import { userInfo } from "os";
 
 interface IEndpoints {
     courses: string;

@@ -193,20 +193,6 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	return &pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm)
 }
 
-// GetSelf returns information about the user with user ID sent in the context
-func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User, error) {
-	currentUser, err := getCurrentUser(ctx, s.db)
-	if err != nil {
-		return nil, err
-	}
-	user, err := web.GetUser(&pb.RecordRequest{ID: currentUser.ID}, s.db)
-	if err != nil {
-		return nil, err
-	}
-	user.RemoveRemoteID()
-	return user, nil
-}
-
 // GetGroup returns information about a group
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
 	log.Println("AG service: getGroup got request with ID ", in.GetID())

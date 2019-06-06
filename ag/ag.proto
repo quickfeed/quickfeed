@@ -207,7 +207,6 @@ service AutograderService {
 
     // users //
 
-    rpc GetSelf(Void) returns (User) {}
     rpc GetUser(RecordRequest) returns (User) {}
     rpc GetUsers(Void) returns (Users) {}
     rpc UpdateUser(User) returns (User) {}
