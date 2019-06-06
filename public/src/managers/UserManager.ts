@@ -1,9 +1,7 @@
 import { IEventData, newEvent } from "../event";
-import {Assignment, Course, Enrollment, User, Group, Submission, ActionRequest} from "../../proto/ag_pb";
+import { User } from "../../proto/ag_pb";
 
-import { IMap, MapHelper } from "../map";
 import { ILogger } from "./LogManager";
-import { isNullOrUndefined } from "util";
 
 export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<User | null>;

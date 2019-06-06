@@ -1,9 +1,9 @@
 import * as React from "react";
-import { ILink, NavigationManager } from "../managers";
+import { NavigationManager } from "../managers";
 import { View, ViewPage } from "./ViewPage";
 import { HelpView } from "./views/HelpView";
 
-import { INavInfo, NavigationHelper } from "../NavigationHelper";
+import { INavInfo } from "../NavigationHelper";
 
 export class HelpPage extends ViewPage {
 

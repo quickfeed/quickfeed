@@ -14,7 +14,6 @@ import { IUserProvider } from "./UserManager";
 
 import { ICourseEnrollment, IUserEnrollment } from "../managers";
 import { Course, Group, Enrollment, User, Directory } from "../../proto/ag_pb";
-import { userInfo } from "os";
 import { isNull } from "util";
 
 interface IDummyUser extends User {

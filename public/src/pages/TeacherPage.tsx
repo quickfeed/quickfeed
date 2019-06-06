@@ -1,17 +1,15 @@
 import * as React from "react";
 
-import { BootstrapButton, CourseGroup, DynamicTable, GroupForm, NavMenu, Results } from "../components";
+import { BootstrapButton, CourseGroup, GroupForm, NavMenu, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { View, ViewPage } from "./ViewPage";
-import { UserView } from "./views/UserView";
 
 import { INavInfo } from "../NavigationHelper";
 
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
     IAssignment,
-    ICourseUserLink,
     IGroupCourseWithGroup,
     IUserCourseWithUser,
     IUserRelation,

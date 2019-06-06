@@ -1,8 +1,6 @@
 import * as React from "react";
-import { CourseManager, ILink, NavigationManager, UserManager } from "../../managers";
+import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
-
-import { DynamicTable } from "../../components";
 import { ActionType, UserView } from "./UserView";
 import { Course, Enrollment } from "../../../proto/ag_pb";
 

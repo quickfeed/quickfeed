@@ -1,8 +1,6 @@
 import * as React from "react";
 import { View, ViewPage } from "./ViewPage";
 
-import { NavigationHelper } from "../NavigationHelper";
-
 export class ErrorPage extends ViewPage {
     private pages: { [key: string]: JSX.Element } = {};
 

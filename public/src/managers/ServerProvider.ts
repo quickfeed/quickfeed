@@ -4,13 +4,9 @@ import {Assignment,
         User, 
         Group, 
         Submission, 
-        Directories,
         Directory,
-        ActionRequest,
-        RecordRequest,
         Void} from "../../proto/ag_pb";
 import {
-    courseUserStateToString,
     IAssignment,
     IBuildInfo,
     ICourseUserLink,

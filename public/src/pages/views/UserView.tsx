@@ -2,7 +2,7 @@ import * as React from "react";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
 import { IUserRelation } from "../../models";
-import {User, Enrollment} from "../../../proto/ag_pb";
+import { Enrollment} from "../../../proto/ag_pb";
 
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
