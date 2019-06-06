@@ -213,7 +213,6 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 
 // CreateCourse implements the Database interface.
 func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
-
 	user, err := db.GetUser(uid)
 	if err != nil {
 		return err
@@ -466,7 +465,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 
 // UpdateAssignments implements the Database interface.
 func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
-	//TODO Updating the database may need locking??
+	//TODO(meling) Updating the database may need locking?? Or maybe rewrite as a single query or txn.
 	for _, v := range assignments {
 		// this will create or update an existing assignment
 		if err := db.CreateAssignment(v); err != nil {
@@ -523,8 +522,9 @@ func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_U
 	return db.getEnrollments(&pb.Course{ID: cid}, statuses...)
 }
 
+//TODO(meling) @Vera: I think this method can be integrated into
+//GetEnrollmentsByCourse and calling that instead of getEnrollments() internally in database package
 func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
-
 	if len(statuses) == 0 {
 		statuses = []pb.Enrollment_UserStatus{
 			pb.Enrollment_NONE,
@@ -541,7 +541,6 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 		Find(&enrollments).Error; err != nil {
 		return nil, err
 	}
-
 	return enrollments, nil
 }
 
@@ -561,7 +560,6 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enro
 
 // UpdateGroupEnrollment will set GroupID of a student enrollment to 0
 func (db *GormDB) UpdateGroupEnrollment(uid, cid uint64) error {
-
 	return db.conn.
 		Model(&pb.Enrollment{}).
 		Where(&pb.Enrollment{CourseID: cid, UserID: uid}).
@@ -569,10 +567,6 @@ func (db *GormDB) UpdateGroupEnrollment(uid, cid uint64) error {
 }
 
 func (db *GormDB) setEnrollment(uid, cid uint64, status pb.Enrollment_UserStatus) error {
-	if status > pb.Enrollment_TEACHER {
-		panic("invalid status")
-	}
-
 	return db.conn.
 		Model(&pb.Enrollment{}).
 		Where(&pb.Enrollment{CourseID: cid, UserID: uid}).
@@ -744,7 +738,6 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
 		}
 	}
 	return groups, nil
-
 }
 
 // DeleteGroup delete a group
@@ -796,14 +789,12 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 
 // GetRepository imlements the Database interface
 func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
-	// This uses the repository ID from the provider to search with, and not
-	// the id of the entry in the database
+	// This uses the repository ID from the provider to search with,
+	// and not the id of the entry in the database
 	var repo pb.Repository
-
 	if err := db.conn.First(&repo, &pb.Repository{RepositoryID: rid}).Error; err != nil {
 		return nil, err
 	}
-
 	return &repo, nil
 }
 
@@ -818,7 +809,6 @@ func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType
 	if err := db.conn.First(&repo, &pb.Repository{DirectoryID: course.DirectoryID, UserID: uid, RepoType: repoType}).Error; err != nil {
 		return nil, err
 	}
-
 	return &repo, nil
 }
 
@@ -833,13 +823,11 @@ func (db *GormDB) GetRepositoryByCourseGroup(cid uint64, gid uint64) (*pb.Reposi
 	if err := db.conn.First(&repo, &pb.Repository{DirectoryID: course.DirectoryID, GroupID: gid}).Error; err != nil {
 		return nil, err
 	}
-
 	return &repo, nil
 }
 
 // GetRepositoriesByDirectory implements the database interface
 func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*pb.Repository, error) {
-
 	var repos []*pb.Repository
 	if err := db.conn.Find(&repos, &pb.Repository{DirectoryID: did}).Error; err != nil {
 		return nil, err
@@ -849,6 +837,9 @@ func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*pb.Repository, erro
 
 // UpdateGroup updates a group
 func (db *GormDB) UpdateGroup(group *pb.Group) error {
+	//TODO(meling) @Vera: we should avoid returning status.Errors here;
+	// ideally, we should keep to the database error types. Is that a problem?
+	// I think we can translate from ErrRecordNotFound to codes.NotFound in web/group.go:291
 	if group.CourseID == 0 {
 		//return gorm.ErrRecordNotFound
 		return status.Errorf(codes.NotFound, "failed to retrieve course")
