@@ -565,7 +565,7 @@ func (db *GormDB) UpdateGroupEnrollment(uid, cid uint64) error {
 	return db.conn.
 		Model(&pb.Enrollment{}).
 		Where(&pb.Enrollment{CourseID: cid, UserID: uid}).
-		Update(&pb.Enrollment{GroupID: 0}).Error
+		Update("group_id", uint64(0)).Error
 }
 
 func (db *GormDB) setEnrollment(uid, cid uint64, status pb.Enrollment_UserStatus) error {
