@@ -46,6 +46,9 @@ type Database interface {
 	EnrollStudent(uid uint64, cid uint64) error
 	EnrollTeacher(uid uint64, cid uint64) error
 	SetPendingEnrollment(uid, cid uint64) error
+	// UpdateGroupEnrollment is used to reset group ID when previously aproved group is
+	// being removed or a user is removed from the group
+	UpdateGroupEnrollment(uid, cid uint64) error
 
 	GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
 	GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enrollment, error)
