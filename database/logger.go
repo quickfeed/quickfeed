@@ -18,7 +18,7 @@ type GormLogger interface {
 	Print(v ...interface{})
 }
 
-// Logger is an adaption of gorm.Logger that uses logrus.
+// Logger is an adaption of gorm.Logger that uses the zap logger.
 type Logger struct {
 	*zap.Logger
 }
