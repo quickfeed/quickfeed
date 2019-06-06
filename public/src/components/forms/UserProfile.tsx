@@ -1,10 +1,6 @@
 import * as React from "react";
 import { User } from "../../../proto/ag_pb";
 import { UserManager } from "../../managers";
-// import { IUser } from "../../models";
-
-import { bindFunc, copy, RProp } from "../../helper";
-
 import { BootstrapButton } from "../../components";
 
 interface IUserProfileProps {

@@ -3,6 +3,7 @@ package web
 import (
 	"net/http"
 	"strings"
+	"sync"
 
 	pb "github.com/autograde/aguis/ag"
 	"google.golang.org/grpc/codes"
@@ -13,7 +14,19 @@ import (
 	"github.com/markbates/goth"
 )
 
+// TeacherSuffix is used to set user as a teacher to be able to create new course
 const TeacherSuffix = "-teacher"
+
+// Scms stores information on active scm clients
+type Scms struct {
+	Scms map[string]scm.SCM
+	Mux  sync.RWMutex
+}
+
+// NewScms returns reference to new thread-safe map
+func NewScms() *Scms {
+	return &Scms{Scms: make(map[string]scm.SCM)}
+}
 
 // getSCM is a helper to get the scm provider for the current echo context.
 // Each user's context store information about their individual scm provider
@@ -28,7 +41,7 @@ func getSCM(c echo.Context, scmProvider string) (scm.SCM, error) {
 	return provider.(scm.SCM), nil
 }
 
-// getProviders returns a list of all providers enabled by goth
+// GetProviders returns a list of all providers enabled by goth
 func GetProviders() (*pb.Providers, error) {
 	var providers []string
 	for _, provider := range goth.GetProviders() {

@@ -10,7 +10,6 @@ import (
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
@@ -29,7 +28,8 @@ import (
 	whgitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
-func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *logrus.Logger, public, httpAddr string, baseURL string, fake bool, buildscripts string, scms map[string]scm.SCM) {
+// NewWebServer starts a new web server
+func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *logrus.Logger, public, httpAddr string, baseURL string, fake bool, buildscripts string, scms *web.Scms) {
 
 	entryPoint := filepath.Join(public, "index.html")
 	if !fileExists(entryPoint) {
@@ -157,7 +157,7 @@ func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, db database.Datab
 	})
 }
 
-func registerAuth(e *echo.Echo, db database.Database, scms map[string]scm.SCM) {
+func registerAuth(e *echo.Echo, db database.Database, scms *web.Scms) {
 	// makes the oauth2 provider available in the request query so that
 	// markbates/goth/gothic.GetProviderName can find it.
 	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -174,26 +174,9 @@ func registerAuth(e *echo.Echo, db database.Database, scms map[string]scm.SCM) {
 	oauth2.GET("/callback", auth.OAuth2Callback(db))
 	e.GET("/logout", auth.OAuth2Logout())
 
-	//scms := make(map[string]scm.SCM)
-
 	api := e.Group("/api/v1")
 	api.Use(auth.AccessControl(db, scms))
-	/*
-		var providers []string
-		for _, provider := range goth.GetProviders() {
-			if !strings.HasSuffix(provider.Name(), auth.TeacherSuffix) {
-				providers = append(providers, provider.Name())
-			}
-		}
-		api.GET("/providers", func(c echo.Context) error {
-			return c.JSONPretty(http.StatusOK, &providers, "\t")
-		})*/
-
 	api.GET("/user", web.GetSelf(db))
-	//api.POST("/directories", web.ListDirectories())
-	//users := api.Group("/users")
-	//users.GET("/:uid", web.GetHttpUser(db))
-
 }
 
 func registerFrontend(e *echo.Echo, entryPoint, public string) {

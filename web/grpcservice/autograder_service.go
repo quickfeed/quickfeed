@@ -11,18 +11,17 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
 )
 
 // AutograderService holds references to the database and shared structures
 type AutograderService struct {
 	db   *database.GormDB
-	scms map[string]scm.SCM
+	scms *web.Scms
 	bh   web.BaseHookOptions
 }
 
 // NewAutograderService is an AutograderService constructor
-func NewAutograderService(db *database.GormDB, scms map[string]scm.SCM, bh web.BaseHookOptions) *AutograderService {
+func NewAutograderService(db *database.GormDB, scms *web.Scms, bh web.BaseHookOptions) *AutograderService {
 	return &AutograderService{
 		db:   db,
 		scms: scms,
@@ -191,20 +190,6 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	}
 
 	return &pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm)
-}
-
-// GetSelf returns information about the user with user ID sent in the context
-func (s *AutograderService) GetSelf(ctx context.Context, in *pb.Void) (*pb.User, error) {
-	currentUser, err := getCurrentUser(ctx, s.db)
-	if err != nil {
-		return nil, err
-	}
-	user, err := web.GetUser(&pb.RecordRequest{ID: currentUser.ID}, s.db)
-	if err != nil {
-		return nil, err
-	}
-	user.RemoveRemoteID()
-	return user, nil
 }
 
 // GetGroup returns information about a group

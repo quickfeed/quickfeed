@@ -1,6 +1,5 @@
 import * as React from "react";
 import { ProgressBar, Row } from "../../components";
-//import { IUser } from "../../models";
 import { User } from "../../../proto/ag_pb";
 
 interface ILabResult {

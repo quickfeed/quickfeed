@@ -3,7 +3,6 @@ import * as grpcWeb from "grpc-web";
 
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import {
-    Repository,
     RepositoryRequest,
     Providers,
     User,
@@ -13,10 +12,7 @@ import {
     Courses,
     Submission,
     Submissions,
-    Assignment,
     Assignments,
-    RemoteIdentity,
-    Enrollment,
     ActionRequest,
     Enrollments,
     Group,
@@ -27,10 +23,7 @@ import {
     URLResponse,
 } from "../../proto/ag_pb";
 import { INewGroup } from "../models";
-import { InitialLetterAlignProperty } from "csstype";
-import { Context } from "vm";
 import { UserManager } from "./UserManager";
-import { createContext } from "react";
 
 export interface IGrpcResponse<T> {
     statusCode: number;
@@ -51,11 +44,11 @@ export class GrpcManager {
     }
 
     // /* USERS */ //
-
+/*
     public getSelf(): Promise<IGrpcResponse<User>> {
         const request = new Void();
         return this.grpcSend<User>(this.agService.getSelf, request);
-    }
+    }*/
 
     public getUsers(): Promise<IGrpcResponse<Users>> {
         const request = new Void();

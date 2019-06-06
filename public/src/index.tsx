@@ -24,8 +24,6 @@ import { HttpHelper } from "./HttpHelper";
 import { ILogEntry, LogManager } from "./managers/LogManager";
 
 import { PageInfo } from "./components/information/PageInfo";
-
-import { UserProfile } from "./components/forms/UserProfile";
 import { UserPage } from "./pages/UserPage";
 
 import { AddMenu } from "./components/navigation/AddMenu";

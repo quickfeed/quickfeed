@@ -1,6 +1,6 @@
 import * as React from "react";
 import { BootstrapButton } from "../../components";
-import { IError, isError, IStatusCode } from "../../models";
+import { IError, isError } from "../../models";
 
 import { CourseManager } from "../../managers/CourseManager";
 

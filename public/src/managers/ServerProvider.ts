@@ -4,13 +4,9 @@ import {Assignment,
         User, 
         Group, 
         Submission, 
-        Directories,
         Directory,
-        ActionRequest,
-        RecordRequest,
         Void} from "../../proto/ag_pb";
 import {
-    courseUserStateToString,
     IAssignment,
     IBuildInfo,
     ICourseUserLink,
@@ -31,13 +27,11 @@ import {
     ICourseEnrollment,
     IEnrollment,
     isCourseEnrollment,
-    isUserEnrollment,
     IUserEnrollment,
     IUserProvider,
 } from "../managers";
 import { IMap, mapify } from "../map";
 import { ILogger } from "./LogManager";
-import { userInfo } from "os";
 
 interface IEndpoints {
     courses: string;

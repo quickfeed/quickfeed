@@ -1,5 +1,5 @@
 import * as React from "react";
-import { IAssignment, IStudentSubmission, IUser, IUserCourseWithUser } from "../../models";
+import { IAssignment, IStudentSubmission, IUserCourseWithUser } from "../../models";
 
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { ICellElement } from "../data/DynamicTable";

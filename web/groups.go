@@ -160,7 +160,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
 func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s scm.SCM, currentUser *pb.User) error {
-	log.Println("web: UpdateGroup started")
+
 	// only admin or course teacher are allowed to update groups
 	signedInUserEnrollment, err := db.GetEnrollmentByCourseAndUser(request.CourseID, currentUser.ID)
 	if err != nil {
@@ -192,6 +192,14 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	if request.Status == pb.Group_REJECTED || request.Status == pb.Group_DELETED {
 		if err := db.UpdateGroupStatus(request); err != nil {
 			return status.Errorf(codes.Aborted, "failed to update group status in database")
+		}
+		// if we reject or delete a previously accepted group, we want its members enrollment updated,
+		// such that they can later join other groups
+		for _, member := range request.Users {
+			if err = db.UpdateGroupEnrollment(member.ID, course.ID); err != nil {
+				log.Println("web: UpdateGroup failed to reset group enrollment for user ", member.ID)
+				return err
+			}
 		}
 		return nil
 	}
@@ -246,10 +254,28 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		request.TeamID = team.ID
 
 	} else {
-		log.Println("UpdateGroup updates team members")
 		// if the github team already exists, update its members
+		// first we need to retrieve the group to have the actual team ID
+		dbGroup, err := db.GetGroup(request.ID)
+		if err != nil {
+			return err
+		}
+		request.TeamID = dbGroup.TeamID
+		// users coming from frontend will often only have IDs
+		// we need to get full user information from database
+		dbUsers := make([]*pb.User, 0)
+		for _, member := range request.Users {
+			dbUser, err := db.GetUser(member.ID)
+			if err != nil {
+				log.Println("web: UpdateGroup cannot get user with ID ", member.ID)
+				return status.Errorf(codes.InvalidArgument, "user not found")
+			}
+			dbUsers = append(dbUsers, dbUser)
+		}
+		request.Users = dbUsers
 		if err := updateGroupTeam(ctx, s, course, request); err != nil {
 			log.Println("groups.go: updateGroupTeam failed: ", err.Error())
+			return err
 		}
 	}
 
@@ -272,7 +298,6 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, group *pb.Group) (*scm.Repository, *scm.Team, error) {
-	log.Println("web: createGroupRepoAndTeam starts")
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
@@ -296,6 +321,7 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) 
 
 	// make list with github username strings
 	usernames := fetchGitUserNames(g)
+	log.Println("web: updateGroupTeam got usernames: ", usernames)
 
 	dir, err := s.GetDirectory(ctx, c.DirectoryID)
 	if err != nil {

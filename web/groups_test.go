@@ -628,3 +628,107 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Errorf("have response group %+v, while database has %+v", respGroup, dbGroup)
 	}
 }
+
+func TestDeleteApprovedGroup(t *testing.T) {
+
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	admin := createFakeUser(t, db, 1)
+	course := allCourses[0]
+	err := db.CreateCourse(admin.ID, course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testscms := make(map[string]scm.SCM)
+	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(admin.ID))})
+	cont := metadata.NewIncomingContext(context.Background(), meta)
+
+	f := scm.NewFakeSCMClient()
+	if _, err := f.CreateDirectory(context.Background(), &scm.CreateDirectoryOptions{
+		Name: course.Code,
+		Path: course.Code,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	testscms["token"] = f
+
+	user1 := createFakeUser(t, db, 2)
+	user2 := createFakeUser(t, db, 3)
+
+	// enroll users in course and group
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserID: user1.ID, CourseID: course.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(user1.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserID: user2.ID, CourseID: course.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(user2.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollTeacher(admin.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	group := &pb.Group{
+		ID:       1,
+		CourseID: course.ID,
+		Name:     "Test Group",
+		Users:    []*pb.User{user1, user2},
+	}
+	createdGroup, err := test_ag.CreateGroup(cont, group)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// first approve the group
+	createdGroup.Status = pb.Group_APPROVED
+	if _, err = test_ag.UpdateGroup(cont, createdGroup); err != nil {
+		t.Fatal(err)
+	}
+
+	// then get user enrollments with group ID
+	enr1, err := db.GetEnrollmentByCourseAndUser(course.ID, user1.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	enr2, err := db.GetEnrollmentByCourseAndUser(course.ID, user2.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// reject the group
+	createdGroup.Status = pb.Group_REJECTED
+	if _, err = test_ag.UpdateGroup(cont, createdGroup); err != nil {
+		t.Fatal(err)
+	}
+
+	// get updated enrollments of group members
+	newEnr1, err := db.GetEnrollmentByCourseAndUser(course.ID, user1.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newEnr2, err := db.GetEnrollmentByCourseAndUser(course.ID, user2.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// now nullify manually group ID for original enrollments
+	enr1.GroupID = 0
+	enr2.GroupID = 0
+
+	// then check that new enrollments have group IDs nullified automatically
+	if !reflect.DeepEqual(enr1, newEnr1) {
+		t.Errorf("want enrollment %+v, while database has %+v", enr1, newEnr1)
+	}
+	if !reflect.DeepEqual(enr2, newEnr2) {
+		t.Errorf("want enrollment %+v, while database has %+v", enr2, newEnr2)
+	}
+}
