@@ -6,9 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/logger"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -70,8 +68,6 @@ func main() {
 
 func before(db *database.GormDB) cli.BeforeFunc {
 	return func(c *cli.Context) error {
-		l := logrus.New()
-		l.Formatter = logger.NewDevFormatter(l.Formatter)
 		tdb, err := database.NewGormDB("sqlite3", c.String("database"), database.NewGormLogger())
 		if err != nil {
 			return err
