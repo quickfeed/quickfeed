@@ -234,6 +234,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 		default:
 			log.Println("OAuth2Callback: error with user association: ", err.Error())
 		}
+
 		// in case of a new user we need a user object with full information, otherwise frontend will get user object where only name, email and url are set
 		user, err = db.GetUserByRemoteIdentity(remote)
 		if err != nil {
@@ -254,7 +255,7 @@ func OAuth2Callback(db database.Database) echo.HandlerFunc {
 // AccessControl returns an access control middleware. Given a valid context
 // with sufficient access the next handler is called. Missing or invalid
 // credentials results in a 401 unauthorized response.
-func AccessControl(db database.Database, scms map[string]scm.SCM) echo.MiddlewareFunc {
+func AccessControl(db database.Database, scms *web.Scms) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			sess, err := session.Get(SessionKey, c)
@@ -284,14 +285,16 @@ func AccessControl(db database.Database, scms map[string]scm.SCM) echo.Middlewar
 			}
 			c.Set(UserKey, user)
 			for _, remoteIdentity := range user.RemoteIdentities {
-				if _, ok := scms[remoteIdentity.AccessToken]; !ok {
+				scms.Mux.Lock()
+				defer scms.Mux.Unlock()
+				if _, ok := scms.Scms[remoteIdentity.AccessToken]; !ok {
 					client, err := scm.NewSCMClient(remoteIdentity.Provider, remoteIdentity.AccessToken)
 					if err != nil {
 						return err
 					}
-					scms[remoteIdentity.AccessToken] = client
+					scms.Scms[remoteIdentity.AccessToken] = client
 				}
-				c.Set(remoteIdentity.Provider, scms[remoteIdentity.AccessToken])
+				c.Set(remoteIdentity.Provider, scms.Scms[remoteIdentity.AccessToken])
 			}
 
 			// TODO: Add access control list.

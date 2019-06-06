@@ -11,6 +11,7 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
+	"github.com/autograde/aguis/web"
 )
 
 func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error) {
@@ -44,17 +45,19 @@ func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error)
 	return usr, nil
 }
 
-func getSCM(ctx context.Context, scms map[string]scm.SCM, db database.Database, provider string) (scm.SCM, error) {
+func getSCM(ctx context.Context, scms *web.Scms, db database.Database, provider string) (scm.SCM, error) {
 	user, err := getCurrentUser(ctx, db)
 	if err != nil {
 		return nil, err
 	}
 	for _, identity := range user.RemoteIdentities {
 		if identity.Provider == provider {
-			if _, ok := scms[identity.AccessToken]; !ok {
+			scms.Mux.RLock()
+			defer scms.Mux.Unlock()
+			if _, ok := scms.Scms[identity.AccessToken]; !ok {
 				return nil, status.Errorf(codes.PermissionDenied, "invalid token")
 			}
-			return scms[identity.AccessToken], nil
+			return scms.Scms[identity.AccessToken], nil
 		}
 	}
 	return nil, status.Errorf(codes.NotFound, "no SCM found")

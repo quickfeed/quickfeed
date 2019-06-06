@@ -13,7 +13,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
 
 	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/web/grpcservice"
@@ -71,7 +70,7 @@ func main() {
 	go envoy.StartEnvoy()
 
 	// holds references for activated providers for current user token
-	scms := make(map[string]scm.SCM)
+	scms := web.NewScms()
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),

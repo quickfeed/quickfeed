@@ -11,18 +11,17 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
 )
 
 // AutograderService holds references to the database and shared structures
 type AutograderService struct {
 	db   *database.GormDB
-	scms map[string]scm.SCM
+	scms *web.Scms
 	bh   web.BaseHookOptions
 }
 
 // NewAutograderService is an AutograderService constructor
-func NewAutograderService(db *database.GormDB, scms map[string]scm.SCM, bh web.BaseHookOptions) *AutograderService {
+func NewAutograderService(db *database.GormDB, scms *web.Scms, bh web.BaseHookOptions) *AutograderService {
 	return &AutograderService{
 		db:   db,
 		scms: scms,
