@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,7 +14,6 @@ import (
 	"github.com/autograde/aguis/scm"
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -197,9 +195,6 @@ func main() {
 
 func before(client *scm.SCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
-		l := logrus.New()
-		l.Out = ioutil.Discard
-
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
 		if accessToken != "" {
