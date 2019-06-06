@@ -9,9 +9,10 @@ install:
 - go get github.com/go-playground/overalls
 - go get github.com/tebeka/selenium
 - go get github.com/autograde/kit/score
+- go get go.uber.org/zap
 
 env:
-- LOGDB=true
+- DisabledLOGDB=true
 
 script:
 - $HOME/gopath/bin/overalls -project=github.com/autograde/aguis -covermode=count -debug
