@@ -72,7 +72,7 @@ func before(db *database.GormDB) cli.BeforeFunc {
 	return func(c *cli.Context) error {
 		l := logrus.New()
 		l.Formatter = logger.NewDevFormatter(l.Formatter)
-		tdb, err := database.NewGormDB("sqlite3", c.String("database"), database.Logger{Logger: l})
+		tdb, err := database.NewGormDB("sqlite3", c.String("database"), database.NewGormLogger())
 		if err != nil {
 			return err
 		}

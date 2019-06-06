@@ -66,7 +66,7 @@ func main() {
 	l := logrus.New()
 	l.Formatter = logger.NewDevFormatter(l.Formatter)
 
-	db, err := database.NewGormDB("sqlite3", *dbFile, database.Logger{Logger: l})
+	db, err := database.NewGormDB("sqlite3", *dbFile, database.NewGormLogger())
 	if err != nil {
 		log.Fatalf("can't connect to database: %v\n", err)
 	}

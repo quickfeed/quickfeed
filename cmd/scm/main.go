@@ -208,7 +208,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		}
 
 		// access token not provided in env variable; check if database holds access token
-		db, err := database.NewGormDB("sqlite3", c.String("database"), database.Logger{Logger: l})
+		db, err := database.NewGormDB("sqlite3", c.String("database"), database.NewGormLogger())
 		if err != nil {
 			return err
 		}
