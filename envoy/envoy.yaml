@@ -1,5 +1,5 @@
 admin:
-  access_log_path: /tmp/admin_access.log
+  access_log_path: /dev/stdout
   address:
     socket_address: { address: 0.0.0.0, port_value: 9901 }
 
@@ -12,6 +12,10 @@ static_resources:
     - filters:
       - name: envoy.http_connection_manager
         config:
+          access_log:
+          - name: envoy.file_access_log
+            config:
+              path: "/dev/stdout"
           codec_type: auto
           stat_prefix: ingress_http
           route_config:
