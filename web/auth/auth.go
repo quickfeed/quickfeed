@@ -9,7 +9,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
@@ -284,17 +283,21 @@ func AccessControl(db database.Database, scms *web.Scms) echo.MiddlewareFunc {
 				return echo.ErrUnauthorized
 			}
 			c.Set(UserKey, user)
-			for _, remoteIdentity := range user.RemoteIdentities {
-				scms.Mux.Lock()
-				defer scms.Mux.Unlock()
-				if _, ok := scms.Scms[remoteIdentity.AccessToken]; !ok {
-					client, err := scm.NewSCMClient(remoteIdentity.Provider, remoteIdentity.AccessToken)
-					if err != nil {
-						return err
-					}
-					scms.Scms[remoteIdentity.AccessToken] = client
+
+			foundSCMProvider := false
+			for _, remoteID := range user.RemoteIdentities {
+				scm, err := scms.GetOrCreateSCMEntry(remoteID.GetProvider(), remoteID.GetAccessToken())
+				if err != nil {
+					log.Println("AccessControl: unknown SCM provider:", err.Error())
+					continue
 				}
-				c.Set(remoteIdentity.Provider, scms.Scms[remoteIdentity.AccessToken])
+				foundSCMProvider = true
+				c.Set(remoteID.Provider, scm)
+			}
+			if !foundSCMProvider {
+				//TODO(meling) use status codes when this is replace with grpc
+				// return status.Errorf(codes.InvalidArgument, "unknown SCM provider")
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
 
 			// TODO: Add access control list.

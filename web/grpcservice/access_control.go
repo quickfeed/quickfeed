@@ -50,14 +50,13 @@ func getSCM(ctx context.Context, scms *web.Scms, db database.Database, provider 
 	if err != nil {
 		return nil, err
 	}
-	for _, identity := range user.RemoteIdentities {
-		if identity.Provider == provider {
-			scms.Mux.RLock()
-			defer scms.Mux.Unlock()
-			if _, ok := scms.Scms[identity.AccessToken]; !ok {
+	for _, remoteID := range user.RemoteIdentities {
+		if remoteID.Provider == provider {
+			scm, ok := scms.GetSCM(remoteID.GetAccessToken())
+			if !ok {
 				return nil, status.Errorf(codes.PermissionDenied, "invalid token")
 			}
-			return scms.Scms[identity.AccessToken], nil
+			return scm, nil
 		}
 	}
 	return nil, status.Errorf(codes.NotFound, "no SCM found")

@@ -3,7 +3,6 @@ package web_test
 import (
 	"context"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -13,11 +12,9 @@ import (
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/grpcservice"
 	_ "github.com/mattn/go-sqlite3"
-	"google.golang.org/grpc/metadata"
 )
 
 func TestNewGroup(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -37,32 +34,24 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	ctx := withUserContext(context.Background(), admin)
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(admin.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
-
-	// Prepare provider
-	fakeProvider, err := scm.NewSCMClient("fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fakeProvider.CreateDirectory(cont,
+	fakeProvider.CreateDirectory(ctx,
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
 	)
-	testscms["token"] = fakeProvider
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
 	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
-	respGroup, err := test_ag.CreateGroup(cont, group_req)
+	respGroup, err := ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	group, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,8 +65,6 @@ func TestNewGroup(t *testing.T) {
 }
 
 func TestNewGroupTeacherCreator(t *testing.T) {
-	const route = "/courses/:cid/groups"
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -106,31 +93,24 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	fakeProvider, scms := fakeProviderMap(t)
+	ctx := withUserContext(context.Background(), teacher)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(teacher.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
-
-	fakeProvider, err := scm.NewSCMClient("fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fakeProvider.CreateDirectory(cont,
+	fakeProvider.CreateDirectory(ctx,
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
 	)
-	testscms["token"] = fakeProvider
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
 	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
-	respGroup, err := test_ag.CreateGroup(cont, group_req)
+	respGroup, err := ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	group, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +124,6 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 }
 
 func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -173,46 +152,33 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	fakeProvider, scms := fakeProviderMap(t)
+	ctx := withUserContext(context.Background(), user)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(user.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
-
-	fakeProvider, err := scm.NewSCMClient("fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fakeProvider.CreateDirectory(cont,
+	fakeProvider.CreateDirectory(ctx,
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
 	)
-	testscms["token"] = fakeProvider
 
 	users := make([]*pb.User, 0)
 	users = append(users, &pb.User{ID: user.ID})
 	users = append(users, &pb.User{ID: teacher.ID})
 	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
-	_, err = test_ag.CreateGroup(cont, group_req)
+	_, err := ags.CreateGroup(ctx, group_req)
 	if err == nil {
 		t.Error("Student trying to enroll teacher should not be possible!")
 	}
 }
 func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	fakeProvider, err := scm.NewSCMClient("fake", "token")
-	if err != nil {
-		t.Fatal(err)
-	}
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 	fakeProvider.CreateDirectory(context.Background(),
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
 	)
-	testscms["token"] = fakeProvider
 
 	admin := createFakeUser(t, db, 1)
 	course := pb.Course{Provider: "fake", DirectoryID: 1}
@@ -257,23 +223,19 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	newGroupReq := &pb.Group{Name: "Hein's two member Group", TeamID: 1, CourseID: course.ID, Users: users}
 
 	// set ID of user3 to context, user3 is not member of group (should fail)
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(user3.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
-
-	if _, err = test_ag.CreateGroup(cont, newGroupReq); err == nil {
+	ctx := withUserContext(context.Background(), user3)
+	if _, err := ags.CreateGroup(ctx, newGroupReq); err == nil {
 		t.Error("expected error 'student must be member of new group'")
 	}
 
 	// set ID of user1, which is group member
-	meta = metadata.New(map[string]string{"user": strconv.Itoa(int(user1.ID))})
-	cont = metadata.NewIncomingContext(context.Background(), meta)
-
-	respGroup, err := test_ag.CreateGroup(cont, newGroupReq)
+	ctx = withUserContext(context.Background(), user1)
+	respGroup, err := ags.CreateGroup(ctx, newGroupReq)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	group, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -297,10 +259,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	updateGroupReq := &pb.Group{ID: group.ID, Name: "Hein's three member Group", CourseID: course.ID, Users: users1}
 
 	// set admin ID in context
-	meta = metadata.New(map[string]string{"user": strconv.Itoa(int(admin.ID))})
-	cont = metadata.NewIncomingContext(context.Background(), meta)
-
-	_, err = test_ag.UpdateGroup(cont, updateGroupReq) //test_ag.UpdateGroup(cont, updateGroupReq)
+	ctx = withUserContext(context.Background(), admin)
+	_, err = ags.UpdateGroup(ctx, updateGroupReq)
 	if err != nil {
 		t.Error(err)
 	}
@@ -340,10 +300,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	updateGroupReq1 := &pb.Group{ID: group.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: users2}
 
 	// set teacher ID in context
-	meta = metadata.New(map[string]string{"user": strconv.Itoa(int(teacher.ID))})
-	cont = metadata.NewIncomingContext(context.Background(), meta)
-
-	_, err = test_ag.UpdateGroup(cont, updateGroupReq1)
+	ctx = withUserContext(context.Background(), teacher)
+	_, err = ags.UpdateGroup(ctx, updateGroupReq1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -407,24 +365,22 @@ func TestDeleteGroup(t *testing.T) {
 
 	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(user.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
-	respGroup, err := test_ag.CreateGroup(cont, group)
+	ctx := withUserContext(context.Background(), user)
+	respGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = test_ag.DeleteGroup(cont, respGroup)
+	_, err = ags.DeleteGroup(ctx, respGroup)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestGetGroup(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -450,18 +406,17 @@ func TestGetGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(user.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ctx := withUserContext(context.Background(), user)
 
 	group := &pb.Group{Name: "Test Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
-	respGroup, err := test_ag.CreateGroup(cont, group)
+	respGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	gotGroup, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: respGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -469,11 +424,9 @@ func TestGetGroup(t *testing.T) {
 	if !reflect.DeepEqual(gotGroup, respGroup) {
 		t.Errorf("have response group %+v, while database has %+v", &gotGroup, &respGroup)
 	}
-
 }
 
 func TestPatchGroupStatus(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -493,19 +446,16 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(admin.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ctx := withUserContext(context.Background(), admin)
 
-	f := scm.NewFakeSCMClient()
-	if _, err := f.CreateDirectory(context.Background(), &scm.CreateDirectoryOptions{
+	if _, err := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{
 		Name: course.Code,
 		Path: course.Code,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	testscms["token"] = f
 
 	user1 := createFakeUser(t, db, 2)
 	user2 := createFakeUser(t, db, 3)
@@ -544,7 +494,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	prePatchGroup.Status = pb.Group_APPROVED
-	_, err = test_ag.UpdateGroup(cont, prePatchGroup)
+	_, err = ags.UpdateGroup(ctx, prePatchGroup)
 	if err != nil {
 		t.Error(err)
 	}
@@ -560,7 +510,6 @@ func TestPatchGroupStatus(t *testing.T) {
 }
 
 func TestGetGroupByUserAndCourse(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -580,10 +529,9 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(admin.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ctx := withUserContext(context.Background(), admin)
 
 	user1 := createFakeUser(t, db, 2)
 	user2 := createFakeUser(t, db, 3)
@@ -614,12 +562,12 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	respGroup, err := test_ag.GetGroupByUserAndCourse(cont, &pb.ActionRequest{UserID: user1.ID, CourseID: course.ID})
+	respGroup, err := ags.GetGroupByUserAndCourse(ctx, &pb.ActionRequest{UserID: user1.ID, CourseID: course.ID})
 	if err != nil {
 		t.Error(err)
 	}
 
-	dbGroup, err := test_ag.GetGroup(cont, &pb.RecordRequest{ID: group.ID})
+	dbGroup, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -630,7 +578,6 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 }
 
 func TestDeleteApprovedGroup(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -641,19 +588,16 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(admin.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ctx := withUserContext(context.Background(), admin)
 
-	f := scm.NewFakeSCMClient()
-	if _, err := f.CreateDirectory(context.Background(), &scm.CreateDirectoryOptions{
+	if _, err := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{
 		Name: course.Code,
 		Path: course.Code,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	testscms["token"] = f
 
 	user1 := createFakeUser(t, db, 2)
 	user2 := createFakeUser(t, db, 3)
@@ -683,14 +627,14 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		Name:     "Test Group",
 		Users:    []*pb.User{user1, user2},
 	}
-	createdGroup, err := test_ag.CreateGroup(cont, group)
+	createdGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// first approve the group
 	createdGroup.Status = pb.Group_APPROVED
-	if _, err = test_ag.UpdateGroup(cont, createdGroup); err != nil {
+	if _, err = ags.UpdateGroup(ctx, createdGroup); err != nil {
 		t.Fatal(err)
 	}
 
@@ -706,7 +650,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 
 	// reject the group
 	createdGroup.Status = pb.Group_REJECTED
-	if _, err = test_ag.UpdateGroup(cont, createdGroup); err != nil {
+	if _, err = ags.UpdateGroup(ctx, createdGroup); err != nil {
 		t.Fatal(err)
 	}
 

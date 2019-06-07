@@ -3,12 +3,10 @@ package web_test
 import (
 	"context"
 	"reflect"
-	"strconv"
 	"testing"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/grpcservice"
 	"github.com/google/go-cmp/cmp"
@@ -47,12 +45,6 @@ func TestGetSelf(t *testing.T) {
 }*/
 
 func TestGetUser(t *testing.T) {
-
-	const (
-		provider    = "github"
-		accessToken = "secret"
-	)
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -68,18 +60,18 @@ func TestGetUser(t *testing.T) {
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
 		&pb.RemoteIdentity{
-			Provider:    provider,
-			AccessToken: accessToken,
+			Provider:    "github",
+			AccessToken: "secret",
 		},
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
 
-	foundUser, err := test_ag.GetUser(cont, &pb.RecordRequest{ID: user.ID})
+	foundUser, err := ags.GetUser(cont, &pb.RecordRequest{ID: user.ID})
 	if err != nil {
 		t.Error(err)
 	}
@@ -90,7 +82,6 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestGetUsers(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -113,11 +104,11 @@ func TestGetUsers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user1.ID))
 
-	foundUsers, err := test_ag.GetUsers(cont, &pb.Void{})
+	foundUsers, err := ags.GetUsers(cont, &pb.Void{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,7 +146,6 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -174,8 +164,8 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(admin.ID))
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -212,7 +202,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	foundEnrollments, err := test_ag.GetEnrollmentsByCourse(cont, &pb.RecordRequest{ID: allCourses[0].ID})
+	foundEnrollments, err := ags.GetEnrollmentsByCourse(cont, &pb.RecordRequest{ID: allCourses[0].ID})
 	if err != nil {
 		t.Error(err)
 	}
@@ -233,11 +223,9 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
 	}
-
 }
 
 func TestPatchUser(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 	user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
@@ -253,10 +241,9 @@ func TestPatchUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
-	meta := metadata.New(map[string]string{"user": strconv.Itoa(int(adminUser.ID))})
-	cont := metadata.NewIncomingContext(context.Background(), meta)
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ctx := withUserContext(context.Background(), adminUser)
 
 	respUser, err := web.PatchUser(adminUser, user, db)
 	if err != nil {
@@ -281,7 +268,7 @@ func TestPatchUser(t *testing.T) {
 		AvatarURL: "www.hello.com",
 	}
 
-	_, err = test_ag.UpdateUser(cont, namechangeRequest)
+	_, err = ags.UpdateUser(ctx, namechangeRequest)
 	if err != nil {
 		t.Error(err)
 	}
@@ -308,6 +295,7 @@ func TestPatchUser(t *testing.T) {
 // createFakeUser is a test helper to create a user in the database
 // with the given remote id and the fake scm provider.
 func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.User {
+	t.Helper()
 	var user pb.User
 	err := db.CreateUserFromRemoteIdentity(&user,
 		&pb.RemoteIdentity{

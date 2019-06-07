@@ -85,30 +85,31 @@ func TestListCourses(t *testing.T) {
 // withUserContext is a test helper function to create metadata for the
 // given user mimicking the context coming from the browser.
 func withUserContext(ctx context.Context, user *pb.User) context.Context {
-	user_UserID := strconv.Itoa(int(user.GetID()))
-	meta := metadata.New(map[string]string{"user": user_UserID})
+	userID := strconv.Itoa(int(user.GetID()))
+	meta := metadata.New(map[string]string{"user": userID})
 	return metadata.NewIncomingContext(ctx, meta)
 }
 
 // fakeProviderMap is a test helper function to create an SCM map.
-func fakeProviderMap(ctx context.Context) map[string]scm.SCM {
-	fakeProvider := scm.NewFakeSCMClient()
-	scmMap := make(map[string]scm.SCM)
-	// add the fake scm to the scm map with the fake token as key
-	scmMap["token"] = fakeProvider
-	return scmMap
+func fakeProviderMap(t *testing.T) (scm.SCM, *web.Scms) {
+	t.Helper()
+	scms := web.NewScms()
+	scm, err := scms.GetOrCreateSCMEntry("fake", "token")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return scm, scms
 }
 
 func TestNewCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	adminUser := createFakeUser(t, db, 10)
-	ctx := withUserContext(context.Background(), adminUser)
-	scmMap := fakeProviderMap(ctx)
-	fakeProvider := scmMap["token"]
+	admin := createFakeUser(t, db, 10)
+	ctx := withUserContext(context.Background(), admin)
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
-	ags := grpcservice.NewAutograderService(db, scmMap, web.BaseHookOptions{})
 	for _, testCourse := range allCourses {
 		// each course needs a separate directory
 		fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
@@ -137,21 +138,19 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	adminUser := createFakeUser(t, db, 10)
-	ctx := withUserContext(context.Background(), adminUser)
-	scmMap := fakeProviderMap(ctx)
-	fakeProvider := scmMap["token"]
+	admin := createFakeUser(t, db, 10)
+	ctx := withUserContext(context.Background(), admin)
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
-	ags := grpcservice.NewAutograderService(db, scmMap, web.BaseHookOptions{})
-	testCourse := allCourses[0]
 	directory, _ := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{Path: path, Directory: directory, Private: private}
 		fakeProvider.CreateRepository(ctx, repoOptions)
 	}
 
-	respCourse, err := ags.CreateCourse(ctx, testCourse)
-	if respCourse != nil {
+	course, err := ags.CreateCourse(ctx, allCourses[0])
+	if course != nil {
 		t.Fatal("expected CreateCourse to fail with AlreadyExists")
 	}
 	if err != nil && status.Code(err) != codes.AlreadyExists {
@@ -165,11 +164,10 @@ func TestEnrollmentProcess(t *testing.T) {
 
 	admin := createFakeUser(t, db, 1)
 	ctx := withUserContext(context.Background(), admin)
-	scmMap := fakeProviderMap(ctx)
-	fakeProvider := scmMap["token"]
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 	fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
 
-	ags := grpcservice.NewAutograderService(db, scmMap, web.BaseHookOptions{})
 	course, err := ags.CreateCourse(ctx, allCourses[0])
 	if err != nil {
 		t.Fatal(err)
@@ -253,15 +251,13 @@ func TestEnrollmentProcess(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollment(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	admin := createFakeUser(t, db, 1)
 	user := createFakeUser(t, db, 2)
-
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
 	var testCourses []*pb.Course
 	for _, course := range allCourses {
@@ -299,8 +295,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	}
 
 	courses_request := &pb.RecordRequest{ID: user.ID}
-	courses, err := test_ag.GetCoursesWithEnrollment(context.Background(), courses_request)
-
+	courses, err := ags.GetCoursesWithEnrollment(context.Background(), courses_request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -322,7 +317,6 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 }
 
 func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -338,9 +332,8 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	}
 
 	user := createFakeUser(t, db, 2)
-
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
 		UserID:   user.ID,
@@ -372,7 +365,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	stats := make([]pb.Enrollment_UserStatus, 0)
 	stats = append(stats, pb.Enrollment_REJECTED, pb.Enrollment_STUDENT)
 	course_req := &pb.RecordRequest{ID: user.ID, Statuses: stats}
-	courses, err := test_ag.GetCoursesWithEnrollment(context.Background(), course_req)
+	courses, err := ags.GetCoursesWithEnrollment(context.Background(), course_req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -383,11 +376,9 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if !cmp.Equal(courses.Courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
 	}
-
 }
 
 func TestGetCourse(t *testing.T) {
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -397,11 +388,10 @@ func TestGetCourse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testscms := make(map[string]scm.SCM)
-	test_ag := grpcservice.NewAutograderService(db, testscms, web.BaseHookOptions{})
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
 
-	foundCourse, err := test_ag.GetCourse(context.Background(), &pb.RecordRequest{ID: course.ID})
-
+	foundCourse, err := ags.GetCourse(context.Background(), &pb.RecordRequest{ID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
