@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/autograde/aguis/envoy"
-	"github.com/autograde/aguis/logger"
 	"github.com/autograde/aguis/web"
 	"go.uber.org/zap"
 
@@ -20,7 +19,6 @@ import (
 
 	http "github.com/autograde/aguis/web/webserver"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -62,9 +60,7 @@ func main() {
 	}
 	defer lg.Sync()
 
-	l := logrus.New()
-	l.Formatter = logger.NewDevFormatter(l.Formatter)
-
+	//TODO(meling) how to connect the main logger with the GormLogger; now they are independent;
 	db, err := database.NewGormDB("sqlite3", *dbFile, database.NewGormLogger())
 	if err != nil {
 		log.Fatalf("can't connect to database: %v\n", err)
@@ -84,7 +80,7 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
-	go http.NewWebServer(db, bh, l, *public, *httpAddr, *baseURL, *fake, *ciScripts, scms)
+	go http.NewWebServer(db, bh, lg, *public, *httpAddr, *baseURL, *fake, *ciScripts, scms)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {

@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/autograde/aguis/database"
-	"github.com/sirupsen/logrus"
 )
 
 func setup(t *testing.T) (*database.GormDB, func()) {
+	t.Helper()
 	const (
 		driver = "sqlite3"
 		prefix = "testdb"
@@ -45,10 +45,4 @@ func assertCode(t *testing.T, haveCode, wantCode int) {
 	if haveCode != wantCode {
 		t.Errorf("have status code %d want %d", haveCode, wantCode)
 	}
-}
-
-func nullLogger() *logrus.Logger {
-	l := logrus.New()
-	l.Out = ioutil.Discard
-	return l
 }

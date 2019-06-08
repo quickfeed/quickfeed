@@ -21,7 +21,7 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 	whgithub "gopkg.in/go-playground/webhooks.v3/github"
@@ -29,11 +29,10 @@ import (
 )
 
 // NewWebServer starts a new web server
-func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *logrus.Logger, public, httpAddr string, baseURL string, fake bool, buildscripts string, scms *web.Scms) {
-
+func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, public, httpAddr string, baseURL string, fake bool, buildscripts string, scms *web.Scms) {
 	entryPoint := filepath.Join(public, "index.html")
-	if !fileExists(entryPoint) {
-		l.WithField("path", entryPoint).Warn("could not find file")
+	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
+		l.Fatal("file not found", zap.String("path", entryPoint))
 	}
 
 	store := newStore([]byte("secret"))
@@ -48,9 +47,8 @@ func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *logrus.Logger,
 	runWebServer(l, e, httpAddr)
 }
 
-func newServer(l *logrus.Logger, store sessions.Store) *echo.Echo {
+func newServer(l *zap.Logger, store sessions.Store) *echo.Echo {
 	e := echo.New()
-	e.Logger = web.EchoLogger{Logger: l}
 	e.HideBanner = true
 	e.Use(
 		middleware.Recover(),
@@ -68,7 +66,7 @@ func newStore(keyPairs ...[]byte) sessions.Store {
 	return store
 }
 
-func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string]bool {
+func enableProviders(l *zap.Logger, baseURL string, fake bool) map[string]bool {
 	enabled := make(map[string]bool)
 
 	if ok := auth.EnableProvider(&auth.Provider{
@@ -83,10 +81,7 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 	}); ok {
 		enabled["github"] = true
 	} else {
-		l.WithFields(logrus.Fields{
-			"provider": "github",
-			"enabled":  false,
-		}).Warn("environment variables not set")
+		l.Debug("environment variable not set for github")
 	}
 
 	if ok := auth.EnableProvider(&auth.Provider{
@@ -101,14 +96,11 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 	}); ok {
 		enabled["gitlab"] = true
 	} else {
-		l.WithFields(logrus.Fields{
-			"provider": "gitlab",
-			"enabled":  false,
-		}).Warn("environment variables not set")
+		l.Debug("environment variable not set for gitlab")
 	}
 
 	if fake {
-		l.Warn("fake provider enabled")
+		l.Debug("fake provider enabled")
 		goth.UseProviders(&auth.FakeProvider{
 			Callback: auth.GetCallbackURL(baseURL, "fake"),
 		})
@@ -120,8 +112,8 @@ func enableProviders(l logrus.FieldLogger, baseURL string, fake bool) map[string
 	return enabled
 }
 
-func registerWebhooks(logger logrus.FieldLogger, e *echo.Echo, db database.Database, secret string, enabled map[string]bool, buildscripts *string) {
-	webhooks.DefaultLog = web.WebhookLogger{FieldLogger: logger}
+func registerWebhooks(logger *zap.Logger, e *echo.Echo, db database.Database, secret string, enabled map[string]bool, buildscripts *string) {
+	webhooks.DefaultLog = web.WebhookLogger{Logger: logger}
 
 	docker := ci.Docker{
 		Endpoint: envString("DOCKER_HOST", "http://localhost:4243"),
@@ -190,13 +182,13 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 	e.Static("/", public)
 }
 
-func runWebServer(l logrus.FieldLogger, e *echo.Echo, httpAddr string) {
+func runWebServer(l *zap.Logger, e *echo.Echo, httpAddr string) {
 	srvErr := e.Start(httpAddr)
 	if srvErr == http.ErrServerClosed {
 		l.Warn("shutting down the server")
 		return
 	}
-	l.WithError(srvErr).Fatal("could not start server")
+	l.Fatal("failed to start server", zap.Error(srvErr))
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
@@ -205,13 +197,8 @@ func runWebServer(l logrus.FieldLogger, e *echo.Echo, httpAddr string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
-		l.WithError(err).Fatal("failure during server shutdown")
+		l.Fatal("failure during server shutdown", zap.Error(err))
 	}
-}
-
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
 }
 
 func envString(env, fallback string) string {

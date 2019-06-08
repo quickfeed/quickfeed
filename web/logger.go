@@ -1,143 +1,90 @@
 package web
 
 import (
-	"io"
-	"strconv"
 	"time"
 
 	"github.com/labstack/echo"
-	"github.com/labstack/gommon/log"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-// Logger returns a logrus logger middleware.
-func Logger(l logrus.FieldLogger) echo.MiddlewareFunc {
+// Logger returns a zap logger middleware.
+func Logger(log *zap.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			r := c.Request()
-			w := c.Response()
 			start := time.Now()
 			if err := next(c); err != nil {
 				c.Error(err)
 			}
-			stop := time.Now()
+			latency := time.Since(start)
 
-			p := r.URL.Path
+			req := c.Request()
+			res := c.Response()
+
+			p := req.URL.Path
 			if p == "" {
 				p = "/"
 			}
 
-			bytesIn := r.Header.Get(echo.HeaderContentLength)
+			bytesIn := req.Header.Get(echo.HeaderContentLength)
 			if bytesIn == "" {
 				bytesIn = "0"
 			}
 
-			l.WithFields(map[string]interface{}{
-				"time_rfc3339":  time.Now().Format(time.RFC3339),
-				"remote_ip":     c.RealIP(),
-				"host":          r.Host,
-				"uri":           r.RequestURI,
-				"method":        r.Method,
-				"path":          p,
-				"referer":       r.Referer(),
-				"user_agent":    r.UserAgent(),
-				"status":        w.Status,
-				"latency":       strconv.FormatInt(stop.Sub(start).Nanoseconds()/1000, 10),
-				"latency_human": stop.Sub(start).String(),
-				"bytes_in":      bytesIn,
-				"bytes_out":     strconv.FormatInt(w.Size, 10),
-			}).Info("Handled request")
+			id := req.Header.Get(echo.HeaderXRequestID)
+			if id == "" {
+				id = res.Header().Get(echo.HeaderXRequestID)
+			}
 
+			fields := []zapcore.Field{
+				zap.Int("status", res.Status),
+				zap.Duration("latency", latency),
+				zap.String("id", id),
+				zap.String("method", req.Method),
+				zap.String("uri", req.RequestURI),
+				zap.String("host", req.Host),
+				zap.String("remote_ip", c.RealIP()),
+				zap.String("path", p),
+				zap.String("referer", req.Referer()),
+				zap.String("user_agent", req.UserAgent()),
+				zap.String("bytes_in", bytesIn),
+				zap.Int64("bytes_out", res.Size),
+			}
+
+			n := res.Status
+			switch {
+			case n >= 500:
+				log.Error("Server error", fields...)
+			case n >= 400:
+				log.Warn("Client error", fields...)
+			case n >= 300:
+				log.Info("Redirection", fields...)
+			default:
+				log.Info("Success", fields...)
+			}
 			return nil
 		}
 	}
 }
 
-// EchoLogger adapts a logrus.Logger to the echo.Logger interface.
-type EchoLogger struct {
-	*logrus.Logger
-}
-
-// Output implements the echo.Logger interface.
-func (l EchoLogger) Output() io.Writer {
-	return l.Logger.Out
-}
-
-// SetOutput implements the echo.Logger interface.
-func (l EchoLogger) SetOutput(out io.Writer) {
-	l.Logger.Out = out
-}
-
-// Prefix implements the echo.Logger interface.
-func (l EchoLogger) Prefix() string {
-	return ""
-}
-
-// SetPrefix implements the echo.Logger interface.
-func (l EchoLogger) SetPrefix(p string) {}
-
-// Level implements the echo.Logger interface.
-func (l EchoLogger) Level() log.Lvl {
-	return log.Lvl(l.Logger.Level)
-}
-
-// SetLevel implements the echo.Logger interface.
-func (l EchoLogger) SetLevel(level log.Lvl) {
-	l.Logger.Level = logrus.Level(level)
-}
-
-// Printj implements the echo.Logger interface.
-func (l EchoLogger) Printj(json log.JSON) {
-	l.Printf("%v", json)
-}
-
-// Debugj implements the echo.Logger interface.
-func (l EchoLogger) Debugj(json log.JSON) {
-	l.Debugf("%v", json)
-}
-
-// Infoj implements the echo.Logger interface.
-func (l EchoLogger) Infoj(json log.JSON) {
-	l.Infof("%v", json)
-}
-
-// Warnj implements the echo.Logger interface.
-func (l EchoLogger) Warnj(json log.JSON) {
-	l.Warnf("%v", json)
-}
-
-// Errorj implements the echo.Logger interface.
-func (l EchoLogger) Errorj(json log.JSON) {
-	l.Errorf("%v", json)
-}
-
-// Fatalj implements the echo.Logger interface.
-func (l EchoLogger) Fatalj(json log.JSON) {
-	l.Fatalf("%v", json)
-}
-
-// Panicj implements the echo.Logger interface.
-func (l EchoLogger) Panicj(json log.JSON) {
-	l.Panicf("%v", json)
-}
-
 // WebhookLogger implements the gopkg.in/go-playground/webhooks.v3.Logger
-// interface using a logrus.FieldLogger.
+// interface using a zap.Logger.
+//TODO(meling) with webhooks.v5 it does not use a logger; so we should not need this?
 type WebhookLogger struct {
-	logrus.FieldLogger
+	*zap.Logger
 }
 
 // Info prints basic information.
 func (l WebhookLogger) Info(msg string) {
-	l.FieldLogger.Info(msg)
+	l.Info(msg)
 }
 
 // Error prints error information.
 func (l WebhookLogger) Error(msg string) {
-	l.FieldLogger.Error(msg)
+	l.Error(msg)
 }
 
 // Debug prints information useful for debugging.
 func (l WebhookLogger) Debug(msg string) {
-	l.FieldLogger.Debug(msg)
+	l.Debug(msg)
 }

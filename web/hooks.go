@@ -12,7 +12,7 @@ import (
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 	"gopkg.in/go-playground/webhooks.v3/github"
@@ -32,7 +32,7 @@ type BaseHookOptions struct {
 }
 
 // GithubHook handles webhook events from GitHub.
-func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runner, scriptPath string) webhooks.ProcessPayloadFunc {
+func GithubHook(logger *zap.Logger, db database.Database, runner ci.Runner, scriptPath string) webhooks.ProcessPayloadFunc {
 	return func(payload interface{}, header webhooks.Header) {
 		h := http.Header(header)
 		event := github.Event(h.Get("X-GitHub-Event"))
@@ -40,14 +40,14 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 		switch event {
 		case github.PushEvent:
 			p := payload.(github.PushPayload)
-			logger.WithField("payload", p).Println("Push event")
+			logger.Debug("Push event", zap.Any("payload", p))
 
 			repo, err := db.GetRepository(uint64(p.Repository.ID))
 			if err != nil {
-				logger.WithError(err).Error("Failed to get repository from database")
+				logger.Error("Failed to get repository from database", zap.Error(err))
 				return
 			}
-			logger.WithField("repo", repo).Info("Found repository, moving on")
+			logger.Debug("Found repository, moving on", zap.Any("repo", repo))
 
 			switch {
 			case repo.IsTestsRepo():
@@ -60,80 +60,80 @@ func GithubHook(logger logrus.FieldLogger, db database.Database, runner ci.Runne
 				runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath)
 
 			default:
-				logger.Info("Nothing to do for this push event")
+				logger.Debug("Nothing to do for this push event")
 			}
 
 		default:
-			logger.WithFields(logrus.Fields{
-				"event":   event,
-				"payload": payload,
-				"header":  h,
-			}).Warn("Event not implemented")
+			logger.Debug("Event not implemented",
+				zap.Any("event", event),
+				zap.Any("payload", payload),
+				zap.Any("header", h),
+			)
 		}
 	}
 }
 
-func refreshAssignmentsFromTestsRepo(logger logrus.FieldLogger, db database.Database, repo *pb.Repository, senderID uint64) {
-	logger.Info("Refreshing course informaton in database")
+func refreshAssignmentsFromTestsRepo(logger *zap.Logger, db database.Database, repo *pb.Repository, senderID uint64) {
+	logger.Debug("Refreshing course informaton in database")
 
 	remoteIdentity, err := db.GetRemoteIdentity("github", senderID)
 	if err != nil {
-		logger.WithError(err).Error("Failed to get sender's remote identity")
+		logger.Error("Failed to get sender's remote identity", zap.Error(err))
 		return
 	}
-	logger.WithField("identity", remoteIdentity).Info("Found sender's remote identity")
+	logger.Debug("Found sender's remote identity", zap.String("remote identity", remoteIdentity.String()))
 
 	s, err := scm.NewSCMClient("github", remoteIdentity.AccessToken)
 	if err != nil {
-		logger.WithError(err).Error("Failed to create SCM Client")
+		logger.Error("Failed to create SCM Client", zap.Error(err))
 		return
 	}
 
 	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
 	if err != nil {
-		logger.WithError(err).Error("Failed to get course from database")
+		logger.Error("Failed to get course from database", zap.Error(err))
 		return
 	}
 
 	assignments, err := FetchAssignments(context.Background(), s, course)
 	if err != nil {
-		logger.WithError(err).Error("Failed to fetch assignments from 'tests' repository")
+		logger.Error("Failed to fetch assignments from 'tests' repository", zap.Error(err))
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
-		logger.WithError(err).Error("Failed to update assignments in database")
+		logger.Error("Failed to update assignments in database", zap.Error(err))
 	}
 }
 
 // runTests runs the ci from a RemoteIdentity
-func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner, repo *pb.Repository,
+func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *pb.Repository,
 	getURL string, commitHash string, scriptPath string) {
 
 	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
 	if err != nil {
-		logger.WithError(err).Error("Failed to get course from database")
+		logger.Error("Failed to get course from database", zap.Error(err))
 		return
 	}
 
 	courseCreator, err := db.GetUser(course.CourseCreatorID)
 	if err != nil || len(courseCreator.RemoteIdentities) < 1 {
-		logger.WithError(err).Error("Failed to fetch course creator")
+		logger.Error("Failed to fetch course creator", zap.Error(err))
 	}
 
 	selectedAssignment, err := db.GetNextAssignment(course.ID, repo.UserID, repo.GroupID)
 	if err != nil {
-		logger.WithError(err).Error("Failed to find a next unapproved assignment")
+		logger.Error("Failed to find a next unapproved assignment", zap.Error(err))
 		return
 	}
-	logger.WithField("Assignment", selectedAssignment).Info("Found assignment")
+	logger.Debug("Found assignment", zap.String("assignment", selectedAssignment.String()))
 
 	testRepos, err := db.GetRepositoriesByCourseAndType(course.ID, pb.Repository_TESTS)
 	if err != nil || len(testRepos) < 1 {
-		logger.WithError(err).Error("Failed to find test repository in database")
+		logger.Error("Failed to find test repository in database", zap.Error(err))
 		return
 	}
 	getURLTest := testRepos[0].HTMLURL
-	logger.WithField("url", getURL).Info("Code Repository")
-	logger.WithField("url", getURLTest).Info("Test repository")
+	logger.Debug("Code Repository", zap.String("url", getURL))
+	logger.Debug("Test Repository", zap.String("url", getURLTest))
 
 	randomSecret := randomSecret()
 	info := ci.AssignmentInfo{
@@ -148,29 +148,29 @@ func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner,
 	}
 	job, err := ci.ParseScriptTemplate(scriptPath, info)
 	if err != nil {
-		logger.WithError(err).Error("Failed to parse script template")
+		logger.Error("Failed to parse script template", zap.Error(err))
 		return
 	}
 
 	start := time.Now()
 	out, err := runner.Run(context.Background(), job)
 	if err != nil {
-		logger.WithError(err).Error("Docker execution failed")
+		logger.Error("Docker execution failed", zap.Error(err))
 		return
 	}
 	execTime := time.Since(start)
-	logger.WithField("out", out).WithField("execTime", execTime).Info("Docker execution successful")
+	logger.Debug("Docker execution successful", zap.String("output", out), zap.Duration("execution time", execTime))
 
 	result, err := ci.ExtractResult(out, randomSecret, execTime)
 	if err != nil {
-		logger.WithError(err).Error("Failed to extract results from log")
+		logger.Error("Failed to extract results from log", zap.Error(err))
 		return
 	}
 	buildInfo, scores, err := result.Marshal()
 	if err != nil {
-		logger.WithError(err).Error("Failed to marshal build info and scores")
+		logger.Error("Failed to marshal build info and scores", zap.Error(err))
 	}
-	logger.WithField("result", result).Info("Extracted results")
+	logger.Debug("Extracted results", zap.Any("result", result))
 
 	err = db.CreateSubmission(&pb.Submission{
 		AssignmentID: selectedAssignment.ID,
@@ -182,76 +182,11 @@ func runTests(logger logrus.FieldLogger, db database.Database, runner ci.Runner,
 		GroupID:      repo.GroupID,
 	})
 	if err != nil {
-		logger.WithError(err).Error("Failed to add submission to database")
+		logger.Error("Failed to add submission to database", zap.Error(err))
 		return
 	}
 }
 
-//TODO(Vera): not needed anymore
-/*
-func getTestRepoCloneURL(logger logrus.FieldLogger, db database.Database, remoteIdentity *pb.RemoteIdentity, repo *pb.Repository) (string, error) {
-	// Add repository url to repository table in database to prevent requestion the data every time we need it.
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: remoteIdentity.AccessToken})
-	client := gh.NewClient(oauth2.NewClient(context.Background(), ts))
-	allRepos, err := db.GetRepositoriesByDirectory(repo.DirectoryID)
-	if err != nil {
-		logger.WithError(err).Error("Problem with requesting repositories")
-		return "", err
-	}
-	var testRepo *ag.Repository
-	for _, v := range allRepos {
-		if v.RepoType == ag.Repository_TESTS {
-			testRepo = v
-			break
-		}
-	}
-	if testRepo == nil {
-		logger.Error("Test Repo does not exists")
-	}
-	testRepos, _, err := client.Repositories.GetByID(context.Background(), int(testRepo.RepositoryId))
-	if err != nil {
-		logger.WithError(err).Error("Got error while requesting repository")
-		return "", err
-	}
-	return *testRepos.CloneURL, nil
-
-}
-
-func runCIFromTMPL(runner ci.Runner, language string, ciInfo models.AssignmentCIInfo, buildscripts string) (*models.CIResult, string, error) {
-	bPath := path.Join(buildscripts, language+".tmpl")
-	if _, err := os.Stat(bPath); err != nil {
-		return nil, "", err
-	}
-	t, err := template.ParseFiles(bPath)
-	if err != nil {
-		return nil, "", err
-	}
-
-	buffer := bytes.NewBufferString("")
-
-	t.Execute(buffer, ciInfo)
-
-	lines := strings.Split(buffer.String(), "\n")
-	restData, image := extractDockerImageInformation(lines)
-
-	if image == nil {
-		return nil, "", fmt.Errorf("image not specified in template file")
-	}
-
-	startTime := time.Now()
-	out, err := runner.Run(context.Background(), &ci.Job{
-		Image:    *image,
-		Commands: restData,
-	})
-	endTime := time.Now()
-
-	if err != nil {
-		return nil, out, err
-	}
-
-	scores, filteredOut, err := parseCIOutput(out)
-
-*/
 func randomSecret() string {
 	randomness := make([]byte, 10)
 	_, err := rand.Read(randomness)
@@ -262,7 +197,7 @@ func randomSecret() string {
 }
 
 // GitlabHook handles events from Gitlab.
-func GitlabHook(logger logrus.FieldLogger) webhooks.ProcessPayloadFunc {
+func GitlabHook(logger *zap.Logger) webhooks.ProcessPayloadFunc {
 	return func(payload interface{}, header webhooks.Header) {
 		h := http.Header(header)
 		event := gitlab.Event(h.Get("X-Gitlab-Event"))
@@ -270,13 +205,13 @@ func GitlabHook(logger logrus.FieldLogger) webhooks.ProcessPayloadFunc {
 		switch event {
 		case gitlab.PushEvents:
 			p := payload.(gitlab.PushEventPayload)
-			logger.WithField("payload", p).Println("Push event")
+			logger.Debug("Push event", zap.Any("payload", p))
 		default:
-			logger.WithFields(logrus.Fields{
-				"event":   event,
-				"payload": payload,
-				"header":  h,
-			}).Warn("Event not implemented")
+			logger.Debug("Event not implemented",
+				zap.Any("event", event),
+				zap.Any("payload", payload),
+				zap.Any("header", h),
+			)
 		}
 	}
 }

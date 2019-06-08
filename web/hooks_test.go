@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"go.uber.org/zap"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 
 	pb "github.com/autograde/aguis/ag"
@@ -43,7 +44,7 @@ func TestGithubHook(t *testing.T) {
 	}
 
 	runner := &mockRunner{}
-	hook := web.GithubHook(nullLogger(), db, runner, "buildscripts")
+	hook := web.GithubHook(zap.NewNop(), db, runner, "buildscripts")
 
 	var h http.Header = make(map[string][]string)
 	h.Set("X-Github-Event", string(github.PushEvent))
