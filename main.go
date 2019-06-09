@@ -11,6 +11,7 @@ import (
 	"github.com/autograde/aguis/envoy"
 	"github.com/autograde/aguis/web"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
@@ -52,16 +53,17 @@ func main() {
 	)
 	flag.Parse()
 
-	//TODO(meling) make dev flag to switch between dev/production logging
-	// lg, err := zap.NewProduction()
-	lg, err := zap.NewDevelopment()
+	cfg := zap.NewDevelopmentConfig()
+	// database logging is only enabled if the LOGDB environment variable is set
+	cfg = database.GormLoggerConfig(cfg)
+	// we only want stack trace enabled for panic level and above
+	logger, err := cfg.Build(zap.AddStacktrace(zapcore.PanicLevel))
 	if err != nil {
 		log.Fatalf("can't initialize logger: %v\n", err)
 	}
-	defer lg.Sync()
+	defer logger.Sync()
 
-	//TODO(meling) how to connect the main logger with the GormLogger; now they are independent;
-	db, err := database.NewGormDB("sqlite3", *dbFile, database.NewGormLogger())
+	db, err := database.NewGormDB("sqlite3", *dbFile, database.NewGormLogger(logger))
 	if err != nil {
 		log.Fatalf("can't connect to database: %v\n", err)
 	}
@@ -72,7 +74,7 @@ func main() {
 	}()
 
 	// start envoy in a docker container; fetch envoy docker image if necessary
-	go envoy.StartEnvoy(lg)
+	go envoy.StartEnvoy(logger)
 
 	// holds references for activated providers for current user token
 	scms := web.NewScms()
@@ -80,7 +82,7 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
-	go http.NewWebServer(db, bh, lg, *public, *httpAddr, *baseURL, *fake, *ciScripts, scms)
+	go http.NewWebServer(db, bh, logger, *public, *httpAddr, *baseURL, *fake, *ciScripts, scms)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {

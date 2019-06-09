@@ -68,7 +68,9 @@ func main() {
 
 func before(db *database.GormDB) cli.BeforeFunc {
 	return func(c *cli.Context) error {
-		tdb, err := database.NewGormDB("sqlite3", c.String("database"), database.NewGormLogger())
+		tdb, err := database.NewGormDB("sqlite3", c.String("database"),
+			database.NewGormLogger(database.BuildLogger()),
+		)
 		if err != nil {
 			return err
 		}

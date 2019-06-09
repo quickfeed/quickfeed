@@ -23,6 +23,36 @@ type Logger struct {
 	*zap.Logger
 }
 
+// NewGormLogger returns a logger for Gorm. A logger instance is only returned
+// if the LOGDB environment variable is set.
+// This logger should probably not be used in production due to the
+// high volume of SQL queries; it is mainly meant to assist with debugging
+// database query issues.
+func NewGormLogger(l *zap.Logger) GormLogger {
+	if os.Getenv("LOGDB") != "" {
+		return Logger{Logger: l}
+	}
+	return nil
+}
+
+// BuildLogger returns a zap logger with Gorm logging enabled.
+// This can be passed to NewGormLogger, if no other loggers are needed.
+func BuildLogger() *zap.Logger {
+	cfg := GormLoggerConfig(zap.NewDevelopmentConfig())
+	l, _ := cfg.Build()
+	return l
+}
+
+// GormLoggerConfig returns a zap logger configuration with Gorm logging
+// enabled with special handling for SQL queries.
+// Gorm logging is only enabled if the LOGDB environment variable is set.
+func GormLoggerConfig(cfg zap.Config) zap.Config {
+	if os.Getenv("LOGDB") != "" {
+		cfg.EncoderConfig.EncodeCaller = GormCallerEncoder
+	}
+	return cfg
+}
+
 // GormCallerEncoder finds the file and line number of the first use in gormdb.go.
 // The default caller encoder from zapcore is unreliable. Hence this implementation
 // ignores the caller argument from zap, and instead we create our own caller for Gorm.
@@ -51,21 +81,6 @@ func GormCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEnc
 		}
 	}
 	enc.AppendString(caller.TrimmedPath())
-}
-
-// NewGormLogger returns a logger for Gorm. A logger instance is only returned
-// if the LOGDB environment variable is set.
-// This logger should probably not be used in production due to the
-// high volume of SQL queries; it is mainly meant to assist with debugging
-// database query issues.
-func NewGormLogger() GormLogger {
-	if os.Getenv("LOGDB") != "" {
-		cfg := zap.NewDevelopmentConfig()
-		cfg.EncoderConfig.EncodeCaller = GormCallerEncoder
-		l, _ := cfg.Build()
-		return Logger{Logger: l}
-	}
-	return nil
 }
 
 var sqlRegexp = regexp.MustCompile(`(\$\d+)|\?`)

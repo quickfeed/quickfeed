@@ -29,7 +29,9 @@ func setup(t *testing.T) (database.Database, func()) {
 		t.Fatal(err)
 	}
 
-	db, err := database.NewGormDB(driver, f.Name(), database.NewGormLogger())
+	db, err := database.NewGormDB(driver, f.Name(),
+		database.NewGormLogger(database.BuildLogger()),
+	)
 	if err != nil {
 		os.Remove(f.Name())
 		t.Fatal(err)
