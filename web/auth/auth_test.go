@@ -18,6 +18,7 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
+	"go.uber.org/zap"
 )
 
 const (
@@ -64,7 +65,7 @@ func TestOAuth2Logout(t *testing.T) {
 		t.Errorf("have %d sessions want %d", ns, 2)
 	}
 
-	authHandler := auth.OAuth2Logout()
+	authHandler := auth.OAuth2Logout(zap.NewNop())
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -91,7 +92,7 @@ func TestOAuth2LoginRedirect(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Login(db)
+	authHandler := auth.OAuth2Login(zap.NewNop(), db)
 	withSession := session.Middleware(store)(authHandler)
 	if err := withSession(c); err != nil {
 		t.Error(err)
@@ -113,7 +114,7 @@ func TestOAuth2CallbackBadRequest(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Callback(db)
+	authHandler := auth.OAuth2Callback(zap.NewNop(), db)
 	withSession := session.Middleware(store)(authHandler)
 	err := withSession(c)
 	httpErr, ok := err.(*echo.HTTPError)
@@ -178,7 +179,7 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 		c.SetParamValues(newProvider)
 	}
 
-	authHandler := auth.PreAuth(db)(func(c echo.Context) error { return nil })
+	authHandler := auth.PreAuth(zap.NewNop(), db)(func(c echo.Context) error { return nil })
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -234,7 +235,7 @@ func TestOAuth2LoginAuthenticated(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	authHandler := auth.OAuth2Login(db)
+	authHandler := auth.OAuth2Login(zap.NewNop(), db)
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -307,7 +308,7 @@ func testOAuth2Callback(t *testing.T, existingUser, haveSession bool) {
 		}
 	}
 
-	authHandler := auth.OAuth2Callback(db)
+	authHandler := auth.OAuth2Callback(zap.NewNop(), db)
 	withSession := session.Middleware(store)(authHandler)
 
 	if err := withSession(c); err != nil {
@@ -349,7 +350,7 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m := auth.AccessControl(db, web.NewScms())
+	m := auth.AccessControl(zap.NewNop(), db, web.NewScms())
 	protected := session.Middleware(store)(m(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}))

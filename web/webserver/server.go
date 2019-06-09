@@ -41,7 +41,7 @@ func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, pu
 
 	enabled := enableProviders(l, baseURL, fake)
 	registerWebhooks(l, e, db, bh.Secret, enabled, &buildscripts)
-	registerAuth(e, db, scms)
+	registerAuth(l, e, db, scms)
 
 	registerFrontend(e, entryPoint, public)
 	runWebServer(l, e, httpAddr)
@@ -149,7 +149,7 @@ func registerWebhooks(logger *zap.Logger, e *echo.Echo, db database.Database, se
 	})
 }
 
-func registerAuth(e *echo.Echo, db database.Database, scms *web.Scms) {
+func registerAuth(logger *zap.Logger, e *echo.Echo, db database.Database, scms *web.Scms) {
 	// makes the oauth2 provider available in the request query so that
 	// markbates/goth/gothic.GetProviderName can find it.
 	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -161,13 +161,13 @@ func registerAuth(e *echo.Echo, db database.Database, scms *web.Scms) {
 		}
 	}
 
-	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(db))
-	oauth2.GET("", auth.OAuth2Login(db))
-	oauth2.GET("/callback", auth.OAuth2Callback(db))
-	e.GET("/logout", auth.OAuth2Logout())
+	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(logger, db))
+	oauth2.GET("", auth.OAuth2Login(logger, db))
+	oauth2.GET("/callback", auth.OAuth2Callback(logger, db))
+	e.GET("/logout", auth.OAuth2Logout(logger))
 
 	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl(db, scms))
+	api.Use(auth.AccessControl(logger, db, scms))
 	api.GET("/user", web.GetSelf(db))
 }
 
