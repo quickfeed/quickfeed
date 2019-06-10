@@ -168,5 +168,5 @@ type PaymentPlan struct {
 }
 
 func (e ErrNotSupported) Error() string {
-	return "method" + e.Method + " not supported by " + e.SCM + " SCM"
+	return "method " + e.Method + " not supported by " + e.SCM + " SCM"
 }
