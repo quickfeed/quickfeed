@@ -89,8 +89,7 @@ func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*p
 	if request.AvatarURL != "" {
 		updateUser.AvatarURL = request.AvatarURL
 	}
-
-	// no need to check IsAdmin field for nil any more, it is type safe - it is always boolean and cannot be nil
+	// current user must be admin to promote another user to admin
 	if currentUser.IsAdmin {
 		updateUser.IsAdmin = request.IsAdmin
 	}

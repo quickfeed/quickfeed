@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	pb "github.com/autograde/aguis/ag"
@@ -49,23 +48,8 @@ func TestGetUser(t *testing.T) {
 	defer cleanup()
 
 	// Create first user (the admin).
-	if err := db.CreateUserFromRemoteIdentity(
-		&pb.User{},
-		&pb.RemoteIdentity{},
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	var user pb.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user,
-		&pb.RemoteIdentity{
-			Provider:    "github",
-			AccessToken: "secret",
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
+	createFakeUser(t, db, 0)
+	user := createFakeUser(t, db, 1)
 
 	_, scms := fakeProviderMap(t)
 	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
@@ -76,8 +60,8 @@ func TestGetUser(t *testing.T) {
 		t.Error(err)
 	}
 	user.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
-	if !reflect.DeepEqual(foundUser, &user) {
-		t.Errorf("have user %+v want %+v", foundUser, &user)
+	if !cmp.Equal(foundUser, user) {
+		t.Errorf("have user %+v want %+v", foundUser, user)
 	}
 }
 
@@ -85,24 +69,8 @@ func TestGetUsers(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user1 pb.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user1,
-		&pb.RemoteIdentity{
-			Provider: "github",
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
-	var user2 pb.User
-	if err := db.CreateUserFromRemoteIdentity(
-		&user2,
-		&pb.RemoteIdentity{
-			Provider: "gitlab",
-		},
-	); err != nil {
-		t.Fatal(err)
-	}
+	user1 := createFakeUser(t, db, 1)
+	user2 := createFakeUser(t, db, 2)
 
 	_, scms := fakeProviderMap(t)
 	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
@@ -117,14 +85,12 @@ func TestGetUsers(t *testing.T) {
 	user1.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	user2.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	// First user should be admin.
-	admin := true
-	user1.IsAdmin = admin
+	user1.IsAdmin = true
 	wantUsers := make([]*pb.User, 0)
-	wantUsers = append(wantUsers, &user1)
-	wantUsers = append(wantUsers, &user2)
-	gotUsers := foundUsers.Users
+	wantUsers = append(wantUsers, user1)
+	wantUsers = append(wantUsers, user2)
 
-	if !cmp.Equal(gotUsers, wantUsers) {
+	if !cmp.Equal(foundUsers.Users, wantUsers) {
 		t.Errorf("have users %+v want %+v", foundUsers.Users, wantUsers)
 	}
 }
@@ -214,7 +180,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		foundUsers = append(foundUsers, e.User)
 	}
 
-	if !reflect.DeepEqual(foundUsers, wantUsers) {
+	if !cmp.Equal(foundUsers, wantUsers) {
 		for _, u := range foundUsers {
 			t.Logf("user %+v", u)
 		}
@@ -254,7 +220,6 @@ func TestPatchUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if !admin.IsAdmin {
 		t.Error("expected user to have become admin")
 	}
@@ -276,19 +241,18 @@ func TestPatchUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantAdmin := true
 	wantUser := &pb.User{
 		ID:               withName.ID,
 		Name:             "Scrooge McDuck",
-		IsAdmin:          wantAdmin,
+		IsAdmin:          true,
 		StudentID:        "99",
 		Email:            "test@test.com",
 		AvatarURL:        "www.hello.com",
 		RemoteIdentities: user.RemoteIdentities,
 	}
 
-	if !reflect.DeepEqual(withName, wantUser) {
-		t.Errorf("have users %+v want %+v", withName, wantUser)
+	if !cmp.Equal(withName, wantUser) {
+		t.Errorf("have users\n%+v want\n%+v\n", withName, wantUser)
 	}
 }
 
