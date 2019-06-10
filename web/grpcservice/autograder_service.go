@@ -95,7 +95,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	if !usr.IsAdmin {
 		return nil, status.Errorf(codes.PermissionDenied, "user must be admin to create a new course")
 	}
-	scm, err := getSCM(ctx, s.scms, s.db, in.Provider)
+	scm, err := s.getSCM(ctx, in.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 	if !in.IsValidCourse() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	scm, err := getSCM(ctx, s.scms, s.db, in.Provider)
+	scm, err := s.getSCM(ctx, in.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if err != nil {
 		return nil, err
 	}
-	scm, err := getSCM(ctx, s.scms, s.db, crs.Provider)
+	scm, err := s.getSCM(ctx, crs.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 		return nil, err
 	}
 
-	scm, err := getSCM(ctx, s.scms, s.db, crs.Provider)
+	scm, err := s.getSCM(ctx, crs.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 	if err != nil {
 		return nil, err
 	}
-	scm, err := getSCM(ctx, s.scms, s.db, crs.Provider)
+	scm, err := s.getSCM(ctx, crs.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +362,7 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 func (s *AutograderService) GetDirectories(ctx context.Context, in *pb.DirectoryRequest) (*pb.Directories, error) {
 	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
 	defer cancel()
-	scm, err := getSCM(ctx, s.scms, s.db, in.Provider)
+	scm, err := s.getSCM(ctx, in.Provider)
 	if err != nil {
 		return nil, err
 	}

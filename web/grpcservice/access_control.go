@@ -11,7 +11,6 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
-	"github.com/autograde/aguis/web"
 )
 
 func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error) {
@@ -45,14 +44,14 @@ func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error)
 	return usr, nil
 }
 
-func getSCM(ctx context.Context, scms *web.Scms, db database.Database, provider string) (scm.SCM, error) {
-	user, err := getCurrentUser(ctx, db)
+func (s *AutograderService) getSCM(ctx context.Context, provider string) (scm.SCM, error) {
+	user, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, err
 	}
 	for _, remoteID := range user.RemoteIdentities {
 		if remoteID.Provider == provider {
-			scm, ok := scms.GetSCM(remoteID.GetAccessToken())
+			scm, ok := s.scms.GetSCM(remoteID.GetAccessToken())
 			if !ok {
 				return nil, status.Errorf(codes.PermissionDenied, "invalid token")
 			}
