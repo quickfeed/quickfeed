@@ -197,7 +197,6 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		// such that they can later join other groups
 		for _, member := range request.Users {
 			if err = db.UpdateGroupEnrollment(member.ID, course.ID); err != nil {
-				log.Println("web: UpdateGroup failed to reset group enrollment for user ", member.ID)
 				return err
 			}
 		}

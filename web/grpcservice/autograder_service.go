@@ -2,7 +2,6 @@ package grpcservice
 
 import (
 	"context"
-	"log"
 
 	"google.golang.org/grpc/codes"
 
@@ -194,18 +193,13 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 
 // GetGroup returns information about a group
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
-	log.Println("AG service: getGroup got request with ID ", in.GetID())
 	if !in.IsValidRequest() {
-		log.Println("AG service: getGroup got invalid request")
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	log.Println("AG service: getGroup started ")
 	group, err := web.GetGroup(in, s.db)
 	if err != nil {
-		log.Println("AG service: getGroup got no group")
 		return nil, err
 	}
-	log.Println("AG service: getGroup got group")
 	group.RemoveRemoteIDs()
 	return group, nil
 }
@@ -225,7 +219,6 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 
 // CreateGroup makes a new group
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
-	log.Println("AG service: CreateGroup called with group ", in)
 	if !in.IsValidGroup() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
@@ -233,7 +226,6 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	log.Println("AG service: CreateGroup got current user ID: ", usr.ID)
 	group, err := web.NewGroup(in, s.db, usr)
 	if err != nil {
 		return nil, err
@@ -245,7 +237,6 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 // UpdateGroup updates group information
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	if !in.IsValidGroup() {
-		log.Println("AG service UpdateGroup is invalid")
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
