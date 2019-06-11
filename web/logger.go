@@ -76,15 +76,15 @@ type WebhookLogger struct {
 
 // Info prints basic information.
 func (l WebhookLogger) Info(msg string) {
-	l.Info(msg)
+	l.Logger.Info(msg)
 }
 
 // Error prints error information.
 func (l WebhookLogger) Error(msg string) {
-	l.Error(msg)
+	l.Logger.Error(msg)
 }
 
 // Debug prints information useful for debugging.
 func (l WebhookLogger) Debug(msg string) {
-	l.Debug(msg)
+	l.Logger.Debug(msg)
 }
