@@ -9,6 +9,7 @@ import (
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/grpcservice"
 	"github.com/google/go-cmp/cmp"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -52,7 +53,7 @@ func TestGetUser(t *testing.T) {
 	user := createFakeUser(t, db, 1)
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
 
 	foundUser, err := ags.GetUser(cont, &pb.RecordRequest{ID: user.ID})
@@ -73,7 +74,7 @@ func TestGetUsers(t *testing.T) {
 	user2 := createFakeUser(t, db, 2)
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user1.ID))
 
 	foundUsers, err := ags.GetUsers(cont, &pb.Void{})
@@ -131,7 +132,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(admin.ID))
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -208,7 +209,7 @@ func TestPatchUser(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), adminUser)
 
 	respUser, err := web.PatchUser(adminUser, user, db)

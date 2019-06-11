@@ -299,7 +299,6 @@ func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.
 //(meling): merge this functionality with func below into a single func.
 // Use only one db call as well. Make sure the db can only return one repo
 func GetCourseInformationURL(request *pb.RecordRequest, db database.Database) (*pb.URLResponse, error) {
-
 	courseInfoRepo, err := db.GetRepositoriesByCourseAndType(request.ID, pb.Repository_COURSEINFO)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "could not retrieve any course information repos")
@@ -314,18 +313,16 @@ func GetCourseInformationURL(request *pb.RecordRequest, db database.Database) (*
 
 // GetRepositoryURL returns the repository information
 func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db database.Database) (*pb.URLResponse, error) {
-
 	var repos []*pb.Repository
 	if request.Type == pb.Repository_USER {
-
 		userRepo, err := db.GetRepositoryByCourseUserType(request.CourseID, currentUser.ID, request.Type)
 		if err != nil {
 			return nil, err
 		}
 		return &pb.URLResponse{URL: userRepo.HTMLURL}, nil
 	}
-	repos, err := db.GetRepositoriesByCourseAndType(request.CourseID, request.Type)
 
+	repos, err := db.GetRepositoriesByCourseAndType(request.CourseID, request.Type)
 	if err != nil {
 		return nil, err
 	}

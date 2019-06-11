@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"go.uber.org/zap"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -36,7 +37,7 @@ func TestNewGroup(t *testing.T) {
 
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	fakeProvider.CreateDirectory(ctx,
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
@@ -95,7 +96,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 
 	fakeProvider, scms := fakeProviderMap(t)
 	ctx := withUserContext(context.Background(), teacher)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	fakeProvider.CreateDirectory(ctx,
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
@@ -154,7 +155,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 
 	fakeProvider, scms := fakeProviderMap(t)
 	ctx := withUserContext(context.Background(), user)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	fakeProvider.CreateDirectory(ctx,
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
@@ -175,7 +176,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	fakeProvider.CreateDirectory(context.Background(),
 		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
 	)
@@ -366,7 +367,7 @@ func TestDeleteGroup(t *testing.T) {
 	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	ctx := withUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group)
@@ -407,7 +408,7 @@ func TestGetGroup(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), user)
 
 	group := &pb.Group{Name: "Test Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
@@ -447,7 +448,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	if _, err := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{
@@ -530,7 +531,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	user1 := createFakeUser(t, db, 2)
@@ -589,7 +590,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(db, scms, web.BaseHookOptions{})
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	if _, err := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{

@@ -3,6 +3,7 @@ package grpcservice
 import (
 	"context"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 
 	"github.com/autograde/aguis/web"
@@ -14,19 +15,20 @@ import (
 
 // AutograderService holds references to the database and shared structures
 type AutograderService struct {
-	db   *database.GormDB
-	scms *web.Scms
-	bh   web.BaseHookOptions
+	logger *zap.SugaredLogger
+	db     *database.GormDB
+	scms   *web.Scms
+	bh     web.BaseHookOptions
 }
 
 // NewAutograderService is an AutograderService constructor
-func NewAutograderService(db *database.GormDB, scms *web.Scms, bh web.BaseHookOptions) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *web.Scms, bh web.BaseHookOptions) *AutograderService {
 	return &AutograderService{
-		db:   db,
-		scms: scms,
-		bh:   bh,
+		logger: logger.Sugar(),
+		db:     db,
+		scms:   scms,
+		bh:     bh,
 	}
-
 }
 
 // GetRepositoryURL returns a repository of requested type
@@ -36,9 +38,15 @@ func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.Reposit
 	}
 	currentUser, err := getCurrentUser(ctx, s.db)
 	if err != nil {
-		return nil, err
+		s.logger.Info(err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user metadata or user not in database")
 	}
-	return web.GetRepositoryURL(currentUser, in, s.db)
+	repoURL, err := web.GetRepositoryURL(currentUser, in, s.db)
+	if err != nil {
+		s.logger.Info(err)
+		return nil, status.Errorf(codes.NotFound, "failed to fetch repository URL")
+	}
+	return repoURL, nil
 }
 
 // GetUser returns information about the user excluding remote identity
