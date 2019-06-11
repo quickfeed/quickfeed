@@ -125,7 +125,7 @@ export class TeacherPage extends ViewPage {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: IAssignment[] = await this.courseMan.getAssignments(course.getId());
 
-            const students = await this.courseMan.getUsersForCourse(course, this.userMan,
+            const students = await this.courseMan.getUsersForCourse(course, this.userMan, false,
                 [
                     Enrollment.UserStatus.STUDENT,
                     Enrollment.UserStatus.TEACHER,
@@ -220,7 +220,7 @@ export class TeacherPage extends ViewPage {
         const group: Group | null = await this.courseMan.getGroup(groupId);
         if (course && curUser && group) {
             const students = await this.courseMan
-                .getUsersForCourse(course, this.userMan, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                .getUsersForCourse(course, this.userMan, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}

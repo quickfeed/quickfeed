@@ -18,6 +18,7 @@ import {
   Courses,
   Directories,
   DirectoryRequest,
+  EnrollmentRequest,
   Enrollments,
   Group,
   Groups,
@@ -404,14 +405,14 @@ export class AutograderServiceClient {
 
   methodInfoGetEnrollmentsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
     Enrollments,
-    (request: RecordRequest) => {
+    (request: EnrollmentRequest) => {
       return request.serializeBinary();
     },
     Enrollments.deserializeBinary
   );
 
   getEnrollmentsByCourse(
-    request: RecordRequest,
+    request: EnrollmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Enrollments) => void) {

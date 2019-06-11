@@ -24,7 +24,7 @@ export interface ICourseProvider {
     getAssignments(courseID: number): Promise<IMap<IAssignment>>;
     // getCoursesStudent(): Promise<ICourseUserLink[]>;
     getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]>;
-    getUsersForCourse(course: Course, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]>;
+    getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]>;
 
     addUserToCourse(user: User, course: Course): Promise<boolean>;
     changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean>;
@@ -298,9 +298,10 @@ export class CourseManager {
     public async getUsersForCourse(
         course: Course,
         userMan: UserManager,
+        noGroupMemebers?: boolean,
         state?: Enrollment.UserStatus[]): Promise<IUserRelation[]> {
 
-        return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
+        return (await this.courseProvider.getUsersForCourse(course, noGroupMemebers, state)).map<IUserRelation>((user) => {
             return {
                 link: { courseId: course.getId(), userid: user.userid, state: user.status },
                 user: user.user,

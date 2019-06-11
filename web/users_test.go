@@ -168,7 +168,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	foundEnrollments, err := ags.GetEnrollmentsByCourse(cont, &pb.RecordRequest{ID: allCourses[0].ID})
+	foundEnrollments, err := ags.GetEnrollmentsByCourse(cont, &pb.EnrollmentRequest{CourseID: allCourses[0].ID})
 	if err != nil {
 		t.Error(err)
 	}

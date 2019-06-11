@@ -739,6 +739,34 @@ export namespace RepositoryRequest {
   }
 }
 
+export class EnrollmentRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getFilteroutgroupmembers(): boolean;
+  setFilteroutgroupmembers(value: boolean): void;
+
+  getStatesList(): Array<Enrollment.UserStatus>;
+  setStatesList(value: Array<Enrollment.UserStatus>): void;
+  clearStatesList(): void;
+  addStates(value: Enrollment.UserStatus, index?: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): EnrollmentRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: EnrollmentRequest): EnrollmentRequest.AsObject;
+  static serializeBinaryToWriter(message: EnrollmentRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): EnrollmentRequest;
+  static deserializeBinaryFromReader(message: EnrollmentRequest, reader: jspb.BinaryReader): EnrollmentRequest;
+}
+
+export namespace EnrollmentRequest {
+  export type AsObject = {
+    courseid: number,
+    filteroutgroupmembers: boolean,
+    statesList: Array<Enrollment.UserStatus>,
+  }
+}
+
 export class Providers extends jspb.Message {
   getProvidersList(): Array<string>;
   setProvidersList(value: Array<string>): void;

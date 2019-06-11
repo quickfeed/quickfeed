@@ -45,3 +45,8 @@ func (req ActionRequest) IsValidRequest() bool {
 	return (req.GetUserID() > 0 || req.GetGroupID() > 0) &&
 		req.GetCourseID() > 0
 }
+
+// IsValidRequest checks that course ID is a positive number
+func (req EnrollmentRequest) IsValidRequest() bool {
+	return req.GetCourseID() > 0
+}

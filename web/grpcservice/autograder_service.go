@@ -151,7 +151,7 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordReq
 }
 
 // GetEnrollmentsByCourse returns all existing enrollments for a course
-func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.RecordRequest) (*pb.Enrollments, error) {
+func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}

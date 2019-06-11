@@ -21,6 +21,8 @@ import {
     Directories,
     DirectoryRequest,
     URLResponse,
+    EnrollmentRequest,
+    Enrollment,
 } from "../../proto/ag_pb";
 import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";
@@ -128,10 +130,18 @@ export class GrpcManager {
 
     // /* ENROLLMENTS */ //
 
-    public getEnrollmentsByCourse(courseid: number, state: any): Promise<IGrpcResponse<Enrollments>> {
-        const request = new RecordRequest();
-        request.setId(courseid);
-        request.setStatusesList(state);
+    public getEnrollmentsByCourse(courseid: number, noGroupMembers?: boolean, state?: any): Promise<IGrpcResponse<Enrollments>> {
+       console.log("GRC: getEnrollments by course started, bool: " + noGroupMembers)
+        const request = new EnrollmentRequest();
+        request.setCourseid(courseid);
+        if (noGroupMembers) {
+            console.log("GRC: getEnrollments by course: setting noGroupMembers ")
+            request.setFilteroutgroupmembers(noGroupMembers);
+        }
+        if (state) {
+            console.log("GRC: getEnrollments by course: setting states ")
+            request.setStatesList(state);
+        }
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request);
     }
 

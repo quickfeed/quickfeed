@@ -242,12 +242,22 @@ func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database,
 }
 
 // GetEnrollmentsByCourse get all enrollments for a course.
-func GetEnrollmentsByCourse(request *pb.RecordRequest, db database.Database) (*pb.Enrollments, error) {
+func GetEnrollmentsByCourse(request *pb.EnrollmentRequest, db database.Database) (*pb.Enrollments, error) {
 
-	enrollments, err := db.GetEnrollmentsByCourse(request.ID, request.Statuses...)
-
+	enrollments, err := db.GetEnrollmentsByCourse(request.CourseID, request.States...)
 	if err != nil {
 		return nil, err
+	}
+
+	// to populate response only with users who are not member of any group, we must filter the result
+	if request.FilterOutGroupMembers {
+		enrollmentsWithoutGroups := make([]*pb.Enrollment, 0)
+		for _, enrollment := range enrollments {
+			if enrollment.GroupID == 0 {
+				enrollmentsWithoutGroups = append(enrollmentsWithoutGroups, enrollment)
+			}
+		}
+		enrollments = enrollmentsWithoutGroups
 	}
 
 	for _, enrollment := range enrollments {

@@ -164,8 +164,8 @@ message Directories {
 
 message RecordRequest {
     uint64 ID = 1;
-    repeated Enrollment.UserStatus statuses = 2;
-    repeated Group.GroupStatus groupStatuses = 3;
+    repeated Enrollment.UserStatus statuses = 3;
+    repeated Group.GroupStatus groupStatuses = 4;
 }
 
 // fields can be empty, do not use fields for user validation, use context
@@ -191,6 +191,14 @@ message RepositoryRequest {
     uint64 repositoryID = 4;
     uint64 userID = 5;
     uint64 courseID = 6;
+}
+
+// depending on situation frontend will have all enrolled users or only those that are not members of any group
+// set filterOutGroupMembers go get list of students not belonging to any group for given course
+message EnrollmentRequest {
+    uint64 courseID = 1;
+    bool filterOutGroupMembers = 2;
+    repeated Enrollment.UserStatus states = 3;
 }
 
 message Providers {
@@ -232,7 +240,7 @@ service AutograderService {
 
     // enrollments //
 
-    rpc GetEnrollmentsByCourse(RecordRequest) returns (Enrollments) {}
+    rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(ActionRequest) returns (Void) {} 
     rpc UpdateEnrollment(ActionRequest) returns (Void) {} 
 
