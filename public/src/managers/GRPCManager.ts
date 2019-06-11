@@ -81,12 +81,10 @@ export class GrpcManager {
     // /* COURSES */ //
 
     public createCourse(course: Course): Promise<IGrpcResponse<Course>> {
-        console.log("GRPCMan calls createCourse for course " + course.getName());
         return this.grpcSend<Course>(this.agService.createCourse, course);
     }
 
     public updateCourse(course: Course): Promise<IGrpcResponse<Course>> {
-        console.log("GRPCMan calls updateCourse for course " + course.getName());
         return this.grpcSend<Course>(this.agService.updateCourse, course);
     }
 
@@ -131,15 +129,12 @@ export class GrpcManager {
     // /* ENROLLMENTS */ //
 
     public getEnrollmentsByCourse(courseid: number, noGroupMembers?: boolean, state?: any): Promise<IGrpcResponse<Enrollments>> {
-       console.log("GRC: getEnrollments by course started, bool: " + noGroupMembers)
         const request = new EnrollmentRequest();
         request.setCourseid(courseid);
         if (noGroupMembers) {
-            console.log("GRC: getEnrollments by course: setting noGroupMembers ")
             request.setFilteroutgroupmembers(noGroupMembers);
         }
         if (state) {
-            console.log("GRC: getEnrollments by course: setting states ")
             request.setStatesList(state);
         }
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request);

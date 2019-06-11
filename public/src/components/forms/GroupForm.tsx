@@ -12,6 +12,7 @@ import { UserManager } from "../../managers/UserManager";
 interface IGroupProp {
     className: string;
     students: IUserRelation[];
+    freeStudents: IUserRelation[];
     curUser: User;
     courseMan: CourseManager;
     userMan: UserManager;
@@ -306,22 +307,21 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     private getSelectedStudents(curUser: IUserRelation | undefined): IUserRelation[] {
         const ss: IUserRelation[] = [];
         if (this.props.groupData) {
+            // add group members to the list of selected students
             for (const user of this.props.groupData.getUsersList()) {
                 const guser = this.props.students.find((v) => v.user.getId() === user.getId());
                 if (guser) {
                     ss.push(guser);
                 }
             }
-
-        } else if (curUser) {
-            ss.push(curUser);
-        }
+        } 
         return ss;
     }
 
     private getAvailableStudents(curUser: IUserRelation | undefined): IUserRelation[] {
-        const as: IUserRelation[] = this.props.students.slice();
+        const as: IUserRelation[] = this.props.freeStudents.slice();
         if (this.props.groupData) {
+            // remove group members from the list of available students
             for (const user of this.props.groupData.getUsersList()) {
                 const guser = as.find((v) => v.user.getId() === user.getId());
                 if (guser) {
@@ -331,13 +331,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                     }
                 }
             }
-
-        } else if (curUser) {
-            const index = as.indexOf(curUser);
-            if (index >= 0) {
-                as.splice(index, 1);
-            }
-        }
+        } 
         return as;
     }
 }
