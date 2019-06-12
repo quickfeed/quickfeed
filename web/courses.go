@@ -89,7 +89,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			return err
 		}
 		// check whether user repo already exists (happens when accepting prevoiusly rejected student)
-		if _, err = db.GetRepositoryByCourseUserType(request.CourseID, request.UserID, pb.Repository_USER); err != nil {
+		if _, err = db.GetRepositoryByCourseUser(request.CourseID, request.UserID); err != nil {
 			if err == gorm.ErrRecordNotFound {
 				//create user repo and team on SCM.
 				repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
@@ -315,7 +315,7 @@ func GetCourseInformationURL(request *pb.RecordRequest, db database.Database) (*
 func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db database.Database) (*pb.URLResponse, error) {
 	var repos []*pb.Repository
 	if request.Type == pb.Repository_USER {
-		userRepo, err := db.GetRepositoryByCourseUserType(request.CourseID, currentUser.ID, request.Type)
+		userRepo, err := db.GetRepositoryByCourseUser(request.CourseID, currentUser.ID)
 		if err != nil {
 			return nil, err
 		}

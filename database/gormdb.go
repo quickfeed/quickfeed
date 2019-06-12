@@ -798,15 +798,15 @@ func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
 	return &repo, nil
 }
 
-// GetRepositoryByCourseUserType implements the database interface
-func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType pb.Repository_Type) (*pb.Repository, error) {
+// GetRepositoryByCourseUser implements the database interface
+func (db *GormDB) GetRepositoryByCourseUser(cid uint64, uid uint64) (*pb.Repository, error) {
 	course, err := db.GetCourse(cid)
 	if err != nil {
 		return nil, gorm.ErrRecordNotFound
 	}
 
 	var repo pb.Repository
-	if err := db.conn.First(&repo, &pb.Repository{DirectoryID: course.DirectoryID, UserID: uid, RepoType: repoType}).Error; err != nil {
+	if err := db.conn.First(&repo, &pb.Repository{DirectoryID: course.DirectoryID, UserID: uid, RepoType: pb.Repository_USER}).Error; err != nil {
 		return nil, err
 	}
 	return &repo, nil

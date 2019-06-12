@@ -91,9 +91,8 @@ type Database interface {
 	//TODO(Vera): check if still used
 	//GetRepositoriesByCourseIDandUserID(uint64, uint64) (*pb.Repository, error)
 
-	// GetRepositoryByCourseUserType returns the repository
-	// for the given course ID, user ID and repository type.
-	GetRepositoryByCourseUserType(uint64, uint64, pb.Repository_Type) (*pb.Repository, error)
+	// GetRepositoryByCourseUser returns the user repository for the given course and user.
+	GetRepositoryByCourseUser(uint64, uint64) (*pb.Repository, error)
 	// GetRepositoriesByCourseAndType returns repositories for the given course and repository type.
 	GetRepositoriesByCourseAndType(uint64, pb.Repository_Type) ([]*pb.Repository, error)
 	// GetRepositoryByCourseGroup returns group repository for the given course

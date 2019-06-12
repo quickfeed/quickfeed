@@ -1824,7 +1824,7 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	want := &repoUserTwo
 
-	gotRepo, err := db.GetRepositoryByCourseUserType(course.ID, userTwo.ID, pb.Repository_USER)
+	gotRepo, err := db.GetRepositoryByCourseUser(course.ID, userTwo.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1923,7 +1923,7 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 
 	want := &repoUserTwo
 
-	gotRepo, err := db.GetRepositoryByCourseUserType(course.ID, userTwo.ID, pb.Repository_USER)
+	gotRepo, err := db.GetRepositoryByCourseUser(course.ID, userTwo.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
