@@ -310,8 +310,6 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *web.Scms) ech
 				c.Set(remoteID.Provider, scm)
 			}
 			if !foundSCMProvider {
-				//TODO(meling) use status codes when this is replace with grpc
-				// return status.Errorf(codes.InvalidArgument, "unknown SCM provider")
 				logger.Info("no SCM providers found for", zap.String("user", user.String()))
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}

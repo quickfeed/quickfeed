@@ -3,13 +3,10 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -32,9 +29,7 @@ var repoNames = fmt.Sprintf("(%s, %s, %s, %s)",
 // NewCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
 // does not contain the Autograder repositories that will be created.
-//TODO(meling) should have proper logging in these funcs, especially for errors.
 func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
-
 	directory, err := s.GetDirectory(ctx, request.DirectoryID)
 	if err != nil {
 		return nil, err
@@ -44,8 +39,7 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		return nil, err
 	}
 	if isDirty(repos) {
-		return nil, status.Errorf(codes.AlreadyExists,
-			"'%s' contains one or more Autograder repositories %s", directory.GetPath(), repoNames)
+		return nil, fmt.Errorf("'%s' contains one or more Autograder repositories %s", directory.GetPath(), repoNames)
 	}
 
 	for path, private := range RepoPaths {
@@ -56,10 +50,8 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		}
 		repo, err := s.CreateRepository(ctx, repoOptions)
 		if err != nil {
-			log.Println("NewCourse: failed to create repository:", path)
 			return nil, err
 		}
-		log.Println("Created repository:", path)
 
 		hookOptions := &scm.CreateHookOptions{
 			URL:        GetEventsURL(bh.BaseURL, request.Provider),
@@ -67,10 +59,8 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 			Repository: repo,
 		}
 		if err := s.CreateHook(ctx, hookOptions); err != nil {
-			log.Println("NewCourse: Failed to create webhook for repository:", path)
 			return nil, err
 		}
-		log.Println("Created webhook for repository:", path)
 
 		dbRepo := pb.Repository{
 			DirectoryID:  directory.ID,

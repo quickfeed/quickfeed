@@ -1,12 +1,8 @@
 package scm
 
 import (
-	"google.golang.org/grpc/status"
-
 	"context"
 	"log"
-
-	"google.golang.org/grpc/codes"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/google/go-github/github"
@@ -240,11 +236,9 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
-
 	groupTeam, _, err := s.client.Organizations.GetTeam(ctx, int(opt.TeamID))
 	if err != nil {
-		return status.Errorf(codes.NotFound, "team not found")
-
+		return err
 	}
 
 	// check whether group members are already in team; add missing members
@@ -257,7 +251,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOption
 		if !isMember {
 			_, _, err = s.client.Organizations.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
 			if err != nil {
-
 				log.Println("GitHub UpdateTeamMembers could not add user ", member, " to the team ", groupTeam.GetName(), ": ", err.Error())
 				return err
 			}
