@@ -210,7 +210,7 @@ export class StudentPage extends ViewPage {
                 allLinks.push({ name: "Repositories" });
 
                 const userRepoURL = await this.courseMan.getRepositoryURL(course.course.getId(), Repository.Type.USER);
-                const informationURL = await this.courseMan.getCourseInformationURL(course.course.getId());
+                const informationURL = await this.courseMan.getRepositoryURL(course.course.getId(), Repository.Type.COURSEINFO);
                 const assignmentURL = await this.courseMan.getRepositoryURL(course.course.getId(), Repository.Type.ASSIGNMENTS);
 
                 allLinks.push({ name: "User Repository", uri: userRepoURL, absolute: true });

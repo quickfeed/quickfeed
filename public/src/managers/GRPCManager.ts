@@ -23,6 +23,7 @@ import {
     URLResponse,
     EnrollmentRequest,
     Enrollment,
+    Repository,
 } from "../../proto/ag_pb";
 import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";
@@ -112,11 +113,6 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCoursesWithEnrollment, request);
     }
 
-    public getCourseInformationURL(courseID: number): Promise<IGrpcResponse<URLResponse>> {
-        const request = new RecordRequest();
-        request.setId(courseID);
-        return this.grpcSend<URLResponse>(this.agService.getCourseInformationURL, request);
-    }
 
     // /* ASSIGNMENTS */ //
 

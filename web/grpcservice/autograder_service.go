@@ -316,14 +316,6 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.RecordR
 	return &pb.Void{}, web.UpdateSubmission(in, s.db)
 }
 
-// GetCourseInformationURL returns URL of repository containing information about the course
-func (s *AutograderService) GetCourseInformationURL(ctx context.Context, in *pb.RecordRequest) (*pb.URLResponse, error) {
-	if !in.IsValidRequest() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
-	}
-	return web.GetCourseInformationURL(in, s.db)
-}
-
 // RefreshCourse returns latest information about the course
 func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequest) (*pb.Assignments, error) {
 	if !in.IsValidRequest() {

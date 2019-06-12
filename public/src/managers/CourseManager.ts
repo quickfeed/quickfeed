@@ -48,8 +48,6 @@ export interface ICourseProvider {
     getProviders(): Promise<string[]>;
     refreshCoursesFor(courseID: number): Promise<any>;
     approveSubmission(submissionID: number): Promise<void>;
-
-    getCourseInformationURL(cid: number): Promise<string>;
     getRepositoryURL(cid: number, type: number): Promise<string>;
 }
 
@@ -388,10 +386,6 @@ export class CourseManager {
 
     public async getProviders(): Promise<string[]> {
         return await this.courseProvider.getProviders();
-    }
-
-    public async getCourseInformationURL(cid: number): Promise<string> {
-        return await this.courseProvider.getCourseInformationURL(cid);
     }
 
     public async getRepositoryURL(cid: number, type: number): Promise<string> {

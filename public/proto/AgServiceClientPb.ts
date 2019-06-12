@@ -315,28 +315,6 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoGetCourseInformationURL = new grpcWeb.AbstractClientBase.MethodInfo(
-    URLResponse,
-    (request: RecordRequest) => {
-      return request.serializeBinary();
-    },
-    URLResponse.deserializeBinary
-  );
-
-  getCourseInformationURL(
-    request: RecordRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: URLResponse) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/GetCourseInformationURL',
-      request,
-      metadata || {},
-      this.methodInfoGetCourseInformationURL,
-      callback);
-  }
-
   methodInfoCreateCourse = new grpcWeb.AbstractClientBase.MethodInfo(
     Course,
     (request: Course) => {

@@ -293,16 +293,6 @@ func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.
 
 }
 
-// GetCourseInformationURL returns the course information html as string
-//TODO(meling) remove this method from AutograderService and update frontend to use other function
-func GetCourseInformationURL(request *pb.RecordRequest, db database.Database) (*pb.URLResponse, error) {
-	repoQuery := &pb.RepositoryRequest{
-		CourseID: request.GetID(),
-		Type:     pb.Repository_COURSEINFO,
-	}
-	return GetRepositoryURL(nil, repoQuery, db)
-}
-
 // GetRepositoryURL returns the repository information
 func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db database.Database) (*pb.URLResponse, error) {
 	course, err := db.GetCourse(request.GetCourseID())

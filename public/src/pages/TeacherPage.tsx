@@ -294,7 +294,7 @@ export class TeacherPage extends ViewPage {
     }
     public async courseInformation(navInfo: INavInfo<{ cid: string }>): View {
         const courseId = parseInt(navInfo.params.cid, 10);
-        const informationURL = await this.courseMan.getCourseInformationURL(courseId);
+        const informationURL = await this.courseMan.getRepositoryURL(courseId, Repository.Type.COURSEINFO);
         if (informationURL === "") {
             return <div> 404 not found</div>;
         }

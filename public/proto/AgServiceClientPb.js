@@ -46,9 +46,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetCoursesWithEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Courses, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Courses.deserializeBinary);
-        this.methodInfoGetCourseInformationURL = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.URLResponse, function (request) {
-            return request.serializeBinary();
-        }, ag_pb_1.URLResponse.deserializeBinary);
         this.methodInfoCreateCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Course, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Course.deserializeBinary);
@@ -149,10 +146,6 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.getCoursesWithEnrollment = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetCoursesWithEnrollment', request, metadata || {}, this.methodInfoGetCoursesWithEnrollment, callback);
-    };
-    AutograderServiceClient.prototype.getCourseInformationURL = function (request, metadata, callback) {
-        return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetCourseInformationURL', request, metadata || {}, this.methodInfoGetCourseInformationURL, callback);
     };
     AutograderServiceClient.prototype.createCourse = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

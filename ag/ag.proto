@@ -233,7 +233,6 @@ service AutograderService {
     rpc GetCourse(RecordRequest) returns (Course) {} 
     rpc GetCourses(Void) returns (Courses) {} 
     rpc GetCoursesWithEnrollment(RecordRequest) returns (Courses) {}
-    rpc GetCourseInformationURL (RecordRequest) returns (URLResponse) {} 
     rpc CreateCourse(Course) returns (Course) {}
     rpc UpdateCourse(Course) returns (Void) {}
     rpc RefreshCourse (RecordRequest) returns (Assignments) {}
