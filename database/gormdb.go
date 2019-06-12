@@ -6,9 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	pb "github.com/autograde/aguis/ag"
 	"github.com/jinzhu/gorm"
 )
@@ -763,7 +760,8 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 // CreateRepository implements the Database interface
 func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	if repo.DirectoryID == 0 || repo.RepositoryID == 0 {
-		return fmt.Errorf("both DirectoryId and RepositoryID must be provided for repository")
+		// both directory and repository must be non-zero
+		return errors.New("failed to create repository; invalid arguments")
 	}
 
 	switch {
@@ -780,8 +778,8 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 			return err
 		}
 	case !repo.RepoType.IsCourseRepo():
-		// if both user and group are unset, the repository belongs to the course
-		return fmt.Errorf("either UserID, GroupID or a course repository type must be provided")
+		// both user and group unset, then repository type must an autograder repo type
+		return errors.New("failed to create repository; invalid arguments")
 	}
 
 	return db.conn.Create(repo).Error
@@ -809,23 +807,18 @@ func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error
 
 // UpdateGroup updates a group
 func (db *GormDB) UpdateGroup(group *pb.Group) error {
-	//TODO(meling) @Vera: we should avoid returning status.Errors here;
-	// ideally, we should keep to the database error types. Is that a problem?
-	// I think we can translate from ErrRecordNotFound to codes.NotFound in web/group.go:291
 	if group.CourseID == 0 {
-		//return gorm.ErrRecordNotFound
-		return status.Errorf(codes.NotFound, "failed to retrieve course")
+		return gorm.ErrRecordNotFound
 	}
 	tx := db.conn.Begin()
 	var course uint64
-	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
-		ID: group.CourseID,
-	}).Count(&course).Error; err != nil {
+	if err := db.conn.Model(&pb.Course{}).
+		Where(&pb.Course{ID: group.CourseID}).
+		Count(&course).Error; err != nil {
 		return err
 	}
 	if course != 1 {
-		//return gorm.ErrRecordNotFound
-		return status.Errorf(codes.Aborted, "course not found")
+		return gorm.ErrRecordNotFound
 	}
 	if err := tx.Model(&pb.Group{}).Updates(group).Error; err != nil {
 		tx.Rollback()
@@ -842,16 +835,12 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	for _, u := range group.Users {
 		userids = append(userids, u.ID)
 	}
-	query := tx.Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{
-			CourseID: group.CourseID,
-		}).
-		Where("user_id IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
-			pb.Enrollment_STUDENT, pb.Enrollment_TEACHER}).
-		Updates(&pb.Enrollment{
-			GroupID: group.ID,
-		})
 
+	query := tx.Model(&pb.Enrollment{}).
+		Where(&pb.Enrollment{CourseID: group.CourseID}).
+		Where("user_id IN (?) AND status IN (?)", userids,
+			[]pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_TEACHER}).
+		Updates(&pb.Enrollment{GroupID: group.ID})
 	if query.Error != nil {
 		tx.Rollback()
 		return query.Error
@@ -859,9 +848,8 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 
 	if query.RowsAffected != int64(len(userids)) {
 		tx.Rollback()
-		return status.Errorf(codes.Aborted, "failed to update group")
+		return errors.New("failed to update group")
 	}
-
 	tx.Commit()
 	return nil
 }
