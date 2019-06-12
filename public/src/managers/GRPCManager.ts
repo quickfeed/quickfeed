@@ -28,8 +28,10 @@ import {
 import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";
 
+// will have either data or message
 export interface IGrpcResponse<T> {
     statusCode: number;
+    message?: string;
     data?: T;
 }
 
@@ -272,8 +274,10 @@ export class GrpcManager {
                 (err: grpcWeb.Error, response: T | undefined) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
+                            console.log("Got error: " + err.message);
                             const temp: IGrpcResponse<T> = {
                                 statusCode: err.code,
+                                message: err.message,
                             };
                             resolve(temp);
                         }
