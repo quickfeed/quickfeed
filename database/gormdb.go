@@ -768,20 +768,20 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 
 	switch {
 	case repo.UserID > 0:
-		// check that user exists creating repo in database
+		// check that user exists before creating repo in database
 		err := db.conn.First(&pb.User{}, repo.UserID).Error
 		if err != nil {
 			return err
 		}
 	case repo.GroupID > 0:
-		// check that group exists creating repo in database
+		// check that group exists before creating repo in database
 		err := db.conn.First(&pb.Group{}, repo.GroupID).Error
 		if err != nil {
 			return err
 		}
 	case !repo.RepoType.IsCourseRepo():
 		// if both user and group are unset, the repository belongs to the course
-		return fmt.Errorf("either UserId, GroupID or a course repository Type must be provided")
+		return fmt.Errorf("either UserID, GroupID or a course repository type must be provided")
 	}
 
 	return db.conn.Create(repo).Error
@@ -798,38 +798,10 @@ func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
 	return &repo, nil
 }
 
-// GetRepositoryByCourseUser implements the database interface
-func (db *GormDB) GetRepositoryByCourseUser(cid uint64, uid uint64) (*pb.Repository, error) {
-	course, err := db.GetCourse(cid)
-	if err != nil {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	var repo pb.Repository
-	if err := db.conn.First(&repo, &pb.Repository{DirectoryID: course.DirectoryID, UserID: uid, RepoType: pb.Repository_USER}).Error; err != nil {
-		return nil, err
-	}
-	return &repo, nil
-}
-
-// GetRepositoryByCourseGroup implements the database interface
-func (db *GormDB) GetRepositoryByCourseGroup(cid uint64, gid uint64) (*pb.Repository, error) {
-	course, err := db.GetCourse(cid)
-	if err != nil {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	var repo pb.Repository
-	if err := db.conn.First(&repo, &pb.Repository{DirectoryID: course.DirectoryID, GroupID: gid}).Error; err != nil {
-		return nil, err
-	}
-	return &repo, nil
-}
-
-// GetRepositoriesByDirectory implements the database interface
-func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*pb.Repository, error) {
+// GetRepositories implements the database interface
+func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error) {
 	var repos []*pb.Repository
-	if err := db.conn.Find(&repos, &pb.Repository{DirectoryID: did}).Error; err != nil {
+	if err := db.conn.Find(&repos, query).Error; err != nil {
 		return nil, err
 	}
 	return repos, nil
@@ -892,20 +864,6 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 
 	tx.Commit()
 	return nil
-}
-
-// GetRepositoriesByCourseAndType implements the database interface
-func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType pb.Repository_Type) ([]*pb.Repository, error) {
-	course, err := db.GetCourse(cid)
-	if err != nil {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	var repos []*pb.Repository
-	if err := db.conn.Find(&repos, &pb.Repository{DirectoryID: course.DirectoryID, RepoType: repoType}).Error; err != nil {
-		return nil, err
-	}
-	return repos, nil
 }
 
 // Close closes the gorm database.

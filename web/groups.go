@@ -230,7 +230,11 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	}
 
 	// check whether the group repo already exists
-	if _, err = db.GetRepositoryByCourseGroup(course.ID, request.ID); err == gorm.ErrRecordNotFound {
+	groupRepoQuery := &pb.Repository{
+		DirectoryID: course.GetDirectoryID(),
+		GroupID:     request.GetID(),
+	}
+	if _, err = db.GetRepositories(groupRepoQuery); err == gorm.ErrRecordNotFound {
 		// if not - we will create team and repo
 		// if all checks pass, create group repository
 		repo, team, err := createGroupRepoAndTeam(ctx, s, course, request)

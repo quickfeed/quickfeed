@@ -1581,18 +1581,18 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 
 	want := []*pb.Repository{&repoCourseInfo, &repoSolution, &repoAssignment}
 
-	gotRepo, err := db.GetRepositoriesByDirectory(120)
+	gotRepo, err := db.GetRepositories(&pb.Repository{DirectoryID: 120})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if !reflect.DeepEqual(gotRepo, want) {
 		for _, s := range gotRepo {
-			fmt.Printf("have %+v\n", s)
+			t.Logf("have %+v\n", s)
 		}
-		fmt.Println("")
+		t.Log()
 		for _, s := range want {
-			fmt.Printf("want %+v\n", s)
+			t.Logf("want %+v\n", s)
 		}
 		t.Errorf("Failed")
 	}
@@ -1718,20 +1718,17 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	want := []*pb.Repository{&repoCourseInfo}
 
-	gotRepo, err := db.GetRepositoriesByCourseAndType(course.ID, pb.Repository_COURSEINFO)
+	repoQuery := &pb.Repository{
+		DirectoryID: course.GetDirectoryID(),
+		RepoType:    pb.Repository_COURSEINFO,
+	}
+	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if !reflect.DeepEqual(gotRepo, want) {
-		//t.Errorf("Failed")
-		for _, s := range gotRepo {
-			t.Logf("have %+v\n", s)
-		}
-		for _, s := range want {
-			t.Logf("want %+v\n", s)
-		}
-		t.Errorf("Failed")
+		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
 	}
 }
 
@@ -1822,20 +1819,24 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := &repoUserTwo
+	want := []*pb.Repository{&repoUserTwo}
 
-	gotRepo, err := db.GetRepositoryByCourseUser(course.ID, userTwo.ID)
+	repoQuery := &pb.Repository{
+		DirectoryID: course.DirectoryID,
+		UserID:      userTwo.ID,
+		RepoType:    pb.Repository_USER,
+	}
+	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if !reflect.DeepEqual(gotRepo, want) {
-		fmt.Printf("have %+v want %+v\n", gotRepo, want)
-		t.Errorf("Failed")
+		t.Errorf("\nhave %+v\nwant %+v\n", gotRepo, want)
 	}
 }
 
-func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
+func TestGetRepositoryByCourseUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -1921,9 +1922,14 @@ func TestGetRepositoriesByCourseIdandUserId(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := &repoUserTwo
+	want := []*pb.Repository{&repoUserTwo}
 
-	gotRepo, err := db.GetRepositoryByCourseUser(course.ID, userTwo.ID)
+	repoQuery := &pb.Repository{
+		DirectoryID: course.DirectoryID,
+		UserID:      userTwo.ID,
+		RepoType:    pb.Repository_USER,
+	}
+	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {
 		t.Fatal(err)
 	}

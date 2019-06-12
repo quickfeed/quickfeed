@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -83,26 +84,31 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if err != nil {
 			return err
 		}
-
 		student, err := db.GetUser(request.UserID)
 		if err != nil {
 			return err
 		}
-		// check whether user repo already exists (happens when accepting prevoiusly rejected student)
-		if _, err = db.GetRepositoryByCourseUser(request.CourseID, request.UserID); err != nil {
+
+		// check whether user repo already exists (happens when accepting previously rejected student)
+		userRepoQuery := &pb.Repository{
+			DirectoryID: course.GetDirectoryID(),
+			UserID:      request.GetUserID(),
+			RepoType:    pb.Repository_USER,
+		}
+		if _, err = db.GetRepositories(userRepoQuery); err != nil {
 			if err == gorm.ErrRecordNotFound {
-				//create user repo and team on SCM.
+				// create user repo and team on SCM.
 				repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
 				if err != nil {
 					return err
 				}
 				// add student repo to database if SCM interaction was successful
 				dbRepo := pb.Repository{
-					DirectoryID:  course.DirectoryID,
+					DirectoryID:  course.GetDirectoryID(),
+					UserID:       request.GetUserID(),
+					RepoType:     pb.Repository_USER,
 					RepositoryID: repo.ID,
 					HTMLURL:      repo.WebURL,
-					RepoType:     pb.Repository_USER,
-					UserID:       request.UserID,
 				}
 				if err := db.CreateRepository(&dbRepo); err != nil {
 					return err
@@ -161,17 +167,9 @@ func GetCourse(query *pb.RecordRequest, db database.Database) (*pb.Course, error
 
 // RefreshCourse updates the course assignments (and possibly other course information).
 func RefreshCourse(ctx context.Context, request *pb.RecordRequest, s scm.SCM, db database.Database, currentUser *pb.User) (*pb.Assignments, error) {
-
 	course, err := db.GetCourse(request.ID)
 	if err != nil {
 		return nil, err
-	}
-
-	if currentUser.IsAdmin {
-		// Only admin users should be able to update repos to private, if they are public.
-		//TODO(meling) remove this; we should prevent creating public repos in the first place
-		// and instead only if the teacher specifically requests public repo from the frontend
-		updateRepoToPrivate(ctx, db, s, course.DirectoryID)
 	}
 
 	assignments, err := FetchAssignments(ctx, s, course)
@@ -296,70 +294,35 @@ func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.
 }
 
 // GetCourseInformationURL returns the course information html as string
-//(meling): merge this functionality with func below into a single func.
-// Use only one db call as well. Make sure the db can only return one repo
+//TODO(meling) remove this method from AutograderService and update frontend to use other function
 func GetCourseInformationURL(request *pb.RecordRequest, db database.Database) (*pb.URLResponse, error) {
-	courseInfoRepo, err := db.GetRepositoriesByCourseAndType(request.ID, pb.Repository_COURSEINFO)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "could not retrieve any course information repos")
+	repoQuery := &pb.RepositoryRequest{
+		CourseID: request.GetID(),
+		Type:     pb.Repository_COURSEINFO,
 	}
-	if len(courseInfoRepo) > 1 {
-		return nil, status.Errorf(codes.Internal, "too many information repositories exist")
-	} else if len(courseInfoRepo) < 1 {
-		return nil, status.Errorf(codes.Internal, "no repository found")
-	}
-	return &pb.URLResponse{URL: courseInfoRepo[0].HTMLURL}, nil
+	return GetRepositoryURL(nil, repoQuery, db)
 }
 
 // GetRepositoryURL returns the repository information
 func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db database.Database) (*pb.URLResponse, error) {
-	var repos []*pb.Repository
-	if request.Type == pb.Repository_USER {
-		userRepo, err := db.GetRepositoryByCourseUser(request.CourseID, currentUser.ID)
-		if err != nil {
-			return nil, err
-		}
-		return &pb.URLResponse{URL: userRepo.HTMLURL}, nil
-	}
-
-	repos, err := db.GetRepositoriesByCourseAndType(request.CourseID, request.Type)
+	course, err := db.GetCourse(request.GetCourseID())
 	if err != nil {
 		return nil, err
 	}
-	if len(repos) > 1 {
-		return nil, status.Errorf(codes.NotFound, "too many course information repositories exists for this course")
+	userRepoQuery := &pb.Repository{
+		DirectoryID: course.GetDirectoryID(),
+		RepoType:    request.GetType(),
 	}
-	if len(repos) == 0 {
-		return nil, status.Errorf(codes.NotFound, "no repositories found")
+	if request.Type == pb.Repository_USER {
+		userRepoQuery.UserID = currentUser.GetID()
+	}
+
+	repos, err := db.GetRepositories(userRepoQuery)
+	if err != nil {
+		return nil, err
+	}
+	if len(repos) != 1 {
+		return nil, fmt.Errorf("found %d repositories for query %+v", len(repos), userRepoQuery)
 	}
 	return &pb.URLResponse{URL: repos[0].HTMLURL}, nil
-}
-
-//TODO(meling) there are no error handling here; also add tests
-//TODO(meling) this method should probably not be necessary because we shouldn't let the frontend
-// create non-private repos unless this action is specifically specified in the CreateRepository call.
-func updateRepoToPrivate(ctx context.Context, db database.Database, s scm.SCM, directoryID uint64) {
-	repositories, err := db.GetRepositoriesByDirectory(directoryID)
-	if err != nil {
-		return
-	}
-	payment, _ := s.GetPaymentPlan(ctx, directoryID)
-	// If privaterepos is bigger than 0, we know that the org/team is paid for.
-	if payment.PrivateRepos > 0 {
-		for _, repo := range repositories {
-			if repo.RepoType != pb.Repository_ASSIGNMENTS &&
-				repo.RepoType != pb.Repository_COURSEINFO &&
-				repo.RepoType != pb.Repository_SOLUTIONS {
-
-				scmRepo := &scm.Repository{
-					DirectoryID: repo.DirectoryID,
-					ID:          repo.RepositoryID,
-				}
-				err := s.UpdateRepository(ctx, scmRepo)
-				if err != nil {
-					return
-				}
-			}
-		}
-	}
 }

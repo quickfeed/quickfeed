@@ -126,7 +126,11 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 	}
 	logger.Debug("Found assignment", zap.String("assignment", selectedAssignment.String()))
 
-	testRepos, err := db.GetRepositoriesByCourseAndType(course.ID, pb.Repository_TESTS)
+	testsRepoQuery := &pb.Repository{
+		DirectoryID: course.GetDirectoryID(),
+		RepoType:    pb.Repository_TESTS,
+	}
+	testRepos, err := db.GetRepositories(testsRepoQuery)
 	if err != nil || len(testRepos) < 1 {
 		logger.Error("Failed to find test repository in database", zap.Error(err))
 		return

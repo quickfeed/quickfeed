@@ -23,12 +23,6 @@ type Database interface {
 	GetUsers(...uint64) ([]*pb.User, error)
 	// UpdateUser updates the user's details, excluding remote identities.
 	UpdateUser(*pb.User) error
-	//TODO(Vera): remove later
-	// The returned users's remote identities are included if withRemoteIDs
-	// is true, otherwise remote identities won't be include.
-	// Note: Remote identities holds the user's access token and should not
-	// be returned to the frontend.
-	//GetUsers(withRemoteIDs bool, userIDs ...uint64) ([]*models.User, error)
 
 	// SetAdmin makes an existing user an administrator. The admin role is allowed to
 	// create courses, so it makes sense that teachers are made admins.
@@ -75,26 +69,10 @@ type Database interface {
 	UpdateGroup(group *pb.Group) error
 	DeleteGroup(uint64) error
 
-	// The returned users's remote identities are included if withRemoteIDs
-	// is true, otherwise remote identities won't be include.
-	// Note: Remote identities holds the user's access token and should not
-	// be returned to the frontend.
-	//TODO(Vera): remove that later
-	//GetGroup(withRemoteIDs bool, groupID uint64) (*models.Group, error)
-
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error
-	// GetRepository returns the repository for the provided repository ID.
+	// GetRepository returns the repository for the SCM provider's repository ID.
 	GetRepository(uint64) (*pb.Repository, error)
-	//TODO(meling) this is only used by courses.go:updateRepoToPrivate(), which should be removed; hence do we need this method?
-	GetRepositoriesByDirectory(uint64) ([]*pb.Repository, error)
-	//TODO(Vera): check if still used
-	//GetRepositoriesByCourseIDandUserID(uint64, uint64) (*pb.Repository, error)
-
-	// GetRepositoryByCourseUser returns the user repository for the given course and user.
-	GetRepositoryByCourseUser(uint64, uint64) (*pb.Repository, error)
-	// GetRepositoriesByCourseAndType returns repositories for the given course and repository type.
-	GetRepositoriesByCourseAndType(uint64, pb.Repository_Type) ([]*pb.Repository, error)
-	// GetRepositoryByCourseGroup returns group repository for the given course
-	GetRepositoryByCourseGroup(cid uint64, gid uint64) (*pb.Repository, error)
+	// GetRepositories returns repositories that match the given query.
+	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
 }
