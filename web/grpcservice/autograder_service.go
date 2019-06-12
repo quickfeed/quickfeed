@@ -409,7 +409,12 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 
 // GetProviders returns a list of providers
 func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.Providers, error) {
-	return web.GetProviders()
+	providers := web.GetProviders()
+	if len(providers.GetProviders()) < 1 {
+		s.logger.Error("found no SCM providers")
+		return nil, status.Errorf(codes.NotFound, "found no SCM providers")
+	}
+	return providers, nil
 }
 
 // GetDirectories returns a list of directories for a course

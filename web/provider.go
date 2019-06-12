@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	pb "github.com/autograde/aguis/ag"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/autograde/aguis/scm"
 	"github.com/labstack/echo"
@@ -30,15 +28,12 @@ func getSCM(c echo.Context, scmProvider string) (scm.SCM, error) {
 }
 
 // GetProviders returns a list of all providers enabled by goth
-func GetProviders() (*pb.Providers, error) {
+func GetProviders() *pb.Providers {
 	var providers []string
 	for _, provider := range goth.GetProviders() {
 		if !strings.HasSuffix(provider.Name(), TeacherSuffix) {
 			providers = append(providers, provider.Name())
 		}
 	}
-	if len(providers) == 0 {
-		return nil, status.Errorf(codes.NotFound, "no providers found")
-	}
-	return &pb.Providers{Providers: providers}, nil
+	return &pb.Providers{Providers: providers}
 }
