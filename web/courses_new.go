@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	pb "github.com/autograde/aguis/ag"
@@ -23,8 +24,14 @@ var RepoPaths = map[string]bool{
 	pb.SolutionsRepo:  private,
 }
 
-var repoNames = fmt.Sprintf("(%s, %s, %s, %s)",
-	pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo, pb.SolutionsRepo)
+var (
+	repoNames = fmt.Sprintf("(%s, %s, %s, %s)",
+		pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo, pb.SolutionsRepo)
+
+	// ErrAlreadyExists indicates that one or more Autograder repositories
+	// already exists for the directory (or GitHub organization).
+	ErrAlreadyExists = errors.New("repositories already exists in SCM " + repoNames)
+)
 
 // NewCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
@@ -39,7 +46,7 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		return nil, err
 	}
 	if isDirty(repos) {
-		return nil, fmt.Errorf("'%s' contains one or more Autograder repositories %s", directory.GetPath(), repoNames)
+		return nil, ErrAlreadyExists
 	}
 
 	for path, private := range RepoPaths {

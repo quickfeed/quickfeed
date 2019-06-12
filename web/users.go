@@ -6,11 +6,8 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 
-	//"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // JSONuser is a model to improve marshalling of user structure for authentication
@@ -45,14 +42,8 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 
 // GetUser returns information about the provided user id.
 func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) {
-	if request.ID < 1 {
-		return nil, status.Errorf(codes.Aborted, "invalid argument")
-	}
 	user, err := db.GetUser(request.ID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "user not found")
-		}
 		return nil, err
 	}
 	return user, nil
@@ -62,9 +53,6 @@ func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) 
 func GetUsers(db database.Database) (*pb.Users, error) {
 	users, err := db.GetUsers()
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "no users found")
-		}
 		return nil, err
 	}
 	return &pb.Users{Users: users}, nil
@@ -74,7 +62,7 @@ func GetUsers(db database.Database) (*pb.Users, error) {
 func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
 	updateUser, err := db.GetUser(request.ID)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "user not found")
+		return nil, err
 	}
 
 	if request.Name != "" {

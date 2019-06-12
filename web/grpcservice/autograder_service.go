@@ -127,7 +127,15 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 
 	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
-	return web.NewCourse(ctx, in, s.db, scm, s.bh)
+	course, err := web.NewCourse(ctx, in, s.db, scm, s.bh)
+	if err != nil {
+		s.logger.Error(err)
+		if err == web.ErrAlreadyExists {
+			return nil, status.Errorf(codes.AlreadyExists, err.Error())
+		}
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create course")
+	}
+	return course, nil
 }
 
 // UpdateCourse changes the course information details.

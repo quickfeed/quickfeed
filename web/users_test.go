@@ -64,17 +64,40 @@ func TestGetUser(t *testing.T) {
 	if !cmp.Equal(foundUser, user) {
 		t.Errorf("have user %+v want %+v", foundUser, user)
 	}
+
+	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 0})
+	if err == nil {
+		t.Error("expected 'rpc error: code = InvalidArgument desc = invalid payload'")
+	}
+
+	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 1})
+	if err != nil {
+		t.Errorf("unexpected error %+v", err)
+	}
+
+	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 3})
+	if err == nil {
+		t.Error("expected 'rpc error: code = NotFound desc = failed to get user'")
+	}
 }
 
 func TestGetUsers(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
+		t.Fatalf("found unexpected users %+v", unexpectedUsers)
+	}
+
 	user1 := createFakeUser(t, db, 1)
 	user2 := createFakeUser(t, db, 2)
 
-	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user1.ID))
 
 	foundUsers, err := ags.GetUsers(cont, &pb.Void{})
