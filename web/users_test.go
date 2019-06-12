@@ -192,6 +192,84 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 }
 
+func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var users []*pb.User
+	for _, u := range allUsers {
+		user := createFakeUser(t, db, u.remoteID)
+		users = append(users, user)
+	}
+	admin := users[0]
+
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ctx := withUserContext(context.Background(), admin)
+
+	course := allCourses[1]
+	err := db.CreateCourse(admin.ID, course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var wantEnrollments []*pb.Enrollment
+	for i, user := range users {
+		if i == 0 {
+			// we want to skip enrolling admin, as he must have been enrolled when creating course
+			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantEnrollments = append(wantEnrollments, enr)
+		} else if i%3 != 0 {
+			// enroll every third student as a group member
+			if err := db.CreateEnrollment(&pb.Enrollment{
+				UserID: user.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+				t.Fatal(err)
+			}
+			if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			// enroll rest of the students and add them to the list to check against
+			if err := db.CreateEnrollment(&pb.Enrollment{
+				UserID: user.ID, CourseID: course.ID}); err != nil {
+				t.Fatal(err)
+			}
+			if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+				t.Fatal(err)
+			}
+			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			//enr.RemoveRemoteID()
+			wantEnrollments = append(wantEnrollments, enr)
+		}
+	}
+
+	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID, FilterOutGroupMembers: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// set user references to nil as db methods populating the first list will not have them
+	for _, u := range gotEnrollments.Enrollments {
+		u.User = nil
+	}
+
+	if !cmp.Equal(gotEnrollments.Enrollments, wantEnrollments) {
+		for _, u := range gotEnrollments.Enrollments {
+			t.Logf("user %+v", u)
+		}
+		for _, u := range wantEnrollments {
+			t.Logf("want %+v", u)
+		}
+		t.Errorf("have users %+v want %+v", gotEnrollments, wantEnrollments)
+	}
+
+}
+
 func TestPatchUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
