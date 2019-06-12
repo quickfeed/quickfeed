@@ -26,3 +26,16 @@ func (g *Groups) RemoveRemoteIDs() {
 		group.RemoveRemoteIDs()
 	}
 }
+
+// RemoveRemoteID removes remote identity of the enrolled user
+func (e *Enrollment) RemoveRemoteID() {
+	voidIDs := make([]*RemoteIdentity, 0)
+	e.GetUser().RemoteIdentities = voidIDs
+}
+
+// RemoveRemoteIDs removes remote identities for every enrollment
+func (e *Enrollments) RemoveRemoteIDs() {
+	for _, enr := range e.GetEnrollments() {
+		enr.RemoveRemoteID()
+	}
+}

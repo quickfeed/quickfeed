@@ -162,7 +162,12 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return web.GetEnrollmentsByCourse(in, s.db)
+	enrolls, err := web.GetEnrollmentsByCourse(in, s.db)
+	if err != nil {
+		return nil, err
+	}
+	enrolls.RemoveRemoteIDs()
+	return enrolls, nil
 }
 
 // CreateEnrollment inserts a new student enrollment
