@@ -255,7 +255,6 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOption
 			return err
 		}
 		if !isMember {
-			log.Println("GitHub UpdateTeamMembers: group member ", member, " is not in the team")
 			_, _, err = s.client.Organizations.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
 			if err != nil {
 

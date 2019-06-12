@@ -234,7 +234,12 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		DirectoryID: course.GetDirectoryID(),
 		GroupID:     request.GetID(),
 	}
-	if _, err = db.GetRepositories(groupRepoQuery); err == gorm.ErrRecordNotFound {
+	repos, err := db.GetRepositories(groupRepoQuery)
+	if err != nil {
+		return err
+	}
+
+	if len(repos) == 0 {
 		// if not - we will create team and repo
 		// if all checks pass, create group repository
 		repo, team, err := createGroupRepoAndTeam(ctx, s, course, request)
@@ -324,7 +329,6 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) 
 
 	// make list with github username strings
 	usernames := fetchGitUserNames(g)
-	log.Println("web: updateGroupTeam got usernames: ", usernames)
 
 	dir, err := s.GetDirectory(ctx, c.DirectoryID)
 	if err != nil {
