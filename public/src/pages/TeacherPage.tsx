@@ -27,8 +27,6 @@ export class TeacherPage extends ViewPage {
     private courseMan: CourseManager;
     private courses: Course[] = [];
 
-    private pages: { [name: string]: JSX.Element } = {};
-    private curUser: User | null;
     private refreshState = 0;
 
     constructor(userMan: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
@@ -50,15 +48,13 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{cid}/assignmentinfo", this.assignmentInformation);
         this.navHelper.registerFunction("courses/{cid}/testinfo", this.testInformation);
         this.navHelper.registerFunction("courses/{cid}/solutioninfo", this.solutionInformation);
-
     }
 
     public checkAuthentication(): boolean {
-        this.curUser = this.userMan.getCurrentUser();
-        if (this.curUser && this.userMan.isTeacher(this.curUser)) {
+        const curUser = this.userMan.getCurrentUser();
+        if (curUser && this.userMan.isTeacher(curUser)) {
             return true;
         }
-        this.curUser = null;
         return false;
     }
 
@@ -292,6 +288,7 @@ export class TeacherPage extends ViewPage {
             ],
         };
     }
+
     public async courseInformation(navInfo: INavInfo<{ cid: string }>): View {
         const courseId = parseInt(navInfo.params.cid, 10);
         const informationURL = await this.courseMan.getRepositoryURL(courseId, Repository.Type.COURSEINFO);
