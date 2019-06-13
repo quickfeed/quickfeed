@@ -270,7 +270,7 @@ export interface IStatusCode {
  * IError represents server side error object
  */
 export interface IError extends IStatusCode {
-    data?: any;
+    message?: string;
 }
 
 /**

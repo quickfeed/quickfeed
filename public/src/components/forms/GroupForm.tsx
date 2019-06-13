@@ -145,14 +145,10 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
 
             const result = this.props.groupData ?
                 await this.updateGroup(formData, this.props.groupData.getId()) : await this.createGroup(formData);
-            if (isError(result) && result.data) {
-                const errMsg = result.data.message;
+            if (isError(result) && result.message) {
+                const errMsg = result.message;
                 let serverErrors: string[] = [];
-                if (errMsg instanceof Array) {
-                    serverErrors = errMsg;
-                } else {
-                    serverErrors.push(errMsg);
-                }
+                serverErrors.push(errMsg);
                 const flashErrors = this.getFlashErrors(serverErrors);
                 this.setState({
                     errorFlash: flashErrors,

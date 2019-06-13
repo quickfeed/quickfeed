@@ -274,7 +274,7 @@ export class GrpcManager {
                 (err: grpcWeb.Error, response: T | undefined) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
-                            console.log("Got error: " + err.message);
+                            console.log("GRPC: got error: " + err.message);
                             const temp: IGrpcResponse<T> = {
                                 statusCode: err.code,
                                 message: err.message,

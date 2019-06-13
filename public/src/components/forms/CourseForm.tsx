@@ -165,14 +165,10 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             const result = this.props.courseData ?
                 await this.updateCourse(this.props.courseData.getId()) : await this.createNewCourse();
 
-            if (isError(result) && result.data) {
-                const errMsg = result.data.message;
+            if (isError(result) && result.message) {
+                const errMsg = result.message;
                 let serverErrors: string[] = [];
-                if (errMsg instanceof Array) {
-                    serverErrors = errMsg;
-                } else {
-                    serverErrors.push(errMsg);
-                }
+                serverErrors.push(errMsg);
                 const flashErrors = this.getFlashErrors(serverErrors);
                 this.setState({
                     errorFlash: flashErrors,

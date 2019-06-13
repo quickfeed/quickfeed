@@ -19,7 +19,7 @@ import {
 } from "../models";
 
 import { HttpHelper, IHTTPResult } from "../HttpHelper";
-import {GrpcManager} from "./GRPCManager"
+import {GrpcManager, IGrpcResponse} from "./GRPCManager"
 import { ICourseProvider } from "./CourseManager";
 
 import HttpStatusCode from "../HttpStatusCode";
@@ -291,7 +291,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
 
-    public async updateGroup(group: Group): Promise<IStatusCode | IError> {     //(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
+    public async updateGroup(group: Group): Promise<IStatusCode | IError> {    
         const result = await this.grpcHelper.updateGroup(group);
         if (result.statusCode !== 0 || !result.data) {
             if (result.message) {
@@ -494,12 +494,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
     }
 
-    private parseError(result: IHTTPResult<any>): IError {
+    private parseError(result: IGrpcResponse<any>): IError {
         const error: IError = {
             statusCode: result.statusCode,
         };
-        if (result.data) {
-            error.data = JSON.parse(JSON.stringify(result.data)) as any;
+        if (result.message) {
+            error.message = result.message;
         }
         return error;
     }
