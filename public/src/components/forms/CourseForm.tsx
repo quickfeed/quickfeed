@@ -264,7 +264,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
         let orgMsg: JSX.Element;
         if (this.state.provider === "github") {
-            orgMsg = <div><p>Select a GitHub organization for your course.
+            orgMsg = <div>
+                <p>Select a GitHub organization for your course.
                 (Don't see your organization below? Autograder needs access to your organization.
                 Grant access <a href="https://github.com/settings/applications" target="_blank"> here</a>.)</p>
 
@@ -281,20 +282,21 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
                 <p>
                 <b>Wait for your organization to be upgraded by GitHub.</b>
                 Return to this page when your organization has been upgraded, to create the course. This will allow Autograder to create the appropriate repository structure. 
-                Once these repositories have been created by Autograder:
-
+                Once these repositories have been created by Autograder: </p>
+                <div>
                 <ul>
                     <li>course-info</li>
                     <li>assignments</li>
                     <li>solutions</li>
                     <li>tests</li>
                 </ul>
-
+                </div>
+                <p>
                 You can populate these with your course's content. 
                 Only the assignments and tests repositories must contain meta-data and tests for Autograder to function. 
                 Please read the documentation for further instructions on how to work with the various repositories.
-
-            </p></div>;
+                </p>
+            </div>;
         } else {
             orgMsg = <p>Select a GitLab group.</p>;
         }
