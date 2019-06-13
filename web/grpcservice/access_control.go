@@ -5,8 +5,6 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/markbates/goth"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -14,6 +12,7 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
+	"github.com/markbates/goth"
 )
 
 func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error) {

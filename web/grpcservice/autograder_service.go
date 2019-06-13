@@ -5,12 +5,12 @@ import (
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
-
-	"github.com/autograde/aguis/web"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
+	"github.com/autograde/aguis/web"
+	"github.com/autograde/aguis/web/auth"
 )
 
 // AutograderService holds references to the database and
@@ -409,10 +409,10 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 
 // GetProviders returns a list of providers
 func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.Providers, error) {
-	providers := web.GetProviders()
+	providers := auth.GetProviders()
 	if len(providers.GetProviders()) < 1 {
-		s.logger.Error("found no SCM providers")
-		return nil, status.Errorf(codes.NotFound, "found no SCM providers")
+		s.logger.Error("found no enabled SCM providers")
+		return nil, status.Errorf(codes.NotFound, "found no enabled SCM providers")
 	}
 	return providers, nil
 }
