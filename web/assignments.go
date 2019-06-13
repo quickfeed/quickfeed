@@ -58,16 +58,3 @@ func FetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.As
 	// parse assignments found in the cloned tests directory
 	return ParseAssignments(cloneDir, course.ID)
 }
-
-func createAssignment(request *pb.Assignment, course *pb.Course) (*pb.Assignment, error) {
-
-	return &pb.Assignment{
-		AutoApprove: request.AutoApprove,
-		CourseID:    course.ID,
-		Deadline:    request.Deadline,
-		Language:    request.Language,
-		Name:        request.Name,
-		Order:       uint32(request.ID),
-		IsGroupLab:  request.IsGroupLab,
-	}, nil
-}
