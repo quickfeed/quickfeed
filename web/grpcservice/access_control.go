@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/markbates/goth"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -36,6 +38,9 @@ func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error)
 }
 
 func (s *AutograderService) getSCM(ctx context.Context, provider string) (scm.SCM, error) {
+	if _, err := goth.GetProvider(provider); err != nil {
+		return nil, status.Errorf(codes.NotFound, "invalid provider")
+	}
 	user, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, err

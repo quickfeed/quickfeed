@@ -156,7 +156,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 
 	_, scms := fakeProviderMap(t)
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
-	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(admin.ID))
+	ctx := withUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
@@ -192,7 +192,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	foundEnrollments, err := ags.GetEnrollmentsByCourse(cont, &pb.EnrollmentRequest{CourseID: allCourses[0].ID})
+	foundEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: allCourses[0].ID})
 	if err != nil {
 		t.Error(err)
 	}
