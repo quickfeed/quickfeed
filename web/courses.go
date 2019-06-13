@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -63,7 +64,7 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
 func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM) error {
-
+	log.Println("UpdateEnrollment started")
 	if _, err := db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "not found")
@@ -95,25 +96,28 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			UserID:      request.GetUserID(),
 			RepoType:    pb.Repository_USER,
 		}
-		if _, err = db.GetRepositories(userRepoQuery); err != nil {
-			if err == gorm.ErrRecordNotFound {
-				// create user repo and team on SCM.
-				repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
-				if err != nil {
-					return err
-				}
-				// add student repo to database if SCM interaction was successful
-				dbRepo := pb.Repository{
-					DirectoryID:  course.GetDirectoryID(),
-					UserID:       request.GetUserID(),
-					RepoType:     pb.Repository_USER,
-					RepositoryID: repo.ID,
-					HTMLURL:      repo.WebURL,
-				}
-				if err := db.CreateRepository(&dbRepo); err != nil {
-					return err
-				}
+		repos, err := db.GetRepositories(userRepoQuery)
+		if err != nil {
+			return err
+		}
+		if len(repos) == 0 {
+			// create user repo and team on SCM.
+			repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
+			if err != nil {
+				return err
 			}
+			// add student repo to database if SCM interaction was successful
+			dbRepo := pb.Repository{
+				DirectoryID:  course.GetDirectoryID(),
+				UserID:       request.GetUserID(),
+				RepoType:     pb.Repository_USER,
+				RepositoryID: repo.ID,
+				HTMLURL:      repo.WebURL,
+			}
+			if err := db.CreateRepository(&dbRepo); err != nil {
+				return err
+			}
+
 		}
 
 	case pb.Enrollment_TEACHER:
