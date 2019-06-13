@@ -42,11 +42,7 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 
 // GetUser returns information about the provided user id.
 func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) {
-	user, err := db.GetUser(request.ID)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
+	return db.GetUser(request.ID)
 }
 
 // GetUsers returns all the users in the database.
