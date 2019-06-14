@@ -677,3 +677,68 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		t.Errorf("want enrollment %+v, while database has %+v", enr2, newEnr2)
 	}
 }
+
+func TestGetGroups(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	var users []*pb.User
+	for _, u := range allUsers {
+		user := createFakeUser(t, db, u.remoteID)
+		users = append(users, user)
+	}
+	admin := users[0]
+
+	_, scms := fakeProviderMap(t)
+	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ctx := withUserContext(context.Background(), admin)
+
+	course := allCourses[1]
+	err := db.CreateCourse(admin.ID, course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// enroll all users in course
+	for _, user := range users[1:] {
+		if err := db.CreateEnrollment(&pb.Enrollment{
+			UserID: user.ID, CourseID: course.ID}); err != nil {
+			t.Fatal(err)
+		}
+		if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// place some students in groups
+	group1, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group 1", CourseID: course.ID, Users: []*pb.User{users[1], users[2]}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	group1.RemoveRemoteIDs()
+	group2, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group 2", CourseID: course.ID, Users: []*pb.User{users[4], users[5]}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	group2.RemoveRemoteIDs()
+	wantGroups := []*pb.Group{group1, group2}
+
+	// check that request on non-existent course returns error
+	groups, err := ags.GetGroups(ctx, &pb.RecordRequest{ID: 15})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(groups.Groups) > 0 {
+		t.Error("no groups should be returned")
+	}
+
+	//get groups from the database
+	gotGroups, err := ags.GetGroups(ctx, &pb.RecordRequest{ID: course.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// check that the method returns expected groups
+	if !reflect.DeepEqual(wantGroups, gotGroups.Groups) {
+		t.Errorf("want groups %+v, while database has %+v", wantGroups, gotGroups.Groups)
+	}
+}

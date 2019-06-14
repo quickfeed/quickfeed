@@ -267,7 +267,6 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			//enr.RemoveRemoteID()
 			wantEnrollments = append(wantEnrollments, enr)
 		}
 	}
