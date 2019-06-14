@@ -96,7 +96,7 @@ func main() {
 					Action: deleteRepositories(&client),
 				},
 				{
-					Name:  "teams",
+					Name:  "team",
 					Usage: "Delete teams.",
 					Flags: []cli.Flag{
 						cli.StringFlag{
