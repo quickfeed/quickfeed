@@ -369,3 +369,19 @@ func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) erro
 
 	return nil
 }
+
+// GetOrgMembership implements the SCM interface
+func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
+
+	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int(opt.OrgID))
+	if err != nil {
+		return nil, err
+	}
+	membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetName())
+	if err != nil {
+		return nil, err
+	}
+	opt.Role = membership.GetRole()
+
+	return opt, nil
+}

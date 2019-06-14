@@ -55,6 +55,8 @@ type SCM interface {
 	CreateCloneURL(*CreateClonePathOptions) string
 	// Fetch current payment plan
 	GetPaymentPlan(context.Context, uint64) (*PaymentPlan, error)
+	// Get user's membership in organization
+	GetOrgMembership(context.Context, *OrgMembership) (*OrgMembership, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -160,6 +162,13 @@ type Team struct {
 type PaymentPlan struct {
 	Name         string
 	PrivateRepos uint64
+}
+
+// OrgMembership represents user's membership in organization
+type OrgMembership struct {
+	Username string
+	OrgID    uint64
+	Role     string
 }
 
 func (e ErrNotSupported) Error() string {
