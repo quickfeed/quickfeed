@@ -4,9 +4,12 @@ import (
 	"context"
 	"log"
 
+	"google.golang.org/grpc/codes"
+
 	pb "github.com/autograde/aguis/ag"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"google.golang.org/grpc/status"
 )
 
 // GithubSCM implements the SCM interface.
@@ -106,10 +109,14 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		return nil, err
 	}
 
+	if repo.Owner == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "owner not found")
+	}
+
 	return &Repository{
 		ID:          uint64(repo.GetID()),
 		Path:        repo.GetName(),
-		Owner:       repo.Owner.GetLogin(), // TODO: Guard against Owner = nil.
+		Owner:       repo.Owner.GetLogin(),
 		WebURL:      repo.GetHTMLURL(),
 		SSHURL:      repo.GetSSHURL(),
 		HTTPURL:     repo.GetCloneURL(),
@@ -137,10 +144,16 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, directory *pb.Directory
 
 	var repositories []*Repository
 	for _, repo := range repos {
+
+		owner := ""
+		if repo.Owner != nil {
+			owner = repo.Owner.GetLogin()
+		}
+
 		repositories = append(repositories, &Repository{
 			ID:          uint64(repo.GetID()),
 			Path:        repo.GetName(),
-			Owner:       repo.Owner.GetLogin(), // TODO: Guard against Owner = nil.
+			Owner:       owner,
 			WebURL:      repo.GetHTMLURL(),
 			SSHURL:      repo.GetSSHURL(),
 			HTTPURL:     repo.GetCloneURL(),
