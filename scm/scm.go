@@ -70,15 +70,6 @@ func NewSCMClient(provider, token string) (SCM, error) {
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// Directory represents an entity which is capable of managing source code
-// repositories as well as user access to those repositories.
-//TODO(meling) remove this struct, since it is now in ag.proto
-type Directory struct {
-	ID     uint64 `json:"id"`
-	Path   string `json:"path"`
-	Avatar string `json:"avatar,omitempty"`
-}
-
 // CreateDirectoryOptions contains information on how a directory should be
 // created.
 type CreateDirectoryOptions struct {
