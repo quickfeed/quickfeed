@@ -1,6 +1,4 @@
-import { Enrollment, Group, User, Course } from "../proto/ag_pb";
-
-// TODO(meling) can we delete these types, and instead use types from ag.proto?
+import { Course, Enrollment, Group, User } from "../proto/ag_pb";
 
 export interface IUser {
     id: number;
@@ -123,14 +121,12 @@ export interface ICourseGroupRelation {
 
 // Browser only objects END
 
-
 export interface IBuildInfo {
     buildid: number;
     builddate: Date;
     buildlog: string;
     execTime: number;
 }
-
 
 /**
  * Information about a single assignment

@@ -1,11 +1,8 @@
 import * as React from "react";
-import { View, ViewPage } from "./ViewPage";
-
-import { INavInfo } from "../NavigationHelper";
-
+import { User } from "../../proto/ag_pb";
 import { NavigationManager, UserManager } from "../managers";
-import {User} from "../../proto/ag_pb";
-
+import { INavInfo } from "../NavigationHelper";
+import { View, ViewPage } from "./ViewPage";
 
 export class LoginPage extends ViewPage {
     private navMan: NavigationManager;
@@ -23,6 +20,7 @@ export class LoginPage extends ViewPage {
         this.navHelper.registerFunction("logout", this.logout);
     }
 
+    // TODO(meling) remove
     public async index(info: INavInfo<{ provider: string }>): View {
         return <div>Quickly hide, you should not be here! Someone is going to get mad...</div>;
     }

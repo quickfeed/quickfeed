@@ -1,25 +1,14 @@
 import * as React from "react";
+import { Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CoursesOverview, GroupForm, GroupInfo, NavMenu, SingleCourseOverview, StudentLab } from "../components";
-
+import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
+import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
-
-import {
-    ICourseLinkAssignment, IGroupCourse, IStudentSubmission,
-    IUserCourse, 
-
-} from "../models";
-
-
-import {Course, Enrollment, Repository, Group} from "../../proto/ag_pb"
-
-import { View, ViewPage } from "./ViewPage";
-
+import { ICourseLinkAssignment, IGroupCourse, IStudentSubmission, IUserCourse } from "../models";
 import { INavInfo } from "../NavigationHelper";
-
-import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { ILinkCollection } from "../managers";
+import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
 
 export class StudentPage extends ViewPage {
@@ -64,7 +53,6 @@ export class StudentPage extends ViewPage {
             return true;
         }
         return false;
-
     }
 
     public async index(navInfo: INavInfo<any>): View {
@@ -160,10 +148,10 @@ export class StudentPage extends ViewPage {
             if (grp) {
                 return <GroupInfo group={grp} course={course} />;
             } else {
-                const students = await this.courseMan
-                    .getUsersForCourse(course, this.userMan, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
-                const freeStudents = await this.courseMan
-                    .getUsersForCourse(course, this.userMan, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                const students = await this.courseMan.getUsersForCourse(course, this.userMan, false,
+                    [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                const freeStudents = await this.courseMan.getUsersForCourse(course, this.userMan, true,
+                    [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
                 return <GroupForm className="form-horizontal"
                     students={students}
                     freeStudents={freeStudents}
@@ -187,7 +175,7 @@ export class StudentPage extends ViewPage {
         if (key === 0) {
             const coursesLinks: ILinkCollection[] = [];
             for (const course of this.activeUserCourses) {
-
+                const courseID = course.course.getId();
                 const allLinks: ILink[] = [];
                 allLinks.push({ name: "Labs" });
                 const labs = course.assignments;
@@ -196,12 +184,12 @@ export class StudentPage extends ViewPage {
                     if (lab.assignment.isgrouplab) {
                         gLabs.push({
                             name: lab.assignment.name,
-                            uri: this.pagePath + "/courses/" + course.course.getId() + "/grouplab/" + lab.assignment.id,
+                            uri: this.pagePath + "/courses/" + courseID + "/grouplab/" + lab.assignment.id,
                         });
                     } else {
                         allLinks.push({
                             name: lab.assignment.name,
-                            uri: this.pagePath + "/courses/" + course.course.getId() + "/lab/" + lab.assignment.id,
+                            uri: this.pagePath + "/courses/" + courseID + "/lab/" + lab.assignment.id,
                         });
                     }
                 });
@@ -209,9 +197,9 @@ export class StudentPage extends ViewPage {
                 allLinks.push(...gLabs);
                 allLinks.push({ name: "Repositories" });
 
-                const userRepoURL = await this.courseMan.getRepositoryURL(course.course.getId(), Repository.Type.USER);
-                const informationURL = await this.courseMan.getRepositoryURL(course.course.getId(), Repository.Type.COURSEINFO);
-                const assignmentURL = await this.courseMan.getRepositoryURL(course.course.getId(), Repository.Type.ASSIGNMENTS);
+                const userRepoURL = await this.courseMan.getRepositoryURL(courseID, Repository.Type.USER);
+                const informationURL = await this.courseMan.getRepositoryURL(courseID, Repository.Type.COURSEINFO);
+                const assignmentURL = await this.courseMan.getRepositoryURL(courseID, Repository.Type.ASSIGNMENTS);
 
                 allLinks.push({ name: "User Repository", uri: userRepoURL, absolute: true });
                 allLinks.push({ name: "Course Info", uri: informationURL, absolute: true });
@@ -219,10 +207,10 @@ export class StudentPage extends ViewPage {
 
                 allLinks.push({ name: "Settings" });
                 allLinks.push({
-                    name: "Members", uri: this.pagePath + "/courses/" + course.course.getId() + "/members",
+                    name: "Members", uri: this.pagePath + "/courses/" + courseID + "/members",
                 });
                 coursesLinks.push({
-                    item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + course.course.getId() },
+                    item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + courseID },
                     children: allLinks,
                 });
             }
@@ -248,7 +236,8 @@ export class StudentPage extends ViewPage {
     private onlyActiveCourses(studentCourse: IUserCourse[]): IUserCourse[] {
         const userCourses: IUserCourse[] = [];
         studentCourse.forEach((a) => {
-            if (a.link && (a.link.state === Enrollment.UserStatus.STUDENT || a.link.state === Enrollment.UserStatus.TEACHER)) {
+            if (a.link && (a.link.state === Enrollment.UserStatus.STUDENT
+                || a.link.state === Enrollment.UserStatus.TEACHER)) {
                 userCourses.push(a);
             }
         });
@@ -260,10 +249,7 @@ export class StudentPage extends ViewPage {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
             this.userCourses = await this.courseMan.getStudentCourses(curUser,
-                [
-                    Enrollment.UserStatus.STUDENT,
-                    Enrollment.UserStatus.TEACHER,
-                ]);
+                [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             this.activeUserCourses = this.onlyActiveCourses(this.userCourses as IUserCourse[]);
 
             // preloading groupdata.
