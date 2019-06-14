@@ -192,22 +192,6 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, e
 
 const autograderHookName = "web"
 
-// GetAutograderHook implements the SCM interface.
-//TODO(meling) currently unused; remove if not needed
-// func (s *GithubSCM) GetAutograderHook(ctx context.Context, repo *Repository) (*Hook, error) {
-// 	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
-// 	for _, hook := range githubHooks {
-// 		if hook.GetName() == autograderHookName {
-// 			return &Hook{
-// 				ID:   uint64(hook.GetID()),
-// 				Name: hook.GetName(),
-// 				URL:  hook.GetURL(),
-// 			}, nil
-// 		}
-// 	}
-// 	return nil, err
-// }
-
 // CreateHook implements the SCM interface.
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
 	name := autograderHookName
