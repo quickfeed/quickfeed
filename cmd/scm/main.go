@@ -95,6 +95,25 @@ func main() {
 					},
 					Action: deleteRepositories(&client),
 				},
+				{
+					Name:  "teams",
+					Usage: "Delete teams.",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "name",
+							Usage: "Team name.",
+						},
+						cli.StringFlag{
+							Name:  "namespace",
+							Usage: "Organization the team belongs to.",
+						},
+						cli.BoolFlag{
+							Name:  "all",
+							Usage: "Delete all teams in namespace.",
+						},
+					},
+					Action: deleteTeams(&client),
+				},
 			},
 		},
 		{
@@ -361,6 +380,46 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 		}
 		_, err := (*client).CreateTeam(ctx, opt)
 		return err
+	}
+}
+
+func deleteTeams(client *scm.SCM) cli.ActionFunc {
+	ctx := context.Background()
+
+	return func(c *cli.Context) error {
+		if !c.IsSet("name") && !c.Bool("all") {
+			return cli.NewExitError("name must be provided", 3)
+		}
+		if !c.IsSet("namespace") {
+			return cli.NewExitError("namespace must be provided", 3)
+		}
+		if c.Bool("all") {
+			msg := fmt.Sprintf("Are you sure you want to delete all teams in %s?", c.String("namespace"))
+			if ok, err := confirm(msg); !ok || err != nil {
+				fmt.Println("Canceled")
+				return err
+			}
+
+			teams, err := (*client).GetTeams(ctx, &pb.Directory{Path: c.String("namespace")})
+			if err != nil {
+				return err
+			}
+
+			for _, team := range teams {
+				var errs []error
+				if err := (*client).DeleteTeam(ctx, team.ID); err != nil {
+					errs = append(errs, err)
+				} else {
+					fmt.Println("Deleted team", team.Name)
+				}
+				if len(errs) > 0 {
+					return cli.NewMultiError(errs...)
+				}
+			}
+			return nil
+		}
+
+		return cli.NewExitError("not implemented", 9)
 	}
 }
 

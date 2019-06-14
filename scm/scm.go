@@ -37,6 +37,10 @@ type SCM interface {
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *CreateTeamOptions) (*Team, error)
+	// Delete team.
+	DeleteTeam(context.Context, uint64) error
+	// Fetch all teams for organization
+	GetTeams(context.Context, *pb.Directory) ([]*Team, error)
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember as a member to a team.

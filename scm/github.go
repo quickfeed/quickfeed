@@ -234,6 +234,29 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 	}, nil
 }
 
+// DeleteTeam implements the SCM interface.
+func (s *GithubSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
+
+	if _, err := s.client.Organizations.DeleteTeam(ctx, int(teamID)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetTeams implements the scm interface
+func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Directory) ([]*Team, error) {
+	gitTeams, _, err := s.client.Organizations.ListTeams(ctx, org.Path, &github.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	var teams []*Team
+	for _, gitTeam := range gitTeams {
+		newTeam := &Team{ID: uint64(gitTeam.GetID()), Name: gitTeam.GetName(), URL: gitTeam.GetURL()}
+		teams = append(teams, newTeam)
+	}
+	return teams, nil
+}
+
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
 	groupTeam, _, err := s.client.Organizations.GetTeam(ctx, int(opt.TeamID))

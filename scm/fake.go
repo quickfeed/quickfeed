@@ -138,6 +138,18 @@ func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team
 	return &Team{ID: 1, Name: "", URL: ""}, nil
 }
 
+// DeleteTeam implements the SCM interface.
+func (s *FakeSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// GetTeams implements the SCM interface
+func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Directory) ([]*Team, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // UpdateTeamMembers implements the SCM interface.
 func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
 	// TODO no implementation provided yet
