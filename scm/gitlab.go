@@ -217,3 +217,9 @@ func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	}
 	return gitlab.VisibilityLevel(gitlab.PublicVisibility)
 }
+
+// UpdateOrgMembership implements the SCM interface
+func (s *GitlabSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership) error {
+	// TODO no implementation provided yet
+	return nil
+}

@@ -4,9 +4,12 @@ import (
 	"context"
 	"log"
 
+	"google.golang.org/grpc/codes"
+
 	pb "github.com/autograde/aguis/ag"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"google.golang.org/grpc/status"
 )
 
 // GithubSCM implements the SCM interface.
@@ -67,7 +70,6 @@ func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory,
 
 // CreateRepoAndTeam implements the SCM interface.
 func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, *Team, error) {
-	log.Println("scm: createRepoAndTeam starts")
 	repo, err := s.CreateRepository(ctx, opt)
 	if err != nil {
 		log.Println("scm: createRepoAndTeam - error creating repo: ", err.Error())
@@ -382,4 +384,30 @@ func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*
 	opt.Role = membership.GetRole()
 
 	return opt, nil
+}
+
+// UpdateOrgMembership implements the SCM interface
+func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership) error {
+
+	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int(opt.OrgID))
+	if err != nil {
+		return err
+	}
+	gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetName())
+	if err != nil {
+		return err
+	}
+	log.Println("Got membership for ", opt.Username, " with role: ", gitMembership.GetRole())
+	if opt.Role != "admin" && opt.Role != "member" {
+		return status.Errorf(codes.InvalidArgument, "invalid role")
+	}
+	gitMembership.Role = &opt.Role
+	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, gitOrg.GetName(), gitMembership)
+	if err != nil {
+		return err
+	}
+	if newMembership.Role != &opt.Role {
+		return status.Errorf(codes.Canceled, "failed to update membership")
+	}
+	return nil
 }

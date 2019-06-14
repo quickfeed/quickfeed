@@ -194,3 +194,9 @@ func (s *FakeSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*Or
 	// TODO no implementation provided yet
 	return nil, nil
 }
+
+// UpdateOrgMembership implements the SCM interface
+func (s *FakeSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership) error {
+	// TODO no implementation provided yet
+	return nil
+}

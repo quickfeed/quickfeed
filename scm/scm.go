@@ -57,6 +57,8 @@ type SCM interface {
 	GetPaymentPlan(context.Context, uint64) (*PaymentPlan, error)
 	// Get user's membership in organization
 	GetOrgMembership(context.Context, *OrgMembership) (*OrgMembership, error)
+	// Promotes or demotes organization member
+	UpdateOrgMembership(context.Context, *OrgMembership) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -168,7 +170,8 @@ type PaymentPlan struct {
 type OrgMembership struct {
 	Username string
 	OrgID    uint64
-	Role     string
+	// role can be "admin" (organization owner) or "member"
+	Role string
 }
 
 func (e ErrNotSupported) Error() string {

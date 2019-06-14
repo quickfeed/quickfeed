@@ -3,7 +3,6 @@ package grpcservice
 import (
 	"context"
 	"errors"
-	"log"
 	"strconv"
 
 	"google.golang.org/grpc/codes"
@@ -37,7 +36,6 @@ func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error)
 }
 
 func (s *AutograderService) getSCM(ctx context.Context, provider string) (scm.SCM, error) {
-	log.Println("GetSCM got provider ", provider)
 	providers, err := s.GetProviders(ctx, &pb.Void{})
 	if err != nil {
 		return nil, err

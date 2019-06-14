@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -64,7 +63,6 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
 func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM) error {
-	log.Println("UpdateEnrollment started")
 	if _, err := db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "not found")

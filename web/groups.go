@@ -49,7 +49,6 @@ func GetGroupByUserAndCourse(request *pb.ActionRequest, db database.Database) (*
 
 // GetGroups returns all groups for the given course cid.
 func GetGroups(request *pb.RecordRequest, db database.Database) (*pb.Groups, error) {
-	//TODO(Vera): add a corner case with non-existent course to the unit test
 	groups, err := db.GetGroupsByCourse(request.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
