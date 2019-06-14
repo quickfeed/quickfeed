@@ -3,6 +3,7 @@ package grpcservice
 import (
 	"context"
 	"errors"
+	"log"
 	"strconv"
 
 	"google.golang.org/grpc/codes"
@@ -12,7 +13,6 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
-	"github.com/markbates/goth"
 )
 
 func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error) {
@@ -37,9 +37,15 @@ func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error)
 }
 
 func (s *AutograderService) getSCM(ctx context.Context, provider string) (scm.SCM, error) {
-	if _, err := goth.GetProvider(provider); err != nil {
-		return nil, status.Errorf(codes.NotFound, "invalid provider")
+	log.Println("GetSCM got provider ", provider)
+	providers, err := s.GetProviders(ctx, &pb.Void{})
+	if err != nil {
+		return nil, err
 	}
+	if !providers.IsValidProvider(provider) {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid provider")
+	}
+
 	user, err := getCurrentUser(ctx, s.db)
 	if err != nil {
 		return nil, err

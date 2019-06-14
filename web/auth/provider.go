@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log"
 	"os"
 	"strings"
 
@@ -43,11 +44,18 @@ func EnableProvider(p *Provider, createProvider func(key, secret, callback strin
 
 // GetProviders returns a list of all providers enabled by goth.
 func GetProviders() *pb.Providers {
+	log.Println("GetProviders called")
 	var providers []string
 	for _, provider := range goth.GetProviders() {
 		if !strings.HasSuffix(provider.Name(), TeacherSuffix) {
 			providers = append(providers, provider.Name())
 		}
+	}
+	log.Println("Got providers: ", providers)
+	// TODO(HACK): it looks safe to add fake provider anyways for testing phase
+	// but better find a less hacky solution (or just remove the whole thing) for production
+	if len(providers) < 1 {
+		providers = append(providers, "fake")
 	}
 	return &pb.Providers{Providers: providers}
 }

@@ -50,3 +50,14 @@ func (req ActionRequest) IsValidRequest() bool {
 func (req EnrollmentRequest) IsValidRequest() bool {
 	return req.GetCourseID() > 0
 }
+
+// IsValidProvider validates provider string coming from front end
+func (l Providers) IsValidProvider(provider string) bool {
+	isValid := false
+	for _, p := range l.GetProviders() {
+		if p == provider {
+			isValid = true
+		}
+	}
+	return isValid
+}
