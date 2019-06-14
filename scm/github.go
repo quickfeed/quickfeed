@@ -393,21 +393,27 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 	if err != nil {
 		return err
 	}
-	gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetName())
+	isMember, _, err := s.client.Organizations.IsMember(ctx, gitOrg.GetName(), opt.Username)
 	if err != nil {
 		return err
 	}
-	log.Println("Got membership for ", opt.Username, " with role: ", gitMembership.GetRole())
-	if opt.Role != "admin" && opt.Role != "member" {
-		return status.Errorf(codes.InvalidArgument, "invalid role")
+	if isMember {
+		gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetName())
+		if err != nil {
+			return err
+		}
+		if opt.Role != "admin" && opt.Role != "member" {
+			return status.Errorf(codes.InvalidArgument, "invalid role")
+		}
+		gitMembership.Role = &opt.Role
+		newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, gitOrg.GetName(), gitMembership)
+		if err != nil {
+			return err
+		}
+		if newMembership.Role != &opt.Role {
+			return status.Errorf(codes.Canceled, "failed to update membership")
+		}
+		return nil
 	}
-	gitMembership.Role = &opt.Role
-	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, gitOrg.GetName(), gitMembership)
-	if err != nil {
-		return err
-	}
-	if newMembership.Role != &opt.Role {
-		return status.Errorf(codes.Canceled, "failed to update membership")
-	}
-	return nil
+	return status.Errorf(codes.Canceled, "failed to update membership")
 }

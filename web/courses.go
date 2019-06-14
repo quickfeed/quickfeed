@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -119,7 +120,23 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		}
 
 	case pb.Enrollment_TEACHER:
-		err = db.EnrollTeacher(request.UserID, request.CourseID)
+		if err = db.EnrollTeacher(request.UserID, request.CourseID); err != nil {
+			return err
+		}
+		course, err := db.GetCourse(request.CourseID)
+		if err != nil {
+			return err
+		}
+		student, err := db.GetUser(request.UserID)
+		if err != nil {
+			return err
+		}
+		orgUpdate := &scm.OrgMembership{Username: student.GetLogin(), OrgID: course.GetDirectoryID(), Role: "admin"}
+		if err = s.UpdateOrgMembership(ctx, orgUpdate); err != nil {
+			log.Println("UpdateEnrollment could not update user's membership: ", err.Error())
+			return err
+		}
+
 	case pb.Enrollment_REJECTED:
 		err = db.RejectEnrollment(request.UserID, request.CourseID)
 	case pb.Enrollment_PENDING:
