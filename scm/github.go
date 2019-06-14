@@ -415,5 +415,5 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 		}
 		return nil
 	}
-	return status.Errorf(codes.Canceled, "failed to update membership")
+	return status.Errorf(codes.NotFound, "membership not found")
 }
