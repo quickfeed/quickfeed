@@ -56,6 +56,8 @@ func main() {
 	cfg := zap.NewDevelopmentConfig()
 	// database logging is only enabled if the LOGDB environment variable is set
 	cfg = database.GormLoggerConfig(cfg)
+	// add colorization
+	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	// we only want stack trace enabled for panic level and above
 	logger, err := cfg.Build(zap.AddStacktrace(zapcore.PanicLevel))
 	if err != nil {
