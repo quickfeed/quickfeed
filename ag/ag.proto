@@ -164,8 +164,8 @@ message Directories {
 
 message RecordRequest {
     uint64 ID = 1;
-    repeated Enrollment.UserStatus statuses = 3;
-    repeated Group.GroupStatus groupStatuses = 4;
+    repeated Enrollment.UserStatus statuses = 2;
+    repeated Group.GroupStatus groupStatuses = 3;
 }
 
 // fields can be empty, do not use fields for user validation, use context

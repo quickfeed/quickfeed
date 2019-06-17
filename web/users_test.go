@@ -2,19 +2,25 @@ package web_test
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web"
+	"github.com/autograde/aguis/web/auth"
 	"github.com/autograde/aguis/web/grpcservice"
 	"github.com/google/go-cmp/cmp"
+	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 )
 
-/*
+//TODO(vera): reimplement
 func TestGetSelf(t *testing.T) {
+	t.Skip("must be updated")
 	const (
 		selfURL   = "/user"
 		apiPrefix = "/api/v1"
@@ -41,8 +47,10 @@ func TestGetSelf(t *testing.T) {
 	if location != apiPrefix+userURL {
 		t.Errorf("have Location '%v' want '%v'", location, apiPrefix+userURL)
 	}
-	assertCode(t, w.Code, http.StatusFound)
-}*/
+	if w.Code == http.StatusNotFound {
+		t.Fatal("not found")
+	}
+}
 
 func TestGetUser(t *testing.T) {
 	db, cleanup := setup(t)

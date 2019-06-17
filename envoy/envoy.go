@@ -60,32 +60,6 @@ func StartEnvoy(l *zap.Logger) {
 		l.Fatal("failed to execute bash script", zap.Error(err))
 	}
 	l.Debug("envoy.sh", zap.String("output", string(out)))
-
-	/*
-		if !imgExists {
-			img, err := cli.ImagePull(ctx, "envoyproxy/envoy:latest", types.ImagePullOptions{})
-			if err != nil {
-				log.Panicln("Envoy: cannot pull image: ", err.Error())
-			}
-			io.Copy(os.Stdout, img)
-
-		}
-
-		envoy, err := cli.ContainerCreate(ctx, &container.Config{
-			Image:        "envoyproxy/envoy",
-			ExposedPorts: nat.PortSet{"8080": struct{}{}},
-		}, &container.HostConfig{
-			PortBindings: map[nat.Port][]nat.PortBinding{nat.Port("8080"): {{HostIP: "127.0.0.1", HostPort: "8080"}}},
-		}, nil, "ag_envoy")
-		if err != nil {
-			log.Panicln("Envoy: cannot create container: ", err.Error())
-		}
-
-		if err := cli.ContainerStart(ctx, envoy.ID, types.ContainerStartOptions{}); err != nil {
-			log.Panicln("Envoy: container failed to start: ", err.Error())
-		}
-	*/
-
 }
 
 // hasEnvoyImage returns true if the docker client has the latest Envoy image.

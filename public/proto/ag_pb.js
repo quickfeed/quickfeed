@@ -4864,7 +4864,7 @@ proto.Directories.prototype.clearDirectoriesList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.RecordRequest.repeatedFields_ = [3,4];
+proto.RecordRequest.repeatedFields_ = [2,3];
 
 
 
@@ -4896,8 +4896,8 @@ proto.RecordRequest.prototype.toObject = function(opt_includeInstance) {
 proto.RecordRequest.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    statusesList: jspb.Message.getRepeatedField(msg, 3),
-    groupstatusesList: jspb.Message.getRepeatedField(msg, 4)
+    statusesList: jspb.Message.getRepeatedField(msg, 2),
+    groupstatusesList: jspb.Message.getRepeatedField(msg, 3)
   };
 
   if (includeInstance) {
@@ -4938,11 +4938,11 @@ proto.RecordRequest.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {number} */ (reader.readUint64());
       msg.setId(value);
       break;
-    case 3:
+    case 2:
       var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
       msg.setStatusesList(value);
       break;
-    case 4:
+    case 3:
       var value = /** @type {!Array<!proto.Group.GroupStatus>} */ (reader.readPackedEnum());
       msg.setGroupstatusesList(value);
       break;
@@ -4985,14 +4985,14 @@ proto.RecordRequest.serializeBinaryToWriter = function(message, writer) {
   f = message.getStatusesList();
   if (f.length > 0) {
     writer.writePackedEnum(
-      3,
+      2,
       f
     );
   }
   f = message.getGroupstatusesList();
   if (f.length > 0) {
     writer.writePackedEnum(
-      4,
+      3,
       f
     );
   }
@@ -5015,17 +5015,17 @@ proto.RecordRequest.prototype.setId = function(value) {
 
 
 /**
- * repeated Enrollment.UserStatus statuses = 3;
+ * repeated Enrollment.UserStatus statuses = 2;
  * @return {!Array<!proto.Enrollment.UserStatus>}
  */
 proto.RecordRequest.prototype.getStatusesList = function() {
-  return /** @type {!Array<!proto.Enrollment.UserStatus>} */ (jspb.Message.getRepeatedField(this, 3));
+  return /** @type {!Array<!proto.Enrollment.UserStatus>} */ (jspb.Message.getRepeatedField(this, 2));
 };
 
 
 /** @param {!Array<!proto.Enrollment.UserStatus>} value */
 proto.RecordRequest.prototype.setStatusesList = function(value) {
-  jspb.Message.setField(this, 3, value || []);
+  jspb.Message.setField(this, 2, value || []);
 };
 
 
@@ -5034,7 +5034,7 @@ proto.RecordRequest.prototype.setStatusesList = function(value) {
  * @param {number=} opt_index
  */
 proto.RecordRequest.prototype.addStatuses = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 3, value, opt_index);
+  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
 
@@ -5047,17 +5047,17 @@ proto.RecordRequest.prototype.clearStatusesList = function() {
 
 
 /**
- * repeated Group.GroupStatus groupStatuses = 4;
+ * repeated Group.GroupStatus groupStatuses = 3;
  * @return {!Array<!proto.Group.GroupStatus>}
  */
 proto.RecordRequest.prototype.getGroupstatusesList = function() {
-  return /** @type {!Array<!proto.Group.GroupStatus>} */ (jspb.Message.getRepeatedField(this, 4));
+  return /** @type {!Array<!proto.Group.GroupStatus>} */ (jspb.Message.getRepeatedField(this, 3));
 };
 
 
 /** @param {!Array<!proto.Group.GroupStatus>} value */
 proto.RecordRequest.prototype.setGroupstatusesList = function(value) {
-  jspb.Message.setField(this, 4, value || []);
+  jspb.Message.setField(this, 3, value || []);
 };
 
 
@@ -5066,7 +5066,7 @@ proto.RecordRequest.prototype.setGroupstatusesList = function(value) {
  * @param {number=} opt_index
  */
 proto.RecordRequest.prototype.addGroupstatuses = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 4, value, opt_index);
+  jspb.Message.addToRepeatedField(this, 3, value, opt_index);
 };
 
 

@@ -37,13 +37,13 @@ proto:
 	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
 	--js_out=import_style=commonjs:../$(proto-path)/ \
 	--grpc-web_out=import_style=typescript,mode=grpcweb:../$(proto-path)/ ag.proto
-	@sed -i '' '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
+	@sed -i '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
 	@tsc $(proto-path)/AgServiceClientPb.ts
 
 devtools: grpcweb
 
 grpcweb:
-	@echo Fetch and install grpcweb protoc plugin (requires sudo access)
+	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
 	@mkdir -p $(tmpdir)
 	@cd $(tmpdir); curl -LOs $(grpcweb-url)
 	@sudo mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
