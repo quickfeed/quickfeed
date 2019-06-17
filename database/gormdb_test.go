@@ -134,17 +134,17 @@ func TestGormDBGetCourses(t *testing.T) {
 	defer cleanup()
 
 	user := createFakeUser(t, db, 10)
-	c1 := pb.Course{DirectoryID: 1}
+	c1 := pb.Course{OrganizationID: 1}
 	if err := db.CreateCourse(user.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
 
-	c2 := pb.Course{DirectoryID: 2}
+	c2 := pb.Course{OrganizationID: 2}
 	if err := db.CreateCourse(user.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
 
-	c3 := pb.Course{DirectoryID: 3}
+	c3 := pb.Course{OrganizationID: 3}
 	if err := db.CreateCourse(user.ID, &c3); err != nil {
 		t.Fatal(err)
 	}
@@ -349,11 +349,11 @@ func TestGormDBUpdateGroupEnrollment(t *testing.T) {
 	defer cleanup()
 
 	teacher := createFakeUser(t, db, 1)
-	c := pb.Course{DirectoryID: 1}
+	c := pb.Course{OrganizationID: 1}
 	if err := db.CreateCourse(teacher.ID, &c); err != nil {
 		t.Fatal(err)
 	}
-	course, err := db.GetCourseByDirectoryID(1)
+	course, err := db.GetCourseByOrganizationID(1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -391,22 +391,22 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	defer cleanup()
 
 	teacher := createFakeUser(t, db, 1)
-	c1 := pb.Course{DirectoryID: 1}
+	c1 := pb.Course{OrganizationID: 1}
 	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
 
-	c2 := pb.Course{DirectoryID: 2}
+	c2 := pb.Course{OrganizationID: 2}
 	if err := db.CreateCourse(teacher.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
 
-	c3 := pb.Course{DirectoryID: 3}
+	c3 := pb.Course{OrganizationID: 3}
 	if err := db.CreateCourse(teacher.ID, &c3); err != nil {
 		t.Fatal(err)
 	}
 
-	c4 := pb.Course{DirectoryID: 4}
+	c4 := pb.Course{OrganizationID: 4}
 	if err := db.CreateCourse(teacher.ID, &c4); err != nil {
 		t.Fatal(err)
 	}
@@ -443,10 +443,10 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	}
 
 	wantCourses := []*pb.Course{
-		{ID: c1.ID, DirectoryID: 1, Enrolled: pb.Enrollment_PENDING},
-		{ID: c2.ID, DirectoryID: 2, Enrolled: pb.Enrollment_REJECTED},
-		{ID: c3.ID, DirectoryID: 3, Enrolled: pb.Enrollment_STUDENT},
-		{ID: c4.ID, DirectoryID: 4, Enrolled: pb.Enrollment_NONE},
+		{ID: c1.ID, OrganizationID: 1, Enrolled: pb.Enrollment_PENDING},
+		{ID: c2.ID, OrganizationID: 2, Enrolled: pb.Enrollment_REJECTED},
+		{ID: c3.ID, OrganizationID: 3, Enrolled: pb.Enrollment_STUDENT},
+		{ID: c4.ID, OrganizationID: 4, Enrolled: pb.Enrollment_NONE},
 	}
 	if !reflect.DeepEqual(courses, wantCourses) {
 		t.Errorf("have course %+v want %+v", courses, wantCourses)
@@ -676,8 +676,8 @@ func TestGormDBCreateCourse(t *testing.T) {
 		Year: 2017,
 		Tag:  "tag",
 
-		Provider:    "github",
-		DirectoryID: 1,
+		Provider:       "github",
+		OrganizationID: 1,
 	}
 
 	user := createFakeUser(t, db, 10)
@@ -707,12 +707,12 @@ func TestGormDBCreateCourseNonAdmin(t *testing.T) {
 
 func TestGormDBGetCourse(t *testing.T) {
 	course := &pb.Course{
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryID: 1234,
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 1234,
 	}
 
 	db, cleanup := setup(t)
@@ -735,14 +735,14 @@ func TestGormDBGetCourse(t *testing.T) {
 
 }
 
-func TestGormDBGetCourseByDirectory(t *testing.T) {
+func TestGormDBGetCourseByOrganization(t *testing.T) {
 	course := &pb.Course{
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryID: 1234,
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 1234,
 	}
 
 	db, cleanup := setup(t)
@@ -754,7 +754,7 @@ func TestGormDBGetCourseByDirectory(t *testing.T) {
 	}
 
 	// Get the created course.
-	createdCourse, err := db.GetCourseByDirectoryID(course.DirectoryID)
+	createdCourse, err := db.GetCourseByOrganizationID(course.OrganizationID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -778,20 +778,20 @@ func TestGormDBGetCourseNoRecord(t *testing.T) {
 func TestGormDBUpdateCourse(t *testing.T) {
 	var (
 		course = &pb.Course{
-			Name:        "Test Course",
-			Code:        "DAT100",
-			Year:        2017,
-			Tag:         "Spring",
-			Provider:    "github",
-			DirectoryID: 1234,
+			Name:           "Test Course",
+			Code:           "DAT100",
+			Year:           2017,
+			Tag:            "Spring",
+			Provider:       "github",
+			OrganizationID: 1234,
 		}
 		updates = &pb.Course{
-			Name:        "Test Course Edit",
-			Code:        "DAT100-1",
-			Year:        2018,
-			Tag:         "Autumn",
-			Provider:    "gitlab",
-			DirectoryID: 12345,
+			Name:           "Test Course Edit",
+			Code:           "DAT100-1",
+			Year:           2018,
+			Tag:            "Autumn",
+			Provider:       "gitlab",
+			OrganizationID: 12345,
 		}
 	)
 
@@ -924,11 +924,11 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	teacher := createFakeUser(t, db, 10)
 	// Create course c1 and c2
-	c1 := pb.Course{DirectoryID: 1}
+	c1 := pb.Course{OrganizationID: 1}
 	if err := db.CreateCourse(teacher.ID, &c1); err != nil {
 		t.Fatal(err)
 	}
-	c2 := pb.Course{DirectoryID: 2}
+	c2 := pb.Course{OrganizationID: 2}
 	if err := db.CreateCourse(teacher.ID, &c2); err != nil {
 		t.Fatal(err)
 	}
@@ -1322,7 +1322,7 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 
 	user := createFakeUser(t, db, 10)
 	repo := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 100,
 		UserID:       user.ID,
@@ -1341,7 +1341,7 @@ func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
 	defer cleanup()
 
 	repo := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 100,
 		UserID:       20,
@@ -1356,9 +1356,9 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 	defer cleanup()
 
 	repo := pb.Repository{
-		DirectoryID:  120,
-		RepositoryID: 100,
-		RepoType:     pb.Repository_COURSEINFO,
+		OrganizationID: 120,
+		RepositoryID:   100,
+		RepoType:       pb.Repository_COURSEINFO,
 		// Name:         "Name",
 	}
 	if err := db.CreateRepository(&repo); err != nil {
@@ -1389,11 +1389,11 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	defer cleanup()
 
 	teacher := createFakeUser(t, db, 10)
-	course := pb.Course{DirectoryID: 1}
+	course := pb.Course{OrganizationID: 1}
 	if err := db.CreateCourse(teacher.ID, &course); err != nil {
 		t.Fatal(err)
 	}
-	courseTwo := pb.Course{DirectoryID: 2}
+	courseTwo := pb.Course{OrganizationID: 2}
 	if err := db.CreateCourse(teacher.ID, &courseTwo); err != nil {
 		t.Fatal(err)
 	}
@@ -1520,17 +1520,17 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	}
 }
 
-func TestGetRepositoriesByDirectory(t *testing.T) {
+func TestGetRepositoriesByOrganization(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
 	course := &pb.Course{
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryID: 1234,
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 1234,
 	}
 
 	teacher := createFakeUser(t, db, 10)
@@ -1542,7 +1542,7 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 100,
 		UserID:       user.ID,
@@ -1555,7 +1555,7 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 
 	// Creating solution
 	repoSolution := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 101,
 		UserID:       user.ID,
@@ -1568,7 +1568,7 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 102,
 		UserID:       user.ID,
@@ -1581,7 +1581,7 @@ func TestGetRepositoriesByDirectory(t *testing.T) {
 
 	want := []*pb.Repository{&repoCourseInfo, &repoSolution, &repoAssignment}
 
-	gotRepo, err := db.GetRepositories(&pb.Repository{DirectoryID: 120})
+	gotRepo, err := db.GetRepositories(&pb.Repository{OrganizationID: 120})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1661,13 +1661,13 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryID: 1234,
-		ID:          1,
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 1234,
+		ID:             1,
 	}
 
 	teacher := createFakeUser(t, db, 10)
@@ -1679,7 +1679,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
-		DirectoryID: 1234,
+		OrganizationID: 1234,
 		// Name:         "Name",
 		RepositoryID: 100,
 		UserID:       user.ID,
@@ -1692,7 +1692,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	// Creating solution
 	repoSolution := pb.Repository{
-		DirectoryID: 1234,
+		OrganizationID: 1234,
 		// Name:         "Name",
 		RepositoryID: 101,
 		UserID:       user.ID,
@@ -1705,7 +1705,7 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
-		DirectoryID: 1234,
+		OrganizationID: 1234,
 		// Name:         "Name",
 		RepositoryID: 102,
 		UserID:       user.ID,
@@ -1719,8 +1719,8 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	want := []*pb.Repository{&repoCourseInfo}
 
 	repoQuery := &pb.Repository{
-		DirectoryID: course.GetDirectoryID(),
-		RepoType:    pb.Repository_COURSEINFO,
+		OrganizationID: course.GetOrganizationID(),
+		RepoType:       pb.Repository_COURSEINFO,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {
@@ -1737,13 +1737,13 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{
-		ID:          1234,
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryID: 120,
+		ID:             1234,
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 120,
 	}
 
 	teacher := createFakeUser(t, db, 1)
@@ -1756,7 +1756,7 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 100,
 		UserID:       user.ID,
@@ -1769,7 +1769,7 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating solution
 	repoSolution := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 101,
 		UserID:       user.ID,
@@ -1782,7 +1782,7 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 102,
 		UserID:       user.ID,
@@ -1795,7 +1795,7 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating UserRepo for user
 	repoUser := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 103,
 		UserID:       user.ID,
@@ -1808,7 +1808,7 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 
 	// Creating UserRepo for userTwo
 	repoUserTwo := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 104,
 		UserID:       userTwo.ID,
@@ -1822,9 +1822,9 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 	want := []*pb.Repository{&repoUserTwo}
 
 	repoQuery := &pb.Repository{
-		DirectoryID: course.DirectoryID,
-		UserID:      userTwo.ID,
-		RepoType:    pb.Repository_USER,
+		OrganizationID: course.OrganizationID,
+		UserID:         userTwo.ID,
+		RepoType:       pb.Repository_USER,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {
@@ -1841,13 +1841,13 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	defer cleanup()
 
 	course := &pb.Course{
-		ID:          1234,
-		Name:        "Test Course",
-		Code:        "DAT100",
-		Year:        2017,
-		Tag:         "Spring",
-		Provider:    "github",
-		DirectoryID: 120,
+		ID:             1234,
+		Name:           "Test Course",
+		Code:           "DAT100",
+		Year:           2017,
+		Tag:            "Spring",
+		Provider:       "github",
+		OrganizationID: 120,
 	}
 
 	teacher := createFakeUser(t, db, 1)
@@ -1859,7 +1859,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 100,
 		UserID:       user.ID,
@@ -1872,7 +1872,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating solution
 	repoSolution := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 101,
 		UserID:       user.ID,
@@ -1885,7 +1885,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 102,
 		UserID:       user.ID,
@@ -1898,7 +1898,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating UserRepo for user
 	repoUser := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 103,
 		UserID:       user.ID,
@@ -1911,7 +1911,7 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 
 	// Creating UserRepo for userTwo
 	repoUserTwo := pb.Repository{
-		DirectoryID: 120,
+		OrganizationID: 120,
 		// Name:         "Name",
 		RepositoryID: 104,
 		UserID:       userTwo.ID,
@@ -1925,9 +1925,9 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	want := []*pb.Repository{&repoUserTwo}
 
 	repoQuery := &pb.Repository{
-		DirectoryID: course.DirectoryID,
-		UserID:      userTwo.ID,
-		RepoType:    pb.Repository_USER,
+		OrganizationID: course.OrganizationID,
+		UserID:         userTwo.ID,
+		RepoType:       pb.Repository_USER,
 	}
 	gotRepo, err := db.GetRepositories(repoQuery)
 	if err != nil {

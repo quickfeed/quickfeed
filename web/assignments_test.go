@@ -37,7 +37,7 @@ func TestFetchAssignments(t *testing.T) {
 	courseDirID := uint64(gitHubTestOrgID)
 	if courseDirID == 0 {
 		// find course directory ID for 'autograder-test' or your organization
-		dirs, err := s.ListDirectories(ctx)
+		dirs, err := s.ListOrganizations(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -50,8 +50,8 @@ func TestFetchAssignments(t *testing.T) {
 	}
 
 	course := &pb.Course{
-		Name:        "Autograder Test Course",
-		DirectoryID: courseDirID,
+		Name:           "Autograder Test Course",
+		OrganizationID: courseDirID,
 	}
 
 	assignments, err := web.FetchAssignments(ctx, s, course)

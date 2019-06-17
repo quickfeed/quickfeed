@@ -207,8 +207,8 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 
 	// check whether the group repo already exists
 	groupRepoQuery := &pb.Repository{
-		DirectoryID: course.GetDirectoryID(),
-		GroupID:     request.GetID(),
+		OrganizationID: course.GetOrganizationID(),
+		GroupID:        request.GetID(),
 	}
 	repos, err := db.GetRepositories(groupRepoQuery)
 	if err != nil {
@@ -224,12 +224,12 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		}
 		// create database entry for group repository
 		groupRepo := &pb.Repository{
-			DirectoryID:  course.DirectoryID,
-			RepositoryID: repo.ID,
-			UserID:       0,
-			GroupID:      request.ID,
-			HTMLURL:      repo.WebURL,
-			RepoType:     pb.Repository_USER, // TODO(meling) should we distinguish GroupRepo?
+			OrganizationID: course.OrganizationID,
+			RepositoryID:   repo.ID,
+			UserID:         0,
+			GroupID:        request.ID,
+			HTMLURL:        repo.WebURL,
+			RepoType:       pb.Repository_USER, // TODO(meling) should we distinguish GroupRepo?
 		}
 		if err := db.CreateRepository(groupRepo); err != nil {
 			return status.Errorf(codes.Internal, "failed to add repository to database")
@@ -279,7 +279,7 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	dir, err := s.GetDirectory(ctx, course.DirectoryID)
+	org, err := s.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
 		return nil, nil, status.Errorf(codes.Internal, "organization not found")
 	}
@@ -287,9 +287,9 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 	gitUserNames := fetchGitUserNames(group)
 
 	opt := &scm.CreateRepositoryOptions{
-		Directory: dir,
-		Path:      group.Name,
-		Private:   true,
+		Organization: org,
+		Path:         group.Name,
+		Private:      true,
 	}
 	return s.CreateRepoAndTeam(ctx, opt, group.Name, gitUserNames)
 }
@@ -299,16 +299,16 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) 
 	// make list with github username strings
 	usernames := fetchGitUserNames(g)
 
-	dir, err := s.GetDirectory(ctx, c.DirectoryID)
+	org, err := s.GetOrganization(ctx, c.OrganizationID)
 	if err != nil {
 		return status.Errorf(codes.NotFound, "organization not found")
 	}
 
 	opt := &scm.CreateTeamOptions{
-		Directory: dir,
-		TeamName:  g.Name,
-		TeamID:    g.TeamID,
-		Users:     usernames,
+		Organization: org,
+		TeamName:     g.Name,
+		TeamID:       g.TeamID,
+		Users:        usernames,
 	}
 
 	if err = s.UpdateTeamMembers(ctx, opt); err != nil {

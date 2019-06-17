@@ -16,12 +16,12 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	course := pb.Course{
-		Name:        "Distributed Systems",
-		Code:        "DAT520",
-		Year:        2018,
-		Tag:         "Spring",
-		Provider:    "fake",
-		DirectoryID: 1,
+		Name:           "Distributed Systems",
+		Code:           "DAT520",
+		Year:           2018,
+		Tag:            "Spring",
+		Provider:       "fake",
+		OrganizationID: 1,
 	}
 
 	// create course as teacher

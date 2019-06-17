@@ -28,40 +28,40 @@ func NewGithubSCMClient(token string) *GithubSCM {
 	}
 }
 
-// ListDirectories implements the SCM interface.
-func (s *GithubSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error) {
-	orgs, _, err := s.client.Organizations.ListOrgMemberships(ctx, nil)
+// ListOrganizations implements the SCM interface.
+func (s *GithubSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
+	userOrgs, _, err := s.client.Organizations.ListOrgMemberships(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var directories []*pb.Directory
-	for _, org := range orgs {
-		directories = append(directories, &pb.Directory{
+	var orgs []*pb.Organization
+	for _, org := range userOrgs {
+		orgs = append(orgs, &pb.Organization{
 			ID:     uint64(org.Organization.GetID()),
 			Path:   org.Organization.GetLogin(),
 			Avatar: org.Organization.GetAvatarURL(),
 		})
 	}
-	return directories, nil
+	return orgs, nil
 }
 
-// CreateDirectory implements the SCM interface.
-func (s *GithubSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*pb.Directory, error) {
+// CreateOrganization implements the SCM interface.
+func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
 	return nil, ErrNotSupported{
 		SCM:    "github",
-		Method: "CreateDirectory",
+		Method: "CreateOrganization",
 	}
 }
 
-// GetDirectory implements the SCM interface.
-func (s *GithubSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory, error) {
+// GetOrganization implements the SCM interface.
+func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
 	org, _, err := s.client.Organizations.GetByID(ctx, int(id))
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.Directory{
+	return &pb.Organization{
 		ID:     uint64(org.GetID()),
 		Path:   org.GetLogin(),
 		Avatar: org.GetAvatarURL(),
@@ -77,9 +77,9 @@ func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepository
 	}
 
 	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
-		Directory: opt.Directory,
-		TeamName:  teamName,
-		Users:     gitUserNames,
+		Organization: opt.Organization,
+		TeamName:     teamName,
+		Users:        gitUserNames,
 	})
 	if err != nil {
 		log.Println("scm: createRepoAndTeam - error creating team: ", err.Error())
@@ -100,7 +100,7 @@ func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepository
 
 // CreateRepository implements the SCM interface.
 func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	repo, _, err := s.client.Repositories.Create(ctx, opt.Directory.Path, &github.Repository{
+	repo, _, err := s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
 		Name:    &opt.Path,
 		Private: &opt.Private,
 	})
@@ -114,27 +114,27 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	return &Repository{
-		ID:          uint64(repo.GetID()),
-		Path:        repo.GetName(),
-		Owner:       owner,
-		WebURL:      repo.GetHTMLURL(),
-		SSHURL:      repo.GetSSHURL(),
-		HTTPURL:     repo.GetCloneURL(),
-		DirectoryID: opt.Directory.ID,
+		ID:      uint64(repo.GetID()),
+		Path:    repo.GetName(),
+		Owner:   owner,
+		WebURL:  repo.GetHTMLURL(),
+		SSHURL:  repo.GetSSHURL(),
+		HTTPURL: repo.GetCloneURL(),
+		OrgID:   opt.Organization.ID,
 	}, nil
 }
 
 // GetRepositories implements the SCM interface.
-func (s *GithubSCM) GetRepositories(ctx context.Context, directory *pb.Directory) ([]*Repository, error) {
+func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) ([]*Repository, error) {
 	var path string
-	if directory.Path != "" {
-		path = directory.Path
+	if org.Path != "" {
+		path = org.Path
 	} else {
-		directory, err := s.GetDirectory(ctx, directory.ID)
+		org, err := s.GetOrganization(ctx, org.ID)
 		if err != nil {
 			return nil, err
 		}
-		path = directory.Path
+		path = org.Path
 	}
 
 	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, nil)
@@ -151,13 +151,13 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, directory *pb.Directory
 		}
 
 		repositories = append(repositories, &Repository{
-			ID:          uint64(repo.GetID()),
-			Path:        repo.GetName(),
-			Owner:       owner,
-			WebURL:      repo.GetHTMLURL(),
-			SSHURL:      repo.GetSSHURL(),
-			HTTPURL:     repo.GetCloneURL(),
-			DirectoryID: directory.ID,
+			ID:      uint64(repo.GetID()),
+			Path:    repo.GetName(),
+			Owner:   owner,
+			WebURL:  repo.GetHTMLURL(),
+			SSHURL:  repo.GetSSHURL(),
+			HTTPURL: repo.GetCloneURL(),
+			OrgID:   org.ID,
 		})
 	}
 
@@ -212,7 +212,7 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 
 // CreateTeam implements the SCM interface.
 func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
-	t, _, err := s.client.Organizations.CreateTeam(ctx, opt.Directory.Path, &github.Team{
+	t, _, err := s.client.Organizations.CreateTeam(ctx, opt.Organization.Path, &github.Team{
 		Name: &opt.TeamName,
 	})
 	if err != nil {
@@ -241,7 +241,7 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
 }
 
 // GetTeams implements the scm interface
-func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Directory) ([]*Team, error) {
+func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	gitTeams, _, err := s.client.Organizations.ListTeams(ctx, org.Path, &github.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -308,7 +308,7 @@ func (s *GithubSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 	if len(opt.UserToken) > 0 {
 		token = opt.UserToken
 	}
-	return "https://" + token + "@github.com/" + opt.Directory + "/" + opt.Repository + ".git"
+	return "https://" + token + "@github.com/" + opt.Organization + "/" + opt.Repository + ".git"
 }
 
 // AddTeamRepo implements the SCM interface.

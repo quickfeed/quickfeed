@@ -10,12 +10,12 @@ import (
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
-	// Lists directories which can be used as a course directory.
-	ListDirectories(context.Context) ([]*pb.Directory, error)
-	// Creates a new directory.
-	CreateDirectory(context.Context, *CreateDirectoryOptions) (*pb.Directory, error)
-	// Gets a directory.
-	GetDirectory(context.Context, uint64) (*pb.Directory, error)
+	// Lists organizations which can be used as a course directory.
+	ListOrganizations(context.Context) ([]*pb.Organization, error)
+	// Creates a new organization.
+	CreateOrganization(context.Context, *CreateOrgOptions) (*pb.Organization, error)
+	// Gets an organization.
+	GetOrganization(context.Context, uint64) (*pb.Organization, error)
 	// CreateRepoAndTeam invokes the SCM to create a repository and team for the
 	// specified namespace (typically the course name), the path of the repository
 	// (typically the name of the student with a '-labs' suffix or the group name).
@@ -25,8 +25,8 @@ type SCM interface {
 	CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, *Team, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
-	// Get repositories within directory.
-	GetRepositories(context.Context, *pb.Directory) ([]*Repository, error)
+	// Get repositories within organization.
+	GetRepositories(context.Context, *pb.Organization) ([]*Repository, error)
 	// Update repository settings
 	UpdateRepository(context.Context, *Repository) error
 	// Delete repository.
@@ -40,7 +40,7 @@ type SCM interface {
 	// Delete team.
 	DeleteTeam(context.Context, uint64) error
 	// Fetch all teams for organization
-	GetTeams(context.Context, *pb.Directory) ([]*Team, error)
+	GetTeams(context.Context, *pb.Organization) ([]*Team, error)
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember as a member to a team.
@@ -74,9 +74,9 @@ func NewSCMClient(provider, token string) (SCM, error) {
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// CreateDirectoryOptions contains information on how a directory should be
+// CreateOrgOptions contains information on how an organization should be
 // created.
-type CreateDirectoryOptions struct {
+type CreateOrgOptions struct {
 	Path string
 	Name string
 }
@@ -96,7 +96,7 @@ type Repository struct {
 	// HTTP(S) clone URL.
 	HTTPURL string
 
-	DirectoryID uint64
+	OrgID uint64
 }
 
 // Hook contains information about a webhook for a repository.
@@ -109,9 +109,9 @@ type Hook struct {
 // CreateRepositoryOptions contains information on how a repository should be
 // created.
 type CreateRepositoryOptions struct {
-	Path      string
-	Directory *pb.Directory
-	Private   bool
+	Path         string
+	Organization *pb.Organization
+	Private      bool
 }
 
 // CreateHookOptions contains information on how to create a webhook.
@@ -124,10 +124,10 @@ type CreateHookOptions struct {
 
 // CreateTeamOptions contains information about the team and the users of the team.
 type CreateTeamOptions struct {
-	Directory *pb.Directory
-	TeamName  string
-	TeamID    uint64
-	Users     []string
+	Organization *pb.Organization
+	TeamName     string
+	TeamID       uint64
+	Users        []string
 }
 
 // ErrNotSupported is returned when the source code management solution used
@@ -139,9 +139,9 @@ type ErrNotSupported struct {
 
 // CreateClonePathOptions holds elements used when constructing a clone URL string.
 type CreateClonePathOptions struct {
-	UserToken  string
-	Directory  string
-	Repository string
+	UserToken    string
+	Organization string
+	Repository   string
 }
 
 // AddTeamRepoOptions contains information about the repos to be added to a team.

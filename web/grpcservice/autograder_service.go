@@ -417,8 +417,8 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 	return providers, nil
 }
 
-// GetDirectories returns a list of directories for a course
-func (s *AutograderService) GetDirectories(ctx context.Context, in *pb.DirectoryRequest) (*pb.Directories, error) {
+// GetOrganizations returns a list of directories for a course
+func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.ActionRequest) (*pb.Organizations, error) {
 	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
 	defer cancel()
 
@@ -427,7 +427,7 @@ func (s *AutograderService) GetDirectories(ctx context.Context, in *pb.Directory
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
-	return web.ListDirectories(ctx, s.db, scm)
+	return web.ListOrganizations(ctx, s.db, scm)
 }
 
 // GetRepository is not yet implemented

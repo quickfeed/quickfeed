@@ -25,14 +25,14 @@ func FetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.As
 	ctx, cancel := context.WithTimeout(c, MaxWait)
 	defer cancel()
 
-	directory, err := s.GetDirectory(ctx, course.DirectoryID)
+	org, err := s.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
 
 	cloneURL := s.CreateCloneURL(&scm.CreateClonePathOptions{
-		Directory:  directory.Path,
-		Repository: pb.TestsRepo,
+		Organization: org.Path,
+		Repository:   pb.TestsRepo,
 	})
 
 	cloneDir, err := ioutil.TempDir("", pb.TestsRepo)

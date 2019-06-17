@@ -90,9 +90,9 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 
 		// check whether user repo already exists (happens when accepting previously rejected student)
 		userRepoQuery := &pb.Repository{
-			DirectoryID: course.GetDirectoryID(),
-			UserID:      request.GetUserID(),
-			RepoType:    pb.Repository_USER,
+			OrganizationID: course.GetOrganizationID(),
+			UserID:         request.GetUserID(),
+			RepoType:       pb.Repository_USER,
 		}
 		repos, err := db.GetRepositories(userRepoQuery)
 		if err != nil {
@@ -106,11 +106,11 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			}
 			// add student repo to database if SCM interaction was successful
 			dbRepo := pb.Repository{
-				DirectoryID:  course.GetDirectoryID(),
-				UserID:       request.GetUserID(),
-				RepoType:     pb.Repository_USER,
-				RepositoryID: repo.ID,
-				HTMLURL:      repo.WebURL,
+				OrganizationID: course.GetOrganizationID(),
+				UserID:         request.GetUserID(),
+				RepoType:       pb.Repository_USER,
+				RepositoryID:   repo.ID,
+				HTMLURL:        repo.WebURL,
 			}
 			if err := db.CreateRepository(&dbRepo); err != nil {
 				return status.Errorf(codes.Internal, "could not create user repository")
@@ -130,7 +130,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if err != nil {
 			return status.Errorf(codes.NotFound, "user not found")
 		}
-		orgUpdate := &scm.OrgMembership{Username: student.GetLogin(), OrgID: course.GetDirectoryID(), Role: "admin"}
+		orgUpdate := &scm.OrgMembership{Username: student.GetLogin(), OrgID: course.GetOrganizationID(), Role: "admin"}
 		if err = s.UpdateOrgMembership(ctx, orgUpdate); err != nil {
 			return status.Errorf(codes.Internal, "could not update user membership")
 		}
@@ -153,7 +153,7 @@ func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, stud
 	ctx, cancel := context.WithTimeout(c, MaxWait)
 	defer cancel()
 
-	dir, err := s.GetDirectory(ctx, course.DirectoryID)
+	org, err := s.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -162,9 +162,9 @@ func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, stud
 	teamName := student.Login
 
 	opt := &scm.CreateRepositoryOptions{
-		Directory: dir,
-		Path:      pb.StudentRepoName(teamName),
-		Private:   true,
+		Organization: org,
+		Path:         pb.StudentRepoName(teamName),
+		Private:      true,
 	}
 
 	return s.CreateRepoAndTeam(ctx, opt, teamName, []string{teamName})
@@ -246,7 +246,7 @@ func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database,
 	}
 
 	// Check that the directory exists.
-	_, err = s.GetDirectory(ctx, request.DirectoryID)
+	_, err = s.GetOrganization(ctx, request.OrganizationID)
 	if err != nil {
 		return status.Errorf(codes.Aborted, "no directory found")
 	}
@@ -311,8 +311,8 @@ func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db da
 		return nil, err
 	}
 	userRepoQuery := &pb.Repository{
-		DirectoryID: course.GetDirectoryID(),
-		RepoType:    request.GetType(),
+		OrganizationID: course.GetOrganizationID(),
+		RepoType:       request.GetType(),
 	}
 	if request.Type == pb.Repository_USER {
 		userRepoQuery.UserID = currentUser.GetID()

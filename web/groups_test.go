@@ -23,7 +23,7 @@ func TestNewGroup(t *testing.T) {
 	var course pb.Course
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.DirectoryID = 1
+	course.OrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -39,8 +39,8 @@ func TestNewGroup(t *testing.T) {
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
-	fakeProvider.CreateDirectory(ctx,
-		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
+	fakeProvider.CreateOrganization(ctx,
+		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
 
 	users := make([]*pb.User, 0)
@@ -73,7 +73,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	var course pb.Course
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.DirectoryID = 1
+	course.OrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -98,8 +98,8 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	ctx := withUserContext(context.Background(), teacher)
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
-	fakeProvider.CreateDirectory(ctx,
-		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
+	fakeProvider.CreateOrganization(ctx,
+		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
 
 	users := make([]*pb.User, 0)
@@ -132,7 +132,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	var course pb.Course
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2
-	course.DirectoryID = 1
+	course.OrganizationID = 1
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -157,8 +157,8 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	ctx := withUserContext(context.Background(), user)
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
-	fakeProvider.CreateDirectory(ctx,
-		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
+	fakeProvider.CreateOrganization(ctx,
+		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
 
 	users := make([]*pb.User, 0)
@@ -177,12 +177,12 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
-	fakeProvider.CreateDirectory(context.Background(),
-		&scm.CreateDirectoryOptions{Path: "path", Name: "name"},
+	fakeProvider.CreateOrganization(context.Background(),
+		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
 
 	admin := createFakeUser(t, db, 1)
-	course := pb.Course{Provider: "fake", DirectoryID: 1}
+	course := pb.Course{Provider: "fake", OrganizationID: 1}
 	if err := db.CreateCourse(admin.ID, &course); err != nil {
 		t.Fatal(err)
 	}
@@ -343,12 +343,12 @@ func TestDeleteGroup(t *testing.T) {
 	defer cleanup()
 
 	testCourse := pb.Course{
-		Name:        "Distributed Systems",
-		Code:        "DAT520",
-		Year:        2018,
-		Tag:         "Spring",
-		Provider:    "fake",
-		DirectoryID: 1,
+		Name:           "Distributed Systems",
+		Code:           "DAT520",
+		Year:           2018,
+		Tag:            "Spring",
+		Provider:       "fake",
+		OrganizationID: 1,
 	}
 	admin := createFakeUser(t, db, 1)
 	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
@@ -386,12 +386,12 @@ func TestGetGroup(t *testing.T) {
 	defer cleanup()
 
 	testCourse := pb.Course{
-		Name:        "Distributed Systems",
-		Code:        "DAT520",
-		Year:        2018,
-		Tag:         "Spring",
-		Provider:    "fake",
-		DirectoryID: 1,
+		Name:           "Distributed Systems",
+		Code:           "DAT520",
+		Year:           2018,
+		Tag:            "Spring",
+		Provider:       "fake",
+		OrganizationID: 1,
 	}
 	admin := createFakeUser(t, db, 1)
 	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {
@@ -432,13 +432,13 @@ func TestPatchGroupStatus(t *testing.T) {
 	defer cleanup()
 
 	course := pb.Course{
-		Name:        "Distributed Systems",
-		Code:        "DAT520",
-		Year:        2018,
-		Tag:         "Spring",
-		Provider:    "fake",
-		DirectoryID: 1,
-		ID:          1,
+		Name:           "Distributed Systems",
+		Code:           "DAT520",
+		Year:           2018,
+		Tag:            "Spring",
+		Provider:       "fake",
+		OrganizationID: 1,
+		ID:             1,
 	}
 
 	admin := createFakeUser(t, db, 1)
@@ -451,7 +451,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
-	if _, err := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{
+	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
 		Name: course.Code,
 		Path: course.Code,
 	}); err != nil {
@@ -515,13 +515,13 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	defer cleanup()
 
 	course := pb.Course{
-		Name:        "Distributed Systems",
-		Code:        "DAT520",
-		Year:        2018,
-		Tag:         "Spring",
-		Provider:    "fake",
-		DirectoryID: 1,
-		ID:          1,
+		Name:           "Distributed Systems",
+		Code:           "DAT520",
+		Year:           2018,
+		Tag:            "Spring",
+		Provider:       "fake",
+		OrganizationID: 1,
+		ID:             1,
 	}
 
 	admin := createFakeUser(t, db, 1)
@@ -593,7 +593,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
-	if _, err := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{
+	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
 		Name: course.Code,
 		Path: course.Code,
 	}); err != nil {

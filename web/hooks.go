@@ -89,7 +89,7 @@ func refreshAssignmentsFromTestsRepo(logger *zap.Logger, db database.Database, r
 		return
 	}
 
-	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
+	course, err := db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
 		logger.Error("Failed to get course from database", zap.Error(err))
 		return
@@ -108,7 +108,7 @@ func refreshAssignmentsFromTestsRepo(logger *zap.Logger, db database.Database, r
 func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *pb.Repository,
 	getURL string, commitHash string, scriptPath string) {
 
-	course, err := db.GetCourseByDirectoryID(repo.DirectoryID)
+	course, err := db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
 		logger.Error("Failed to get course from database", zap.Error(err))
 		return
@@ -127,8 +127,8 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 	logger.Debug("Found assignment", zap.String("assignment", selectedAssignment.String()))
 
 	testsRepoQuery := &pb.Repository{
-		DirectoryID: course.GetDirectoryID(),
-		RepoType:    pb.Repository_TESTS,
+		OrganizationID: course.GetOrganizationID(),
+		RepoType:       pb.Repository_TESTS,
 	}
 	testRepos, err := db.GetRepositories(testsRepoQuery)
 	if err != nil || len(testRepos) < 1 {

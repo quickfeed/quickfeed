@@ -10,49 +10,49 @@ import (
 
 // FakeSCM implements the SCM interface.
 type FakeSCM struct {
-	Repositories map[uint64]*Repository
-	Directories  map[uint64]*pb.Directory
-	Hooks        map[uint64]int
+	Repositories  map[uint64]*Repository
+	Organizations map[uint64]*pb.Organization
+	Hooks         map[uint64]int
 }
 
 // NewFakeSCMClient returns a new Fake client implementing the SCM interface.
 func NewFakeSCMClient() *FakeSCM {
 	return &FakeSCM{
-		Repositories: make(map[uint64]*Repository),
-		Directories:  make(map[uint64]*pb.Directory),
-		Hooks:        make(map[uint64]int),
+		Repositories:  make(map[uint64]*Repository),
+		Organizations: make(map[uint64]*pb.Organization),
+		Hooks:         make(map[uint64]int),
 	}
 }
 
-// ListDirectories implements the SCM interface.
-func (s *FakeSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error) {
-	var dirs []*pb.Directory
-	for _, dir := range s.Directories {
-		dirs = append(dirs, dir)
+// ListOrganizations implements the SCM interface.
+func (s *FakeSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
+	var orgs []*pb.Organization
+	for _, org := range s.Organizations {
+		orgs = append(orgs, org)
 	}
 
-	return dirs, nil
+	return orgs, nil
 }
 
-// CreateDirectory implements the SCM interface.
-func (s *FakeSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*pb.Directory, error) {
-	id := len(s.Directories) + 1
-	dir := &pb.Directory{
+// CreateOrganization implements the SCM interface.
+func (s *FakeSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
+	id := len(s.Organizations) + 1
+	org := &pb.Organization{
 		ID:     uint64(id),
 		Path:   opt.Path,
 		Avatar: "https://avatars3.githubusercontent.com/u/1000" + strconv.Itoa(id) + "?v=3",
 	}
-	s.Directories[dir.ID] = dir
-	return dir, nil
+	s.Organizations[org.ID] = org
+	return org, nil
 }
 
-// GetDirectory implements the SCM interface.
-func (s *FakeSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory, error) {
-	dir, ok := s.Directories[id]
+// GetOrganization implements the SCM interface.
+func (s *FakeSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
+	org, ok := s.Organizations[id]
 	if !ok {
 		return nil, errors.New("directory not found")
 	}
-	return dir, nil
+	return org, nil
 }
 
 // CreateRepoAndTeam implements the SCM interface.
@@ -63,9 +63,9 @@ func (s *FakeSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOp
 	}
 
 	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
-		Directory: opt.Directory,
-		TeamName:  teamName,
-		Users:     gitUserNames,
+		Organization: opt.Organization,
+		TeamName:     teamName,
+		Users:        gitUserNames,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -86,22 +86,22 @@ func (s *FakeSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOp
 func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
 	id := len(s.Repositories) + 1
 	repo := &Repository{
-		ID:          uint64(id),
-		Path:        opt.Path,
-		WebURL:      "https://example.com/" + opt.Directory.Path + "/" + opt.Path,
-		SSHURL:      "git@example.com:" + opt.Directory.Path + "/" + opt.Path,
-		HTTPURL:     "https://example.com/" + opt.Directory.Path + "/" + opt.Path + ".git",
-		DirectoryID: opt.Directory.ID,
+		ID:      uint64(id),
+		Path:    opt.Path,
+		WebURL:  "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
+		SSHURL:  "git@example.com:" + opt.Organization.Path + "/" + opt.Path,
+		HTTPURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path + ".git",
+		OrgID:   opt.Organization.ID,
 	}
 	s.Repositories[repo.ID] = repo
 	return repo, nil
 }
 
 // GetRepositories implements the SCM interface.
-func (s *FakeSCM) GetRepositories(ctx context.Context, directory *pb.Directory) ([]*Repository, error) {
+func (s *FakeSCM) GetRepositories(ctx context.Context, org *pb.Organization) ([]*Repository, error) {
 	var repos []*Repository
 	for _, repo := range s.Repositories {
-		if repo.DirectoryID == directory.ID {
+		if repo.OrgID == org.ID {
 			repos = append(repos, repo)
 		}
 	}
@@ -145,7 +145,7 @@ func (s *FakeSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
 }
 
 // GetTeams implements the SCM interface
-func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Directory) ([]*Team, error) {
+func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }

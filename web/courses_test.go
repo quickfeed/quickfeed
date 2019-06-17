@@ -27,7 +27,7 @@ var allCourses = []*pb.Course{
 		Year:            2018,
 		Tag:             "Spring",
 		Provider:        "fake",
-		DirectoryID:     1,
+		OrganizationID:  1,
 	},
 	{
 		Name:            "Operating Systems",
@@ -36,7 +36,7 @@ var allCourses = []*pb.Course{
 		Year:            2017,
 		Tag:             "Fall",
 		Provider:        "fake",
-		DirectoryID:     2,
+		OrganizationID:  2,
 	}, {
 		Name:            "New Systems",
 		CourseCreatorID: 1,
@@ -44,7 +44,7 @@ var allCourses = []*pb.Course{
 		Year:            2019,
 		Tag:             "Fall",
 		Provider:        "fake",
-		DirectoryID:     3,
+		OrganizationID:  3,
 	}, {
 		Name:            "Hyped Systems",
 		CourseCreatorID: 1,
@@ -52,7 +52,7 @@ var allCourses = []*pb.Course{
 		Year:            2019,
 		Tag:             "Fall",
 		Provider:        "fake",
-		DirectoryID:     4,
+		OrganizationID:  4,
 	},
 }
 
@@ -113,7 +113,7 @@ func TestNewCourse(t *testing.T) {
 
 	for _, testCourse := range allCourses {
 		// each course needs a separate directory
-		fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
+		fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
 
 		respCourse, err := ags.CreateCourse(ctx, testCourse)
 		if err != nil {
@@ -144,9 +144,9 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
-	directory, _ := fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
+	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
-		repoOptions := &scm.CreateRepositoryOptions{Path: path, Directory: directory, Private: private}
+		repoOptions := &scm.CreateRepositoryOptions{Path: path, Organization: directory, Private: private}
 		fakeProvider.CreateRepository(ctx, repoOptions)
 	}
 
@@ -167,7 +167,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
-	fakeProvider.CreateDirectory(ctx, &scm.CreateDirectoryOptions{Path: "path", Name: "name"})
+	fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
 
 	course, err := ags.CreateCourse(ctx, allCourses[0])
 	if err != nil {

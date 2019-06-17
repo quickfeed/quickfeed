@@ -20,16 +20,16 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 	}
 }
 
-// ListDirectories implements the SCM interface.
-func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error) {
+// ListOrganizations implements the SCM interface.
+func (s *GitlabSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
 	groups, _, err := s.client.Groups.ListGroups(nil, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
-	var directories []*pb.Directory
+	var directories []*pb.Organization
 	for _, group := range groups {
-		directories = append(directories, &pb.Directory{
+		directories = append(directories, &pb.Organization{
 			ID:     uint64(group.ID),
 			Path:   group.Path,
 			Avatar: group.AvatarURL,
@@ -38,8 +38,8 @@ func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*pb.Directory, error
 	return directories, nil
 }
 
-// CreateDirectory implements the SCM interface.
-func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*pb.Directory, error) {
+// CreateOrganization implements the SCM interface.
+func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
 		Name:            &opt.Name,
 		Path:            &opt.Path,
@@ -49,21 +49,21 @@ func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 		return nil, err
 	}
 
-	return &pb.Directory{
+	return &pb.Organization{
 		ID:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
 }
 
-// GetDirectory implements the SCM interface.
-func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*pb.Directory, error) {
+// GetOrganization implements the SCM interface.
+func (s *GitlabSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
 	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.Directory{
+	return &pb.Organization{
 		ID:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
@@ -78,7 +78,7 @@ func (s *GitlabSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepository
 
 // CreateRepository implements the SCM interface.
 func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	directoryID := int(opt.Directory.ID)
+	directoryID := int(opt.Organization.ID)
 	repo, _, err := s.client.Projects.CreateProject(
 		&gitlab.CreateProjectOptions{
 			Path:        &opt.Path,
@@ -91,17 +91,17 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	return &Repository{
-		ID:          uint64(repo.ID),
-		Path:        repo.Path,
-		WebURL:      repo.WebURL,
-		SSHURL:      repo.SSHURLToRepo,
-		HTTPURL:     repo.HTTPURLToRepo,
-		DirectoryID: opt.Directory.ID,
+		ID:      uint64(repo.ID),
+		Path:    repo.Path,
+		WebURL:  repo.WebURL,
+		SSHURL:  repo.SSHURLToRepo,
+		HTTPURL: repo.HTTPURLToRepo,
+		OrgID:   opt.Organization.ID,
 	}, nil
 }
 
 // GetRepositories implements the SCM interface.
-func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Directory) ([]*Repository, error) {
+func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Organization) ([]*Repository, error) {
 	var gid interface{}
 	if directory.Path != "" {
 		gid = directory.Path
@@ -117,12 +117,12 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Directory
 	var repositories []*Repository
 	for _, repo := range repos {
 		repositories = append(repositories, &Repository{
-			ID:          uint64(repo.ID),
-			Path:        repo.Path,
-			WebURL:      repo.WebURL,
-			SSHURL:      repo.SSHURLToRepo,
-			HTTPURL:     repo.HTTPURLToRepo,
-			DirectoryID: directory.ID,
+			ID:      uint64(repo.ID),
+			Path:    repo.Path,
+			WebURL:  repo.WebURL,
+			SSHURL:  repo.SSHURLToRepo,
+			HTTPURL: repo.HTTPURLToRepo,
+			OrgID:   directory.ID,
 		})
 	}
 
@@ -163,7 +163,7 @@ func (s *GitlabSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
 }
 
 // GetTeams implements the SCM interface
-func (s *GitlabSCM) GetTeams(ctx context.Context, org *pb.Directory) ([]*Team, error) {
+func (s *GitlabSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }

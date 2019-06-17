@@ -37,11 +37,11 @@ var (
 // and creates the repositories for the course. Requires that the directory
 // does not contain the Autograder repositories that will be created.
 func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
-	directory, err := s.GetDirectory(ctx, request.DirectoryID)
+	org, err := s.GetOrganization(ctx, request.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
-	repos, err := s.GetRepositories(ctx, directory)
+	repos, err := s.GetRepositories(ctx, org)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +51,9 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 
 	for path, private := range RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{
-			Path:      path,
-			Directory: directory,
-			Private:   private,
+			Path:         path,
+			Organization: org,
+			Private:      private,
 		}
 		repo, err := s.CreateRepository(ctx, repoOptions)
 		if err != nil {
@@ -70,10 +70,10 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		}
 
 		dbRepo := pb.Repository{
-			DirectoryID:  directory.ID,
-			RepositoryID: repo.ID,
-			HTMLURL:      repo.WebURL,
-			RepoType:     pb.RepoType(path),
+			OrganizationID: org.ID,
+			RepositoryID:   repo.ID,
+			HTMLURL:        repo.WebURL,
+			RepoType:       pb.RepoType(path),
 		}
 		if err := db.CreateRepository(&dbRepo); err != nil {
 			return nil, err

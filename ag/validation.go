@@ -12,7 +12,7 @@ func (c Course) IsValidCourse() bool {
 	return c.GetName() != "" &&
 		c.GetCode() != "" &&
 		(c.GetProvider() == "github" || c.GetProvider() == "gitlab" || c.GetProvider() == "fake") &&
-		c.GetDirectoryID() != 0 &&
+		c.GetOrganizationID() != 0 &&
 		c.GetYear() != 0 &&
 		c.GetTag() != ""
 }

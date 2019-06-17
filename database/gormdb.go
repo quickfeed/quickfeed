@@ -220,7 +220,7 @@ func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 
 	var courses uint64
 	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
-		DirectoryID: course.DirectoryID,
+		OrganizationID: course.OrganizationID,
 	}).Count(&courses).Error; err != nil {
 		return err
 	}
@@ -616,10 +616,10 @@ func (db *GormDB) GetCourse(cid uint64) (*pb.Course, error) {
 	return &course, nil
 }
 
-// GetCourseByDirectoryID implements the Database interface
-func (db *GormDB) GetCourseByDirectoryID(did uint64) (*pb.Course, error) {
+// GetCourseByOrganizationID implements the Database interface
+func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	var course pb.Course
-	if err := db.conn.First(&course, &pb.Course{DirectoryID: did}).Error; err != nil {
+	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
 	return &course, nil
@@ -759,7 +759,7 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 
 // CreateRepository implements the Database interface
 func (db *GormDB) CreateRepository(repo *pb.Repository) error {
-	if repo.DirectoryID == 0 || repo.RepositoryID == 0 {
+	if repo.OrganizationID == 0 || repo.RepositoryID == 0 {
 		// both directory and repository must be non-zero
 		return errors.New("failed to create repository; invalid arguments")
 	}

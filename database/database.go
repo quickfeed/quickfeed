@@ -30,7 +30,7 @@ type Database interface {
 
 	CreateCourse(uint64, *pb.Course) error
 	GetCourse(uint64) (*pb.Course, error)
-	GetCourseByDirectoryID(did uint64) (*pb.Course, error)
+	GetCourseByOrganizationID(did uint64) (*pb.Course, error)
 	GetCourses(...uint64) ([]*pb.Course, error)
 	GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
 	UpdateCourse(*pb.Course) error
