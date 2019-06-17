@@ -9,7 +9,7 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 
 # necessary when target is not tied to a file
-.PHONY: dep install ui proto devtools grpcweb
+.PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run
 
 dep:
 	go get -u github.com/golang/protobuf/protoc-gen-go
@@ -49,3 +49,11 @@ grpcweb:
 	@sudo mv $(tmpdir)/$(protoc-grpcweb-long) $(grpcweb-path)
 	@chmod +x $(grpcweb-path)
 	@rm -rf $(tmpdir)
+
+envoy-build:
+	@echo Building Autograder Envoy proxy
+	@cd envoy; docker build -t ag_envoy -f ./envoy/envoy.Dockerfile .
+
+envoy-run:
+	@echo Starting Autograder Envoy proxy
+	@cd envoy; docker run --name=envoy -p 8080:8080 --net=host ag_envoy
