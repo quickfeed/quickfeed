@@ -18,10 +18,7 @@ import (
 func GetGroup(request *pb.RecordRequest, db database.Database) (*pb.Group, error) {
 	group, err := db.GetGroup(request.ID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "Group not found")
-		}
-		return nil, err
+		err = status.Errorf(codes.NotFound, "Group not found")
 	}
 	return group, nil
 }
@@ -38,23 +35,16 @@ func GetGroupByUserAndCourse(request *pb.ActionRequest, db database.Database) (*
 
 	}
 	if enrollment.GroupID > 0 {
-		group, err := db.GetGroup(enrollment.GroupID)
-		if err != nil {
-			return nil, status.Errorf(codes.NotFound, "group not found")
-		}
-		return group, nil
+		return db.GetGroup(enrollment.GroupID)
 	}
-	return nil, status.Errorf(codes.NotFound, "group not found")
+	return nil, status.Errorf(codes.InvalidArgument, "user is not in group")
 }
 
 // GetGroups returns all groups for the given course cid.
 func GetGroups(request *pb.RecordRequest, db database.Database) (*pb.Groups, error) {
 	groups, err := db.GetGroupsByCourse(request.ID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "group not found")
-		}
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "group not found")
 	}
 	return &pb.Groups{Groups: groups}, nil
 }
@@ -71,10 +61,7 @@ func DeleteGroup(request *pb.Group, db database.Database) error {
 	if group.Status > pb.Group_REJECTED {
 		return status.Errorf(codes.Aborted, "accepted group cannot be deleted")
 	}
-	if err := db.DeleteGroup(request.ID); err != nil {
-		return err
-	}
-	return nil
+	return db.DeleteGroup(request.ID)
 }
 
 // NewGroup creates a new group for the given course cid.
@@ -83,10 +70,7 @@ func DeleteGroup(request *pb.Group, db database.Database) error {
 // by a teacher of the course using the UpdateGroup function below.
 func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*pb.Group, error) {
 	if _, err := db.GetCourse(request.CourseID); err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "course not found")
-		}
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "course not found")
 	}
 	// make a sclice of IDs from the pb.User slice
 	var userIds []uint64
@@ -96,7 +80,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 	// make sure that all users are in the database
 	users, err := db.GetUsers(userIds...)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "not all users are enrolled")
 	}
 
 	if len(users) != len(request.Users) {
@@ -118,7 +102,7 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 		case err == gorm.ErrRecordNotFound:
 			return nil, status.Errorf(codes.NotFound, "user not enrolled in this course")
 		case err != nil:
-			return nil, err
+			return nil, status.Errorf(codes.InvalidArgument, "invalid user information")
 		case enrollment.GroupID > 0:
 			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")
 		case enrollment.Status < pb.Enrollment_STUDENT:
@@ -143,15 +127,11 @@ func NewGroup(request *pb.Group, db database.Database, currentUser *pb.User) (*p
 		if err == database.ErrDuplicateGroup {
 			return nil, status.Errorf(codes.InvalidArgument, err.Error())
 		}
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "failed to create group in database")
 	}
 
 	// database method returns error, front end method wants a new group to be returned. Get it from the database as an extra check for successful group creation
-	newGroup, err := db.GetGroup(request.ID)
-	if err != nil {
-		return nil, err
-	}
-	return newGroup, nil
+	return db.GetGroup(request.ID)
 }
 
 // UpdateGroup updates the group for the given gid and course cid.
@@ -172,10 +152,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	// course must exist in the database
 	course, err := db.GetCourse(request.CourseID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return status.Errorf(codes.NotFound, "course not found")
-		}
-		return err
+		return status.Errorf(codes.NotFound, "course not found")
 	}
 	// group must exist in the database
 	_, err = db.GetGroup(request.ID)
@@ -196,7 +173,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		// such that they can later join other groups
 		for _, member := range request.Users {
 			if err = db.UpdateGroupEnrollment(member.ID, course.ID); err != nil {
-				return err
+				return status.Errorf(codes.Internal, "failed to update group enrollment")
 			}
 		}
 		return nil
@@ -220,7 +197,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		case err == gorm.ErrRecordNotFound:
 			return status.Errorf(codes.NotFound, "user not enrolled in this course")
 		case err != nil:
-			return err
+			return status.Errorf(codes.Internal, "failed to get enrollment from database")
 		case enrollment.GroupID > 0 && enrollment.GroupID != request.ID:
 			return status.Errorf(codes.InvalidArgument, "user already in another group")
 		case enrollment.Status < pb.Enrollment_STUDENT:
@@ -235,7 +212,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 	}
 	repos, err := db.GetRepositories(groupRepoQuery)
 	if err != nil {
-		return err
+		return status.Errorf(codes.Internal, "failed to get repositories from database")
 	}
 
 	if len(repos) == 0 {
@@ -243,8 +220,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		// if all checks pass, create group repository
 		repo, team, err := createGroupRepoAndTeam(ctx, s, course, request)
 		if err != nil {
-			log.Println("web: UpdateGroup could not create group repos and team: ", err.Error())
-			return err
+			return status.Errorf(codes.Internal, "failed to get create group repo and team")
 		}
 		// create database entry for group repository
 		groupRepo := &pb.Repository{
@@ -256,7 +232,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 			RepoType:     pb.Repository_USER, // TODO(meling) should we distinguish GroupRepo?
 		}
 		if err := db.CreateRepository(groupRepo); err != nil {
-			return err
+			return status.Errorf(codes.Internal, "failed to add repository to database")
 		}
 		request.TeamID = team.ID
 
@@ -265,7 +241,7 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		// first we need to retrieve the group to have the actual team ID
 		dbGroup, err := db.GetGroup(request.ID)
 		if err != nil {
-			return err
+			return status.Errorf(codes.NotFound, "group not found")
 		}
 		request.TeamID = dbGroup.TeamID
 		// users coming from frontend will often only have IDs
@@ -281,24 +257,19 @@ func UpdateGroup(ctx context.Context, request *pb.Group, db database.Database, s
 		}
 		request.Users = dbUsers
 		if err := updateGroupTeam(ctx, s, course, request); err != nil {
-			log.Println("groups.go: updateGroupTeam failed: ", err.Error())
-			return err
+			return status.Errorf(codes.Internal, "failed to update group team")
 		}
 	}
 
 	// update group
-	if err := db.UpdateGroup(&pb.Group{
+	return db.UpdateGroup(&pb.Group{
 		ID:       request.ID,
 		Name:     request.Name,
 		CourseID: request.CourseID,
 		TeamID:   request.TeamID,
 		Users:    users,
 		Status:   pb.Group_APPROVED,
-	}); err != nil {
-		return err
-	}
-
-	return nil
+	})
 }
 
 // createGroupRepoAndTeam creates the given group in course on the provided SCM.
@@ -310,8 +281,7 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 
 	dir, err := s.GetDirectory(ctx, course.DirectoryID)
 	if err != nil {
-		log.Println("web: createGroupRepoAndTeam error getting directory: ", err.Error())
-		return nil, nil, err
+		return nil, nil, status.Errorf(codes.Internal, "organization not found")
 	}
 
 	gitUserNames := fetchGitUserNames(group)
@@ -331,8 +301,7 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) 
 
 	dir, err := s.GetDirectory(ctx, c.DirectoryID)
 	if err != nil {
-		log.Println("web: updateGroupTeam error getting directory: ", err.Error())
-		return err
+		return status.Errorf(codes.NotFound, "organization not found")
 	}
 
 	opt := &scm.CreateTeamOptions{
@@ -343,8 +312,7 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) 
 	}
 
 	if err = s.UpdateTeamMembers(ctx, opt); err != nil {
-		log.Println("updateGroupTeam failed to UpdateTeamMembers: ", err.Error())
-		return err
+		return status.Errorf(codes.Internal, "failed to update team members")
 	}
 
 	return nil

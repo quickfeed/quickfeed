@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,7 +17,7 @@ import (
 func ListCourses(db database.Database) (*pb.Courses, error) {
 	courses, err := db.GetCourses()
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "course not found")
 	}
 	return &pb.Courses{Courses: courses}, nil
 }
@@ -29,16 +28,16 @@ func ListCourses(db database.Database) (*pb.Courses, error) {
 func ListCoursesWithEnrollment(request *pb.RecordRequest, db database.Database) (*pb.Courses, error) {
 	courses, err := db.GetCoursesByUser(request.ID, request.Statuses...)
 	if err != nil {
-		return nil, err
+		err = status.Errorf(codes.NotFound, "no courses found")
 	}
-	return &pb.Courses{Courses: courses}, nil
+	return &pb.Courses{Courses: courses}, err
 }
 
 // ListAssignments lists the assignments for the provided course.
 func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assignments, error) {
 	assignments, err := db.GetAssignmentsByCourse(request.ID)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "no assignments found")
 	}
 	return &pb.Assignments{Assignments: assignments}, nil
 }
@@ -54,10 +53,10 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 
 	if err := db.CreateEnrollment(&enrollment); err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return status.Errorf(codes.NotFound, "Record not found")
+			return status.Errorf(codes.NotFound, "record not found")
 
 		}
-		return err
+		return status.Errorf(codes.Internal, "could not create enrollment")
 	}
 	return nil
 }
@@ -68,7 +67,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "not found")
 		}
-		return err
+		return status.Errorf(codes.Internal, "could not update enrollment")
 	}
 
 	// TODO If the enrollment is accepted, create repositories and permissions for them with webooks.
@@ -78,15 +77,15 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		// Update enrollment for student in DB.
 		err = db.EnrollStudent(request.UserID, request.CourseID)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, "could not enroll student")
 		}
 		course, err := db.GetCourse(request.CourseID)
 		if err != nil {
-			return err
+			return status.Errorf(codes.NotFound, "course not found")
 		}
 		student, err := db.GetUser(request.UserID)
 		if err != nil {
-			return err
+			return status.Errorf(codes.NotFound, "user not found")
 		}
 
 		// check whether user repo already exists (happens when accepting previously rejected student)
@@ -97,13 +96,13 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		}
 		repos, err := db.GetRepositories(userRepoQuery)
 		if err != nil {
-			return err
+			return status.Errorf(codes.NotFound, "repository not found")
 		}
 		if len(repos) == 0 {
 			// create user repo and team on SCM.
 			repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
 			if err != nil {
-				return err
+				return status.Errorf(codes.Internal, "could not create user repository and team")
 			}
 			// add student repo to database if SCM interaction was successful
 			dbRepo := pb.Repository{
@@ -114,38 +113,39 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 				HTMLURL:      repo.WebURL,
 			}
 			if err := db.CreateRepository(&dbRepo); err != nil {
-				return err
+				return status.Errorf(codes.Internal, "could not create user repository")
 			}
 
 		}
 
 	case pb.Enrollment_TEACHER:
 		if err = db.EnrollTeacher(request.UserID, request.CourseID); err != nil {
-			return err
+			return status.Errorf(codes.Internal, "could not enroll teacher")
 		}
 		course, err := db.GetCourse(request.CourseID)
 		if err != nil {
-			return err
+			return status.Errorf(codes.NotFound, "course not found")
 		}
 		student, err := db.GetUser(request.UserID)
 		if err != nil {
-			return err
+			return status.Errorf(codes.NotFound, "user not found")
 		}
 		orgUpdate := &scm.OrgMembership{Username: student.GetLogin(), OrgID: course.GetDirectoryID(), Role: "admin"}
 		if err = s.UpdateOrgMembership(ctx, orgUpdate); err != nil {
-			log.Println("UpdateEnrollment could not update user's membership: ", err.Error())
-			return err
+			return status.Errorf(codes.Internal, "could not update user membership")
 		}
 
 	case pb.Enrollment_REJECTED:
-		err = db.RejectEnrollment(request.UserID, request.CourseID)
+		if err = db.RejectEnrollment(request.UserID, request.CourseID); err != nil {
+			err = status.Errorf(codes.Internal, "could not reject user")
+		}
 	case pb.Enrollment_PENDING:
-		err = db.SetPendingEnrollment(request.UserID, request.CourseID)
+		if err = db.SetPendingEnrollment(request.UserID, request.CourseID); err != nil {
+			err = status.Errorf(codes.Internal, "could not set pending")
+		}
 	}
-	if err != nil {
-		return err
-	}
-	return nil
+	// it will be nil or error, as expected by calling function
+	return err
 }
 
 func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, *scm.Team, error) {
@@ -179,7 +179,6 @@ func GetCourse(query *pb.RecordRequest, db database.Database) (*pb.Course, error
 			return nil, status.Errorf(codes.NotFound, "course not found")
 		}
 		return nil, status.Errorf(codes.NotFound, "failed to get course from database")
-
 	}
 	return course, nil
 }
@@ -288,14 +287,7 @@ func GetEnrollmentsByCourse(request *pb.EnrollmentRequest, db database.Database)
 
 // UpdateSubmission updates a submission
 func UpdateSubmission(request *pb.RecordRequest, db database.Database) error {
-
-	err := db.UpdateSubmissionByID(request.ID, true)
-	if err != nil {
-		return err
-	}
-
-	return nil
-
+	return db.UpdateSubmissionByID(request.ID, true)
 }
 
 // ListGroupSubmissions fetches all submissions from specific group
@@ -305,7 +297,7 @@ func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "not found")
 		}
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "no submissions found")
 	}
 
 	return &pb.Submissions{Submissions: submissions}, nil

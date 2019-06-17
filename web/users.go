@@ -5,6 +5,8 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
@@ -12,10 +14,8 @@ import (
 
 // JSONuser is a model to improve marshalling of user structure for authentication
 type JSONuser struct {
-	ID uint64 `json:"id"`
-
-	IsAdmin *bool `json:"isadmin"`
-
+	ID        uint64 `json:"id"`
+	IsAdmin   *bool  `json:"isadmin"`
 	Name      string `json:"name"`
 	StudentID string `json:"studentid"`
 	Email     string `json:"email"`
@@ -49,7 +49,7 @@ func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) 
 func GetUsers(db database.Database) (*pb.Users, error) {
 	users, err := db.GetUsers()
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "no users found")
 	}
 	return &pb.Users{Users: users}, nil
 }
@@ -58,7 +58,7 @@ func GetUsers(db database.Database) (*pb.Users, error) {
 func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
 	updateUser, err := db.GetUser(request.ID)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "user not found")
 	}
 
 	if request.Name != "" {
@@ -78,7 +78,7 @@ func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*p
 		updateUser.IsAdmin = request.IsAdmin
 	}
 	if err := db.UpdateUser(updateUser); err != nil {
-		return nil, err
+		err = status.Errorf(codes.Internal, "could not update user")
 	}
-	return updateUser, nil
+	return updateUser, err
 }
