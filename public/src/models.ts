@@ -155,40 +155,6 @@ export interface IAssignmentGroup {
     required: number;
 }
 
-export function courseUserStateToString(state: Enrollment.UserStatus[]): string {
-    return state.map((sta) => {
-        switch (sta) {
-            case Enrollment.UserStatus.PENDING:
-                return "pending";
-            case Enrollment.UserStatus.REJECTED:
-                return "rejected";
-            case Enrollment.UserStatus.STUDENT:
-                return "student";
-            case Enrollment.UserStatus.TEACHER:
-                return "teacher";
-            default:
-                return "";
-        }
-    }).join(",");
-}
-
-export function courseGroupStateToString(state: Group.GroupStatus[]): string {
-    return state.map((sta) => {
-        switch (sta) {
-            case Group.GroupStatus.PENDING:
-                return "pending";
-            case Group.GroupStatus.REJECTED:
-                return "rejected";
-            case Group.GroupStatus.APPROVED:
-                return "approved";
-            case Group.GroupStatus.DELETED:
-                return "deleted";
-            default:
-                return "";
-        }
-    }).join(",");
-}
-
 /**
  * The relation description between a user and course
  */
