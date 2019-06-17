@@ -205,8 +205,8 @@ export class Course extends jspb.Message {
   getProvider(): string;
   setProvider(value: string): void;
 
-  getDirectoryid(): number;
-  setDirectoryid(value: number): void;
+  getOrganizationid(): number;
+  setOrganizationid(value: number): void;
 
   getEnrolled(): Enrollment.UserStatus;
   setEnrolled(value: Enrollment.UserStatus): void;
@@ -243,7 +243,7 @@ export namespace Course {
     year: number,
     tag: string,
     provider: string,
-    directoryid: number,
+    organizationid: number,
     enrolled: Enrollment.UserStatus,
     enrollmentsList: Array<Enrollment.AsObject>,
     assignmentsList: Array<Assignment.AsObject>,
@@ -499,8 +499,8 @@ export class Repository extends jspb.Message {
   getId(): number;
   setId(value: number): void;
 
-  getDirectoryid(): number;
-  setDirectoryid(value: number): void;
+  getOrganizationid(): number;
+  setOrganizationid(value: number): void;
 
   getRepositoryid(): number;
   setRepositoryid(value: number): void;
@@ -528,7 +528,7 @@ export class Repository extends jspb.Message {
 export namespace Repository {
   export type AsObject = {
     id: number,
-    directoryid: number,
+    organizationid: number,
     repositoryid: number,
     userid: number,
     groupid: number,
@@ -565,7 +565,7 @@ export namespace Repositories {
   }
 }
 
-export class Directory extends jspb.Message {
+export class Organization extends jspb.Message {
   getId(): number;
   setId(value: number): void;
 
@@ -576,14 +576,14 @@ export class Directory extends jspb.Message {
   setAvatar(value: string): void;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Directory.AsObject;
-  static toObject(includeInstance: boolean, msg: Directory): Directory.AsObject;
-  static serializeBinaryToWriter(message: Directory, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Directory;
-  static deserializeBinaryFromReader(message: Directory, reader: jspb.BinaryReader): Directory;
+  toObject(includeInstance?: boolean): Organization.AsObject;
+  static toObject(includeInstance: boolean, msg: Organization): Organization.AsObject;
+  static serializeBinaryToWriter(message: Organization, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Organization;
+  static deserializeBinaryFromReader(message: Organization, reader: jspb.BinaryReader): Organization;
 }
 
-export namespace Directory {
+export namespace Organization {
   export type AsObject = {
     id: number,
     path: string,
@@ -591,23 +591,23 @@ export namespace Directory {
   }
 }
 
-export class Directories extends jspb.Message {
-  getDirectoriesList(): Array<Directory>;
-  setDirectoriesList(value: Array<Directory>): void;
-  clearDirectoriesList(): void;
-  addDirectories(value?: Directory, index?: number): Directory;
+export class Organizations extends jspb.Message {
+  getOrganizationsList(): Array<Organization>;
+  setOrganizationsList(value: Array<Organization>): void;
+  clearOrganizationsList(): void;
+  addOrganizations(value?: Organization, index?: number): Organization;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Directories.AsObject;
-  static toObject(includeInstance: boolean, msg: Directories): Directories.AsObject;
-  static serializeBinaryToWriter(message: Directories, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Directories;
-  static deserializeBinaryFromReader(message: Directories, reader: jspb.BinaryReader): Directories;
+  toObject(includeInstance?: boolean): Organizations.AsObject;
+  static toObject(includeInstance: boolean, msg: Organizations): Organizations.AsObject;
+  static serializeBinaryToWriter(message: Organizations, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Organizations;
+  static deserializeBinaryFromReader(message: Organizations, reader: jspb.BinaryReader): Organizations;
 }
 
-export namespace Directories {
+export namespace Organizations {
   export type AsObject = {
-    directoriesList: Array<Directory.AsObject>,
+    organizationsList: Array<Organization.AsObject>,
   }
 }
 
@@ -654,6 +654,9 @@ export class ActionRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
+  getProvider(): string;
+  setProvider(value: string): void;
+
   getStatus(): Enrollment.UserStatus;
   setStatus(value: Enrollment.UserStatus): void;
 
@@ -674,30 +677,9 @@ export namespace ActionRequest {
     userid: number,
     groupid: number,
     courseid: number,
+    provider: string,
     status: Enrollment.UserStatus,
     groupstatus: Group.GroupStatus,
-  }
-}
-
-export class DirectoryRequest extends jspb.Message {
-  getProvider(): string;
-  setProvider(value: string): void;
-
-  getCourseid(): number;
-  setCourseid(value: number): void;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): DirectoryRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: DirectoryRequest): DirectoryRequest.AsObject;
-  static serializeBinaryToWriter(message: DirectoryRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): DirectoryRequest;
-  static deserializeBinaryFromReader(message: DirectoryRequest, reader: jspb.BinaryReader): DirectoryRequest;
-}
-
-export namespace DirectoryRequest {
-  export type AsObject = {
-    provider: string,
-    courseid: number,
   }
 }
 
@@ -708,8 +690,8 @@ export class RepositoryRequest extends jspb.Message {
   getType(): Repository.Type;
   setType(value: Repository.Type): void;
 
-  getDirectoryid(): number;
-  setDirectoryid(value: number): void;
+  getOrganizationid(): number;
+  setOrganizationid(value: number): void;
 
   getRepositoryid(): number;
   setRepositoryid(value: number): void;
@@ -732,7 +714,7 @@ export namespace RepositoryRequest {
   export type AsObject = {
     id: number,
     type: Repository.Type,
-    directoryid: number,
+    organizationid: number,
     repositoryid: number,
     userid: number,
     courseid: number,

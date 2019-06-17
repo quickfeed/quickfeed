@@ -62,7 +62,7 @@ message Course {
     uint32 year = 5;
     string tag = 6;
     string provider = 7;
-    uint64 directoryID = 8;
+    uint64 organizationID = 8;
     Enrollment.UserStatus enrolled = 9;
 
     repeated Enrollment enrollments = 10;
@@ -138,7 +138,7 @@ message Repository {
         COURSEINFO = 4;
     }
     uint64 ID = 1;
-    uint64 directoryID = 2;
+    uint64 organizationID = 2;
     uint64 repositoryID = 3;
     uint64 userID = 4;
     uint64 groupID = 5;
@@ -150,14 +150,14 @@ message Repositories {
     repeated Repository repositories = 1;
 }
 
-message Directory {
+message Organization {
     uint64 ID = 1;
     string path = 2;
     string avatar = 3;
 }
 
-message Directories {
-    repeated Directory directories = 1;
+message Organizations {
+    repeated Organization organizations = 1;
 }
 
 ////    REQUESTS AND RESPONSES      \\\\
@@ -175,19 +175,15 @@ message ActionRequest {
     uint64 userID = 2;
     uint64 groupID = 3;
     uint64 courseID = 4;
-    Enrollment.UserStatus status = 5;
-    Group.GroupStatus groupStatus = 6;
-}
-
-message DirectoryRequest {
-    string provider = 1;
-    uint64 courseID = 2;
+    string provider = 5;
+    Enrollment.UserStatus status = 6;
+    Group.GroupStatus groupStatus = 7;
 }
 
 message RepositoryRequest {
     uint64 ID = 1;
     Repository.Type type = 2;
-    uint64 directoryID = 3;
+    uint64 organizationID = 3;
     uint64 repositoryID = 4;
     uint64 userID = 5;
     uint64 courseID = 6;
@@ -255,7 +251,7 @@ service AutograderService {
     rpc GetAssignments(RecordRequest) returns (Assignments) {} 
     rpc GetRepositoryURL(RepositoryRequest) returns (URLResponse){}
     rpc GetProviders(Void) returns (Providers) {}
-    rpc GetDirectories (DirectoryRequest) returns (Directories) {}
+    rpc GetOrganizations (ActionRequest) returns (Organizations) {}
 
     // The sole purpose of this RPC is to provide a reference to Repository type to TypeScript client
     // Might later be used as a more general type for retrieval of repo information 

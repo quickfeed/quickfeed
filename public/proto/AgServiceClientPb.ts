@@ -16,12 +16,11 @@ import {
   Assignments,
   Course,
   Courses,
-  Directories,
-  DirectoryRequest,
   EnrollmentRequest,
   Enrollments,
   Group,
   Groups,
+  Organizations,
   Providers,
   RecordRequest,
   Repository,
@@ -601,25 +600,25 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoGetDirectories = new grpcWeb.AbstractClientBase.MethodInfo(
-    Directories,
-    (request: DirectoryRequest) => {
+  methodInfoGetOrganizations = new grpcWeb.AbstractClientBase.MethodInfo(
+    Organizations,
+    (request: ActionRequest) => {
       return request.serializeBinary();
     },
-    Directories.deserializeBinary
+    Organizations.deserializeBinary
   );
 
-  getDirectories(
-    request: DirectoryRequest,
+  getOrganizations(
+    request: ActionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Directories) => void) {
+               response: Organizations) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/GetDirectories',
+        '/AutograderService/GetOrganizations',
       request,
       metadata || {},
-      this.methodInfoGetDirectories,
+      this.methodInfoGetOrganizations,
       callback);
   }
 

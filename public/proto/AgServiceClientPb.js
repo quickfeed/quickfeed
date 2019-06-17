@@ -85,9 +85,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Providers, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Providers.deserializeBinary);
-        this.methodInfoGetDirectories = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Directories, function (request) {
+        this.methodInfoGetOrganizations = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Organizations, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.Directories.deserializeBinary);
+        }, ag_pb_1.Organizations.deserializeBinary);
         this.methodInfoGetRepository = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Repository, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Repository.deserializeBinary);
@@ -199,9 +199,9 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetProviders', request, metadata || {}, this.methodInfoGetProviders, callback);
     };
-    AutograderServiceClient.prototype.getDirectories = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.getOrganizations = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetDirectories', request, metadata || {}, this.methodInfoGetDirectories, callback);
+            '/AutograderService/GetOrganizations', request, metadata || {}, this.methodInfoGetOrganizations, callback);
     };
     AutograderServiceClient.prototype.getRepository = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
