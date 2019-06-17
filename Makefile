@@ -50,6 +50,10 @@ grpcweb:
 	@chmod +x $(grpcweb-path)
 	@rm -rf $(tmpdir)
 
+typescript:
+	@echo "Fetch typescript compiler (requires sudo access)"
+	@npm install -g typescript
+
 envoy-build:
 	@echo Building Autograder Envoy proxy
 	@cd envoy; docker build -t ag_envoy -f ./envoy/envoy.Dockerfile .
