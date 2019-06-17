@@ -6,7 +6,7 @@ import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
-import { Course, Directory, Void } from "../../../proto/ag_pb"
+import { Course, Organization, Void } from "../../../proto/ag_pb"
 
 interface ICourseFormProps<T> {
     className?: string;
@@ -23,7 +23,7 @@ interface ICourseFormStates {
     tag: string;
     year: string;
     provider: string;
-    directoryid: number;
+    orgid: number;
     organisations: JSX.Element | null;
     errorFlash: JSX.Element | null;
 }
@@ -47,7 +47,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             tag: this.props.courseData ? this.props.courseData.getTag() : "",
             year: this.props.courseData ? this.props.courseData.getYear().toString() : "",
             provider: this.props.courseData ? this.props.courseData.getProvider() : "",
-            directoryid: this.props.courseData ? this.props.courseData.getDirectoryid() : 0,
+            orgid: this.props.courseData ? this.props.courseData.getOrganizationid() : 0,
             organisations: null,
             errorFlash: null,
         };
@@ -188,7 +188,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         courseData.setTag(this.state.tag);
         courseData.setYear(parseInt(this.state.year, 10));
         courseData.setProvider(this.state.provider);
-        courseData.setDirectoryid(this.state.directoryid);
+        courseData.setOrganizationid(this.state.orgid);
        
         return await this.props.courseMan.updateCourse(courseId, courseData);
 
@@ -201,7 +201,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         courseData.setTag(this.state.tag);
         courseData.setYear(parseInt(this.state.year, 10));
         courseData.setProvider(this.state.provider);
-        courseData.setDirectoryid(this.state.directoryid);
+        courseData.setOrganizationid(this.state.orgid);
 
         return await this.props.courseMan.createNewCourse(courseData);
     }
@@ -220,7 +220,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         const elem = e.target;
         if (dirId) {
             this.setState({
-                directoryid: dirId,
+                orgid: dirId,
             });
             let sibling = elem.parentNode.firstChild;
             for (; sibling; sibling = sibling.nextSibling) {
@@ -233,7 +233,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     }
 
     private async getOrganizations(provider: string): Promise<void> {
-        const directories = await this.props.courseMan.getDirectories(provider);
+        const directories = await this.props.courseMan.getOrganizations(provider);
         this.setState({
             provider,
             errorFlash: null,
@@ -241,7 +241,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         this.updateOrganisationDivs(directories);
     }
 
-    private updateOrganisationDivs(orgs: Directory[]): void {
+    private updateOrganisationDivs(orgs: Organization[]): void {
         const organisationDetails: JSX.Element[] = [];
         for (let i: number = 0; i < orgs.length; i++) {
             organisationDetails.push(
@@ -314,7 +314,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
         this.setState({
             organisations: orgDivs,
-            directoryid: 0,
+            orgid: 0,
         });
     }
 
@@ -332,7 +332,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         if (this.state.provider === "") {
             errors.push("Provider cannot be blank.");
         }
-        if (this.state.directoryid === 0) {
+        if (this.state.orgid === 0) {
             errors.push("Organisation cannot be blank.");
         }
         const year = parseInt(this.state.year, 10);

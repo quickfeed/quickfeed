@@ -18,8 +18,7 @@ import {
     Group,
     Groups,
     Void,
-    Directories,
-    DirectoryRequest,
+    Organizations,
     URLResponse,
     EnrollmentRequest,
     Enrollment,
@@ -247,10 +246,10 @@ export class GrpcManager {
         return this.grpcSend<Providers>(this.agService.getProviders, request);
     }
 
-    public getDirectories(provider: string): Promise<IGrpcResponse<Directories>> {
-        const request = new DirectoryRequest();
+    public getOrganizations(provider: string): Promise<IGrpcResponse<Organizations>> {
+        const request = new ActionRequest();
         request.setProvider(provider);
-        return this.grpcSend<Directories>(this.agService.getDirectories, request);
+        return this.grpcSend<Organizations>(this.agService.getOrganizations, request);
     }
 
     // /* UTILITY */ //

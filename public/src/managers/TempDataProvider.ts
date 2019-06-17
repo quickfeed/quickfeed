@@ -13,7 +13,7 @@ import { IMap, MapHelper, mapify } from "../map";
 import { IUserProvider } from "./UserManager";
 
 import { ICourseEnrollment, IUserEnrollment } from "../managers";
-import { Course, Group, Enrollment, User, Directory } from "../../proto/ag_pb";
+import { Course, Group, Enrollment, User, Organization } from "../../proto/ag_pb";
 import { isNull } from "util";
 
 interface IDummyUser extends User {
@@ -53,7 +53,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented.");
     }
 
-    public async getDirectories(provider: string): Promise<Directory[]> {
+    public async getOrganizations(provider: string): Promise<Organization[]> {
         throw new Error("Not implemented");
     }
 
@@ -449,7 +449,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         course0.setTag("Spring");
         course0.setYear(2017);
         course0.setProvider("github");
-        course0.setDirectoryid(23650610);
+        course0.setOrganizationid(23650610);
 
         course1.setId(1);
         course1.setName("Algorithms and Datastructures");
@@ -457,7 +457,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         course1.setTag("Spring");
         course1.setYear(2017);
         course1.setProvider("github");
-        course1.setDirectoryid(23650611);
+        course1.setOrganizationid(23650611);
 
         course2.setId(2);
         course2.setName("Databases");
@@ -465,7 +465,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         course2.setTag("Spring");
         course2.setYear(2017);
         course2.setProvider("github");
-        course2.setDirectoryid(23650612);
+        course2.setOrganizationid(23650612);
 
         course3.setId(3);
         course3.setName("Communication Technology");
@@ -473,7 +473,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         course3.setTag("Spring");
         course3.setYear(2017);
         course3.setProvider("github");
-        course3.setDirectoryid(23650613);
+        course3.setOrganizationid(23650613);
 
         course4.setId(4);
         course4.setName("Operating Systems");
@@ -481,7 +481,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         course4.setTag("Spring");
         course4.setYear(2017);
         course4.setProvider("github");
-        course4.setDirectoryid(23650614);
+        course4.setOrganizationid(23650614);
 
         tempCourses.push(course0);
         tempCourses.push(course1);
@@ -603,24 +603,15 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    private getLocalDirectories(): Directory[] {
-        const localDirectory = new Directory();
-        localDirectory.setId(23650610);
-        localDirectory.setPath("dat520-2017");
-        localDirectory.setAvatar("https://avatars2.githubusercontent.com/u/23650610?v=3");
+    private getLocalOrgs(): Organization[] {
+        const localOrg = new Organization();
+        localOrg.setId(23650610);
+        localOrg.setPath("dat520-2017");
+        localOrg.setAvatar("https://avatars2.githubusercontent.com/u/23650610?v=3");
 
-        const localDirectories: Directory[] = [];
-        localDirectories.push(localDirectory);
-        return localDirectories;
-        /*return (
-            [
-                {
-                    id: 23650610,
-                    path: "dat520-2017",
-                    avatar: "https://avatars2.githubusercontent.com/u/23650610?v=3",
-                },
-            ]
-        );*/
+        const localOrgs: Organization[] = [];
+        localOrgs.push(localOrg);
+        return localOrgs;
     }
 
     private addLocalCourseGroups(): void {

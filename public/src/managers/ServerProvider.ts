@@ -4,7 +4,7 @@ import {Assignment,
         User, 
         Group, 
         Submission, 
-        Directory,
+        Organization,
         Void} from "../../proto/ag_pb";
 import {
     IAssignment,
@@ -394,8 +394,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getDirectories(provider: string): Promise<Directory[]> {
-        const result = await this.grpcHelper.getDirectories(provider);
+    public async getOrganizations(provider: string): Promise<Organization[]> {
+        const result = await this.grpcHelper.getOrganizations(provider);
         if (result.statusCode !== 0 || !result.data) {
             if (result.message) {
                 this.informUser(result.message, "getAllUser");
@@ -403,7 +403,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return [];
         }
 
-        return result.data.getDirectoriesList();
+        return result.data.getOrganizationsList();
     }
 
     public async getProviders(): Promise<string[]> {

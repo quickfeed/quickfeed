@@ -17,7 +17,7 @@ import {
 
 import { UserManager } from "../managers";
 import { ILogger } from "./LogManager";
-import { Course, Enrollment, User, Directory, Group, Void } from "../../proto/ag_pb";
+import { Course, Enrollment, User, Organization, Group, Void } from "../../proto/ag_pb";
 
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
@@ -44,7 +44,7 @@ export interface ICourseProvider {
 
     getAllLabInfos(courseID: number, userId: number): Promise<IMap<ISubmission>>;
     getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>>;
-    getDirectories(provider: string): Promise<Directory[]>;
+    getOrganizations(provider: string): Promise<Organization[]>;
     getProviders(): Promise<string[]>;
     refreshCoursesFor(courseID: number): Promise<any>;
     approveSubmission(submissionID: number): Promise<void>;
@@ -380,8 +380,8 @@ export class CourseManager {
      * Get all available directories or organisations for a single provider
      * @param provider The provider to load information from, for instance github og gitlab
      */
-    public async getDirectories(provider: string): Promise<Directory[]> {
-        return await this.courseProvider.getDirectories(provider);
+    public async getOrganizations(provider: string): Promise<Organization[]> {
+        return await this.courseProvider.getOrganizations(provider);
     }
 
     public async getProviders(): Promise<string[]> {
