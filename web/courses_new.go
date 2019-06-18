@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
@@ -80,6 +83,25 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		}
 	}
 
+	// we want to add course creator to teacher team
+	courseCreator, err := db.GetUser(request.GetCourseCreatorID())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "internal database error")
+	}
+	// create two teams on course organization: one for all students and one for all teachers
+	opt := &scm.CreateTeamOptions{
+		Organization: org,
+		TeamName:     "teachers",
+		Users:        []string{courseCreator.GetLogin()},
+	}
+	if _, err = s.CreateTeam(ctx, opt); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create teacher team")
+	}
+	if _, err = s.CreateTeam(ctx, &scm.CreateTeamOptions{Organization: org, TeamName: "students"}); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create student team")
+	}
+
+	// then add course to the database
 	if err := db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
 		return nil, err
 	}
