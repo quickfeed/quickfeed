@@ -9,11 +9,6 @@ export interface IUser {
     isadmin: boolean;
 }
 
-export interface IGroup {
-    id: number;
-    name: string;
-
-}
 
 /**
  * Checks if value is compatible with the ICourse interface
@@ -216,6 +211,7 @@ export interface ICoursesWithAssignments {
 /**
  * INewGroup represent data structure for a new group
  */
+
 export interface INewGroup {
     name: string;
     userids: number[];
