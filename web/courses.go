@@ -185,6 +185,7 @@ func createUserRepo(c context.Context, s scm.SCM, orgID uint64, student *pb.User
 		Organization: org,
 		Path:         pb.StudentRepoName(student.GetLogin()),
 		Private:      true,
+		Owner:        student.GetLogin(),
 	}
 
 	return s.CreateRepository(c, opt)

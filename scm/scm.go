@@ -114,6 +114,8 @@ type CreateRepositoryOptions struct {
 	Path         string
 	Organization *pb.Organization
 	Private      bool
+	// we can create user repositories
+	Owner string
 }
 
 // CreateHookOptions contains information on how to create a webhook.
