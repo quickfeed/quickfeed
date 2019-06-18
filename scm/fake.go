@@ -150,6 +150,12 @@ func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, 
 	return nil, nil
 }
 
+// AddTeamMember implements the scm interface
+func (s *FakeSCM) AddTeamMember(ctx context.Context, opt *AddMemberOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // UpdateTeamMembers implements the SCM interface.
 func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
 	// TODO no implementation provided yet

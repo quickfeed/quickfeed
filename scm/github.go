@@ -56,7 +56,7 @@ func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOption
 
 // GetOrganization implements the SCM interface.
 func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
-	org, _, err := s.client.Organizations.GetByID(ctx, int(id))
+	org, _, err := s.client.Organizations.GetByID(ctx, int64(id))
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organiz
 func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, *Team, error) {
 	repo, err := s.CreateRepository(ctx, opt)
 	if err != nil {
-		log.Println("scm: createRepoAndTeam - error creating repo: ", err.Error())
-		return nil, nil, err
+		return nil, nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
@@ -82,8 +81,7 @@ func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepository
 		Users:        gitUserNames,
 	})
 	if err != nil {
-		log.Println("scm: createRepoAndTeam - error creating team: ", err.Error())
-		return nil, nil, err
+		return nil, nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	err = s.AddTeamRepo(ctx, &AddTeamRepoOptions{
@@ -92,8 +90,7 @@ func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepository
 		Repo:   repo.Path,
 	})
 	if err != nil {
-		log.Println("scm: createRepoAndTeam - error adding team repo: ", err.Error())
-		return nil, nil, err
+		return nil, nil, status.Errorf(codes.Internal, err.Error())
 	}
 	return repo, team, nil
 }
@@ -166,7 +163,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) (
 
 // DeleteRepository implements the SCM interface.
 func (s *GithubSCM) DeleteRepository(ctx context.Context, id uint64) error {
-	repo, _, err := s.client.Repositories.GetByID(ctx, int(id))
+	repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
 	if err != nil {
 		return err
 	}
@@ -182,9 +179,8 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, e
 	var hooks []*Hook
 	for _, hook := range githubHooks {
 		hooks = append(hooks, &Hook{
-			ID:   uint64(hook.GetID()),
-			Name: hook.GetName(),
-			URL:  hook.GetURL(),
+			ID:  uint64(hook.GetID()),
+			URL: hook.GetURL(),
 		})
 	}
 	return hooks, err
@@ -194,9 +190,7 @@ const autograderHookName = "web"
 
 // CreateHook implements the SCM interface.
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
-	name := autograderHookName
 	_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, &github.Hook{
-		Name: &name,
 		Config: map[string]interface{}{
 			"url":          opt.URL,
 			"secret":       opt.Secret,
@@ -212,14 +206,14 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 
 // CreateTeam implements the SCM interface.
 func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
-	t, _, err := s.client.Organizations.CreateTeam(ctx, opt.Organization.Path, &github.Team{
-		Name: &opt.TeamName,
+	t, _, err := s.client.Teams.CreateTeam(ctx, opt.Organization.Path, github.NewTeam{
+		Name: opt.TeamName,
 	})
 	if err != nil {
 		return nil, err
 	}
 	for _, user := range opt.Users {
-		_, _, err = s.client.Organizations.AddTeamMembership(ctx, t.GetID(), user, nil)
+		_, _, err = s.client.Teams.AddTeamMembership(ctx, t.GetID(), user, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -234,7 +228,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 // DeleteTeam implements the SCM interface.
 func (s *GithubSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
 
-	if _, err := s.client.Organizations.DeleteTeam(ctx, int(teamID)); err != nil {
+	if _, err := s.client.Teams.DeleteTeam(ctx, int64(teamID)); err != nil {
 		return err
 	}
 	return nil
@@ -242,7 +236,7 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
 
 // GetTeams implements the scm interface
 func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
-	gitTeams, _, err := s.client.Organizations.ListTeams(ctx, org.Path, &github.ListOptions{})
+	gitTeams, _, err := s.client.Teams.ListTeams(ctx, org.Path, &github.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -254,22 +248,44 @@ func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team
 	return teams, nil
 }
 
+// AddTeamMember implements the scm interface
+func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *AddMemberOptions) error {
+	// if no id provided get it from github by slug
+	if opt.TeamID < 1 {
+		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, opt.TeamSlug)
+		if err != nil {
+			return status.Errorf(codes.Internal, err.Error())
+		}
+		opt.TeamID = team.GetID()
+	}
+
+	isAlreadyMember, _, err := s.client.Teams.IsTeamMember(ctx, opt.TeamID, opt.Username)
+	if err != nil {
+		return err
+	}
+	if isAlreadyMember {
+		return nil
+	}
+	_, _, err = s.client.Teams.AddTeamMembership(ctx, opt.TeamID, opt.Username, &github.TeamAddTeamMembershipOptions{})
+	return err
+}
+
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
-	groupTeam, _, err := s.client.Organizations.GetTeam(ctx, int(opt.TeamID))
+	groupTeam, _, err := s.client.Teams.GetTeam(ctx, int64(opt.TeamID))
 	if err != nil {
 		return err
 	}
 
 	// check whether group members are already in team; add missing members
 	for _, member := range opt.Users {
-		isMember, _, err := s.client.Organizations.IsTeamMember(ctx, groupTeam.GetID(), member)
+		isMember, _, err := s.client.Teams.IsTeamMember(ctx, groupTeam.GetID(), member)
 		if err != nil {
 			log.Println("GitHub UpdateTeamMembers could not check user against the team: ", err.Error())
 			return err
 		}
 		if !isMember {
-			_, _, err = s.client.Organizations.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
+			_, _, err = s.client.Teams.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
 			if err != nil {
 				log.Println("GitHub UpdateTeamMembers could not add user ", member, " to the team ", groupTeam.GetName(), ": ", err.Error())
 				return err
@@ -278,7 +294,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOption
 	}
 
 	// find current team members
-	oldUsers, _, err := s.client.Organizations.ListTeamMembers(ctx, groupTeam.GetID(), nil)
+	oldUsers, _, err := s.client.Teams.ListTeamMembers(ctx, groupTeam.GetID(), nil)
 	if err != nil {
 		log.Println("GitHub UpdateTeamMembers could not list team members: ", err.Error())
 		return err
@@ -292,7 +308,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOption
 			}
 		}
 		if toRemove {
-			_, err = s.client.Organizations.RemoveTeamMembership(ctx, groupTeam.GetID(), teamMember.GetLogin())
+			_, err = s.client.Teams.RemoveTeamMembership(ctx, groupTeam.GetID(), teamMember.GetLogin())
 			if err != nil {
 				log.Println("GitHub UpdateTeamMembers could not remove user ", teamMember.GetLogin(), " from team ", groupTeam.GetName(), ": ", err.Error())
 				return err
@@ -313,13 +329,10 @@ func (s *GithubSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 
 // AddTeamRepo implements the SCM interface.
 func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
-	_, err := s.client.Organizations.AddTeamRepo(ctx, int(opt.TeamID), opt.Owner, opt.Repo, &github.OrganizationAddTeamRepoOptions{
+	_, err := s.client.Teams.AddTeamRepo(ctx, int64(opt.TeamID), opt.Owner, opt.Repo, &github.TeamAddTeamRepoOptions{
 		Permission: "push", // This make sure that users can pull and push
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // GetUserName implements the SCM interface.
@@ -333,7 +346,7 @@ func (s *GithubSCM) GetUserName(ctx context.Context) (string, error) {
 
 // GetUserNameByID implements the SCM interface.
 func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
-	user, _, err := s.client.Users.GetByID(ctx, int(remoteID))
+	user, _, err := s.client.Users.GetByID(ctx, int64(remoteID))
 	if err != nil {
 		return "", err
 	}
@@ -342,7 +355,7 @@ func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 
 // GetPaymentPlan implements the SCM interface.
 func (s *GithubSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
-	org, _, err := s.client.Organizations.GetByID(ctx, int(orgID))
+	org, _, err := s.client.Organizations.GetByID(ctx, int64(orgID))
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +369,7 @@ func (s *GithubSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentP
 // UpdateRepository implements the SCM interface
 func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
 	// TODO - make this more flexible rather than only making stuff private.
-	gitRepo, _, err := s.client.Repositories.GetByID(ctx, int(repo.ID))
+	gitRepo, _, err := s.client.Repositories.GetByID(ctx, int64(repo.ID))
 	if err != nil {
 		return err
 	}
@@ -373,7 +386,7 @@ func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) erro
 // GetOrgMembership implements the SCM interface
 func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
 
-	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int(opt.OrgID))
+	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +402,7 @@ func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*
 // UpdateOrgMembership implements the SCM interface
 func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership) error {
 
-	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int(opt.OrgID))
+	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))
 	if err != nil {
 		return err
 	}
