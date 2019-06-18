@@ -45,6 +45,8 @@ type SCM interface {
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember as a member to a team.
 	AddTeamMember(context.Context, *AddMemberOptions) error
+	// RemoveTeamMember removes team member
+	RemoveTeamMember(context.Context, *AddMemberOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team
 	UpdateTeamMembers(context.Context, *CreateTeamOptions) error
 	// GetUserName returns the currently logged in user's login name.

@@ -270,6 +270,30 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *AddMemberOptions) er
 	return err
 }
 
+// RemoveTeamMember implements the scm interface
+func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *AddMemberOptions) error {
+	// if no id provided get it from github by slug
+	if opt.TeamID < 1 {
+		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, opt.TeamSlug)
+		if err != nil {
+			return status.Errorf(codes.Internal, err.Error())
+		}
+		opt.TeamID = team.GetID()
+	}
+
+	isMember, _, err := s.client.Teams.IsTeamMember(ctx, opt.TeamID, opt.Username)
+	if err != nil {
+		return err
+	}
+	if !isMember {
+		return nil
+	}
+
+	_, err = s.client.Teams.RemoveTeamMembership(ctx, opt.TeamID, opt.Username)
+
+	return err
+}
+
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
 	groupTeam, _, err := s.client.Teams.GetTeam(ctx, int64(opt.TeamID))
