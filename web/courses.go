@@ -74,11 +74,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 	var err error
 	switch request.Status {
 	case pb.Enrollment_STUDENT:
-		// Update enrollment for student in DB.
-		err = db.EnrollStudent(request.UserID, request.CourseID)
-		if err != nil {
-			return status.Errorf(codes.Internal, "could not enroll student")
-		}
+
 		course, err := db.GetCourse(request.CourseID)
 		if err != nil {
 			return status.Errorf(codes.NotFound, "course not found")
@@ -99,16 +95,16 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			return status.Errorf(codes.NotFound, "repository not found")
 		}
 		if len(repos) == 0 {
-			/*
-				// create user repo and team on SCM.
-				repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
-				if err != nil {
-					return status.Errorf(codes.Internal, "could not create user repository and team")
-				}*/
-			// create only repo to avoid creating personal team
-			repo, err := createUserRepo(ctx, s, course.OrganizationID, student)
+
+			// create user repo and team on SCM.
+			repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
 			if err != nil {
-				return status.Errorf(codes.Internal, "could not create user repository")
+				return status.Errorf(codes.Internal, "could not create user repository and team")
+			}
+
+			err = db.EnrollStudent(request.UserID, request.CourseID)
+			if err != nil {
+				return status.Errorf(codes.Internal, "could not enroll student")
 			}
 			// add student repo to database if SCM interaction was successful
 			dbRepo := pb.Repository{
@@ -127,9 +123,6 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		}
 
 	case pb.Enrollment_TEACHER:
-		if err = db.EnrollTeacher(request.UserID, request.CourseID); err != nil {
-			return status.Errorf(codes.Internal, "could not enroll teacher")
-		}
 		course, err := db.GetCourse(request.CourseID)
 		if err != nil {
 			return status.Errorf(codes.NotFound, "course not found")
@@ -138,9 +131,14 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if err != nil {
 			return status.Errorf(codes.NotFound, "user not found")
 		}
+		// we want to update org membership first, as it is more prone to errors user could react to
 		orgUpdate := &scm.OrgMembership{Username: student.GetLogin(), OrgID: course.GetOrganizationID(), Role: "admin"}
 		if err = s.UpdateOrgMembership(ctx, orgUpdate); err != nil {
-			return status.Errorf(codes.Internal, "could not update user membership")
+			return status.Errorf(codes.Internal, fmt.Sprintln("could not update github membership, reason: ", err.Error()))
+		}
+
+		if err = db.EnrollTeacher(student.ID, course.ID); err != nil {
+			return status.Errorf(codes.Internal, "could not enroll teacher")
 		}
 		// add all teachers to teachers team
 		return addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_TEACHER)
@@ -182,7 +180,14 @@ func createUserRepo(c context.Context, s scm.SCM, orgID uint64, student *pb.User
 	if err != nil {
 		return nil, err
 	}
-	return s.CreateRepository(c, &scm.CreateRepositoryOptions{Path: pb.StudentRepoName(student.GetLogin()), Organization: org, Private: true})
+
+	opt := &scm.CreateRepositoryOptions{
+		Organization: org,
+		Path:         pb.StudentRepoName(student.GetLogin()),
+		Private:      true,
+	}
+
+	return s.CreateRepository(c, opt)
 }
 
 func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, status pb.Enrollment_UserStatus) error {
