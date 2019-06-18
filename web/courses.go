@@ -99,10 +99,16 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			return status.Errorf(codes.NotFound, "repository not found")
 		}
 		if len(repos) == 0 {
-			// create user repo and team on SCM.
-			repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
+			/*
+				// create user repo and team on SCM.
+				repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
+				if err != nil {
+					return status.Errorf(codes.Internal, "could not create user repository and team")
+				}*/
+			// create only repo to avoid creating personal team
+			repo, err := createUserRepo(ctx, s, course.OrganizationID, student)
 			if err != nil {
-				return status.Errorf(codes.Internal, "could not create user repository and team")
+				return status.Errorf(codes.Internal, "could not create user repository")
 			}
 			// add student repo to database if SCM interaction was successful
 			dbRepo := pb.Repository{
@@ -115,6 +121,8 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			if err := db.CreateRepository(&dbRepo); err != nil {
 				return status.Errorf(codes.Internal, "could not create user repository")
 			}
+			// instead of creating personal team we will add all students to students team
+			return addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT)
 
 		}
 
@@ -134,6 +142,8 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if err = s.UpdateOrgMembership(ctx, orgUpdate); err != nil {
 			return status.Errorf(codes.Internal, "could not update user membership")
 		}
+		// add all teachers to teachers team
+		return addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_TEACHER)
 
 	case pb.Enrollment_REJECTED:
 		if err = db.RejectEnrollment(request.UserID, request.CourseID); err != nil {
@@ -150,10 +160,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 
 func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, *scm.Team, error) {
 
-	ctx, cancel := context.WithTimeout(c, MaxWait)
-	defer cancel()
-
-	org, err := s.GetOrganization(ctx, course.OrganizationID)
+	org, err := s.GetOrganization(c, course.OrganizationID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -167,7 +174,41 @@ func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, stud
 		Private:      true,
 	}
 
-	return s.CreateRepoAndTeam(ctx, opt, teamName, []string{teamName})
+	return s.CreateRepoAndTeam(c, opt, teamName, []string{teamName})
+}
+
+func createUserRepo(c context.Context, s scm.SCM, orgID uint64, student *pb.User) (*scm.Repository, error) {
+	org, err := s.GetOrganization(c, orgID)
+	if err != nil {
+		return nil, err
+	}
+	return s.CreateRepository(c, &scm.CreateRepositoryOptions{Path: pb.StudentRepoName(student.GetLogin()), Organization: org, Private: true})
+}
+
+func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, status pb.Enrollment_UserStatus) error {
+
+	// get course organization
+	org, err := s.GetOrganization(c, orgID)
+	if err != nil {
+		return err
+	}
+
+	var slug string
+	// check whether user is teacher or not
+	switch status {
+	case pb.Enrollment_STUDENT:
+		slug = "students"
+	case pb.Enrollment_TEACHER:
+		slug = "teachers"
+	}
+
+	opt := &scm.AddMemberOptions{
+		Organization: org,
+		TeamSlug:     slug,
+		Username:     user.GetLogin(),
+	}
+
+	return s.AddTeamMember(c, opt)
 }
 
 // GetCourse find course by id and return JSON object.
