@@ -353,15 +353,6 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	return db.conn.Create(submission).Error
 }
 
-// GetSubmission implements the Database interface
-func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
-	var submission pb.Submission
-	if err := db.conn.Where(query).Last(&submission).Error; err != nil {
-		return nil, err
-	}
-	return &submission, nil
-}
-
 // UpdateSubmission implements the Database interface
 func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 	//TODO(meling) consider to make this into a transaction
@@ -373,39 +364,29 @@ func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 	return db.conn.Model(&pb.Submission{}).Update(submission).Error
 }
 
-// GetSubmissions implements the Database interface
-func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*pb.Submission, error) {
-	var course pb.Course
-	if err := db.conn.Preload("Assignments").First(&course, cid).Error; err != nil {
+// GetSubmission implements the Database interface
+func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
+	var submission pb.Submission
+	if err := db.conn.Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
-
-	var latestSubs []*pb.Submission
-	for _, a := range course.Assignments {
-		query := &pb.Submission{AssignmentID: a.GetID(), UserID: uid}
-		temp, err := db.GetSubmission(query)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				continue
-			}
-			return nil, err
-		}
-		latestSubs = append(latestSubs, temp)
-	}
-	return latestSubs, nil
+	return &submission, nil
 }
 
-// GetGroupSubmissions implements the Database interface
-func (db *GormDB) GetGroupSubmissions(cid uint64, gid uint64) ([]*pb.Submission, error) {
+// GetSubmissions implements the Database interface
+func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
 	var course pb.Course
-	if err := db.conn.Preload("Assignments").First(&course, cid).Error; err != nil {
+	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
 
+	// note that, this creates a query with possibly both user and group;
+	// it will only limit the number of submissions returned if both are supplied.
+	q := &pb.Submission{UserID: query.GetUserID(), GroupID: query.GetGroupID()}
 	var latestSubs []*pb.Submission
 	for _, a := range course.Assignments {
-		query := &pb.Submission{AssignmentID: a.GetID(), GroupID: gid}
-		temp, err := db.GetSubmission(query)
+		q.AssignmentID = a.GetID()
+		temp, err := db.GetSubmission(q)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				continue

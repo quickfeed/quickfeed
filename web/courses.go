@@ -275,7 +275,7 @@ func GetSubmission(request *pb.RecordRequest, db database.Database, currentUser 
 
 // ListSubmissions returns all the latests submissions for a user to a course
 func ListSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submissions, error) {
-	submissions, err := db.GetSubmissions(request.GetCourseID(), request.GetUserID())
+	submissions, err := db.GetSubmissions(request.GetCourseID(), &pb.Submission{UserID: request.GetUserID()})
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "not found")
@@ -287,7 +287,7 @@ func ListSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submi
 
 // ListGroupSubmissions fetches all submissions from specific group
 func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submissions, error) {
-	submissions, err := db.GetGroupSubmissions(request.GetCourseID(), request.GetGroupID())
+	submissions, err := db.GetSubmissions(request.GetCourseID(), &pb.Submission{GroupID: request.GetGroupID()})
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "not found")

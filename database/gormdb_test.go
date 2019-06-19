@@ -867,7 +867,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	}
 
 	// confirm that the submission is in the database
-	submissions, err := db.GetSubmissions(course.ID, user.ID)
+	submissions, err := db.GetSubmissions(course.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -892,7 +892,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	submissions, err = db.GetSubmissions(course.ID, user.ID)
+	submissions, err = db.GetSubmissions(course.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -904,7 +904,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	submissions, err = db.GetSubmissions(course.ID, user.ID)
+	submissions, err = db.GetSubmissions(course.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -916,8 +916,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 func TestGormDBGetNonExsistingSubmissions(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-
-	if _, err := db.GetSubmissions(10, 10); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetSubmissions(10, &pb.Submission{UserID: 10}); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
@@ -976,7 +975,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}
 
 	// confirm that the submission is in the database
-	submissions, err := db.GetSubmissions(course.ID, user.ID)
+	submissions, err := db.GetSubmissions(course.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1070,7 +1069,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 
 	// Even if there is three submission, only the latest for each assignment should be returned
 
-	submissions, err := db.GetSubmissions(c1.ID, user.ID)
+	submissions, err := db.GetSubmissions(c1.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1081,14 +1080,14 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		}
 		t.Errorf("have %#v want %#v", submissions, want)
 	}
-	data, err := db.GetSubmissions(c1.ID, user.ID)
+	data, err := db.GetSubmissions(c1.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetSubmissions(c2.ID, user.ID)
+	data, err = db.GetSubmissions(c2.ID, &pb.Submission{UserID: user.ID})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {
@@ -1453,7 +1452,7 @@ func TestGormDBGetGroupSubmissions(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if sub, err := db.GetGroupSubmissions(10, 10); err != gorm.ErrRecordNotFound {
+	if sub, err := db.GetSubmissions(10, &pb.Submission{GroupID: 10}); err != gorm.ErrRecordNotFound {
 		t.Errorf("got submission %v", sub)
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
@@ -1569,7 +1568,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 
 	// Even if there is three submission, only the latest for each assignment should be returned
 
-	submissions, err := db.GetGroupSubmissions(course.ID, group.ID)
+	submissions, err := db.GetSubmissions(course.ID, &pb.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1580,14 +1579,14 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		}
 		t.Errorf("have %#v want %#v", submissions, want)
 	}
-	data, err := db.GetGroupSubmissions(course.ID, group.ID)
+	data, err := db.GetSubmissions(course.ID, &pb.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 2 {
 		t.Errorf("Expected '%v' elements in the array, got '%v'", 2, len(data))
 	}
 	// Since there is no submissions, but the course and user exist, an empty array should be returned
-	data, err = db.GetGroupSubmissions(courseTwo.ID, group.ID)
+	data, err = db.GetSubmissions(courseTwo.ID, &pb.Submission{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	} else if len(data) != 0 {

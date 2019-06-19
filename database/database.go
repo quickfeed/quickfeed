@@ -53,13 +53,14 @@ type Database interface {
 	GetAssignmentsByCourse(uint64) ([]*pb.Assignment, error)
 	GetNextAssignment(cid, uid, gid uint64) (*pb.Assignment, error)
 
+	// CreateSubmission creates a submission in the database.
 	CreateSubmission(*pb.Submission) error
-	GetSubmission(query *pb.Submission) (*pb.Submission, error)
-
-	GetSubmissions(cid uint64, uid uint64) ([]*pb.Submission, error)
-	GetGroupSubmissions(cid uint64, gid uint64) ([]*pb.Submission, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(submissionID uint64, approved bool) error
+	// GetSubmission returns a single submission matching the given query.
+	GetSubmission(query *pb.Submission) (*pb.Submission, error)
+	// GetSubmissions returns a list of submission entries for the given course, matching the given query.
+	GetSubmissions(cid uint64, query *pb.Submission) ([]*pb.Submission, error)
 
 	CreateGroup(*pb.Group) error
 	// GetGroup returns the group with the specified group id.
