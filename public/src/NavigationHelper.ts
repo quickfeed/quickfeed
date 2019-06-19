@@ -2,9 +2,9 @@
 import { IEventData, newEvent } from "./event";
 
 export interface ITypeMap {
-    string: string;
-    boolean: boolean;
-    number: number;
+    string?: string;
+    boolean?: boolean;
+    number?: number;
 }
 
 export function trimChars(str: string, char: string): string {
@@ -178,21 +178,26 @@ export class NavigationHelper {
         return navObj.func.call(this.thisObject, navInfo);
     }
 
-    private parseValue<K extends keyof ITypeMap>(value: string, type: K): ITypeMap[K] | undefined {
+    private parseValue<K extends keyof ITypeMap>(value: string, type: K): ITypeMap | undefined {
         switch (type) {
             case "string":
-                return value;
+                var mapp: ITypeMap = {string: value}
+                return mapp;
             case "number":
                 const num = parseFloat(value);
                 if (isNaN(num)) {
                     return undefined;
                 }
-                return num;
+                var mapp: ITypeMap = {number: num}
+                return mapp;
             case "boolean":
                 if (value.toLowerCase() === "true") {
-                    return true;
+                    var mapp: ITypeMap = {boolean: true}
+                    return mapp;
                 } else if (value.toLowerCase() === "false") {
-                    return false;
+                    
+                    var mapp: ITypeMap = {boolean: false}
+                    return mapp;
                 }
                 return undefined;
         }
