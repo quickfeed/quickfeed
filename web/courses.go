@@ -275,8 +275,7 @@ func GetSubmission(request *pb.RecordRequest, db database.Database, currentUser 
 
 // ListSubmissions returns all the latests submissions for a user to a course
 func ListSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submissions, error) {
-
-	submissions, err := db.GetSubmissions(request.UserID, request.CourseID)
+	submissions, err := db.GetSubmissions(request.GetCourseID(), request.GetUserID())
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "not found")
@@ -284,6 +283,23 @@ func ListSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submi
 		return nil, err
 	}
 	return &pb.Submissions{Submissions: submissions}, nil
+}
+
+// ListGroupSubmissions fetches all submissions from specific group
+func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submissions, error) {
+	submissions, err := db.GetGroupSubmissions(request.GetCourseID(), request.GetGroupID())
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, status.Errorf(codes.NotFound, "not found")
+		}
+		return nil, status.Errorf(codes.NotFound, "no submissions found")
+	}
+	return &pb.Submissions{Submissions: submissions}, nil
+}
+
+// UpdateSubmission updates a submission
+func UpdateSubmission(request *pb.RecordRequest, db database.Database) error {
+	return db.UpdateSubmission(request.ID, true)
 }
 
 // UpdateCourse updates an existing course
@@ -310,7 +326,6 @@ func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database,
 
 // GetEnrollmentsByCourse get all enrollments for a course.
 func GetEnrollmentsByCourse(request *pb.EnrollmentRequest, db database.Database) (*pb.Enrollments, error) {
-
 	enrollments, err := db.GetEnrollmentsByCourse(request.CourseID, request.States...)
 	if err != nil {
 		return nil, err
@@ -334,25 +349,6 @@ func GetEnrollmentsByCourse(request *pb.EnrollmentRequest, db database.Database)
 		}
 	}
 	return &pb.Enrollments{Enrollments: enrollments}, nil
-}
-
-// UpdateSubmission updates a submission
-func UpdateSubmission(request *pb.RecordRequest, db database.Database) error {
-	return db.UpdateSubmission(request.ID, true)
-}
-
-// ListGroupSubmissions fetches all submissions from specific group
-func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submissions, error) {
-	submissions, err := db.GetGroupSubmissions(request.CourseID, request.UserID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "not found")
-		}
-		return nil, status.Errorf(codes.NotFound, "no submissions found")
-	}
-
-	return &pb.Submissions{Submissions: submissions}, nil
-
 }
 
 // GetRepositoryURL returns the repository information
