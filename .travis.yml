@@ -13,6 +13,7 @@ install:
 
 env:
 - DisabledLOGDB=true
+- GO111MODULE=on
 
 script:
 - $HOME/gopath/bin/overalls -project=github.com/autograde/aguis -covermode=count -debug

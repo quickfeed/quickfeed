@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v26/github"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc/status"
 )
@@ -185,8 +185,6 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, e
 	}
 	return hooks, err
 }
-
-const autograderHookName = "web"
 
 // CreateHook implements the SCM interface.
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err error) {
