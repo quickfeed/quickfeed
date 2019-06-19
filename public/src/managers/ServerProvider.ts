@@ -484,7 +484,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     private informUser(info: string, sender: string): void {
-        this.logger.warn("Request from method " + sender + " failed: " + info);
+        console.log("Request from method " + sender + " failed: " + info);
     }
 
     private handleError(result: IHTTPResult<any>, sender?: string): void {
