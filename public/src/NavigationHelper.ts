@@ -178,26 +178,21 @@ export class NavigationHelper {
         return navObj.func.call(this.thisObject, navInfo);
     }
 
-    private parseValue<K extends keyof ITypeMap>(value: string, type: K): ITypeMap | undefined {
+    private parseValue<K extends keyof ITypeMap>(value: string, type: K): ITypeMap[K] | undefined {
         switch (type) {
             case "string":
-                var mapp: ITypeMap = {string: value}
-                return mapp;
+                return value;
             case "number":
                 const num = parseFloat(value);
                 if (isNaN(num)) {
                     return undefined;
                 }
-                var mapp: ITypeMap = {number: num}
-                return mapp;
+                return num;
             case "boolean":
                 if (value.toLowerCase() === "true") {
-                    var mapp: ITypeMap = {boolean: true}
-                    return mapp;
+                    return true;
                 } else if (value.toLowerCase() === "false") {
-                    
-                    var mapp: ITypeMap = {boolean: false}
-                    return mapp;
+                    return false;
                 }
                 return undefined;
         }
