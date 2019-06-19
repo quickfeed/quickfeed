@@ -192,6 +192,16 @@ func (s *GitlabSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 	return nil
 }
 
+// GetUserName implements the SCM interface.
+func (s *GitlabSCM) GetUserName(ctx context.Context) (string, error) {
+	return "", nil
+}
+
+// GetUserNameByID implements the SCM interface.
+func (s *GitlabSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string, error) {
+	return "", nil
+}
+
 // CreateCloneURL implements the SCM interface.
 func (s *GitlabSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 	return ""

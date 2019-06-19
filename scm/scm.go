@@ -49,6 +49,10 @@ type SCM interface {
 	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in CreateTeamOptions
 	UpdateTeamMembers(context.Context, *CreateTeamOptions) error
+	// GetUserName returns the currently logged in user's login name.
+	GetUserName(context.Context) (string, error)
+	// GetUserNameByID returns the login name of user with the given remoteID.
+	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider specific clone path.
 	CreateCloneURL(*CreateClonePathOptions) string
 	// Fetch current payment plan
