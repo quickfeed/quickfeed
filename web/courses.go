@@ -262,16 +262,15 @@ func RefreshCourse(ctx context.Context, request *pb.RecordRequest, s scm.SCM, db
 
 // GetSubmission returns a single submission for a assignment and a user
 func GetSubmission(request *pb.RecordRequest, db database.Database, currentUser *pb.User) (*pb.Submission, error) {
-	submission, err := db.GetSubmissionForUser(request.ID, currentUser.ID)
+	query := &pb.Submission{AssignmentID: request.ID, UserID: currentUser.ID}
+	submission, err := db.GetSubmission(query)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "not found")
 		}
 		return nil, err
 	}
-
 	return submission, nil
-
 }
 
 // ListSubmissions returns all the latests submissions for a user to a course

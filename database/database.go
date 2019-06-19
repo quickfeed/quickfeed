@@ -54,7 +54,8 @@ type Database interface {
 	GetNextAssignment(cid, uid, gid uint64) (*pb.Assignment, error)
 
 	CreateSubmission(*pb.Submission) error
-	GetSubmissionForUser(aid uint64, uid uint64) (*pb.Submission, error)
+	GetSubmission(query *pb.Submission) (*pb.Submission, error)
+
 	GetSubmissionForGroup(aid uint64, gid uint64) (*pb.Submission, error)
 	GetSubmissions(cid uint64, uid uint64) ([]*pb.Submission, error)
 	GetGroupSubmissions(cid uint64, gid uint64) ([]*pb.Submission, error)

@@ -822,8 +822,8 @@ func TestGormDBUpdateCourse(t *testing.T) {
 func TestGormDBGetSubmissionForUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-
-	if _, err := db.GetSubmissionForUser(10, 10); err != gorm.ErrRecordNotFound {
+	query := &pb.Submission{AssignmentID: 10, UserID: 10}
+	if _, err := db.GetSubmission(query); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
@@ -831,7 +831,6 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 func TestGormDBGetSubmissionByID(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-
 	if sub, err := db.GetSubmissionsByID(100); err != gorm.ErrRecordNotFound {
 		t.Errorf("got submission %v", sub)
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)

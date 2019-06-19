@@ -286,7 +286,8 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Ass
 		case v.IsGroupLab && gid > 0:
 			sub, err = db.GetSubmissionForGroup(v.ID, gid)
 		case !v.IsGroupLab && uid > 0:
-			sub, err = db.GetSubmissionForUser(v.ID, uid)
+			query := &pb.Submission{AssignmentID: v.GetID(), UserID: uid}
+			sub, err = db.GetSubmission(query)
 		default:
 			// This is when uid or gid is set to 0, but there is a group or user lab
 			// TODO: Fix so uid always is included and gid is optional
@@ -351,10 +352,10 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	return db.conn.Create(submission).Error
 }
 
-// GetSubmissionForUser implements the Database interface
-func (db *GormDB) GetSubmissionForUser(aid uint64, uid uint64) (*pb.Submission, error) {
+// GetSubmission implements the Database interface
+func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	var submission pb.Submission
-	if err := db.conn.Where(&pb.Submission{AssignmentID: aid, UserID: uid}).Last(&submission).Error; err != nil {
+	if err := db.conn.Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
 	return &submission, nil
@@ -370,6 +371,7 @@ func (db *GormDB) GetSubmissionForGroup(aid uint64, gid uint64) (*pb.Submission,
 }
 
 // GetSubmissionsByID implements the Database interface
+//TODO(meling) remove this; it is unused
 func (db *GormDB) GetSubmissionsByID(sid uint64) (*pb.Submission, error) {
 	var submission pb.Submission
 	if err := db.conn.First(&submission, sid).Error; err != nil {
@@ -380,12 +382,12 @@ func (db *GormDB) GetSubmissionsByID(sid uint64) (*pb.Submission, error) {
 
 // UpdateSubmissionByID implements the Database interface
 func (db *GormDB) UpdateSubmissionByID(sid uint64, approved bool) error {
-	sub, err := db.GetSubmissionsByID(sid)
-	if err != nil {
+	var submission pb.Submission
+	if err := db.conn.First(&submission, sid).Error; err != nil {
 		return err
 	}
-	sub.Approved = approved
-	return db.conn.Model(&pb.Submission{}).Update(sub).Error
+	submission.Approved = approved
+	return db.conn.Model(&pb.Submission{}).Update(submission).Error
 }
 
 // GetSubmissions implements the Database interface
@@ -397,7 +399,8 @@ func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*pb.Submission, erro
 
 	var latestSubs []*pb.Submission
 	for _, a := range course.Assignments {
-		temp, err := db.GetSubmissionForUser(a.ID, uid)
+		query := &pb.Submission{AssignmentID: a.GetID(), UserID: uid}
+		temp, err := db.GetSubmission(query)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				continue
