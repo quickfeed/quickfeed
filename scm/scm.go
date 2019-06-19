@@ -43,11 +43,11 @@ type SCM interface {
 	GetTeams(context.Context, *pb.Organization) ([]*Team, error)
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
-	// AddTeamMember as a member to a team.
+	// AddTeamMember adds a member to a team.
 	AddTeamMember(context.Context, *TeamMembershipOptions) error
 	// RemoveTeamMember removes team member
 	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
-	// UpdateTeamMembers adds or removes members of an existing team
+	// UpdateTeamMembers adds or removes members of an existing team based on list of users in CreateTeamOptions
 	UpdateTeamMembers(context.Context, *CreateTeamOptions) error
 	// Returns a provider specific clone path.
 	CreateCloneURL(*CreateClonePathOptions) string
@@ -55,7 +55,7 @@ type SCM interface {
 	GetPaymentPlan(context.Context, uint64) (*PaymentPlan, error)
 	// Get user's membership in organization
 	GetOrgMembership(context.Context, *OrgMembership) (*OrgMembership, error)
-	// Promotes or demotes organization member
+	// Promotes or demotes organization member, based on Role field in OrgMembership
 	UpdateOrgMembership(context.Context, *OrgMembership) error
 }
 
