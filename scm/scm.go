@@ -138,8 +138,9 @@ type CreateTeamOptions struct {
 type AddMemberOptions struct {
 	Organization *pb.Organization
 	TeamID       int64
-	TeamSlug     string
-	Username     string
+	TeamSlug     string // team name in all lowercase
+	Username     string // GitHub username
+	Role         string // member or maintainer. Maintainer can add, remove and promote team members
 }
 
 // ErrNotSupported is returned when the source code management solution used
@@ -175,15 +176,14 @@ type Team struct {
 // PaymentPlan represents the payment plan to use.
 type PaymentPlan struct {
 	Name         string
-	PrivateRepos uint64
+	PrivateRepos uint64 // max number allowed on the org
 }
 
 // OrgMembership represents user's membership in organization
 type OrgMembership struct {
 	Username string
 	OrgID    uint64
-	// role can be "admin" (organization owner) or "member"
-	Role string
+	Role     string // role can be "admin" (organization owner) or "member"
 }
 
 func (e ErrNotSupported) Error() string {
