@@ -169,13 +169,13 @@ func (s *GitlabSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team
 }
 
 // AddTeamMember implements the scm interface
-func (s *GitlabSCM) AddTeamMember(ctx context.Context, opt *AddMemberOptions) error {
+func (s *GitlabSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }
 
 // RemoveTeamMember implements the scm interface
-func (s *GitlabSCM) RemoveTeamMember(ctx context.Context, opt *AddMemberOptions) error {
+func (s *GitlabSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

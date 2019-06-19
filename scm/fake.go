@@ -151,13 +151,13 @@ func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, 
 }
 
 // AddTeamMember implements the scm interface
-func (s *FakeSCM) AddTeamMember(ctx context.Context, opt *AddMemberOptions) error {
+func (s *FakeSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }
 
 // RemoveTeamMember implements the scm interface
-func (s *FakeSCM) RemoveTeamMember(ctx context.Context, opt *AddMemberOptions) error {
+func (s *FakeSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

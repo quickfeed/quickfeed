@@ -44,9 +44,9 @@ type SCM interface {
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
 	// AddTeamMember as a member to a team.
-	AddTeamMember(context.Context, *AddMemberOptions) error
+	AddTeamMember(context.Context, *TeamMembershipOptions) error
 	// RemoveTeamMember removes team member
-	RemoveTeamMember(context.Context, *AddMemberOptions) error
+	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team
 	UpdateTeamMembers(context.Context, *CreateTeamOptions) error
 	// GetUserName returns the currently logged in user's login name.
@@ -134,8 +134,8 @@ type CreateTeamOptions struct {
 	Users        []string
 }
 
-// AddMemberOptions contain information on organization team and user to be added
-type AddMemberOptions struct {
+// TeamMembershipOptions contain information on organization team and user to be added
+type TeamMembershipOptions struct {
 	Organization *pb.Organization
 	TeamID       int64
 	TeamSlug     string // team name in all lowercase

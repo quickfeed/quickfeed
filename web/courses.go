@@ -203,17 +203,17 @@ func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, st
 	// check whether user is teacher or not
 	switch status {
 	case pb.Enrollment_STUDENT:
-		return s.AddTeamMember(c, &scm.AddMemberOptions{Organization: org, TeamSlug: "students", Username: user.GetLogin()})
+		return s.AddTeamMember(c, &scm.TeamMembershipOptions{Organization: org, TeamSlug: "students", Username: user.GetLogin(), Role: "member"})
 	case pb.Enrollment_TEACHER:
 		// remove from students
-		if err = s.RemoveTeamMember(c, &scm.AddMemberOptions{Organization: org, TeamSlug: "students", Username: user.GetLogin()}); err != nil {
+		if err = s.RemoveTeamMember(c, &scm.TeamMembershipOptions{Organization: org, TeamSlug: "students", Username: user.GetLogin()}); err != nil {
 			return err
 		}
 		//add to teachers
-		return s.AddTeamMember(c, &scm.AddMemberOptions{Organization: org, TeamSlug: "teachers", Username: user.GetLogin()})
+		return s.AddTeamMember(c, &scm.TeamMembershipOptions{Organization: org, TeamSlug: "teachers", Username: user.GetLogin()})
 	}
 
-	opt := &scm.AddMemberOptions{
+	opt := &scm.TeamMembershipOptions{
 		Organization: org,
 		TeamSlug:     slug,
 		Username:     user.GetLogin(),
