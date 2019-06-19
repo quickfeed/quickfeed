@@ -417,17 +417,7 @@ func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*
 		return nil, err
 	}
 
-	// DEBUG: request all memberships, log what happens
-	log.Println("scms: GetOrgMembership lists all members:")
-	all, _, err := s.client.Organizations.ListMembers(ctx, gitOrg.GetName(), &github.ListMembersOptions{Role: "all"})
-	if err != nil {
-		log.Println("scms: GetOrgMembership got error: ", err.Error())
-	}
-	for _, one := range all {
-		log.Println("Got member: ", one.GetLogin())
-	}
-
-	membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetName())
+	membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetLogin())
 	if err != nil {
 		log.Println("scms: GetOrgMembership could not get membership: ", err.Error())
 		return nil, err
@@ -446,17 +436,7 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 		return err
 	}
 
-	// DEBUG: request all memberships, log what happens
-	log.Println("scms: GetOrgMembership lists all members:")
-	all, _, err := s.client.Organizations.ListMembers(ctx, gitOrg.GetName(), &github.ListMembersOptions{PublicOnly: false})
-	if err != nil {
-		log.Println("scms: GetOrgMembership got error: ", err.Error())
-	}
-	for _, one := range all {
-		log.Println("Got member: ", one.GetLogin())
-	}
-
-	isMember, _, err := s.client.Organizations.IsMember(ctx, gitOrg.GetName(), opt.Username)
+	isMember, _, err := s.client.Organizations.IsMember(ctx, gitOrg.GetLogin(), opt.Username)
 	if err != nil {
 		log.Println("scms: UpdateOrgMembership could not check if member: ", err.Error())
 		return err
@@ -464,7 +444,7 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 	if !isMember {
 		return status.Errorf(codes.NotFound, "membership not found")
 	}
-	gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetName())
+	gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetLogin())
 	if err != nil {
 		log.Println("scms: UpdateOrgMembership could not get org membership: ", err.Error())
 		return err
@@ -473,12 +453,12 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 		return status.Errorf(codes.InvalidArgument, "invalid role")
 	}
 	gitMembership.Role = &opt.Role
-	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, gitOrg.GetName(), gitMembership)
+	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, gitOrg.GetLogin(), gitMembership)
 	if err != nil {
 		log.Println("scms: UpdateOrgMembership could not edit org membership: ", err.Error())
 		return err
 	}
-	if newMembership.Role != &opt.Role {
+	if newMembership.GetRole() != opt.Role {
 		return status.Errorf(codes.Canceled, "failed to update membership")
 	}
 	return nil
