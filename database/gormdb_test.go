@@ -828,12 +828,88 @@ func TestGormDBGetSubmissionForUser(t *testing.T) {
 	}
 }
 
-func TestGormDBGetSubmissionByID(t *testing.T) {
+func TestGormDBUpdateSubmission(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-	if sub, err := db.GetSubmissionsByID(100); err != gorm.ErrRecordNotFound {
-		t.Errorf("got submission %v", sub)
-		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+
+	teacher := createFakeUser(t, db, 10)
+	// create a course and an assignment
+	var course pb.Course
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
+		t.Fatal(err)
+	}
+	assigment := pb.Assignment{
+		CourseID: course.ID,
+		Order:    1,
+	}
+	if err := db.CreateAssignment(&assigment); err != nil {
+		t.Fatal(err)
+	}
+
+	// create user and enroll as student
+	user := createFakeUser(t, db, 11)
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	// create another submission for the assignment; now it should succeed
+	if err := db.CreateSubmission(&pb.Submission{
+		AssignmentID: assigment.ID,
+		UserID:       user.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// confirm that the submission is in the database
+	submissions, err := db.GetSubmissions(course.ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(submissions) != 1 {
+		t.Fatalf("have %d submissions want %d", len(submissions), 1)
+	}
+	want := &pb.Submission{
+		ID:           submissions[0].ID,
+		AssignmentID: assigment.ID,
+		UserID:       user.ID,
+		Approved:     false,
+	}
+	if !reflect.DeepEqual(submissions[0], want) {
+		t.Errorf("have %#v want %#v", submissions[0], want)
+	}
+
+	if submissions[0].GetApproved() == true {
+		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
+	}
+
+	err = db.UpdateSubmission(submissions[0].GetID(), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	submissions, err = db.GetSubmissions(course.ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if submissions[0].GetApproved() == true {
+		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
+	}
+
+	err = db.UpdateSubmission(submissions[0].GetID(), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	submissions, err = db.GetSubmissions(course.ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if submissions[0].GetApproved() != true {
+		t.Errorf("expected submission to be 'approved' but got 'not-approved'")
 	}
 }
 

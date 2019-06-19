@@ -338,7 +338,7 @@ func GetEnrollmentsByCourse(request *pb.EnrollmentRequest, db database.Database)
 
 // UpdateSubmission updates a submission
 func UpdateSubmission(request *pb.RecordRequest, db database.Database) error {
-	return db.UpdateSubmissionByID(request.ID, true)
+	return db.UpdateSubmission(request.ID, true)
 }
 
 // ListGroupSubmissions fetches all submissions from specific group

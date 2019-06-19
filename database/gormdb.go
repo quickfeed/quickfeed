@@ -370,18 +370,9 @@ func (db *GormDB) GetSubmissionForGroup(aid uint64, gid uint64) (*pb.Submission,
 	return &submission, nil
 }
 
-// GetSubmissionsByID implements the Database interface
-//TODO(meling) remove this; it is unused
-func (db *GormDB) GetSubmissionsByID(sid uint64) (*pb.Submission, error) {
-	var submission pb.Submission
-	if err := db.conn.First(&submission, sid).Error; err != nil {
-		return nil, err
-	}
-	return &submission, nil
-}
-
-// UpdateSubmissionByID implements the Database interface
-func (db *GormDB) UpdateSubmissionByID(sid uint64, approved bool) error {
+// UpdateSubmission implements the Database interface
+func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
+	//TODO(meling) consider to make this into a transaction
 	var submission pb.Submission
 	if err := db.conn.First(&submission, sid).Error; err != nil {
 		return err

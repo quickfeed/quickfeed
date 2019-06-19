@@ -366,6 +366,7 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.RecordR
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
+	//TODO(meling) UpdateSubmission requires administrator/teacher access
 	return &pb.Void{}, web.UpdateSubmission(in, s.db)
 }
 

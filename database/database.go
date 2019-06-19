@@ -59,8 +59,8 @@ type Database interface {
 	GetSubmissionForGroup(aid uint64, gid uint64) (*pb.Submission, error)
 	GetSubmissions(cid uint64, uid uint64) ([]*pb.Submission, error)
 	GetGroupSubmissions(cid uint64, gid uint64) ([]*pb.Submission, error)
-	GetSubmissionsByID(sid uint64) (*pb.Submission, error)
-	UpdateSubmissionByID(sid uint64, approved bool) error
+	// UpdateSubmission updates the specified submission with approved or not approved.
+	UpdateSubmission(submissionID uint64, approved bool) error
 
 	CreateGroup(*pb.Group) error
 	// GetGroup returns the group with the specified group id.
