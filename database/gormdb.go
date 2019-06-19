@@ -284,7 +284,8 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Ass
 		var sub *pb.Submission
 		switch {
 		case v.IsGroupLab && gid > 0:
-			sub, err = db.GetSubmissionForGroup(v.ID, gid)
+			query := &pb.Submission{AssignmentID: v.GetID(), GroupID: gid}
+			sub, err = db.GetSubmission(query)
 		case !v.IsGroupLab && uid > 0:
 			query := &pb.Submission{AssignmentID: v.GetID(), UserID: uid}
 			sub, err = db.GetSubmission(query)
@@ -361,15 +362,6 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	return &submission, nil
 }
 
-// GetSubmissionForGroup implements the Database interface
-func (db *GormDB) GetSubmissionForGroup(aid uint64, gid uint64) (*pb.Submission, error) {
-	var submission pb.Submission
-	if err := db.conn.Where(&pb.Submission{AssignmentID: aid, GroupID: gid}).Last(&submission).Error; err != nil {
-		return nil, err
-	}
-	return &submission, nil
-}
-
 // UpdateSubmission implements the Database interface
 func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 	//TODO(meling) consider to make this into a transaction
@@ -412,7 +404,8 @@ func (db *GormDB) GetGroupSubmissions(cid uint64, gid uint64) ([]*pb.Submission,
 
 	var latestSubs []*pb.Submission
 	for _, a := range course.Assignments {
-		temp, err := db.GetSubmissionForGroup(a.ID, gid)
+		query := &pb.Submission{AssignmentID: a.GetID(), GroupID: gid}
+		temp, err := db.GetSubmission(query)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				continue

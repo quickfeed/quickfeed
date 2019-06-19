@@ -56,7 +56,6 @@ type Database interface {
 	CreateSubmission(*pb.Submission) error
 	GetSubmission(query *pb.Submission) (*pb.Submission, error)
 
-	GetSubmissionForGroup(aid uint64, gid uint64) (*pb.Submission, error)
 	GetSubmissions(cid uint64, uid uint64) ([]*pb.Submission, error)
 	GetGroupSubmissions(cid uint64, gid uint64) ([]*pb.Submission, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
