@@ -118,8 +118,11 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 				return status.Errorf(codes.Internal, "could not create user repository")
 			}
 			// instead of creating personal team we will add all students to students team
-			return addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT)
-
+			if err = addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT); err != nil {
+				return err
+			}
+			// then send invitation to course organization to student (will return nil if already a member)
+			return addUserToOrg(ctx, s, course.GetOrganizationID(), student)
 		}
 
 	case pb.Enrollment_TEACHER:
@@ -220,6 +223,15 @@ func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, st
 	}
 
 	return s.AddTeamMember(c, opt)
+}
+
+func addUserToOrg(ctx context.Context, s scm.SCM, orgID uint64, user *pb.User) error {
+	// get course organization
+	org, err := s.GetOrganization(ctx, orgID)
+	if err != nil {
+		return err
+	}
+	return s.CreateOrgMembership(ctx, &scm.OrgMembershipOptions{Organization: org, Username: user.GetLogin()})
 }
 
 // GetCourse find course by id and return JSON object.

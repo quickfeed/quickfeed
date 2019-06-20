@@ -463,16 +463,16 @@ func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 	if !isMember {
 		// we can invite by github login (recommended, provided on user authentication with github, i.e. valid),
 		// or by mail (provided by student, not necessary connected to github acount)
-		invitation := &github.CreateOrgInvitationOptions{}
+		invitation := github.CreateOrgInvitationOptions{}
 		// if login is set - use it to get user's GitHub ID
 		if opt.Username != "" {
 			gitUser, _, err := s.client.Users.Get(ctx, opt.Username)
 			if err != nil {
-				log.Println("scms: CreateOrgMembership couldnot get user ", opt.Username)
+				log.Println("scms: CreateOrgMembership could not get user ", opt.Username)
 				return status.Errorf(codes.InvalidArgument, "github user not found")
 			}
 			invitation.InviteeID = gitUser.ID
-			log.Println("scms: CreateOrgMembership will use user ID: ", invitation.InviteeID)
+			log.Println("scms: CreateOrgMembership will use user ID: ", invitation.GetInviteeID())
 		} else {
 			// if no username and no email provided, method must fail
 			if opt.Email == "" {
@@ -481,9 +481,13 @@ func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 			}
 			invitation.Email = &opt.Email
 		}
+		// we want to use default values for other option fields (or we will get null field errors from github)
+		role := "direct_member"
+		invitation.Role = &role
+		invitation.TeamID = make([]int64, 0)
 		// issue an invitation. Github wil use user ID if provided and send invitation to account email,
 		// otherwise will use email provided in options
-		inv, _, err := s.client.Organizations.CreateOrgInvitation(ctx, gitOrg.GetLogin(), invitation)
+		inv, _, err := s.client.Organizations.CreateOrgInvitation(ctx, gitOrg.GetLogin(), &invitation)
 		if err != nil {
 			log.Println("scms: CreateOrgMembership could not create invitation: ", err.Error())
 			return status.Errorf(codes.Internal, "could not issue github invitation")
