@@ -41,9 +41,9 @@ func (s *GitlabSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, 
 // CreateOrganization implements the SCM interface.
 func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
-		Name:            &opt.Name,
-		Path:            &opt.Path,
-		VisibilityLevel: getVisibilityLevel(false),
+		Name:       &opt.Name,
+		Path:       &opt.Path,
+		Visibility: getVisibilityLevel(false),
 	}, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
@@ -213,15 +213,21 @@ func (s *GitlabSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*
 	return nil, nil
 }
 
-func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
+func getVisibilityLevel(private bool) *gitlab.VisibilityValue {
 	if private {
-		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)
+		return gitlab.Visibility(gitlab.PrivateVisibility)
 	}
-	return gitlab.VisibilityLevel(gitlab.PublicVisibility)
+	return gitlab.Visibility(gitlab.PublicVisibility)
 }
 
 // UpdateOrgMembership implements the SCM interface
 func (s *GitlabSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// CreateOrgMembership implements the SCM interface
+func (s *GitlabSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }
