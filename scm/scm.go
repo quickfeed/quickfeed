@@ -104,14 +104,12 @@ type Hook struct {
 	URL  string
 }
 
-// CreateRepositoryOptions contains information on how a repository should be
-// created.
+// CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Path         string
 	Organization *pb.Organization
+	Path         string
 	Private      bool
-	// we can create user repositories
-	Owner string
+	Owner        string // we can create user repositories
 }
 
 // CreateHookOptions contains information on how to create a webhook.
@@ -157,9 +155,7 @@ type CreateClonePathOptions struct {
 type AddTeamRepoOptions struct {
 	TeamID uint64
 	Repo   string
-
-	// Only used by GitHub.
-	Owner string
+	Owner  string // only used by GitHub
 }
 
 // Team represents a git Team

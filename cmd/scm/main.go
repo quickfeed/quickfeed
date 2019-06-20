@@ -267,7 +267,7 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 				return err
 			}
 
-			repos, err := (*client).GetRepositories(ctx, &pb.Directory{Path: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, &pb.Organization{Path: c.String("namespace")})
 			if err != nil {
 				return err
 			}
@@ -301,7 +301,7 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 			return cli.NewExitError("namespace must be provided", 3)
 		}
 		if c.Bool("all") {
-			repos, err := (*client).GetRepositories(ctx, &pb.Directory{Path: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, &pb.Organization{Path: c.String("namespace")})
 			if err != nil {
 				return err
 			}
@@ -374,9 +374,9 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 			return cli.NewExitError("team user names must be provided (comma separated)", 3)
 		}
 		opt := &scm.CreateTeamOptions{
-			Directory: &pb.Directory{Path: c.String("namespace")},
-			TeamName:  c.String("team"),
-			Users:     users,
+			Organization: &pb.Organization{Path: c.String("namespace")},
+			TeamName:     c.String("team"),
+			Users:        users,
 		}
 		_, err := (*client).CreateTeam(ctx, opt)
 		return err
@@ -400,7 +400,7 @@ func deleteTeams(client *scm.SCM) cli.ActionFunc {
 				return err
 			}
 
-			teams, err := (*client).GetTeams(ctx, &pb.Directory{Path: c.String("namespace")})
+			teams, err := (*client).GetTeams(ctx, &pb.Organization{Path: c.String("namespace")})
 			if err != nil {
 				return err
 			}
