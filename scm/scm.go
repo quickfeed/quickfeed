@@ -57,6 +57,8 @@ type SCM interface {
 	GetOrgMembership(context.Context, *OrgMembership) (*OrgMembership, error)
 	// Promotes or demotes organization member, based on Role field in OrgMembership
 	UpdateOrgMembership(context.Context, *OrgMembership) error
+	// Invite user to course organization
+	CreateOrgMembership(context.Context, *OrgMembershipOptions) error
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -135,6 +137,13 @@ type TeamMembershipOptions struct {
 	TeamSlug     string // team name in all lowercase
 	Username     string // GitHub username
 	Role         string // member or maintainer. Maintainer can add, remove and promote team members
+}
+
+// OrgMembershipOptions provides information on user to be invited to organization
+type OrgMembershipOptions struct {
+	Organization *pb.Organization
+	Username     string // GitHub username
+	Email        string // we can also send invites by email
 }
 
 // ErrNotSupported is returned when the source code management solution used
