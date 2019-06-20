@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { ILink } from "../../managers/NavigationManager";
 import { NavigationHelper } from "../../NavigationHelper";

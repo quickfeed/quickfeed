@@ -6,7 +6,7 @@ import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
-import { Course, Organization, Void } from "../../../proto/ag_pb"
+import { Course, Organization, Void, User } from "../../../proto/ag_pb"
 
 interface ICourseFormProps<T> {
     className?: string;
@@ -14,6 +14,7 @@ interface ICourseFormProps<T> {
     navMan: NavigationManager;
     pagePath: string;
     courseData?: Course; // for editing an existing course
+    curUser?: User;  // to make current user info accessible
     providers: string[];
 }
 

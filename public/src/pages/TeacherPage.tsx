@@ -14,7 +14,7 @@ import {
     IUserCourseWithUser,
     IUserRelation,
 } from "../models";
-import {User, Course, Group, Enrollment, Repository} from "../../proto/ag_pb";
+import {Course, Group, Enrollment, Repository} from "../../proto/ag_pb";
 
 
 import { GroupResults } from "../components/teacher/GroupResults";

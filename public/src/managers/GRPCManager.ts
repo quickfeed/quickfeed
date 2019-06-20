@@ -20,9 +20,7 @@ import {
     Void,
     Organizations,
     URLResponse,
-    EnrollmentRequest,
-    Enrollment,
-    Repository,
+    EnrollmentRequest
 } from "../../proto/ag_pb";
 import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";

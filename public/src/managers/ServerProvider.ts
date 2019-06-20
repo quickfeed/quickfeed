@@ -1,11 +1,13 @@
-import {Assignment, 
+import {
+    Assignment, 
         Course, 
         Enrollment, 
         User, 
         Group, 
         Submission, 
         Organization,
-        Void} from "../../proto/ag_pb";
+        Void
+    } from "../../proto/ag_pb";
 import {
     IAssignment,
     IBuildInfo,
