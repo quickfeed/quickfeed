@@ -23,7 +23,6 @@ require (
 	github.com/jinzhu/gorm v0.0.0-20160404144928-5174cc5c242a
 	github.com/jinzhu/inflection v0.0.0-20170102125226-1c35d901db3d // indirect
 	github.com/jinzhu/now v1.0.1 // indirect
-	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v0.0.0-20170803061611-b42edd791fad
 	github.com/labstack/echo-contrib v0.0.0-20170707172923-c43bc4a1577d
@@ -49,7 +48,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
 	golang.org/x/sys v0.0.0-20190619223125-e40ef342dc56 // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20190619215442-4adf7a708c2d // indirect
 	google.golang.org/grpc v1.21.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/webhooks.v3 v3.2.0
