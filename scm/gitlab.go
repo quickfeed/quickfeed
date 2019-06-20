@@ -231,3 +231,9 @@ func (s *GitlabSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 	// TODO no implementation provided yet
 	return nil
 }
+
+// ListAuthorizations implements the SCM interface
+func (s *GitlabSCM) ListAuthorizations(ctx context.Context) ([]*Authorization, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}

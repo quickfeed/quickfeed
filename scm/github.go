@@ -496,3 +496,18 @@ func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 	}
 	return nil
 }
+
+// ListAuthorizations implements the SCM interface
+func (s *GithubSCM) ListAuthorizations(ctx context.Context) ([]*Authorization, error) {
+	gitScopes, _, err := s.client.Authorizations.List(ctx, &github.ListOptions{})
+	if err != nil {
+		log.Println("scms: ListAuthorizations failed: ", err.Error())
+		return nil, nil
+	}
+	log.Println("scms: got authorization list with ", len(gitScopes), " items:")
+	for i, sc := range gitScopes {
+		log.Println(i, ": ", sc.GetToken(), ", ", sc.Scopes)
+	}
+
+	return nil, nil
+}

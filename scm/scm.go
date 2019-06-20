@@ -59,6 +59,8 @@ type SCM interface {
 	UpdateOrgMembership(context.Context, *OrgMembership) error
 	// Invite user to course organization
 	CreateOrgMembership(context.Context, *OrgMembershipOptions) error
+	// Lists all authorizations for authenticated user
+	ListAuthorizations(context.Context) ([]*Authorization, error)
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
@@ -185,6 +187,12 @@ type OrgMembership struct {
 	Username string
 	OrgID    uint64
 	Role     string // role can be "admin" (organization owner) or "member"
+}
+
+// Authorization stores information about user scopes
+type Authorization struct {
+	Token  string
+	Scopes []string
 }
 
 func (e ErrNotSupported) Error() string {
