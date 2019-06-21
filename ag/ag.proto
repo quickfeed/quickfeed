@@ -84,8 +84,8 @@ message Enrollment {
     }
     
     uint64 ID = 1;
-    uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
-    uint64 userID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
+    uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""];
+    uint64 userID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""]; 
     uint64 groupID = 4;
     User user = 5;
     Course course = 6;
