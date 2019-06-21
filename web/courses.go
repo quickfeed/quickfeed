@@ -121,7 +121,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			if err = addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT); err != nil {
 				return err
 			}
-			// then send invitation to course organization to student (will return nil if already a member)
+			// then send invitation to course organization to student (will return nil if successful or already a member)
 			return addUserToOrg(ctx, s, course.GetOrganizationID(), student)
 		}
 

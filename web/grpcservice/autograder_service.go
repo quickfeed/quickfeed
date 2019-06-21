@@ -161,7 +161,11 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
-	return &pb.Void{}, web.UpdateCourse(ctx, in, s.db, scm)
+	if err = web.UpdateCourse(ctx, in, s.db, scm); err != nil {
+		s.logger.Error(err)
+		err = status.Errorf(codes.InvalidArgument, "failed to update course")
+	}
+	return &pb.Void{}, err
 }
 
 // GetCourse returns course information for the given course.
