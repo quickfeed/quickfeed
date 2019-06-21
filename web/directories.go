@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
@@ -12,11 +11,6 @@ import (
 // ListOrganizations returns all directories which can be used as a course
 // directory from the given provider.
 func ListOrganizations(ctx context.Context, db database.Database, scm scm.SCM) (*pb.Organizations, error) {
-
-	// TEMP: attempt to get user scopes for current user
-	if _, err := scm.ListAuthorizations(ctx); err != nil {
-		log.Println(err.Error())
-	}
 
 	orgs, err := scm.ListOrganizations(ctx)
 	if err != nil {

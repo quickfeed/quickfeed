@@ -101,6 +101,27 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	return usr, nil
 }
 
+// IsAuthorizedTeacher checks whether current user has teacher scopes
+func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void) (*pb.AuthorizationResponse, error) {
+	_, err := getCurrentUser(ctx, s.db)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+	}
+	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	defer cancel()
+
+	// TODO(vera): upgrade to send provider from client. Currently not supported for other clients anyway
+	scm, err := s.getSCM(ctx, "github")
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+	}
+
+	isAuthorized := web.HasTeacherScopes(ctx, scm)
+	return &pb.AuthorizationResponse{IsAuthorized: isAuthorized}, nil
+}
+
 // CreateCourse creates a new course.
 // Only users with teacher role (admin) can create new courses.
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {

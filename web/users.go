@@ -1,7 +1,12 @@
 package web
 
 import (
+	"context"
+	"log"
 	"net/http"
+
+	"github.com/autograde/aguis/scm"
+	"github.com/google/go-cmp/cmp"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
@@ -21,6 +26,9 @@ type JSONuser struct {
 	Email     string `json:"email"`
 	AvatarURL string `json:"avatarurl"`
 }
+
+// TeacherScopes defines scopes that must be enabled enabled on teacher token
+var TeacherScopes = []string{"admin:org", "delete_repo", "repo", "user"}
 
 // GetSelf redirects to GetUser with the current user's id.
 func GetSelf(db database.Database) echo.HandlerFunc {
@@ -81,4 +89,14 @@ func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*p
 		err = status.Errorf(codes.Internal, "could not update user")
 	}
 	return updateUser, err
+}
+
+// HasTeacherScopes checks whether current user has upgraded scopes on provided scm client
+func HasTeacherScopes(ctx context.Context, s scm.SCM) bool {
+	auth := s.GetUserScopes(ctx)
+	if !cmp.Equal(auth.Scopes, TeacherScopes) {
+		log.Println("Got scopes: ", auth.Scopes, " want scopes: ", TeacherScopes)
+		return false
+	}
+	return true
 }
