@@ -63,12 +63,12 @@ type Database interface {
 	GetSubmissions(cid uint64, query *pb.Submission) ([]*pb.Submission, error)
 
 	CreateGroup(*pb.Group) error
-	// GetGroup returns the group with the specified group id.
-	GetGroup(uint64) (*pb.Group, error)
-	GetGroupsByCourse(cid uint64) ([]*pb.Group, error)
 	UpdateGroupStatus(*pb.Group) error
 	UpdateGroup(group *pb.Group) error
 	DeleteGroup(uint64) error
+	// GetGroup returns the group with the specified group id.
+	GetGroup(uint64) (*pb.Group, error)
+	GetGroupsByCourse(cid uint64) ([]*pb.Group, error)
 
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error
