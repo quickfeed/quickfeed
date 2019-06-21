@@ -116,8 +116,6 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
             (Don't see your organization below? Autograder needs access to your organization.
             Grant access <a href="https://github.com/settings/applications" target="_blank"> here</a>.)</p>
 
-
-            <p>As a new teacher or student assistant, please <a href={"https://" + hostURL + "/auth/github-teacher"} target="_blank">follow this link</a> to enable teacher scopes on your Autograder token.</p>
             <p>For each new semester of a course, Autograder requires a new GitHub organization.
             This is to keep the student roster for the different runs of the course separate.</p>
 

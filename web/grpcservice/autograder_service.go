@@ -117,7 +117,6 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
-
 	isAuthorized := web.HasTeacherScopes(ctx, scm)
 	return &pb.AuthorizationResponse{IsAuthorized: isAuthorized}, nil
 }
