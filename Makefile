@@ -41,7 +41,7 @@ proto:
 	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
 	@tsc $(proto-path)/AgServiceClientPb.ts
 
-devtools: grpcweb
+devtools: grpcweb npmtools
 
 grpcweb:
 	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
@@ -51,9 +51,11 @@ grpcweb:
 	@chmod +x $(grpcweb-path)
 	@rm -rf $(tmpdir)
 
-typescript:
-	@echo "Fetch typescript compiler (requires sudo access)"
+npmtools:
+	@echo "Install webpack and typescript compiler (requires sudo access)"
 	@npm install -g typescript
+	@npm install -g webpack
+	@npm install -g webpack-cli
 
 envoy-build:
 	@echo Building Autograder Envoy proxy
