@@ -45,13 +45,6 @@ export class GrpcManager {
         this.userMan = man;
     }
 
-    // /* USERS */ //
-/*
-    public getSelf(): Promise<IGrpcResponse<User>> {
-        const request = new Void();
-        return this.grpcSend<User>(this.agService.getSelf, request);
-    }*/
-
     public getUsers(): Promise<IGrpcResponse<Users>> {
         const request = new Void();
         return this.grpcSend<Users>(this.agService.getUsers, request);
@@ -271,7 +264,6 @@ export class GrpcManager {
                 (err: grpcWeb.Error, response: T | undefined) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
-                            console.log("GRPC: got error: " + err.message);
                             const temp: IGrpcResponse<T> = {
                                 statusCode: err.code,
                                 message: err.message,

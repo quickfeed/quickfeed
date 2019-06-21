@@ -389,7 +389,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const result = await this.grpcHelper.updateUser(user);
         if (result.statusCode !== 0 || !result.data) {
             if (result.message) {
-                this.informUser(result.message, "getAllUser");
+                this.informUser(result.message, "updateUser");
             }
             return false;
         }
