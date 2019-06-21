@@ -183,6 +183,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async isAuthorizedTeacher(): Promise<boolean> {
+        const result = await this.grpcHelper.isAuthorizedTeacher(); 
+        if (result.statusCode !== 0) {
+            if (result.message) {
+                this.informUser(result.message, "changeUserState");
+            }
+            return false;
+        }
+        return true;
+    }
+
 
 
     public async createNewCourse(courseData: Course): Promise<Course | IError> {

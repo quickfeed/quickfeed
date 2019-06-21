@@ -118,6 +118,12 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
+
+    public async isAuthorizedTeacher(): Promise<boolean> {
+        return true;
+    }
+
+
     public async logout(user: User): Promise<boolean> {
         return true;
     }

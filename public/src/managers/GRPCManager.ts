@@ -20,7 +20,8 @@ import {
     Void,
     Organizations,
     URLResponse,
-    EnrollmentRequest
+    EnrollmentRequest,
+    AuthorizationResponse
 } from "../../proto/ag_pb";
 import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";
@@ -69,6 +70,11 @@ export class GrpcManager {
             requrest.setIsadmin(user.getIsadmin());
         }
         return this.grpcSend(this.agService.updateUser, requrest);
+    }
+
+    public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
+        const voidy = new Void();
+        return this.grpcSend<AuthorizationResponse>(this.agService.isAuthorizedTeacher, voidy);
     }
 
     // /* COURSES */ //
