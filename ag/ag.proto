@@ -205,6 +205,10 @@ message URLResponse {
     string URL = 1;
 }
 
+message AuthorizationResponse {
+    bool IsAuthorized = 1;
+}
+
 message Void {}
 
 service AutograderService {
@@ -214,7 +218,7 @@ service AutograderService {
     rpc GetUser(RecordRequest) returns (User) {}
     rpc GetUsers(Void) returns (Users) {}
     rpc UpdateUser(User) returns (User) {}
-
+    rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}  
     // groups //
 
     rpc GetGroup(RecordRequest) returns (Group) {}

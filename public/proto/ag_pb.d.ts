@@ -787,6 +787,24 @@ export namespace URLResponse {
   }
 }
 
+export class AuthorizationResponse extends jspb.Message {
+  getIsauthorized(): boolean;
+  setIsauthorized(value: boolean): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): AuthorizationResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: AuthorizationResponse): AuthorizationResponse.AsObject;
+  static serializeBinaryToWriter(message: AuthorizationResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AuthorizationResponse;
+  static deserializeBinaryFromReader(message: AuthorizationResponse, reader: jspb.BinaryReader): AuthorizationResponse;
+}
+
+export namespace AuthorizationResponse {
+  export type AsObject = {
+    isauthorized: boolean,
+  }
+}
+
 export class Void extends jspb.Message {
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Void.AsObject;
