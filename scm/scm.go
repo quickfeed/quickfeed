@@ -60,7 +60,7 @@ type SCM interface {
 	// Invite user to course organization
 	CreateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user
-	ListAuthorizations(context.Context) ([]*Authorization, error)
+	GetUserScopes(context.Context) *Authorization
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.

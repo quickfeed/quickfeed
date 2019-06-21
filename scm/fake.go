@@ -209,8 +209,8 @@ func (s *FakeSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipOpt
 	return nil
 }
 
-// ListAuthorizations implements the SCM interface
-func (s *FakeSCM) ListAuthorizations(ctx context.Context) ([]*Authorization, error) {
+// GetUserScopes implements the SCM interface
+func (s *FakeSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// TODO no implementation provided yet
-	return nil, nil
+	return nil
 }
