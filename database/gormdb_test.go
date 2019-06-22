@@ -1144,7 +1144,7 @@ var createGroupTests = []struct {
 		},
 
 		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
-		err:         gorm.ErrRecordNotFound,
+		err:         database.ErrUpdateGroup,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
 	// users that's not enrolled in the course.
@@ -1161,7 +1161,7 @@ var createGroupTests = []struct {
 			}
 		},
 		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
-		err:         gorm.ErrRecordNotFound,
+		err:         database.ErrUpdateGroup,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
 	// users that's not enrolled in the course.
@@ -1178,7 +1178,7 @@ var createGroupTests = []struct {
 			}
 		},
 		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
-		err:         gorm.ErrRecordNotFound,
+		err:         database.ErrUpdateGroup,
 	},
 	// Should fail with ErrRecordNotFound as we cannot create a group with
 	// users that's not enrolled in the course.
@@ -1195,7 +1195,7 @@ var createGroupTests = []struct {
 			}
 		},
 		enrollments: []uint{uint(pb.Enrollment_REJECTED), uint(pb.Enrollment_REJECTED)},
-		err:         gorm.ErrRecordNotFound,
+		err:         database.ErrUpdateGroup,
 	},
 	// Should pass as the user exists and is enrolled in the course.
 	{

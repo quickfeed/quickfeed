@@ -16,6 +16,8 @@ var (
 	// ErrDuplicateGroup is returned when trying to create a group with the same
 	// name as a previously registered group.
 	ErrDuplicateGroup = errors.New("group name already registered")
+	// ErrUpdateGroup is returned when updating a group's enrollment fails.
+	ErrUpdateGroup = errors.New("failed to update group enrollment")
 	// ErrCourseExists is returned when trying to create an association in
 	// the database for a DirectoryId that already exists in the database.
 	ErrCourseExists = errors.New("course already exists on git provider")

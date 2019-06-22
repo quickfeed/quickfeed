@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"strings"
 
 	pb "github.com/autograde/aguis/ag"
@@ -47,7 +46,7 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 	}
 	if query.RowsAffected != int64(len(userids)) {
 		tx.Rollback()
-		return gorm.ErrRecordNotFound
+		return ErrUpdateGroup
 	}
 
 	tx.Commit()
@@ -97,7 +96,7 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	}
 	if query.RowsAffected != int64(len(userids)) {
 		tx.Rollback()
-		return errors.New("failed to update group")
+		return ErrUpdateGroup
 	}
 
 	tx.Commit()
