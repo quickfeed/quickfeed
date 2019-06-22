@@ -24,6 +24,8 @@ var (
 	// ErrInsufficientAccess is returned when trying to update database
 	// with insufficient access priviledges.
 	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
+	// ErrCreateRepo is returned when trying to create repository with wrong argument.
+	ErrCreateRepo = errors.New("failed to create repository; invalid arguments")
 )
 
 // GormDB implements the Database interface.
@@ -488,8 +490,7 @@ func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_U
 	return db.getEnrollments(&pb.Course{ID: cid}, statuses...)
 }
 
-//TODO(meling) @Vera: I think this method can be integrated into
-//GetEnrollmentsByCourse and calling that instead of getEnrollments() internally in database package
+// getEnrollments is generic helper function that return enrollments for either course and user.
 func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
 	if len(statuses) == 0 {
 		statuses = []pb.Enrollment_UserStatus{
@@ -602,8 +603,8 @@ func (db *GormDB) UpdateCourse(course *pb.Course) error {
 // CreateRepository implements the Database interface
 func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	if repo.OrganizationID == 0 || repo.RepositoryID == 0 {
-		// both directory and repository must be non-zero
-		return errors.New("failed to create repository; invalid arguments")
+		// both organization and repository must be non-zero
+		return ErrCreateRepo
 	}
 
 	switch {
@@ -621,7 +622,7 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 		}
 	case !repo.RepoType.IsCourseRepo():
 		// both user and group unset, then repository type must an autograder repo type
-		return errors.New("failed to create repository; invalid arguments")
+		return ErrCreateRepo
 	}
 
 	return db.conn.Create(repo).Error
