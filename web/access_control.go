@@ -3,15 +3,13 @@ package web
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
+	"google.golang.org/grpc/metadata"
 )
 
 func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error) {
@@ -35,27 +33,23 @@ func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error)
 	return db.GetUser(userID)
 }
 
-func (s *AutograderService) getSCM(ctx context.Context, provider string) (scm.SCM, error) {
+func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider string) (scm.SCM, error) {
 	providers, err := s.GetProviders(ctx, &pb.Void{})
 	if err != nil {
 		return nil, err
 	}
 	if !providers.IsValidProvider(provider) {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid provider")
+		return nil, fmt.Errorf("invalid provider(%s)", provider)
 	}
 
-	user, err := getCurrentUser(ctx, s.db)
-	if err != nil {
-		return nil, err
-	}
 	for _, remoteID := range user.RemoteIdentities {
 		if remoteID.Provider == provider {
 			scm, ok := s.scms.GetSCM(remoteID.GetAccessToken())
 			if !ok {
-				return nil, status.Errorf(codes.PermissionDenied, "invalid token")
+				return nil, fmt.Errorf("invalid token for user(%d) provider(%s)", user.ID, provider)
 			}
 			return scm, nil
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "no SCM found")
+	return nil, errors.New("no SCM found")
 }
