@@ -103,12 +103,12 @@ func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	return nil
 }
 
-// UpdateGroupStatus updates status field of a group
+// UpdateGroupStatus updates status field of a group.
 func (db *GormDB) UpdateGroupStatus(group *pb.Group) error {
 	return db.conn.Model(group).Update("status", group.Status).Error
 }
 
-// DeleteGroup deletes a group and remove the corresponding group enrollments.
+// DeleteGroup deletes a group and its corresponding enrollments.
 func (db *GormDB) DeleteGroup(gid uint64) error {
 	group, err := db.GetGroup(gid)
 	if err != nil {
@@ -128,7 +128,7 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 	return nil
 }
 
-// GetGroup returns the group with the specified by group id.
+// GetGroup returns the group with the specified group id.
 func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
 	var group pb.Group
 	if err := db.conn.Preload("Enrollments").First(&group, gid).Error; err != nil {
