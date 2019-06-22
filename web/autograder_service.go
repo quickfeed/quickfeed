@@ -105,18 +105,14 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
 	// TODO(vera): upgrade to send provider from client. Currently not supported for other clients anyway
 	// Hein @Vera: it may be easier to pass along the courseID from the client as is done for UpdateEnrollment (see below)
-	scm, err := s.getSCM(ctx, usr, "github")
+	// Hein @Vera: should the current user be admin; if so, the bool param should be set to true
+	_, scm, err := s.getUserAndSCM(ctx, "github", false)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+		return nil, err
 	}
+
 	isAuthorized := HasTeacherScopes(ctx, scm)
 	return &pb.AuthorizationResponse{IsAuthorized: isAuthorized}, nil
 }
@@ -130,19 +126,9 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := s.getCurrentUser(ctx)
+	usr, scm, err := s.getUserAndSCM(ctx, in.Provider, true)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
-	if !usr.IsAdmin {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.PermissionDenied, "user must be admin to create or update")
-	}
-	scm, err := s.getSCM(ctx, usr, in.Provider)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+		return nil, err
 	}
 
 	// make sure that the current user is set as course creator
@@ -167,20 +153,11 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := s.getCurrentUser(ctx)
+	_, scm, err := s.getUserAndSCM(ctx, in.Provider, true)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, err
 	}
-	if !usr.IsAdmin {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.PermissionDenied, "user must be admin to create or update")
-	}
-	scm, err := s.getSCM(ctx, usr, in.Provider)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
-	}
+
 	if err = UpdateCourse(ctx, in, s.db, scm); err != nil {
 		s.logger.Error(err)
 		err = status.Errorf(codes.InvalidArgument, "failed to update course")
@@ -217,24 +194,14 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
-	if !usr.IsAdmin {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.PermissionDenied, "user must be admin to create or update")
-	}
 	crs, err := GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get course")
 	}
-	scm, err := s.getSCM(ctx, usr, crs.Provider)
+	_, scm, err := s.getUserAndSCM(ctx, crs.Provider, true)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+		return nil, err
 	}
 
 	return &pb.Void{}, UpdateEnrollment(ctx, in, s.db, scm)
@@ -329,15 +296,9 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	usr, err := s.getCurrentUser(ctx)
+	usr, scm, err := s.getUserAndSCM(ctx, crs.Provider, false)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
-	scm, err := s.getSCM(ctx, usr, crs.Provider)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+		return nil, err
 	}
 
 	return &pb.Void{}, UpdateGroup(ctx, in, s.db, scm, usr)
@@ -404,15 +365,9 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 	if err != nil {
 		return nil, err
 	}
-	usr, err := s.getCurrentUser(ctx)
+	usr, scm, err := s.getUserAndSCM(ctx, crs.Provider, false)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
-	scm, err := s.getSCM(ctx, usr, crs.Provider)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+		return nil, err
 	}
 	return RefreshCourse(ctx, in, scm, s.db, usr)
 }
@@ -445,15 +400,9 @@ func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.ActionR
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := s.getCurrentUser(ctx)
+	_, scm, err := s.getUserAndSCM(ctx, in.Provider, false)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
-	scm, err := s.getSCM(ctx, usr, in.Provider)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+		return nil, err
 	}
 	return ListOrganizations(ctx, s.db, scm)
 }

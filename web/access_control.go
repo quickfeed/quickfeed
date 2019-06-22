@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strconv"
 
 	pb "github.com/autograde/aguis/ag"
@@ -51,4 +53,25 @@ func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider 
 		}
 	}
 	return nil, errors.New("no SCM found")
+}
+
+// getUserAndSCM returns the current user and scm for the given provider.
+// All errors are logged, but only a single error is returned to the client.
+// This is a helper method to facilitate consistent treatment of errors and logging.
+func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string, mustBeAdmin bool) (*pb.User, scm.SCM, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, nil, status.Errorf(codes.NotFound, "failed to get current user")
+	}
+	if mustBeAdmin && !usr.IsAdmin {
+		s.logger.Error("user must be admin to create or update")
+		return nil, nil, status.Error(codes.PermissionDenied, "user must be admin to create or update")
+	}
+	scm, err := s.getSCM(ctx, usr, provider)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+	}
+	return usr, scm, nil
 }
