@@ -194,16 +194,11 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	crs, err := s.getCourse(in.CourseID)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get course")
-	}
-	_, scm, err := s.getUserAndSCM(ctx, crs.Provider, true)
+	// must be admin to update enrollment status
+	_, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID(), true)
 	if err != nil {
 		return nil, err
 	}
-
 	return &pb.Void{}, UpdateEnrollment(ctx, in, s.db, scm)
 }
 
@@ -292,15 +287,11 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	crs, err := s.getCourse(in.CourseID)
+	// need not be admin to update group composition
+	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID(), false)
 	if err != nil {
 		return nil, err
 	}
-	usr, scm, err := s.getUserAndSCM(ctx, crs.Provider, false)
-	if err != nil {
-		return nil, err
-	}
-
 	return &pb.Void{}, UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
@@ -361,11 +352,8 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	crs, err := s.getCourse(in.GetID())
-	if err != nil {
-		return nil, err
-	}
-	usr, scm, err := s.getUserAndSCM(ctx, crs.Provider, false)
+	// must be admin to refresh course
+	usr, scm, err := s.getUserAndSCM2(ctx, in.GetID(), true)
 	if err != nil {
 		return nil, err
 	}

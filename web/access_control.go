@@ -75,3 +75,15 @@ func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string, 
 	}
 	return usr, scm, nil
 }
+
+// getUserAndSCM2 returns the current user and scm for the given course.
+// All errors are logged, but only a single error is returned to the client.
+// This is a helper method to facilitate consistent treatment of errors and logging.
+func (s *AutograderService) getUserAndSCM2(ctx context.Context, courseID uint64, mustBeAdmin bool) (*pb.User, scm.SCM, error) {
+	crs, err := s.getCourse(courseID)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, nil, status.Errorf(codes.NotFound, "failed to get course")
+	}
+	return s.getUserAndSCM(ctx, crs.GetProvider(), mustBeAdmin)
+}
