@@ -39,7 +39,7 @@ func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.Reposit
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	currentUser, err := getCurrentUser(ctx, s.db)
+	currentUser, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -86,7 +86,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	currentUser, err := getCurrentUser(ctx, s.db)
+	currentUser, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -105,7 +105,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -130,7 +130,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -167,7 +167,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -217,7 +217,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -304,7 +304,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -329,7 +329,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -359,7 +359,7 @@ func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequ
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -404,7 +404,7 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 	if err != nil {
 		return nil, err
 	}
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
@@ -445,7 +445,7 @@ func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.ActionR
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	usr, err := getCurrentUser(ctx, s.db)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")

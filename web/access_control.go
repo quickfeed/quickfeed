@@ -7,12 +7,11 @@ import (
 	"strconv"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 	"google.golang.org/grpc/metadata"
 )
 
-func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error) {
+func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error) {
 	// process user id from context
 	meta, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -30,7 +29,7 @@ func getCurrentUser(ctx context.Context, db database.Database) (*pb.User, error)
 		return nil, err
 	}
 	// return the user corresponding to userID, or an error.
-	return db.GetUser(userID)
+	return s.db.GetUser(userID)
 }
 
 func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider string) (scm.SCM, error) {
