@@ -369,6 +369,9 @@ func TestGormDBUpdateGroupEnrollment(t *testing.T) {
 	}
 
 	enrolled, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if err = db.UpdateGroupEnrollment(user.ID, course.ID); err != nil {
 		t.Fatal(err)
