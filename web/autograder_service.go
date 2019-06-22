@@ -170,7 +170,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return GetCourse(in, s.db)
+	return s.getCourse(in.GetID())
 }
 
 // GetCourses returns a list of all courses.
@@ -194,7 +194,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	crs, err := GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
+	crs, err := s.getCourse(in.CourseID)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get course")
@@ -292,7 +292,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	crs, err := GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
+	crs, err := s.getCourse(in.CourseID)
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +361,7 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	crs, err := GetCourse(in, s.db)
+	crs, err := s.getCourse(in.GetID())
 	if err != nil {
 		return nil, err
 	}

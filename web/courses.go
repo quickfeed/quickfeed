@@ -234,10 +234,9 @@ func addUserToOrg(ctx context.Context, s scm.SCM, orgID uint64, user *pb.User) e
 	return s.CreateOrgMembership(ctx, &scm.OrgMembershipOptions{Organization: org, Username: user.GetLogin()})
 }
 
-// GetCourse find course by id and return JSON object.
-func GetCourse(query *pb.RecordRequest, db database.Database) (*pb.Course, error) {
-
-	course, err := db.GetCourse(query.ID)
+// GetCourse returns a course object for the given course id.
+func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
+	course, err := s.db.GetCourse(courseID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Errorf(codes.NotFound, "course not found")
