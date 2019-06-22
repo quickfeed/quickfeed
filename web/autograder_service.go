@@ -44,7 +44,7 @@ func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.Reposit
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	repoURL, err := GetRepositoryURL(currentUser, in, s.db)
+	repoURL, err := s.getRepositoryURL(currentUser, in)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to fetch repository URL")

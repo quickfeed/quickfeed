@@ -363,9 +363,9 @@ func GetEnrollmentsByCourse(request *pb.EnrollmentRequest, db database.Database)
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
-// GetRepositoryURL returns the repository information
-func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db database.Database) (*pb.URLResponse, error) {
-	course, err := db.GetCourse(request.GetCourseID())
+// getRepositoryURL returns the repository information
+func (s *AutograderService) getRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest) (*pb.URLResponse, error) {
+	course, err := s.db.GetCourse(request.GetCourseID())
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +377,7 @@ func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db da
 		userRepoQuery.UserID = currentUser.GetID()
 	}
 
-	repos, err := db.GetRepositories(userRepoQuery)
+	repos, err := s.db.GetRepositories(userRepoQuery)
 	if err != nil {
 		return nil, err
 	}
