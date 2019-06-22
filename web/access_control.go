@@ -1,4 +1,4 @@
-package grpcservice
+package web
 
 import (
 	"context"

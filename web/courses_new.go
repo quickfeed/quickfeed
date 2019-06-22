@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/autograde/aguis/web/auth"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -64,7 +66,7 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		}
 
 		hookOptions := &scm.CreateHookOptions{
-			URL:        GetEventsURL(bh.BaseURL, request.Provider),
+			URL:        auth.GetEventsURL(bh.BaseURL, request.Provider),
 			Secret:     bh.Secret,
 			Repository: repo,
 		}

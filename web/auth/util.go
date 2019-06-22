@@ -1,4 +1,4 @@
-package web
+package auth
 
 // GetEventsURL returns the event URL for a given base URL and a provider.
 func GetEventsURL(baseURL, provider string) string {

@@ -10,13 +10,12 @@ import (
 
 	"github.com/autograde/aguis/envoy"
 	"github.com/autograde/aguis/web"
+	"github.com/autograde/aguis/web/auth"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-
-	"github.com/autograde/aguis/web/grpcservice"
 
 	http "github.com/autograde/aguis/web/webserver"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -79,7 +78,7 @@ func main() {
 	go envoy.StartEnvoy(logger)
 
 	// holds references for activated providers for current user token
-	scms := web.NewScms()
+	scms := auth.NewScms()
 	bh := web.BaseHookOptions{
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
@@ -91,7 +90,7 @@ func main() {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterAutograderServiceServer(grpcServer, grpcservice.NewAutograderService(logger, db, scms, bh))
+	pb.RegisterAutograderServiceServer(grpcServer, web.NewAutograderService(logger, db, scms, bh))
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}

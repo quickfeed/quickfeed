@@ -42,6 +42,7 @@ func EnableProvider(p *Provider, createProvider func(key, secret, callback strin
 }
 
 // GetProviders returns a list of all providers enabled by goth.
+//TODO(meling) temporarily moved to web package
 func GetProviders() *pb.Providers {
 	var providers []string
 	for _, provider := range goth.GetProviders() {

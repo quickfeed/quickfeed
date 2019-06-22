@@ -1,4 +1,4 @@
-package grpcservice
+package web
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 )
 
@@ -18,12 +17,12 @@ import (
 type AutograderService struct {
 	logger *zap.SugaredLogger
 	db     *database.GormDB
-	scms   *web.Scms
-	bh     web.BaseHookOptions
+	scms   *auth.Scms
+	bh     BaseHookOptions
 }
 
 // NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *web.Scms, bh web.BaseHookOptions) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Scms, bh BaseHookOptions) *AutograderService {
 	return &AutograderService{
 		logger: logger.Sugar(),
 		db:     db,
@@ -37,7 +36,7 @@ func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.Reposit
 	if !in.IsValidRepoRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	currentUser, err := getCurrentUser(ctx, s.db)
@@ -45,7 +44,7 @@ func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.Reposit
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	repoURL, err := web.GetRepositoryURL(currentUser, in, s.db)
+	repoURL, err := GetRepositoryURL(currentUser, in, s.db)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to fetch repository URL")
@@ -58,7 +57,7 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	usr, err := web.GetUser(in, s.db)
+	usr, err := GetUser(in, s.db)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get user")
@@ -69,7 +68,7 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 
 // GetUsers returns a list of all users.
 func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
-	usrs, err := web.GetUsers(s.db)
+	usrs, err := GetUsers(s.db)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get users")
@@ -84,7 +83,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	if !in.IsValidUser() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	currentUser, err := getCurrentUser(ctx, s.db)
@@ -92,7 +91,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	usr, err := web.PatchUser(currentUser, in, s.db)
+	usr, err := PatchUser(currentUser, in, s.db)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to update current user")
@@ -108,7 +107,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	// TODO(vera): upgrade to send provider from client. Currently not supported for other clients anyway
@@ -117,7 +116,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
-	isAuthorized := web.HasTeacherScopes(ctx, scm)
+	isAuthorized := HasTeacherScopes(ctx, scm)
 	return &pb.AuthorizationResponse{IsAuthorized: isAuthorized}, nil
 }
 
@@ -127,7 +126,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	if !in.IsValidCourse() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	usr, err := getCurrentUser(ctx, s.db)
@@ -147,10 +146,10 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 
 	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
-	course, err := web.NewCourse(ctx, in, s.db, scm, s.bh)
+	course, err := NewCourse(ctx, in, s.db, scm, s.bh)
 	if err != nil {
 		s.logger.Error(err)
-		if err == web.ErrAlreadyExists {
+		if err == ErrAlreadyExists {
 			return nil, status.Errorf(codes.AlreadyExists, err.Error())
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create course")
@@ -164,7 +163,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 	if !in.IsValidCourse() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	usr, err := getCurrentUser(ctx, s.db)
@@ -181,7 +180,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
-	if err = web.UpdateCourse(ctx, in, s.db, scm); err != nil {
+	if err = UpdateCourse(ctx, in, s.db, scm); err != nil {
 		s.logger.Error(err)
 		err = status.Errorf(codes.InvalidArgument, "failed to update course")
 	}
@@ -193,12 +192,12 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return web.GetCourse(in, s.db)
+	return GetCourse(in, s.db)
 }
 
 // GetCourses returns a list of all courses.
 func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Courses, error) {
-	return web.ListCourses(s.db)
+	return ListCourses(s.db)
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
@@ -206,7 +205,7 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.ActionR
 	if !in.IsValidEnrollment() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return &pb.Void{}, web.CreateEnrollment(in, s.db)
+	return &pb.Void{}, CreateEnrollment(in, s.db)
 }
 
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
@@ -214,7 +213,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 	if !in.IsValidEnrollment() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	usr, err := getCurrentUser(ctx, s.db)
@@ -226,7 +225,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.PermissionDenied, "user must be admin to create or update")
 	}
-	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
+	crs, err := GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get course")
@@ -237,7 +236,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.ActionR
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
 
-	return &pb.Void{}, web.UpdateEnrollment(ctx, in, s.db, scm)
+	return &pb.Void{}, UpdateEnrollment(ctx, in, s.db, scm)
 }
 
 // GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.
@@ -246,7 +245,7 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 	//TODO(meling) these direct calls and returns needs to be logged here and return status.Error instead
-	return web.ListCoursesWithEnrollment(in, s.db)
+	return ListCoursesWithEnrollment(in, s.db)
 }
 
 // GetAssignments returns a list of all assignments.
@@ -254,7 +253,7 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordReq
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return web.ListAssignments(in, s.db)
+	return ListAssignments(in, s.db)
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
@@ -262,7 +261,7 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	enrolls, err := web.GetEnrollmentsByCourse(in, s.db)
+	enrolls, err := GetEnrollmentsByCourse(in, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +274,7 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	group, err := web.GetGroup(in, s.db)
+	group, err := GetGroup(in, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +287,7 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	groups, err := web.GetGroups(in, s.db)
+	groups, err := GetGroups(in, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +300,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if !in.IsValidGroup() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	usr, err := getCurrentUser(ctx, s.db)
@@ -309,7 +308,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	group, err := web.NewGroup(in, s.db, usr)
+	group, err := NewGroup(in, s.db, usr)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +321,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if !in.IsValidGroup() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	usr, err := getCurrentUser(ctx, s.db)
@@ -331,7 +330,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
 
-	crs, err := web.GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
+	crs, err := GetCourse(&pb.RecordRequest{ID: in.CourseID}, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +341,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
 
-	return &pb.Void{}, web.UpdateGroup(ctx, in, s.db, scm, usr)
+	return &pb.Void{}, UpdateGroup(ctx, in, s.db, scm, usr)
 }
 
 // DeleteGroup removes group record from the database
@@ -350,7 +349,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.
 	if in.GetID() < 1 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return &pb.Void{}, web.DeleteGroup(in, s.db)
+	return &pb.Void{}, DeleteGroup(in, s.db)
 }
 
 // GetSubmission returns a student submission
@@ -358,7 +357,7 @@ func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequ
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	usr, err := getCurrentUser(ctx, s.db)
@@ -366,7 +365,7 @@ func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequ
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	return web.GetSubmission(in, s.db, usr)
+	return GetSubmission(in, s.db, usr)
 }
 
 // GetSubmissions returns a list of submissions
@@ -374,7 +373,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.ActionReq
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return web.ListSubmissions(in, s.db)
+	return ListSubmissions(in, s.db)
 }
 
 // GetGroupSubmissions returns all submissions of a student group
@@ -382,7 +381,7 @@ func (s *AutograderService) GetGroupSubmissions(ctx context.Context, in *pb.Acti
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return web.ListGroupSubmissions(in, s.db)
+	return ListGroupSubmissions(in, s.db)
 }
 
 // UpdateSubmission changes submission information
@@ -391,7 +390,7 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.RecordR
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
 	//TODO(meling) UpdateSubmission requires administrator/teacher access
-	return &pb.Void{}, web.UpdateSubmission(in, s.db)
+	return &pb.Void{}, UpdateSubmission(in, s.db)
 }
 
 // RefreshCourse returns latest information about the course
@@ -399,7 +398,7 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	usr, err := getCurrentUser(ctx, s.db)
@@ -407,7 +406,7 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	crs, err := web.GetCourse(in, s.db)
+	crs, err := GetCourse(in, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +415,7 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
-	return web.RefreshCourse(ctx, in, scm, s.db, usr)
+	return RefreshCourse(ctx, in, scm, s.db, usr)
 }
 
 // GetGroupByUserAndCourse returns a student group
@@ -424,7 +423,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	group, err := web.GetGroupByUserAndCourse(in, s.db)
+	group, err := GetGroupByUserAndCourse(in, s.db)
 	if err != nil {
 		return nil, err
 	}
@@ -444,7 +443,7 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 
 // GetOrganizations returns a list of directories for a course
 func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.ActionRequest) (*pb.Organizations, error) {
-	ctx, cancel := context.WithTimeout(ctx, web.MaxWait)
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
 	scm, err := s.getSCM(ctx, in.Provider)
@@ -452,7 +451,7 @@ func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.ActionR
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
 	}
-	return web.ListOrganizations(ctx, s.db, scm)
+	return ListOrganizations(ctx, s.db, scm)
 }
 
 // GetRepository is not yet implemented

@@ -11,7 +11,6 @@ import (
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
-	"github.com/autograde/aguis/web/grpcservice"
 	"github.com/google/go-cmp/cmp"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
@@ -61,7 +60,7 @@ func TestGetUser(t *testing.T) {
 	user := createFakeUser(t, db, 1)
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
 
 	foundUser, err := ags.GetUser(cont, &pb.RecordRequest{ID: user.ID})
@@ -94,7 +93,7 @@ func TestGetUsers(t *testing.T) {
 	defer cleanup()
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
 	if err != nil {
 		t.Fatal(err)
@@ -163,7 +162,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -235,7 +234,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	admin := users[0]
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	course := allCourses[1]
@@ -317,7 +316,7 @@ func TestPatchUser(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), adminUser)
 
 	respUser, err := web.PatchUser(adminUser, user, db)

@@ -10,7 +10,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -350,7 +349,7 @@ func TestAccessControl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m := auth.AccessControl(zap.NewNop(), db, web.NewScms())
+	m := auth.AccessControl(zap.NewNop(), db, auth.NewScms())
 	protected := session.Middleware(store)(m(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}))

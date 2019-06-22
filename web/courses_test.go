@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/web/grpcservice"
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
+	"github.com/autograde/aguis/web/auth"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -92,9 +92,9 @@ func withUserContext(ctx context.Context, user *pb.User) context.Context {
 }
 
 // fakeProviderMap is a test helper function to create an SCM map.
-func fakeProviderMap(t *testing.T) (scm.SCM, *web.Scms) {
+func fakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	t.Helper()
-	scms := web.NewScms()
+	scms := auth.NewScms()
 	scm, err := scms.GetOrCreateSCMEntry("fake", "token")
 	if err != nil {
 		t.Fatal(err)
@@ -109,7 +109,7 @@ func TestNewCourse(t *testing.T) {
 	admin := createFakeUser(t, db, 10)
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	for _, testCourse := range allCourses {
 		// each course needs a separate directory
@@ -142,7 +142,7 @@ func TestNewCourseExistingRepos(t *testing.T) {
 	admin := createFakeUser(t, db, 10)
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	directory, _ := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
 	for path, private := range web.RepoPaths {
@@ -166,7 +166,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	admin := createFakeUser(t, db, 1)
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
 
 	course, err := ags.CreateCourse(ctx, allCourses[0])
@@ -258,7 +258,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	admin := createFakeUser(t, db, 1)
 	user := createFakeUser(t, db, 2)
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	var testCourses []*pb.Course
 	for _, course := range allCourses {
@@ -334,7 +334,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	user := createFakeUser(t, db, 2)
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	if err := db.CreateEnrollment(&pb.Enrollment{
 		UserID:   user.ID,
@@ -390,7 +390,7 @@ func TestGetCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	foundCourse, err := ags.GetCourse(context.Background(), &pb.RecordRequest{ID: course.ID})
 	if err != nil {
