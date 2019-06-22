@@ -7,7 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// CreateGroup creates a new group and assign users to newly created group
+// CreateGroup creates a new group and assign users to newly created group.
 func (db *GormDB) CreateGroup(group *pb.Group) error {
 	if group.CourseID == 0 {
 		return gorm.ErrRecordNotFound
@@ -53,7 +53,7 @@ func (db *GormDB) CreateGroup(group *pb.Group) error {
 	return nil
 }
 
-// UpdateGroup updates a group
+// UpdateGroup updates a group with the specified users and enrollments.
 func (db *GormDB) UpdateGroup(group *pb.Group) error {
 	if group.CourseID == 0 {
 		return gorm.ErrRecordNotFound
@@ -108,7 +108,7 @@ func (db *GormDB) UpdateGroupStatus(group *pb.Group) error {
 	return db.conn.Model(group).Update("status", group.Status).Error
 }
 
-// DeleteGroup delete a group
+// DeleteGroup deletes a group and remove the corresponding group enrollments.
 func (db *GormDB) DeleteGroup(gid uint64) error {
 	group, err := db.GetGroup(gid)
 	if err != nil {
@@ -128,7 +128,7 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 	return nil
 }
 
-// GetGroup returns a group specified by id return error if does not exits
+// GetGroup returns the group with the specified by group id.
 func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
 	var group pb.Group
 	if err := db.conn.Preload("Enrollments").First(&group, gid).Error; err != nil {
@@ -148,16 +148,12 @@ func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
 	return &group, nil
 }
 
-// GetGroupsByCourse returns a list of groups
-//TODO(meling) add test for this method
-//TODO(meling) can this also Preload("Users") to avoid the GetUsers below.
+// GetGroupsByCourse returns the groups for the given course.
 func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
 	var groups []*pb.Group
 	if err := db.conn.
 		Preload("Enrollments").
-		Where(&pb.Group{
-			CourseID: cid,
-		}).
+		Where(&pb.Group{CourseID: cid}).
 		Find(&groups).Error; err != nil {
 		return nil, err
 	}
