@@ -170,7 +170,12 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return s.getCourse(in.GetID())
+	course, err := s.getCourse(in.GetID())
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "course not found")
+	}
+	return course, nil
 }
 
 // GetCourses returns a list of all courses.

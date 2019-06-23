@@ -236,14 +236,7 @@ func addUserToOrg(ctx context.Context, s scm.SCM, orgID uint64, user *pb.User) e
 
 // GetCourse returns a course object for the given course id.
 func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
-	course, err := s.db.GetCourse(courseID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "course not found")
-		}
-		return nil, status.Errorf(codes.NotFound, "failed to get course from database")
-	}
-	return course, nil
+	return s.db.GetCourse(courseID)
 }
 
 // RefreshCourse updates the course assignments (and possibly other course information).
