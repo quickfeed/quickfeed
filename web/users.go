@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 
@@ -10,9 +11,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 )
@@ -36,7 +34,6 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		usr := c.Get("user").(*pb.User)
 		user, err := db.GetUser(usr.ID)
-
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
@@ -48,25 +45,28 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// GetUser returns information about the provided user id.
-func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) {
-	return db.GetUser(request.ID)
+// getUser returns information about the provided user id.
+func (s *AutograderService) getUser(request *pb.RecordRequest) (*pb.User, error) {
+	return s.db.GetUser(request.ID)
 }
 
-// GetUsers returns all the users in the database.
-func GetUsers(db database.Database) (*pb.Users, error) {
-	users, err := db.GetUsers()
+// getUsers returns all the users in the database.
+func (s *AutograderService) getUsers() (*pb.Users, error) {
+	users, err := s.db.GetUsers()
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "no users found")
+		return nil, err
 	}
 	return &pb.Users{Users: users}, nil
 }
 
-// PatchUser promotes a user to an administrator or makes other changes to the user database entry.
-func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
-	updateUser, err := db.GetUser(request.ID)
+// patchUser promotes a user to an administrator or makes other changes to the user database entry.
+func (s *AutograderService) patchUser(currentUser *pb.User, request *pb.User) (*pb.User, error) {
+	updateUser, err := s.db.GetUser(request.ID)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "user not found")
+		return nil, err
+	}
+	if !currentUser.IsAdmin && currentUser.ID != request.ID {
+		return nil, errors.New("only admin can update another user")
 	}
 
 	if request.Name != "" {
@@ -85,9 +85,8 @@ func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*p
 	if currentUser.IsAdmin {
 		updateUser.IsAdmin = request.IsAdmin
 	}
-	if err := db.UpdateUser(updateUser); err != nil {
-		err = status.Errorf(codes.Internal, "could not update user")
-	}
+
+	err = s.db.UpdateUser(updateUser)
 	return updateUser, err
 }
 

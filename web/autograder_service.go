@@ -57,7 +57,7 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	usr, err := GetUser(in, s.db)
+	usr, err := s.getUser(in)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get user")
@@ -68,7 +68,7 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 
 // GetUsers returns a list of all users.
 func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
-	usrs, err := GetUsers(s.db)
+	usrs, err := s.getUsers()
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get users")
@@ -78,7 +78,8 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 }
 
 // UpdateUser updates the current users's information and returns the updated user.
-//TODO(meling) should this also allow teacher/admin to update another user?
+// Admin users can update other users information, whereas non-admin users cannot
+// update other users's information.
 func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.User, error) {
 	if !in.IsValidUser() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
@@ -91,7 +92,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	usr, err := PatchUser(currentUser, in, s.db)
+	usr, err := s.patchUser(currentUser, in)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to update current user")
