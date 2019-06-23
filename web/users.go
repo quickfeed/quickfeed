@@ -60,13 +60,15 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 }
 
 // patchUser promotes a user to an administrator or makes other changes to the user database entry.
+// Only admin user can promote another user, and only the current user can change his database entries.
 func (s *AutograderService) patchUser(currentUser *pb.User, request *pb.User) (*pb.User, error) {
+	if !currentUser.IsAdmin && currentUser.ID != request.ID {
+		return nil, errors.New("only admin can update another user")
+	}
+
 	updateUser, err := s.db.GetUser(request.ID)
 	if err != nil {
 		return nil, err
-	}
-	if !currentUser.IsAdmin && currentUser.ID != request.ID {
-		return nil, errors.New("only admin can update another user")
 	}
 
 	if request.Name != "" {

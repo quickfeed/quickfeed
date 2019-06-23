@@ -55,13 +55,19 @@ func TestGetUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// Create first user (the admin).
-	createFakeUser(t, db, 0)
-	user := createFakeUser(t, db, 1)
+	// create first user (the admin).
+	createFakeUser(t, db, 1)
+	// user will be the logged in user (saved in context)
+	user := createFakeUser(t, db, 2)
+	// another user, which the logged in user should not have access to, since user is not admin.
+	createFakeUser(t, db, 3)
 
 	_, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
-	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
+	//TODO(meling) check which metadata func is to be used for this??
+	// seems that the commented one below does not work.
+	//cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
+	cont := withUserContext(context.Background(), user)
 
 	foundUser, err := ags.GetUser(cont, &pb.RecordRequest{ID: user.ID})
 	if err != nil {
@@ -72,17 +78,32 @@ func TestGetUser(t *testing.T) {
 		t.Errorf("have user %+v want %+v", foundUser, user)
 	}
 
+	// 'user' is trying to get user with an illegal id 0; should fail with invalid argument error
 	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 0})
 	if err == nil {
 		t.Error("expected 'rpc error: code = InvalidArgument desc = invalid payload'")
 	}
 
+	// 'user' is trying to get 'admin'; should fail with illegal access error
 	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 1})
+	if err == nil {
+		t.Errorf("expected 'rpc error: code = PermissionDenied desc = only admin can access another user'")
+	}
+
+	// 'user getting back 'user'; should be ok
+	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 2})
 	if err != nil {
 		t.Errorf("unexpected error %+v", err)
 	}
 
+	// 'user' is trying to get 'other' user; should fail with illegal access error
 	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 3})
+	if err == nil {
+		t.Errorf("expected illegal access error")
+	}
+
+	// 'user' is trying to get non-existing user; should fail
+	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 4})
 	if err == nil {
 		t.Error("expected 'rpc error: code = NotFound desc = failed to get user'")
 	}

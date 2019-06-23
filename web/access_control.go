@@ -55,6 +55,27 @@ func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider 
 	return nil, errors.New("no SCM found")
 }
 
+// isAdmin returns true only if the current user is administrator.
+// Any non-admin user in the context returns false.
+func (s *AutograderService) isAdmin(ctx context.Context) bool {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	return usr.IsAdmin
+}
+
+// hasAccess returns true if the current user is administrator or the user with userID.
+func (s *AutograderService) hasAccess(ctx context.Context, userID uint64) bool {
+	currentUser, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	return currentUser.IsAdmin || currentUser.ID == userID
+}
+
 // getUserAndSCM returns the current user and scm for the given provider.
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.
