@@ -368,7 +368,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         // We want a user with full information provided to be set as currentUser 
         // Such user is retrieved by GRPC method getUser
         const grpcResult = await this.grpcHelper.getUser(iusr.id);
-
+        // If grpc method fails, construct User object from JSON
         if (grpcResult.statusCode !== 0 || !grpcResult.data) {
             const usr: User = new User();
             usr.setId(iusr.id);
@@ -381,7 +381,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         return this.makeUserInfo(grpcResult.data);
     }
-
 
     public async refreshCoursesFor(courseID: number): Promise<any> {
         const result = await this.grpcHelper.refreshCourse(courseID);

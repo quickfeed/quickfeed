@@ -211,6 +211,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 	if err != nil {
 		return nil, err
 	}
+
 	for _, user := range opt.Users {
 		_, _, err = s.client.Teams.AddTeamMembership(ctx, t.GetID(), user, nil)
 		if err != nil {
@@ -258,11 +259,12 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 		opt.TeamID = team.GetID()
 	}
 
-	isAlreadyMember, _, err := s.client.Teams.IsTeamMember(ctx, opt.TeamID, opt.Username)
+	isAlreadyMember, _, err := s.client.Teams.GetTeamMembership(ctx, opt.TeamID, opt.Username)
 	if err != nil {
 		return err
 	}
-	if isAlreadyMember {
+	// we will only get some response if given user is team member
+	if isAlreadyMember != nil {
 		return nil
 	}
 	_, _, err = s.client.Teams.AddTeamMembership(ctx, opt.TeamID, opt.Username, &github.TeamAddTeamMembershipOptions{})
@@ -280,13 +282,12 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 		opt.TeamID = team.GetID()
 	}
 
-	isMember, _, err := s.client.Teams.IsTeamMember(ctx, opt.TeamID, opt.Username)
-	if err != nil {
-		return err
-	}
-	if !isMember {
+	isMember, _, err := s.client.Teams.GetTeamMembership(ctx, opt.TeamID, opt.Username)
+	if isMember == nil {
+		// user is not in this team
 		return nil
 	}
+	// TODO(vera): check for errors other than not found
 
 	_, err = s.client.Teams.RemoveTeamMembership(ctx, opt.TeamID, opt.Username)
 
@@ -302,12 +303,9 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOption
 
 	// check whether group members are already in team; add missing members
 	for _, member := range opt.Users {
-		isMember, _, err := s.client.Teams.IsTeamMember(ctx, groupTeam.GetID(), member)
-		if err != nil {
-			log.Println("GitHub UpdateTeamMembers could not check user against the team: ", err.Error())
-			return err
-		}
-		if !isMember {
+		isMember, _, err := s.client.Teams.GetTeamMembership(ctx, groupTeam.GetID(), member)
+		// TODO(vera): error check (other than not found)
+		if isMember == nil {
 			_, _, err = s.client.Teams.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
 			if err != nil {
 				log.Println("GitHub UpdateTeamMembers could not add user ", member, " to the team ", groupTeam.GetName(), ": ", err.Error())
