@@ -14,6 +14,14 @@ This guide details the specifics for go and github, but should be similar setup 
     mkdir $HOME/go
     ```
 
+    (If running on a UiS server; here is how to update Go)
+    ```
+	wget -O /tmp/go.tar.gz https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz
+	[[ -d /usr/local/go ]] && rm -rf /usr/local/go
+	tar -C /usr/local -zxf /tmp/go.tar.gz
+	rm -f /tmp/go.tar.gz
+    ```
+
 3. Install Docker CE via repository (Recommended 18.03)
     
     For ubuntu 
