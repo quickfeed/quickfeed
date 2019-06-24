@@ -1,5 +1,5 @@
 import {
-    Assignment, 
+        Assignment, 
         Course, 
         Enrollment, 
         User, 
@@ -84,9 +84,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getCourses(): Promise<Course[]> {
         const result = await this.grpcHelper.getCourses();
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getCourses");
-            }
             return [];
         }
         const data = result.data.getCoursesList().map((course) => {
@@ -99,9 +96,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
         const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getCoursesFor");
-            }
             return [];
         }
         const arr: ICourseEnrollment[] = [];
@@ -121,9 +115,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getUsersForCourse(course: Course, noGroupMembers?: boolean, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]> {
         const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, state);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getUsersForCourse");
-            }
             return [];
         }
 
@@ -142,9 +133,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
         const result = await this.grpcHelper.getAssignments(courseId);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getAssignments");
-            }
             return [];
         }
         const assignments: IAssignment[] = [];
@@ -163,9 +151,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async addUserToCourse(user: User, course: Course): Promise<boolean> {
         const result = await this.grpcHelper.createEnrollment(user.getId(), course.getId());
         if (result.statusCode !== 0) {
-            if (result.message) {
-                this.informUser(result.message, "addUserToCourse");
-            }
             return false;
         }
         return true;
@@ -175,9 +160,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const result = await this.grpcHelper.updateEnrollment(link.userid, link.courseId, state);
        
         if (result.statusCode !== 0) {
-            if (result.message) {
-                this.informUser(result.message, "changeUserState");
-            }
             return false;
         }
         return true;
@@ -186,9 +168,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async isAuthorizedTeacher(): Promise<boolean> {
         const result = await this.grpcHelper.isAuthorizedTeacher(); 
         if (result.statusCode !== 0) {
-            if (result.message) {
-                this.informUser(result.message, "changeUserState");
-            }
             return false;
         }
         return true;
@@ -199,10 +178,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async createNewCourse(courseData: Course): Promise<Course | IError> {
         const result = await this.grpcHelper.createCourse(courseData);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "createNewCourse");
-            }
-            return this.parseError(result);
+           return this.parseError(result);
         }
         return result.data;
     }
@@ -211,9 +187,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getCourse(id: number): Promise<Course | null> {
         const result = await this.grpcHelper.getCourse(id);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getCourse");
-            }
             return null;
         }
         return result.data;
@@ -223,22 +196,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async updateCourse(courseId: number, courseData: Course): Promise< Void | IError> {
         const result = await this.grpcHelper.updateCourse(courseData);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "updateCourse");
-            }
             return this.parseError(result);
         }
-        const voidy = new Void();
-        return voidy;
+        return new Void();
      }
 
     public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | IError> {
         const result = await this.grpcHelper.createGroup(groupData, courseID);
         
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "createGroup");
-            }
             return this.parseError(result);
         }
         return result.data;
@@ -248,9 +214,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getCourseGroups(courseID: number): Promise<Group[]> {
         const result = await this.grpcHelper.getGroups(courseID);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getCourseGroups");
-            }
             return [];
         }
         return result.data.getGroupsList();
@@ -259,9 +222,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<Group | null> {
         const result = await this.grpcHelper.getGroupByUserAndCourse(userID, courseID);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getGroupByUserAndCourse");
-            }
             return null;
         }
         return result.data;
@@ -271,9 +231,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async updateGroupStatus(groupID: number, st: Group.GroupStatus): Promise<boolean> {
         const result = await this.grpcHelper.updateGroupStatus(groupID, st);
         if (result.statusCode !== 0)  {
-            if (result.message) {
-                this.informUser(result.message, "updateGroupStatus");
-            }
             return false;
         }
         return true;
@@ -283,9 +240,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getGroup(groupID: number): Promise<Group | null> {
         const result = await this.grpcHelper.getGroup(groupID);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getGroup");
-            }
             return null;
         }
         return result.data;
@@ -295,9 +249,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async deleteGroup(groupID: number): Promise<boolean> {
         const result = await this.grpcHelper.deleteGroup(groupID);
          if (result.statusCode !== 0) {
-            if (result.message) {
-                this.informUser(result.message, "deleteGroup");
-            }
             return false;
         }
         return true;
@@ -307,9 +258,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async updateGroup(group: Group): Promise<IStatusCode | IError> {    
         const result = await this.grpcHelper.updateGroup(group);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "updateGroup");
-            }
             return this.parseError(result);
         }
         const code: IStatusCode = {statusCode: result.statusCode};
@@ -319,9 +267,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>> {
         const result = await this.grpcHelper.getGroupSubmissions(courseID, groupID);
         if (result.statusCode !== 0 || !result.data ) {
-            if (result.message) {
-                this.informUser(result.message, "getAllGroupLabInfos");
-            }
             return {};
         }
 
@@ -339,9 +284,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getAllLabInfos(courseID: number, userID: number): Promise<IMap<ISubmission>> {
         const result = await this.grpcHelper.getSubmissions(courseID, userID);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getAllLabInfos");
-            }
             return {};
         }
         const isubmissions: ISubmission[] = [];
@@ -367,9 +309,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getAllUser(): Promise<User[]> {
         const result = await this.grpcHelper.getUsers();
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getAllUser");
-            }
             return [];
         }
         const arr = result.data.getUsersList().map<User>((ele) => this.makeUserInfo(ele));
@@ -387,9 +326,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async changeAdminRole(user: User): Promise<boolean> {
         const result = await this.grpcHelper.updateUser(user, true);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "changeAdminRole");
-            }
             return false;
         }
         return true;
@@ -399,9 +335,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async updateUser(user: User): Promise<boolean> {
         const result = await this.grpcHelper.updateUser(user);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "updateUser");
-            }
             return false;
         }
         return true;
@@ -410,21 +343,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getOrganizations(provider: string): Promise<Organization[]> {
         const result = await this.grpcHelper.getOrganizations(provider);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getAllUser");
-            }
             return [];
         }
-
         return result.data.getOrganizationsList();
     }
 
     public async getProviders(): Promise<string[]> {
         const result = await this.grpcHelper.getProviders();
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getProviders");
-            }
             return [];
         } 
         return result.data.getProvidersList();
@@ -435,7 +361,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
       
         const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
         if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
-            this.informUser("user not found", "getLoggedInUser");
             return null;
         }
         const iusr = result.data;
@@ -445,7 +370,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const grpcResult = await this.grpcHelper.getUser(iusr.id);
 
         if (grpcResult.statusCode !== 0 || !grpcResult.data) {
-            this.informUser("user not found", "getLoggedInUser");
             const usr: User = new User();
             usr.setId(iusr.id);
             usr.setStudentid(iusr.studentid);
@@ -462,9 +386,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async refreshCoursesFor(courseID: number): Promise<any> {
         const result = await this.grpcHelper.refreshCourse(courseID);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "refreshCoursesFor");
-            }
             return null;
         }
         return result.data.getAssignmentsList();
@@ -473,9 +394,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getRepositoryURL(courseID: number, repoType: number): Promise<string> {
         const result = await this.grpcHelper.getRepositoryURL(courseID, repoType);
         if (result.statusCode !== 0 || !result.data) {
-            if (result.message) {
-                this.informUser(result.message, "getRepositoryURL");
-            }
             return "";
         }
         return result.data.getUrl();
@@ -483,28 +401,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
 
     public async approveSubmission(submissionID: number): Promise<void> {
-        const result = await this.grpcHelper.updateSubmission(submissionID);
-        if (result.message) {
-            this.informUser(result.message, "approveSubmission");
-            return;
-        }
+        await this.grpcHelper.updateSubmission(submissionID);
         return;
     }
 
 
     private makeUserInfo(data: User): User {
         return data;
-    }
-
-    private informUser(info: string, sender: string): void {
-        console.log("Request from method " + sender + " failed: " + info);
-    }
-
-    private handleError(result: IHTTPResult<any>, sender?: string): void {
-        this.logger.warn("Request to server failed with status code: " + result.statusCode, true);
-        if (sender) {
-            this.logger.warn("Failed request from: " + sender);
-        }
     }
 
     private parseError(result: IGrpcResponse<any>): IError {
