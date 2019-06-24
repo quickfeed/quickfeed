@@ -122,7 +122,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, state);
         if (result.statusCode !== 0 || !result.data) {
             if (result.message) {
-                this.informUser(result.message, "getUsersFroCourse");
+                this.informUser(result.message, "getUsersForCourse");
             }
             return [];
         }
