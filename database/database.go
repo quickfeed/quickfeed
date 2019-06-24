@@ -16,8 +16,8 @@ type Database interface {
 	// UpdateAccessToken updates the access token for the given remote identity.
 	// The supplied remote identity must contain Provider, RemoteID and AccessToken.
 	UpdateAccessToken(*pb.RemoteIdentity) error
-	// GetUser returns the user for the given user ID,
-	// including the user's remote identities.
+
+	// GetUser returns the given user, including remote identities.
 	GetUser(uint64) (*pb.User, error)
 	// GetUsers returns the users for the given set of user IDs.
 	GetUsers(...uint64) ([]*pb.User, error)
@@ -62,13 +62,18 @@ type Database interface {
 	// GetSubmissions returns a list of submission entries for the given course, matching the given query.
 	GetSubmissions(cid uint64, query *pb.Submission) ([]*pb.Submission, error)
 
+	// CreateGroup creates a new group and assign users to newly created group.
 	CreateGroup(*pb.Group) error
+	// UpdateGroup updates a group with the specified users and enrollments.
+	UpdateGroup(group *pb.Group) error
+	// UpdateGroupStatus updates status field of a group.
+	UpdateGroupStatus(*pb.Group) error
+	// DeleteGroup deletes a group and its corresponding enrollments.
+	DeleteGroup(uint64) error
 	// GetGroup returns the group with the specified group id.
 	GetGroup(uint64) (*pb.Group, error)
+	// GetGroupsByCourse returns the groups for the given course.
 	GetGroupsByCourse(cid uint64) ([]*pb.Group, error)
-	UpdateGroupStatus(*pb.Group) error
-	UpdateGroup(group *pb.Group) error
-	DeleteGroup(uint64) error
 
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error

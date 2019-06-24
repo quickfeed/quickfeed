@@ -218,3 +218,9 @@ func (s *FakeSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipOpt
 	// TODO no implementation provided yet
 	return nil
 }
+
+// GetUserScopes implements the SCM interface
+func (s *FakeSCM) GetUserScopes(ctx context.Context) *Authorization {
+	// TODO no implementation provided yet
+	return nil
+}

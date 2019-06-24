@@ -29,7 +29,7 @@ import (
 )
 
 // NewWebServer starts a new web server
-func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, public, httpAddr string, baseURL string, fake bool, buildscripts string, scms *web.Scms) {
+func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, public, httpAddr string, baseURL string, fake bool, buildscripts string, scms *auth.Scms) {
 	entryPoint := filepath.Join(public, "index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		l.Fatal("file not found", zap.String("path", entryPoint))
@@ -149,7 +149,7 @@ func registerWebhooks(logger *zap.Logger, e *echo.Echo, db database.Database, se
 	})
 }
 
-func registerAuth(logger *zap.Logger, e *echo.Echo, db database.Database, scms *web.Scms) {
+func registerAuth(logger *zap.Logger, e *echo.Echo, db database.Database, scms *auth.Scms) {
 	// makes the oauth2 provider available in the request query so that
 	// markbates/goth/gothic.GetProviderName can find it.
 	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {

@@ -11,7 +11,6 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
-	"github.com/autograde/aguis/web/grpcservice"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -37,7 +36,7 @@ func TestNewGroup(t *testing.T) {
 
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
@@ -96,7 +95,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 
 	fakeProvider, scms := fakeProviderMap(t)
 	ctx := withUserContext(context.Background(), teacher)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
@@ -155,7 +154,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 
 	fakeProvider, scms := fakeProviderMap(t)
 	ctx := withUserContext(context.Background(), user)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
@@ -176,7 +175,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	fakeProvider.CreateOrganization(context.Background(),
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
@@ -367,7 +366,7 @@ func TestDeleteGroup(t *testing.T) {
 	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	ctx := withUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group)
@@ -408,7 +407,7 @@ func TestGetGroup(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), user)
 
 	group := &pb.Group{Name: "Test Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
@@ -448,7 +447,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
@@ -531,7 +530,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	user1 := createFakeUser(t, db, 2)
@@ -590,7 +589,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
@@ -690,7 +689,7 @@ func TestGetGroups(t *testing.T) {
 	admin := users[0]
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	course := allCourses[1]

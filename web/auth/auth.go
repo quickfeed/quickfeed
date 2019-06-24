@@ -8,7 +8,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/web"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
@@ -22,7 +21,7 @@ func init() {
 
 // GetCallbackURL returns the callback URL for a given base URL and a provider.
 func GetCallbackURL(baseURL, provider string) string {
-	return web.GetProviderURL(baseURL, "auth", provider, "callback")
+	return GetProviderURL(baseURL, "auth", provider, "callback")
 }
 
 // Session keys.
@@ -265,7 +264,7 @@ func OAuth2Callback(logger *zap.Logger, db database.Database) echo.HandlerFunc {
 // AccessControl returns an access control middleware. Given a valid context
 // with sufficient access the next handler is called. Missing or invalid
 // credentials results in a 401 unauthorized response.
-func AccessControl(logger *zap.Logger, db database.Database, scms *web.Scms) echo.MiddlewareFunc {
+func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			sess, err := session.Get(SessionKey, c)

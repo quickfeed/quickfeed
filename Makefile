@@ -7,6 +7,7 @@ protoc-grpcweb		:= protoc-gen-grpc-web
 protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
+sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 
 # necessary when target is not tied to a file
 .PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run
@@ -37,10 +38,10 @@ proto:
 	Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:. \
 	--js_out=import_style=commonjs:../$(proto-path)/ \
 	--grpc-web_out=import_style=typescript,mode=grpcweb:../$(proto-path)/ ag.proto
-	@sed -i '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
+	$(sedi) '/gogo/d' $(proto-path)/ag_pb.js $(proto-path)/AgServiceClientPb.ts $(proto-path)/ag_pb.d.ts
 	@tsc $(proto-path)/AgServiceClientPb.ts
 
-devtools: grpcweb
+devtools: grpcweb npmtools
 
 grpcweb:
 	@echo "Fetch and install grpcweb protoc plugin (requires sudo access)"
@@ -50,9 +51,11 @@ grpcweb:
 	@chmod +x $(grpcweb-path)
 	@rm -rf $(tmpdir)
 
-typescript:
-	@echo "Fetch typescript compiler (requires sudo access)"
+npmtools:
+	@echo "Install webpack and typescript compiler (requires sudo access)"
 	@npm install -g typescript
+	@npm install -g webpack
+	@npm install -g webpack-cli
 
 envoy-build:
 	@echo Building Autograder Envoy proxy

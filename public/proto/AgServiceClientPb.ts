@@ -14,6 +14,7 @@ import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/t
 import {
   ActionRequest,
   Assignments,
+  AuthorizationResponse,
   Course,
   Courses,
   EnrollmentRequest,
@@ -113,6 +114,28 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoUpdateUser,
+      callback);
+  }
+
+  methodInfoIsAuthorizedTeacher = new grpcWeb.AbstractClientBase.MethodInfo(
+    AuthorizationResponse,
+    (request: Void) => {
+      return request.serializeBinary();
+    },
+    AuthorizationResponse.deserializeBinary
+  );
+
+  isAuthorizedTeacher(
+    request: Void,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: AuthorizationResponse) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/IsAuthorizedTeacher',
+      request,
+      metadata || {},
+      this.methodInfoIsAuthorizedTeacher,
       callback);
   }
 

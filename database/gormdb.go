@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/jinzhu/gorm"
@@ -17,12 +16,16 @@ var (
 	// ErrDuplicateGroup is returned when trying to create a group with the same
 	// name as a previously registered group.
 	ErrDuplicateGroup = errors.New("group name already registered")
+	// ErrUpdateGroup is returned when updating a group's enrollment fails.
+	ErrUpdateGroup = errors.New("failed to update group enrollment")
 	// ErrCourseExists is returned when trying to create an association in
 	// the database for a DirectoryId that already exists in the database.
 	ErrCourseExists = errors.New("course already exists on git provider")
 	// ErrInsufficientAccess is returned when trying to update database
 	// with insufficient access priviledges.
 	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
+	// ErrCreateRepo is returned when trying to create repository with wrong argument.
+	ErrCreateRepo = errors.New("failed to create repository; invalid arguments")
 )
 
 // GormDB implements the Database interface.
@@ -487,8 +490,7 @@ func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_U
 	return db.getEnrollments(&pb.Course{ID: cid}, statuses...)
 }
 
-//TODO(meling) @Vera: I think this method can be integrated into
-//GetEnrollmentsByCourse and calling that instead of getEnrollments() internally in database package
+// getEnrollments is generic helper function that return enrollments for either course and user.
 func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
 	if len(statuses) == 0 {
 		statuses = []pb.Enrollment_UserStatus{
@@ -598,138 +600,11 @@ func (db *GormDB) UpdateCourse(course *pb.Course) error {
 	return db.conn.Model(&pb.Course{}).Updates(course).Error
 }
 
-// CreateGroup creates a new group and assign users to newly created group
-func (db *GormDB) CreateGroup(group *pb.Group) error {
-	if group.CourseID == 0 {
-		return gorm.ErrRecordNotFound
-	}
-
-	tx := db.conn.Begin()
-	var course uint64
-	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
-		ID: group.CourseID,
-	}).Count(&course).Error; err != nil {
-		return err
-	}
-	if course != 1 {
-		return gorm.ErrRecordNotFound
-	}
-
-	if err := tx.Model(&pb.Group{}).Create(group).Error; err != nil {
-		tx.Rollback()
-		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
-			return ErrDuplicateGroup
-		}
-		return err
-	}
-	var userids []uint64
-	for _, u := range group.Users {
-		userids = append(userids, u.ID)
-	}
-	query := tx.Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{
-			CourseID: group.CourseID,
-		}).
-		Where("user_id IN (?) AND status IN (?)", userids, []pb.Enrollment_UserStatus{
-			pb.Enrollment_STUDENT, pb.Enrollment_TEACHER}).
-		Updates(&pb.Enrollment{
-			GroupID: group.ID,
-		})
-
-	if query.Error != nil {
-		tx.Rollback()
-		return query.Error
-	}
-
-	if query.RowsAffected != int64(len(userids)) {
-		tx.Rollback()
-		return gorm.ErrRecordNotFound
-	}
-
-	tx.Commit()
-	return nil
-}
-
-// GetGroup returns a group specified by id return error if does not exits
-func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
-	var group pb.Group
-	if err := db.conn.Preload("Enrollments").First(&group, gid).Error; err != nil {
-		return nil, err
-	}
-	var userIds []uint64
-	for _, enrollment := range group.Enrollments {
-		userIds = append(userIds, enrollment.UserID)
-	}
-	if len(userIds) > 0 {
-		users, err := db.GetUsers(userIds...)
-		if err != nil {
-			return nil, err
-		}
-		group.Users = users
-	}
-	return &group, nil
-}
-
-// UpdateGroupStatus updates status field of a group
-func (db *GormDB) UpdateGroupStatus(group *pb.Group) error {
-	return db.conn.Model(group).Update("status", group.Status).Error
-}
-
-// GetGroupsByCourse returns a list of groups
-//TODO(meling) add test for this method
-//TODO(meling) can this also Preload("Users") to avoid the GetUsers below.
-func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
-	var groups []*pb.Group
-	if err := db.conn.
-		Preload("Enrollments").
-		Where(&pb.Group{
-			CourseID: cid,
-		}).
-		Find(&groups).Error; err != nil {
-		return nil, err
-	}
-
-	for _, group := range groups {
-		var userIds []uint64
-		for _, enrollment := range group.Enrollments {
-			userIds = append(userIds, enrollment.UserID)
-		}
-		if len(userIds) > 0 {
-			users, err := db.GetUsers(userIds...)
-			if err != nil {
-				return nil, err
-			}
-			group.Users = users
-		}
-	}
-	return groups, nil
-}
-
-// DeleteGroup delete a group
-func (db *GormDB) DeleteGroup(gid uint64) error {
-	group, err := db.GetGroup(gid)
-	if err != nil {
-		return err
-	}
-
-	tx := db.conn.Begin()
-	if err := tx.Delete(group).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, gid).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
-}
-
 // CreateRepository implements the Database interface
 func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	if repo.OrganizationID == 0 || repo.RepositoryID == 0 {
-		// both directory and repository must be non-zero
-		return errors.New("failed to create repository; invalid arguments")
+		// both organization and repository must be non-zero
+		return ErrCreateRepo
 	}
 
 	switch {
@@ -747,7 +622,7 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 		}
 	case !repo.RepoType.IsCourseRepo():
 		// both user and group unset, then repository type must an autograder repo type
-		return errors.New("failed to create repository; invalid arguments")
+		return ErrCreateRepo
 	}
 
 	return db.conn.Create(repo).Error
@@ -771,55 +646,6 @@ func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error
 		return nil, err
 	}
 	return repos, nil
-}
-
-// UpdateGroup updates a group
-func (db *GormDB) UpdateGroup(group *pb.Group) error {
-	if group.CourseID == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	tx := db.conn.Begin()
-	var course uint64
-	if err := db.conn.Model(&pb.Course{}).
-		Where(&pb.Course{ID: group.CourseID}).
-		Count(&course).Error; err != nil {
-		return err
-	}
-	if course != 1 {
-		return gorm.ErrRecordNotFound
-	}
-	if err := tx.Model(&pb.Group{}).Updates(group).Error; err != nil {
-		tx.Rollback()
-		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
-			return ErrDuplicateGroup
-		}
-		return err
-	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.ID).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	var userids []uint64
-	for _, u := range group.Users {
-		userids = append(userids, u.ID)
-	}
-
-	query := tx.Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: group.CourseID}).
-		Where("user_id IN (?) AND status IN (?)", userids,
-			[]pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_TEACHER}).
-		Updates(&pb.Enrollment{GroupID: group.ID})
-	if query.Error != nil {
-		tx.Rollback()
-		return query.Error
-	}
-
-	if query.RowsAffected != int64(len(userids)) {
-		tx.Rollback()
-		return errors.New("failed to update group")
-	}
-	tx.Commit()
-	return nil
 }
 
 // Close closes the gorm database.

@@ -1,13 +1,16 @@
 package web
 
 import (
+	"context"
+	"errors"
+	"log"
 	"net/http"
+
+	"github.com/autograde/aguis/scm"
+	"github.com/google/go-cmp/cmp"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 )
@@ -22,13 +25,15 @@ type JSONuser struct {
 	AvatarURL string `json:"avatarurl"`
 }
 
+// TeacherScopes defines scopes that must be enabled enabled on teacher token
+var TeacherScopes = []string{"admin:org", "delete_repo", "repo", "user"}
+
 // GetSelf redirects to GetUser with the current user's id.
 func GetSelf(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		usr := c.Get("user").(*pb.User)
 		user, err := db.GetUser(usr.ID)
-
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
@@ -40,25 +45,30 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// GetUser returns information about the provided user id.
-func GetUser(request *pb.RecordRequest, db database.Database) (*pb.User, error) {
-	return db.GetUser(request.ID)
+// getUser returns information about the provided user id.
+func (s *AutograderService) getUser(request *pb.RecordRequest) (*pb.User, error) {
+	return s.db.GetUser(request.ID)
 }
 
-// GetUsers returns all the users in the database.
-func GetUsers(db database.Database) (*pb.Users, error) {
-	users, err := db.GetUsers()
+// getUsers returns all the users in the database.
+func (s *AutograderService) getUsers() (*pb.Users, error) {
+	users, err := s.db.GetUsers()
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "no users found")
+		return nil, err
 	}
 	return &pb.Users{Users: users}, nil
 }
 
-// PatchUser promotes a user to an administrator or makes other changes to the user database entry.
-func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*pb.User, error) {
-	updateUser, err := db.GetUser(request.ID)
+// patchUser promotes a user to an administrator or makes other changes to the user database entry.
+// Only admin user can promote another user, and only the current user can change his database entries.
+func (s *AutograderService) patchUser(currentUser *pb.User, request *pb.User) (*pb.User, error) {
+	if !currentUser.IsAdmin && currentUser.ID != request.ID {
+		return nil, errors.New("only admin can update another user")
+	}
+
+	updateUser, err := s.db.GetUser(request.ID)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "user not found")
+		return nil, err
 	}
 
 	if request.Name != "" {
@@ -77,8 +87,17 @@ func PatchUser(currentUser *pb.User, request *pb.User, db database.Database) (*p
 	if currentUser.IsAdmin {
 		updateUser.IsAdmin = request.IsAdmin
 	}
-	if err := db.UpdateUser(updateUser); err != nil {
-		err = status.Errorf(codes.Internal, "could not update user")
-	}
+
+	err = s.db.UpdateUser(updateUser)
 	return updateUser, err
+}
+
+// HasTeacherScopes checks whether current user has upgraded scopes on provided scm client
+func HasTeacherScopes(ctx context.Context, s scm.SCM) bool {
+	auth := s.GetUserScopes(ctx)
+	if !cmp.Equal(auth.Scopes, TeacherScopes) {
+		log.Println("Got scopes: ", auth.Scopes, " want scopes: ", TeacherScopes)
+		return false
+	}
+	return true
 }

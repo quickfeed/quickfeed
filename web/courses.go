@@ -121,7 +121,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			if err = addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT); err != nil {
 				return err
 			}
-			// then send invitation to course organization to student (will return nil if already a member)
+			// then send invitation to course organization to student (will return nil if successful or already a member)
 			return addUserToOrg(ctx, s, course.GetOrganizationID(), student)
 		}
 
@@ -234,17 +234,9 @@ func addUserToOrg(ctx context.Context, s scm.SCM, orgID uint64, user *pb.User) e
 	return s.CreateOrgMembership(ctx, &scm.OrgMembershipOptions{Organization: org, Username: user.GetLogin()})
 }
 
-// GetCourse find course by id and return JSON object.
-func GetCourse(query *pb.RecordRequest, db database.Database) (*pb.Course, error) {
-
-	course, err := db.GetCourse(query.ID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "course not found")
-		}
-		return nil, status.Errorf(codes.NotFound, "failed to get course from database")
-	}
-	return course, nil
+// GetCourse returns a course object for the given course id.
+func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
+	return s.db.GetCourse(courseID)
 }
 
 // RefreshCourse updates the course assignments (and possibly other course information).
@@ -363,9 +355,9 @@ func GetEnrollmentsByCourse(request *pb.EnrollmentRequest, db database.Database)
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
-// GetRepositoryURL returns the repository information
-func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db database.Database) (*pb.URLResponse, error) {
-	course, err := db.GetCourse(request.GetCourseID())
+// getRepositoryURL returns the repository information
+func (s *AutograderService) getRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest) (*pb.URLResponse, error) {
+	course, err := s.db.GetCourse(request.GetCourseID())
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +369,7 @@ func GetRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest, db da
 		userRepoQuery.UserID = currentUser.GetID()
 	}
 
-	repos, err := db.GetRepositories(userRepoQuery)
+	repos, err := s.db.GetRepositories(userRepoQuery)
 	if err != nil {
 		return nil, err
 	}

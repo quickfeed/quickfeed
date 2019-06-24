@@ -1,11 +1,13 @@
-import {Assignment, 
+import {
+    Assignment, 
         Course, 
         Enrollment, 
         User, 
         Group, 
         Submission, 
         Organization,
-        Void} from "../../proto/ag_pb";
+        Void
+    } from "../../proto/ag_pb";
 import {
     IAssignment,
     IBuildInfo,
@@ -172,6 +174,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean> {
         const result = await this.grpcHelper.updateEnrollment(link.userid, link.courseId, state);
        
+        if (result.statusCode !== 0) {
+            if (result.message) {
+                this.informUser(result.message, "changeUserState");
+            }
+            return false;
+        }
+        return true;
+    }
+
+    public async isAuthorizedTeacher(): Promise<boolean> {
+        const result = await this.grpcHelper.isAuthorizedTeacher(); 
         if (result.statusCode !== 0) {
             if (result.message) {
                 this.informUser(result.message, "changeUserState");
@@ -387,7 +400,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const result = await this.grpcHelper.updateUser(user);
         if (result.statusCode !== 0 || !result.data) {
             if (result.message) {
-                this.informUser(result.message, "getAllUser");
+                this.informUser(result.message, "updateUser");
             }
             return false;
         }

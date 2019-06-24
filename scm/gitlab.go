@@ -241,3 +241,9 @@ func (s *GitlabSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 	// TODO no implementation provided yet
 	return nil
 }
+
+// GetUserScopes implements the SCM interface
+func (s *GitlabSCM) GetUserScopes(ctx context.Context) *Authorization {
+	// TODO no implementation provided yet
+	return nil
+}

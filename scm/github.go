@@ -3,6 +3,7 @@ package scm
 import (
 	"context"
 	"log"
+	"strings"
 
 	"google.golang.org/grpc/codes"
 
@@ -513,4 +514,15 @@ func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 		log.Println("scms: CreateOrgMembership sent invitation to user ", inv.GetLogin())
 	}
 	return nil
+}
+
+// GetUserScopes implements the SCM interface
+func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
+	// this method will always return error as it is OAut2 API, but will also return scopes info in response headers
+	_, resp, _ := s.client.Authorizations.List(ctx, &github.ListOptions{})
+	// header contains a single string with all scopes for authenticated user
+	stringScopes := resp.Header.Get("X-OAuth-Scopes")
+	// we split the string to check against the global slice of required scopes
+	gitScopes := strings.Split(stringScopes, ", ")
+	return &Authorization{Scopes: gitScopes}
 }

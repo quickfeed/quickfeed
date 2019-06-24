@@ -19,6 +19,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateUser = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.User, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.User.deserializeBinary);
+        this.methodInfoIsAuthorizedTeacher = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.AuthorizationResponse, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.AuthorizationResponse.deserializeBinary);
         this.methodInfoGetGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Group, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Group.deserializeBinary);
@@ -110,6 +113,10 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.updateUser = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateUser', request, metadata || {}, this.methodInfoUpdateUser, callback);
+    };
+    AutograderServiceClient.prototype.isAuthorizedTeacher = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/IsAuthorizedTeacher', request, metadata || {}, this.methodInfoIsAuthorizedTeacher, callback);
     };
     AutograderServiceClient.prototype.getGroup = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

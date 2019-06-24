@@ -21,8 +21,7 @@ import {
     Organizations,
     URLResponse,
     EnrollmentRequest,
-    Enrollment,
-    Repository,
+    AuthorizationResponse
 } from "../../proto/ag_pb";
 import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";
@@ -46,13 +45,6 @@ export class GrpcManager {
     public setUserMan(man: UserManager) {
         this.userMan = man;
     }
-
-    // /* USERS */ //
-/*
-    public getSelf(): Promise<IGrpcResponse<User>> {
-        const request = new Void();
-        return this.grpcSend<User>(this.agService.getSelf, request);
-    }*/
 
     public getUsers(): Promise<IGrpcResponse<Users>> {
         const request = new Void();
@@ -78,6 +70,11 @@ export class GrpcManager {
             requrest.setIsadmin(user.getIsadmin());
         }
         return this.grpcSend(this.agService.updateUser, requrest);
+    }
+
+    public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
+        const voidy = new Void();
+        return this.grpcSend<AuthorizationResponse>(this.agService.isAuthorizedTeacher, voidy);
     }
 
     // /* COURSES */ //
@@ -273,7 +270,6 @@ export class GrpcManager {
                 (err: grpcWeb.Error, response: T | undefined) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
-                            console.log("GRPC: got error: " + err.message);
                             const temp: IGrpcResponse<T> = {
                                 statusCode: err.code,
                                 message: err.message,

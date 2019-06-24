@@ -11,7 +11,6 @@ import (
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
-	"github.com/autograde/aguis/web/grpcservice"
 	"github.com/google/go-cmp/cmp"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
@@ -56,13 +55,19 @@ func TestGetUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// Create first user (the admin).
-	createFakeUser(t, db, 0)
-	user := createFakeUser(t, db, 1)
+	// create first user (the admin).
+	createFakeUser(t, db, 1)
+	// user will be the logged in user (saved in context)
+	user := createFakeUser(t, db, 2)
+	// another user, which the logged in user should not have access to, since user is not admin.
+	createFakeUser(t, db, 3)
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
-	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	//TODO(meling) check which metadata func is to be used for this??
+	// seems that the commented one below does not work.
+	//cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
+	cont := withUserContext(context.Background(), user)
 
 	foundUser, err := ags.GetUser(cont, &pb.RecordRequest{ID: user.ID})
 	if err != nil {
@@ -73,17 +78,32 @@ func TestGetUser(t *testing.T) {
 		t.Errorf("have user %+v want %+v", foundUser, user)
 	}
 
+	// 'user' is trying to get user with an illegal id 0; should fail with invalid argument error
 	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 0})
 	if err == nil {
 		t.Error("expected 'rpc error: code = InvalidArgument desc = invalid payload'")
 	}
 
+	// 'user' is trying to get 'admin'; should fail with illegal access error
 	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 1})
+	if err == nil {
+		t.Errorf("expected 'rpc error: code = PermissionDenied desc = only admin can access another user'")
+	}
+
+	// 'user getting back 'user'; should be ok
+	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 2})
 	if err != nil {
 		t.Errorf("unexpected error %+v", err)
 	}
 
+	// 'user' is trying to get 'other' user; should fail with illegal access error
 	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 3})
+	if err == nil {
+		t.Errorf("expected illegal access error")
+	}
+
+	// 'user' is trying to get non-existing user; should fail
+	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 4})
 	if err == nil {
 		t.Error("expected 'rpc error: code = NotFound desc = failed to get user'")
 	}
@@ -94,7 +114,7 @@ func TestGetUsers(t *testing.T) {
 	defer cleanup()
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
 	if err != nil {
 		t.Fatal(err)
@@ -163,7 +183,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -235,7 +255,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	admin := users[0]
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), admin)
 
 	course := allCourses[1]
@@ -300,7 +320,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 
 }
 
-func TestPatchUser(t *testing.T) {
+func TestUpdateUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 	user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
@@ -317,10 +337,10 @@ func TestPatchUser(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := grpcservice.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	ctx := withUserContext(context.Background(), adminUser)
 
-	respUser, err := web.PatchUser(adminUser, user, db)
+	respUser, err := ags.UpdateUser(ctx, user)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -362,6 +382,86 @@ func TestPatchUser(t *testing.T) {
 
 	if !cmp.Equal(withName, wantUser) {
 		t.Errorf("have users\n%+v want\n%+v\n", withName, wantUser)
+	}
+}
+
+func TestUpdateUserFailures(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+	user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
+	adminUser := createFakeUser(t, db, 1)
+	remoteIdentity := &pb.RemoteIdentity{Provider: "fake", AccessToken: "token"}
+	if err := db.CreateUserFromRemoteIdentity(
+		user, remoteIdentity,
+	); err != nil {
+		t.Fatal(err)
+	}
+	user, err := db.GetUserByRemoteIdentity(remoteIdentity)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+
+	u := createFakeUser(t, db, 3)
+	if u.IsAdmin {
+		t.Fatalf("expected user %v to be non-admin", u)
+	}
+	// context with user u (non-admin user); can only change its own name etc
+	ctx := withUserContext(context.Background(), u)
+
+	// trying to demote current adminUser by setting IsAdmin to false
+	nameChangeRequest := &pb.User{
+		ID:        adminUser.ID,
+		IsAdmin:   false,
+		Name:      "Scrooge McDuck",
+		StudentID: "99",
+		Email:     "test@test.com",
+		AvatarURL: "www.hello.com",
+	}
+	// current user u (non-admin) is in the ctx and tries to change adminUser
+	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	noChangeAdmin, err := db.GetUser(adminUser.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(noChangeAdmin, adminUser) {
+		t.Errorf("\nhave: %+v\nwant: %+v\n", noChangeAdmin, adminUser)
+	}
+
+	nameChangeRequest = &pb.User{
+		ID:        u.ID,
+		IsAdmin:   true,
+		Name:      "Scrooge McDuck",
+		StudentID: "99",
+		Email:     "test@test.com",
+		AvatarURL: "www.hello.com",
+	}
+	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	if err != nil {
+		t.Error(err)
+	}
+	withName, err := db.GetUser(u.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantUser := &pb.User{
+		ID:               withName.ID,
+		Name:             "Scrooge McDuck",
+		IsAdmin:          false, // we want that the current user u cannot promote himself to admin
+		StudentID:        "99",
+		Email:            "test@test.com",
+		AvatarURL:        "www.hello.com",
+		RemoteIdentities: u.RemoteIdentities,
+	}
+
+	if !cmp.Equal(withName, wantUser) {
+		t.Errorf("\nhave: %+v\nwant: %+v\n", withName, wantUser)
 	}
 }
 

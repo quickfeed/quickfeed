@@ -314,7 +314,6 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, c *pb.Course, g *pb.Group) 
 	if err = s.UpdateTeamMembers(ctx, opt); err != nil {
 		return status.Errorf(codes.Internal, "failed to update team members")
 	}
-
 	return nil
 }
 

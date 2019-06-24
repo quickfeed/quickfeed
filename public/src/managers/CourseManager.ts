@@ -11,8 +11,7 @@ import {
     IStudentSubmission,
     ISubmission,
     IUserCourse,
-    IUserRelation,
-
+    IUserRelation
 } from "../models";
 
 import { UserManager } from "../managers";

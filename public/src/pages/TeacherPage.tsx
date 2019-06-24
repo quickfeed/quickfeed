@@ -14,7 +14,7 @@ import {
     IUserCourseWithUser,
     IUserRelation,
 } from "../models";
-import {User, Course, Group, Enrollment, Repository} from "../../proto/ag_pb";
+import {Course, Group, Enrollment, Repository} from "../../proto/ag_pb";
 
 
 import { GroupResults } from "../components/teacher/GroupResults";
@@ -53,6 +53,9 @@ export class TeacherPage extends ViewPage {
     public checkAuthentication(): boolean {
         const curUser = this.userMan.getCurrentUser();
         if (curUser && this.userMan.isTeacher(curUser)) {
+            if (!this.userMan.isAuthorizedTeacher()) {
+                window.location.href="https://" + window.location.hostname + "/auth/github-teacher";                
+            }
             return true;
         }
         return false;
