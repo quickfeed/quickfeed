@@ -84,8 +84,8 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 }
 
 // UpdateUser updates the current users's information and returns the updated user.
-// Admin users can update other users information, whereas non-admin users cannot
-// update other users's information.
+// Admin users can update other users information, whereas non-admin users can only
+// update their own information.
 func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.User, error) {
 	if !in.IsValidUser() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
