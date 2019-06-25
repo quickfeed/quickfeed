@@ -58,16 +58,6 @@ export interface IGroupCourse extends ICourseLinkAssignment {
 }
 
 /**
- * Function to find out if object is a instance of IUserCourse.
- * Will return false if link is missing.
- * @param object
- */
-export function isIUserCourse(test: IUserCourse | IGroupCourse | ICourseLinkAssignment): test is IUserCourse {
-    const inter = test as IUserCourse;
-    return inter.link ? (inter.link as ICourseUserLink).userid !== undefined : false;
-}
-
-/**
  * An IUserCourse instance which also contains the user it
  * is related to.
  * @see IUserCourse

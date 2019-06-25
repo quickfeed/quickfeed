@@ -109,7 +109,6 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     }
 
     private renderInfo(): JSX.Element {
-        const hostURL: string = window.location.hostname;
         const gitMsg: JSX.Element = 
         <div>
             <p>Select a GitHub organization for your course.

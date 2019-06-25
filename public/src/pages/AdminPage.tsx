@@ -96,7 +96,7 @@ export class AdminPage extends ViewPage {
         const tables: JSX.Element[] = [];
         for (let i = 0; i < allCourses.length; i++) {
             const e = allCourses[i];
-            const labs = await this.courseMan.getAssignments(e);
+            const labs = await this.courseMan.getAssignments(e.getId());
             tables.push(<div key={i}>
                 <h3>Labs for {e.getName()} ({e.getCode()})</h3>
                 <DynamicTable
