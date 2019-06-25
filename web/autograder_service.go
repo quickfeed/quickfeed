@@ -69,14 +69,11 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 }
 
 // GetUsers returns a list of all users.
+// Frontend note: This method is used from AdminPage.tsx:users():35.
 func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
-	// used in AdminPage.tsx:35:users()
-	// Unclear if this is useful for anything but debugging.
-	// What we mainly want is GetUsers(ctx, course *pb.Course) (or *pb.RecordRequest)
-	// TODO(meling) check for admin requires test to be updated
-	//if !s.isAdmin(ctx) {
-	//	return nil, status.Errorf(codes.PermissionDenied, "only admin can access other users")
-	//}
+	if !s.isAdmin(ctx) {
+		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other users")
+	}
 	usrs, err := s.getUsers()
 	if err != nil {
 		s.logger.Error(err)

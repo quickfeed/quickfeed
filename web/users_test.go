@@ -14,7 +14,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/metadata"
 )
 
 //TODO(vera): reimplement
@@ -64,12 +63,9 @@ func TestGetUser(t *testing.T) {
 
 	_, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
-	//TODO(meling) check which metadata func is to be used for this??
-	// seems that the commented one below does not work.
-	//cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user.ID))
-	cont := withUserContext(context.Background(), user)
+	ctx := withUserContext(context.Background(), user)
 
-	foundUser, err := ags.GetUser(cont, &pb.RecordRequest{ID: user.ID})
+	foundUser, err := ags.GetUser(ctx, &pb.RecordRequest{ID: user.ID})
 	if err != nil {
 		t.Error(err)
 	}
@@ -79,31 +75,31 @@ func TestGetUser(t *testing.T) {
 	}
 
 	// 'user' is trying to get user with an illegal id 0; should fail with invalid argument error
-	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 0})
+	_, err = ags.GetUser(ctx, &pb.RecordRequest{ID: 0})
 	if err == nil {
 		t.Error("expected 'rpc error: code = InvalidArgument desc = invalid payload'")
 	}
 
 	// 'user' is trying to get 'admin'; should fail with illegal access error
-	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 1})
+	_, err = ags.GetUser(ctx, &pb.RecordRequest{ID: 1})
 	if err == nil {
 		t.Errorf("expected 'rpc error: code = PermissionDenied desc = only admin can access another user'")
 	}
 
 	// 'user getting back 'user'; should be ok
-	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 2})
+	_, err = ags.GetUser(ctx, &pb.RecordRequest{ID: 2})
 	if err != nil {
 		t.Errorf("unexpected error %+v", err)
 	}
 
 	// 'user' is trying to get 'other' user; should fail with illegal access error
-	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 3})
+	_, err = ags.GetUser(ctx, &pb.RecordRequest{ID: 3})
 	if err == nil {
 		t.Errorf("expected illegal access error")
 	}
 
 	// 'user' is trying to get non-existing user; should fail
-	_, err = ags.GetUser(cont, &pb.RecordRequest{ID: 4})
+	_, err = ags.GetUser(ctx, &pb.RecordRequest{ID: 4})
 	if err == nil {
 		t.Error("expected 'rpc error: code = NotFound desc = failed to get user'")
 	}
@@ -116,30 +112,29 @@ func TestGetUsers(t *testing.T) {
 	_, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
+	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
 
-	user1 := createFakeUser(t, db, 1)
+	admin := createFakeUser(t, db, 1)
 	user2 := createFakeUser(t, db, 2)
-
-	cont := metadata.AppendToOutgoingContext(context.Background(), "user", string(user1.ID))
-
-	foundUsers, err := ags.GetUsers(cont, &pb.Void{})
+	ctx := withUserContext(context.Background(), user2)
+	_, err = ags.GetUsers(ctx, &pb.Void{})
+	if err == nil {
+		t.Fatal("expected 'rpc error: code = PermissionDenied desc = only admin can access other users'")
+	}
+	// now switch to use admin as the user; this should pass
+	ctx = withUserContext(context.Background(), admin)
+	foundUsers, err := ags.GetUsers(ctx, &pb.Void{})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Remote identities should not be loaded.
-	user1.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
+	// remote identities should not be loaded.
+	admin.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	user2.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
-	// First user should be admin.
-	user1.IsAdmin = true
 	wantUsers := make([]*pb.User, 0)
-	wantUsers = append(wantUsers, user1)
+	wantUsers = append(wantUsers, admin)
 	wantUsers = append(wantUsers, user2)
 
 	if !cmp.Equal(foundUsers.Users, wantUsers) {
