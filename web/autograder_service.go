@@ -117,9 +117,9 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 	if err != nil {
 		return nil, err
 	}
-
-	isAuthorized := HasTeacherScopes(ctx, scm)
-	return &pb.AuthorizationResponse{IsAuthorized: isAuthorized}, nil
+	return &pb.AuthorizationResponse{
+		IsAuthorized: s.hasTeacherScopes(ctx, scm),
+	}, nil
 }
 
 // CreateCourse creates a new course.
