@@ -9,18 +9,6 @@ export interface IUser {
     isadmin: boolean;
 }
 
-
-/**
- * Checks if value is compatible with the ICourse interface
- * @param value A value to check if it is an ICourse
- */
-export function isCourse(value: any): value is Course {
-    return value
-        && typeof value.id === "number"
-        && typeof value.name === "string"
-        && typeof value.tag === "string";
-}
-
 // Browser only objects START
 
 export interface ICourseLinkAssignment {

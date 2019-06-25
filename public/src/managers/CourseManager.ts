@@ -6,7 +6,6 @@ import {
     IError,
     IGroupCourse,
     INewGroup,
-    isCourse,
     IStatusCode,
     IStudentSubmission,
     ISubmission,
@@ -173,10 +172,6 @@ export class CourseManager {
      * @param courseID The course id or ICourse to retrive assignments from
      */
     public async getAssignments(courseID: number): Promise<IAssignment[]> {
-        /*
-        if (isCourse(courseID)) {
-            courseID = courseID.getId();
-        }*/
         return MapHelper.toArray(await this.courseProvider.getAssignments(courseID));
     }
 
