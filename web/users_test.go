@@ -318,37 +318,30 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-	user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
-	adminUser := createFakeUser(t, db, 1)
-	remoteIdentity := &pb.RemoteIdentity{Provider: "fake", AccessToken: "token"}
-	if err := db.CreateUserFromRemoteIdentity(
-		user, remoteIdentity,
-	); err != nil {
-		t.Fatal(err)
-	}
-	user, err := db.GetUserByRemoteIdentity(remoteIdentity)
-	if err != nil {
-		t.Fatal(err)
-	}
+	firstAdminUser := createFakeUser(t, db, 1)
+	nonAdminUser := createFakeUser(t, db, 11)
 
 	_, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
-	ctx := withUserContext(context.Background(), adminUser)
+	ctx := withUserContext(context.Background(), firstAdminUser)
 
-	respUser, err := ags.UpdateUser(ctx, user)
+	// we want to update nonAdminUser to become admin
+	nonAdminUser.IsAdmin = true
+	respUser, err := ags.UpdateUser(ctx, nonAdminUser)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	admin, err := db.GetUser(user.ID)
+	// we expect the nonAdminUser to now be admin
+	admin, err := db.GetUser(nonAdminUser.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !admin.IsAdmin {
-		t.Error("expected user to have become admin")
+		t.Error("expected nonAdminUser to have become admin")
 	}
 
-	namechangeRequest := &pb.User{
+	nameChangeRequest := &pb.User{
 		ID:        respUser.ID,
 		IsAdmin:   respUser.IsAdmin,
 		Name:      "Scrooge McDuck",
@@ -357,11 +350,11 @@ func TestUpdateUser(t *testing.T) {
 		AvatarURL: "www.hello.com",
 	}
 
-	_, err = ags.UpdateUser(ctx, namechangeRequest)
+	_, err = ags.UpdateUser(ctx, nameChangeRequest)
 	if err != nil {
 		t.Error(err)
 	}
-	withName, err := db.GetUser(user.ID)
+	withName, err := db.GetUser(nonAdminUser.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -372,7 +365,7 @@ func TestUpdateUser(t *testing.T) {
 		StudentID:        "99",
 		Email:            "test@test.com",
 		AvatarURL:        "www.hello.com",
-		RemoteIdentities: user.RemoteIdentities,
+		RemoteIdentities: nonAdminUser.RemoteIdentities,
 	}
 
 	if !cmp.Equal(withName, wantUser) {
@@ -383,18 +376,9 @@ func TestUpdateUser(t *testing.T) {
 func TestUpdateUserFailures(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-	user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
+	//user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
 	adminUser := createFakeUser(t, db, 1)
-	remoteIdentity := &pb.RemoteIdentity{Provider: "fake", AccessToken: "token"}
-	if err := db.CreateUserFromRemoteIdentity(
-		user, remoteIdentity,
-	); err != nil {
-		t.Fatal(err)
-	}
-	user, err := db.GetUserByRemoteIdentity(remoteIdentity)
-	if err != nil {
-		t.Fatal(err)
-	}
+	createFakeUser(t, db, 11)
 
 	_, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
@@ -416,7 +400,7 @@ func TestUpdateUserFailures(t *testing.T) {
 		AvatarURL: "www.hello.com",
 	}
 	// current user u (non-admin) is in the ctx and tries to change adminUser
-	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	_, err := ags.UpdateUser(ctx, nameChangeRequest)
 	if err == nil {
 		t.Fatal(err)
 	}
