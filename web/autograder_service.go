@@ -90,15 +90,13 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	if !in.IsValidUser() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
+	if !s.hasAccess(ctx, in.ID) {
+		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another user")
+	}
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	currentUser, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
-	usr, err := s.patchUser(currentUser, in)
+	usr, err := s.updateUser(s.isAdmin(ctx), in)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to update current user")

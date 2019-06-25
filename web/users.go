@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net/http"
 
@@ -59,13 +58,10 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 	return &pb.Users{Users: users}, nil
 }
 
-// patchUser promotes a user to an administrator or makes other changes to the user database entry.
-// Only admin user can promote another user, and only the current user can change his database entries.
-func (s *AutograderService) patchUser(currentUser *pb.User, request *pb.User) (*pb.User, error) {
-	if !currentUser.IsAdmin && currentUser.ID != request.ID {
-		return nil, errors.New("only admin can update another user")
-	}
-
+// updateUser promotes the given user to administrator and/or
+// make other changes to the user database entry for the given user.
+// The isAdmin flag must be true to promote the given user to admin.
+func (s *AutograderService) updateUser(isAdmin bool, request *pb.User) (*pb.User, error) {
 	updateUser, err := s.db.GetUser(request.ID)
 	if err != nil {
 		return nil, err
@@ -84,7 +80,7 @@ func (s *AutograderService) patchUser(currentUser *pb.User, request *pb.User) (*
 		updateUser.AvatarURL = request.AvatarURL
 	}
 	// current user must be admin to promote another user to admin
-	if currentUser.IsAdmin {
+	if isAdmin {
 		updateUser.IsAdmin = request.IsAdmin
 	}
 
