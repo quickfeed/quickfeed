@@ -17,3 +17,5 @@ sed -i '/gogo/d' ../public/proto/ag_pb.js ../public/proto/AgServiceClientPb.ts .
 
 
 tsc ../public/proto/AgServiceClientPb.ts
+
+protoc -I=. -I=$GOPATH/src -I=$GOPATH/src/github.com/gogo/protobuf/protobuf --proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
