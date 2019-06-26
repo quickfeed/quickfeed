@@ -75,6 +75,10 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 // GetUsers returns a list of all users.
 // Frontend note: This method is used from AdminPage.tsx:users():35.
 func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
+
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
+	defer cancel()
+
 	if !s.isAdmin(ctx) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other users")
 	}
@@ -94,11 +98,13 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	if !in.IsValidUser() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
+
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
+	defer cancel()
+
 	if !s.hasAccess(ctx, in.ID) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another user")
 	}
-	ctx, cancel := context.WithTimeout(ctx, MaxWait)
-	defer cancel()
 
 	usr, err := s.updateUser(s.isAdmin(ctx), in)
 	if err != nil {
