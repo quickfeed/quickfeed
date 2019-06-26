@@ -97,6 +97,9 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if len(repos) == 0 {
 
 			// create user repo and team on SCM.
+			// personal team is being created because user repo access is based on team role now
+			// TODO(vera): we could avoid creating personal teams for every student if there is a way
+			// to automate granting the user write access to user repo on repo creation
 			repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
 			if err != nil {
 				return status.Errorf(codes.Internal, "could not create user repository and team")
@@ -117,13 +120,17 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			if err := db.CreateRepository(&dbRepo); err != nil {
 				return status.Errorf(codes.Internal, "could not create user repository")
 			}
-			// instead of creating personal team we will add all students to students team
+			// along with personal team we will add all students to students team
 			if err = addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT); err != nil {
 				return err
 			}
 			// then send invitation to course organization to student (will return nil if successful or already a member)
 			return addUserToOrg(ctx, s, course.GetOrganizationID(), student)
 		}
+		// if repo already exists (student was previously accepted to course, then rejected, and now is being accepted again),
+		// it means that user team has already been created and invitation to organization has been issued
+		// we only need to update enrollment in the database
+		return db.EnrollStudent(request.UserID, request.CourseID)
 
 	case pb.Enrollment_TEACHER:
 		course, err := db.GetCourse(request.CourseID)
