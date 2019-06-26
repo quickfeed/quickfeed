@@ -57,6 +57,9 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 	if !in.IsValidRequest() {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
+	ctx, cancel := context.WithTimeout(ctx, MaxWait)
+	defer cancel()
+
 	if !s.hasAccess(ctx, in.ID) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another user")
 	}
