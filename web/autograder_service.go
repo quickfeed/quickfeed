@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -110,10 +111,10 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 
-	// TODO(vera): upgrade to send provider from client. Currently not supported for other clients anyway
+	// TODO(vera): upgrade to send provider from client. Currently not supported for other providers anyway
 	// Hein @Vera: it may be easier to pass along the courseID from the client as is done for UpdateEnrollment (see below)
 	// Hein @Vera: should the current user be admin; if so, the bool param should be set to true
-	_, scm, err := s.getUserAndSCM(ctx, "github", false)
+	_, scm, err := s.getUserAndSCM(ctx, "github", true)
 	if err != nil {
 		return nil, err
 	}
