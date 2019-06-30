@@ -175,7 +175,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 
 	stud1 := createFakeUser(t, db, 2)
-	enrollStud1 := &pb.ActionRequest{CourseID: course.ID, UserID: stud1.ID}
+	enrollStud1 := &pb.Enrollment{CourseID: course.ID, UserID: stud1.ID}
 	if _, err = ags.CreateEnrollment(ctx, enrollStud1); err != nil {
 		t.Fatal(err)
 	}
@@ -213,7 +213,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	// create another user and enroll as student
 
 	stud2 := createFakeUser(t, db, 3)
-	enrollStud2 := &pb.ActionRequest{CourseID: course.ID, UserID: stud2.ID}
+	enrollStud2 := &pb.Enrollment{CourseID: course.ID, UserID: stud2.ID}
 	if _, err = ags.CreateEnrollment(ctx, enrollStud2); err != nil {
 		t.Fatal(err)
 	}

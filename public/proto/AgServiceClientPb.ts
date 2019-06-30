@@ -17,6 +17,7 @@ import {
   AuthorizationResponse,
   Course,
   Courses,
+  Enrollment,
   EnrollmentRequest,
   Enrollments,
   Group,
@@ -427,14 +428,14 @@ export class AutograderServiceClient {
 
   methodInfoCreateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: ActionRequest) => {
+    (request: Enrollment) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   createEnrollment(
-    request: ActionRequest,
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
@@ -449,14 +450,14 @@ export class AutograderServiceClient {
 
   methodInfoUpdateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: ActionRequest) => {
+    (request: Enrollment) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   updateEnrollment(
-    request: ActionRequest,
+    request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {

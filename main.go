@@ -89,7 +89,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to start tcp listener: %v\n", err)
 	}
-	grpcServer := grpc.NewServer()
+	opt := grpc.UnaryInterceptor(pb.AGInterceptor(logger))
+	grpcServer := grpc.NewServer(opt)
 	pb.RegisterAutograderServiceServer(grpcServer, web.NewAutograderService(logger, db, scms, bh))
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)

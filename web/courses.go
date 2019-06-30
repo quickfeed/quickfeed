@@ -43,18 +43,16 @@ func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assig
 }
 
 // CreateEnrollment enrolls a user in a course.
-func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
-
+func CreateEnrollment(request *pb.Enrollment, db database.Database) error {
 	enrollment := pb.Enrollment{
-		UserID:   request.UserID,
-		CourseID: request.CourseID,
+		UserID:   request.GetUserID(),
+		CourseID: request.GetCourseID(),
 		Status:   pb.Enrollment_PENDING,
 	}
 
 	if err := db.CreateEnrollment(&enrollment); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "record not found")
-
 		}
 		return status.Errorf(codes.Internal, "could not create enrollment")
 	}
@@ -62,7 +60,8 @@ func CreateEnrollment(request *pb.ActionRequest, db database.Database) error {
 }
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
-func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db database.Database, s scm.SCM) error {
+// TODO(meling) simplify the flow of this func; too long; split into sub-functions
+func UpdateEnrollment(ctx context.Context, request *pb.Enrollment, db database.Database, s scm.SCM) error {
 	if _, err := db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "not found")
@@ -74,7 +73,6 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 	var err error
 	switch request.Status {
 	case pb.Enrollment_STUDENT:
-
 		course, err := db.GetCourse(request.CourseID)
 		if err != nil {
 			return status.Errorf(codes.NotFound, "course not found")
@@ -95,7 +93,6 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			return status.Errorf(codes.NotFound, "repository not found")
 		}
 		if len(repos) == 0 {
-
 			// create user repo and team on SCM.
 			// personal team is being created because user repo access is based on team role now
 			// TODO(vera): we could avoid creating personal teams for every student if there is a way
@@ -142,11 +139,14 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 			return status.Errorf(codes.NotFound, "user not found")
 		}
 		// we want to update org membership first, as it is more prone to errors user could react to
-		orgUpdate := &scm.OrgMembership{Username: student.GetLogin(), OrgID: course.GetOrganizationID(), Role: "admin"}
+		orgUpdate := &scm.OrgMembership{
+			Username: student.GetLogin(),
+			OrgID:    course.GetOrganizationID(),
+			Role:     "admin",
+		}
 		if err = s.UpdateOrgMembership(ctx, orgUpdate); err != nil {
 			return status.Errorf(codes.Internal, fmt.Sprintln("could not update github membership, reason: ", err.Error()))
 		}
-
 		if err = db.EnrollTeacher(student.ID, course.ID); err != nil {
 			return status.Errorf(codes.Internal, "could not enroll teacher")
 		}
@@ -157,6 +157,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 		if err = db.RejectEnrollment(request.UserID, request.CourseID); err != nil {
 			err = status.Errorf(codes.Internal, "could not reject user")
 		}
+
 	case pb.Enrollment_PENDING:
 		if err = db.SetPendingEnrollment(request.UserID, request.CourseID); err != nil {
 			err = status.Errorf(codes.Internal, "could not set pending")
@@ -167,7 +168,6 @@ func UpdateEnrollment(ctx context.Context, request *pb.ActionRequest, db databas
 }
 
 func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, *scm.Team, error) {
-
 	org, err := s.GetOrganization(c, course.OrganizationID)
 	if err != nil {
 		return nil, nil, err
@@ -185,6 +185,7 @@ func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, stud
 	return s.CreateRepoAndTeam(c, opt, teamName, []string{teamName})
 }
 
+// TODO(meling) why is not used?
 func createUserRepo(c context.Context, s scm.SCM, orgID uint64, student *pb.User) (*scm.Repository, error) {
 	org, err := s.GetOrganization(c, orgID)
 	if err != nil {
@@ -202,7 +203,6 @@ func createUserRepo(c context.Context, s scm.SCM, orgID uint64, student *pb.User
 }
 
 func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, status pb.Enrollment_UserStatus) error {
-
 	// get course organization
 	org, err := s.GetOrganization(c, orgID)
 	if err != nil {
@@ -213,22 +213,35 @@ func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, st
 	// check whether user is teacher or not
 	switch status {
 	case pb.Enrollment_STUDENT:
-		return s.AddTeamMember(c, &scm.TeamMembershipOptions{Organization: org, TeamSlug: "students", Username: user.GetLogin(), Role: "member"})
+		opt := &scm.TeamMembershipOptions{
+			Organization: org,
+			TeamSlug:     "students",
+			Username:     user.GetLogin(),
+			Role:         "member",
+		}
+		return s.AddTeamMember(c, opt)
+
 	case pb.Enrollment_TEACHER:
-		// remove from students
-		if err = s.RemoveTeamMember(c, &scm.TeamMembershipOptions{Organization: org, TeamSlug: "students", Username: user.GetLogin()}); err != nil {
+		// remove user from students
+		opt := &scm.TeamMembershipOptions{
+			Organization: org,
+			TeamSlug:     "students",
+			Username:     user.GetLogin(),
+		}
+		if err = s.RemoveTeamMember(c, opt); err != nil {
 			return err
 		}
-		//add to teachers
-		return s.AddTeamMember(c, &scm.TeamMembershipOptions{Organization: org, TeamSlug: "teachers", Username: user.GetLogin()})
+		// add user to teachers
+		opt.TeamSlug = "teachers"
+		// TODO(meling) should this have Role: "admin" ??
+		return s.AddTeamMember(c, opt)
 	}
 
 	opt := &scm.TeamMembershipOptions{
 		Organization: org,
-		TeamSlug:     slug,
+		TeamSlug:     slug, //TODO(meling) this is uninitialized, why?
 		Username:     user.GetLogin(),
 	}
-
 	return s.AddTeamMember(c, opt)
 }
 
