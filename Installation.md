@@ -7,6 +7,13 @@ This guide details the specifics for go and github, but should be similar setup 
 (Another note to self: Merge this with the README.md documentation.)
 (And: make the process more streamlined; can we avoid the teacher authorization thing, or link to it so that we don't have to remember this...)
 
+To set up IPv4 port forwarding on UiS servers:
+```
+sudo sysctl net.ipv4.ip_forward=1
+sudo sysctl -p  (to confirm the change)
+sudo service docker restart
+```
+
 1. Install a linux distro server edition (For this we choose ubuntu LTS)
 2. Install Golang (Recommended 1.10)
     1. Create folder go in $HOME
