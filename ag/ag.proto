@@ -3,7 +3,7 @@ syntax = "proto3";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-//  USERS AND  USERGROUPS   //
+// USERS AND USERGROUPS //
 
 message User {
     uint64 ID = 1;
@@ -43,7 +43,6 @@ message Group {
     uint64 teamID = 4;
     GroupStatus status = 5;
 
-
     repeated User users = 6;
     repeated Enrollment enrollments = 7;
 }
@@ -82,7 +81,6 @@ message Enrollment {
         STUDENT = 3;
         TEACHER = 4;
     }
-    
     uint64 ID = 1;
     uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""];
     uint64 userID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""]; 

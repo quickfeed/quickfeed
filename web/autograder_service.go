@@ -192,49 +192,93 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 	return enrolls, nil
 }
 
-// GetGroup returns information about a group
+// GetGroup returns information about a group.
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
-	group, err := GetGroup(in, s.db)
+	group, err := s.getGroup(in)
 	if err != nil {
-		return nil, err
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get group")
+	}
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+	}
+	if !(s.isTeacher(usr.ID, group.GetCourseID()) || s.hasAccessG(ctx, group.GetUsers())) {
+		return nil, status.Errorf(codes.PermissionDenied, "only members, teachers or admin can access a group")
 	}
 	group.RemoveRemoteIDs()
 	return group, nil
 }
 
-// GetGroups returns a list of student groups created for the course
+// GetGroups returns a list of groups created for the course.
 func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest) (*pb.Groups, error) {
-	groups, err := GetGroups(in, s.db)
+	if !s.isAdmin(ctx) {
+		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other groups")
+	}
+	groups, err := s.getGroups(in)
 	if err != nil {
-		return nil, err
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get groups")
 	}
 	groups.RemoveRemoteIDs()
 	return groups, nil
 }
 
-// CreateGroup makes a new group
+// GetGroupByUserAndCourse returns the group of the given student for a given course.
+func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.ActionRequest) (*pb.Group, error) {
+	if !s.hasAccess(ctx, in.UserID) {
+		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another group")
+	}
+	group, err := s.getGroupByUserAndCourse(in)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get group for given user and course")
+	}
+	group.RemoveRemoteIDs()
+	return group, nil
+}
+
+// CreateGroup creates a new group.
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	group, err := NewGroup(in, s.db, usr)
+	group, err := s.createGroup(in, usr)
 	if err != nil {
+		s.logger.Error(err)
+		if _, ok := status.FromError(err); !ok {
+			// set err to generic error for the frontend
+			err = status.Error(codes.Internal, "server error; check server logs for details")
+		}
 		return nil, err
 	}
 	group.RemoveRemoteIDs()
 	return group, nil
 }
 
-// UpdateGroup updates group information
+// UpdateGroup updates group information.
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
-	// need not be admin to update group composition
+	// need not be admin to approve or update group composition
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID(), false)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Void{}, UpdateGroup(ctx, in, s.db, scm, usr)
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update groups")
+	}
+
+	err = s.updateGroup(ctx, in, usr, scm)
+	if err != nil {
+		s.logger.Error(err)
+		if _, ok := status.FromError(err); !ok {
+			// set err to generic error for the frontend
+			err = status.Error(codes.Internal, "server error; check server logs for details")
+		}
+	}
+	return &pb.Void{}, err
 }
 
 // DeleteGroup removes group record from the database
@@ -244,7 +288,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.
 	if in.GetID() < 1 {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 	}
-	return &pb.Void{}, DeleteGroup(in, s.db)
+	return &pb.Void{}, s.deleteGroup(in)
 }
 
 // GetSubmission returns a student submission
@@ -281,16 +325,6 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 		return nil, err
 	}
 	return RefreshCourse(ctx, in, scm, s.db, usr)
-}
-
-// GetGroupByUserAndCourse returns a student group
-func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.ActionRequest) (*pb.Group, error) {
-	group, err := GetGroupByUserAndCourse(in, s.db)
-	if err != nil {
-		return nil, err
-	}
-	group.RemoveRemoteIDs()
-	return group, nil
 }
 
 // GetProviders returns a list of providers

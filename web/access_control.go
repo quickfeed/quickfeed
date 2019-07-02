@@ -69,6 +69,16 @@ func (s *AutograderService) isAdmin(ctx context.Context) bool {
 	return usr.IsAdmin
 }
 
+// isTeacher returns true only if the current user is teacher for the given course.
+func (s *AutograderService) isTeacher(userID uint64, courseID uint64) bool {
+	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	return enrollment.Status == pb.Enrollment_TEACHER
+}
+
 // hasAccess returns true if the current user is administrator or the user with userID.
 func (s *AutograderService) hasAccess(ctx context.Context, userID uint64) bool {
 	currentUser, err := s.getCurrentUser(ctx)
@@ -77,6 +87,24 @@ func (s *AutograderService) hasAccess(ctx context.Context, userID uint64) bool {
 		return false
 	}
 	return currentUser.IsAdmin || currentUser.ID == userID
+}
+
+// hasAccessG returns true if the current user is administrator or one of the provided users.
+func (s *AutograderService) hasAccessG(ctx context.Context, users []*pb.User) bool {
+	currentUser, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	if currentUser.IsAdmin {
+		return true
+	}
+	for _, u := range users {
+		if currentUser.ID == u.ID {
+			return true
+		}
+	}
+	return false
 }
 
 // getUserAndSCM returns the current user and scm for the given provider.

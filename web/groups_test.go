@@ -94,10 +94,9 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ctx := withUserContext(context.Background(), teacher)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
-	fakeProvider.CreateOrganization(ctx,
+	fakeProvider.CreateOrganization(context.Background(),
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
 
@@ -105,12 +104,26 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	users = append(users, &pb.User{ID: user.ID})
 	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
+	ctx := withUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	// check that group member can access group
 	group, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// check that teacher can access group
+	ctx = withUserContext(context.Background(), teacher)
+	_, err = ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// check that admin can access group
+	ctx = withUserContext(context.Background(), admin)
+	_, err = ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -247,7 +260,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Errorf("have response group %+v, while database has %+v", respGroup, group)
 	}
 
-	// ******************* Admin/Teacher UpdateGroup *******************
+	// ******************* Teacher UpdateGroup *******************
 
 	// group with three students
 
@@ -258,8 +271,8 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 
 	updateGroupReq := &pb.Group{ID: group.ID, Name: "Hein's three member Group", CourseID: course.ID, Users: users1}
 
-	// set admin ID in context
-	ctx = withUserContext(context.Background(), admin)
+	// set teacher ID in context
+	ctx = withUserContext(context.Background(), teacher)
 	_, err = ags.UpdateGroup(ctx, updateGroupReq)
 	if err != nil {
 		t.Error(err)
@@ -292,7 +305,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Errorf("want group %+v", wantGroup)
 	}
 
-	// ******************* Teacher Only UpdateGroup *******************
+	// ******************* Teacher UpdateGroup *******************
 
 	// change group to only one student
 	users2 := make([]*pb.User, 0)
@@ -446,9 +459,20 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	teacher := createFakeUser(t, db, 2)
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.SetAdmin(teacher.ID); err != nil {
+		t.Fatal(err)
+	}
+
 	fakeProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
-	ctx := withUserContext(context.Background(), admin)
+	ctx := withUserContext(context.Background(), teacher)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
 		Name: course.Code,
@@ -457,8 +481,8 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	user1 := createFakeUser(t, db, 2)
-	user2 := createFakeUser(t, db, 3)
+	user1 := createFakeUser(t, db, 3)
+	user2 := createFakeUser(t, db, 4)
 
 	// enroll users in course and group
 	if err := db.CreateEnrollment(&pb.Enrollment{
@@ -505,7 +529,7 @@ func TestPatchGroupStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(prePatchGroup, haveGroup) {
-		t.Errorf("have group %+v want %+v", haveGroup, prePatchGroup)
+		t.Errorf("have\n%+v\nwant\n%+v\n", haveGroup, prePatchGroup)
 	}
 }
 
