@@ -105,7 +105,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 }
 
 // CreateCourse creates a new course.
-// Only users with teacher role (admin) can create new courses.
+// Only users with admin role can create new courses.
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider, true)
 	if err != nil {
