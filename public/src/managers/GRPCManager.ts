@@ -1,28 +1,26 @@
-
 import * as grpcWeb from "grpc-web";
-
-import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import {
-    RepositoryRequest,
-    Providers,
-    User,
-    Users,
-    RecordRequest,
+    ActionRequest,
+    Assignments,
+    AuthorizationResponse,
     Course,
     Courses,
-    Submission,
-    Submissions,
-    Assignments,
-    ActionRequest,
+    EnrollmentRequest,
     Enrollments,
     Group,
     Groups,
-    Void,
     Organizations,
+    Providers,
+    RecordRequest,
+    RepositoryRequest,
+    Submission,
+    Submissions,
     URLResponse,
-    EnrollmentRequest,
-    AuthorizationResponse
+    User,
+    Users,
+    Void,
 } from "../../proto/ag_pb";
+import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";
 
@@ -35,7 +33,7 @@ export interface IGrpcResponse<T> {
 
 export class GrpcManager {
 
-    agService: AutograderServiceClient;
+    private agService: AutograderServiceClient;
     private userMan: UserManager;
 
     constructor() {
@@ -113,7 +111,6 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCoursesWithEnrollment, request);
     }
 
-
     // /* ASSIGNMENTS */ //
 
     public getAssignments(courseId: number): Promise<IGrpcResponse<Assignments>> {
@@ -124,7 +121,9 @@ export class GrpcManager {
 
     // /* ENROLLMENTS */ //
 
-    public getEnrollmentsByCourse(courseid: number, noGroupMembers?: boolean, state?: any): Promise<IGrpcResponse<Enrollments>> {
+    public getEnrollmentsByCourse(courseid: number, noGroupMembers?: boolean, state?: any):
+        Promise<IGrpcResponse<Enrollments>> {
+
         const request = new EnrollmentRequest();
         request.setCourseid(courseid);
         if (noGroupMembers) {
@@ -289,7 +288,8 @@ export class GrpcManager {
         });
         return grpcPromise;
     }
-    // if gRPC call returns with error, inform user (currently just logs to console)
+
+    // informUser logs any gRPC error to the console.
     private informUser(response: IGrpcResponse<any>, sender: string): void {
         if (response.statusCode !== 0) {
             console.log("GRPC method " + sender + " failed with code " + response.statusCode + ": " + response.message);
