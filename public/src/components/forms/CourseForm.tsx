@@ -6,7 +6,7 @@ import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
-import { Course, Organization, Void, User } from "../../../proto/ag_pb"
+import { Course, Organization, User, Void } from "../../../proto/ag_pb";
 
 interface ICourseFormProps<T> {
     className?: string;
@@ -27,16 +27,6 @@ interface ICourseFormStates {
     orgid: number;
     organisations: JSX.Element | null;
     errorFlash: JSX.Element | null;
-}
-
-interface ICourseFormData {
-    id?: number;
-    name: string;
-    code: string;
-    tag: string;
-    year: number;
-    provider: string;
-    directoryid: number;
 }
 
 class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStates> {
@@ -109,37 +99,46 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
     }
 
     private renderInfo(): JSX.Element {
-        const gitMsg: JSX.Element = 
-        <div>
-            <p>Select a GitHub organization for your course.
-            (Don't see your organization below? Autograder needs access to your organization.
+        const gitMsg: JSX.Element =
+            <div>
+                <p>Select a GitHub organization for your course.
+                (Don't see your organization below? Autograder needs access to your organization.
             Grant access <a href="https://github.com/settings/applications" target="_blank"> here</a>.)</p>
 
-            <p>For each new semester of a course, Autograder requires a new GitHub organization.
+                <p>For each new semester of a course, Autograder requires a new GitHub organization.
             This is to keep the student roster for the different runs of the course separate.</p>
 
-            <p><b>Create an organization for your course.</b> When you <a href="https://github.com/account/organizations/new" target="_blank">create an organization</a>, be sure to select the “Free Plan.”</p>
+                <p><b>Create an organization for your course.</b> When you
+                <a href="https://github.com/account/organizations/new" target="_blank">create an organization</a>,
+                be sure to select the “Free Plan.”</p>
 
-            <p><b>Important:</b> <i>Don't create any repositories in your GitHub organization yet; Autograder will create a repository structure for you.</i></p> 
+                <p><b>Important:</b> <i>Don't create any repositories in your GitHub organization yet;
+                    Autograder will create a repository structure for you.</i></p>
 
-            <p><b>Apply for an Educator discount.</b></p>
-            <p>For teachers, GitHub is happy to upgrade your organization to serve private repositories. Go ahead an apply for <a href="https://education.github.com/discount_requests/new" target="_blank">an Education discount</a> for your GitHub organization.</p>
-            <p>Wait for your organization to be upgraded by GitHub.</p>
-            <p>Return to this page when your organization has been upgraded, to create the course. This will allow Autograder to create the appropriate repository structure.</p> 
-            <p>Once these repositories have been created by Autograder: </p>
-            <div>
-                <ul>
-                    <li>course-info</li>
-                    <li>assignments</li>
-                    <li>solutions</li>
-                    <li>tests</li>
-                </ul>
-            </div>
-            <p>You can populate these with your course's content.</p>
-            <p>Only the assignments and tests repositories must contain meta-data and tests for Autograder to function.</p>
-            <p>Please read the documentation for further instructions on how to work with the various repositories.</p>
-        </div>;
-    return gitMsg;
+                <p><b>Apply for an Educator discount.</b></p>
+                <p>For teachers, GitHub is happy to upgrade your organization to serve private repositories.
+                    Go ahead an apply for an
+                    <a href="https://education.github.com/discount_requests/new" target="_blank">Education discount</a>
+                    for your GitHub organization.</p>
+                <p>Wait for your organization to be upgraded by GitHub.</p>
+                <p>Return to this page when your organization has been upgraded, to create the course.
+                    This will allow Autograder to create the appropriate repository structure.</p>
+                <p>Once these repositories have been created by Autograder: </p>
+                <div>
+                    <ul>
+                        <li>course-info</li>
+                        <li>assignments</li>
+                        <li>solutions</li>
+                        <li>tests</li>
+                    </ul>
+                </div>
+                <p>You can populate these with your course's content.</p>
+                <p>Only the assignments and tests repositories must contain meta-data and tests
+                    for Autograder to function.</p>
+                <p>Please read the documentation for further instructions on how to work with
+                    the various repositories.</p>
+            </div>;
+        return gitMsg;
     }
 
     private renderProviders(): JSX.Element | JSX.Element[] {
@@ -206,7 +205,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
 
             if (isError(result) && result.message) {
                 const errMsg = result.message;
-                let serverErrors: string[] = [];
+                const serverErrors: string[] = [];
                 serverErrors.push(errMsg);
                 const flashErrors = this.getFlashErrors(serverErrors);
                 this.setState({
@@ -228,9 +227,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         courseData.setYear(parseInt(this.state.year, 10));
         courseData.setProvider(this.state.provider);
         courseData.setOrganizationid(this.state.orgid);
-       
-        return await this.props.courseMan.updateCourse(courseId, courseData);
 
+        return this.props.courseMan.updateCourse(courseId, courseData);
     }
 
     private async createNewCourse(): Promise<Course | IError> {
@@ -242,14 +240,14 @@ class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStat
         courseData.setProvider(this.state.provider);
         courseData.setOrganizationid(this.state.orgid);
 
-        return await this.props.courseMan.createNewCourse(courseData);
+        return this.props.courseMan.createNewCourse(courseData);
     }
 
     private handleInputChange(e: React.FormEvent<any>) {
         const target: any = e.target;
         const value = target.type === "checkbox" ? target.checked : target.value;
         const name = target.name as "name";
-        
+
         this.setState({
             [name]: value,
         });
