@@ -76,20 +76,11 @@ export interface IStudentSubmission {
 
 /**
  * An interface which contains a user and the relation to a signe course.
- * Usualy returned when a course is given.
+ * Usually returned when a course is given.
  */
 export interface IUserRelation {
     user: User;
     link: ICourseUserLink;
-}
-
-/**
- * An interface which contains a user and the relation to a signe course.
- * Usualy returned when a course is given.
- */
-export interface ICourseGroupRelation {
-    group: Group;
-    link: ICourseGroupLink;
 }
 
 // Browser only objects END
@@ -104,6 +95,7 @@ export interface IBuildInfo {
 /**
  * Information about a single assignment
  */
+// TODO(meling) can we reuse Assignment from ag.proto/ag_pb.ts instead?
 export interface IAssignment {
     id: number;
     courseid: number;
@@ -117,15 +109,6 @@ export interface IAssignment {
     // end: Date;
 
     assignmentGroupId?: number;
-}
-
-/**
- * Information about an assignment group
- * This is not implemented and is a feature for the future
- */
-export interface IAssignmentGroup {
-    id: number;
-    required: number;
 }
 
 /**
@@ -175,25 +158,17 @@ export interface ISubmission {
     testCases: ITestCases[];
 
     approved: boolean;
-
-}
-
-/**
- * A course description with all related assignments
- */
-export interface ICoursesWithAssignments {
-    course: Course;
-    labs: IAssignment[];
 }
 
 /**
  * INewGroup represent data structure for a new group
  */
-
 export interface INewGroup {
     name: string;
     userids: number[];
 }
+
+// TODO(meling) consider to replace IError and IStatusCode with standard grpc error types
 
 /**
  * IStatusCode represent the status code returns from serverside
@@ -213,6 +188,7 @@ export interface IError extends IStatusCode {
  * Checks if value is compatible with the IError interface
  * @param item A value to check if it is an IError
  */
+// TODO(meling) this is only used in two places; obsolete?
 export function isError(item: any): item is IError {
     return item && typeof item.statusCode === "number";
 }
