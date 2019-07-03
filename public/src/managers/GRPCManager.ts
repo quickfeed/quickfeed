@@ -222,7 +222,7 @@ export class GrpcManager {
         const request = new ActionRequest();
         request.setCourseid(courseID);
         request.setGroupid(groupID);
-        return this.grpcSend<Submissions>(this.agService.getGroupSubmissions, request);
+        return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
     public updateSubmission(submissionID: number): Promise<IGrpcResponse<Void>> {

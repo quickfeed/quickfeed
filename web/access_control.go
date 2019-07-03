@@ -89,6 +89,40 @@ func (s *AutograderService) hasAccess(ctx context.Context, userID uint64) bool {
 	return currentUser.IsAdmin || currentUser.ID == userID
 }
 
+// hasGroupAccess returns true if the current user is administrator,
+// teacher of the given course, or one of the provided users.
+func (s *AutograderService) hasGroupAccess(ctx context.Context, courseID, userID, groupID uint64) bool {
+	currentUser, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	if currentUser.IsAdmin {
+		return true
+	}
+
+	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, currentUser.ID)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	if enrollment.Status == pb.Enrollment_TEACHER || enrollment.Status == pb.Enrollment_STUDENT {
+		return true
+	}
+
+	group, err := s.db.GetGroup(groupID)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	for _, u := range group.Users {
+		if currentUser.ID == u.ID {
+			return true
+		}
+	}
+	return false
+}
+
 // hasAccessG returns true if the current user is administrator or one of the provided users.
 func (s *AutograderService) hasAccessG(ctx context.Context, users []*pb.User) bool {
 	currentUser, err := s.getCurrentUser(ctx)

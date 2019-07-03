@@ -470,28 +470,6 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
-    Submissions,
-    (request: ActionRequest) => {
-      return request.serializeBinary();
-    },
-    Submissions.deserializeBinary
-  );
-
-  getSubmissions(
-    request: ActionRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: Submissions) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/GetSubmissions',
-      request,
-      metadata || {},
-      this.methodInfoGetSubmissions,
-      callback);
-  }
-
   methodInfoGetSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Submission,
     (request: RecordRequest) => {
@@ -514,7 +492,7 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoGetGroupSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
     Submissions,
     (request: ActionRequest) => {
       return request.serializeBinary();
@@ -522,17 +500,17 @@ export class AutograderServiceClient {
     Submissions.deserializeBinary
   );
 
-  getGroupSubmissions(
+  getSubmissions(
     request: ActionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Submissions) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/GetGroupSubmissions',
+        '/AutograderService/GetSubmissions',
       request,
       metadata || {},
-      this.methodInfoGetGroupSubmissions,
+      this.methodInfoGetSubmissions,
       callback);
   }
 

@@ -76,19 +76,22 @@ func (req RecordRequest) IsValid() bool {
 	return req.GetID() > 0
 }
 
-// IsValidRepoRequest checks required fields of a repository request
+// IsValid checks required fields of a repository request
 func (req RepositoryRequest) IsValid() bool {
-	return req.GetCourseID() > 0 &&
-		req.GetType() <= Repository_COURSEINFO
+	return req.GetCourseID() > 0 && req.GetType() <= Repository_COURSEINFO
 }
 
-// IsValidRequest checks required fields of an update group request
+// IsValid checks required fields of an action request.
+// It must have a positive course ID and
+// a positive user ID or group ID but not both.
 func (req ActionRequest) IsValid() bool {
-	return (req.GetUserID() > 0 || req.GetGroupID() > 0) &&
-		req.GetCourseID() > 0
+	uid, gid := req.GetUserID(), req.GetGroupID()
+	return req.GetCourseID() > 0 &&
+		(uid == 0 && gid > 0) ||
+		(uid > 0 && gid == 0)
 }
 
-// IsValidRequest checks that course ID is a positive number
+// IsValid checks that course ID is positive.
 func (req EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
 }

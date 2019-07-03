@@ -244,14 +244,13 @@ service AutograderService {
 
     // submissions //
 
-    rpc GetSubmissions(ActionRequest) returns (Submissions) {}
     rpc GetSubmission(RecordRequest) returns (Submission) {}
-    rpc GetGroupSubmissions(ActionRequest) returns (Submissions) {}
+    rpc GetSubmissions(ActionRequest) returns (Submissions) {}
     rpc UpdateSubmission(RecordRequest) returns (Void) {}
    
     // misc //
     
-    rpc GetAssignments(RecordRequest) returns (Assignments) {} 
+    rpc GetAssignments(RecordRequest) returns (Assignments) {}
     rpc GetRepositoryURL(RepositoryRequest) returns (URLResponse) {}
     rpc GetProviders(Void) returns (Providers) {}
     rpc GetOrganizations(ActionRequest) returns (Organizations) {}

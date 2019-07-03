@@ -297,26 +297,16 @@ func GetSubmission(request *pb.RecordRequest, db database.Database, currentUser 
 	return submission, nil
 }
 
-// ListSubmissions returns all the latests submissions for a user to a course
-func ListSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submissions, error) {
-	submissions, err := db.GetSubmissions(request.GetCourseID(), &pb.Submission{UserID: request.GetUserID()})
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "not found")
-		}
-		return nil, err
+// getSubmissions returns all the latests submissions for a user to a course
+func (s *AutograderService) getSubmissions(request *pb.ActionRequest) (*pb.Submissions, error) {
+	// only one of user ID and group ID will be set; enforced by the IsValid
+	query := &pb.Submission{
+		UserID:  request.GetUserID(),
+		GroupID: request.GetGroupID(),
 	}
-	return &pb.Submissions{Submissions: submissions}, nil
-}
-
-// ListGroupSubmissions fetches all submissions from specific group
-func ListGroupSubmissions(request *pb.ActionRequest, db database.Database) (*pb.Submissions, error) {
-	submissions, err := db.GetSubmissions(request.GetCourseID(), &pb.Submission{GroupID: request.GetGroupID()})
+	submissions, err := s.db.GetSubmissions(request.GetCourseID(), query)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "not found")
-		}
-		return nil, status.Errorf(codes.NotFound, "no submissions found")
+		return nil, err
 	}
 	return &pb.Submissions{Submissions: submissions}, nil
 }

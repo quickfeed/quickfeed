@@ -67,13 +67,10 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
-        this.methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submissions, function (request) {
-            return request.serializeBinary();
-        }, ag_pb_1.Submissions.deserializeBinary);
         this.methodInfoGetSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
-        this.methodInfoGetGroupSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submissions, function (request) {
+        this.methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submissions, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submissions.deserializeBinary);
         this.methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
@@ -178,17 +175,13 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateEnrollment', request, metadata || {}, this.methodInfoUpdateEnrollment, callback);
     };
-    AutograderServiceClient.prototype.getSubmissions = function (request, metadata, callback) {
-        return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions, callback);
-    };
     AutograderServiceClient.prototype.getSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetSubmission', request, metadata || {}, this.methodInfoGetSubmission, callback);
     };
-    AutograderServiceClient.prototype.getGroupSubmissions = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.getSubmissions = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetGroupSubmissions', request, metadata || {}, this.methodInfoGetGroupSubmissions, callback);
+            '/AutograderService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions, callback);
     };
     AutograderServiceClient.prototype.updateSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

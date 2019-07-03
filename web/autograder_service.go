@@ -82,7 +82,6 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	if !s.hasAccess(ctx, in.ID) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another user")
 	}
-
 	usr, err := s.updateUser(s.isAdmin(ctx), in)
 	if err != nil {
 		s.logger.Error(err)
@@ -301,14 +300,17 @@ func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequ
 	return GetSubmission(in, s.db, usr)
 }
 
-// GetSubmissions returns a list of submissions
+// GetSubmissions returns the submissions matching the query encoded in the action request.
 func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.ActionRequest) (*pb.Submissions, error) {
-	return ListSubmissions(in, s.db)
-}
-
-// GetGroupSubmissions returns all submissions of a student group
-func (s *AutograderService) GetGroupSubmissions(ctx context.Context, in *pb.ActionRequest) (*pb.Submissions, error) {
-	return ListGroupSubmissions(in, s.db)
+	if !s.hasGroupAccess(ctx, in.GetCourseID(), in.GetUserID(), in.GetGroupID()) {
+		return nil, status.Errorf(codes.PermissionDenied, "only members, teachers or admin can access submissions")
+	}
+	submissions, err := s.getSubmissions(in)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "no submissions found")
+	}
+	return submissions, nil
 }
 
 // UpdateSubmission changes submission information

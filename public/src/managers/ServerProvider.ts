@@ -7,7 +7,7 @@ import {
         Submission, 
         Organization,
         Void
-    } from "../../proto/ag_pb";
+} from "../../proto/ag_pb";
 import {
     IAssignment,
     IBuildInfo,
@@ -20,7 +20,7 @@ import {
     IUser,
 } from "../models";
 
-import { HttpHelper, IHTTPResult } from "../HttpHelper";
+import { HttpHelper } from "../HttpHelper";
 import {GrpcManager, IGrpcResponse} from "./GRPCManager"
 import { ICourseProvider } from "./CourseManager";
 
@@ -92,7 +92,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return data;
     }
 
-
     public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
         const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
         if (result.statusCode !== 0 || !result.data) {
@@ -111,7 +110,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return arr;
     }
 
-
     public async getUsersForCourse(course: Course, noGroupMembers?: boolean, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]> {
         const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, state);
         if (result.statusCode !== 0 || !result.data) {
@@ -129,7 +127,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return arr;
     }
 
-
     public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
         const result = await this.grpcHelper.getAssignments(courseId);
         if (result.statusCode !== 0 || !result.data) {
@@ -146,7 +143,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return ele.id;
         });
     }
-
 
     public async addUserToCourse(user: User, course: Course): Promise<boolean> {
         const result = await this.grpcHelper.createEnrollment(user.getId(), course.getId());
@@ -173,8 +169,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-
-
     public async createNewCourse(courseData: Course): Promise<Course | IError> {
         const result = await this.grpcHelper.createCourse(courseData);
         if (result.statusCode !== 0 || !result.data) {
@@ -183,7 +177,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-
     public async getCourse(id: number): Promise<Course | null> {
         const result = await this.grpcHelper.getCourse(id);
         if (result.statusCode !== 0 || !result.data) {
@@ -191,7 +184,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         return result.data;
     }
-
 
     public async updateCourse(courseId: number, courseData: Course): Promise< Void | IError> {
         const result = await this.grpcHelper.updateCourse(courseData);
@@ -210,7 +202,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-
     public async getCourseGroups(courseID: number): Promise<Group[]> {
         const result = await this.grpcHelper.getGroups(courseID);
         if (result.statusCode !== 0 || !result.data) {
@@ -227,7 +218,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-
     public async updateGroupStatus(groupID: number, st: Group.GroupStatus): Promise<boolean> {
         const result = await this.grpcHelper.updateGroupStatus(groupID, st);
         if (result.statusCode !== 0)  {
@@ -235,7 +225,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         return true;
     }
-
 
     public async getGroup(groupID: number): Promise<Group | null> {
         const result = await this.grpcHelper.getGroup(groupID);
@@ -245,7 +234,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-
     public async deleteGroup(groupID: number): Promise<boolean> {
         const result = await this.grpcHelper.deleteGroup(groupID);
          if (result.statusCode !== 0) {
@@ -253,7 +241,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         return true;
     }
-
 
     public async updateGroup(group: Group): Promise<IStatusCode | IError> {    
         const result = await this.grpcHelper.updateGroup(group);
@@ -278,7 +265,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return mapify(isubmissions, (ele) => {
             return ele.id;
         });
-
     }
 
     public async getAllLabInfos(courseID: number, userID: number): Promise<IMap<ISubmission>> {
@@ -295,7 +281,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return ele.id;
         });
     }
-
 
     public async tryLogin(username: string, password: string): Promise<User | null> {
         throw new Error("tryLogin This could be removed since there is no normal login.");
@@ -331,7 +316,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-
     public async updateUser(user: User): Promise<boolean> {
         const result = await this.grpcHelper.updateUser(user);
         if (result.statusCode !== 0 || !result.data) {
@@ -354,11 +338,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return [];
         } 
         return result.data.getProvidersList();
-
     }
 
     public async getLoggedInUser(): Promise<User | null> {
-      
         const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
         if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
             return null;
@@ -398,12 +380,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getUrl();
     }
 
-
     public async approveSubmission(submissionID: number): Promise<void> {
         await this.grpcHelper.updateSubmission(submissionID);
         return;
     }
-
 
     private makeUserInfo(data: User): User {
         return data;
@@ -480,10 +460,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             testCases: scoreObj,
             approved: sbm.getApproved()
         };
-
         return isbm;
-
-
     }
 
     // this method convert a grpc Assignment to IAssignment
@@ -520,10 +497,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             ienroll.user = user;
         }
         ienroll.course = enrollment.getCourse();
-        
-
         return ienroll as IEnrollment;
     }
-
-
 }
