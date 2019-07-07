@@ -253,14 +253,12 @@ export class GrpcManager {
     // /* UTILITY */ //
 
     private grpcSend<T>(method: any, request: any): Promise<IGrpcResponse<T>> {
-
         const grpcPromise = new Promise<IGrpcResponse<T>>((resolve) => {
-
             let userId = "";
-            // currentUser reference is created on authorization with a provider and stores a User object
+            // currentUser reference is created on authorization with a provider and stores a User object.
             // This object can be used for user validation. This implementation sends user ID to simplify
             // and standardize different server checks.
-            // Alternative solution is to send the token, which requires a sequre way of storing the token
+            // Alternative solution is to send the token, which requires a secure way of storing the token.
             const currentUser = this.userMan.getCurrentUser();
             if (currentUser != null) {
                 userId = currentUser.getId().toString();
@@ -274,7 +272,7 @@ export class GrpcManager {
                                 statusCode: err.code,
                                 message: err.message,
                             };
-                            this.informUser(temp, method.name);
+                            this.logErr(temp, method.name);
                             resolve(temp);
                         }
                     } else {
@@ -289,10 +287,10 @@ export class GrpcManager {
         return grpcPromise;
     }
 
-    // informUser logs any gRPC error to the console.
-    private informUser(response: IGrpcResponse<any>, sender: string): void {
-        if (response.statusCode !== 0) {
-            console.log("GRPC method " + sender + " failed with code " + response.statusCode + ": " + response.message);
+    // logErr logs any gRPC error to the console.
+    private logErr(resp: IGrpcResponse<any>, methodName: string): void {
+        if (resp.statusCode !== 0) {
+            console.log("GRPC " + methodName + " failed with code " + resp.statusCode + ": " + resp.message);
         }
     }
 }

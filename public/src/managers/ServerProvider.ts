@@ -176,7 +176,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | IError> {
         const result = await this.grpcHelper.createGroup(groupData, courseID);
-
         if (result.statusCode !== 0 || !result.data) {
             return this.parseError(result);
         }
