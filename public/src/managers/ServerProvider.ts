@@ -99,7 +99,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
         const arr: IUserEnrollment[] = [];
         result.data.getEnrollmentsList().forEach((ele) => {
+            // TODO(meling) this conversion seems unnecessary.
             const enroll: IEnrollment = this.toIEnrollment(ele);
+            // TODO(meling) this should be unnecessary to check since we get the enrollment from the backend.
             if (isCourseEnrollment(enroll)) {
                 arr.push(enroll);
             }

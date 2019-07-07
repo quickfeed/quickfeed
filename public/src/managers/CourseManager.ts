@@ -10,19 +10,19 @@ import {
     IStudentSubmission,
     ISubmission,
     IUserCourse,
-    IUserRelation
+    IUserRelation,
 } from "../models";
 
+import { Course, Enrollment, Group, Organization, User, Void } from "../../proto/ag_pb";
 import { UserManager } from "../managers";
 import { ILogger } from "./LogManager";
-import { Course, Enrollment, User, Organization, Group, Void } from "../../proto/ag_pb";
 
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
     getAssignments(courseID: number): Promise<IMap<IAssignment>>;
-    // getCoursesStudent(): Promise<ICourseUserLink[]>;
     getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]>;
-    getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]>;
+    getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]):
+        Promise<IUserEnrollment[]>;
 
     addUserToCourse(user: User, course: Course): Promise<boolean>;
     changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean>;
@@ -38,7 +38,6 @@ export interface ICourseProvider {
     deleteGroup(groupID: number): Promise<boolean>;
     getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null>;
     updateGroup(groupData: Group): Promise<IStatusCode | IError>;
-    // deleteCourse(id: number): Promise<boolean>;
 
     getAllLabInfos(courseID: number, userId: number): Promise<IMap<ISubmission>>;
     getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>>;
@@ -103,12 +102,7 @@ export class CourseManager {
      * @param ID The id of the course
      */
     public async getCourse(ID: number): Promise<Course | null> {
-        // const a = (await this.courseProvider.getCourses())[id];
-        // if (a) {
-        //     return a;
-        // }
-        // return null;
-        return await this.courseProvider.getCourse(ID);
+        return this.courseProvider.getCourse(ID);
     }
 
     /**
@@ -116,7 +110,7 @@ export class CourseManager {
      */
     public async getCourses(): Promise<Course[]> {
         // return MapHelper.toArray(await this.courseProvider.getCourses());
-        return await this.courseProvider.getCourses();
+        return this.courseProvider.getCourses();
     }
 
     public async getCoursesWithState(user: User): Promise<IUserCourse[]> {
@@ -133,18 +127,6 @@ export class CourseManager {
     }
 
     /**
-     * returns all the courses
-     * if user is enrolled to a course, enrolled field will have a non-negative value
-     * else enrolled field will have -1
-     * @param user
-     * @returns {Promise<ICourseWithEnrollStatus[]>}
-     */
-    /*public async getCoursesWithEnrollStatus(user: IUser): Promise<ICourseWithEnrollStatus[]> {
-        const userCourses = await this.courseProvider.getCoursesWithEnrollStatus(user);
-        return userCourses;
-    }*/
-
-    /**
      * Get all courses related to a user
      * @param user The user to get courses to
      * @param state Optional. The state the relations should be in, all if not present
@@ -154,6 +136,7 @@ export class CourseManager {
     }
 
     /**
+     * TODO(meling) unused function; no references to it.
      * Retrives one assignment from a single course
      * @param course The course the assignment is in
      * @param assignmentID The id to the assignment
@@ -197,10 +180,11 @@ export class CourseManager {
      * @param courseData The new information for the course
      */
     public async updateCourse(courseID: number, courseData: Course): Promise<Void | IError> {
-        return await this.courseProvider.updateCourse(courseID, courseData);
+        return this.courseProvider.updateCourse(courseID, courseData);
     }
 
     /**
+     * TODO(meling) unused function; no references to it.
      * Load an IUserCourse object for a single user and a single course
      * @param student The student the information should be retrived from
      * @param course The course the data should be loaded for
@@ -227,7 +211,8 @@ export class CourseManager {
      * @param student The student the information should be retrived from
      * @param course The course the data should be loaded for
      */
-    public async getStudentCourseForTeacher(student: IUserRelation, course: Course, assignments: IAssignment[]): Promise<IUserCourse | null> {
+    public async getStudentCourseForTeacher(student: IUserRelation, course: Course, assignments: IAssignment[]):
+        Promise<IUserCourse | null> {
         const userCourse: IUserCourse = {
             link: { userid: student.user.getId(), courseId: course.getId(), state: student.link.state },
             assignments: [],
@@ -238,6 +223,7 @@ export class CourseManager {
     }
 
     /**
+     * TODO(meling) unused function; no references to it.
      * Loads a single IStudentSubmission for a student and an assignment.
      * This will contains information about an assignment and the lates
      * sumbission information related to that assignment.
@@ -294,20 +280,21 @@ export class CourseManager {
         noGroupMemebers?: boolean,
         state?: Enrollment.UserStatus[]): Promise<IUserRelation[]> {
 
-        return (await this.courseProvider.getUsersForCourse(course, noGroupMemebers, state)).map<IUserRelation>((user) => {
-            return {
-                link: { courseId: course.getId(), userid: user.userid, state: user.status },
-                user: user.user,
-            };
-        });
+        return (await this.courseProvider.getUsersForCourse(course, noGroupMemebers, state)).map<IUserRelation>(
+            (user) => {
+                return {
+                    link: { courseId: course.getId(), userid: user.userid, state: user.status },
+                    user: user.user,
+                };
+            });
     }
 
     public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | IError> {
-        return await this.courseProvider.createGroup(groupData, courseID);
+        return this.courseProvider.createGroup(groupData, courseID);
     }
 
     public async updateGroup(groupData: Group): Promise<IStatusCode | IError> {
-        return await this.courseProvider.updateGroup(groupData);
+        return this.courseProvider.updateGroup(groupData);
     }
 
     /**
@@ -315,7 +302,7 @@ export class CourseManager {
      * @param courseID course id of a course
      */
     public async getCourseGroups(courseID: number): Promise<Group[]> {
-        return await this.courseProvider.getCourseGroups(courseID);
+        return this.courseProvider.getCourseGroups(courseID);
     }
 
     /**
@@ -327,7 +314,7 @@ export class CourseManager {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
             const groupCourse: IGroupCourse = {
-                link: { groupid: group.getId(), courseId: course.getId(), state: group.getStatus()},
+                link: { groupid: group.getId(), courseId: course.getId(), state: group.getStatus() },
                 assignments: [],
                 course,
             };
@@ -337,11 +324,12 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupCourseForTeacher(group: Group, course: Course, assignments: IAssignment[]): Promise<IGroupCourse | null> {
+    public async getGroupCourseForTeacher(group: Group, course: Course, assignments: IAssignment[]):
+        Promise<IGroupCourse | null> {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
             const groupCourse: IGroupCourse = {
-                link: { groupid: group.getId(), courseId: course.getId(), state: group.getStatus()},
+                link: { groupid: group.getId(), courseId: course.getId(), state: group.getStatus() },
                 assignments: [],
                 course,
             };
@@ -352,23 +340,23 @@ export class CourseManager {
     }
 
     public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<Group | null> {
-        return await this.courseProvider.getGroupByUserAndCourse(userID, courseID);
+        return this.courseProvider.getGroupByUserAndCourse(userID, courseID);
     }
 
     public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean> {
-        return await this.courseProvider.updateGroupStatus(groupID, status);
+        return this.courseProvider.updateGroupStatus(groupID, status);
     }
 
     public async getGroup(groupID: number): Promise<Group | null> {
-        return await this.courseProvider.getGroup(groupID);
+        return this.courseProvider.getGroup(groupID);
     }
 
     public async deleteGroup(groupID: number): Promise<boolean> {
-        return await this.courseProvider.deleteGroup(groupID);
+        return this.courseProvider.deleteGroup(groupID);
     }
 
     public async refreshCoursesFor(courseID: number): Promise<any> {
-        return await this.courseProvider.refreshCoursesFor(courseID);
+        return this.courseProvider.refreshCoursesFor(courseID);
     }
 
     /**
@@ -376,11 +364,11 @@ export class CourseManager {
      * @param provider The provider to load information from, for instance github og gitlab
      */
     public async getOrganizations(provider: string): Promise<Organization[]> {
-        return await this.courseProvider.getOrganizations(provider);
+        return this.courseProvider.getOrganizations(provider);
     }
 
     public async getProviders(): Promise<string[]> {
-        return await this.courseProvider.getProviders();
+        return this.courseProvider.getProviders();
     }
 
     public async getRepositoryURL(cid: number, type: number): Promise<string> {
@@ -388,7 +376,7 @@ export class CourseManager {
     }
 
     public async approveSubmission(submissionID: number): Promise<void> {
-        return await this.courseProvider.approveSubmission(submissionID);
+        return this.courseProvider.approveSubmission(submissionID);
     }
 
     /**
