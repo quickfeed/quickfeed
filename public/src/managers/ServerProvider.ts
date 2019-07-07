@@ -101,7 +101,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         result.data.getEnrollmentsList().forEach((ele) => {
             const enroll: IEnrollment = this.toIEnrollment(ele);
             if (isCourseEnrollment(enroll)) {
-                enroll.user = this.makeUserInfo(enroll.user);
                 arr.push(enroll);
             }
         });
@@ -276,8 +275,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         if (result.statusCode !== 0 || !result.data) {
             return [];
         }
-        const arr = result.data.getUsersList().map<User>((ele) => this.makeUserInfo(ele));
-        return arr;
+        return result.data.getUsersList();
     }
 
     public async tryRemoteLogin(provider: string): Promise<User | null> {
@@ -339,9 +337,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             usr.setEmail(iusr.email);
             usr.setAvatarurl(iusr.avatarurl);
             usr.setIsadmin(iusr.isadmin);
-            return this.makeUserInfo(usr);
+            return usr;
         }
-        return this.makeUserInfo(grpcResult.data);
+        return grpcResult.data;
     }
 
     public async refreshCoursesFor(courseID: number): Promise<any> {
@@ -363,10 +361,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async approveSubmission(submissionID: number): Promise<void> {
         await this.grpcHelper.updateSubmission(submissionID);
         return;
-    }
-
-    private makeUserInfo(data: User): User {
-        return data;
     }
 
     private parseError(result: IGrpcResponse<any>): IError {
