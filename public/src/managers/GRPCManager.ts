@@ -19,6 +19,7 @@ import {
     User,
     Users,
     Void,
+    Enrollment,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { INewGroup } from "../models";
@@ -136,14 +137,14 @@ export class GrpcManager {
     }
 
     public createEnrollment(userid: number, courseid: number): Promise<IGrpcResponse<Void>> {
-        const request = new ActionRequest();
+        const request = new Enrollment();
         request.setUserid(userid);
         request.setCourseid(courseid);
         return this.grpcSend<Void>(this.agService.createEnrollment, request);
     }
 
     public updateEnrollment(userid: number, courseid: number, state: any): Promise<IGrpcResponse<Void>> {
-        const request = new ActionRequest();
+        const request = new Enrollment();
         request.setUserid(userid);
         request.setCourseid(courseid);
         request.setStatus(state);
