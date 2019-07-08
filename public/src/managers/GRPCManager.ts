@@ -264,7 +264,7 @@ export class GrpcManager {
                 userId = currentUser.getId().toString();
             }
 
-            const call = method.call(this.agService, request, { "custom-header-1": "value1", "user": userId },
+            method.call(this.agService, request, { "custom-header-1": "value1", "user": userId },
                 (err: grpcWeb.Error, response: T | undefined) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {

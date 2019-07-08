@@ -12,8 +12,7 @@ install:
 - go get go.uber.org/zap
 
 env:
-- DisabledLOGDB=true
-- GO111MODULE=on
+- GO111MODULE=auto
 
 script:
 - $HOME/gopath/bin/overalls -project=github.com/autograde/aguis -covermode=count -debug
