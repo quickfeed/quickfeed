@@ -7,6 +7,7 @@ import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
 
+import {Course, Enrollment, Group, Repository} from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
     IAssignment,
@@ -14,8 +15,6 @@ import {
     IUserCourseWithUser,
     IUserRelation,
 } from "../models";
-import {Course, Group, Enrollment, Repository} from "../../proto/ag_pb";
-
 
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
@@ -55,7 +54,7 @@ export class TeacherPage extends ViewPage {
         if (curUser && this.userMan.isTeacher(curUser)) {
             if (!this.userMan.isAuthorizedTeacher()) {
                 window.location.assign("https://" + window.location.hostname + "/auth/github-teacher");
-                //window.location.href="https://" + window.location.hostname + "/auth/github-teacher";                
+                // window.location.href="https://" + window.location.hostname + "/auth/github-teacher";
             }
             return true;
         }
@@ -213,7 +212,7 @@ export class TeacherPage extends ViewPage {
 
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
         const courseId = parseInt(info.params.cid, 10);
-        const groupId = parseInt(info.params.gid, 10);  
+        const groupId = parseInt(info.params.gid, 10);
 
         const course = await this.courseMan.getCourse(courseId);
         const curUser = await this.userMan.getCurrentUser();
@@ -423,7 +422,7 @@ export class TeacherPage extends ViewPage {
     private async getCourses(): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return await this.courseMan.getCoursesFor(curUsr);
+            return  this.courseMan.getCoursesFor(curUsr);
         }
         return [];
     }

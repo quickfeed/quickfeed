@@ -1,13 +1,13 @@
 import * as React from "react";
 
+import { Course, Enrollment, Group, User } from "../../../proto/ag_pb";
+import { Search } from "../../components";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
+import { UserManager } from "../../managers/UserManager";
 import {
     IError, INewGroup, isError, IStatusCode, IUserRelation,
 } from "../../models";
-import { Course, User, Enrollment, Group } from "../../../proto/ag_pb";
-import { Search } from "../../components";
-import { UserManager } from "../../managers/UserManager";
 
 interface IGroupProp {
     className: string;
@@ -147,7 +147,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 await this.updateGroup(formData, this.props.groupData.getId()) : await this.createGroup(formData);
             if (isError(result) && result.message) {
                 const errMsg = result.message;
-                let serverErrors: string[] = [];
+                const serverErrors: string[] = [];
                 serverErrors.push(errMsg);
                 const flashErrors = this.getFlashErrors(serverErrors);
                 this.setState({
@@ -155,7 +155,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 });
             } else {
                 if (this.props.groupData) {
-                    if (this.props.groupData.getUsersList().filter((x) => x.getId() === this.props.curUser.getId()).length > 0) {
+                    if (this.props.groupData.getUsersList().filter((x) =>
+                         x.getId() === this.props.curUser.getId()).length > 0) {
                         const redirectTo: string = this.props.groupData ?
                             this.props.pagePath + "/courses/" + this.props.course.getId() + "/groups"
                             : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
@@ -190,7 +191,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     }
 
     private async createGroup(formData: INewGroup): Promise<Group | IError> {
-        return await this.props.courseMan.createGroup(formData, this.props.course.getId());
+        return this.props.courseMan.createGroup(formData, this.props.course.getId());
     }
 
     private async updateGroup(formData: INewGroup, gid: number): Promise<IStatusCode | IError> {
@@ -198,14 +199,14 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         groupData.setId(gid);
         groupData.setName(formData.name);
         groupData.setCourseid(this.props.course.getId());
-        const groupUsers: User[] = [];  
+        const groupUsers: User[] = [];
         formData.userids.forEach((ele) => {
             const usr = new User();
             usr.setId(ele);
             groupUsers.push(usr);
         });
         groupData.setUsersList(groupUsers);
-        return await this.props.courseMan.updateGroup(groupData);
+        return this.props.courseMan.updateGroup(groupData);
     }
 
     private handleInputChange(e: React.FormEvent<any>) {
@@ -310,7 +311,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                     ss.push(guser);
                 }
             }
-        } 
+        }
         return ss;
     }
 
@@ -327,7 +328,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                     }
                 }
             }
-        } 
+        }
         return as;
     }
 }

@@ -1,7 +1,7 @@
 
 import * as React from "react";
-import { ILink } from "../../managers";
 import { User } from "../../../proto/ag_pb";
+import { ILink } from "../../managers";
 import { NavMenuDropdown } from "./NavMenuDropdown";
 
 export interface INavBarLoginProps {

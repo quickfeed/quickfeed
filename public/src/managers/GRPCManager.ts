@@ -5,6 +5,7 @@ import {
     AuthorizationResponse,
     Course,
     Courses,
+    Enrollment,
     EnrollmentRequest,
     Enrollments,
     Group,
@@ -19,7 +20,6 @@ import {
     User,
     Users,
     Void,
-    Enrollment,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { INewGroup } from "../models";

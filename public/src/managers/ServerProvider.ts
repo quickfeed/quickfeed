@@ -121,7 +121,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         });
 
         return mapify(assignments, (ele) => {
-            //ele.deadline = !ele.deadline ? new Date(2000, 1, 1) : new Date(ele.deadline);
             return ele.id;
         });
     }

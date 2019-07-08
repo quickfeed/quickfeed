@@ -1,6 +1,6 @@
 import * as React from "react";
-import { ProgressBar, Row } from "../../components";
 import { User } from "../../../proto/ag_pb";
+import { ProgressBar, Row } from "../../components";
 
 interface ILabResult {
     progress: number;

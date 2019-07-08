@@ -56,11 +56,11 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                     header={["Name", "Members"]}
                     data={this.props.approvedGroups}
                     selector={
-                        (group: Group) => //[
-                            //group.getName(),
-                            //this.getMembers(group.getUsersList()),
+                        (group: Group) => // [
+                            // group.getName(),
+                            // this.getMembers(group.getUsersList()),
                             this.renderRow(group)
-                        //]}
+                        // ]}
                     }
                 />
             </div>
@@ -161,7 +161,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
             case "approve":
                 group.setStatus(Group.GroupStatus.APPROVED);
                 await this.props.courseMan.updateGroup(group);
-                //await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.APPROVED);
+                // await this.props.courseMan.updateGroupStatus(group.id, Group.GroupStatus.APPROVED);
                 break;
             case "reject":
                 group.setStatus(Group.GroupStatus.REJECTED);
@@ -170,7 +170,8 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
             case "edit":
                 console.log("CourseGroup: handleActionOnClick attempts to edit group " + group);
                 this.props.navMan
-                    .navigateTo(this.props.pagePath + "/courses/" + group.getCourseid() + "/groups/" + group.getId() + "/edit");
+                    .navigateTo(this.props.pagePath + "/courses/"
+                     + group.getCourseid() + "/groups/" + group.getId() + "/edit");
                 break;
             case "delete":
                 if (confirm(

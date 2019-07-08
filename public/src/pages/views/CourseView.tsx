@@ -1,6 +1,6 @@
 import * as React from "react";
-import { DynamicTable, Search } from "../../components";
 import { Course } from "../../../proto/ag_pb";
+import { DynamicTable, Search } from "../../components";
 
 interface ICourseViewProp {
     courses: Course[];
@@ -30,7 +30,8 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
                 <DynamicTable
                     header={["ID", "Name", "Course Code", "Year", "Semester", "Action"]}
                     data={this.state.courses}
-                    selector={(e: Course) => [e.getId().toString(), e.getName(), e.getCode(), e.getYear().toString(), e.getTag(),
+                    selector={(e: Course) => 
+                        [e.getId().toString(), e.getName(), e.getCode(), e.getYear().toString(), e.getTag(),
                     <span>
                         <button className="btn btn-primary"
                             onClick={() => this.props.onEditClick(e.getId())}>Edit</button>

@@ -105,7 +105,6 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
                         href={"/" + link.uri}>{link.name}</a>
                 </li>;
             }
-            
         } else {
             return <li key={index} className={isActive}>
                 <span className="header">{link.name}</span>

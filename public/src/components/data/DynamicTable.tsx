@@ -8,12 +8,12 @@ interface IDynamicTableProps<T> {
     onRowClick?: (link: T) => void;
 }
 
-export interface ICellElement{
+export interface ICellElement {
     value: string | JSX.Element;
     className?: string;
 }
 
-function isICellElement(obj: any): obj is ICellElement{
+function isICellElement(obj: any): obj is ICellElement {
     return obj.value;
 }
 
@@ -42,14 +42,13 @@ export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, {}> 
     private renderCells(values: Array<string | JSX.Element | ICellElement>, th: boolean = false): JSX.Element[] {
         return values.map((v, i) => {
             if (th) {
-                if (isICellElement(v)){
+                if (isICellElement(v)) {
                     return <th key={i} className={v.className ? v.className : ""}>{v.value}</th>;
                 } else {
                     return <th key={i}>{v}</th>;
                 }
-                
             }
-            if (isICellElement(v)){
+            if (isICellElement(v)) {
                 return <td className={v.className ? v.className : ""} key={i}>{v.value}</td>;
             } else {
                 return <td key={i}>{v}</td>;
