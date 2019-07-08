@@ -11,6 +11,7 @@ import {
     Group,
     Groups,
     Organizations,
+    Provider,
     Providers,
     RecordRequest,
     RepositoryRequest,
@@ -246,7 +247,7 @@ export class GrpcManager {
     }
 
     public getOrganizations(provider: string): Promise<IGrpcResponse<Organizations>> {
-        const request = new ActionRequest();
+        const request = new Provider();
         request.setProvider(provider);
         return this.grpcSend<Organizations>(this.agService.getOrganizations, request);
     }
