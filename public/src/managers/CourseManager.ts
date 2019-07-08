@@ -269,6 +269,7 @@ export class CourseManager {
     }
 
     /**
+     * TODO(meling) userMan argument is not used in this func; remove it?
      * Retrives all users related to a single course
      * @param course The course to retrive userinformation to
      * @param userMan Usermanager to be able to get user information

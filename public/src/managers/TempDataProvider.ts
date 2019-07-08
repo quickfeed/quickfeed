@@ -1,4 +1,4 @@
-import * as Models from "../models";
+import { Course, Enrollment, Group, Organization, User } from "../../proto/ag_pb";
 import {
     IAssignment,
     ICourseUserLink,
@@ -7,14 +7,13 @@ import {
     IStatusCode,
     ISubmission,
 } from "../models";
-import { ICourseProvider } from "./CourseManager";
-
-import { IMap, MapHelper, mapify } from "../map";
-import { IUserProvider } from "./UserManager";
 
 import { ICourseEnrollment, IUserEnrollment } from "../managers";
-import { Course, Group, Enrollment, User, Organization } from "../../proto/ag_pb";
+import { ICourseProvider } from "./CourseManager";
+import { IUserProvider } from "./UserManager";
+
 import { isNull } from "util";
+import { IMap, MapHelper, mapify } from "../map";
 
 interface IDummyUser extends User {
     password: string;
@@ -59,7 +58,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async getAllUser(): Promise<User[]> {
         const users: User[] = [];
-        const dummyUsers =  MapHelper.toArray(this.localUsers);
+        const dummyUsers = MapHelper.toArray(this.localUsers);
         dummyUsers.forEach((ele) => {
             users.push(ele.user);
         });
@@ -95,7 +94,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
-    public async tryRemoteLogin(provider: string): Promise< User | null> {
+    public async tryRemoteLogin(provider: string): Promise<User | null> {
         let lookup = "test@testersen.no";
         if (provider === "gitlab") {
             lookup = "bob@bobsen.no";
@@ -103,7 +102,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         const user = MapHelper.find(this.localUsers, (u) =>
             u.user.getEmail().toLocaleLowerCase() === lookup);
 
-        return new Promise< User | null>((resolve, reject) => {
+        return new Promise<User | null>((resolve, reject) => {
             // Simulate async callback
             setTimeout(() => {
                 if (isNull(user)) {
@@ -113,16 +112,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                     this.currentLoggedIn = user.user;
                     resolve(user.user);
                 }
-                
+
             }, 500);
         });
     }
 
-
     public async isAuthorizedTeacher(): Promise<boolean> {
         return true;
     }
-
 
     public async logout(user: User): Promise<boolean> {
         return true;
@@ -220,11 +217,11 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return ["github"];
     }
 
-    public async grpcGetLoggedInUser(): Promise <User| null > {
+    public async grpcGetLoggedInUser(): Promise<User | null> {
         return this.currentLoggedIn;
     }
 
-    public async getLoggedInUser(): Promise< User | null> {
+    public async getLoggedInUser(): Promise<User | null> {
         return this.currentLoggedIn;
     }
 
@@ -270,7 +267,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async updateGroup(groupData: Group): Promise<IStatusCode | IError> {
         throw new Error("Method not implemented");
     }
-    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<Models.ISubmission>> {
+    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<ISubmission>> {
         throw new Error("Method not implemented.");
     }
 
@@ -283,7 +280,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     public async updateUser(user: User): Promise<boolean> {
-
         const tempUser = this.localUsers[user.getId()];
         if (tempUser) {
             tempUser.user.setName(user.getName());
@@ -291,7 +287,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             tempUser.user.setStudentid(user.getStudentid());
             tempUser.user.setIsadmin(user.getIsadmin());
         }
-
         return Promise.resolve(true);
     }
 
@@ -301,15 +296,13 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private addLocalUsers() {
         const dummyUsers: IGrpcDummyUser[] = [];
-        
         const tempUser: User = new User();
-        
         tempUser.setId(999);
         tempUser.setName("Test Testersen");
         tempUser.setEmail("test@testersen.no");
         tempUser.setStudentid("9999");
         tempUser.setIsadmin(true);
-        let tempDummy = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        const tempDummy: IGrpcDummyUser = { user: tempUser, password: "1234" };
         dummyUsers.push(tempDummy);
 
         tempUser.setId(1000);
@@ -317,7 +310,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         tempUser.setEmail("admin@admin");
         tempUser.setStudentid("1000");
         tempUser.setIsadmin(true);
-        let tempDummy1 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        const tempDummy1: IGrpcDummyUser = { user: tempUser, password: "1234" };
         dummyUsers.push(tempDummy1);
 
         tempUser.setId(1);
@@ -325,7 +318,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         tempUser.setEmail("per@pettersen.no");
         tempUser.setStudentid("1234");
         tempUser.setIsadmin(true);
-        let tempDummy2 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        const tempDummy2: IGrpcDummyUser = { user: tempUser, password: "1234" };
         dummyUsers.push(tempDummy2);
 
         tempUser.setId(2);
@@ -333,7 +326,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         tempUser.setEmail("bob@bobsen.no");
         tempUser.setStudentid("1234");
         tempUser.setIsadmin(true);
-        let tempDummy3 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        const tempDummy3: IGrpcDummyUser = { user: tempUser, password: "1234" };
         dummyUsers.push(tempDummy3);
 
         tempUser.setId(3);
@@ -341,9 +334,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         tempUser.setEmail("petter@pan.no");
         tempUser.setStudentid("1234");
         tempUser.setIsadmin(true);
-        let tempDummy4 = {user: tempUser, password: "1234"} as IGrpcDummyUser;
+        const tempDummy4: IGrpcDummyUser = { user: tempUser, password: "1234" };
         dummyUsers.push(tempDummy4);
-
         this.localUsers = mapify(dummyUsers, (ele) => ele.user.getId());
     }
 
@@ -441,7 +433,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalCourses() {
-
         const tempCourses: Course[] = [];
         const course0 = new Course();
         const course1 = new Course();
@@ -494,7 +485,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         tempCourses.push(course2);
         tempCourses.push(course3);
         tempCourses.push(course4);
-       
+
         this.localCourses = mapify(tempCourses, (ele) => ele.getId());
     }
 
@@ -621,9 +612,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalCourseGroups(): void {
-
         /*
-
         this.localCourseGroups = [
             {
                 id: 1,
@@ -675,5 +664,4 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             },
         ];*/
     }
-
 }
