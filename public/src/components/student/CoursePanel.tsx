@@ -2,8 +2,8 @@ import * as React from "react";
 
 import { DynamicTable } from "../../components";
 
-import { IAssignment, IStudentSubmission } from "../../models";
 import { Course } from "../../../proto/ag_pb";
+import { IAssignment, IStudentSubmission } from "../../models";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 

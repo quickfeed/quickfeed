@@ -1,7 +1,7 @@
 import * as React from "react";
 import { User } from "../../../proto/ag_pb";
-import { UserManager } from "../../managers";
 import { BootstrapButton } from "../../components";
+import { UserManager } from "../../managers";
 
 interface IUserProfileProps {
     userMan: UserManager;

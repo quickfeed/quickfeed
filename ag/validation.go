@@ -26,7 +26,7 @@ type validator interface {
 func AGInterceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		if v, ok := req.(validator); ok {
-			if v.IsValid() {
+			if !v.IsValid() {
 				return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
 			}
 		} else {
@@ -45,12 +45,12 @@ func (v Void) IsValid() bool {
 	return true
 }
 
-// IsValidGroup checks required fields of a group request
+// IsValid checks required fields of a group request
 func (grp Group) IsValid() bool {
 	return grp.GetName() != "" && grp.GetCourseID() > 0 && len(grp.GetUsers()) > 0
 }
 
-// IsValidCourse checks required fields of a course request
+// IsValid checks required fields of a course request
 func (c Course) IsValid() bool {
 	return c.GetName() != "" &&
 		c.GetCode() != "" &&
@@ -60,7 +60,7 @@ func (c Course) IsValid() bool {
 		c.GetTag() != ""
 }
 
-// IsValidUser chacks required fields of a user request
+// IsValid chacks required fields of a user request
 func (u User) IsValid() bool {
 	return u.GetID() > 0
 }
@@ -71,7 +71,7 @@ func (req Enrollment) IsValid() bool {
 		req.GetUserID() > 0 && req.GetCourseID() > 0
 }
 
-// IsValidRequest checks whether RecordRequest fields are valid
+// IsValid checks whether RecordRequest fields are valid
 func (req RecordRequest) IsValid() bool {
 	return req.GetID() > 0
 }
