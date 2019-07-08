@@ -12,5 +12,6 @@ env:
 - GO111MODULE=on
 
 script:
+- go test -v ./...
 - $HOME/gopath/bin/overalls -project=github.com/autograde/aguis -covermode=count -debug
 - $HOME/gopath/bin/goveralls -coverprofile=overalls.coverprofile -service=travis-ci -repotoken $COVERALLS_TOKEN
