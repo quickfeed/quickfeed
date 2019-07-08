@@ -154,7 +154,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 
     private async refreshActivePage(): Promise<JSX.Element> {
         if (this.state.activePage) {
-            return await this.renderTemplate(this.state.activePage, this.state.activePage.template);
+            return this.renderTemplate(this.state.activePage, this.state.activePage.template);
         }
         return <div>404 Error</div>;
     }
