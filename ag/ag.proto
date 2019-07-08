@@ -173,9 +173,8 @@ message ActionRequest {
     uint64 userID = 2;
     uint64 groupID = 3;
     uint64 courseID = 4;
-    string provider = 5;
-    Enrollment.UserStatus status = 6;
-    Group.GroupStatus groupStatus = 7;
+    Enrollment.UserStatus status = 5;
+    Group.GroupStatus groupStatus = 6;
 }
 
 message RepositoryRequest {
@@ -185,6 +184,10 @@ message RepositoryRequest {
     uint64 repositoryID = 4;
     uint64 userID = 5;
     uint64 courseID = 6;
+}
+
+message Provider {
+    string provider = 1;
 }
 
 // depending on situation frontend will have all enrolled users or only those that are not members of any group
@@ -253,7 +256,7 @@ service AutograderService {
     rpc GetAssignments(RecordRequest) returns (Assignments) {}
     rpc GetRepositoryURL(RepositoryRequest) returns (URLResponse) {}
     rpc GetProviders(Void) returns (Providers) {}
-    rpc GetOrganizations(ActionRequest) returns (Organizations) {}
+    rpc GetOrganizations(Provider) returns (Organizations) {}
 
     // The sole purpose of this RPC is to provide a reference to Repository type to TypeScript client
     // Might later be used as a more general type for retrieval of repo information 

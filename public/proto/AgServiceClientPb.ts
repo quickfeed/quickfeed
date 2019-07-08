@@ -23,6 +23,7 @@ import {
   Group,
   Groups,
   Organizations,
+  Provider,
   Providers,
   RecordRequest,
   Repository,
@@ -604,14 +605,14 @@ export class AutograderServiceClient {
 
   methodInfoGetOrganizations = new grpcWeb.AbstractClientBase.MethodInfo(
     Organizations,
-    (request: ActionRequest) => {
+    (request: Provider) => {
       return request.serializeBinary();
     },
     Organizations.deserializeBinary
   );
 
   getOrganizations(
-    request: ActionRequest,
+    request: Provider,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Organizations) => void) {

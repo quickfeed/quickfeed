@@ -340,7 +340,7 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 }
 
 // GetOrganizations returns a list of directories for a course
-func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.ActionRequest) (*pb.Organizations, error) {
+func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.Provider) (*pb.Organizations, error) {
 	ctx, cancel := context.WithTimeout(ctx, MaxWait)
 	defer cancel()
 

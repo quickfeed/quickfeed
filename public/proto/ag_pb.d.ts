@@ -654,9 +654,6 @@ export class ActionRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
-  getProvider(): string;
-  setProvider(value: string): void;
-
   getStatus(): Enrollment.UserStatus;
   setStatus(value: Enrollment.UserStatus): void;
 
@@ -677,7 +674,6 @@ export namespace ActionRequest {
     userid: number,
     groupid: number,
     courseid: number,
-    provider: string,
     status: Enrollment.UserStatus,
     groupstatus: Group.GroupStatus,
   }
@@ -718,6 +714,24 @@ export namespace RepositoryRequest {
     repositoryid: number,
     userid: number,
     courseid: number,
+  }
+}
+
+export class Provider extends jspb.Message {
+  getProvider(): string;
+  setProvider(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Provider.AsObject;
+  static toObject(includeInstance: boolean, msg: Provider): Provider.AsObject;
+  static serializeBinaryToWriter(message: Provider, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Provider;
+  static deserializeBinaryFromReader(message: Provider, reader: jspb.BinaryReader): Provider;
+}
+
+export namespace Provider {
+  export type AsObject = {
+    provider: string,
   }
 }
 
