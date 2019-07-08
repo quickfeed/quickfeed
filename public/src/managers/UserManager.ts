@@ -1,7 +1,7 @@
 import { IEventData, newEvent } from "../event";
-import { User } from "../../proto/ag_pb";
-
 import { ILogger } from "./LogManager";
+
+import { User } from "../../proto/ag_pb";
 
 export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<User | null>;
@@ -30,7 +30,7 @@ export class UserManager {
 
     private userProvider: IUserProvider;
     private currentUser: User | null;
-   // private usersToken: string | null;
+    // private usersToken: string | null;
 
     /**
      * Creates a new instance of the UserManager
@@ -101,10 +101,7 @@ export class UserManager {
      * @returns Returns true if admin. False otherwise
      */
     public isAdmin(user: User): boolean {
-        if (user.getIsadmin()) {
-            return user.getIsadmin();
-        }
-        return false;
+        return user.getIsadmin();
     }
 
     /**
@@ -113,6 +110,7 @@ export class UserManager {
      * @returns Returns true if user is teacher in one or more courses
      */
     public async isTeacher(user: User): Promise<boolean> {
+        // TODO(meling) we do distinguish between admin and teacher; should this be fixed?
         return user.getIsadmin();
     }
 
@@ -121,7 +119,7 @@ export class UserManager {
      * @returns Returns true if user has already been authorized as teacher
      */
     public async isAuthorizedTeacher(): Promise<boolean> {
-        return await this.userProvider.isAuthorizedTeacher();
+        return this.userProvider.isAuthorizedTeacher();
     }
 
     /**
@@ -130,7 +128,7 @@ export class UserManager {
      * @returns All users at the backend
      */
     public async getAllUser(): Promise<User[]> {
-        return await this.userProvider.getAllUser();
+        return this.userProvider.getAllUser();
     }
 
     /**
@@ -146,7 +144,7 @@ export class UserManager {
      * @param user The user to premote to admin
      */
     public async changeAdminRole(user: User): Promise<boolean> {
-        return await this.userProvider.changeAdminRole(user);
+        return this.userProvider.changeAdminRole(user);
     }
 
     /**
@@ -162,11 +160,7 @@ export class UserManager {
      */
     public async checkUserLoggedIn(): Promise<boolean> {
         const usr = await this.userProvider.getLoggedInUser();
-
         this.currentUser = usr;
-        if (usr) {
-            return true;
-        }
-        return false;
+        return usr ? true : false;
     }
 }
