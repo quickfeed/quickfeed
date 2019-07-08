@@ -37,6 +37,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
 	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
 	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/tools v0.0.0-20190706070813-72ffa07ba3db // indirect
 	google.golang.org/grpc v1.21.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/webhooks.v3 v3.2.0
