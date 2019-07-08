@@ -56,6 +56,7 @@ npmtools:
 	@npm install -g typescript
 	@npm install -g webpack
 	@npm install -g webpack-cli
+	@npm install -g tslint
 
 envoy-build:
 	@echo Building Autograder Envoy proxy

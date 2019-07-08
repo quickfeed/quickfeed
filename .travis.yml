@@ -4,12 +4,12 @@ go:
  - tip
 
 install:
+- go mod tidy
 - go get golang.org/x/tools/cmd/cover
 - go get github.com/mattn/goveralls
 - go get github.com/go-playground/overalls
 - go get github.com/tebeka/selenium
 - go get github.com/autograde/kit/score
-- go get go.uber.org/zap
 
 env:
 - GO111MODULE=auto
