@@ -19,11 +19,6 @@ func init() {
 	gob.Register(&UserSession{})
 }
 
-// GetCallbackURL returns the callback URL for a given base URL and a provider.
-func GetCallbackURL(baseURL, provider string) string {
-	return GetProviderURL(baseURL, "auth", provider, "callback")
-}
-
 // Session keys.
 const (
 	SessionKey       = "session"
