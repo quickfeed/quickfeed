@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Course, Group, User } from "../../../proto/ag_pb";
-import { BootstrapButton, DynamicTable } from "../../components";
+import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 
 import { bindFunc, RProp } from "../../helper";
@@ -19,7 +19,22 @@ interface ICourseGroupProp {
     pagePath: string;
 }
 
-export class CourseGroup extends React.Component<ICourseGroupProp, any> {
+interface ICourseGroupState {
+    approvedGroups: Group[];
+    pendingGroups: Group[];
+    rejectedGroups: Group[];
+}
+
+export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupState, any> {
+
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            approvedGroups: this.props.approvedGroups,
+            pendingGroups: this.props.pendingGroups,
+            rejectedGroups: this.props.rejectedGroups,
+        };
+    }
     public render() {
         let approvedGroups;
         if (this.props.approvedGroups.length > 0) {
@@ -40,6 +55,10 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
         return (
             <div className="group-container">
                 <h1>{this.props.course.getName()}</h1>
+                <Search className="input-group"
+                    placeholder="Search for groups"
+                    onChange={(query) => this.handleSearch(query)}
+                />
                 {noGroupsWell}
                 {approvedGroups}
                 {pendingGroups}
@@ -54,13 +73,9 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                 <h3>Approved Groups</h3>
                 <DynamicTable
                     header={["Name", "Members"]}
-                    data={this.props.approvedGroups}
+                    data={this.state.approvedGroups}
                     selector={
-                        (group: Group) => // [
-                            // group.getName(),
-                            // this.getMembers(group.getUsersList()),
-                            this.renderRow(group)
-                        // ]}
+                        (group: Group) => this.renderRow(group)
                     }
                 />
             </div>
@@ -74,7 +89,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                 <h3>Pending Groups</h3>
                 <DynamicTable
                     header={["Name", "Members", "Actions"]}
-                    data={this.props.pendingGroups}
+                    data={this.state.pendingGroups}
                     selector={(group: Group) => this.renderRow(group)}
                 />
             </div>
@@ -111,7 +126,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
                 <h3>Rejected Groups</h3>
                 <DynamicTable
                     header={["Name", "Members", "Action"]}
-                    data={this.props.rejectedGroups}
+                    data={this.state.rejectedGroups}
                     selector={
                         (group: Group) => [
                             group.getName(),
@@ -152,6 +167,11 @@ export class CourseGroup extends React.Component<ICourseGroupProp, any> {
             await this.props.courseMan.deleteGroup(gid) :
             await this.props.courseMan.updateGroupStatus(gid, status);
         if (result) {
+            this.setState({
+                approvedGroups: this.props.approvedGroups,
+                pendingGroups: this.props.pendingGroups,
+                rejectedGroups: this.props.rejectedGroups,
+            });
             this.props.navMan.refresh();
         }
     }
@@ -183,6 +203,53 @@ ${group.getName()}?`,
                     break;
                 }
         }
+        this.setState({
+            approvedGroups: this.props.approvedGroups,
+            pendingGroups: this.props.pendingGroups,
+            rejectedGroups: this.props.rejectedGroups,
+        });
         this.props.navMan.refresh();
     }
+
+    private handleSearch(query: string): void {
+        query = query.toLowerCase();
+        const filteredApproved: Group[] = [];
+        const filteredPending: Group[] = [];
+        const filteredRejected: Group[] = [];
+
+        this.props.approvedGroups.forEach((grp) => {
+            if (grp.getName().toLowerCase().indexOf(query) !== -1
+            ) {
+                filteredApproved.push(grp);
+            }
+        });
+
+        this.setState({
+            approvedGroups: filteredApproved,
+        });
+
+        this.props.pendingGroups.forEach((grp) => {
+            if (grp.getName().toLowerCase().indexOf(query) !== -1
+            ) {
+                filteredPending.push(grp);
+            }
+        });
+
+        this.setState({
+            pendingGroups: filteredPending,
+        });
+
+        this.props.rejectedGroups.forEach((grp) => {
+            if (grp.getName().toLowerCase().indexOf(query) !== -1
+            ) {
+                filteredRejected.push(grp);
+            }
+        });
+
+        this.setState({
+            rejectedGroups: filteredRejected,
+        });
+
+    }
+
 }

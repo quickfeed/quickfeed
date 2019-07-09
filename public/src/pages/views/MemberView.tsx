@@ -39,7 +39,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         return <div>
             <h1>{this.props.course.getName()}</h1>
             <Search className="input-group"
-                    placeholder="Search for courses"
+                    placeholder="Search for users"
                     onChange={(query) => this.handleSearch(query)}
                 />
             {this.renderUserView()}
