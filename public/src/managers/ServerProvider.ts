@@ -64,10 +64,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         if (result.statusCode !== 0 || !result.data) {
             return [];
         }
-        const data = result.data.getCoursesList().map((course) => {
-            return course;
-        });
-        return data;
+        return result.data.getCoursesList();
     }
 
     public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
