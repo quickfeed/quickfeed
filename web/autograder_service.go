@@ -324,7 +324,7 @@ func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequ
 	return RefreshCourse(ctx, in, scm, s.db, usr)
 }
 
-// GetProviders returns a list of providers
+// GetProviders returns a list of SCM providers supported by the backend.
 func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.Providers, error) {
 	providers := auth.GetProviders()
 	if len(providers.GetProviders()) < 1 {
