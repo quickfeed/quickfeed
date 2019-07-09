@@ -384,7 +384,7 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoRefreshCourse = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
     Assignments,
     (request: RecordRequest) => {
       return request.serializeBinary();
@@ -392,17 +392,39 @@ export class AutograderServiceClient {
     Assignments.deserializeBinary
   );
 
-  refreshCourse(
+  getAssignments(
     request: RecordRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Assignments) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/RefreshCourse',
+        '/AutograderService/GetAssignments',
       request,
       metadata || {},
-      this.methodInfoRefreshCourse,
+      this.methodInfoGetAssignments,
+      callback);
+  }
+
+  methodInfoUpdateAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: RecordRequest) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  updateAssignments(
+    request: RecordRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateAssignments',
+      request,
+      metadata || {},
+      this.methodInfoUpdateAssignments,
       callback);
   }
 
@@ -535,28 +557,6 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoUpdateSubmission,
-      callback);
-  }
-
-  methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
-    Assignments,
-    (request: RecordRequest) => {
-      return request.serializeBinary();
-    },
-    Assignments.deserializeBinary
-  );
-
-  getAssignments(
-    request: RecordRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: Assignments) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/GetAssignments',
-      request,
-      metadata || {},
-      this.methodInfoGetAssignments,
       callback);
   }
 

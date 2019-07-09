@@ -55,9 +55,12 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
-        this.methodInfoRefreshCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Assignments, function (request) {
+        this.methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Assignments, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Assignments.deserializeBinary);
+        this.methodInfoUpdateAssignments = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetEnrollmentsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Enrollments, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Enrollments.deserializeBinary);
@@ -76,9 +79,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
-        this.methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Assignments, function (request) {
-            return request.serializeBinary();
-        }, ag_pb_1.Assignments.deserializeBinary);
         this.methodInfoGetRepositoryURL = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.URLResponse, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.URLResponse.deserializeBinary);
@@ -159,9 +159,13 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse, callback);
     };
-    AutograderServiceClient.prototype.refreshCourse = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.getAssignments = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/RefreshCourse', request, metadata || {}, this.methodInfoRefreshCourse, callback);
+            '/AutograderService/GetAssignments', request, metadata || {}, this.methodInfoGetAssignments, callback);
+    };
+    AutograderServiceClient.prototype.updateAssignments = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateAssignments', request, metadata || {}, this.methodInfoUpdateAssignments, callback);
     };
     AutograderServiceClient.prototype.getEnrollmentsByCourse = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
@@ -186,10 +190,6 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.updateSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission, callback);
-    };
-    AutograderServiceClient.prototype.getAssignments = function (request, metadata, callback) {
-        return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetAssignments', request, metadata || {}, this.methodInfoGetAssignments, callback);
     };
     AutograderServiceClient.prototype.getRepositoryURL = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

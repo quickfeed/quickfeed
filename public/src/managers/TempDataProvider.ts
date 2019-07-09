@@ -269,7 +269,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented.");
     }
 
-    public async refreshCoursesFor(courseid: number): Promise<any> {
+    public async updateAssignments(courseid: number): Promise<any> {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve({});

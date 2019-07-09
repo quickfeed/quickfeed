@@ -90,10 +90,10 @@ export class GrpcManager {
         return this.grpcSend<Course>(this.agService.updateCourse, course);
     }
 
-    public refreshCourse(courseID: number): Promise<IGrpcResponse<any>> {
+    public updateAssignments(courseID: number): Promise<IGrpcResponse<Void>> {
         const request = new RecordRequest();
         request.setId(courseID);
-        return this.grpcSend<Assignments>(this.agService.refreshCourse, request);
+        return this.grpcSend<Void>(this.agService.updateAssignments, request);
     }
 
     public getCourse(id: number): Promise<IGrpcResponse<Course>> {
@@ -300,7 +300,7 @@ export class GrpcManager {
     private logErr(resp: IGrpcResponse<any>, methodName: string): void {
         if (resp.statusCode.getStatuscode() !== 0) {
             console.log("GRPC " + methodName + " failed with code "
-             + resp.statusCode + ": " + resp.statusCode.getErrormessage());
+                + resp.statusCode + ": " + resp.statusCode.getErrormessage());
         }
     }
 }

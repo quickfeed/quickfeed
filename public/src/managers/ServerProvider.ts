@@ -131,7 +131,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean> {
         const result = await this.grpcHelper.updateEnrollment(link.userid, link.courseId, state);
-
         if (result.statusCode.getStatuscode() !== 0) {
             return false;
         }
@@ -221,11 +220,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async updateGroup(group: Group): Promise<StatusCode> {
         const result = await this.grpcHelper.updateGroup(group);
         return result.statusCode;
-       /* if (result.statusCode.getStatuscode() !== 0 || !result.data) {
-            return this.parseError(result);
-        }
-        const code: IStatusCode = { statusCode: result.statusCode.getStatuscode() };
-        return code;*/
+        /* if (result.statusCode.getStatuscode() !== 0 || !result.data) {
+             return this.parseError(result);
+         }
+         const code: IStatusCode = { statusCode: result.statusCode.getStatuscode() };
+         return code;*/
     }
 
     public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>> {
@@ -341,12 +340,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return grpcResult.data;
     }
 
-    public async refreshCoursesFor(courseID: number): Promise<any> {
-        const result = await this.grpcHelper.refreshCourse(courseID);
-        if (result.statusCode.getStatuscode() !== 0 || !result.data) {
-            return null;
-        }
-        return result.data.getAssignmentsList();
+    public async updateAssignments(courseID: number): Promise<boolean> {
+        const result = await this.grpcHelper.updateAssignments(courseID);
+        return result.statusCode.getStatuscode() === 0;
     }
 
     public async getRepositoryURL(courseID: number, repoType: number): Promise<string> {

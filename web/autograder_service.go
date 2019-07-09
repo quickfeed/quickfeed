@@ -176,11 +176,6 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 	return ListCoursesWithEnrollment(in, s.db)
 }
 
-// GetAssignments returns a list of all assignments.
-func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Assignments, error) {
-	return ListAssignments(in, s.db)
-}
-
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	enrolls, err := GetEnrollmentsByCourse(in, s.db)
@@ -314,14 +309,35 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.RecordR
 	return &pb.Void{}, UpdateSubmission(in, s.db)
 }
 
+// GetAssignments returns a list of all assignments for the given course.
+func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Assignments, error) {
+	courseID := in.GetID()
+	assignments, err := getAssignments(s.db, courseID)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "no assignments found for course")
+	}
+	return assignments, nil
+}
+
 // RefreshCourse returns latest information about the course
-func (s *AutograderService) RefreshCourse(ctx context.Context, in *pb.RecordRequest) (*pb.Assignments, error) {
-	// must be admin to refresh course
-	usr, scm, err := s.getUserAndSCM2(ctx, in.GetID(), true)
+func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
+	courseID := in.GetID()
+
+	// must be admin or teacher to update the assignments for a course
+	usr, scm, err := s.getUserAndSCM2(ctx, courseID, true)
 	if err != nil {
 		return nil, err
 	}
-	return RefreshCourse(ctx, in, scm, s.db, usr)
+	if !s.isTeacher(usr.ID, courseID) {
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers or admin can update course assignments")
+	}
+	err = updateAssignments(ctx, s.db, scm, courseID)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to update assignments for course")
+	}
+	return &pb.Void{}, nil
 }
 
 // GetProviders returns a list of SCM providers supported by the backend.

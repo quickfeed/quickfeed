@@ -41,7 +41,7 @@ export interface ICourseProvider {
     getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>>;
     getOrganizations(provider: string): Promise<Organization[]>;
     getProviders(): Promise<string[]>;
-    refreshCoursesFor(courseID: number): Promise<any>;
+    updateAssignments(courseID: number): Promise<boolean>;
     approveSubmission(submissionID: number): Promise<void>;
     getRepositoryURL(cid: number, type: number): Promise<string>;
 }
@@ -354,8 +354,15 @@ export class CourseManager {
         return this.courseProvider.deleteGroup(groupID);
     }
 
-    public async refreshCoursesFor(courseID: number): Promise<any> {
-        return this.courseProvider.refreshCoursesFor(courseID);
+    /**
+     * updateAssignments updates the assignments on the backend database
+     * for the given course. The assignment data is collected from the
+     * assignment.yml files found in the course's tests repository; there
+     * should be one assignment.yml file per lab assignment.
+     * @param courseID course whose assignment to update
+     */
+    public async updateAssignments(courseID: number): Promise<boolean> {
+        return this.courseProvider.updateAssignments(courseID);
     }
 
     /**

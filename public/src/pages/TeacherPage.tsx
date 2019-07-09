@@ -7,7 +7,7 @@ import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
 
-import {Course, Enrollment, Group, Repository} from "../../proto/ag_pb";
+import { Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
     IAssignment,
@@ -79,21 +79,22 @@ export class TeacherPage extends ViewPage {
                         classType="primary"
                         onClick={(e) => {
                             this.refreshState = 1;
-                            this.courseMan.refreshCoursesFor(course.getId())
+                            // TODO(meling) check if returning a boolean from updateAssignments is ok here?
+                            this.courseMan.updateAssignments(course.getId())
                                 .then((value) => {
                                     this.refreshState = 2;
                                     this.navMan.refresh();
                                 });
                             this.navMan.refresh();
                         }}>
-                        Refresh course info
+                        Update Course Assignments
                     </BootstrapButton>;
                     break;
                 case 1:
                     button = <BootstrapButton
                         classType="default"
                         disabled={true}>
-                        Refreshing Course information
+                        Updating Course Assignments
                     </BootstrapButton>;
                     break;
                 case 2:
@@ -102,14 +103,15 @@ export class TeacherPage extends ViewPage {
                         disabled={false}
                         onClick={(e) => {
                             this.refreshState = 1;
-                            this.courseMan.refreshCoursesFor(course.getId())
+                            // TODO(meling) check if returning a boolean from updateAssignments is ok here?
+                            this.courseMan.updateAssignments(course.getId())
                                 .then((value) => {
                                     this.refreshState = 2;
                                     this.navMan.refresh();
                                 });
                             this.navMan.refresh();
                         }}>
-                        Info refreshed
+                        Course Assignments Updated
                     </BootstrapButton>;
                     break;
             }
@@ -124,11 +126,8 @@ export class TeacherPage extends ViewPage {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: IAssignment[] = await this.courseMan.getAssignments(course.getId());
 
-            const students = await this.courseMan.getUsersForCourse(course, this.userMan, false,
-                [
-                    Enrollment.UserStatus.STUDENT,
-                    Enrollment.UserStatus.TEACHER,
-                ]);
+            const students = await this.courseMan.getUsersForCourse(
+                course, this.userMan, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
                 const userCourses = await this.courseMan.getStudentCourseForTeacher(student, course, labs);
@@ -220,12 +219,10 @@ export class TeacherPage extends ViewPage {
         if (course && curUser && group) {
             // get full list of students and teachers
             const students = await this.courseMan.getUsersForCourse(
-                course, this.userMan, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]
-                );
+                course, this.userMan, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             // get list of users who are not in group
             const freeStudents = await this.courseMan.getUsersForCourse(
-                course, this.userMan, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]
-                );
+                course, this.userMan, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -424,7 +421,7 @@ export class TeacherPage extends ViewPage {
     private async getCourses(): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return  this.courseMan.getCoursesFor(curUsr);
+            return this.courseMan.getCoursesFor(curUsr);
         }
         return [];
     }

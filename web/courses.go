@@ -33,15 +33,6 @@ func ListCoursesWithEnrollment(request *pb.RecordRequest, db database.Database) 
 	return &pb.Courses{Courses: courses}, err
 }
 
-// ListAssignments lists the assignments for the provided course.
-func ListAssignments(request *pb.RecordRequest, db database.Database) (*pb.Assignments, error) {
-	assignments, err := db.GetAssignmentsByCourse(request.ID)
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "no assignments found")
-	}
-	return &pb.Assignments{Assignments: assignments}, nil
-}
-
 // CreateEnrollment enrolls a user in a course.
 func CreateEnrollment(request *pb.Enrollment, db database.Database) error {
 	enrollment := pb.Enrollment{
@@ -257,31 +248,6 @@ func addUserToOrg(ctx context.Context, s scm.SCM, orgID uint64, user *pb.User) e
 // GetCourse returns a course object for the given course id.
 func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID)
-}
-
-// RefreshCourse updates the course assignments (and possibly other course information).
-func RefreshCourse(ctx context.Context, request *pb.RecordRequest, s scm.SCM, db database.Database, currentUser *pb.User) (*pb.Assignments, error) {
-	course, err := db.GetCourse(request.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	assignments, err := fetchAssignments(ctx, s, course)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = db.UpdateAssignments(assignments); err != nil {
-		return nil, err
-	}
-	//TODO(meling) Are the assignments (previously it was yamlparser.NewAssignmentRequest)
-	// needed by the frontend? Or can we use models.Assignment instead through db.GetAssignmentsByCourse()?
-	// Currently the frontend looks faulty, i.e. doesn't use the returned results from this
-	// function; see 'refreshCoursesFor(course_CourseID: number): Promise<any>' in ServerProvider.ts,
-	// which does a 'return this.makeUserInfo(result.data);', indicating that the result is
-	// converted into a UserInfo type, which probably fails??
-
-	return &pb.Assignments{Assignments: assignments}, nil
 }
 
 // GetSubmission returns a single submission for a assignment and a user

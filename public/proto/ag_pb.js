@@ -668,7 +668,7 @@ proto.User.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.User.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     isadmin: jspb.Message.getFieldWithDefault(msg, 2, false),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
@@ -1062,7 +1062,7 @@ proto.Users.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Users.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     usersList: jspb.Message.toObjectList(msg.getUsersList(),
     proto.User.toObject, includeInstance)
   };
@@ -1209,7 +1209,7 @@ proto.RemoteIdentity.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.RemoteIdentity.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     provider: jspb.Message.getFieldWithDefault(msg, 2, ""),
     remoteid: jspb.Message.getFieldWithDefault(msg, 3, 0),
@@ -1449,7 +1449,7 @@ proto.Group.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Group.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     name: jspb.Message.getFieldWithDefault(msg, 2, ""),
     courseid: jspb.Message.getFieldWithDefault(msg, 3, 0),
@@ -1797,7 +1797,7 @@ proto.Groups.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Groups.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     groupsList: jspb.Message.toObjectList(msg.getGroupsList(),
     proto.Group.toObject, includeInstance)
   };
@@ -1951,7 +1951,7 @@ proto.Course.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Course.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     coursecreatorid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
@@ -2446,7 +2446,7 @@ proto.Courses.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Courses.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     coursesList: jspb.Message.toObjectList(msg.getCoursesList(),
     proto.Course.toObject, includeInstance)
   };
@@ -2593,7 +2593,7 @@ proto.Enrollment.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Enrollment.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
@@ -2985,7 +2985,7 @@ proto.Enrollments.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Enrollments.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
     proto.Enrollment.toObject, includeInstance)
   };
@@ -3132,7 +3132,7 @@ proto.Assignment.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Assignment.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
@@ -3524,7 +3524,7 @@ proto.Assignments.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Assignments.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     assignmentsList: jspb.Message.toObjectList(msg.getAssignmentsList(),
     proto.Assignment.toObject, includeInstance)
   };
@@ -3671,7 +3671,7 @@ proto.Submission.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Submission.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
@@ -4021,7 +4021,7 @@ proto.Submissions.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Submissions.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     submissionsList: jspb.Message.toObjectList(msg.getSubmissionsList(),
     proto.Submission.toObject, includeInstance)
   };
@@ -4168,7 +4168,7 @@ proto.Repository.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Repository.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     organizationid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     repositoryid: jspb.Message.getFieldWithDefault(msg, 3, 0),
@@ -4473,7 +4473,7 @@ proto.Repositories.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Repositories.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     repositoriesList: jspb.Message.toObjectList(msg.getRepositoriesList(),
     proto.Repository.toObject, includeInstance)
   };
@@ -4620,7 +4620,7 @@ proto.Organization.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Organization.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     path: jspb.Message.getFieldWithDefault(msg, 2, ""),
     avatar: jspb.Message.getFieldWithDefault(msg, 3, "")
@@ -4806,7 +4806,7 @@ proto.Organizations.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Organizations.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     organizationsList: jspb.Message.toObjectList(msg.getOrganizationsList(),
     proto.Organization.toObject, includeInstance)
   };
@@ -4960,7 +4960,7 @@ proto.RecordRequest.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.RecordRequest.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     statusesList: jspb.Message.getRepeatedField(msg, 2),
     groupstatusesList: jspb.Message.getRepeatedField(msg, 3)
@@ -5173,7 +5173,7 @@ proto.GroupRequest.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.GroupRequest.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     userid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     groupid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     courseid: jspb.Message.getFieldWithDefault(msg, 3, 0)
@@ -5352,7 +5352,7 @@ proto.RepositoryRequest.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.RepositoryRequest.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     type: jspb.Message.getFieldWithDefault(msg, 2, 0),
     organizationid: jspb.Message.getFieldWithDefault(msg, 3, 0),
@@ -5612,7 +5612,7 @@ proto.Provider.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Provider.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     provider: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
@@ -5744,7 +5744,7 @@ proto.EnrollmentRequest.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.EnrollmentRequest.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     filteroutgroupmembers: jspb.Message.getFieldWithDefault(msg, 2, false),
     statesList: jspb.Message.getRepeatedField(msg, 3)
@@ -5942,7 +5942,7 @@ proto.SubmissionRequest.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.SubmissionRequest.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     userid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     groupid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     courseid: jspb.Message.getFieldWithDefault(msg, 3, 0)
@@ -6128,7 +6128,7 @@ proto.Providers.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Providers.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     providersList: jspb.Message.getRepeatedField(msg, 1)
   };
 
@@ -6270,7 +6270,7 @@ proto.URLResponse.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.URLResponse.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     url: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
@@ -6395,7 +6395,7 @@ proto.AuthorizationResponse.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.AuthorizationResponse.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     isauthorized: jspb.Message.getFieldWithDefault(msg, 1, false)
   };
 
@@ -6522,7 +6522,7 @@ proto.StatusCode.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.StatusCode.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
     statuscode: jspb.Message.getFieldWithDefault(msg, 1, 0),
     errormessage: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
@@ -6674,7 +6674,7 @@ proto.Void.prototype.toObject = function(opt_includeInstance) {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.Void.toObject = function(includeInstance, msg) {
-  var obj = {
+  var f, obj = {
 
   };
 

@@ -7,8 +7,34 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
+	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 )
+
+// ListAssignments lists the assignments for the provided course.
+func getAssignments(db database.Database, courseID uint64) (*pb.Assignments, error) {
+	assignments, err := db.GetAssignmentsByCourse(courseID)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Assignments{Assignments: assignments}, nil
+}
+
+// updateAssignments updates the assignments for the given course
+func updateAssignments(ctx context.Context, db database.Database, sc scm.SCM, courseID uint64) error {
+	course, err := db.GetCourse(courseID)
+	if err != nil {
+		return err
+	}
+	assignments, err := fetchAssignments(ctx, sc, course)
+	if err != nil {
+		return err
+	}
+	if err = db.UpdateAssignments(assignments); err != nil {
+		return err
+	}
+	return nil
+}
 
 // fetchAssignments returns a list of assignments for the given course, by
 // cloning the 'tests' repo for the given course and extracting the assignments
