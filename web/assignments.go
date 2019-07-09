@@ -56,5 +56,5 @@ func fetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.As
 	}
 
 	// parse assignments found in the cloned tests directory
-	return ParseAssignments(cloneDir, course.ID)
+	return parseAssignments(cloneDir, course.ID)
 }

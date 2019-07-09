@@ -1,4 +1,4 @@
-package web_test
+package web
 
 import (
 	"context"
@@ -11,13 +11,12 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/web"
 	tspb "github.com/gogo/protobuf/types"
 )
 
 func TestParseWithInvalidDir(t *testing.T) {
 	const dir = "invalid/dir"
-	_, err := web.ParseAssignments(dir, 0)
+	_, err := parseAssignments(dir, 0)
 	if err == nil {
 		t.Errorf("want no such file or directory error, got nil")
 	}
@@ -101,7 +100,7 @@ func TestParse(t *testing.T) {
 		Order:       2,
 	}
 
-	assignments, err := web.ParseAssignments(testsDir, 0)
+	assignments, err := parseAssignments(testsDir, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

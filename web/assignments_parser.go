@@ -30,7 +30,7 @@ type assignmentData struct {
 
 // ParseAssignments recursively walks the given directory and parses
 // any 'assignment.yml' files found and returns an array of assignments.
-func ParseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
+func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, err
