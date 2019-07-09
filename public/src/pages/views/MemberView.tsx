@@ -1,8 +1,8 @@
 import * as React from "react";
+import { Course, Enrollment } from "../../../proto/ag_pb";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
 import { ActionType, UserView } from "./UserView";
-import { Course, Enrollment } from "../../../proto/ag_pb";
 
 interface IUserViewerProps {
     navMan: NavigationManager;

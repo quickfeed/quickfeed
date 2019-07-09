@@ -210,6 +210,11 @@ message AuthorizationResponse {
     bool IsAuthorized = 1;
 }
 
+message StatusCode {
+    uint64 statusCode = 1;
+    string errorMessage = 2;
+}
+
 message Void {}
 
 service AutograderService {

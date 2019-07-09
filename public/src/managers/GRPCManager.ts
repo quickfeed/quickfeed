@@ -15,13 +15,14 @@ import {
     Providers,
     RecordRequest,
     RepositoryRequest,
+    StatusCode,
     Submission,
+    SubmissionRequest,
     Submissions,
     URLResponse,
     User,
     Users,
     Void,
-    SubmissionRequest,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { INewGroup } from "../models";
@@ -29,8 +30,7 @@ import { UserManager } from "./UserManager";
 
 // will have either data or message
 export interface IGrpcResponse<T> {
-    statusCode: number;
-    message?: string;
+    statusCode: StatusCode;
     data?: T;
 }
 
@@ -271,17 +271,23 @@ export class GrpcManager {
                 (err: grpcWeb.Error, response: T | undefined) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
+                            const code = new StatusCode();
+                            code.setStatuscode(err.code);
+                            code.setErrormessage(err.message);
                             const temp: IGrpcResponse<T> = {
-                                statusCode: err.code,
-                                message: err.message,
+                                statusCode: code,
                             };
                             this.logErr(temp, method.name);
                             resolve(temp);
                         }
                     } else {
+                        const code = new StatusCode();
+                        code.setStatuscode(0);
+                        // TODO(vera): this can be handled in another way, needs synchronization with backend
+                        code.setErrormessage("");
                         const temp: IGrpcResponse<T> = {
                             data: response as T,
-                            statusCode: 0,
+                            statusCode: code,
                         };
                         resolve(temp);
                     }
@@ -292,8 +298,9 @@ export class GrpcManager {
 
     // logErr logs any gRPC error to the console.
     private logErr(resp: IGrpcResponse<any>, methodName: string): void {
-        if (resp.statusCode !== 0) {
-            console.log("GRPC " + methodName + " failed with code " + resp.statusCode + ": " + resp.message);
+        if (resp.statusCode.getStatuscode() !== 0) {
+            console.log("GRPC " + methodName + " failed with code "
+             + resp.statusCode + ": " + resp.statusCode.getErrormessage());
         }
     }
 }

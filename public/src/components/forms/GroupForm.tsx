@@ -1,12 +1,12 @@
 import * as React from "react";
 
-import { Course, Enrollment, Group, User } from "../../../proto/ag_pb";
+import { Course, Enrollment, Group, StatusCode, User } from "../../../proto/ag_pb";
 import { Search } from "../../components";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { UserManager } from "../../managers/UserManager";
 import {
-    IError, INewGroup, isError, IStatusCode, IUserRelation,
+    INewGroup, IUserRelation,
 } from "../../models";
 
 interface IGroupProp {
@@ -145,8 +145,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
 
             const result = this.props.groupData ?
                 await this.updateGroup(formData, this.props.groupData.getId()) : await this.createGroup(formData);
-            if (isError(result) && result.message) {
-                const errMsg = result.message;
+            if (result instanceof StatusCode) {
+                const errMsg = result.getErrormessage();
                 const serverErrors: string[] = [];
                 serverErrors.push(errMsg);
                 const flashErrors = this.getFlashErrors(serverErrors);
@@ -190,11 +190,11 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         return flash;
     }
 
-    private async createGroup(formData: INewGroup): Promise<Group | IError> {
+    private async createGroup(formData: INewGroup): Promise<Group | StatusCode> {
         return this.props.courseMan.createGroup(formData, this.props.course.getId());
     }
 
-    private async updateGroup(formData: INewGroup, gid: number): Promise<IStatusCode | IError> {
+    private async updateGroup(formData: INewGroup, gid: number): Promise<StatusCode> {
         const groupData = new Group();
         groupData.setId(gid);
         groupData.setName(formData.name);

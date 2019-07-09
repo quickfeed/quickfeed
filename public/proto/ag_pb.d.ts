@@ -829,6 +829,28 @@ export namespace AuthorizationResponse {
   }
 }
 
+export class StatusCode extends jspb.Message {
+  getStatuscode(): number;
+  setStatuscode(value: number): void;
+
+  getErrormessage(): string;
+  setErrormessage(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): StatusCode.AsObject;
+  static toObject(includeInstance: boolean, msg: StatusCode): StatusCode.AsObject;
+  static serializeBinaryToWriter(message: StatusCode, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): StatusCode;
+  static deserializeBinaryFromReader(message: StatusCode, reader: jspb.BinaryReader): StatusCode;
+}
+
+export namespace StatusCode {
+  export type AsObject = {
+    statuscode: number,
+    errormessage: string,
+  }
+}
+
 export class Void extends jspb.Message {
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Void.AsObject;

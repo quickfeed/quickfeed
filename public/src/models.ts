@@ -167,28 +167,3 @@ export interface INewGroup {
     name: string;
     userids: number[];
 }
-
-// TODO(meling) consider to replace IError and IStatusCode with standard grpc error types
-
-/**
- * IStatusCode represent the status code returns from serverside
- */
-export interface IStatusCode {
-    statusCode: number;
-}
-
-/**
- * IError represents server side error object
- */
-export interface IError extends IStatusCode {
-    message?: string;
-}
-
-/**
- * Checks if value is compatible with the IError interface
- * @param item A value to check if it is an IError
- */
-// TODO(meling) this is only used in two places; obsolete?
-export function isError(item: any): item is IError {
-    return item && typeof item.statusCode === "number";
-}

@@ -1,7 +1,7 @@
 import * as React from "react";
+import { Course } from "../../../proto/ag_pb";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentSubmission } from "../../models";
-import { Course } from "../../../proto/ag_pb";
 
 interface ILabInfoProps {
     course: Course;

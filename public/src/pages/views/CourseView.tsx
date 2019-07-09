@@ -30,7 +30,7 @@ export class CourseView extends React.Component<ICourseViewProp, ICourseViewStat
                 <DynamicTable
                     header={["ID", "Name", "Course Code", "Year", "Semester", "Action"]}
                     data={this.state.courses}
-                    selector={(e: Course) => 
+                    selector={(e: Course) =>
                         [e.getId().toString(), e.getName(), e.getCode(), e.getYear().toString(), e.getTag(),
                     <span>
                         <button className="btn btn-primary"

@@ -219,11 +219,13 @@ export class TeacherPage extends ViewPage {
         const group: Group | null = await this.courseMan.getGroup(groupId);
         if (course && curUser && group) {
             // get full list of students and teachers
-            const students = await this.courseMan
-                .getUsersForCourse(course, this.userMan, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            const students = await this.courseMan.getUsersForCourse(
+                course, this.userMan, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]
+                );
             // get list of users who are not in group
-            const freeStudents = await this.courseMan
-                .getUsersForCourse(course, this.userMan, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            const freeStudents = await this.courseMan.getUsersForCourse(
+                course, this.userMan, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]
+                );
             return <GroupForm
                 className="form-horizontal"
                 students={students}

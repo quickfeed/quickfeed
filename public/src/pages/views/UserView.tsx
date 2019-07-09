@@ -1,9 +1,8 @@
 import * as React from "react";
+import { Enrollment} from "../../../proto/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
 import { IUserRelation } from "../../models";
-import { Enrollment} from "../../../proto/ag_pb";
-
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 
@@ -38,7 +37,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     }
 
     public componentWillReceiveProps(nextProps: Readonly<IUserViewerProps>, nextContext: any): void {
-        let state = {users: nextProps.users}
+        const state = {users: nextProps.users};
         this.setState(state);
     }
 
@@ -76,12 +75,12 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         if (user.link.state === Enrollment.UserStatus.TEACHER) {
             selector.push(
                 <span className="text-muted">
-                    <a href={'https://github.com/'+user.user.getLogin()} target="_blank">{user.user.getName()}</a>                    
+                    <a href={"https://github.com/" + user.user.getLogin()} target="_blank">{user.user.getName()}</a>
                 </span>
             );
         } else {
             selector.push(
-                <a href={'https://github.com/'+user.user.getLogin()} target="_blank">{user.user.getName()}</a>                    
+                <a href={"https://github.com/" + user.user.getLogin()} target="_blank">{user.user.getName()}</a>
                 );
         }
         selector.push(

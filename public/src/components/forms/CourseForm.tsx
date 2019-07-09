@@ -1,12 +1,11 @@
 import * as React from "react";
 import { BootstrapButton } from "../../components";
-import { IError, isError } from "../../models";
 
 import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
-import { Course, Organization, User, Void } from "../../../proto/ag_pb";
+import { Course, Organization, StatusCode, User, Void } from "../../../proto/ag_pb";
 
 interface ICourseFormProps {
     className?: string;
@@ -203,8 +202,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
             const result = this.props.courseData ?
                 await this.updateCourse(this.props.courseData.getId()) : await this.createNewCourse();
 
-            if (isError(result) && result.message) {
-                const errMsg = result.message;
+            if (result instanceof StatusCode) {
+                const errMsg = result.getErrormessage();
                 const serverErrors: string[] = [];
                 serverErrors.push(errMsg);
                 const flashErrors = this.getFlashErrors(serverErrors);
@@ -218,7 +217,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
         }
     }
 
-    private async updateCourse(courseId: number): Promise<Void | IError> {
+    private async updateCourse(courseId: number): Promise<Void | StatusCode> {
         const courseData = new Course();
         courseData.setId(courseId);
         courseData.setName(this.state.name);
@@ -231,7 +230,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
         return this.props.courseMan.updateCourse(courseId, courseData);
     }
 
-    private async createNewCourse(): Promise<Course | IError> {
+    private async createNewCourse(): Promise<Course | StatusCode> {
         const courseData = new Course();
         courseData.setName(this.state.name);
         courseData.setCode(this.state.code);
