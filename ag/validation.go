@@ -47,7 +47,7 @@ func (v Void) IsValid() bool {
 
 // IsValid checks required fields of a group request
 func (grp Group) IsValid() bool {
-	return grp.GetName() != "" && grp.GetCourseID() > 0 && len(grp.GetUsers()) > 0
+	return grp.GetName() != "" && grp.GetCourseID() > 0
 }
 
 // IsValid checks required fields of a course request
