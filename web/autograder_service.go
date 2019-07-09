@@ -114,7 +114,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 
 	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
-	course, err := NewCourse(ctx, in, s.db, scm, s.bh)
+	course, err := s.createCourse(ctx, in, scm)
 	if err != nil {
 		s.logger.Error(err)
 		if err == ErrAlreadyExists {

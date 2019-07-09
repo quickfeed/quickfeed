@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 )
 
@@ -38,15 +37,15 @@ var (
 	ErrAlreadyExists = errors.New("repositories already exists in SCM " + repoNames)
 )
 
-// NewCourse creates a new course for the directory specified in the request
+// createCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
 // does not contain the Autograder repositories that will be created.
-func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM, bh BaseHookOptions) (*pb.Course, error) {
-	org, err := s.GetOrganization(ctx, request.OrganizationID)
+func (s *AutograderService) createCourse(ctx context.Context, request *pb.Course, sc scm.SCM) (*pb.Course, error) {
+	org, err := sc.GetOrganization(ctx, request.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
-	repos, err := s.GetRepositories(ctx, org)
+	repos, err := sc.GetRepositories(ctx, org)
 	if err != nil {
 		return nil, err
 	}
@@ -60,17 +59,17 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 			Organization: org,
 			Private:      private,
 		}
-		repo, err := s.CreateRepository(ctx, repoOptions)
+		repo, err := sc.CreateRepository(ctx, repoOptions)
 		if err != nil {
 			return nil, err
 		}
 
 		hookOptions := &scm.CreateHookOptions{
-			URL:        auth.GetEventsURL(bh.BaseURL, request.Provider),
-			Secret:     bh.Secret,
+			URL:        auth.GetEventsURL(s.bh.BaseURL, request.Provider),
+			Secret:     s.bh.Secret,
 			Repository: repo,
 		}
-		if err := s.CreateHook(ctx, hookOptions); err != nil {
+		if err := sc.CreateHook(ctx, hookOptions); err != nil {
 			return nil, err
 		}
 
@@ -80,13 +79,13 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 			HTMLURL:        repo.WebURL,
 			RepoType:       pb.RepoType(path),
 		}
-		if err := db.CreateRepository(&dbRepo); err != nil {
+		if err := s.db.CreateRepository(&dbRepo); err != nil {
 			return nil, err
 		}
 	}
 
 	// we want to add course creator to teacher team
-	courseCreator, err := db.GetUser(request.GetCourseCreatorID())
+	courseCreator, err := s.db.GetUser(request.GetCourseCreatorID())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "internal database error")
 	}
@@ -96,15 +95,15 @@ func NewCourse(ctx context.Context, request *pb.Course, db database.Database, s 
 		TeamName:     "teachers",
 		Users:        []string{courseCreator.GetLogin()},
 	}
-	if _, err = s.CreateTeam(ctx, opt); err != nil {
+	if _, err = sc.CreateTeam(ctx, opt); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create teacher team")
 	}
-	if _, err = s.CreateTeam(ctx, &scm.CreateTeamOptions{Organization: org, TeamName: "students"}); err != nil {
+	if _, err = sc.CreateTeam(ctx, &scm.CreateTeamOptions{Organization: org, TeamName: "students"}); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create student team")
 	}
 
 	// then add course to the database
-	if err := db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
+	if err := s.db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
 		return nil, err
 	}
 	return request, nil
