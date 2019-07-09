@@ -103,9 +103,10 @@ func (req EnrollmentRequest) IsValid() bool {
 
 // IsValid ensures that provider string is one of implemented providers
 func (req Provider) IsValid() bool {
-	return req.GetProvider() == "github" ||
-		req.GetProvider() == "gitlab" ||
-		req.GetProvider() == "fake"
+	provider := req.GetProvider()
+	return provider == "github" ||
+		provider == "gitlab" ||
+		provider == "fake"
 }
 
 // IsValidProvider validates provider string coming from front end
