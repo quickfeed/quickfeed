@@ -339,16 +339,14 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 	return providers, nil
 }
 
-// GetOrganizations returns a list of directories for a course
+// GetOrganizations returns a list of organizations that are available
+// for course creation.
 func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.Provider) (*pb.Organizations, error) {
-	ctx, cancel := context.WithTimeout(ctx, MaxWait)
-	defer cancel()
-
 	_, scm, err := s.getUserAndSCM(ctx, in.Provider, false)
 	if err != nil {
 		return nil, err
 	}
-	return ListOrganizations(ctx, s.db, scm)
+	return s.getAvailableOrganizations(ctx, scm)
 }
 
 // GetRepository is not yet implemented
