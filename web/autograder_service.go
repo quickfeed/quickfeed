@@ -225,7 +225,7 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 }
 
 // GetGroupByUserAndCourse returns the group of the given student for a given course.
-func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.ActionRequest) (*pb.Group, error) {
+func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
 	if !s.hasAccess(ctx, in.UserID) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another group")
 	}
@@ -301,7 +301,7 @@ func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequ
 }
 
 // GetSubmissions returns the submissions matching the query encoded in the action request.
-func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.ActionRequest) (*pb.Submissions, error) {
+func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {
 	if !s.hasGroupAccess(ctx, in.GetCourseID(), in.GetUserID(), in.GetGroupID()) {
 		return nil, status.Errorf(codes.PermissionDenied, "only members, teachers or admin can access submissions")
 	}

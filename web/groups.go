@@ -26,7 +26,7 @@ func (s *AutograderService) getGroups(request *pb.RecordRequest) (*pb.Groups, er
 }
 
 // getGroupByUserAndCourse returns the group of the given user and course.
-func (s *AutograderService) getGroupByUserAndCourse(request *pb.ActionRequest) (*pb.Group, error) {
+func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*pb.Group, error) {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		return nil, err

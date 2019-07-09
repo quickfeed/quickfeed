@@ -586,7 +586,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	respGroup, err := ags.GetGroupByUserAndCourse(ctx, &pb.ActionRequest{UserID: user1.ID, CourseID: course.ID})
+	respGroup, err := ags.GetGroupByUserAndCourse(ctx, &pb.GroupRequest{UserID: user1.ID, CourseID: course.ID})
 	if err != nil {
 		t.Error(err)
 	}

@@ -298,7 +298,7 @@ func GetSubmission(request *pb.RecordRequest, db database.Database, currentUser 
 }
 
 // getSubmissions returns all the latests submissions for a user to a course
-func (s *AutograderService) getSubmissions(request *pb.ActionRequest) (*pb.Submissions, error) {
+func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.Submissions, error) {
 	// only one of user ID and group ID will be set; enforced by the IsValid
 	query := &pb.Submission{
 		UserID:  request.GetUserID(),

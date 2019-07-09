@@ -1,6 +1,5 @@
 import * as grpcWeb from "grpc-web";
 import {
-    ActionRequest,
     Assignments,
     AuthorizationResponse,
     Course,
@@ -9,6 +8,7 @@ import {
     EnrollmentRequest,
     Enrollments,
     Group,
+    GroupRequest,
     Groups,
     Organizations,
     Provider,
@@ -21,6 +21,7 @@ import {
     User,
     Users,
     Void,
+    SubmissionRequest,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { INewGroup } from "../models";
@@ -161,7 +162,7 @@ export class GrpcManager {
     }
 
     public getGroupByUserAndCourse(userID: number, courseID: number): Promise<IGrpcResponse<Group>> {
-        const request = new ActionRequest();
+        const request = new GroupRequest();
         request.setUserid(userID);
         request.setCourseid(courseID);
         return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse, request);
@@ -213,14 +214,14 @@ export class GrpcManager {
     }
 
     public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
-        const request = new ActionRequest();
+        const request = new SubmissionRequest();
         request.setCourseid(courseID);
         request.setUserid(userID);
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
     public getGroupSubmissions(courseID: number, groupID: number): Promise<IGrpcResponse<Submissions>> {
-        const request = new ActionRequest();
+        const request = new SubmissionRequest();
         request.setCourseid(courseID);
         request.setGroupid(groupID);
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
