@@ -70,3 +70,6 @@ protoset:
 	@echo Compiling protoset for grpcurl
 	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
 	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
+
+test:
+	@cd ./web; go test
