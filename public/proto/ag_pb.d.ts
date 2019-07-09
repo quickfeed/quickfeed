@@ -645,6 +645,9 @@ export class GroupRequest extends jspb.Message {
   getUserid(): number;
   setUserid(value: number): void;
 
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
   getCourseid(): number;
   setCourseid(value: number): void;
 
@@ -659,6 +662,7 @@ export class GroupRequest extends jspb.Message {
 export namespace GroupRequest {
   export type AsObject = {
     userid: number,
+    groupid: number,
     courseid: number,
   }
 }

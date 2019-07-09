@@ -281,12 +281,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 }
 
 // DeleteGroup removes group record from the database
-func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
-	//TODO(meling) This will call IsValid() method on Group also, which would probably not pass for this request
-	// Easiest is perhaps to switch it with a simple RecordRequest with checking just the ID.
-	if in.GetID() < 1 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
-	}
+func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
 	return &pb.Void{}, s.deleteGroup(in)
 }
 

@@ -168,7 +168,8 @@ message RecordRequest {
 
 message GroupRequest {
     uint64 userID = 1;
-    uint64 courseID = 2;
+    uint64 groupID = 2;
+    uint64 courseID = 3;
 }
 
 message RepositoryRequest {
@@ -233,7 +234,7 @@ service AutograderService {
     rpc GetGroups(RecordRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 
     rpc UpdateGroup(Group) returns (Void) {}
-    rpc DeleteGroup(Group) returns (Void) {}
+    rpc DeleteGroup(GroupRequest) returns (Void) {}
 
     // courses //
 

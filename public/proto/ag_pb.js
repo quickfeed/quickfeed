@@ -5175,7 +5175,8 @@ proto.GroupRequest.prototype.toObject = function(opt_includeInstance) {
 proto.GroupRequest.toObject = function(includeInstance, msg) {
   var obj = {
     userid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0)
+    groupid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    courseid: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -5218,6 +5219,10 @@ proto.GroupRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {number} */ (reader.readUint64());
+      msg.setGroupid(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readUint64());
       msg.setCourseid(value);
       break;
     default:
@@ -5256,10 +5261,17 @@ proto.GroupRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCourseid();
+  f = message.getGroupid();
   if (f !== 0) {
     writer.writeUint64(
       2,
+      f
+    );
+  }
+  f = message.getCourseid();
+  if (f !== 0) {
+    writer.writeUint64(
+      3,
       f
     );
   }
@@ -5282,17 +5294,32 @@ proto.GroupRequest.prototype.setUserid = function(value) {
 
 
 /**
- * optional uint64 courseID = 2;
+ * optional uint64 groupID = 2;
  * @return {number}
  */
-proto.GroupRequest.prototype.getCourseid = function() {
+proto.GroupRequest.prototype.getGroupid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.GroupRequest.prototype.setCourseid = function(value) {
+proto.GroupRequest.prototype.setGroupid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional uint64 courseID = 3;
+ * @return {number}
+ */
+proto.GroupRequest.prototype.getCourseid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/** @param {number} value */
+proto.GroupRequest.prototype.setCourseid = function(value) {
+  jspb.Message.setProto3IntField(this, 3, value);
 };
 
 

@@ -36,15 +36,15 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 }
 
 // DeleteGroup deletes a pending or rejected group for the given gid.
-func (s *AutograderService) deleteGroup(request *pb.Group) error {
-	group, err := s.db.GetGroup(request.ID)
+func (s *AutograderService) deleteGroup(request *pb.GroupRequest) error {
+	group, err := s.db.GetGroup(request.GroupID)
 	if err != nil {
 		return err
 	}
 	if group.Status > pb.Group_REJECTED {
 		return status.Errorf(codes.Aborted, "accepted group cannot be deleted")
 	}
-	return s.db.DeleteGroup(request.ID)
+	return s.db.DeleteGroup(request.GroupID)
 }
 
 // createGroup creates a new group for the given course and users.

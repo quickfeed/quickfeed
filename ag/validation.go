@@ -91,9 +91,11 @@ func (req SubmissionRequest) IsValid() bool {
 		(uid > 0 && gid == 0)
 }
 
-// IsValid ensures that both user and course IDs are set
+// IsValid ensures that course ID and group or user IDs are set
 func (req GroupRequest) IsValid() bool {
-	return req.GetUserID() > 0 && req.GetCourseID() > 0
+	uid := req.GetUserID()
+	gid := req.GetGroupID()
+	return (uid > 0 || gid > 0) && req.GetCourseID() > 0
 }
 
 // IsValid checks that course ID is positive.
