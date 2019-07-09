@@ -69,7 +69,7 @@ func (s *AutograderService) isAdmin(ctx context.Context) bool {
 	return usr.IsAdmin
 }
 
-// isTeacher returns true only if the current user is teacher for the given course.
+// isTeacher returns true only if the given user is teacher for the given course.
 func (s *AutograderService) isTeacher(userID uint64, courseID uint64) bool {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
