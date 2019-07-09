@@ -1,4 +1,4 @@
-package web_test
+package web
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
-	"github.com/autograde/aguis/web"
 )
 
 const (
@@ -54,7 +53,7 @@ func TestFetchAssignments(t *testing.T) {
 		OrganizationID: courseDirID,
 	}
 
-	assignments, err := web.FetchAssignments(ctx, s, course)
+	assignments, err := fetchAssignments(ctx, s, course)
 	if err != nil {
 		t.Fatal(err)
 	}

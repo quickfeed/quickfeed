@@ -10,7 +10,7 @@ import (
 	"github.com/autograde/aguis/scm"
 )
 
-// FetchAssignments returns a list of assignments for the given course, by
+// fetchAssignments returns a list of assignments for the given course, by
 // cloning the 'tests' repo for the given course and extracting the assignments
 // from the 'assignment.yml' files, one for each assignment.
 //
@@ -21,7 +21,7 @@ import (
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func FetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.Assignment, error) {
+func fetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.Assignment, error) {
 	ctx, cancel := context.WithTimeout(c, MaxWait)
 	defer cancel()
 

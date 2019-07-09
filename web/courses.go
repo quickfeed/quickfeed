@@ -266,7 +266,7 @@ func RefreshCourse(ctx context.Context, request *pb.RecordRequest, s scm.SCM, db
 		return nil, err
 	}
 
-	assignments, err := FetchAssignments(ctx, s, course)
+	assignments, err := fetchAssignments(ctx, s, course)
 	if err != nil {
 		return nil, err
 	}

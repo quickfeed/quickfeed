@@ -95,7 +95,7 @@ func refreshAssignmentsFromTestsRepo(logger *zap.Logger, db database.Database, r
 		return
 	}
 
-	assignments, err := FetchAssignments(context.Background(), s, course)
+	assignments, err := fetchAssignments(context.Background(), s, course)
 	if err != nil {
 		logger.Error("Failed to fetch assignments from 'tests' repository", zap.Error(err))
 	}
