@@ -186,7 +186,7 @@ export class GrpcManager {
     }
 
     public deleteGroup(groupid: number): Promise<IGrpcResponse<Void>> {
-        const request = new Group();
+        const request = new RecordRequest();
         request.setId(groupid);
         return this.grpcSend<Void>(this.agService.deleteGroup, request);
     }

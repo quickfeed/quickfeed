@@ -254,14 +254,14 @@ export class AutograderServiceClient {
 
   methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: GroupRequest) => {
+    (request: RecordRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   deleteGroup(
-    request: GroupRequest,
+    request: RecordRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {

@@ -281,7 +281,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 }
 
 // DeleteGroup removes group record from the database
-func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
+func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
 	return &pb.Void{}, s.deleteGroup(in)
 }
 

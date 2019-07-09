@@ -387,7 +387,7 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = ags.DeleteGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
+	_, err = ags.DeleteGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}

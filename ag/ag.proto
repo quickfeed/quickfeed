@@ -234,7 +234,7 @@ service AutograderService {
     rpc GetGroups(RecordRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 
     rpc UpdateGroup(Group) returns (Void) {}
-    rpc DeleteGroup(GroupRequest) returns (Void) {}
+    rpc DeleteGroup(RecordRequest) returns (Void) {}
 
     // courses //
 
