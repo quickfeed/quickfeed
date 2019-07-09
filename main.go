@@ -83,7 +83,7 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
-	go http.NewWebServer(db, bh, logger, *public, *httpAddr, *baseURL, *fake, *ciScripts, scms)
+	go http.NewWebServer(db, bh, logger, *public, *httpAddr, *fake, *ciScripts, scms)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {

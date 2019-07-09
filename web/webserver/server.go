@@ -29,7 +29,7 @@ import (
 )
 
 // NewWebServer starts a new web server
-func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, public, httpAddr string, baseURL string, fake bool, buildscripts string, scms *auth.Scms) {
+func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, public, httpAddr string, fake bool, buildscripts string, scms *auth.Scms) {
 	entryPoint := filepath.Join(public, "index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		l.Fatal("file not found", zap.String("path", entryPoint))
@@ -39,7 +39,7 @@ func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, pu
 	gothic.Store = store
 	e := newServer(l, store)
 
-	enabled := enableProviders(l, baseURL, fake)
+	enabled := enableProviders(l, bh.BaseURL, fake)
 	registerWebhooks(l, e, db, bh.Secret, enabled, &buildscripts)
 	registerAuth(l, e, db, scms)
 
