@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Course, Enrollment } from "../../../proto/ag_pb";
+import { Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
 import { ActionType, UserView } from "./UserView";
@@ -13,7 +14,22 @@ interface IUserViewerProps {
     course: Course;
 }
 
-export class MemberView extends React.Component<IUserViewerProps, {}> {
+interface IUserViewerState {
+    acceptedUsers: IUserRelation[];
+    pendingUsers: IUserRelation[];
+    rejectedUsers: IUserRelation[];
+}
+
+export class MemberView extends React.Component<IUserViewerProps, IUserViewerState, {}> {
+
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            acceptedUsers: this.props.acceptedUsers,
+            pendingUsers: this.props.pendingUsers,
+            rejectedUsers: this.props.rejectedUsers,
+        };
+    }
     public render() {
         const pendingActions = [
             { name: "Accept", uri: "accept", extra: "primary" },
@@ -22,6 +38,10 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
 
         return <div>
             <h1>{this.props.course.getName()}</h1>
+            <Search className="input-group"
+                    placeholder="Search for courses"
+                    onChange={(query) => this.handleSearch(query)}
+                />
             {this.renderUserView()}
             {this.renderPendingView(pendingActions)}
             {this.renderRejectedView()}
@@ -32,7 +52,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
         if (this.props.rejectedUsers.length > 0) {
             return this.renderUsers(
                 "Rejected users",
-                this.props.rejectedUsers,
+                this.state.rejectedUsers,
                 [],
                 ActionType.Menu,
                 (user: IUserRelation) => {
@@ -48,7 +68,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
     public renderUserView() {
         return this.renderUsers(
             "Registered users",
-            this.props.acceptedUsers,
+            this.state.acceptedUsers,
             [],
             ActionType.Menu,
             (user: IUserRelation) => {
@@ -65,7 +85,7 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
     }
 
     public renderPendingView(pendingActions: ILink[]) {
-        if (this.props.pendingUsers.length > 0) {
+        if (this.state.pendingUsers.length > 0) {
             return this.renderUsers("Pending users", this.props.pendingUsers, pendingActions, ActionType.InRow);
         }
     }
@@ -111,6 +131,54 @@ export class MemberView extends React.Component<IUserViewerProps, {}> {
                 break;
         }
         this.props.navMan.refresh();
+    }
+
+    private handleSearch(query: string): void {
+        query = query.toLowerCase();
+        const filteredAccepted: IUserRelation[] = [];
+        const filteredPending: IUserRelation[] = [];
+        const filteredRejected: IUserRelation[] = [];
+
+        // we filter out every student group separately to ensure that student status is easily visible to teacher
+        // filter accepted students
+        this.props.acceptedUsers.forEach((user) => {
+            if (user.user.getName().toLowerCase().indexOf(query) !== -1
+                || user.user.getStudentid().toLowerCase().indexOf(query) !== -1
+            ) {
+                filteredAccepted.push(user);
+            }
+        });
+
+        this.setState({
+            acceptedUsers: filteredAccepted,
+        });
+
+        // filter pending students
+        this.props.pendingUsers.forEach((user) => {
+            if (user.user.getName().toLowerCase().indexOf(query) !== -1
+                || user.user.getStudentid().toLowerCase().indexOf(query) !== -1
+            ) {
+                filteredPending.push(user);
+            }
+        });
+
+        this.setState({
+            pendingUsers: filteredPending,
+        });
+
+        // filter rejected students
+        this.props.rejectedUsers.forEach((user) => {
+            if (user.user.getName().toLowerCase().indexOf(query) !== -1
+                || user.user.getStudentid().toLowerCase().indexOf(query) !== -1
+            ) {
+                filteredRejected.push(user);
+            }
+        });
+
+        this.setState({
+            rejectedUsers: filteredRejected,
+        });
+
     }
 }
 

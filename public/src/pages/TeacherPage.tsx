@@ -69,7 +69,7 @@ export class TeacherPage extends ViewPage {
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             if (info.params.page) {
-                return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
+                return <h3>You are now on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
             }
             // return <h1>Teacher Course {info.params.course}</h1>;
             let button;
