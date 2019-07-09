@@ -50,6 +50,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
+                // TODO(vera): what does it even do?
                 onRebuildClick={() => { }}
                 onApproveClick={() => {
                     if (this.state.assignment && this.state.assignment.latest) {

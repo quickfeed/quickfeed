@@ -1,8 +1,8 @@
 import * as React from "react";
 import { IAssignment, IGroupCourseWithGroup, IStudentSubmission } from "../../models";
 
-import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { Course } from "../../../proto/ag_pb";
+import { DynamicTable, Row, Search, StudentLab } from "../../components";
 
 interface IResultsProp {
     course: Course;

@@ -8,7 +8,7 @@ import { NavigationManager } from "../../managers/NavigationManager";
 
 import { Course, Organization, User, Void } from "../../../proto/ag_pb";
 
-interface ICourseFormProps<T> {
+interface ICourseFormProps {
     className?: string;
     courseMan: CourseManager;
     navMan: NavigationManager;
@@ -29,7 +29,7 @@ interface ICourseFormStates {
     errorFlash: JSX.Element | null;
 }
 
-class CourseForm<T> extends React.Component<ICourseFormProps<T>, ICourseFormStates> {
+class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates> {
     constructor(props: any) {
         super(props);
         this.state = {
