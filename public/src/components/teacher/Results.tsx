@@ -1,9 +1,9 @@
 import * as React from "react";
 import { IAssignment, IStudentSubmission, IUserCourseWithUser } from "../../models";
 
+import { Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { ICellElement } from "../data/DynamicTable";
-import { Course } from "../../../proto/ag_pb";
 
 interface IResultsProp {
     course: Course;
