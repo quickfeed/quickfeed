@@ -641,41 +641,25 @@ export namespace RecordRequest {
   }
 }
 
-export class ActionRequest extends jspb.Message {
-  getId(): number;
-  setId(value: number): void;
-
+export class GroupRequest extends jspb.Message {
   getUserid(): number;
   setUserid(value: number): void;
-
-  getGroupid(): number;
-  setGroupid(value: number): void;
 
   getCourseid(): number;
   setCourseid(value: number): void;
 
-  getStatus(): Enrollment.UserStatus;
-  setStatus(value: Enrollment.UserStatus): void;
-
-  getGroupstatus(): Group.GroupStatus;
-  setGroupstatus(value: Group.GroupStatus): void;
-
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): ActionRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: ActionRequest): ActionRequest.AsObject;
-  static serializeBinaryToWriter(message: ActionRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): ActionRequest;
-  static deserializeBinaryFromReader(message: ActionRequest, reader: jspb.BinaryReader): ActionRequest;
+  toObject(includeInstance?: boolean): GroupRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GroupRequest): GroupRequest.AsObject;
+  static serializeBinaryToWriter(message: GroupRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GroupRequest;
+  static deserializeBinaryFromReader(message: GroupRequest, reader: jspb.BinaryReader): GroupRequest;
 }
 
-export namespace ActionRequest {
+export namespace GroupRequest {
   export type AsObject = {
-    id: number,
     userid: number,
-    groupid: number,
     courseid: number,
-    status: Enrollment.UserStatus,
-    groupstatus: Group.GroupStatus,
   }
 }
 
@@ -760,6 +744,32 @@ export namespace EnrollmentRequest {
     courseid: number,
     filteroutgroupmembers: boolean,
     statesList: Array<Enrollment.UserStatus>,
+  }
+}
+
+export class SubmissionRequest extends jspb.Message {
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SubmissionRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: SubmissionRequest): SubmissionRequest.AsObject;
+  static serializeBinaryToWriter(message: SubmissionRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SubmissionRequest;
+  static deserializeBinaryFromReader(message: SubmissionRequest, reader: jspb.BinaryReader): SubmissionRequest;
+}
+
+export namespace SubmissionRequest {
+  export type AsObject = {
+    userid: number,
+    groupid: number,
+    courseid: number,
   }
 }
 

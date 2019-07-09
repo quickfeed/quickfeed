@@ -12,7 +12,6 @@ import * as grpcWeb from 'grpc-web';
 import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
 import {
-  ActionRequest,
   Assignments,
   AuthorizationResponse,
   Course,
@@ -21,6 +20,7 @@ import {
   EnrollmentRequest,
   Enrollments,
   Group,
+  GroupRequest,
   Groups,
   Organizations,
   Provider,
@@ -29,6 +29,7 @@ import {
   Repository,
   RepositoryRequest,
   Submission,
+  SubmissionRequest,
   Submissions,
   URLResponse,
   User,
@@ -165,14 +166,14 @@ export class AutograderServiceClient {
 
   methodInfoGetGroupByUserAndCourse = new grpcWeb.AbstractClientBase.MethodInfo(
     Group,
-    (request: ActionRequest) => {
+    (request: GroupRequest) => {
       return request.serializeBinary();
     },
     Group.deserializeBinary
   );
 
   getGroupByUserAndCourse(
-    request: ActionRequest,
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Group) => void) {
@@ -495,14 +496,14 @@ export class AutograderServiceClient {
 
   methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
     Submissions,
-    (request: ActionRequest) => {
+    (request: SubmissionRequest) => {
       return request.serializeBinary();
     },
     Submissions.deserializeBinary
   );
 
   getSubmissions(
-    request: ActionRequest,
+    request: SubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Submissions) => void) {

@@ -166,15 +166,9 @@ message RecordRequest {
     repeated Group.GroupStatus groupStatuses = 3;
 }
 
-// fields can be empty, do not use fields for user validation, use context
-// can be used in submission, enrollment and group requests, also in requests with multiple IDs
-message ActionRequest {
-    uint64 ID = 1;
-    uint64 userID = 2;
-    uint64 groupID = 3;
-    uint64 courseID = 4;
-    Enrollment.UserStatus status = 5;
-    Group.GroupStatus groupStatus = 6;
+message GroupRequest {
+    uint64 userID = 1;
+    uint64 courseID = 2;
 }
 
 message RepositoryRequest {
@@ -196,6 +190,12 @@ message EnrollmentRequest {
     uint64 courseID = 1;
     bool filterOutGroupMembers = 2;
     repeated Enrollment.UserStatus states = 3;
+}
+
+message SubmissionRequest {
+    uint64 userID = 1;
+    uint64 groupID = 2;
+    uint64 courseID = 3;
 }
 
 message Providers {
@@ -224,7 +224,7 @@ service AutograderService {
     // groups //
 
     rpc GetGroup(RecordRequest) returns (Group) {}
-    rpc GetGroupByUserAndCourse(ActionRequest) returns (Group) {} 
+    rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {} 
     rpc GetGroups(RecordRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 
     rpc UpdateGroup(Group) returns (Void) {}
@@ -248,7 +248,7 @@ service AutograderService {
     // submissions //
 
     rpc GetSubmission(RecordRequest) returns (Submission) {}
-    rpc GetSubmissions(ActionRequest) returns (Submissions) {}
+    rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
     rpc UpdateSubmission(RecordRequest) returns (Void) {}
    
     // misc //
