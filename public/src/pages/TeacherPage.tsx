@@ -122,6 +122,7 @@ export class TeacherPage extends ViewPage {
         });
     }
 
+    // TODO(meling) consolidate these two result functions?
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: IAssignment[] = await this.courseMan.getAssignments(course.getId());
@@ -140,7 +141,7 @@ export class TeacherPage extends ViewPage {
                 labs={labs}
                 students={linkedStudents}
                 onApproveClick={async (submissionID: number) => {
-                    await this.courseMan.approveSubmission(submissionID);
+                    await this.courseMan.approveSubmission(submissionID); // TODO(meling) also send along courseID
                     // this.navMan.refresh();
                 }}
             >
@@ -160,7 +161,6 @@ export class TeacherPage extends ViewPage {
                     linkedGroups.push({
                         course: grp,
                         group: grpCourse,
-
                     });
                 }
             }
@@ -333,6 +333,8 @@ export class TeacherPage extends ViewPage {
     }
 
     public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
+        // TODO(meling) BUG using Safari with popups enabled on ag3; need more analysis:
+        // If you allow popups for this tests repo link, it creates new popups infinitely.
         const courseId = parseInt(navInfo.params.cid, 10);
         const testInformationURL = await this.courseMan.getRepositoryURL(courseId, Repository.Type.TESTS);
         if (testInformationURL === "") {
