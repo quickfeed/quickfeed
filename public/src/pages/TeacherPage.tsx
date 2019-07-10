@@ -291,88 +291,42 @@ export class TeacherPage extends ViewPage {
         };
     }
 
-    public async courseInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const courseId = parseInt(navInfo.params.cid, 10);
-        const informationURL = await this.courseMan.getRepositoryURL(courseId, Repository.Type.COURSEINFO);
-        if (informationURL === "") {
-            return <div> 404 not found</div>;
+    public async repositoryLink(cid: string, repoType: number, msg: string): View {
+        const courseId = parseInt(cid, 10);
+        const repoURL = await this.courseMan.getRepositoryURL(courseId, repoType);
+        if (repoURL === "") {
+            return <div>404 not found</div>;
         }
-
-        // Open new window for course information.
-        const popup = window.open(informationURL, "_blank");
-
+        // open new window for the repository link
+        const popup = window.open(repoURL, "_blank");
         if (!popup) {
-            return <div> Course information found <a href={informationURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+            // fallback if the pop window was blocked by the browser
+            // TODO(meling) format this more nicely with larger font
+            return <div>(popup window was blocked by the browser)
+                {msg} repository is found <a href={repoURL}> here </a> </div>;
         }
-
-        // If for some reason navigateTo did not succeed, show this error message.
+        this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
+        // TODO(meling) it is unclear if we can get here, and if so, is the error msg below is accurate?
+        // if navigateTo failed, show this error message.
         return <div> Popup blocker prevented the page to load. </div>;
     }
 
+    public async courseInformation(navInfo: INavInfo<{ cid: string }>): View {
+        return this.repositoryLink(navInfo.params.cid, Repository.Type.COURSEINFO, "Course information");
+    }
+
     public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const courseId = parseInt(navInfo.params.cid, 10);
-        const assignmentURL = await this.courseMan.getRepositoryURL(courseId,
-            Repository.Type.ASSIGNMENTS);
-        if (assignmentURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(assignmentURL, "_blank");
-
-        if (!popup) {
-            return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
+        return this.repositoryLink(navInfo.params.cid, Repository.Type.ASSIGNMENTS, "Assignments");
     }
 
     public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
         // TODO(meling) BUG using Safari with popups enabled on ag3; need more analysis:
         // If you allow popups for this tests repo link, it creates new popups infinitely.
-        const courseId = parseInt(navInfo.params.cid, 10);
-        const testInformationURL = await this.courseMan.getRepositoryURL(courseId, Repository.Type.TESTS);
-        if (testInformationURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(testInformationURL, "_blank");
-
-        if (!popup) {
-            return <div> Test repository found <a href={testInformationURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
+        return this.repositoryLink(navInfo.params.cid, Repository.Type.TESTS, "Tests");
     }
 
     public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const courseId = parseInt(navInfo.params.cid, 10);
-        const solutionURL = await this.courseMan.getRepositoryURL(courseId,
-            Repository.Type.SOLUTIONS);
-        if (solutionURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(solutionURL, "_blank");
-
-        if (!popup) {
-            return <div> solution repository found <a href={solutionURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
+        return this.repositoryLink(navInfo.params.cid, Repository.Type.SOLUTIONS, "Solutions");
     }
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
