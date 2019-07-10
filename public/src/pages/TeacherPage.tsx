@@ -339,7 +339,6 @@ export class TeacherPage extends ViewPage {
                     states.push(Enrollment.UserStatus.STUDENT);
                 }
                 const courses = await this.courseMan.getCoursesFor(curUser, states);
-                // const courses = await this.courseMan.getActiveCoursesFor(curUser);
 
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {

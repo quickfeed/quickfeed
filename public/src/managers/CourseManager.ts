@@ -204,7 +204,6 @@ export class CourseManager {
         return userCourse;
     }
 
-
     /**
      * Retrives all course relations, and courses related to a
      * a single student
