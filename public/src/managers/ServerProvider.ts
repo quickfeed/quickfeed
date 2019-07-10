@@ -123,26 +123,20 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async addUserToCourse(user: User, course: Course): Promise<boolean> {
         const result = await this.grpcHelper.createEnrollment(user.getId(), course.getId());
-        if (result.status.getCode() !== 0) {
-            return false;
-        }
-        return true;
+        return result.status.getCode() === 0;
     }
 
     public async changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean> {
         const result = await this.grpcHelper.updateEnrollment(link.userid, link.courseId, state);
-        if (result.status.getCode() !== 0) {
-            return false;
-        }
-        return true;
+        return result.status.getCode() === 0;
     }
 
     public async isAuthorizedTeacher(): Promise<boolean> {
         const result = await this.grpcHelper.isAuthorizedTeacher();
-        if (result.status.getCode() !== 0) {
+        if (result.status.getCode() !== 0 || !result.data) {
             return false;
         }
-        return true;
+        return result.data.getIsauthorized();
     }
 
     public async createNewCourse(courseData: Course): Promise<Course | Status> {
@@ -211,10 +205,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async deleteGroup(groupID: number): Promise<boolean> {
         const result = await this.grpcHelper.deleteGroup(groupID);
-        if (result.status.getCode() !== 0) {
-            return false;
-        }
-        return true;
+        return result.status.getCode() === 0;
     }
 
     public async updateGroup(group: Group): Promise<Status> {
@@ -278,12 +269,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
+    // TODO(vera): now admins can only promote users, but never demote
+    // what if we introduce a rule that would allow course creators to demote users?
     public async changeAdminRole(user: User): Promise<boolean> {
         const result = await this.grpcHelper.updateUser(user, true);
-        if (result.status.getCode() !== 0 || !result.data) {
-            return false;
-        }
-        return true;
+        // we are not interested in user data returned in this case, only checking that there were no errors
+        return result.status.getCode() === 0;
     }
 
     public async updateUser(user: User): Promise<boolean> {
