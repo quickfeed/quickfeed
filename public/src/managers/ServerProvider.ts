@@ -105,7 +105,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return arr;
     }
 
-    public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
+    public async getAssignments(courseId: number): Promise<IAssignment[]> {
         const result = await this.grpcHelper.getAssignments(courseId);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
@@ -116,9 +116,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             assignments.push(asg);
         });
 
-        return mapify(assignments, (ele) => {
-            return ele.id;
-        });
+        return assignments;
     }
 
     public async addUserToCourse(user: User, course: Course): Promise<boolean> {

@@ -72,13 +72,14 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourseStudent;
     }
 
-    public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
-        const temp: IMap<IAssignment> = [];
+    public async getAssignments(courseId: number): Promise<IAssignment[]> {
+        const temp: IAssignment[] = [];
         MapHelper.forEach(this.localAssignments, (a, i) => {
             if (a.courseid === courseId) {
                 temp[i] = a;
             }
         });
+
         return temp;
     }
 

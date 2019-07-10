@@ -17,7 +17,7 @@ import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
-    getAssignments(courseID: number): Promise<IMap<IAssignment>>;
+    getAssignments(courseID: number): Promise<IAssignment[]>;
     getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]>;
     getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]):
         Promise<IUserEnrollment[]>;
@@ -134,26 +134,11 @@ export class CourseManager {
     }
 
     /**
-     * TODO(meling) unused function; no references to it.
-     * Retrives one assignment from a single course
-     * @param course The course the assignment is in
-     * @param assignmentID The id to the assignment
-     */
-    public async getAssignment(course: Course, assignmentID: number): Promise<IAssignment | null> {
-        const assignments = await this.courseProvider.getAssignments(course.getId());
-        const assign = assignments[assignmentID];
-        if (assign) {
-            return assign;
-        }
-        return null;
-    }
-
-    /**
      * Get all assignments in a single course
      * @param courseID The course id or ICourse to retrive assignments from
      */
     public async getAssignments(courseID: number): Promise<IAssignment[]> {
-        return MapHelper.toArray(await this.courseProvider.getAssignments(courseID));
+        return this.courseProvider.getAssignments(courseID);
     }
 
     /**
