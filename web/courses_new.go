@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/autograde/aguis/web/auth"
 
@@ -113,13 +112,11 @@ func (s *AutograderService) createCourse(ctx context.Context, request *pb.Course
 // isDirty returns true if the list of provided repositories contains
 // any of the repositories that Autograder wants to create.
 func isDirty(repos []*scm.Repository) bool {
-	log.Println("IsDirty got ", len(repos), " repos")
 	if len(repos) == 0 {
 		return false
 	}
 	for _, repo := range repos {
 		if _, exists := RepoPaths[repo.Path]; exists {
-			log.Println("Repo ", repo.Path, " exists")
 			return true
 		}
 	}
