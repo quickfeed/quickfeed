@@ -277,9 +277,9 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
-// UpdateSubmission updates a submission
-func UpdateSubmission(request *pb.RecordRequest, db database.Database) error {
-	return db.UpdateSubmission(request.ID, true)
+// approveSubmission approves the given submission.
+func (s *AutograderService) approveSubmission(submissionID uint64) error {
+	return s.db.UpdateSubmission(submissionID, true)
 }
 
 // UpdateCourse updates an existing course

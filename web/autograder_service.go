@@ -303,10 +303,17 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	return submissions, nil
 }
 
-// UpdateSubmission changes submission information
+// UpdateSubmission approves the given submission.
+// TODO(meling) consider to rename to ApproveSubmission?
+// TODO(meling) seems like we need the courseID in the request to find if the current user is a teacher for the course.
 func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
-	//TODO(meling) UpdateSubmission requires administrator/teacher access
-	return &pb.Void{}, UpdateSubmission(in, s.db)
+	submissionID := in.GetID()
+	err := s.approveSubmission(submissionID)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to approve submission")
+	}
+	return &pb.Void{}, nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.
