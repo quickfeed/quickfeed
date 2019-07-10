@@ -22,7 +22,7 @@ interface IUserViewerState {
 
 export class MemberView extends React.Component<IUserViewerProps, IUserViewerState, {}> {
 
-    constructor(props: any) {
+    constructor(props: IUserViewerProps) {
         super(props);
         this.state = {
             acceptedUsers: this.props.acceptedUsers,
@@ -36,6 +36,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             { name: "Reject", uri: "reject", extra: "danger" },
         ];
 
+        this.refreshState();
         return <div>
             <h1>{this.props.course.getName()}</h1>
             <Search className="input-group"
@@ -49,7 +50,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     public renderRejectedView() {
-        if (this.props.rejectedUsers.length > 0) {
+        if (this.state.rejectedUsers.length > 0) {
             return this.renderUsers(
                 "Rejected users",
                 this.state.rejectedUsers,
@@ -86,7 +87,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     public renderPendingView(pendingActions: ILink[]) {
         if (this.state.pendingUsers.length > 0) {
-            return this.renderUsers("Pending users", this.props.pendingUsers, pendingActions, ActionType.InRow);
+            return this.renderUsers("Pending users", this.state.pendingUsers, pendingActions, ActionType.InRow);
         }
     }
 
@@ -96,6 +97,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         actions?: ILink[],
         linkType?: ActionType,
         optionalActions?: ((user: IUserRelation) => ILink[])) {
+        console.log("Rendering users: " + title);
         return <div>
             <h3>{title}</h3>
             <UserView
@@ -130,6 +132,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
                 break;
         }
+        this.refreshState();
         this.props.navMan.refresh();
     }
 
@@ -179,6 +182,14 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             rejectedUsers: filteredRejected,
         });
 
+    }
+
+    private refreshState() {
+        this.setState({
+            acceptedUsers: this.props.acceptedUsers,
+            pendingUsers: this.props.pendingUsers,
+            rejectedUsers: this.props.rejectedUsers,
+        });
     }
 }
 

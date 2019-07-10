@@ -73,7 +73,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
                 <h3>Approved Groups</h3>
                 <DynamicTable
                     header={["Name", "Members"]}
-                    data={this.state.approvedGroups}
+                    data={this.props.approvedGroups}
                     selector={
                         (group: Group) => this.renderRow(group)
                     }
@@ -89,7 +89,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
                 <h3>Pending Groups</h3>
                 <DynamicTable
                     header={["Name", "Members", "Actions"]}
-                    data={this.state.pendingGroups}
+                    data={this.props.pendingGroups}
                     selector={(group: Group) => this.renderRow(group)}
                 />
             </div>
@@ -126,7 +126,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
                 <h3>Rejected Groups</h3>
                 <DynamicTable
                     header={["Name", "Members", "Action"]}
-                    data={this.state.rejectedGroups}
+                    data={this.props.rejectedGroups}
                     selector={
                         (group: Group) => [
                             group.getName(),
@@ -167,11 +167,6 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
             await this.props.courseMan.deleteGroup(gid) :
             await this.props.courseMan.updateGroupStatus(gid, status);
         if (result) {
-            this.setState({
-                approvedGroups: this.props.approvedGroups,
-                pendingGroups: this.props.pendingGroups,
-                rejectedGroups: this.props.rejectedGroups,
-            });
             this.props.navMan.refresh();
         }
     }
@@ -203,11 +198,7 @@ ${group.getName()}?`,
                     break;
                 }
         }
-        this.setState({
-            approvedGroups: this.props.approvedGroups,
-            pendingGroups: this.props.pendingGroups,
-            rejectedGroups: this.props.rejectedGroups,
-        });
+        this.refreshState();
         this.props.navMan.refresh();
     }
 
@@ -250,6 +241,14 @@ ${group.getName()}?`,
             rejectedGroups: filteredRejected,
         });
 
+    }
+
+    private refreshState() {
+        this.setState({
+            approvedGroups: this.props.approvedGroups,
+            pendingGroups: this.props.pendingGroups,
+            rejectedGroups: this.props.rejectedGroups,
+        });
     }
 
 }
