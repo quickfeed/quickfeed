@@ -99,7 +99,7 @@ export class GrpcManager {
     public getCourse(id: number): Promise<IGrpcResponse<Course>> {
         const request = new RecordRequest();
         request.setId(id);
-        return this.grpcSend(this.agService.getCourse, request);
+        return this.grpcSend<Course>(this.agService.getCourse, request);
     }
 
     public getCourses(): Promise<IGrpcResponse<Courses>> {
