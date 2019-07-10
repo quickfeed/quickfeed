@@ -5,6 +5,7 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
+	"github.com/jinzhu/gorm"
 )
 
 // getAvailableOrganizations returns all organizations that can be used as a course
@@ -29,6 +30,9 @@ func (s *AutograderService) getAvailableOrganizations(ctx context.Context, sc sc
 		}
 		course, err := s.db.GetCourseByOrganizationID(org.ID)
 		if err != nil {
+			if err != gorm.ErrRecordNotFound {
+				continue
+			}
 			s.logger.Errorf("couldn't fetch course from database: %v", err)
 		}
 
