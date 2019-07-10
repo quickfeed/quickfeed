@@ -42,7 +42,7 @@ export interface ICourseProvider {
     getOrganizations(provider: string): Promise<Organization[]>;
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
-    approveSubmission(submissionID: number): Promise<void>;
+    approveSubmission(submissionID: number, courseID: number): Promise<void>;
     getRepositoryURL(cid: number, type: number): Promise<string>;
 }
 
@@ -381,8 +381,8 @@ export class CourseManager {
         return this.courseProvider.getRepositoryURL(cid, type);
     }
 
-    public async approveSubmission(submissionID: number): Promise<void> {
-        return this.courseProvider.approveSubmission(submissionID);
+    public async approveSubmission(submissionID: number, courseID: number): Promise<void> {
+        return this.courseProvider.approveSubmission(submissionID, courseID);
     }
 
     /**

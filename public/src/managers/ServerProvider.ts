@@ -339,7 +339,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getUrl();
     }
 
-    public async approveSubmission(submissionID: number): Promise<void> {
+    public async approveSubmission(submissionID: number, courseID: number): Promise<void> {
         await this.grpcHelper.updateSubmission(submissionID);
         return;
     }
