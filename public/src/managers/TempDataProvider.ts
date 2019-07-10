@@ -13,10 +13,6 @@ import { IUserProvider } from "./UserManager";
 import { isNull } from "util";
 import { IMap, MapHelper, mapify } from "../map";
 
-interface IDummyUser extends User {
-    password: string;
-}
-
 interface IGrpcDummyUser {
     user: User;
     password: string;
@@ -201,8 +197,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getAllLabInfos(courseId: number): Promise<IMap<ISubmission>> {
-        const temp: IMap<ISubmission> = {};
+    public async getAllLabInfos(courseId: number): Promise<ISubmission[]> {
+        const temp: ISubmission[] = [];
         const assignments = await this.getAssignments(courseId);
         MapHelper.forEach(this.localLabInfo, (ele) => {
             if (assignments[ele.assignmentid]) {
@@ -266,7 +262,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async updateGroup(groupData: Group): Promise<Status> {
         throw new Error("Method not implemented");
     }
-    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<ISubmission>> {
+    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<ISubmission[]> {
         throw new Error("Method not implemented.");
     }
 

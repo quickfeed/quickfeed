@@ -31,7 +31,6 @@ import {
     IUserEnrollment,
     IUserProvider,
 } from "../managers";
-import { IMap, mapify } from "../map";
 import { ILogger } from "./LogManager";
 
 interface IEndpoints {
@@ -211,10 +210,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status;
     }
 
-    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>> {
+    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]> {
         const result = await this.grpcHelper.getGroupSubmissions(courseID, groupID);
         if (result.status.getCode() !== 0 || !result.data) {
-            return {};
+            return [];
         }
 
         const isubmissions: ISubmission[] = [];
@@ -222,24 +221,20 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             const isbm = this.toISUbmission(ele);
             isubmissions.push(isbm);
         });
-        return mapify(isubmissions, (ele) => {
-            return ele.id;
-        });
+        return isubmissions;
     }
 
-    public async getAllLabInfos(courseID: number, userID: number): Promise<IMap<ISubmission>> {
+    public async getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]> {
         const result = await this.grpcHelper.getSubmissions(courseID, userID);
         if (result.status.getCode() !== 0 || !result.data) {
-            return {};
+            return [];
         }
         const isubmissions: ISubmission[] = [];
         result.data.getSubmissionsList().forEach((ele) => {
             const isbm = this.toISUbmission(ele);
             isubmissions.push(isbm);
         });
-        return mapify(isubmissions, (ele) => {
-            return ele.id;
-        });
+        return isubmissions;
     }
 
     public async tryLogin(username: string, password: string): Promise<User | null> {

@@ -1,4 +1,3 @@
-import { IMap, MapHelper } from "../map";
 import {
     IAssignment,
     ICourseLinkAssignment,
@@ -37,8 +36,8 @@ export interface ICourseProvider {
     getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null>;
     updateGroup(groupData: Group): Promise<Status>;
 
-    getAllLabInfos(courseID: number, userId: number): Promise<IMap<ISubmission>>;
-    getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>>;
+    getAllLabInfos(courseID: number, userId: number): Promise<ISubmission[]>;
+    getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]>;
     getOrganizations(provider: string): Promise<Organization[]>;
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
@@ -205,28 +204,6 @@ export class CourseManager {
         return userCourse;
     }
 
-    /**
-     * TODO(meling) unused function; no references to it.
-     * Loads a single IStudentSubmission for a student and an assignment.
-     * This will contains information about an assignment and the lates
-     * sumbission information related to that assignment.
-     * @param student The student the information should be retrived from
-     * @param assignment The assignment the data should be loaded for
-     */
-    public async getUserSubmittions(student: User, assignment: IAssignment): Promise<IStudentSubmission> {
-        const labsInfo = MapHelper.find(await this.courseProvider.getAllLabInfos(assignment.courseid, student.getId()),
-            (ele) => ele.userid === student.getId() && ele.assignmentid === assignment.id);
-        if (labsInfo) {
-            return {
-                assignment,
-                latest: labsInfo,
-            };
-        }
-        return {
-            assignment,
-            latest: undefined,
-        };
-    }
 
     /**
      * Retrives all course relations, and courses related to a
@@ -383,8 +360,8 @@ export class CourseManager {
             assignments = await this.getAssignments(studentCourse.course.getId());
         }
         if (assignments.length > 0) {
-            const submissions = MapHelper.toArray(
-                await this.courseProvider.getAllLabInfos(studentCourse.course.getId(), student.getId()));
+            const submissions =
+                await this.courseProvider.getAllLabInfos(studentCourse.course.getId(), student.getId());
 
             for (const a of assignments) {
                 const submission = submissions.find((sub) => sub.assignmentid === a.id);
@@ -406,8 +383,8 @@ export class CourseManager {
             assignments = await this.getAssignments(groupCourse.course.getId());
         }
         if (assignments.length > 0) {
-            const submissions = MapHelper.toArray(
-                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.getId(), group.getId()));
+            const submissions =
+                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.getId(), group.getId());
 
             for (const a of assignments) {
                 const submission = submissions.find((sub) => sub.assignmentid === a.id);
