@@ -12,6 +12,7 @@ import * as grpcWeb from 'grpc-web';
 import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
 import {
+  ApproveSubmissionRequest,
   Assignments,
   AuthorizationResponse,
   Course,
@@ -538,25 +539,25 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoApproveSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: RecordRequest) => {
+    (request: ApproveSubmissionRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
-  updateSubmission(
-    request: RecordRequest,
+  approveSubmission(
+    request: ApproveSubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/UpdateSubmission',
+        '/AutograderService/ApproveSubmission',
       request,
       metadata || {},
-      this.methodInfoUpdateSubmission,
+      this.methodInfoApproveSubmission,
       callback);
   }
 

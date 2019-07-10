@@ -33,12 +33,12 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 
 // GetRepositoryURL returns a repository URL for the requested repository type.
 func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.RepositoryRequest) (*pb.URLResponse, error) {
-	currentUser, err := s.getCurrentUser(ctx)
+	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	repoURL, err := s.getRepositoryURL(currentUser, in)
+	repoURL, err := s.getRepositoryURL(usr, in)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to fetch repository URL")
@@ -303,12 +303,17 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	return submissions, nil
 }
 
-// UpdateSubmission approves the given submission.
-// TODO(meling) consider to rename to ApproveSubmission?
-// TODO(meling) seems like we need the courseID in the request to find if the current user is a teacher for the course.
-func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
-	submissionID := in.GetID()
-	err := s.approveSubmission(submissionID)
+// ApproveSubmission approves the given submission.
+func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.ApproveSubmissionRequest) (*pb.Void, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+	}
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can approve submissions")
+	}
+	err = s.approveSubmission(in.GetSubmissionID())
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to approve submission")

@@ -777,6 +777,28 @@ export namespace SubmissionRequest {
   }
 }
 
+export class ApproveSubmissionRequest extends jspb.Message {
+  getSubmissionid(): number;
+  setSubmissionid(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ApproveSubmissionRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ApproveSubmissionRequest): ApproveSubmissionRequest.AsObject;
+  static serializeBinaryToWriter(message: ApproveSubmissionRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ApproveSubmissionRequest;
+  static deserializeBinaryFromReader(message: ApproveSubmissionRequest, reader: jspb.BinaryReader): ApproveSubmissionRequest;
+}
+
+export namespace ApproveSubmissionRequest {
+  export type AsObject = {
+    submissionid: number,
+    courseid: number,
+  }
+}
+
 export class Providers extends jspb.Message {
   getProvidersList(): Array<string>;
   setProvidersList(value: Array<string>): void;

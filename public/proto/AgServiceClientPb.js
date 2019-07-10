@@ -76,7 +76,7 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submissions, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submissions.deserializeBinary);
-        this.methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+        this.methodInfoApproveSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetRepositoryURL = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.URLResponse, function (request) {
@@ -187,9 +187,9 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions, callback);
     };
-    AutograderServiceClient.prototype.updateSubmission = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.approveSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission, callback);
+            '/AutograderService/ApproveSubmission', request, metadata || {}, this.methodInfoApproveSubmission, callback);
     };
     AutograderServiceClient.prototype.getRepositoryURL = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
