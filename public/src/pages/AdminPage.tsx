@@ -49,7 +49,7 @@ export class AdminPage extends ViewPage {
             <UserView
                 users={allUsers}
                 optionalActions={(user: IUserRelation) => {
-                    if (this.userMan.isAdmin(user.user)) {
+                    if (user.user.getIsadmin()) {
                         return [{ uri: "demote", name: "Demote", extra: "danger" }];
                     }
                     return [{ uri: "promote", name: "Promote", extra: "primary" }];

@@ -96,15 +96,6 @@ export class UserManager {
     }
 
     /**
-     * Function to see of a user is an admin or not
-     * @param user User to check if is an admin
-     * @returns Returns true if admin. False otherwise
-     */
-    public isAdmin(user: User): boolean {
-        return user.getIsadmin();
-    }
-
-    /**
      * Function to see if a user is a teacher in any courses at all
      * @param user User to check if is an teacher in a courses
      * @returns Returns true if user is teacher in one or more courses

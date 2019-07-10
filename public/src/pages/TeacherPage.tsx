@@ -378,7 +378,7 @@ export class TeacherPage extends ViewPage {
         if (curUser) {
             if (menu === 0) {
                 const states = [Enrollment.UserStatus.TEACHER];
-                if (this.userMan.isAdmin(curUser)) {
+                if (curUser.getIsadmin()) {
                     states.push(Enrollment.UserStatus.PENDING);
                     states.push(Enrollment.UserStatus.STUDENT);
                 }
