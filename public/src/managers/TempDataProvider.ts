@@ -607,56 +607,49 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalCourseGroups(): void {
-        /*
-        this.localCourseGroups = [
-            {
-                id: 1,
-                name: "Group1",
-                status: Group.GroupStatus.APPROVED,
-                courseid: 1,
-                users: [
-                    {
-                        id: 1,
-                        email: "test@example.com",
-                        name: "Student 1",
-                        isadmin: false,
-                        studentid: "12345",
-                        avatarurl: "",
-                    },
-                    {
-                        id: 2,
-                        email: "test2@example.com",
-                        name: "Student 2",
-                        isadmin: false,
-                        studentid: "12346",
-                        avatarurl: "",
-                    },
-                ],
-            },
-            {
-                id: 2,
-                name: "Group2",
-                status: Group.GroupStatus.PENDING_GROUP,
-                courseid: 1,
-                users: [
-                    {
-                        id: 3,
-                        email: "tes3t@example.com",
-                        name: "Student 3",
-                        isadmin: false,
-                        studentid: "12347",
-                        avatarurl: "",
-                    },
-                    {
-                        id: 4,
-                        email: "test4@example.com",
-                        name: "Student 4",
-                        isadmin: false,
-                        studentid: "12348",
-                        avatarurl: "",
-                    },
-                ],
-            },
-        ];*/
+        const tempGroups: Group[] = [];
+        const grpUser1 = new User();
+        grpUser1.setId(1);
+        grpUser1.setEmail("test@example.com");
+        grpUser1.setName("Student 1");
+        grpUser1.setStudentid("12345");
+
+        const grpUser2 = new User();
+        grpUser2.setId(2);
+        grpUser2.setEmail("test2@example.com");
+        grpUser2.setName("Student 2");
+        grpUser2.setStudentid("12346");
+        const grpUsers1 = [];
+        grpUsers1.push(grpUser1, grpUser2);
+
+        const testGrp1 = new Group();
+        testGrp1.setId(1);
+        testGrp1.setName("Group 1");
+        testGrp1.setStatus(Group.GroupStatus.APPROVED);
+        testGrp1.setCourseid(1);
+        testGrp1.setUsersList(grpUsers1);
+
+        const grpUser3 = new User();
+        grpUser3.setId(3);
+        grpUser3.setEmail("test3@example.com");
+        grpUser3.setName("Student 3");
+        grpUser3.setStudentid("12347");
+
+        const grpUser4 = new User();
+        grpUser4.setId(4);
+        grpUser4.setEmail("test4@example.com");
+        grpUser4.setName("Student 4");
+        grpUser4.setStudentid("12348");
+        const grpUsers2 = [];
+        grpUsers2.push(grpUser3, grpUser4);
+
+        const testGrp2 = new Group();
+        testGrp1.setId(2);
+        testGrp1.setName("Group 2");
+        testGrp1.setStatus(Group.GroupStatus.PENDING);
+        testGrp1.setCourseid(1);
+        testGrp1.setUsersList(grpUsers2);
+
+        this.localCourseGroups.push(testGrp1, testGrp2);
     }
 }
