@@ -141,7 +141,7 @@ export class TeacherPage extends ViewPage {
                 labs={labs}
                 students={linkedStudents}
                 onApproveClick={async (submissionID: number) => {
-                    await this.courseMan.approveSubmission(submissionID); // TODO(meling) also send along courseID
+                    await this.courseMan.approveSubmission(submissionID, course.getId());
                     // this.navMan.refresh();
                 }}
             >
@@ -170,7 +170,7 @@ export class TeacherPage extends ViewPage {
                 labs={labs}
                 groups={linkedGroups}
                 onApproveClick={async (submissionID: number) => {
-                    await this.courseMan.approveSubmission(submissionID);
+                    await this.courseMan.approveSubmission(submissionID, course.getId());
                     this.navMan.refresh();
                 }}
             >
