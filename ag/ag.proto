@@ -211,9 +211,9 @@ message AuthorizationResponse {
     bool IsAuthorized = 1;
 }
 
-message StatusCode {
-    uint64 statusCode = 1;
-    string errorMessage = 2;
+message Status {
+    uint64 Code = 1;
+    string Error = 2;
 }
 
 message Void {}

@@ -1,4 +1,4 @@
-import { Course, Enrollment, Group, Organization, StatusCode, User } from "../../proto/ag_pb";
+import { Course, Enrollment, Group, Organization, Status, User } from "../../proto/ag_pb";
 import {
     IAssignment,
     ICourseUserLink,
@@ -174,7 +174,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    public async createNewCourse(course: any): Promise<Course | StatusCode> {
+    public async createNewCourse(course: any): Promise<Course | Status> {
         throw new Error("Method not implemented");
     }
 
@@ -186,7 +186,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
-    public async updateCourse(courseId: number, courseData: Course): Promise<StatusCode> {
+    public async updateCourse(courseId: number, courseData: Course): Promise<Status> {
         throw new Error("Method not implemented");
     }
 
@@ -241,7 +241,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         }
         return courses;
     }
-    public async createGroup(groupData: INewGroup, courseId: number): Promise<Group | StatusCode> {
+    public async createGroup(groupData: INewGroup, courseId: number): Promise<Group | Status> {
         throw new Error("Method not implemented");
     }
     public async getCourseGroups(courseId: number): Promise<Group[]> {
@@ -262,7 +262,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async getGroup(gid: number): Promise<Group | null> {
         throw new Error("Method not implemented");
     }
-    public async updateGroup(groupData: Group): Promise<StatusCode> {
+    public async updateGroup(groupData: Group): Promise<Status> {
         throw new Error("Method not implemented");
     }
     public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<ISubmission>> {

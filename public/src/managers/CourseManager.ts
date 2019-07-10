@@ -11,7 +11,7 @@ import {
     IUserRelation,
 } from "../models";
 
-import { Course, Enrollment, Group, Organization, StatusCode, User, Void } from "../../proto/ag_pb";
+import { Course, Enrollment, Group, Organization, Status, User, Void } from "../../proto/ag_pb";
 import { UserManager } from "../managers";
 import { ILogger } from "./LogManager";
 
@@ -25,17 +25,17 @@ export interface ICourseProvider {
     addUserToCourse(user: User, course: Course): Promise<boolean>;
     changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean>;
 
-    createNewCourse(courseData: Course): Promise<Course | StatusCode>;
+    createNewCourse(courseData: Course): Promise<Course | Status>;
     getCourse(id: number): Promise<Course | null>;
-    updateCourse(courseID: number, courseData: Course): Promise<Void | StatusCode>;
+    updateCourse(courseID: number, courseData: Course): Promise<Void | Status>;
 
     getCourseGroups(courseID: number): Promise<Group[]>;
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
-    createGroup(groupData: INewGroup, courseId: number): Promise<Group | StatusCode>;
+    createGroup(groupData: INewGroup, courseId: number): Promise<Group | Status>;
     getGroup(groupID: number): Promise<Group | null>;
     deleteGroup(groupID: number): Promise<boolean>;
     getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null>;
-    updateGroup(groupData: Group): Promise<StatusCode>;
+    updateGroup(groupData: Group): Promise<Status>;
 
     getAllLabInfos(courseID: number, userId: number): Promise<IMap<ISubmission>>;
     getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>>;
@@ -169,7 +169,7 @@ export class CourseManager {
      * Creates a new course in the backend
      * @param courseData The course information to create a course from
      */
-    public async createNewCourse(courseData: Course): Promise<Course | StatusCode> {
+    public async createNewCourse(courseData: Course): Promise<Course | Status> {
         return this.courseProvider.createNewCourse(courseData);
     }
 
@@ -177,7 +177,7 @@ export class CourseManager {
      * Updates a course with new information
      * @param courseData The new information for the course
      */
-    public async updateCourse(courseID: number, courseData: Course): Promise<Void | StatusCode> {
+    public async updateCourse(courseID: number, courseData: Course): Promise<Void | Status> {
         return this.courseProvider.updateCourse(courseID, courseData);
     }
 
@@ -288,11 +288,11 @@ export class CourseManager {
             });
     }
 
-    public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | StatusCode> {
+    public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | Status> {
         return this.courseProvider.createGroup(groupData, courseID);
     }
 
-    public async updateGroup(groupData: Group): Promise<StatusCode> {
+    public async updateGroup(groupData: Group): Promise<Status> {
         return this.courseProvider.updateGroup(groupData);
     }
 

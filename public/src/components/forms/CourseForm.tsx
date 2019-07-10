@@ -5,7 +5,7 @@ import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
-import { Course, Organization, StatusCode, User, Void } from "../../../proto/ag_pb";
+import { Course, Organization, Status, User, Void } from "../../../proto/ag_pb";
 
 interface ICourseFormProps {
     className?: string;
@@ -202,8 +202,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
             const result = this.props.courseData ?
                 await this.updateCourse(this.props.courseData.getId()) : await this.createNewCourse();
 
-            if (result instanceof StatusCode) {
-                const errMsg = result.getErrormessage();
+            if (result instanceof Status) {
+                const errMsg = result.getError();
                 const serverErrors: string[] = [];
                 serverErrors.push(errMsg);
                 const flashErrors = this.getFlashErrors(serverErrors);
@@ -217,7 +217,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
         }
     }
 
-    private async updateCourse(courseId: number): Promise<Void | StatusCode> {
+    private async updateCourse(courseId: number): Promise<Void | Status> {
         const courseData = new Course();
         courseData.setId(courseId);
         courseData.setName(this.state.name);
@@ -230,7 +230,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
         return this.props.courseMan.updateCourse(courseId, courseData);
     }
 
-    private async createNewCourse(): Promise<Course | StatusCode> {
+    private async createNewCourse(): Promise<Course | Status> {
         const courseData = new Course();
         courseData.setName(this.state.name);
         courseData.setCode(this.state.code);
