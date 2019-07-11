@@ -209,12 +209,14 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 		Name: opt.TeamName,
 	})
 	if err != nil {
+		log.Println("GitHub CreateTeam failed: ", err.Error())
 		return nil, err
 	}
 
 	for _, user := range opt.Users {
 		_, _, err = s.client.Teams.AddTeamMembership(ctx, t.GetID(), user, nil)
 		if err != nil {
+			log.Println("GitHub CreateTeam failed to add membership for user ", user, ": ", err.Error())
 			return nil, err
 		}
 	}
@@ -229,6 +231,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 func (s *GithubSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
 
 	if _, err := s.client.Teams.DeleteTeam(ctx, int64(teamID)); err != nil {
+		log.Println("GitHub DeleteTeam failed: ", err.Error())
 		return err
 	}
 	return nil
@@ -238,6 +241,7 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
 func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	gitTeams, _, err := s.client.Teams.ListTeams(ctx, org.Path, &github.ListOptions{})
 	if err != nil {
+		log.Println("GitHub GetTeams: failed to list teams ")
 		return nil, err
 	}
 	var teams []*Team
@@ -254,6 +258,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 	if opt.TeamID < 1 {
 		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, opt.TeamSlug)
 		if err != nil {
+			log.Println("GitHub AddTeamMember: could not get team by slug")
 			return status.Errorf(codes.Internal, err.Error())
 		}
 		opt.TeamID = team.GetID()
@@ -261,6 +266,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 
 	isAlreadyMember, _, err := s.client.Teams.GetTeamMembership(ctx, opt.TeamID, opt.Username)
 	if err != nil {
+		log.Println("GitHub AddTeamMember: could not get team membership")
 		return err
 	}
 	// we will only get some response if given user is team member
@@ -268,6 +274,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 		return nil
 	}
 	_, _, err = s.client.Teams.AddTeamMembership(ctx, opt.TeamID, opt.Username, &github.TeamAddTeamMembershipOptions{})
+	log.Println("GitHub AddTeamMember: error adding team membership with options: ", opt)
 	return err
 }
 
@@ -277,6 +284,7 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 	if opt.TeamID < 1 {
 		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, opt.TeamSlug)
 		if err != nil {
+			log.Println("GitHub RemoveTeamMember: failed to get team by slug: ", opt.TeamSlug)
 			return status.Errorf(codes.Internal, err.Error())
 		}
 		opt.TeamID = team.GetID()
@@ -290,7 +298,7 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 	// TODO(vera): check for errors other than not found
 
 	_, err = s.client.Teams.RemoveTeamMembership(ctx, opt.TeamID, opt.Username)
-
+	log.Println("GitHub RemoveTeamMember: error removing team embership: ", err.Error())
 	return err
 }
 
@@ -298,6 +306,7 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
 	groupTeam, _, err := s.client.Teams.GetTeam(ctx, int64(opt.TeamID))
 	if err != nil {
+		log.Println("GitHub UpdateTeamMember: failed to get team: ", err.Error())
 		return err
 	}
 
@@ -407,10 +416,10 @@ func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) erro
 // GetOrgMembership implements the SCM interface
 func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
 
-	log.Println("scms: GetOrgMembership started with options: ", opt)
+	log.Println("GitHub GetOrgMembership started with options: ", opt)
 	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))
 	if err != nil {
-		log.Println("scms: GetOrgMembership could not get organization: ", err.Error())
+		log.Println("GitHub GetOrgMembership could not get organization: ", err.Error())
 		return nil, err
 	}
 
@@ -429,13 +438,13 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 	log.Println("scms: UpdateOrgMembership startedwith options: ", opt)
 	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))
 	if err != nil {
-		log.Println("scms: UpdateOrgMembership could not get org: ", err.Error())
+		log.Println("GitHub UpdateOrgMembership could not get org: ", err.Error())
 		return err
 	}
 
 	isMember, _, err := s.client.Organizations.IsMember(ctx, gitOrg.GetLogin(), opt.Username)
 	if err != nil {
-		log.Println("scms: UpdateOrgMembership could not check if member: ", err.Error())
+		log.Println("GitHub UpdateOrgMembership could not check if member: ", err.Error())
 		return err
 	}
 	if !isMember {
@@ -443,7 +452,7 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 	}
 	gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetLogin())
 	if err != nil {
-		log.Println("scms: UpdateOrgMembership could not get org membership: ", err.Error())
+		log.Println("GitHub UpdateOrgMembership could not get org membership: ", err.Error())
 		return err
 	}
 	if opt.Role != "admin" && opt.Role != "member" {
@@ -452,7 +461,7 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 	gitMembership.Role = &opt.Role
 	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, gitOrg.GetLogin(), gitMembership)
 	if err != nil {
-		log.Println("scms: UpdateOrgMembership could not edit org membership: ", err.Error())
+		log.Println("GitHub UpdateOrgMembership could not edit org membership: ", err.Error())
 		return err
 	}
 	if newMembership.GetRole() != opt.Role {
@@ -463,17 +472,17 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 
 // CreateOrgMembership implements the SCM interface
 func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
-	log.Println("scms: CreateOrgMembership startedwith options: ", opt)
+	log.Println("GitHub CreateOrgMembership startedwith options: ", opt)
 	// check that organization is valid
 	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.Organization.ID))
 	if err != nil {
-		log.Println("scms: CreateOrgMembership could not get org: ", err.Error())
+		log.Println("GitHub CreateOrgMembership could not get org: ", err.Error())
 		return err
 	}
 	// check that user is not already org member
 	isMember, _, err := s.client.Organizations.IsMember(ctx, gitOrg.GetLogin(), opt.Username)
 	if err != nil {
-		log.Println("scms: CreateOrgMembership could not check if member: ", err.Error())
+		log.Println("GitHub CreateOrgMembership could not check if member: ", err.Error())
 		return err
 	}
 	// if not member - issue an invitation
@@ -485,14 +494,14 @@ func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 		if opt.Username != "" {
 			gitUser, _, err := s.client.Users.Get(ctx, opt.Username)
 			if err != nil {
-				log.Println("scms: CreateOrgMembership could not get user ", opt.Username)
+				log.Println("GitHub CreateOrgMembership could not get user ", opt.Username)
 				return status.Errorf(codes.InvalidArgument, "github user not found")
 			}
 			invitation.InviteeID = gitUser.ID
 		} else {
 			// if no username and no email provided, method must fail
 			if opt.Email == "" {
-				log.Println("scms: CreateOrgMembership got neither username nor email")
+				log.Println("GitHub CreateOrgMembership got neither username nor email")
 				return status.Errorf(codes.InvalidArgument, "to invite user provide username or email")
 			}
 			invitation.Email = &opt.Email
@@ -505,10 +514,10 @@ func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 		// otherwise will use email provided in options
 		inv, _, err := s.client.Organizations.CreateOrgInvitation(ctx, gitOrg.GetLogin(), &invitation)
 		if err != nil {
-			log.Println("scms: CreateOrgMembership could not create invitation: ", err.Error())
+			log.Println("GitHub CreateOrgMembership could not create invitation: ", err.Error())
 			return status.Errorf(codes.Internal, "could not issue github invitation")
 		}
-		log.Println("scms: CreateOrgMembership sent invitation to user ", inv.GetLogin())
+		log.Println("GitHub CreateOrgMembership sent invitation to user ", inv.GetLogin())
 	}
 	return nil
 }
