@@ -198,7 +198,6 @@ ${group.getName()}?`,
                     break;
                 }
         }
-        this.refreshState();
         this.props.navMan.refresh();
     }
 
@@ -241,14 +240,6 @@ ${group.getName()}?`,
             rejectedGroups: filteredRejected,
         });
 
-    }
-
-    private refreshState() {
-        this.setState({
-            approvedGroups: this.props.approvedGroups,
-            pendingGroups: this.props.pendingGroups,
-            rejectedGroups: this.props.rejectedGroups,
-        });
     }
 
 }

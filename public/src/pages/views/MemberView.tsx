@@ -35,8 +35,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             { name: "Accept", uri: "accept", extra: "primary" },
             { name: "Reject", uri: "reject", extra: "danger" },
         ];
-
-        this.refreshState();
         return <div>
             <h1>{this.props.course.getName()}</h1>
             <Search className="input-group"
@@ -132,7 +130,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
                 break;
         }
-        this.refreshState();
         this.props.navMan.refresh();
     }
 
@@ -182,14 +179,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             rejectedUsers: filteredRejected,
         });
 
-    }
-
-    private refreshState() {
-        this.setState({
-            acceptedUsers: this.props.acceptedUsers,
-            pendingUsers: this.props.pendingUsers,
-            rejectedUsers: this.props.rejectedUsers,
-        });
     }
 }
 
