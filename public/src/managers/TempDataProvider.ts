@@ -596,18 +596,19 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private getLocalOrgs(): Organization[] {
+        const localOrgs: Organization[] = [];
         const localOrg = new Organization();
         localOrg.setId(23650610);
         localOrg.setPath("dat520-2017");
         localOrg.setAvatar("https://avatars2.githubusercontent.com/u/23650610?v=3");
-
-        const localOrgs: Organization[] = [];
         localOrgs.push(localOrg);
         return localOrgs;
     }
 
     private addLocalCourseGroups(): void {
         const tempGroups: Group[] = [];
+        const grpUsers1: User[] = [];
+        const grpUsers2: User[] = [];
         const grpUser1 = new User();
         grpUser1.setId(1);
         grpUser1.setEmail("test@example.com");
@@ -619,7 +620,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         grpUser2.setEmail("test2@example.com");
         grpUser2.setName("Student 2");
         grpUser2.setStudentid("12346");
-        const grpUsers1 = [];
         grpUsers1.push(grpUser1, grpUser2);
 
         const testGrp1 = new Group();
@@ -640,7 +640,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         grpUser4.setEmail("test4@example.com");
         grpUser4.setName("Student 4");
         grpUser4.setStudentid("12348");
-        const grpUsers2 = [];
         grpUsers2.push(grpUser3, grpUser4);
 
         const testGrp2 = new Group();
@@ -650,6 +649,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         testGrp1.setCourseid(1);
         testGrp1.setUsersList(grpUsers2);
 
-        this.localCourseGroups.push(testGrp1, testGrp2);
+        tempGroups.push(testGrp1, testGrp2);
+
+        this.localCourseGroups = tempGroups;
     }
 }
