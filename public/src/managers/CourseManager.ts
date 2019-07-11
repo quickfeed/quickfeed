@@ -106,7 +106,6 @@ export class CourseManager {
      * Get all the courses available at the server
      */
     public async getCourses(): Promise<Course[]> {
-        // return MapHelper.toArray(await this.courseProvider.getCourses());
         return this.courseProvider.getCourses();
     }
 
@@ -166,29 +165,6 @@ export class CourseManager {
     }
 
     /**
-     * TODO(meling) unused function; no references to it.
-     * Load an IUserCourse object for a single user and a single course
-     * @param student The student the information should be retrived from
-     * @param course The course the data should be loaded for
-     */
-    public async getStudentCourse(student: User, course: Course): Promise<IUserCourse | null> {
-        const courses = await this.courseProvider.getCoursesFor(student);
-        for (const crs of courses) {
-            if (crs.courseid === course.getId()) {
-                const userCourse: IUserCourse = {
-                    link: crs.status !== undefined ?
-                        { userid: student.getId(), courseId: course.getId(), state: crs.status } : undefined,
-                    assignments: [],
-                    course,
-                };
-                await this.fillLinks(student, userCourse);
-                return userCourse;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Load an IUserCourse object for a single user and a single course
      * @param student The student the information should be retrived from
      * @param course The course the data should be loaded for
@@ -228,15 +204,12 @@ export class CourseManager {
     }
 
     /**
-     * TODO(meling) userMan argument is not used in this func; remove it?
      * Retrives all users related to a single course
      * @param course The course to retrive userinformation to
-     * @param userMan Usermanager to be able to get user information
      * @param state Optional. The state of the user to course relation
      */
     public async getUsersForCourse(
         course: Course,
-        userMan: UserManager,
         noGroupMemebers?: boolean,
         state?: Enrollment.UserStatus[]): Promise<IUserRelation[]> {
 
