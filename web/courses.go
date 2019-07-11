@@ -224,7 +224,7 @@ func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, st
 		}
 		// add user to teachers
 		opt.TeamSlug = "teachers"
-		// TODO(meling) should this have Role: "admin" ??
+		opt.Role = "maintainer"
 		return s.AddTeamMember(c, opt)
 	}
 
