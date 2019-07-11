@@ -332,7 +332,7 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordReq
 	return assignments, nil
 }
 
-// RefreshCourse returns latest information about the course
+// UpdateAssignments returns latest information about the course
 func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
 	courseID := in.GetID()
 
