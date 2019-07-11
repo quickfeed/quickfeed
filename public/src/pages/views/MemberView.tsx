@@ -47,6 +47,14 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         </div>;
     }
 
+    public componentDidUpdate(prevProps: IUserViewerProps) {
+        if ((prevProps.acceptedUsers.length !== this.props.acceptedUsers.length)
+         || (prevProps.pendingUsers.length !== this.props.pendingUsers.length)
+          || (prevProps.rejectedUsers.length !== this.props.rejectedUsers.length)) {
+            this.refreshState();
+        }
+    }
+
     public renderRejectedView() {
         if (this.state.rejectedUsers.length > 0) {
             return this.renderUsers(
@@ -84,7 +92,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     public renderPendingView(pendingActions: ILink[]) {
-        if (this.state.pendingUsers.length > 0) {
+        if (this.props.pendingUsers.length > 0) {
             return this.renderUsers("Pending users", this.state.pendingUsers, pendingActions, ActionType.InRow);
         }
     }
@@ -179,6 +187,14 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             rejectedUsers: filteredRejected,
         });
 
+    }
+
+    private refreshState() {
+        this.setState({
+            pendingUsers: this.props.pendingUsers,
+            acceptedUsers: this.props.acceptedUsers,
+            rejectedUsers: this.props.rejectedUsers,
+        });
     }
 }
 

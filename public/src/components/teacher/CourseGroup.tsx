@@ -67,6 +67,14 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
         );
     }
 
+    public componentDidUpdate(prevProps: ICourseGroupProp) {
+        if ((prevProps.approvedGroups.length !== this.props.approvedGroups.length)
+         || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)
+          || (prevProps.rejectedGroups.length !== this.props.rejectedGroups.length)) {
+            this.refreshState();
+        }
+    }
+
     private createApproveGroupView(): JSX.Element {
         return (
             <div className="approved-groups">
@@ -240,6 +248,14 @@ ${group.getName()}?`,
             rejectedGroups: filteredRejected,
         });
 
+    }
+
+    private refreshState() {
+        this.setState({
+            approvedGroups: this.props.approvedGroups,
+            pendingGroups: this.props.pendingGroups,
+            rejectedGroups: this.props.rejectedGroups,
+        });
     }
 
 }
