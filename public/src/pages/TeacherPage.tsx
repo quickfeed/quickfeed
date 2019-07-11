@@ -128,7 +128,7 @@ export class TeacherPage extends ViewPage {
             const labs: IAssignment[] = await this.courseMan.getAssignments(course.getId());
 
             const students = await this.courseMan.getUsersForCourse(
-                course, this.userMan, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             const linkedStudents: IUserCourseWithUser[] = [];
             for (const student of students) {
                 const userCourses = await this.courseMan.getStudentCourseForTeacher(student, course, labs);
@@ -219,10 +219,10 @@ export class TeacherPage extends ViewPage {
         if (course && curUser && group) {
             // get full list of students and teachers
             const students = await this.courseMan.getUsersForCourse(
-                course, this.userMan, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             // get list of users who are not in group
             const freeStudents = await this.courseMan.getUsersForCourse(
-                course, this.userMan, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+                course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -241,13 +241,13 @@ export class TeacherPage extends ViewPage {
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const all = await this.courseMan.getUsersForCourse(course, this.userMan);
+            const all = await this.courseMan.getUsersForCourse(course);
             const acceptedUsers: IUserRelation[] = [];
             const pendingUsers: IUserRelation[] = [];
             const rejectedUsers: IUserRelation[] = [];
             // Sorts all the users to the correct tables, and ignores the rejected once
             // TODO: Maybe move this to the Members view
-            all.forEach((user, id) => {
+            all.forEach((user) => {
                 switch (user.link.state) {
                     case Enrollment.UserStatus.TEACHER:
                     case Enrollment.UserStatus.STUDENT:

@@ -47,7 +47,7 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
-                onRebuildClick={() => { }} // TODO(vera): check/replace/remove
+                onRebuildClick={() => { }}
                 onApproveClick={() => {
                     if (this.state.assignment && this.state.assignment.latest) {
                         this.props.onApproveClick(this.state.assignment.latest.id);
