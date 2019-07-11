@@ -200,38 +200,25 @@ func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, st
 		return err
 	}
 
-	var slug string
+	opt := &scm.TeamMembershipOptions{
+		Organization: org,
+		TeamSlug:     "students",
+		Username:     user.GetLogin(),
+	}
+
 	// check whether user is teacher or not
 	switch status {
 	case pb.Enrollment_STUDENT:
-		opt := &scm.TeamMembershipOptions{
-			Organization: org,
-			TeamSlug:     "students",
-			Username:     user.GetLogin(),
-			Role:         "member",
-		}
-		return s.AddTeamMember(c, opt)
+		opt.Role = "member"
 
 	case pb.Enrollment_TEACHER:
 		// remove user from students
-		opt := &scm.TeamMembershipOptions{
-			Organization: org,
-			TeamSlug:     "students",
-			Username:     user.GetLogin(),
-		}
 		if err = s.RemoveTeamMember(c, opt); err != nil {
 			return err
 		}
 		// add user to teachers
 		opt.TeamSlug = "teachers"
 		opt.Role = "maintainer"
-		return s.AddTeamMember(c, opt)
-	}
-
-	opt := &scm.TeamMembershipOptions{
-		Organization: org,
-		TeamSlug:     slug, //TODO(meling) this is uninitialized, why?
-		Username:     user.GetLogin(),
 	}
 	return s.AddTeamMember(c, opt)
 }

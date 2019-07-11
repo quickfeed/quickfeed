@@ -489,7 +489,6 @@ func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 				return status.Errorf(codes.InvalidArgument, "github user not found")
 			}
 			invitation.InviteeID = gitUser.ID
-			log.Println("scms: CreateOrgMembership will use user ID: ", invitation.GetInviteeID())
 		} else {
 			// if no username and no email provided, method must fail
 			if opt.Email == "" {
@@ -502,7 +501,7 @@ func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipO
 		role := "direct_member"
 		invitation.Role = &role
 		invitation.TeamID = make([]int64, 0)
-		// issue an invitation. Github wil use user ID if provided and send invitation to account email,
+		// issue an invitation. Github will use user ID if provided and send invitation to account email,
 		// otherwise will use email provided in options
 		inv, _, err := s.client.Organizations.CreateOrgInvitation(ctx, gitOrg.GetLogin(), &invitation)
 		if err != nil {
