@@ -108,12 +108,12 @@ func UpdateEnrollment(ctx context.Context, request *pb.Enrollment, db database.D
 			if err := db.CreateRepository(&dbRepo); err != nil {
 				return status.Errorf(codes.Internal, "could not create user repository")
 			}
-			// along with personal team we will add all students to students team
-			if err = addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT); err != nil {
+			// send invitation to course organization to student (will return nil if successful or already a member)
+			if err = addUserToOrg(ctx, s, course.GetOrganizationID(), student); err != nil {
 				return err
 			}
-			// then send invitation to course organization to student (will return nil if successful or already a member)
-			return addUserToOrg(ctx, s, course.GetOrganizationID(), student)
+			// then add to the 'students' team
+			return addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT)
 		}
 		// if repo already exists (student was previously accepted to course, then rejected, and now is being accepted again),
 		// it means that user team has already been created and invitation to organization has been issued
@@ -141,7 +141,7 @@ func UpdateEnrollment(ctx context.Context, request *pb.Enrollment, db database.D
 		if err = db.EnrollTeacher(student.ID, course.ID); err != nil {
 			return status.Errorf(codes.Internal, "could not enroll teacher")
 		}
-		// add all teachers to teachers team
+		// add all teachers to 'teachers' team (will remove them from 'students' team)
 		return addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_TEACHER)
 
 	case pb.Enrollment_REJECTED:
