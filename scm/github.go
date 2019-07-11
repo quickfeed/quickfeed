@@ -266,15 +266,16 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 
 	isAlreadyMember, _, err := s.client.Teams.GetTeamMembership(ctx, opt.TeamID, opt.Username)
 	if err != nil {
-		log.Println("GitHub AddTeamMember: could not get team membership")
-		return err
+		// will always return an error when user is not a team member, but this is expected, no error will be returned
+		// but it is useful to log it in case there were other reasons (invalid token and others)
+		log.Println("GitHub AddTeamMember: team membership not found: ", err.Error())
 	}
-	// we will only get some response if given user is team member
+	// if already in team , take no action
 	if isAlreadyMember != nil {
 		return nil
 	}
+	// otherwise add user as team member
 	_, _, err = s.client.Teams.AddTeamMembership(ctx, opt.TeamID, opt.Username, &github.TeamAddTeamMembershipOptions{})
-	log.Println("GitHub AddTeamMember: error adding team membership with options: ", opt)
 	return err
 }
 
@@ -416,7 +417,6 @@ func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) erro
 // GetOrgMembership implements the SCM interface
 func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
 
-	log.Println("GitHub GetOrgMembership started with options: ", opt)
 	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))
 	if err != nil {
 		log.Println("GitHub GetOrgMembership could not get organization: ", err.Error())
