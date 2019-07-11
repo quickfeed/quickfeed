@@ -207,11 +207,7 @@ func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, st
 	}
 
 	// check whether user is teacher or not
-	switch status {
-	case pb.Enrollment_STUDENT:
-		opt.Role = "member"
-
-	case pb.Enrollment_TEACHER:
+	if status == pb.Enrollment_TEACHER {
 		// remove user from students
 		if err = s.RemoveTeamMember(c, opt); err != nil {
 			return err
