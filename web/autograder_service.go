@@ -32,6 +32,8 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 }
 
 // GetRepositoryURL returns a repository URL for the requested repository type.
+// Access policy: Any User can request these URLs. However, only those with access
+// to the different repositories can actually use the URL.
 func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.RepositoryRequest) (*pb.URLResponse, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -47,6 +49,8 @@ func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.Reposit
 }
 
 // GetUser returns user information for the given user, excluding remote identities.
+// Access policy: Admin can access all users;
+// Current User can access its own User object.
 func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (*pb.User, error) {
 	if !s.hasAccess(ctx, in.ID) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another user")
@@ -61,7 +65,8 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (
 }
 
 // GetUsers returns a list of all users.
-// Frontend note: This method is used from AdminPage.tsx:users():35.
+// Access policy: Admin.
+// Frontend note: This method is called from AdminPage.
 func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
 	if !s.isAdmin(ctx) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other users")
@@ -76,8 +81,9 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 }
 
 // UpdateUser updates the current users's information and returns the updated user.
-// Admin users can update other users information, whereas non-admin users can only
-// update their own information.
+// This function can also promote a user to admin or demote a user.
+// Access policy: Admin can update other users's information and promote to Admin;
+// Current User can update its own information.
 func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.User, error) {
 	if !s.hasAccess(ctx, in.ID) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another user")
@@ -91,8 +97,10 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	return usr, nil
 }
 
-// IsAuthorizedTeacher checks whether current user has teacher scopes
+// IsAuthorizedTeacher checks whether current user has teacher scopes.
+// Access policy: Any User.
 func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void) (*pb.AuthorizationResponse, error) {
+	//TODO(meling) fix access policy. no admin needed
 	// TODO(vera): upgrade to send provider from client. Currently not supported for other providers anyway
 	// Hein @Vera: it may be easier to pass along the courseID from the client as is done for UpdateEnrollment (see below)
 	_, scm, err := s.getUserAndSCM(ctx, "github", true)
@@ -105,7 +113,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 }
 
 // CreateCourse creates a new course.
-// Only users with admin role can create new courses.
+// Access policy: Admin.
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider, true)
 	if err != nil {
@@ -126,8 +134,9 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 }
 
 // UpdateCourse changes the course information details.
-// Only users with teacher role (admin) can update the course details.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
+	//TODO(meling) fix access policy.
 	_, scm, err := s.getUserAndSCM(ctx, in.Provider, true)
 	if err != nil {
 		return nil, err
@@ -141,6 +150,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 }
 
 // GetCourse returns course information for the given course.
+// Access policy: Any User.
 func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest) (*pb.Course, error) {
 	course, err := s.getCourse(in.GetID())
 	if err != nil {
@@ -151,17 +161,21 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 }
 
 // GetCourses returns a list of all courses.
+// Access policy: Any User.
 func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Courses, error) {
 	return ListCourses(s.db)
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
+// Access policy: Any User.
 func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	return &pb.Void{}, CreateEnrollment(in, s.db)
 }
 
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
+	//TODO(meling) fix access policy.
 	// must be admin to update enrollment status
 	_, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID(), true)
 	if err != nil {
@@ -171,13 +185,16 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 }
 
 // GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.
+// Access policy: Any User.
 func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.RecordRequest) (*pb.Courses, error) {
 	//TODO(meling) these direct calls and returns needs to be logged here and return status.Error instead
 	return ListCoursesWithEnrollment(in, s.db)
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
+	//TODO(meling) fix access policy.
 	enrolls, err := GetEnrollmentsByCourse(in, s.db)
 	if err != nil {
 		return nil, err
@@ -187,6 +204,7 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 }
 
 // GetGroup returns information about a group.
+// Access policy: Group members, Teacher of CourseID.
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
 	group, err := s.getGroup(in)
 	if err != nil {
@@ -206,7 +224,9 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 }
 
 // GetGroups returns a list of groups created for the course.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest) (*pb.Groups, error) {
+	//TODO(meling) fix access policy. No admin access
 	if !s.isAdmin(ctx) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other groups")
 	}
@@ -220,7 +240,9 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 }
 
 // GetGroupByUserAndCourse returns the group of the given student for a given course.
+// Access policy: Group members, Teacher of CourseID.
 func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
+	//TODO(meling) fix access policy. No admin access
 	if !s.hasAccess(ctx, in.UserID) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another group")
 	}
@@ -234,6 +256,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 }
 
 // CreateGroup creates a new group.
+// Access policy: Any User.
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -254,6 +277,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 }
 
 // UpdateGroup updates group information.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	// need not be admin to approve or update group composition
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID(), false)
@@ -275,13 +299,17 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	return &pb.Void{}, err
 }
 
-// DeleteGroup removes group record from the database
+// DeleteGroup removes group record from the database.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
+	//TODO(meling) fix access policy.
 	return &pb.Void{}, s.deleteGroup(in)
 }
 
-// GetSubmission returns a student submission
+// GetSubmission returns a student submission.
+// Access policy: Current User if owner of submission, Teacher of CourseID.
 func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequest) (*pb.Submission, error) {
+	//TODO(meling) fix access policy.
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
@@ -291,7 +319,9 @@ func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequ
 }
 
 // GetSubmissions returns the submissions matching the query encoded in the action request.
+// Access policy: Current User if owner of submission, Teacher of CourseID.
 func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {
+	//TODO(meling) fix access policy. No admin access
 	if !s.hasGroupAccess(ctx, in.GetCourseID(), in.GetUserID(), in.GetGroupID()) {
 		return nil, status.Errorf(codes.PermissionDenied, "only members, teachers or admin can access submissions")
 	}
@@ -304,6 +334,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 }
 
 // ApproveSubmission approves the given submission.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.ApproveSubmissionRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -322,6 +353,7 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 }
 
 // GetAssignments returns a list of all assignments for the given course.
+// Access policy: Any User.
 func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Assignments, error) {
 	courseID := in.GetID()
 	assignments, err := getAssignments(s.db, courseID)
@@ -333,7 +365,9 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordReq
 }
 
 // UpdateAssignments returns latest information about the course
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
+	//TODO(meling) fix access policy. No admin access
 	courseID := in.GetID()
 
 	// must be admin or teacher to update the assignments for a course
@@ -353,6 +387,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Record
 }
 
 // GetProviders returns a list of SCM providers supported by the backend.
+// Access policy: Any User.
 func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.Providers, error) {
 	providers := auth.GetProviders()
 	if len(providers.GetProviders()) < 1 {
@@ -362,8 +397,8 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 	return providers, nil
 }
 
-// GetOrganizations returns a list of organizations that are available
-// for course creation.
+// GetOrganizations returns list of organizations available for course creation.
+// Access policy: Any User.
 func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.Provider) (*pb.Organizations, error) {
 	_, scm, err := s.getUserAndSCM(ctx, in.Provider, false)
 	if err != nil {
@@ -373,6 +408,7 @@ func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.Provide
 }
 
 // GetRepository is not yet implemented
+// Access policy: Any User.
 func (s *AutograderService) GetRepository(ctx context.Context, in *pb.RepositoryRequest) (*pb.Repository, error) {
 	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
