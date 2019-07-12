@@ -1,6 +1,5 @@
-import { Course, Enrollment, Group, Organization, Status, User } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Organization, Status, User } from "../../proto/ag_pb";
 import {
-    IAssignment,
     ICourseUserLink,
     INewGroup,
     ISubmission,
@@ -11,6 +10,8 @@ import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
 import { isNull } from "util";
+// TODO(meling) this import works in VSCode, but fails for webpack.
+// import { Timestamp } from "../../node_modules/@types/google-protobuf/google/protobuf/timestamp_pb";
 import { IMap, MapHelper, mapify } from "../map";
 
 interface IGrpcDummyUser {
@@ -25,7 +26,7 @@ interface IGrpcDummyUser {
 export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     private localUsers: IMap<IGrpcDummyUser>;
-    private localAssignments: IMap<IAssignment>;
+    private localAssignments: IMap<Assignment>;
     private localCourses: IMap<Course>;
     private localCourseStudent: ICourseUserLink[];
     private localLabInfo: IMap<ISubmission>;
@@ -68,14 +69,13 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourseStudent;
     }
 
-    public async getAssignments(courseId: number): Promise<IAssignment[]> {
-        const temp: IAssignment[] = [];
+    public async getAssignments(courseId: number): Promise<Assignment[]> {
+        const temp: Assignment[] = [];
         MapHelper.forEach(this.localAssignments, (a, i) => {
-            if (a.courseid === courseId) {
+            if (a.getCourseid() === courseId) {
                 temp[i] = a;
             }
         });
-
         return temp;
     }
 
@@ -335,100 +335,92 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalAssignments() {
-        this.localAssignments = mapify([
-            {
-                id: 0,
-                courseid: 0,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 1,
-                courseid: 0,
-                name: "Lab 2",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 2,
-                courseid: 0,
-                name: "Lab 3",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 3,
-                courseid: 0,
-                name: "Lab 4",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 4,
-                courseid: 1,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 5,
-                courseid: 1,
-                name: "Lab 2",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 6,
-                courseid: 1,
-                name: "Lab 3",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 7,
-                courseid: 2,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 8,
-                courseid: 2,
-                name: "Lab 2",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 9,
-                courseid: 3,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 10,
-                courseid: 4,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-        ] as IAssignment[], (ele) => ele.id);
+        // const ts = new Timestamp();
+        // ts.fromDate(new Date(2017, 5, 25));
+        const ts = undefined;
+        const a0 = new Assignment();
+        const a1 = new Assignment();
+        const a2 = new Assignment();
+        const a3 = new Assignment();
+        const a4 = new Assignment();
+        const a5 = new Assignment();
+        const a6 = new Assignment();
+        const a7 = new Assignment();
+        const a8 = new Assignment();
+        const a9 = new Assignment();
+        const a10 = new Assignment();
+
+        a0.setId(0);
+        a0.setCourseid(0);
+        a0.setName("Lab 1");
+        a0.setLanguage("Go");
+        a0.setDeadline(ts);
+
+        a1.setId(1);
+        a1.setCourseid(0);
+        a1.setName("Lab 2");
+        a1.setLanguage("Go");
+        a1.setDeadline(ts);
+
+        a2.setId(2);
+        a2.setCourseid(0);
+        a2.setName("Lab 3");
+        a2.setLanguage("Go");
+        a2.setDeadline(ts);
+
+        a3.setId(3);
+        a3.setCourseid(0);
+        a3.setName("Lab 4");
+        a3.setLanguage("Go");
+        a3.setDeadline(ts);
+
+        a4.setId(4);
+        a4.setCourseid(1);
+        a4.setName("Lab 1");
+        a4.setLanguage("Go");
+        a4.setDeadline(ts);
+
+        a5.setId(5);
+        a5.setCourseid(1);
+        a5.setName("Lab 2");
+        a5.setLanguage("Go");
+        a5.setDeadline(ts);
+
+        a6.setId(6);
+        a6.setCourseid(1);
+        a6.setName("Lab 3");
+        a6.setLanguage("Go");
+        a6.setDeadline(ts);
+
+        a7.setId(7);
+        a7.setCourseid(2);
+        a7.setName("Lab 1");
+        a7.setLanguage("TypeScript");
+        a7.setDeadline(ts);
+
+        a8.setId(8);
+        a8.setCourseid(2);
+        a8.setName("Lab 2");
+        a8.setLanguage("Go");
+        a8.setDeadline(ts);
+
+        a9.setId(9);
+        a9.setCourseid(3);
+        a9.setName("Lab 1");
+        a9.setLanguage("Go");
+        a9.setDeadline(ts);
+
+        a10.setId(10);
+        a10.setCourseid(4);
+        a10.setName("Lab 1");
+        a10.setLanguage("TypeScript");
+        a10.setDeadline(ts);
+
+        const tempAssignments: Assignment[] = [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10];
+        this.localAssignments = mapify(tempAssignments, (ele) => ele.getId());
     }
 
     private addLocalCourses() {
-        const tempCourses: Course[] = [];
         const course0 = new Course();
         const course1 = new Course();
         const course2 = new Course();
@@ -475,12 +467,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         course4.setProvider("github");
         course4.setOrganizationid(23650614);
 
-        tempCourses.push(course0);
-        tempCourses.push(course1);
-        tempCourses.push(course2);
-        tempCourses.push(course3);
-        tempCourses.push(course4);
-
+        const tempCourses: Course[] = [course0, course1, course2, course3, course4];
         this.localCourses = mapify(tempCourses, (ele) => ele.getId());
     }
 
@@ -606,51 +593,44 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalCourseGroups(): void {
-        const tempGroups: Group[] = [];
-        const grpUsers1: User[] = [];
-        const grpUsers2: User[] = [];
-        const grpUser1 = new User();
-        grpUser1.setId(1);
-        grpUser1.setEmail("test@example.com");
-        grpUser1.setName("Student 1");
-        grpUser1.setStudentid("12345");
+        const user1 = new User();
+        user1.setId(1);
+        user1.setEmail("test@example.com");
+        user1.setName("Student 1");
+        user1.setStudentid("12345");
 
-        const grpUser2 = new User();
-        grpUser2.setId(2);
-        grpUser2.setEmail("test2@example.com");
-        grpUser2.setName("Student 2");
-        grpUser2.setStudentid("12346");
-        grpUsers1.push(grpUser1, grpUser2);
+        const user2 = new User();
+        user2.setId(2);
+        user2.setEmail("test2@example.com");
+        user2.setName("Student 2");
+        user2.setStudentid("12346");
 
-        const testGrp1 = new Group();
-        testGrp1.setId(1);
-        testGrp1.setName("Group 1");
-        testGrp1.setStatus(Group.GroupStatus.APPROVED);
-        testGrp1.setCourseid(1);
-        testGrp1.setUsersList(grpUsers1);
+        const group1 = new Group();
+        group1.setId(1);
+        group1.setName("Group 1");
+        group1.setStatus(Group.GroupStatus.APPROVED);
+        group1.setCourseid(1);
+        group1.setUsersList([user1, user2]);
 
-        const grpUser3 = new User();
-        grpUser3.setId(3);
-        grpUser3.setEmail("test3@example.com");
-        grpUser3.setName("Student 3");
-        grpUser3.setStudentid("12347");
+        const user3 = new User();
+        user3.setId(3);
+        user3.setEmail("test3@example.com");
+        user3.setName("Student 3");
+        user3.setStudentid("12347");
 
-        const grpUser4 = new User();
-        grpUser4.setId(4);
-        grpUser4.setEmail("test4@example.com");
-        grpUser4.setName("Student 4");
-        grpUser4.setStudentid("12348");
-        grpUsers2.push(grpUser3, grpUser4);
+        const user4 = new User();
+        user4.setId(4);
+        user4.setEmail("test4@example.com");
+        user4.setName("Student 4");
+        user4.setStudentid("12348");
 
-        const testGrp2 = new Group();
-        testGrp1.setId(2);
-        testGrp1.setName("Group 2");
-        testGrp1.setStatus(Group.GroupStatus.PENDING);
-        testGrp1.setCourseid(1);
-        testGrp1.setUsersList(grpUsers2);
+        const group2 = new Group();
+        group2.setId(2);
+        group2.setName("Group 2");
+        group2.setStatus(Group.GroupStatus.PENDING);
+        group2.setCourseid(1);
+        group2.setUsersList([user3, user4]);
 
-        tempGroups.push(testGrp1, testGrp2);
-
-        this.localCourseGroups = tempGroups;
+        this.localCourseGroups.push(group1, group2);
     }
 }

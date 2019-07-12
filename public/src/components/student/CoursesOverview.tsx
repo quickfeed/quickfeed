@@ -21,7 +21,7 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
             if (groupCourses && groupCourses[key] && groupCourses[key].course.getId() === val.course.getId()) {
 
                 for (let iter = 0; iter < courseAssignments.length; iter++) {
-                    if (courseAssignments[iter].assignment.isgrouplab) {
+                    if (courseAssignments[iter].assignment.getIsgrouplab()) {
                         courseAssignments[iter].latest = groupCourses[key].assignments[iter].latest;
                     }
                 }

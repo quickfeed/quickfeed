@@ -181,15 +181,15 @@ export class StudentPage extends ViewPage {
                 const labs = course.assignments;
                 const gLabs: ILink[] = [];
                 labs.forEach((lab) => {
-                    if (lab.assignment.isgrouplab) {
+                    if (lab.assignment.getIsgrouplab()) {
                         gLabs.push({
-                            name: lab.assignment.name,
-                            uri: this.pagePath + "/courses/" + courseID + "/grouplab/" + lab.assignment.id,
+                            name: lab.assignment.getName(),
+                            uri: this.pagePath + "/courses/" + courseID + "/grouplab/" + lab.assignment.getId(),
                         });
                     } else {
                         allLinks.push({
-                            name: lab.assignment.name,
-                            uri: this.pagePath + "/courses/" + courseID + "/lab/" + lab.assignment.id,
+                            name: lab.assignment.getName(),
+                            uri: this.pagePath + "/courses/" + courseID + "/lab/" + lab.assignment.getId(),
                         });
                     }
                 });
@@ -283,7 +283,7 @@ export class StudentPage extends ViewPage {
         if (this.selectedUserCourse) {
             // TODO: Be carefull not to return anything that sould not be able to be returned
             this.selectedAssignment = this.selectedUserCourse.assignments.find(
-                (e) => e.assignment.id === labId,
+                (e) => e.assignment.getId() === labId,
             );
         }
     }
@@ -292,7 +292,7 @@ export class StudentPage extends ViewPage {
         if (this.selectedUserGroupCourse) {
             // TODO: Be carefull not to return anything that sould not be able to be returned
             this.selectedAssignment = this.selectedUserGroupCourse.assignments.find(
-                (e) => e.assignment.id === labId,
+                (e) => e.assignment.getId() === labId,
             );
         }
     }

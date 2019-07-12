@@ -1,5 +1,4 @@
 import {
-    IAssignment,
     ICourseLinkAssignment,
     ICourseUserLink,
     IGroupCourse,
@@ -10,13 +9,13 @@ import {
     IUserRelation,
 } from "../models";
 
-import { Course, Enrollment, Group, Organization, Status, User, Void } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Organization, Status, User, Void } from "../../proto/ag_pb";
 import { UserManager } from "../managers";
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
-    getAssignments(courseID: number): Promise<IAssignment[]>;
+    getAssignments(courseID: number): Promise<Assignment[]>;
     getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]>;
     getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]):
         Promise<IUserEnrollment[]>;
@@ -135,7 +134,7 @@ export class CourseManager {
      * Get all assignments in a single course
      * @param courseID The course id or ICourse to retrive assignments from
      */
-    public async getAssignments(courseID: number): Promise<IAssignment[]> {
+    public async getAssignments(courseID: number): Promise<Assignment[]> {
         return this.courseProvider.getAssignments(courseID);
     }
 
@@ -169,7 +168,7 @@ export class CourseManager {
      * @param student The student the information should be retrived from
      * @param course The course the data should be loaded for
      */
-    public async getStudentCourseForTeacher(student: IUserRelation, course: Course, assignments: IAssignment[]):
+    public async getStudentCourseForTeacher(student: IUserRelation, course: Course, assignments: Assignment[]):
         Promise<IUserCourse | null> {
         const userCourse: IUserCourse = {
             link: { userid: student.user.getId(), courseId: course.getId(), state: student.link.state },
@@ -257,7 +256,7 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupCourseForTeacher(group: Group, course: Course, assignments: IAssignment[]):
+    public async getGroupCourseForTeacher(group: Group, course: Course, assignments: Assignment[]):
         Promise<IGroupCourse | null> {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
@@ -324,7 +323,7 @@ export class CourseManager {
      * @param student The student
      * @param studentCourse The student course
      */
-    private async fillLinks(student: User, studentCourse: IUserCourse, assignments?: IAssignment[]): Promise<void> {
+    private async fillLinks(student: User, studentCourse: IUserCourse, assignments?: Assignment[]): Promise<void> {
         if (!studentCourse.link) {
             return;
         }
@@ -336,7 +335,7 @@ export class CourseManager {
                 await this.courseProvider.getAllLabInfos(studentCourse.course.getId(), student.getId());
 
             for (const a of assignments) {
-                const submission = submissions.find((sub) => sub.assignmentid === a.id);
+                const submission = submissions.find((sub) => sub.assignmentid === a.getId());
                 studentCourse.assignments.push({ assignment: a, latest: submission });
             }
         }
@@ -347,7 +346,7 @@ export class CourseManager {
      * @param group The group
      * @param groupCourse The group course
      */
-    private async fillLinksGroup(group: Group, groupCourse: IGroupCourse, assignments?: IAssignment[]): Promise<void> {
+    private async fillLinksGroup(group: Group, groupCourse: IGroupCourse, assignments?: Assignment[]): Promise<void> {
         if (!groupCourse.link) {
             return;
         }
@@ -359,7 +358,7 @@ export class CourseManager {
                 await this.courseProvider.getAllGroupLabInfos(groupCourse.course.getId(), group.getId());
 
             for (const a of assignments) {
-                const submission = submissions.find((sub) => sub.assignmentid === a.id);
+                const submission = submissions.find((sub) => sub.assignmentid === a.getId());
                 groupCourse.assignments.push({ assignment: a, latest: submission });
             }
         }

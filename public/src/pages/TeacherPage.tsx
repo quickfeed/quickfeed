@@ -7,10 +7,9 @@ import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
 
-import { Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
-    IAssignment,
     IGroupCourseWithGroup,
     IUserCourseWithUser,
     IUserRelation,
@@ -125,7 +124,7 @@ export class TeacherPage extends ViewPage {
     // TODO(meling) consolidate these two result functions?
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const labs: IAssignment[] = await this.courseMan.getAssignments(course.getId());
+            const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
 
             const students = await this.courseMan.getUsersForCourse(
                 course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
@@ -153,7 +152,7 @@ export class TeacherPage extends ViewPage {
         return this.courseFunc(info.params.course, async (course) => {
             const linkedGroups: IGroupCourseWithGroup[] = [];
             const groupCourses = await this.courseMan.getCourseGroups(course.getId());
-            const labs: IAssignment[] = await this.courseMan.getAssignments(course.getId());
+            const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
 
             for (const grpCourse of groupCourses) {
                 const grp = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);

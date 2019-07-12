@@ -9,7 +9,9 @@ import { View, ViewPage } from "./ViewPage";
 import { CourseView } from "./views/CourseView";
 import { ActionType, UserView } from "./views/UserView";
 
-import { IAssignment, IUserRelation } from "../models";
+import { Assignment } from "../../proto/ag_pb";
+import { getDeadline } from "../../proto/deadline";
+import { IUserRelation } from "../models";
 
 export class AdminPage extends ViewPage {
     private navMan: NavigationManager;
@@ -100,14 +102,13 @@ export class AdminPage extends ViewPage {
             tables.push(<div key={i}>
                 <h3>Labs for {e.getName()} ({e.getCode()})</h3>
                 <DynamicTable
-                    header={["ID", "Name", /*"Start",*/ "Deadline"/*, "End"*/]}
+                    header={["ID", "Name", "Lab Type", "Deadline"]}
                     data={labs}
-                    selector={(lab: IAssignment) => [
-                        lab.id.toString(),
-                        lab.name,
-                        // lab.start.toDateString(),
-                        lab.deadline.toDateString(),
-                        // lab.end.toDateString(),
+                    selector={(lab: Assignment) => [
+                        lab.getId().toString(),
+                        lab.getName(),
+                        lab.getIsgrouplab() ? "Group lab" : "Individual",
+                        getDeadline(lab),
                     ]}>
                 </DynamicTable>
             </div>);

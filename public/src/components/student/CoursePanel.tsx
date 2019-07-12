@@ -2,8 +2,9 @@ import * as React from "react";
 
 import { DynamicTable } from "../../components";
 
-import { Course } from "../../../proto/ag_pb";
-import { IAssignment, IStudentSubmission } from "../../models";
+import { Assignment, Course } from "../../../proto/ag_pb";
+import { getDeadline } from "../../../proto/deadline";
+import { IStudentSubmission } from "../../models";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
@@ -12,6 +13,8 @@ interface IPanelProps {
     labs: IStudentSubmission[];
     navMan: NavigationManager;
 }
+
+// TODO(meling) why is there an 'any' generic type for React.Component? Is it needed?
 class CoursePanel extends React.Component<IPanelProps, any> {
 
     public render() {
@@ -30,13 +33,14 @@ class CoursePanel extends React.Component<IPanelProps, any> {
                             selector={(item: IStudentSubmission) => {
                                 const score = item.latest ? (item.latest.score.toString() + "%") : "N/A";
                                 return [
-                                    item.assignment.name,
+                                    item.assignment.getName(),
                                     score,
-                                    item.assignment.deadline.toDateString(),
+                                    getDeadline(item.assignment),
                                 ];
                             }}
                             onRowClick={(lab: IStudentSubmission) => {
-                                this.handleRowClick(!lab.assignment.isgrouplab ? labPath : glabPath, lab.assignment);
+                                const path = !lab.assignment.getIsgrouplab() ? labPath : glabPath;
+                                this.handleRowClick(path, lab.assignment);
                             }}
                         />
                     </div>
@@ -45,9 +49,9 @@ class CoursePanel extends React.Component<IPanelProps, any> {
         );
     }
 
-    private handleRowClick(pathPrefix: string, lab: IAssignment) {
+    private handleRowClick(pathPrefix: string, lab: Assignment) {
         if (lab) {
-            this.props.navMan.navigateTo(pathPrefix + lab.id);
+            this.props.navMan.navigateTo(pathPrefix + lab.getId());
         }
     }
 

@@ -1,4 +1,4 @@
-import { Course, Enrollment, Group, User } from "../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, User } from "../proto/ag_pb";
 
 export interface IUser {
     id: number;
@@ -70,7 +70,7 @@ export interface IGroupCourseWithGroup {
  * for a spessific user.
  */
 export interface IStudentSubmission {
-    assignment: IAssignment;
+    assignment: Assignment;
     latest?: ISubmission;
 }
 
@@ -90,25 +90,6 @@ export interface IBuildInfo {
     builddate: Date;
     buildlog: string;
     execTime: number;
-}
-
-/**
- * Information about a single assignment
- */
-// TODO(meling) can we reuse Assignment from ag.proto/ag_pb.ts instead?
-export interface IAssignment {
-    id: number;
-    courseid: number;
-    name: string;
-    language: string;
-    deadline: Date;
-    isgrouplab: boolean;
-
-    // Not implemented yet
-    // start: Date;
-    // end: Date;
-
-    assignmentGroupId?: number;
 }
 
 /**

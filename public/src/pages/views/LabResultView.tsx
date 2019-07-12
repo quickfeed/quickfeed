@@ -28,7 +28,7 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                         <section id="result">
                             <LabResult
                                 course_name={this.props.course.getName()}
-                                lab={this.props.labInfo.assignment.name}
+                                lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
                                 status={this.getSubmissionInfo()}
                                 deliverd={this.getCodeDeliverdString(this.props.labInfo.latest.buildDate)}

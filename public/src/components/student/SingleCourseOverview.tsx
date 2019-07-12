@@ -1,4 +1,5 @@
 import * as React from "react";
+import { getDeadline } from "../../../proto/deadline";
 import { IGroupCourse, IStudentSubmission, IUserCourse } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
@@ -36,8 +37,8 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
                     <div className="col-md-3 col-lg-2">
                         Deadline:
                         <span style={{ display: "inline-block", verticalAlign: "top", paddingLeft: "10px" }}>
-                            {submission.assignment.deadline.toDateString()} <br />
-                            {submission.assignment.deadline.toLocaleTimeString("en-GB")}
+                            {getDeadline(submission.assignment)} <br />
+                            {/*TODO(hein) what's this? {submission.assignment.deadline.toLocaleTimeString("en-GB")} */}
                         </span>
                     </div>
                 </div>;
@@ -46,13 +47,15 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
                 <li key={k} className="list-group-item clickable"
                     // Testing if the onClick handler should be for studentlab or grouplab.
                     onClick={() => {
-                        if (!submission.assignment.isgrouplab) {
-                            return this.props.onLabClick(submission.assignment.courseid, submission.assignment.id);
+                        const courseId = submission.assignment.getCourseid();
+                        const assignmentId = submission.assignment.getId();
+                        if (!submission.assignment.getIsgrouplab()) {
+                            return this.props.onLabClick(courseId, assignmentId);
                         } else {
-                            return this.props.onGroupLabClick(submission.assignment.courseid, submission.assignment.id);
+                            return this.props.onGroupLabClick(courseId, assignmentId);
                         }
                     }}>
-                    <strong>{submission.assignment.name}</strong>
+                    <strong>{submission.assignment.getName()}</strong>
                     {submissionInfo}
                 </li >);
         });
@@ -73,7 +76,7 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
             return null;
         }
         for (let labCounter = 0; labCounter < studentLabs.length; labCounter++) {
-            if (!studentLabs[labCounter].assignment.isgrouplab) {
+            if (!studentLabs[labCounter].assignment.getIsgrouplab()) {
                 labAndGrouplabs.push(studentLabs[labCounter]);
             } else {
                 labAndGrouplabs.push(groupLabs[labCounter]);

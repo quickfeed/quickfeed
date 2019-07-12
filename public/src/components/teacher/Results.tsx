@@ -1,14 +1,14 @@
 import * as React from "react";
-import { IAssignment, IStudentSubmission, IUserCourseWithUser } from "../../models";
+import { IStudentSubmission, IUserCourseWithUser } from "../../models";
 
-import { Course } from "../../../proto/ag_pb";
+import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { ICellElement } from "../data/DynamicTable";
 
 interface IResultsProp {
     course: Course;
     students: IUserCourseWithUser[];
-    labs: IAssignment[];
+    labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
 }
 interface IResultsState {
@@ -44,7 +44,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         const currentStudents = this.props.students.length > 0 ? this.props.students : null;
         if (currentStudents
             && this.state.assignment
-            && !this.state.assignment.assignment.isgrouplab
+            && !this.state.assignment.assignment.getIsgrouplab()
         ) {
             studentLab = <StudentLab
                 course={this.props.course}
@@ -83,14 +83,14 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     private getResultHeader(): string[] {
         let headers: string[] = ["Name", "Slipdays"];
-        headers = headers.concat(this.props.labs.filter((e) => !e.isgrouplab).map((e) => e.name));
+        headers = headers.concat(this.props.labs.filter((e) => !e.getIsgrouplab()).map((e) => e.getName()));
         return headers;
     }
 
     private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element | ICellElement> {
         const slipdayPlaceholder = "5";
         let selector: Array<string | JSX.Element | ICellElement> = [student.user.getName(), slipdayPlaceholder];
-        selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.isgrouplab).map(
+        selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
                 let approvedCss: string = "";
                 if (e.latest && e.latest.approved) {

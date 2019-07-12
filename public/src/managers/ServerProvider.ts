@@ -10,7 +10,6 @@ import {
     Void,
 } from "../../proto/ag_pb";
 import {
-    IAssignment,
     IBuildInfo,
     ICourseUserLink,
     INewGroup,
@@ -104,18 +103,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return arr;
     }
 
-    public async getAssignments(courseId: number): Promise<IAssignment[]> {
+    public async getAssignments(courseId: number): Promise<Assignment[]> {
         const result = await this.grpcHelper.getAssignments(courseId);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
         }
-        const assignments: IAssignment[] = [];
-        result.data.getAssignmentsList().forEach((ele) => {
-            const asg = this.toIAssignment(ele);
-            assignments.push(asg);
-        });
-
-        return assignments;
+        return result.data.getAssignmentsList();
     }
 
     public async addUserToCourse(user: User, course: Course): Promise<boolean> {
@@ -388,25 +381,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             approved: sbm.getApproved(),
         };
         return isbm;
-    }
-
-    // this method convert a grpc Assignment to IAssignment
-    private toIAssignment(assg: Assignment): IAssignment {
-        const deadline = assg.getDeadline();
-        let date: Date = new Date();
-        if (deadline) {
-            // HACK: check the correctness of date conversion
-            date = new Date(deadline.getSeconds());
-        }
-        const iassgn: IAssignment = {
-            id: assg.getId(),
-            name: assg.getName(),
-            courseid: assg.getCourseid(),
-            deadline: date,
-            language: assg.getLanguage(),
-            isgrouplab: assg.getIsgrouplab(),
-        };
-        return iassgn;
     }
 
     // this method convert a grpc Enrollment to IEnrollment

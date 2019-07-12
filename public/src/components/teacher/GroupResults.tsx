@@ -1,13 +1,13 @@
 import * as React from "react";
-import { IAssignment, IGroupCourseWithGroup, IStudentSubmission } from "../../models";
+import { IGroupCourseWithGroup, IStudentSubmission } from "../../models";
 
-import { Course } from "../../../proto/ag_pb";
+import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 
 interface IResultsProp {
     course: Course;
     groups: IGroupCourseWithGroup[];
-    labs: IAssignment[];
+    labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
 }
 interface IResultsState {
@@ -42,7 +42,7 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
         const currentGroup = this.props.groups.length > 0 ? this.props.groups : null;
         if (currentGroup
             && this.state.assignment
-            && this.state.assignment.assignment.isgrouplab) {
+            && this.state.assignment.assignment.getIsgrouplab()) {
             groupLab = <StudentLab
                 course={this.props.course}
                 assignment={this.state.assignment}
@@ -81,14 +81,14 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
 
     private getResultHeader(): string[] {
         let headers: string[] = ["Name", "Slipdays"];
-        headers = headers.concat(this.props.labs.filter((e) => e.isgrouplab).map((e) => e.name));
+        headers = headers.concat(this.props.labs.filter((e) => e.getIsgrouplab()).map((e) => e.getName()));
         return headers;
     }
 
     private getGroupResultSelector(group: IGroupCourseWithGroup): Array<string | JSX.Element> {
         const slipdayPlaceholder = "5";
         let selector: Array<string | JSX.Element> = [group.group.getName(), slipdayPlaceholder];
-        selector = selector.concat(group.course.assignments.filter((e) => e.assignment.isgrouplab).map((e) => {
+        selector = selector.concat(group.course.assignments.filter((e) => e.assignment.getIsgrouplab()).map((e) => {
             let approvedCss;
             if (e.latest) {
                 approvedCss = e.latest.approved ? this.approvedStyle : undefined;
