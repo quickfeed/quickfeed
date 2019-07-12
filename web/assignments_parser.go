@@ -2,6 +2,7 @@ package web
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const target = "assignment.yml"
+const target = "assignment.yaml"
 
 // assignmentData holds information about a single assignment.
 // This is only used for parsing the 'assignment.yml' file.
@@ -41,24 +42,28 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			if filename == target {
+				log.Println("parseAssignment: file is valid yaml")
 				var newAssignment assignmentData
 				source, err := ioutil.ReadFile(path)
 				if err != nil {
+					log.Println("parseAssignment: failed to read file")
 					return err
 				}
 				err = yaml.Unmarshal(source, &newAssignment)
 				if err != nil {
+					log.Println("parseAssignment: error while unmarshalling: ", err.Error())
 					return err
 				}
-
 				// we need to parse the deadline in two stages;
 				// first regular Go time.Time and then protobuf timestamp
 				d, err := time.Parse("02-01-2006 15:04", newAssignment.Deadline)
 				if err != nil {
+					log.Println("parseAssignment: error parsing deadline: ", err.Error())
 					return err
 				}
 				deadline, err := tspb.TimestampProto(d)
 				if err != nil {
+					log.Println("parseAssignment: error converting deadline to timestamp: ", err.Error())
 					return err
 				}
 
