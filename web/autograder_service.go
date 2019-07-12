@@ -43,7 +43,7 @@ func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.Reposit
 	repoURL, err := s.getRepositoryURL(usr, in)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to fetch repository URL")
+		return nil, status.Errorf(codes.NotFound, "failed to get repository URL")
 	}
 	return repoURL, nil
 }
@@ -91,7 +91,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	usr, err := s.updateUser(s.isAdmin(ctx), in)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to update current user")
+		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
 	}
 	usr.RemoveRemoteID()
 	return usr, nil
@@ -136,7 +136,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
-	//TODO(meling) fix access policy.
+	//TODO(meling) fix access policy. no admin needed
 	_, scm, err := s.getUserAndSCM(ctx, in.Provider, true)
 	if err != nil {
 		return nil, err
@@ -268,7 +268,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 		s.logger.Error(err)
 		if _, ok := status.FromError(err); !ok {
 			// set err to generic error for the frontend
-			err = status.Error(codes.Internal, "server error; check server logs for details")
+			err = status.Error(codes.InvalidArgument, "failed to create group")
 		}
 		return nil, err
 	}
@@ -293,7 +293,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 		s.logger.Error(err)
 		if _, ok := status.FromError(err); !ok {
 			// set err to generic error for the frontend
-			err = status.Error(codes.Internal, "server error; check server logs for details")
+			err = status.Error(codes.InvalidArgument, "failed to update group")
 		}
 	}
 	return &pb.Void{}, err
@@ -347,7 +347,7 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 	err = s.approveSubmission(in.GetSubmissionID())
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to approve submission")
+		return nil, status.Errorf(codes.InvalidArgument, "failed to approve submission")
 	}
 	return &pb.Void{}, nil
 }
@@ -381,7 +381,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Record
 	err = updateAssignments(ctx, s.db, scm, courseID)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to update assignments for course")
+		return nil, status.Errorf(codes.InvalidArgument, "failed to update assignments for course")
 	}
 	return &pb.Void{}, nil
 }
