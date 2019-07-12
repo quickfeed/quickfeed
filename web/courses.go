@@ -52,7 +52,7 @@ func CreateEnrollment(request *pb.Enrollment, db database.Database) error {
 
 // UpdateEnrollment accepts or rejects a user to enroll in a course.
 // TODO(meling) simplify the flow of this func; too long; split into sub-functions
-func UpdateEnrollment(ctx context.Context, request *pb.Enrollment, db database.Database, s scm.SCM) error {
+func UpdateEnrollment(ctx context.Context, s scm.SCM, db database.Database, request *pb.Enrollment) error {
 	if _, err := db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID); err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return status.Errorf(codes.NotFound, "not found")
@@ -233,14 +233,12 @@ func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID)
 }
 
-// GetSubmission returns a single submission for a assignment and a user
-func GetSubmission(request *pb.RecordRequest, db database.Database, currentUser *pb.User) (*pb.Submission, error) {
+// getSubmission returns a single submission for a assignment and a user
+func (s *AutograderService) getSubmission(currentUser *pb.User, request *pb.RecordRequest) (*pb.Submission, error) {
+	// ensure that the submission belongs to the current user
 	query := &pb.Submission{AssignmentID: request.ID, UserID: currentUser.ID}
-	submission, err := db.GetSubmission(query)
+	submission, err := s.db.GetSubmission(query)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, status.Errorf(codes.NotFound, "not found")
-		}
 		return nil, err
 	}
 	return submission, nil
@@ -265,26 +263,19 @@ func (s *AutograderService) approveSubmission(submissionID uint64) error {
 	return s.db.UpdateSubmission(submissionID, true)
 }
 
-// UpdateCourse updates an existing course
-func UpdateCourse(ctx context.Context, request *pb.Course, db database.Database, s scm.SCM) error {
-	_, err := db.GetCourse(request.ID)
+// updateCourse updates an existing course.
+func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, request *pb.Course) error {
+	// ensure the course exists
+	_, err := s.db.GetCourse(request.ID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return status.Errorf(codes.NotFound, "Course not found")
-		}
 		return err
 	}
-
-	// Check that the directory exists.
-	_, err = s.GetOrganization(ctx, request.OrganizationID)
+	// ensure the organization exists
+	_, err = sc.GetOrganization(ctx, request.OrganizationID)
 	if err != nil {
-		return status.Errorf(codes.Aborted, "no directory found")
+		return err
 	}
-
-	if err := db.UpdateCourse(request); err != nil {
-		return status.Errorf(codes.Aborted, "could not create course")
-	}
-	return nil
+	return s.db.UpdateCourse(request)
 }
 
 // GetEnrollmentsByCourse get all enrollments for a course.

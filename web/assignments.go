@@ -7,13 +7,12 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 )
 
-// ListAssignments lists the assignments for the provided course.
-func getAssignments(db database.Database, courseID uint64) (*pb.Assignments, error) {
-	assignments, err := db.GetAssignmentsByCourse(courseID)
+// getAssignments lists the assignments for the provided course.
+func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
+	assignments, err := s.db.GetAssignmentsByCourse(courseID)
 	if err != nil {
 		return nil, err
 	}
@@ -21,8 +20,8 @@ func getAssignments(db database.Database, courseID uint64) (*pb.Assignments, err
 }
 
 // updateAssignments updates the assignments for the given course
-func updateAssignments(ctx context.Context, db database.Database, sc scm.SCM, courseID uint64) error {
-	course, err := db.GetCourse(courseID)
+func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, courseID uint64) error {
+	course, err := s.db.GetCourse(courseID)
 	if err != nil {
 		return err
 	}
@@ -30,7 +29,7 @@ func updateAssignments(ctx context.Context, db database.Database, sc scm.SCM, co
 	if err != nil {
 		return err
 	}
-	if err = db.UpdateAssignments(assignments); err != nil {
+	if err = s.db.UpdateAssignments(assignments); err != nil {
 		return err
 	}
 	return nil

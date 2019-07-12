@@ -51,7 +51,7 @@ func (s *AutograderService) deleteGroup(request *pb.RecordRequest) error {
 // This function is typically called by a student when creating
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
-func (s *AutograderService) createGroup(request *pb.Group, currentUser *pb.User) (*pb.Group, error) {
+func (s *AutograderService) createGroup(currentUser *pb.User, request *pb.Group) (*pb.Group, error) {
 	if _, err := s.db.GetCourse(request.CourseID); err != nil {
 		return nil, status.Errorf(codes.NotFound, "course not found")
 	}
@@ -70,7 +70,7 @@ func (s *AutograderService) createGroup(request *pb.Group, currentUser *pb.User)
 // Only teachers can invoke this, and allows the teacher to add or remove
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
-func (s *AutograderService) updateGroup(ctx context.Context, request *pb.Group, currentUser *pb.User, sc scm.SCM) error {
+func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, currentUser *pb.User, request *pb.Group) error {
 	// course must exist in the database
 	course, err := s.db.GetCourse(request.CourseID)
 	if err != nil {

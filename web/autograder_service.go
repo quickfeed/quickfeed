@@ -122,7 +122,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 
 	// make sure that the current user is set as course creator
 	in.CourseCreatorID = usr.GetID()
-	course, err := s.createCourse(ctx, in, scm)
+	course, err := s.createCourse(ctx, scm, in)
 	if err != nil {
 		s.logger.Error(err)
 		if err == ErrAlreadyExists {
@@ -136,13 +136,16 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 // UpdateCourse changes the course information details.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
-	//TODO(meling) fix access policy. no admin needed
-	_, scm, err := s.getUserAndSCM(ctx, in.Provider, true)
+	// don't need to be admin
+	usr, scm, err := s.getUserAndSCM(ctx, in.Provider, false)
 	if err != nil {
 		return nil, err
 	}
+	if !s.isTeacher(usr.GetID(), in.GetID()) {
+		return nil, status.Errorf(codes.PermissionDenied, "only teacher can update course")
+	}
 
-	if err = UpdateCourse(ctx, in, s.db, scm); err != nil {
+	if err = s.updateCourse(ctx, scm, in); err != nil {
 		s.logger.Error(err)
 		err = status.Errorf(codes.InvalidArgument, "failed to update course")
 	}
@@ -181,7 +184,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Void{}, UpdateEnrollment(ctx, in, s.db, scm)
+	return &pb.Void{}, UpdateEnrollment(ctx, scm, s.db, in)
 }
 
 // GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.
@@ -206,6 +209,7 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 // GetGroup returns information about a group.
 // Access policy: Group members, Teacher of CourseID.
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
+	//TODO(meling) fix access policy. No admin access
 	group, err := s.getGroup(in)
 	if err != nil {
 		s.logger.Error(err)
@@ -263,7 +267,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	group, err := s.createGroup(in, usr)
+	group, err := s.createGroup(usr, in)
 	if err != nil {
 		s.logger.Error(err)
 		if _, ok := status.FromError(err); !ok {
@@ -288,7 +292,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update groups")
 	}
 
-	err = s.updateGroup(ctx, in, usr, scm)
+	err = s.updateGroup(ctx, scm, usr, in)
 	if err != nil {
 		s.logger.Error(err)
 		if _, ok := status.FromError(err); !ok {
@@ -309,13 +313,14 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordReques
 // GetSubmission returns a student submission.
 // Access policy: Current User if owner of submission, Teacher of CourseID.
 func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequest) (*pb.Submission, error) {
-	//TODO(meling) fix access policy.
+	//TODO(meling) fix access policy. Currently the underlying s.getSubmission() can only return the current user's submission.
+	// So teachers can't use this as is.
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	return GetSubmission(in, s.db, usr)
+	return s.getSubmission(usr, in)
 }
 
 // GetSubmissions returns the submissions matching the query encoded in the action request.
@@ -356,7 +361,7 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 // Access policy: Any User.
 func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Assignments, error) {
 	courseID := in.GetID()
-	assignments, err := getAssignments(s.db, courseID)
+	assignments, err := s.getAssignments(courseID)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "no assignments found for course")
@@ -378,7 +383,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Record
 	if !s.isTeacher(usr.ID, courseID) {
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers or admin can update course assignments")
 	}
-	err = updateAssignments(ctx, s.db, scm, courseID)
+	err = s.updateAssignments(ctx, scm, courseID)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update assignments for course")
