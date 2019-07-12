@@ -14,8 +14,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const target = "assignment.yml"
-const targetYaml = "assignment.yaml"
+const (
+	target     = "assignment.yml"
+	targetYaml = "assignment.yaml"
+)
 
 // assignmentData holds information about a single assignment.
 // This is only used for parsing the 'assignment.yml' file.
@@ -43,7 +45,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			if filename == target || filename == targetYaml {
-				log.Println("parseAssignment: file is valid yaml")
 				var newAssignment assignmentData
 				source, err := ioutil.ReadFile(path)
 				if err != nil {
