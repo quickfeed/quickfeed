@@ -10,8 +10,7 @@ import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
 import { isNull } from "util";
-// TODO(meling) this import works in VSCode, but fails for webpack.
-// import { Timestamp } from "../../node_modules/@types/google-protobuf/google/protobuf/timestamp_pb";
+import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
 import { IMap, MapHelper, mapify } from "../map";
 
 interface IGrpcDummyUser {
@@ -335,9 +334,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalAssignments() {
-        // const ts = new Timestamp();
-        // ts.fromDate(new Date(2017, 5, 25));
-        const ts = undefined;
+        const ts = new Timestamp();
+        ts.fromDate(new Date(2017, 5, 25));
         const a0 = new Assignment();
         const a1 = new Assignment();
         const a2 = new Assignment();
