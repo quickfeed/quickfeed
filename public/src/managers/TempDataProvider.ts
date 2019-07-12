@@ -9,8 +9,8 @@ import { ICourseEnrollment, IUserEnrollment } from "../managers";
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
-import { isNull } from "util";
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
+import { isNull } from "util";
 import { IMap, MapHelper, mapify } from "../map";
 
 interface IGrpcDummyUser {
@@ -628,7 +628,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         group2.setStatus(Group.GroupStatus.PENDING);
         group2.setCourseid(1);
         group2.setUsersList([user3, user4]);
-
-        this.localCourseGroups.push(group1, group2);
+        this.localCourseGroups = [group1, group2];
     }
 }
