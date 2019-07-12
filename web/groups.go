@@ -105,6 +105,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, request *pb.Group, 
 	if err != nil {
 		return err
 	}
+	s.logger.Info("getGroupUsers got list of users: ", users)
 
 	// check whether the group repo already exists
 	groupRepoQuery := &pb.Repository{
@@ -115,6 +116,9 @@ func (s *AutograderService) updateGroup(ctx context.Context, request *pb.Group, 
 	if err != nil {
 		return err
 	}
+	// request.Users from frontend may only have IDs
+	// we need to get full user information from database
+	request.Users = users
 
 	if len(repos) == 0 {
 		// found no repos for the group; create group repo and team
@@ -139,9 +143,6 @@ func (s *AutograderService) updateGroup(ctx context.Context, request *pb.Group, 
 		// github team already exists, update its members
 		// use the group's existing team ID obtained from the database above.
 		request.TeamID = group.TeamID
-		// request.Users from frontend may only have IDs
-		// we need to get full user information from database
-		request.Users = users
 		if err := updateGroupTeam(ctx, sc, course, request); err != nil {
 			return err
 		}
@@ -242,7 +243,7 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, course *pb.Course, group *p
 func gitUserNames(g *pb.Group) []string {
 	var gitUserNames []string
 	for _, user := range g.Users {
-		gitUserNames = append(gitUserNames, user.Login)
+		gitUserNames = append(gitUserNames, user.GetLogin())
 	}
 	return gitUserNames
 }
