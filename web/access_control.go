@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"strconv"
 
-	"github.com/google/go-cmp/cmp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -175,12 +173,21 @@ func (s *AutograderService) getUserAndSCM2(ctx context.Context, courseID uint64,
 }
 
 // teacherScopes defines scopes that must be enabled for a teacher token to be valid.
-var teacherScopes = []string{"admin:org", "delete_repo", "repo", "user"}
+var teacherScopes = map[string]bool{
+	"admin:org":   true,
+	"delete_repo": true,
+	"repo":        true,
+	"user":        true,
+}
 
 // hasTeacherScopes checks whether current user has upgraded scopes on provided scm client.
-func (s *AutograderService) hasTeacherScopes(ctx context.Context, sc scm.SCM) bool {
-	auth := sc.GetUserScopes(ctx)
-	sort.Strings(auth.Scopes)
-	sort.Strings(teacherScopes)
-	return cmp.Equal(auth.Scopes, teacherScopes)
+func hasTeacherScopes(ctx context.Context, sc scm.SCM) bool {
+	authorization := sc.GetUserScopes(ctx)
+	scopesFound := 0
+	for _, scope := range authorization.Scopes {
+		if teacherScopes[scope] {
+			scopesFound++
+		}
+	}
+	return scopesFound == len(teacherScopes)
 }

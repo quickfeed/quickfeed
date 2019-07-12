@@ -100,15 +100,15 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
 // Access policy: Any User.
 func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void) (*pb.AuthorizationResponse, error) {
-	//TODO(meling) fix access policy. no admin needed
 	// TODO(vera): upgrade to send provider from client. Currently not supported for other providers anyway
 	// Hein @Vera: it may be easier to pass along the courseID from the client as is done for UpdateEnrollment (see below)
-	_, scm, err := s.getUserAndSCM(ctx, "github", true)
+	// any user can ask if they have teacher scopes.
+	_, scm, err := s.getUserAndSCM(ctx, "github", false)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.AuthorizationResponse{
-		IsAuthorized: s.hasTeacherScopes(ctx, scm),
+		IsAuthorized: hasTeacherScopes(ctx, scm),
 	}, nil
 }
 
