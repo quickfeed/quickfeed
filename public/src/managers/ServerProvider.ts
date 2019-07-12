@@ -336,9 +336,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {
             buildInfoAsString = sbm.getBuildinfo();
         }
+        console.log("toISubmission: build: " + sbm.getBuildinfo());
+        console.log("toISubmission: parsed scores: " + buildInfoAsString);
         if (sbm.getScoreobjects() && (sbm.getScoreobjects().trim().length > 2)) {
             scoreInfoAsString = sbm.getScoreobjects();
         }
+        console.log("toISubmission: scores: " + sbm.getScoreobjects());
+        console.log("toISubmission: parsed scores: " + scoreInfoAsString);
         let buildInfo: IBuildInfo;
         let scoreObj: ITestCases[];
         try {
@@ -358,13 +362,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
         let failed = 0;
         let passed = 0;
-        scoreObj.forEach((ele) => {
-            if (ele.points !== ele.score) {
-                failed++;
-            } else {
-                passed++;
-            }
-        });
+        if (scoreObj) {
+            scoreObj.forEach((ele) => {
+                if (ele.points !== ele.score) {
+                    failed++;
+                } else {
+                    passed++;
+                }
+            });
+        }
         const isbm: ISubmission = {
             id: sbm.getId(),
             userid: sbm.getUserid(),
@@ -380,6 +386,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             testCases: scoreObj,
             approved: sbm.getApproved(),
         };
+        console.log("toISubmission: constructed submission " + isbm);
         return isbm;
     }
 

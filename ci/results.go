@@ -2,6 +2,7 @@ package ci
 
 import (
 	"encoding/json"
+	"log"
 	"strings"
 	"time"
 
@@ -25,14 +26,16 @@ type BuildInfo struct {
 
 // ExtractResult returns a result struct for the given log.
 func ExtractResult(out, secret string, execTime time.Duration) (*Result, error) {
+	log.Println("ci ExtractResults has result string: ", out)
 	var filteredLog []string
-	var scores []*score.Score
+	scores := make([]*score.Score, 0)
 	for _, line := range strings.Split(out, "\n") {
+		log.Println("ci ExtractResults: split result line: ", line)
 		// check if line has expected JSON score string
 		if score.HasPrefix(line) {
 			sc, err := score.Parse(line, secret)
 			if err != nil {
-				//TODO(meling) we should probably log parse errors?
+				log.Println("ci got error parsing ci results, line: ", line)
 				continue
 			}
 			scores = append(scores, sc)
@@ -41,7 +44,7 @@ func ExtractResult(out, secret string, execTime time.Duration) (*Result, error) 
 			filteredLog = append(filteredLog, line)
 		}
 	}
-
+	log.Println("ci ExtractResults got results: ", scores, " and filtedLog: ", filteredLog)
 	return &Result{
 		Scores: scores,
 		BuildInfo: &BuildInfo{
