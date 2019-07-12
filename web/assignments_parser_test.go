@@ -56,11 +56,11 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yml"), []byte(y1), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab1", "assignment.yaml"), []byte(y1), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yml"), []byte(y2), 0644)
+	err = ioutil.WriteFile(filepath.Join(testsDir, "lab2", "assignment.yaml"), []byte(y2), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(assignments) < 0 {
+	if len(assignments) < 1 {
 		t.Error("have 0 assignments, want 2")
 	}
 
