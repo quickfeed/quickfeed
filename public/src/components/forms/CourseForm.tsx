@@ -202,7 +202,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
             const result = this.props.courseData ?
                 await this.updateCourse(this.props.courseData.getId()) : await this.createNewCourse();
 
-            if (result instanceof Status) {
+            if ((result instanceof Status) && (result.getCode() > 0)) {
                 const errMsg = result.getError();
                 const serverErrors: string[] = [];
                 serverErrors.push(errMsg);
