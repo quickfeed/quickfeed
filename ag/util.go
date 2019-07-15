@@ -1,9 +1,16 @@
 package ag
 
-// RemoveRemoteID removes references to user's remote identity before transmitting user information over http
+// RemoveRemoteID removes user's remote identity before transmitting to client.
 func (u *User) RemoveRemoteID() {
-	voidIDs := make([]*RemoteIdentity, 0)
-	u.RemoteIdentities = voidIDs
+	if u != nil {
+		voidIDs := make([]*RemoteIdentity, 0)
+		u.RemoteIdentities = voidIDs
+		for _, enrollment := range u.GetEnrollments() {
+			if enrollment.User != nil && enrollment.User.RemoteIdentities != nil {
+				enrollment.User.RemoteIdentities = voidIDs
+			}
+		}
+	}
 }
 
 // RemoveRemoteIDs nullifies remote identities of all users
@@ -15,8 +22,13 @@ func (u *Users) RemoveRemoteIDs() {
 
 // RemoveRemoteIDs nullifies remote identities of all users in a group
 func (g *Group) RemoveRemoteIDs() {
-	for _, user := range g.GetUsers() {
-		user.RemoveRemoteID()
+	if g != nil {
+		for _, user := range g.GetUsers() {
+			user.RemoveRemoteID()
+		}
+		for _, enrollment := range g.GetEnrollments() {
+			enrollment.RemoveRemoteID()
+		}
 	}
 }
 
@@ -29,8 +41,9 @@ func (g *Groups) RemoveRemoteIDs() {
 
 // RemoveRemoteID removes remote identity of the enrolled user
 func (e *Enrollment) RemoveRemoteID() {
-	voidIDs := make([]*RemoteIdentity, 0)
-	e.GetUser().RemoteIdentities = voidIDs
+	if e != nil && e.User != nil {
+		e.User.RemoveRemoteID()
+	}
 }
 
 // RemoveRemoteIDs removes remote identities for every enrollment
