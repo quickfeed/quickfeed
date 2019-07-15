@@ -514,7 +514,8 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 // GetEnrollmentByCourseAndUser return a record of Enrollment
 func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enrollment, error) {
 	var enrollment pb.Enrollment
-	if err := db.conn.
+	m := db.conn.Preload("Course").Preload("User")
+	if err := m.
 		Where(&pb.Enrollment{
 			CourseID: cid,
 			UserID:   uid,

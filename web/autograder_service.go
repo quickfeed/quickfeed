@@ -184,7 +184,17 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Void{}, UpdateEnrollment(ctx, scm, s.db, in)
+	err = s.updateEnrollment(ctx, scm, in)
+	if err != nil {
+		s.logger.Error(err)
+		//TODO(meling) check if we UpdateEnrollment need to return different Status codes.
+		if _, ok := status.FromError(err); !ok {
+			// set err to generic error for the frontend
+			err = status.Error(codes.InvalidArgument, "failed to update enrollment")
+		}
+		return nil, err
+	}
+	return &pb.Void{}, nil
 }
 
 // GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.

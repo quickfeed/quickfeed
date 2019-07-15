@@ -50,116 +50,101 @@ func CreateEnrollment(request *pb.Enrollment, db database.Database) error {
 	return nil
 }
 
-// UpdateEnrollment accepts or rejects a user to enroll in a course.
+// updateEnrollment accepts or rejects a user to enroll in a course.
 // TODO(meling) simplify the flow of this func; too long; split into sub-functions
-func UpdateEnrollment(ctx context.Context, s scm.SCM, db database.Database, request *pb.Enrollment) error {
-	if _, err := db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID); err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return status.Errorf(codes.NotFound, "not found")
-		}
-		return status.Errorf(codes.Internal, "could not update enrollment")
+func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, request *pb.Enrollment) error {
+	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
+	if err != nil {
+		return err
 	}
 
-	// TODO If the enrollment is accepted, create repositories and permissions for them with webooks.
-	var err error
+	switch request.Status {
+	case pb.Enrollment_REJECTED:
+		return s.db.RejectEnrollment(request.UserID, request.CourseID)
+
+	case pb.Enrollment_PENDING:
+		return s.db.SetPendingEnrollment(request.UserID, request.CourseID)
+	}
+
+	// TODO If the enrollment is accepted, create repositories and permissions for them with webhooks.
 	switch request.Status {
 	case pb.Enrollment_STUDENT:
-		course, err := db.GetCourse(request.CourseID)
-		if err != nil {
-			return status.Errorf(codes.NotFound, "course not found")
-		}
-		student, err := db.GetUser(request.UserID)
-		if err != nil {
-			return status.Errorf(codes.NotFound, "user not found")
-		}
+		course, student := enrollment.GetCourse(), enrollment.GetUser()
 
-		// check whether user repo already exists (happens when accepting previously rejected student)
+		// check whether user repo already exists,
+		// which could happen if accepting a previously rejected student
 		userRepoQuery := &pb.Repository{
 			OrganizationID: course.GetOrganizationID(),
 			UserID:         request.GetUserID(),
 			RepoType:       pb.Repository_USER,
 		}
-		repos, err := db.GetRepositories(userRepoQuery)
+		repos, err := s.db.GetRepositories(userRepoQuery)
 		if err != nil {
-			return status.Errorf(codes.NotFound, "repository not found")
+			return err
 		}
-		if len(repos) == 0 {
-			// create user repo and team on SCM.
-			// personal team is being created because user repo access is based on team role now
-			// TODO(vera): we could avoid creating personal teams for every student if there is a way
-			// to automate granting the user write access to user repo on repo creation
-			repo, _, err := createUserRepoAndTeam(ctx, s, course, student)
-			if err != nil {
-				return status.Errorf(codes.Internal, "could not create user repository and team")
-			}
+		if len(repos) > 0 {
+			// if a user repo already exists it most likely means that the student
+			// was previously accepted to course, then rejected, and is now being
+			// accepted again. Also, it means that user team has already been created
+			// and invitation to organization has been issued.
+			// we only need to update enrollment in the database
+			return s.db.EnrollStudent(request.UserID, request.CourseID)
+		}
 
-			err = db.EnrollStudent(request.UserID, request.CourseID)
-			if err != nil {
-				return status.Errorf(codes.Internal, "could not enroll student")
-			}
-			// add student repo to database if SCM interaction was successful
-			dbRepo := pb.Repository{
-				OrganizationID: course.GetOrganizationID(),
-				UserID:         request.GetUserID(),
-				RepoType:       pb.Repository_USER,
-				RepositoryID:   repo.ID,
-				HTMLURL:        repo.WebURL,
-			}
-			if err := db.CreateRepository(&dbRepo); err != nil {
-				return status.Errorf(codes.Internal, "could not create user repository")
-			}
-			// send invitation to course organization to student (will return nil if successful or already a member)
-			if err = addUserToOrg(ctx, s, course.GetOrganizationID(), student); err != nil {
-				return err
-			}
-			// then add to the 'students' team
-			return addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_STUDENT)
+		// create user repo and team on SCM.
+		// personal team is being created because user repo access is based on team role now
+		// TODO(vera): we could avoid creating personal teams for every student if there is a way
+		// to automate granting the user write access to user repo on repo creation
+		// TODO(meling): clean up these three methods (integrate into one helper method)
+		repo, _, err := createUserRepoAndTeam(ctx, sc, course, student)
+		if err != nil {
+			return err
 		}
-		// if repo already exists (student was previously accepted to course, then rejected, and now is being accepted again),
-		// it means that user team has already been created and invitation to organization has been issued
-		// we only need to update enrollment in the database
-		return db.EnrollStudent(request.UserID, request.CourseID)
+		// send invitation to course organization to student (will return nil if successful or already a member)
+		if err = addUserToOrg(ctx, sc, course.GetOrganizationID(), student); err != nil {
+			return err
+		}
+		// then add to the 'students' team
+		if err = addToUserTeam(ctx, sc, course.GetOrganizationID(), student, pb.Enrollment_STUDENT); err != nil {
+			return err
+		}
+
+		// add student repo to database if SCM interaction above was successful
+		dbRepo := pb.Repository{
+			OrganizationID: course.GetOrganizationID(),
+			UserID:         request.GetUserID(),
+			RepoType:       pb.Repository_USER,
+			RepositoryID:   repo.ID,
+			HTMLURL:        repo.WebURL,
+		}
+		if err := s.db.CreateRepository(&dbRepo); err != nil {
+			return err
+		}
+		return s.db.EnrollStudent(request.UserID, request.CourseID)
 
 	case pb.Enrollment_TEACHER:
-		course, err := db.GetCourse(request.CourseID)
-		if err != nil {
-			return status.Errorf(codes.NotFound, "course not found")
-		}
-		student, err := db.GetUser(request.UserID)
-		if err != nil {
-			return status.Errorf(codes.NotFound, "user not found")
-		}
+		course, teacher := enrollment.GetCourse(), enrollment.GetUser()
 		// we want to update org membership first, as it is more prone to errors user could react to
 		orgUpdate := &scm.OrgMembership{
-			Username: student.GetLogin(),
+			Username: teacher.GetLogin(),
 			OrgID:    course.GetOrganizationID(),
-			Role:     "admin",
+			Role:     "admin", //TODO(meling) is admin a role?
 		}
-		if err = s.UpdateOrgMembership(ctx, orgUpdate); err != nil {
-			return status.Errorf(codes.Internal, fmt.Sprintln("could not update github membership, reason: ", err.Error()))
-		}
-		if err = db.EnrollTeacher(student.ID, course.ID); err != nil {
-			return status.Errorf(codes.Internal, "could not enroll teacher")
+		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
+			return err
 		}
 		// add all teachers to 'teachers' team (will remove them from 'students' team)
-		return addToUserTeam(ctx, s, course.GetOrganizationID(), student, pb.Enrollment_TEACHER)
-
-	case pb.Enrollment_REJECTED:
-		if err = db.RejectEnrollment(request.UserID, request.CourseID); err != nil {
-			err = status.Errorf(codes.Internal, "could not reject user")
+		if err = addToUserTeam(ctx, sc, course.GetOrganizationID(), teacher, pb.Enrollment_TEACHER); err != nil {
+			return err
 		}
-
-	case pb.Enrollment_PENDING:
-		if err = db.SetPendingEnrollment(request.UserID, request.CourseID); err != nil {
-			err = status.Errorf(codes.Internal, "could not set pending")
-		}
+		return s.db.EnrollTeacher(teacher.ID, course.ID)
 	}
-	// it will be nil or error, as expected by calling function
-	return err
+
+	return fmt.Errorf("unknown enrollment")
 }
 
-func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, *scm.Team, error) {
-	org, err := s.GetOrganization(c, course.OrganizationID)
+func createUserRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, *scm.Team, error) {
+	org, err := sc.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -173,12 +158,12 @@ func createUserRepoAndTeam(c context.Context, s scm.SCM, course *pb.Course, stud
 		Private:      true,
 	}
 
-	return s.CreateRepoAndTeam(c, opt, teamName, []string{teamName})
+	return sc.CreateRepoAndTeam(ctx, opt, teamName, []string{teamName})
 }
 
 // TODO(meling) why is not used?
-func createUserRepo(c context.Context, s scm.SCM, orgID uint64, student *pb.User) (*scm.Repository, error) {
-	org, err := s.GetOrganization(c, orgID)
+func createUserRepo(c context.Context, sc scm.SCM, orgID uint64, student *pb.User) (*scm.Repository, error) {
+	org, err := sc.GetOrganization(c, orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +175,7 @@ func createUserRepo(c context.Context, s scm.SCM, orgID uint64, student *pb.User
 		Owner:        student.GetLogin(),
 	}
 
-	return s.CreateRepository(c, opt)
+	return sc.CreateRepository(c, opt)
 }
 
 func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, status pb.Enrollment_UserStatus) error {

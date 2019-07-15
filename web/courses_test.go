@@ -190,9 +190,13 @@ func TestEnrollmentProcess(t *testing.T) {
 		CourseID: course.ID,
 		UserID:   stud1.ID,
 		Status:   pb.Enrollment_PENDING,
+		Course:   course,
+		User:     stud1,
 	}
+	// can't use: wantEnrollment.User.RemoveRemoteID()
+	wantEnrollment.User.RemoteIdentities = nil
 	if !cmp.Equal(pendingEnrollment, wantEnrollment) {
-		t.Errorf("have enrollment\n %+v\n want\n %+v", pendingEnrollment, wantEnrollment)
+		t.Errorf("enrollment\nhave %+v\nwant %+v\n", pendingEnrollment, wantEnrollment)
 	}
 
 	enrollStud1.Status = pb.Enrollment_STUDENT
@@ -207,7 +211,7 @@ func TestEnrollmentProcess(t *testing.T) {
 	}
 	wantEnrollment.Status = pb.Enrollment_STUDENT
 	if !cmp.Equal(acceptedEnrollment, wantEnrollment) {
-		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
+		t.Errorf("enrollment\nhave %+v\nwant %+v\n", acceptedEnrollment, wantEnrollment)
 	}
 
 	// create another user and enroll as student
@@ -229,8 +233,10 @@ func TestEnrollmentProcess(t *testing.T) {
 	wantEnrollment.ID = acceptedEnrollment.ID
 	wantEnrollment.Status = pb.Enrollment_STUDENT
 	wantEnrollment.UserID = stud2.ID
+	wantEnrollment.User = stud2
+	wantEnrollment.User.RemoteIdentities = nil
 	if !cmp.Equal(acceptedEnrollment, wantEnrollment) {
-		t.Errorf("have enrollment %+v want %+v", acceptedEnrollment, wantEnrollment)
+		t.Errorf("enrollment\nhave %+v\nwant %+v\n", acceptedEnrollment, wantEnrollment)
 	}
 
 	// promote stud2 to teaching assistant

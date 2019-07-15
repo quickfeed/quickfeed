@@ -267,6 +267,8 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			enr.User = nil
+			enr.Course = nil
 			wantEnrollments = append(wantEnrollments, enr)
 		} else if i%3 != 0 {
 			// enroll every third student as a group member
@@ -290,6 +292,8 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			enr.User = nil
+			enr.Course = nil
 			wantEnrollments = append(wantEnrollments, enr)
 		}
 	}
