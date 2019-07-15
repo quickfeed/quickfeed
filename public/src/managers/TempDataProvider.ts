@@ -211,10 +211,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return ["github"];
     }
 
-    public async grpcGetLoggedInUser(): Promise<User | null> {
-        return this.currentLoggedIn;
-    }
-
     public async getLoggedInUser(): Promise<User | null> {
         return this.currentLoggedIn;
     }
