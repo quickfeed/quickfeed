@@ -8,7 +8,6 @@ import {
 } from "../models";
 
 import { Assignment, Course, Enrollment, Group, Organization, Status, User, Void } from "../../proto/ag_pb";
-import { UserManager } from "../managers";
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {

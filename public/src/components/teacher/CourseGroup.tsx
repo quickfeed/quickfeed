@@ -190,7 +190,6 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
                 await this.props.courseMan.updateGroup(group);
                 break;
             case "edit":
-                console.log("CourseGroup: handleActionOnClick attempts to edit group " + group);
                 this.props.navMan
                     .navigateTo(this.props.pagePath + "/courses/"
                         + group.getCourseid() + "/groups/" + group.getId() + "/edit");

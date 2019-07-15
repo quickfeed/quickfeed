@@ -103,7 +103,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         actions?: ILink[],
         linkType?: ActionType,
         optionalActions?: ((user: IUserRelation) => ILink[])) {
-        console.log("Rendering users: " + title);
         return <div>
             <h3>{title}</h3>
             <UserView

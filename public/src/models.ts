@@ -93,10 +93,6 @@ export interface IBuildInfo {
 }
 
 /**
- * The relation description between a user and course
- */
-
-/**
  * A description of a single test case object
  */
 export interface ITestCases {
