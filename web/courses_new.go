@@ -7,9 +7,6 @@ import (
 
 	"github.com/autograde/aguis/web/auth"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
 )
@@ -53,6 +50,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, ErrAlreadyExists
 	}
 
+	// create course repos and webhooks for each repo
 	for path, private := range RepoPaths {
 		repoOptions := &scm.CreateRepositoryOptions{
 			Path:         path,
@@ -84,25 +82,26 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		}
 	}
 
-	// we want to add course creator to teacher team
+	// add course creator to teacher team
 	courseCreator, err := s.db.GetUser(request.GetCourseCreatorID())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "internal database error")
+		return nil, err
 	}
-	// create two teams on course organization: one for all students and one for all teachers
+	// create teacher team with course creator
 	opt := &scm.CreateTeamOptions{
 		Organization: org,
 		TeamName:     "teachers",
 		Users:        []string{courseCreator.GetLogin()},
 	}
 	if _, err = sc.CreateTeam(ctx, opt); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create teacher team")
+		return nil, err
 	}
-	if _, err = sc.CreateTeam(ctx, &scm.CreateTeamOptions{Organization: org, TeamName: "students"}); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create student team")
+	// create student team without any members
+	studOpt := &scm.CreateTeamOptions{Organization: org, TeamName: "students"}
+	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
+		return nil, err
 	}
 
-	// then add course to the database
 	if err := s.db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
 		return nil, err
 	}
