@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/jinzhu/gorm"
 
 	pb "github.com/autograde/aguis/ag"
@@ -216,8 +217,10 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				}
 			}
 			group.Enrollments = enrollments
-			if !reflect.DeepEqual(have, group) {
-				t.Errorf("have %#v want %#v", have, group)
+			have.RemoveRemoteIDs()
+			group.RemoveRemoteIDs()
+			if diff := cmp.Diff(group, have); diff != "" {
+				t.Errorf("mismatch (-group +have):\n%s", diff)
 			}
 			cleanup()
 		})

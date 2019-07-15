@@ -137,6 +137,11 @@ func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
 	var userIds []uint64
 	for _, enrollment := range group.Enrollments {
 		userIds = append(userIds, enrollment.UserID)
+		u, err := db.GetUser(enrollment.UserID)
+		if err != nil {
+			return nil, err
+		}
+		enrollment.User = u
 	}
 	if len(userIds) > 0 {
 		users, err := db.GetUsers(userIds...)
@@ -162,6 +167,11 @@ func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
 		var userIds []uint64
 		for _, enrollment := range group.Enrollments {
 			userIds = append(userIds, enrollment.UserID)
+			u, err := db.GetUser(enrollment.UserID)
+			if err != nil {
+				return nil, err
+			}
+			enrollment.User = u
 		}
 		if len(userIds) > 0 {
 			users, err := db.GetUsers(userIds...)

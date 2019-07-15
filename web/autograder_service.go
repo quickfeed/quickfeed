@@ -172,7 +172,7 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 // CreateEnrollment enrolls a new student for the course specified in the request.
 // Access policy: Any User.
 func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
-	return &pb.Void{}, CreateEnrollment(in, s.db)
+	return &pb.Void{}, s.createEnrollment(in)
 }
 
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
@@ -208,7 +208,7 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	//TODO(meling) fix access policy.
-	enrolls, err := GetEnrollmentsByCourse(in, s.db)
+	enrolls, err := s.getEnrollmentsByCourse(in)
 	if err != nil {
 		return nil, err
 	}

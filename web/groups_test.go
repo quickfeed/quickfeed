@@ -737,13 +737,11 @@ func TestGetGroups(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	group1.RemoveRemoteIDs()
 	group2, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group 2", CourseID: course.ID, Users: []*pb.User{users[4], users[5]}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	group2.RemoveRemoteIDs()
-	wantGroups := []*pb.Group{group1, group2}
+	wantGroups := &pb.Groups{Groups: []*pb.Group{group1, group2}}
 
 	// check that request on non-existent course returns error
 	groups, err := ags.GetGroups(ctx, &pb.RecordRequest{ID: 15})
@@ -761,7 +759,7 @@ func TestGetGroups(t *testing.T) {
 	}
 
 	// check that the method returns expected groups
-	if !reflect.DeepEqual(wantGroups, gotGroups.Groups) {
-		t.Errorf("want groups %+v, while database has %+v", wantGroups, gotGroups.Groups)
+	if diff := cmp.Diff(wantGroups, gotGroups); diff != "" {
+		t.Errorf("mismatch (-wantGroups +gotGroups):\n%s", diff)
 	}
 }
