@@ -11,7 +11,6 @@ import {
 } from "../../proto/ag_pb";
 import {
     IBuildInfo,
-    ICourseUserLink,
     INewGroup,
     ISubmission,
     ITestCases,
@@ -116,8 +115,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status.getCode() === 0;
     }
 
-    public async changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean> {
-        const result = await this.grpcHelper.updateEnrollment(link.userid, link.courseId, state);
+    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
+        const result = await this.grpcHelper.updateEnrollment(link.getUserid(), link.getCourseid(), state);
         return result.status.getCode() === 0;
     }
 

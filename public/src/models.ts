@@ -20,7 +20,7 @@ export interface ICourseLinkAssignment {
      * The relation between the group and the course.
      * Is null if there is none
      */
-    link?: ICourseUserLink | ICourseGroupLink;
+    link?: Enrollment;
     /**
      * A list of all assignments and the last submission if there
      * is a relation between the group and the course which is
@@ -34,7 +34,7 @@ export interface ICourseLinkAssignment {
  * link, all assignments and the latest submission to a single user
  */
 export interface IUserCourse extends ICourseLinkAssignment {
-    link?: ICourseUserLink;
+    link?: Enrollment;
 }
 
 /**
@@ -42,7 +42,7 @@ export interface IUserCourse extends ICourseLinkAssignment {
  * link, all assignments and the latest submission to a single group
  */
 export interface IGroupCourse extends ICourseLinkAssignment {
-    link?: ICourseGroupLink;
+    link?: Enrollment;
 }
 
 /**
@@ -80,7 +80,7 @@ export interface IStudentSubmission {
  */
 export interface IUserRelation {
     user: User;
-    link: ICourseUserLink;
+    link: Enrollment;
 }
 
 // Browser only objects END
@@ -95,20 +95,22 @@ export interface IBuildInfo {
 /**
  * The relation description between a user and course
  */
+/*
 export interface ICourseUserLink {
     userid: number;
     courseId: number;
     state: Enrollment.UserStatus;
-}
+}*/
 
 /**
  * The relation description between a group and course
  */
+/*
 export interface ICourseGroupLink {
     groupid: number;
     courseId: number;
     state: Group.GroupStatus;
-}
+}*/
 /**
  * A description of a single test case object
  */

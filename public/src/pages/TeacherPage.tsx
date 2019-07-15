@@ -247,7 +247,7 @@ export class TeacherPage extends ViewPage {
             // Sorts all the users to the correct tables, and ignores the rejected once
             // TODO: Maybe move this to the Members view
             all.forEach((user) => {
-                switch (user.link.state) {
+                switch (user.link.getStatus()) {
                     case Enrollment.UserStatus.TEACHER:
                     case Enrollment.UserStatus.STUDENT:
                         acceptedUsers.push(user);

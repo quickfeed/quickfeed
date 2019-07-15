@@ -9,7 +9,7 @@ import { View, ViewPage } from "./ViewPage";
 import { CourseView } from "./views/CourseView";
 import { ActionType, UserView } from "./views/UserView";
 
-import { Assignment } from "../../proto/ag_pb";
+import { Assignment, Enrollment } from "../../proto/ag_pb";
 import { getDeadline } from "../../proto/deadline";
 import { IUserRelation } from "../models";
 
@@ -36,13 +36,13 @@ export class AdminPage extends ViewPage {
 
     public async users(info: INavInfo<{}>): View {
         const allUsers = (await this.userMan.getAllUser()).map((user) => {
+            const enrol = new Enrollment();
+            enrol.setUserid(user.getId());
+            enrol.setCourseid(0);
+            enrol.setStatus(0);
             return {
                 user,
-                link: {
-                    userid: user.getId(),
-                    courseId: 0,
-                    state: 0,
-                },
+                link: enrol,
             };
         });
 

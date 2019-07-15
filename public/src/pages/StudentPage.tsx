@@ -236,8 +236,8 @@ export class StudentPage extends ViewPage {
     private onlyActiveCourses(studentCourse: IUserCourse[]): IUserCourse[] {
         const userCourses: IUserCourse[] = [];
         studentCourse.forEach((a) => {
-            if (a.link && (a.link.state === Enrollment.UserStatus.STUDENT
-                || a.link.state === Enrollment.UserStatus.TEACHER)) {
+            if (a.link && (a.link.getStatus() === Enrollment.UserStatus.STUDENT
+                || a.link.getStatus() === Enrollment.UserStatus.TEACHER)) {
                 userCourses.push(a);
             }
         });

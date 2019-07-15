@@ -1,6 +1,5 @@
 import { Assignment, Course, Enrollment, Group, Organization, Status, User } from "../../proto/ag_pb";
 import {
-    ICourseUserLink,
     INewGroup,
     ISubmission,
 } from "../models";
@@ -27,7 +26,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     private localUsers: IMap<IGrpcDummyUser>;
     private localAssignments: IMap<Assignment>;
     private localCourses: IMap<Course>;
-    private localCourseStudent: ICourseUserLink[];
+    private localCourseStudent: Enrollment[];
     private localLabInfo: IMap<ISubmission>;
     private localCourseGroups: Group[];
 
@@ -64,7 +63,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return MapHelper.toArray(this.localCourses);
     }
 
-    public async getCoursesStudent(): Promise<ICourseUserLink[]> {
+    public async getCoursesStudent(): Promise<Enrollment[]> {
         return this.localCourseStudent;
     }
 
@@ -120,11 +119,11 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     public async addUserToCourse(user: User, course: Course): Promise<boolean> {
-        this.localCourseStudent.push({
-            courseId: course.getId(),
-            userid: user.getId(),
-            state: Enrollment.UserStatus.PENDING,
-        });
+        const tempEnrollment: Enrollment = new Enrollment();
+        tempEnrollment.setCourseid(course.getId());
+        tempEnrollment.setUserid(user.getId());
+        tempEnrollment.setStatus(Enrollment.UserStatus.PENDING);
+        this.localCourseStudent.push(tempEnrollment);
         return true;
     }
 
@@ -133,10 +132,11 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
      * @param course The course userlinks should be retrived from
      * @param state Optinal. The state of the relation, all if not present
      */
-    public async getUserLinksForCourse(course: Course, state?: Enrollment.UserStatus[]): Promise<ICourseUserLink[]> {
-        const users: ICourseUserLink[] = [];
+    public async getUserLinksForCourse(course: Course, state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+        const users: Enrollment[] = [];
         for (const c of await this.getCoursesStudent()) {
-            if (course.getId() === c.courseId && (state === undefined || c.state === Enrollment.UserStatus.STUDENT)) {
+            if (course.getId() === c.getCourseid()
+             && (state === undefined || c.getStatus() === Enrollment.UserStatus.STUDENT)) {
                 users.push(c);
             }
         }
@@ -157,16 +157,16 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async getUsersForCourse(course: Course, noGroupMembers?: boolean, state?: Enrollment.UserStatus[])
         : Promise<IUserEnrollment[]> {
-        const courseStds: ICourseUserLink[] =
+        const courseStds: Enrollment[] =
             await this.getUserLinksForCourse(course, state);
-        const users = await this.getUsersAsMap(courseStds.map((e) => e.userid));
+        const users = await this.getUsersAsMap(courseStds.map((e) => e.getUserid()));
         return courseStds.map<IUserEnrollment>((link) => {
-            const user = users[link.userid];
+            const user = users[link.getUserid()];
             if (!user) {
                 // TODO: See if we should have an error here or not
                 throw new Error("Link exist witout a user object");
             }
-            return { courseid: link.courseId, userid: link.userid, user, status: link.state };
+            return { courseid: link.getCourseid(), userid: link.getUserid(), user, status: link.getStatus() };
         });
     }
 
@@ -186,8 +186,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean> {
-        link.state = state;
+    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
+        link.setStatus(state);
         return true;
     }
 
@@ -220,19 +220,22 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
-        const cLinks: ICourseUserLink[] = [];
+        const cLinks: Enrollment[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
-            if (user.getId() === c.userid && (state === undefined || c.state === Enrollment.UserStatus.STUDENT)) {
+            if (user.getId() === c.getUserid()
+             && (state === undefined || c.getStatus() === Enrollment.UserStatus.STUDENT)) {
                 cLinks.push(c);
             }
         }
         const courses: ICourseEnrollment[] = [];
         const tempCourses = await this.getCourses();
         for (const link of cLinks) {
-            const c = tempCourses[link.courseId];
+            const c = tempCourses[link.getCourseid()];
             if (c) {
-                courses.push({ course: c, courseid: link.courseId, userid: link.userid, status: link.state });
+                courses.push({
+                    course: c, courseid: link.getCourseid(), userid: link.getUserid(), status: link.getStatus() 
+                });
             }
         }
         return courses;
@@ -470,12 +473,21 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalCourseStudent() {
-        this.localCourseStudent = [
-            { courseId: 0, userid: 999, state: 2 },
-            { courseId: 1, userid: 999, state: 2 },
-            { courseId: 0, userid: 1, state: 0 },
-            { courseId: 0, userid: 2, state: 0 },
-        ] as ICourseUserLink[];
+        const localEnrols: Enrollment[] = [];
+        const tempEnrol: Enrollment = new Enrollment();
+        tempEnrol.setCourseid(0);
+        tempEnrol.setUserid(999);
+        tempEnrol.setStatus(2);
+        localEnrols.push(tempEnrol);
+        tempEnrol.setCourseid(1);
+        localEnrols.push(tempEnrol);
+        tempEnrol.setCourseid(0);
+        tempEnrol.setUserid(1);
+        tempEnrol.setStatus(0);
+        localEnrols.push(tempEnrol);
+        tempEnrol.setUserid(2);
+        localEnrols.push(tempEnrol);
+        this.localCourseStudent = localEnrols;
     }
 
     private addLocalLabInfo() {

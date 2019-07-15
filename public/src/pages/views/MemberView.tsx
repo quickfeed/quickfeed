@@ -64,7 +64,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 ActionType.Menu,
                 (user: IUserRelation) => {
                     const links = [];
-                    if (user.link.state === Enrollment.UserStatus.REJECTED) {
+                    if (user.link.getStatus() === Enrollment.UserStatus.REJECTED) {
                         links.push({ name: "Set pending", uri: "remove", extra: "primary" });
                     }
                     return links;
@@ -80,7 +80,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             ActionType.Menu,
             (user: IUserRelation) => {
                 const links = [];
-                if (user.link.state === Enrollment.UserStatus.TEACHER) {
+                if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
                     links.push({ name: "This is a teacher", extra: "primary" });
                 } else {
                     links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });

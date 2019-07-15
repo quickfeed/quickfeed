@@ -1,9 +1,7 @@
 import {
     ICourseLinkAssignment,
-    ICourseUserLink,
     IGroupCourse,
     INewGroup,
-    IStudentSubmission,
     ISubmission,
     IUserCourse,
     IUserRelation,
@@ -21,7 +19,7 @@ export interface ICourseProvider {
         Promise<IUserEnrollment[]>;
 
     addUserToCourse(user: User, course: Course): Promise<boolean>;
-    changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean>;
+    changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean>;
 
     createNewCourse(courseData: Course): Promise<Course | Status>;
     getCourse(id: number): Promise<Course | null>;
@@ -111,11 +109,16 @@ export class CourseManager {
     public async getCoursesWithState(user: User): Promise<IUserCourse[]> {
         const userCourses = await this.courseProvider.getCoursesFor(user);
         const newMap = userCourses.map<IUserCourse>((ele) => {
+            const enrol = new Enrollment();
+            enrol.setUserid(ele.userid);
+            enrol.setCourseid(ele.courseid);
+            if (ele.status) {
+                enrol.setStatus(ele.status);
+            }
             return {
                 assignments: [],
                 course: ele.course,
-                link: ele.status !== undefined ?
-                    { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
+                link: ele.status !== undefined ? enrol : undefined,
             };
         });
         return newMap;
@@ -143,7 +146,7 @@ export class CourseManager {
      * @param link The link to change state of
      * @param state The new state of the relation
      */
-    public async changeUserState(link: ICourseUserLink, state: Enrollment.UserStatus): Promise<boolean> {
+    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
         return this.courseProvider.changeUserState(link, state);
     }
 
@@ -170,8 +173,13 @@ export class CourseManager {
      */
     public async getStudentCourseForTeacher(student: IUserRelation, course: Course, assignments: Assignment[]):
         Promise<IUserCourse | null> {
+        const enrol = new Enrollment();
+        enrol.setUserid(student.user.getId());
+        enrol.setCourseid(course.getId());
+        enrol.setStatus(student.link.getStatus());
+
         const userCourse: IUserCourse = {
-            link: { userid: student.user.getId(), courseId: course.getId(), state: student.link.state },
+            link: enrol,
             assignments: [],
             course,
         };
@@ -188,11 +196,16 @@ export class CourseManager {
         const links: IUserCourse[] = [];
         const userCourses = await this.courseProvider.getCoursesFor(student, state);
         for (const course of userCourses) {
+            const enrol = new Enrollment();
+            enrol.setUserid(student.getId());
+            enrol.setCourseid(course.courseid);
+            if (course.status) {
+                enrol.setStatus(course.status);
+            }
             links.push({
                 assignments: [],
                 course: course.course,
-                link: course.status !== undefined ?
-                    { courseId: course.courseid, userid: student.getId(), state: course.status } : undefined,
+                link: course.status !== undefined ? enrol : undefined,
             });
         }
 
@@ -214,8 +227,12 @@ export class CourseManager {
 
         return (await this.courseProvider.getUsersForCourse(course, noGroupMemebers, state)).map<IUserRelation>(
             (user) => {
+                const enrol = new Enrollment();
+                enrol.setUserid(user.userid);
+                enrol.setCourseid(course.getId());
+                enrol.setStatus(user.status);
                 return {
-                    link: { courseId: course.getId(), userid: user.userid, state: user.status },
+                    link: enrol,
                     user: user.user,
                 };
             });
@@ -245,8 +262,12 @@ export class CourseManager {
     public async getGroupCourse(group: Group, course: Course): Promise<IGroupCourse | null> {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
+            const enrol = new Enrollment();
+            enrol.setGroupid(group.getId());
+            enrol.setCourseid(course.getId());
+            enrol.setGroup(group);
             const groupCourse: IGroupCourse = {
-                link: { groupid: group.getId(), courseId: course.getId(), state: group.getStatus() },
+                link: enrol,
                 assignments: [],
                 course,
             };
@@ -260,8 +281,12 @@ export class CourseManager {
         Promise<IGroupCourse | null> {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
+            const enrol = new Enrollment();
+            enrol.setGroupid(group.getId());
+            enrol.setCourseid(course.getId());
+            enrol.setGroup(group);
             const groupCourse: IGroupCourse = {
-                link: { groupid: group.getId(), courseId: course.getId(), state: group.getStatus() },
+                link: enrol,
                 assignments: [],
                 course,
             };
