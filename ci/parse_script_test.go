@@ -27,16 +27,13 @@ func TestParseScript(t *testing.T) {
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(testURL, ".git"), "https://"),
 		RandomSecret:       randomString,
 	}
-	job, err := ParseScriptTemplate("scripts", info)
+	_, err = ParseScriptTemplate("scripts", info)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, l := range job.Commands {
-		fmt.Println(l)
-	}
 
 	info.Language = "python361"
-	job, err = ParseScriptTemplate("scripts", info)
+	_, err = ParseScriptTemplate("scripts", info)
 	if err != nil {
 		t.Fatal(err)
 	}
