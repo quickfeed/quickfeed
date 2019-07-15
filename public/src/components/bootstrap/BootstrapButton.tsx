@@ -20,7 +20,11 @@ class BootstrapButton extends React.Component<IButtonProps, {}> {
 
         return (
             <button className={className}
-                type={this.props.type ? this.props.type : ""}
+                // type={"button"}
+                // TODO(vera): this is no longer works with updated react bootstrap,
+                // and commenting it out does not seem to affect any buttons in the application
+                // remove after some testing
+                // classType={this.props.type ? this.props.type : ""}
                 onClick={(e) => this.handleOnclick(e)}
                 disabled={this.props.disabled}
             >

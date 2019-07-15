@@ -178,6 +178,34 @@ export class NavigationHelper {
         return navObj.func.call(this.thisObject, navInfo);
     }
 
+    private parseValue(value: string, type: string): string | number | boolean | undefined {
+        console.log("Parsing value: " + value + " of type " + type);
+        switch (type) {
+            case "string":
+                console.log("It is string");
+                return value;
+            case "number":
+                console.log("It is number");
+                const num = parseFloat(value);
+                if (isNaN(num)) {
+                    console.log("failed to parse number");
+                    return undefined;
+                }
+                return num;
+            case "boolean":
+                console.log("It is bool");
+                if (value.toLowerCase() === "true") {
+                    return true;
+                } else if (value.toLowerCase() === "false") {
+                    return false;
+                }
+                return undefined;
+        }
+        return undefined;
+    }
+
+    // todo(vera): remove after testing
+    /*
     private parseValue<K extends keyof ITypeMap>(value: string, type: K): ITypeMap[K] | undefined {
         switch (type) {
             case "string":
@@ -196,7 +224,7 @@ export class NavigationHelper {
                 }
                 return undefined;
         }
-    }
+    }*/
 
     private createParamsObj(matchPath: string[], realPath: string[]): any | undefined {
         if (matchPath.length !== realPath.length) {
@@ -215,7 +243,7 @@ export class NavigationHelper {
                             return undefined;
                         }
                     } else {
-                        console.error("Type not supportet in navigation path: ", param.type, matchPath, realPath);
+                        console.error("Type not supported in navigation path: ", param.type, matchPath, realPath);
                     }
                 } else {
                     returnObj[param.name] = realPath[i];
