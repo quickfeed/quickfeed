@@ -52,11 +52,12 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
          || (prevProps.pendingUsers.length !== this.props.pendingUsers.length)
           || (prevProps.rejectedUsers.length !== this.props.rejectedUsers.length)) {
             this.refreshState();
+            this.render();
         }
     }
 
     public renderRejectedView() {
-        if (this.state.rejectedUsers.length > 0) {
+        if (this.state.rejectedUsers.length > 0 || this.props.rejectedUsers.length > 0) {
             return this.renderUsers(
                 "Rejected users",
                 this.state.rejectedUsers,
@@ -92,7 +93,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     public renderPendingView(pendingActions: ILink[]) {
-        if (this.props.pendingUsers.length > 0) {
+        if (this.props.pendingUsers.length > 0 || this.state.pendingUsers.length > 0) {
             return this.renderUsers("Pending users", this.state.pendingUsers, pendingActions, ActionType.InRow);
         }
     }

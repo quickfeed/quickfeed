@@ -37,15 +37,15 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
     }
     public render() {
         let approvedGroups;
-        if (this.props.approvedGroups.length > 0) {
+        if (this.props.approvedGroups.length > 0 || this.state.approvedGroups.length > 0) {
             approvedGroups = this.createApproveGroupView();
         }
         let pendingGroups;
-        if (this.props.pendingGroups.length > 0) {
+        if (this.props.pendingGroups.length > 0 || this.state.pendingGroups.length > 0) {
             pendingGroups = this.createPendingGroupView();
         }
         let rejectedGroups;
-        if (this.props.rejectedGroups.length > 0) {
+        if (this.props.rejectedGroups.length > 0 || this.state.rejectedGroups.length > 0) {
             rejectedGroups = this.createRejectedGroupView();
         }
         let noGroupsWell;
@@ -72,6 +72,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
          || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)
           || (prevProps.rejectedGroups.length !== this.props.rejectedGroups.length)) {
             this.refreshState();
+            this.render();
         }
     }
 
@@ -81,7 +82,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
                 <h3>Approved Groups</h3>
                 <DynamicTable
                     header={["Name", "Members"]}
-                    data={this.props.approvedGroups}
+                    data={this.state.approvedGroups}
                     selector={
                         (group: Group) => this.renderRow(group)
                     }
@@ -97,7 +98,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
                 <h3>Pending Groups</h3>
                 <DynamicTable
                     header={["Name", "Members", "Actions"]}
-                    data={this.props.pendingGroups}
+                    data={this.state.pendingGroups}
                     selector={(group: Group) => this.renderRow(group)}
                 />
             </div>
@@ -134,7 +135,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
                 <h3>Rejected Groups</h3>
                 <DynamicTable
                     header={["Name", "Members", "Action"]}
-                    data={this.props.rejectedGroups}
+                    data={this.state.rejectedGroups}
                     selector={
                         (group: Group) => [
                             group.getName(),
