@@ -4,7 +4,6 @@ import {
     ISubmission,
 } from "../models";
 
-import { ICourseEnrollment, IUserEnrollment } from "../managers";
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
@@ -156,17 +155,17 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getUsersForCourse(course: Course, noGroupMembers?: boolean, state?: Enrollment.UserStatus[])
-        : Promise<IUserEnrollment[]> {
+        : Promise<Enrollment[]> {
         const courseStds: Enrollment[] =
             await this.getUserLinksForCourse(course, state);
         const users = await this.getUsersAsMap(courseStds.map((e) => e.getUserid()));
-        return courseStds.map<IUserEnrollment>((link) => {
+        return courseStds.map<Enrollment>((link) => {
             const user = users[link.getUserid()];
             if (!user) {
                 // TODO: See if we should have an error here or not
                 throw new Error("Link exist witout a user object");
             }
-            return { courseid: link.getCourseid(), userid: link.getUserid(), user, status: link.getStatus() };
+            return link;
         });
     }
 
@@ -215,7 +214,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
+    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
         const cLinks: Enrollment[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
@@ -224,14 +223,12 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 cLinks.push(c);
             }
         }
-        const courses: ICourseEnrollment[] = [];
+        const courses: Enrollment[] = [];
         const tempCourses = await this.getCourses();
         for (const link of cLinks) {
             const c = tempCourses[link.getCourseid()];
             if (c) {
-                courses.push({
-                    course: c, courseid: link.getCourseid(), userid: link.getUserid(), status: link.getStatus() 
-                });
+                courses.push(link);
             }
         }
         return courses;

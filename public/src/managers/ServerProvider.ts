@@ -23,10 +23,6 @@ import { GrpcManager } from "./GRPCManager";
 
 import HttpStatusCode from "../HttpStatusCode";
 import {
-    ICourseEnrollment,
-    IEnrollment,
-    isCourseEnrollment,
-    IUserEnrollment,
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
@@ -63,43 +59,33 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getCoursesList();
     }
 
-    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<ICourseEnrollment[]> {
+    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
         const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
         }
-        const arr: ICourseEnrollment[] = [];
+        const arr: Enrollment[] = [];
         result.data.getCoursesList().forEach((ele) => {
-            arr.push({
-                course: ele,
-                status: ele.getEnrolled(),
-                courseid: ele.getId(),
-                userid: user.getId(),
-                user,
-            });
+            const enr: Enrollment = new Enrollment();
+            enr.setCourse(ele);
+            enr.setCourseid(ele.getId());
+            enr.setStatus(ele.getEnrolled());
+            enr.setUser(user);
+            enr.setUserid(user.getId());
+            arr.push(enr);
         });
         return arr;
     }
 
     public async getUsersForCourse(
         course: Course, noGroupMembers?: boolean,
-        state?: Enrollment.UserStatus[]): Promise<IUserEnrollment[]> {
+        state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
 
         const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, state);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
         }
-
-        const arr: IUserEnrollment[] = [];
-        result.data.getEnrollmentsList().forEach((ele) => {
-            // TODO(meling) this conversion seems unnecessary.
-            const enroll: IEnrollment = this.toIEnrollment(ele);
-            // TODO(meling) this should be unnecessary to check since we get the enrollment from the backend.
-            if (isCourseEnrollment(enroll)) {
-                arr.push(enroll);
-            }
-        });
-        return arr;
+        return result.data.getEnrollmentsList();
     }
 
     public async getAssignments(courseId: number): Promise<Assignment[]> {
@@ -389,6 +375,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isbm;
     }
 
+    /*
     // this method convert a grpc Enrollment to IEnrollment
     private toIEnrollment(enrollment: Enrollment): IEnrollment {
         const ienroll: IEnrollment = {
@@ -405,5 +392,5 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         ienroll.course = enrollment.getCourse();
         return ienroll as IEnrollment;
-    }
+    }*/
 }
