@@ -56,22 +56,25 @@ var allCourses = []*pb.Course{
 	},
 }
 
-func TestListCourses(t *testing.T) {
+func TestGetCourses(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user := createFakeUser(t, db, 1)
+	admin := createFakeUser(t, db, 10)
+	_, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+
 	var testCourses []*pb.Course
 	for _, course := range allCourses {
 		testCourse := *course
-		err := db.CreateCourse(user.ID, &testCourse)
+		err := db.CreateCourse(admin.ID, &testCourse)
 		if err != nil {
 			t.Fatal(err)
 		}
 		testCourses = append(testCourses, &testCourse)
 	}
 
-	foundCourses, err := web.ListCourses(db)
+	foundCourses, err := ags.GetCourses(context.Background(), &pb.Void{})
 	if err != nil {
 		t.Fatal(err)
 	}

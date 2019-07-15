@@ -166,13 +166,23 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 // GetCourses returns a list of all courses.
 // Access policy: Any User.
 func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Courses, error) {
-	return ListCourses(s.db)
+	courses, err := s.getCourses()
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "no courses not found")
+	}
+	return courses, nil
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
 // Access policy: Any User.
 func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
-	return &pb.Void{}, s.createEnrollment(in)
+	err := s.createEnrollment(in)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
+	}
+	return &pb.Void{}, nil
 }
 
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
@@ -200,8 +210,12 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 // GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.
 // Access policy: Any User.
 func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.RecordRequest) (*pb.Courses, error) {
-	//TODO(meling) these direct calls and returns needs to be logged here and return status.Error instead
-	return ListCoursesWithEnrollment(in, s.db)
+	courses, err := s.getCoursesWithEnrollment(in)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "no courses with enrollment found")
+	}
+	return courses, nil
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.

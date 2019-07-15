@@ -4,32 +4,26 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	pb "github.com/autograde/aguis/ag"
-	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
 )
 
-// ListCourses returns a JSON object containing all the courses in the database.
-func ListCourses(db database.Database) (*pb.Courses, error) {
-	courses, err := db.GetCourses()
+// getCourses returns all courses.
+func (s *AutograderService) getCourses() (*pb.Courses, error) {
+	courses, err := s.db.GetCourses()
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "course not found")
+		return nil, err
 	}
 	return &pb.Courses{Courses: courses}, nil
 }
 
-// ListCoursesWithEnrollment lists all existing courses with the provided users
-// enrollment status.
-// If status query param is provided, lists only courses of the student filtered by the query param.
-func ListCoursesWithEnrollment(request *pb.RecordRequest, db database.Database) (*pb.Courses, error) {
-	courses, err := db.GetCoursesByUser(request.ID, request.Statuses...)
+// getCoursesWithEnrollment returns all courses that match the provided enrollment status.
+func (s *AutograderService) getCoursesWithEnrollment(request *pb.RecordRequest) (*pb.Courses, error) {
+	courses, err := s.db.GetCoursesByUser(request.ID, request.Statuses...)
 	if err != nil {
-		err = status.Errorf(codes.NotFound, "no courses found")
+		return nil, err
 	}
-	return &pb.Courses{Courses: courses}, err
+	return &pb.Courses{Courses: courses}, nil
 }
 
 // createEnrollment enrolls a user in a course.
@@ -210,14 +204,14 @@ func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID)
 }
 
-// getSubmission returns a single submission for a assignment and a user
+// getSubmission returns the submission of the current user for the given assignment.
 func (s *AutograderService) getSubmission(currentUser *pb.User, request *pb.RecordRequest) (*pb.Submission, error) {
 	// ensure that the submission belongs to the current user
 	query := &pb.Submission{AssignmentID: request.ID, UserID: currentUser.ID}
 	return s.db.GetSubmission(query)
 }
 
-// getSubmissions returns all the latests submissions for a user to a course
+// getSubmissions returns all the latests submissions for a user of the given course.
 func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.Submissions, error) {
 	// only one of user ID and group ID will be set; enforced by IsValid on pb.SubmissionRequest
 	query := &pb.Submission{
@@ -251,7 +245,7 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 	return s.db.UpdateCourse(request)
 }
 
-// getEnrollmentsByCourse get all enrollments for a course.
+// getEnrollmentsByCourse get all enrollments for a course that match the given enrollment request.
 func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.States...)
 	if err != nil {
