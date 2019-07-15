@@ -42,39 +42,6 @@ export interface ICourseProvider {
     getRepositoryURL(cid: number, type: number): Promise<string>;
 }
 
-/*
-export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollment {
-    if ((enroll as any).course) {
-        return true;
-    }
-    return false;
-}
-
-export function isCourseEnrollment(enroll: IEnrollment): enroll is IUserEnrollment {
-    if ((enroll as any).user) {
-        return true;
-    }
-    return false;
-}
-
-export interface ICourseEnrollment extends IEnrollment {
-    course: Course;
-}
-
-export interface IUserEnrollment extends IEnrollment {
-    user: User;
-    status: Enrollment.UserStatus;
-}
-
-export interface IEnrollment {
-    userid: number;
-    courseid: number;
-    status?: Enrollment.UserStatus;
-
-    course?: Course;
-    user?: User;
-}*/
-
 export class CourseManager {
     private courseProvider: ICourseProvider;
 

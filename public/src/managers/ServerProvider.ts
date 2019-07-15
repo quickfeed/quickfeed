@@ -374,23 +374,4 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         console.log("toISubmission: constructed submission " + isbm);
         return isbm;
     }
-
-    /*
-    // this method convert a grpc Enrollment to IEnrollment
-    private toIEnrollment(enrollment: Enrollment): IEnrollment {
-        const ienroll: IEnrollment = {
-            userid: enrollment.getUserid(),
-            courseid: enrollment.getCourseid(),
-        };
-        if (enrollment.getStatus() !== undefined) {
-            ienroll.status = enrollment.getStatus().valueOf();
-        }
-
-        const user: User | undefined = enrollment.getUser();
-        if (user !== undefined) {
-            ienroll.user = user;
-        }
-        ienroll.course = enrollment.getCourse();
-        return ienroll as IEnrollment;
-    }*/
 }

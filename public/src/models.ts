@@ -95,22 +95,7 @@ export interface IBuildInfo {
 /**
  * The relation description between a user and course
  */
-/*
-export interface ICourseUserLink {
-    userid: number;
-    courseId: number;
-    state: Enrollment.UserStatus;
-}*/
 
-/**
- * The relation description between a group and course
- */
-/*
-export interface ICourseGroupLink {
-    groupid: number;
-    courseId: number;
-    state: Group.GroupStatus;
-}*/
 /**
  * A description of a single test case object
  */
