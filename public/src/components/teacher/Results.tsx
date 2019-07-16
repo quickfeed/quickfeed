@@ -91,8 +91,8 @@ class Results extends React.Component<IResultsProp, IResultsState> {
     private getResultSelector(student: IAssignmentLink): Array<string | JSX.Element | ICellElement> {
         const slipdayPlaceholder = "5";
         // enrollment object, user field on enrollment object, or name field on user object can be null
-        const userlink = student.link ? student.link.getUser() : undefined;
-        const displayName = userlink ? userlink.getName() : "";
+        const user = student.link.getUser();
+        const displayName = user ? user.getName() : "";
         let selector: Array<string | JSX.Element | ICellElement> = [displayName, slipdayPlaceholder];
         selector = selector.concat(student.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {

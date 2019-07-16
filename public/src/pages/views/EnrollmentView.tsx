@@ -13,12 +13,12 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         return <DynamicTable
             data={this.props.courses}
             header={["Course code", "Course Name", "Action"]}
-            selector={(course: IAssignmentLink) => this.createEnrollmentRow(this.props.courses, course)}>
+            selector={(course: IAssignmentLink) => this.createEnrollmentRow(course)}>
         </DynamicTable>;
 
     }
 
-    public createEnrollmentRow(studentCourses: IAssignmentLink[], course: IAssignmentLink):
+    public createEnrollmentRow(course: IAssignmentLink):
         Array<string | JSX.Element> {
         const base: Array<string | JSX.Element> = [course.course.getCode(), course.course.getName()];
         if (course.link) {

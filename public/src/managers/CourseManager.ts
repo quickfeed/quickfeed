@@ -146,7 +146,9 @@ export class CourseManager {
         Promise<IAssignmentLink | null> {
         const enrol = new Enrollment();
         enrol.setUserid(student.user.getId());
+        enrol.setUser(student.user);
         enrol.setCourseid(course.getId());
+        enrol.setCourse(course);
         enrol.setStatus(student.link.getStatus());
 
         const userCourse: IAssignmentLink = {
