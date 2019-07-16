@@ -1,5 +1,5 @@
 import * as React from "react";
-import { IStudentSubmission, IUserCourseWithUser } from "../../models";
+import { IAssignmentLink, IStudentSubmission } from "../../models";
 
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
@@ -7,13 +7,13 @@ import { ICellElement } from "../data/DynamicTable";
 
 interface IResultsProp {
     course: Course;
-    students: IUserCourseWithUser[];
+    students: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
 }
 interface IResultsState {
     assignment?: IStudentSubmission;
-    students: IUserCourseWithUser[];
+    students: IAssignmentLink[];
 }
 class Results extends React.Component<IResultsProp, IResultsState> {
 
@@ -25,10 +25,11 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         super(props);
 
         const currentStudent = this.props.students.length > 0 ? this.props.students[0] : null;
-        if (currentStudent && currentStudent.course.assignments.length > 0 && currentStudent.course.assignments[0]) {
+        const courseAssignments = currentStudent ? currentStudent.course.getAssignmentsList() : null;
+        if (currentStudent && courseAssignments && courseAssignments.length > 0) {
             this.state = {
                 // Only using the first student to fetch assignments.
-                assignment: currentStudent.course.assignments[0],
+                assignment: currentStudent.assignments[0],
                 students: this.props.students,
             };
         } else {
@@ -70,7 +71,7 @@ class Results extends React.Component<IResultsProp, IResultsState> {
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.students}
-                            selector={(item: IUserCourseWithUser) => this.getResultSelector(item)}
+                            selector={(item: IAssignmentLink) => this.getResultSelector(item)}
                         />
                     </div>
                     <div className="col-lg-6 col-md-6 col-sm-12">
@@ -87,10 +88,13 @@ class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IUserCourseWithUser): Array<string | JSX.Element | ICellElement> {
+    private getResultSelector(student: IAssignmentLink): Array<string | JSX.Element | ICellElement> {
         const slipdayPlaceholder = "5";
-        let selector: Array<string | JSX.Element | ICellElement> = [student.user.getName(), slipdayPlaceholder];
-        selector = selector.concat(student.course.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
+        // enrollment object, user field on enrollment object, or name field on user object can be null
+        const userlink = student.link ? student.link.getUser() : undefined;
+        const displayName = userlink ? userlink.getName() : "";
+        let selector: Array<string | JSX.Element | ICellElement> = [displayName, slipdayPlaceholder];
+        selector = selector.concat(student.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
                 let approvedCss: string = "";
                 if (e.latest && e.latest.approved) {
@@ -116,14 +120,17 @@ class Results extends React.Component<IResultsProp, IResultsState> {
 
     private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        const filteredData: IUserCourseWithUser[] = [];
+        const filteredData: IAssignmentLink[] = [];
         this.props.students.forEach((std) => {
-            if (std.user.getName().toLowerCase().indexOf(query) !== -1
-                || std.user.getEmail().toLowerCase().indexOf(query) !== -1
-            ) {
-                filteredData.push(std);
+            const usr = std.link.getUser();
+            if (usr) {
+                if (usr.getName().toLowerCase().indexOf(query) !== -1
+                || usr.getEmail().toLowerCase().indexOf(query) !== -1
+                ){
+                    filteredData.push(std);
+                }
             }
-        });
+    });
 
         this.setState({
             students: filteredData,

@@ -20,51 +20,13 @@ export interface IAssignmentLink {
      * The relation between the group and the course.
      * Is null if there is none
      */
-    link?: Enrollment;
+    link: Enrollment;
     /**
      * A list of all assignments and the last submission if there
      * is a relation between the group and the course which is
      * student or teacher
      */
     assignments: IStudentSubmission[];
-}
-
-/**
- * An interface which contains both the course, the course
- * link, all assignments and the latest submission to a single user
- */
-/*
-export interface IUserCourse extends IAssignmentLink {
-    link?: Enrollment;
-}
-*/
-/**
- * An interface which contains both the course, the course
- * link, all assignments and the latest submission to a single group
- */
-/*
-export interface IGroupCourse extends IAssignmentLink {
-    link?: Enrollment;
-}*/
-
-/**
- * An IUserCourse instance which also contains the user it
- * is related to.
- * @see IUserCourse
- */
-export interface IUserCourseWithUser {
-    user: User;
-    course: IAssignmentLink;
-}
-
-/**
- * An ICourseGroup instance which also contains the group it
- * is related to.
- * @see ICourseGroup
- */
-export interface IGroupCourseWithGroup {
-    group: Group;
-    course: IAssignmentLink;
 }
 
 /**

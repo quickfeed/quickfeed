@@ -80,7 +80,7 @@ export class CourseManager {
                 newMap.push({
                     assignments: [],
                     course: crs,
-                    link: ele.getStatus() !== undefined ? ele : undefined,
+                    link: ele,
                 });
             }
         });
@@ -172,7 +172,7 @@ export class CourseManager {
                 links.push({
                     assignments: [],
                     course: crs,
-                    link: enrol.getStatus() !== undefined ? enrol : undefined,
+                    link: enrol,
                 });
             }
         }
@@ -340,7 +340,8 @@ export class CourseManager {
      * @param group The group
      * @param groupCourse The group course
      */
-    private async fillLinksGroup(group: Group, groupCourse: IAssignmentLink, assignments?: Assignment[]): Promise<void> {
+    private async fillLinksGroup(group: Group, groupCourse: IAssignmentLink, assignments?: Assignment[]):
+     Promise<void> {
         if (!groupCourse.link) {
             return;
         }

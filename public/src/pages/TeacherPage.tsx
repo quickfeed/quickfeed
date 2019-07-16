@@ -10,8 +10,7 @@ import { INavInfo } from "../NavigationHelper";
 import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
-    IGroupCourseWithGroup,
-    IUserCourseWithUser,
+    IAssignmentLink,
     IUserRelation,
 } from "../models";
 
@@ -128,11 +127,11 @@ export class TeacherPage extends ViewPage {
 
             const students = await this.courseMan.getUsersForCourse(
                 course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
-            const linkedStudents: IUserCourseWithUser[] = [];
+            const linkedStudents: IAssignmentLink[] = [];
             for (const student of students) {
                 const userCourses = await this.courseMan.getStudentCourseForTeacher(student, course, labs);
                 if (userCourses) {
-                    linkedStudents.push({ course: userCourses, user: student.user });
+                    linkedStudents.push(userCourses);
                 }
             }
             return <Results
@@ -150,17 +149,16 @@ export class TeacherPage extends ViewPage {
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const linkedGroups: IGroupCourseWithGroup[] = [];
+            const linkedGroups: IAssignmentLink[] = [];
             const groupCourses = await this.courseMan.getCourseGroups(course.getId());
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
 
             for (const grpCourse of groupCourses) {
-                const grp = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
-                if (grpCourse && grp) {
-                    linkedGroups.push({
-                        course: grp,
-                        group: grpCourse,
-                    });
+                const grpLink = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
+                if (grpCourse && grpLink) {
+                    grpLink.link.setGroup(grpCourse);
+                    grpLink.link.setGroupid(grpCourse.getId())
+                    linkedGroups.push(grpLink);
                 }
             }
 
