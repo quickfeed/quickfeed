@@ -134,6 +134,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create course")
 	}
+	course.RemoveRemoteIDs()
 	return course, nil
 }
 
@@ -165,6 +166,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "course not found")
 	}
+	course.RemoveRemoteIDs()
 	return course, nil
 }
 
@@ -176,6 +178,7 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "no courses found")
 	}
+	courses.RemoveRemoteIDs()
 	return courses, nil
 }
 
@@ -217,6 +220,7 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "no courses with enrollment found")
 	}
+	courses.RemoveRemoteIDs()
 	return courses, nil
 }
 

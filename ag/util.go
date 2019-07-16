@@ -52,3 +52,20 @@ func (e *Enrollments) RemoveRemoteIDs() {
 		enr.RemoveRemoteID()
 	}
 }
+
+// RemoveRemoteIDs removes remote identities for all course groups and enrollments
+func (c *Course) RemoveRemoteIDs() {
+	for _, enr := range c.GetEnrollments() {
+		enr.RemoveRemoteID()
+	}
+	for _, grp := range c.GetGroups() {
+		grp.RemoveRemoteIDs()
+	}
+}
+
+// RemoveRemoteIDs removes remote identities for groups and enrollments in every course
+func (c *Courses) RemoveRemoteIDs() {
+	for _, crs := range c.GetCourses() {
+		crs.RemoveRemoteIDs()
+	}
+}
