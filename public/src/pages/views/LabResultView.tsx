@@ -61,7 +61,7 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                 </div>
             );
         }
-        return <h1>No subissions have been submitted yet</h1>;
+        return <h1>No submissions yet</h1>;
     }
 
     private getSubmissionInfo(): string {

@@ -139,8 +139,13 @@ export class TeacherPage extends ViewPage {
                 labs={labs}
                 students={linkedStudents}
                 onApproveClick={async (submissionID: number) => {
-                    await this.courseMan.approveSubmission(submissionID, course.getId());
-                    // this.navMan.refresh();
+                    if (confirm(
+                        `Warning! This action is irriversible!
+                        Do you want to approve this lab?`,
+                    )) {
+                        await this.courseMan.approveSubmission(submissionID, course.getId());
+                        this.navMan.refresh();
+                    }
                 }}
             >
             </Results>;
