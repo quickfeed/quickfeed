@@ -272,6 +272,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 	}
 	// if already in team , take no action
 	if isAlreadyMember != nil {
+		log.Println("GitHub adding team member: user ", opt.TeamSlug, " is already in this team")
 		return nil
 	}
 	// otherwise add user as team member
@@ -293,13 +294,13 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 
 	isMember, _, err := s.client.Teams.GetTeamMembership(ctx, opt.TeamID, opt.Username)
 	if isMember == nil {
+		log.Println("GitHub removing team member: user ", opt.Username, " is not a member of team ", opt.TeamSlug)
 		// user is not in this team
 		return nil
 	}
 	// TODO(vera): check for errors other than not found
 
 	_, err = s.client.Teams.RemoveTeamMembership(ctx, opt.TeamID, opt.Username)
-	log.Println("GitHub RemoveTeamMember: error removing team embership: ", err.Error())
 	return err
 }
 
@@ -472,7 +473,6 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 
 // CreateOrgMembership implements the SCM interface
 func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
-	log.Println("GitHub CreateOrgMembership startedwith options: ", opt)
 	// check that organization is valid
 	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.Organization.ID))
 	if err != nil {

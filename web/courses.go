@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -50,10 +51,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 
 	case pb.Enrollment_PENDING:
 		return s.db.SetPendingEnrollment(request.UserID, request.CourseID)
-	}
 
-	// TODO If the enrollment is accepted, create repositories and permissions for them with webhooks.
-	switch request.Status {
 	case pb.Enrollment_STUDENT:
 		course, student := enrollment.GetCourse(), enrollment.GetUser()
 
@@ -69,29 +67,14 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 			return err
 		}
 		if len(repos) > 0 {
-			// if a user repo already exists it most likely means that the student
-			// was previously accepted to course, then rejected, and is now being
-			// accepted again. Also, it means that user team has already been created
-			// and invitation to organization has been issued.
-			// we only need to update enrollment in the database
+			// repo already exist, update enrollment in database
 			return s.db.EnrollStudent(request.UserID, request.CourseID)
 		}
 
-		// create user repo and team on SCM.
-		// personal team is being created because user repo access is based on team role now
-		// TODO(vera): we could avoid creating personal teams for every student if there is a way
-		// to automate granting the user write access to user repo on repo creation
-		// TODO(meling): clean up these three methods (integrate into one helper method)
-		repo, _, err := createUserRepoAndTeam(ctx, sc, course, student)
+		// create user repo, user team, and add user to students team
+		repo, err := updateReposAndTeams(ctx, sc, course, student.GetLogin(), request.GetStatus())
 		if err != nil {
-			return err
-		}
-		// send invitation to course organization to student (will return nil if successful or already a member)
-		if err = addUserToOrg(ctx, sc, course.GetOrganizationID(), student); err != nil {
-			return err
-		}
-		// then add to the 'students' team
-		if err = addToUserTeam(ctx, sc, course.GetOrganizationID(), student, pb.Enrollment_STUDENT); err != nil {
+			s.logger.Errorf("UpdateEnrollment: failed to update repos or team membersip for student %s: %s", student.Login, err.Error())
 			return err
 		}
 
@@ -110,17 +93,10 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 
 	case pb.Enrollment_TEACHER:
 		course, teacher := enrollment.GetCourse(), enrollment.GetUser()
-		// we want to update org membership first, as it is more prone to errors user could react to
-		orgUpdate := &scm.OrgMembership{
-			Username: teacher.GetLogin(),
-			OrgID:    course.GetOrganizationID(),
-			Role:     "admin", //TODO(meling) is admin a role?
-		}
-		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
-			return err
-		}
-		// add all teachers to 'teachers' team (will remove them from 'students' team)
-		if err = addToUserTeam(ctx, sc, course.GetOrganizationID(), teacher, pb.Enrollment_TEACHER); err != nil {
+
+		// make owner, remove from students, add to teachers
+		if _, err := updateReposAndTeams(ctx, sc, course, teacher.GetLogin(), request.GetStatus()); err != nil {
+			s.logger.Errorf("UpdateEnrollment: failed to update team membersip for teacher %s: %s", teacher.Login, err.Error())
 			return err
 		}
 		return s.db.EnrollTeacher(teacher.ID, course.ID)
@@ -129,74 +105,66 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 	return fmt.Errorf("unknown enrollment")
 }
 
-func createUserRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, student *pb.User) (*scm.Repository, *scm.Team, error) {
+func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
 	org, err := sc.GetOrganization(ctx, course.OrganizationID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// the student's git user name is the same as the team name
-	teamName := student.Login
-
-	opt := &scm.CreateRepositoryOptions{
-		Organization: org,
-		Path:         pb.StudentRepoName(teamName),
-		Private:      true,
-	}
-
-	return sc.CreateRepoAndTeam(ctx, opt, teamName, []string{teamName})
-}
-
-// TODO(meling) why is not used?
-func createUserRepo(c context.Context, sc scm.SCM, orgID uint64, student *pb.User) (*scm.Repository, error) {
-	org, err := sc.GetOrganization(c, orgID)
 	if err != nil {
 		return nil, err
 	}
 
-	opt := &scm.CreateRepositoryOptions{
-		Organization: org,
-		Path:         pb.StudentRepoName(student.GetLogin()),
-		Private:      true,
-		Owner:        student.GetLogin(),
-	}
-
-	return sc.CreateRepository(c, opt)
-}
-
-func addToUserTeam(c context.Context, s scm.SCM, orgID uint64, user *pb.User, status pb.Enrollment_UserStatus) error {
-	// get course organization
-	org, err := s.GetOrganization(c, orgID)
-	if err != nil {
-		return err
-	}
-
-	opt := &scm.TeamMembershipOptions{
+	// options to use when updating team membership
+	teamOpt := &scm.TeamMembershipOptions{
 		Organization: org,
 		TeamSlug:     "students",
-		Username:     user.GetLogin(),
+		TeamID:       0,
+		Username:     login,
 	}
 
-	// check whether user is teacher or not
-	if status == pb.Enrollment_TEACHER {
-		// remove user from students
-		if err = s.RemoveTeamMember(c, opt); err != nil {
-			return err
+	switch state {
+	// if student, add to students team, create user repo and personal team
+	case pb.Enrollment_STUDENT:
+
+		// add to students team
+		if err := sc.AddTeamMember(ctx, teamOpt); err != nil {
+			return nil, err
 		}
-		// add user to teachers
-		opt.TeamSlug = "teachers"
-		opt.Role = "maintainer"
-	}
-	return s.AddTeamMember(c, opt)
-}
 
-func addUserToOrg(ctx context.Context, s scm.SCM, orgID uint64, user *pb.User) error {
-	// get course organization
-	org, err := s.GetOrganization(ctx, orgID)
-	if err != nil {
-		return err
+		// the student's git user name is the same as the team name
+		opt := &scm.CreateRepositoryOptions{
+			Organization: org,
+			Path:         pb.StudentRepoName(login),
+			Private:      true,
+		}
+
+		// create personal team and user repo
+		repo, _, err := sc.CreateRepoAndTeam(ctx, opt, login, []string{login})
+		if err != nil {
+			return nil, err
+		}
+		return repo, nil
+
+		//if teacher, promote to owner, remove from students team, add to teachers team
+	case pb.Enrollment_TEACHER:
+		orgUpdate := &scm.OrgMembership{
+			Username: login,
+			OrgID:    course.GetOrganizationID(),
+			Role:     "admin",
+		}
+		// when promoting to teacher, promote to organization owner as well
+		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
+			log.Println("UpdateRepoAndTeam: failed to update org membership: ", err.Error())
+			return nil, err
+		}
+		// then remove from students team
+		if err = sc.RemoveTeamMember(ctx, teamOpt); err != nil {
+			log.Println("UpdateRepoAndTeam: failed to remove team member: ", err.Error())
+			return nil, err
+		}
+		// and add to teachers team
+		teamOpt.TeamSlug = "teachers"
+		teamOpt.Role = "maintainer"
+		return nil, sc.AddTeamMember(ctx, teamOpt)
 	}
-	return s.CreateOrgMembership(ctx, &scm.OrgMembershipOptions{Organization: org, Username: user.GetLogin()})
+	return nil, fmt.Errorf("unknown enrollment")
 }
 
 // GetCourse returns a course object for the given course id.
