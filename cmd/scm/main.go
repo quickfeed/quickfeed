@@ -27,18 +27,18 @@ import (
 //     environment variable.
 //
 // Example usage if you have an organization on github called autograder-test:
-// % scm --provider github get repository --all --namespace autograder-test
+// % scm --provider github get repo -all -namespace autograder-test
 // OR
-// % scm get repository --all --namespace autograder-test
+// % scm get repo -all -namespace autograder-test
 //
 // Another example usage to delete all repos in organization on github
-// % scm delete repository --all --namespace autograder-test
+// % scm delete repo -all -namespace autograder-test
 //
 // Here is an example usage for creating a team with two members
-// % scm create team --namespace autograder-test --team teachers --users s111,meling
+// % scm create team -namespace autograder-test -team teachers -users s111,meling
 //
 // Here is how to fetch the login name of a specific user id:
-// % scm get user --id 810999
+// % scm get user -id 810999
 // OR to fetch the login name of the currently logged in user:
 // % scm get user
 
@@ -77,7 +77,7 @@ func main() {
 			Usage: "Delete commands.",
 			Subcommands: cli.Commands{
 				{
-					Name:  "repository",
+					Name:  "repo",
 					Usage: "Delete repositories.",
 					Flags: []cli.Flag{
 						cli.StringFlag{
@@ -121,7 +121,7 @@ func main() {
 			Usage: "Get commands.",
 			Subcommands: cli.Commands{
 				{
-					Name:  "repository",
+					Name:  "repo",
 					Usage: "Get repository information.",
 					Flags: []cli.Flag{
 						cli.StringFlag{
