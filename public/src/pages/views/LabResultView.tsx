@@ -11,11 +11,7 @@ interface ILabInfoProps {
     onRebuildClick: () => void;
 }
 
-function isDate(date: any): date is Date {
-    return (date as any).getDate !== undefined;
-}
-
-export class LabResultView extends React.Component<ILabInfoProps, {}> {
+export class LabResultView extends React.Component<ILabInfoProps> {
 
     public render() {
         if (this.props.labInfo.latest) {
@@ -31,7 +27,7 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                                 lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
                                 status={this.getSubmissionInfo()}
-                                delivered={this.getCodeDeliveredString(this.props.labInfo.latest.buildDate)}
+                                delivered={this.getDeliveredTime(this.props.labInfo.latest.buildDate)}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}
@@ -55,7 +51,6 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                                     </div>
                                 </div>
                             </Row>
-
                         </section>
                     </div>
                 </div>
@@ -71,12 +66,7 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
         return "Nothing built yet!";
     }
 
-    private getCodeDeliveredString(date?: Date | string): string {
-        if (date && isDate(date)) {
-            return date.toDateString();
-        } else if (typeof (date) === "string") {
-            return date;
-        }
-        return "-";
+    private getDeliveredTime(date: Date): string {
+        return date ? date.toDateString() : "-";
     }
 }

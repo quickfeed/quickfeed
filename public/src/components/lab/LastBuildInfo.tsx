@@ -11,7 +11,8 @@ interface ILastBuildInfo {
     onApproveClick: () => void;
     onRebuildClick: () => void;
 }
-class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
+
+export class LastBuildInfo extends React.Component<ILastBuildInfo> {
 
     public render() {
         let approveButton: JSX.Element;
@@ -50,10 +51,9 @@ class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
         );
     }
 
-    private handleClick(func: () => void) {
+    private handleClick(rebuild: () => void) {
         // TODO: implement rebuild functionality
-        func();
+        rebuild();
         console.log("Rebuilding...");
     }
 }
-export { LastBuildInfo };

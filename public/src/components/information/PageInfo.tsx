@@ -1,18 +1,18 @@
 import * as React from "react";
 import { ILogEntry, LogLevel } from "../../managers/LogManager";
 
-export interface IPageInfoProps {
+interface IPageInfoProps {
     entry?: ILogEntry;
     onclose: () => void;
 }
 
-export class PageInfo extends React.Component<IPageInfoProps, {}> {
+export class PageInfo extends React.Component<IPageInfoProps> {
+
     public render() {
         const e = this.props.entry;
         if (!e) {
             return <div></div>;
         }
-        // [{e.date.toLocaleDateString()}]
         return <div className={"topinfo alert " + this.getLevel(e)}>
             <button
                 type="button"
@@ -25,6 +25,10 @@ export class PageInfo extends React.Component<IPageInfoProps, {}> {
             <strong>{this.getName(e)}</strong>: {e.message}
         </div>;
     }
+
+    // TODO(meling) why do we need both getName() and getLevel(); almost the same.
+    // Can we remove one of them. And do we need to alert the user with Info level?
+    // I think it is enough to have just one level: Error.
 
     private getName(entry: ILogEntry): string {
         switch (entry.logLevel) {

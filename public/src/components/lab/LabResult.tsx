@@ -10,7 +10,8 @@ interface ILabResult {
     status: string;
     delivered: string;
 }
-class LabResult extends React.Component<ILabResult, any> {
+
+export class LabResult extends React.Component<ILabResult> {
 
     public render() {
         let labHeading: JSX.Element;
@@ -40,5 +41,3 @@ class LabResult extends React.Component<ILabResult, any> {
         );
     }
 }
-
-export { LabResult };

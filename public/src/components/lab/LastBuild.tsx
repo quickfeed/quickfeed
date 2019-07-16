@@ -7,7 +7,8 @@ interface ILastBuild {
     score: number;
     weight: number;
 }
-class LastBuild extends React.Component<ILastBuild, any> {
+
+export class LastBuild extends React.Component<ILastBuild> {
 
     public render() {
         return (
@@ -25,4 +26,3 @@ class LastBuild extends React.Component<ILastBuild, any> {
         );
     }
 }
-export { LastBuild };

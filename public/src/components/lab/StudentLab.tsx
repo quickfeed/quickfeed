@@ -12,7 +12,7 @@ interface IStudentLabProbs {
     onRebuildClick: () => void;
 }
 
-class StudentLab extends React.Component<IStudentLabProbs, {}> {
+export class StudentLab extends React.Component<IStudentLabProbs> {
     public render() {
         return <LabResultView
             course={this.props.course}
@@ -23,5 +23,3 @@ class StudentLab extends React.Component<IStudentLabProbs, {}> {
         </LabResultView>;
     }
 }
-
-export { StudentLab, IStudentLabProbs };
