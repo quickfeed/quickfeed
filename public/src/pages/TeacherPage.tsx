@@ -131,6 +131,7 @@ export class TeacherPage extends ViewPage {
             for (const student of students) {
                 const userCourses = await this.courseMan.getStudentCourseForTeacher(student, course, labs);
                 if (userCourses) {
+                    userCourses.link.setUser(student.user);
                     linkedStudents.push(userCourses);
                 }
             }

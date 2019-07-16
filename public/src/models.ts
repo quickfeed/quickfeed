@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, Group, User } from "../proto/ag_pb";
+import { Assignment, Course, Enrollment, User } from "../proto/ag_pb";
 
 export interface IUser {
     id: number;
