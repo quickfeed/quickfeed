@@ -206,6 +206,7 @@ ${group.getName()}?`,
                     break;
                 }
         }
+        this.render();
         this.props.navMan.refresh();
     }
 
