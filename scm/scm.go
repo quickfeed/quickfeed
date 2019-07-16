@@ -61,8 +61,6 @@ type SCM interface {
 	GetOrgMembership(context.Context, *OrgMembership) (*OrgMembership, error)
 	// Promotes or demotes organization member, based on Role field in OrgMembership
 	UpdateOrgMembership(context.Context, *OrgMembership) error
-	// Invite user to course organization
-	CreateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user
 	GetUserScopes(context.Context) *Authorization
 }

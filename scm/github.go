@@ -471,57 +471,6 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 	return nil
 }
 
-// CreateOrgMembership implements the SCM interface
-func (s *GithubSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
-	// check that organization is valid
-	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.Organization.ID))
-	if err != nil {
-		log.Println("GitHub CreateOrgMembership could not get org: ", err.Error())
-		return err
-	}
-	// check that user is not already org member
-	isMember, _, err := s.client.Organizations.IsMember(ctx, gitOrg.GetLogin(), opt.Username)
-	if err != nil {
-		log.Println("GitHub CreateOrgMembership could not check if member: ", err.Error())
-		return err
-	}
-	// if not member - issue an invitation
-	if !isMember {
-		// we can invite by github login (recommended, provided on user authentication with github, i.e. valid),
-		// or by mail (provided by student, not necessary connected to github acount)
-		invitation := github.CreateOrgInvitationOptions{}
-		// if login is set - use it to get user's GitHub ID
-		if opt.Username != "" {
-			gitUser, _, err := s.client.Users.Get(ctx, opt.Username)
-			if err != nil {
-				log.Println("GitHub CreateOrgMembership could not get user ", opt.Username)
-				return status.Errorf(codes.InvalidArgument, "github user not found")
-			}
-			invitation.InviteeID = gitUser.ID
-		} else {
-			// if no username and no email provided, method must fail
-			if opt.Email == "" {
-				log.Println("GitHub CreateOrgMembership got neither username nor email")
-				return status.Errorf(codes.InvalidArgument, "to invite user provide username or email")
-			}
-			invitation.Email = &opt.Email
-		}
-		// we want to use default values for other option fields (or we will get null field errors from github)
-		role := "direct_member"
-		invitation.Role = &role
-		invitation.TeamID = make([]int64, 0)
-		// issue an invitation. Github will use user ID if provided and send invitation to account email,
-		// otherwise will use email provided in options
-		inv, _, err := s.client.Organizations.CreateOrgInvitation(ctx, gitOrg.GetLogin(), &invitation)
-		if err != nil {
-			log.Println("GitHub CreateOrgMembership could not create invitation: ", err.Error())
-			return status.Errorf(codes.Internal, "could not issue github invitation")
-		}
-		log.Println("GitHub CreateOrgMembership sent invitation to user ", inv.GetLogin())
-	}
-	return nil
-}
-
 // GetUserScopes implements the SCM interface
 func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// this method will always return error as it is OAut2 API, but will also return scopes info in response headers

@@ -236,12 +236,6 @@ func (s *GitlabSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 	return nil
 }
 
-// CreateOrgMembership implements the SCM interface
-func (s *GitlabSCM) CreateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
-	// TODO no implementation provided yet
-	return nil
-}
-
 // GetUserScopes implements the SCM interface
 func (s *GitlabSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// TODO no implementation provided yet
