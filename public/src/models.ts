@@ -11,7 +11,7 @@ export interface IUser {
 
 // Browser only objects START
 
-export interface ICourseLinkAssignment {
+export interface IAssignmentLink {
     /**
      * The course to the group
      */
@@ -33,7 +33,7 @@ export interface ICourseLinkAssignment {
  * An interface which contains both the course, the course
  * link, all assignments and the latest submission to a single user
  */
-export interface IUserCourse extends ICourseLinkAssignment {
+export interface IUserCourse extends IAssignmentLink {
     link?: Enrollment;
 }
 
@@ -41,7 +41,7 @@ export interface IUserCourse extends ICourseLinkAssignment {
  * An interface which contains both the course, the course
  * link, all assignments and the latest submission to a single group
  */
-export interface IGroupCourse extends ICourseLinkAssignment {
+export interface IGroupCourse extends IAssignmentLink {
     link?: Enrollment;
 }
 

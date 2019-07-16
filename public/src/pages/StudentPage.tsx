@@ -6,7 +6,7 @@ import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
-import { ICourseLinkAssignment, IGroupCourse, IStudentSubmission, IUserCourse } from "../models";
+import { IAssignmentLink, IGroupCourse, IStudentSubmission, IUserCourse } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
@@ -17,13 +17,13 @@ export class StudentPage extends ViewPage {
     private courseMan: CourseManager;
 
     // Single user
-    private userCourses: ICourseLinkAssignment[] = [];
-    private activeUserCourses: ICourseLinkAssignment[] = [];
-    private selectedUserCourse: ICourseLinkAssignment | undefined;
+    private userCourses: IAssignmentLink[] = [];
+    private activeUserCourses: IAssignmentLink[] = [];
+    private selectedUserCourse: IAssignmentLink | undefined;
 
     // Group user
-    private GroupUserCourses: ICourseLinkAssignment[] = [];
-    private selectedUserGroupCourse: ICourseLinkAssignment | undefined;
+    private GroupUserCourses: IAssignmentLink[] = [];
+    private selectedUserGroupCourse: IAssignmentLink | undefined;
 
     private selectedAssignment: IStudentSubmission | undefined;
 

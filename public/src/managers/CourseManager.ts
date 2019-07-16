@@ -1,5 +1,5 @@
 import {
-    ICourseLinkAssignment,
+    IAssignmentLink,
     IGroupCourse,
     INewGroup,
     ISubmission,
@@ -165,7 +165,7 @@ export class CourseManager {
      * a single student
      * @param student The student to load the information for
      */
-    public async getStudentCourses(student: User, state?: Enrollment.UserStatus[]): Promise<ICourseLinkAssignment[]> {
+    public async getStudentCourses(student: User, state?: Enrollment.UserStatus[]): Promise<IAssignmentLink[]> {
         const links: IUserCourse[] = [];
         const enrols = await this.courseProvider.getCoursesFor(student, state);
         for (const enrol of enrols) {
