@@ -1,11 +1,11 @@
 import * as React from "react";
 import { getDeadline } from "../../../proto/deadline";
-import { IGroupCourse, IStudentSubmission, IUserCourse } from "../../models";
+import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
-    courseAndLabs: IUserCourse;
-    groupAndLabs?: IGroupCourse;
+    courseAndLabs: IAssignmentLink;
+    groupAndLabs?: IAssignmentLink;
     onLabClick: (courseId: number, labId: number) => void;
     onGroupLabClick: (courseId: number, labId: number) => void;
 }

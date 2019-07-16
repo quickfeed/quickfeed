@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Course, Enrollment } from "../../../proto/ag_pb";
 import { DynamicTable } from "../../components";
-import { IUserCourse } from "../../models";
+import { IAssignmentLink } from "../../models";
 
 export interface IEnrollmentViewProps {
-    courses: IUserCourse[];
+    courses: IAssignmentLink[];
     onEnrollmentClick: (course: Course) => void;
 }
 
@@ -13,12 +13,13 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         return <DynamicTable
             data={this.props.courses}
             header={["Course code", "Course Name", "Action"]}
-            selector={(course: IUserCourse) => this.createEnrollmentRow(this.props.courses, course)}>
+            selector={(course: IAssignmentLink) => this.createEnrollmentRow(this.props.courses, course)}>
         </DynamicTable>;
 
     }
 
-    public createEnrollmentRow(studentCourses: IUserCourse[], course: IUserCourse): Array<string | JSX.Element> {
+    public createEnrollmentRow(studentCourses: IAssignmentLink[], course: IAssignmentLink):
+        Array<string | JSX.Element> {
         const base: Array<string | JSX.Element> = [course.course.getCode(), course.course.getName()];
         if (course.link) {
             if (course.link.getStatus() === Enrollment.UserStatus.STUDENT

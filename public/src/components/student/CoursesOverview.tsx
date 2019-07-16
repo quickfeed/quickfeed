@@ -2,13 +2,13 @@ import * as React from "react";
 
 import { CoursePanel, Row } from "../../components";
 
-import { IGroupCourse, IStudentSubmission, IUserCourse } from "../../models";
+import { IAssignmentLink, IStudentSubmission } from "../../models";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
 interface ICourseOverviewProps {
-    courseOverview: IUserCourse[];
-    groupCourseOverview: IGroupCourse[];
+    courseOverview: IAssignmentLink[];
+    groupCourseOverview: IAssignmentLink[];
     navMan: NavigationManager;
 }
 

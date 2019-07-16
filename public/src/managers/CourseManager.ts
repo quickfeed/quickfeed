@@ -1,9 +1,7 @@
 import {
     IAssignmentLink,
-    IGroupCourse,
     INewGroup,
     ISubmission,
-    IUserCourse,
     IUserRelation,
 } from "../models";
 
@@ -73,9 +71,9 @@ export class CourseManager {
         return this.courseProvider.getCourses();
     }
 
-    public async getCoursesWithState(user: User): Promise<IUserCourse[]> {
+    public async getCoursesWithState(user: User): Promise<IAssignmentLink[]> {
         const userCourses = await this.courseProvider.getCoursesFor(user);
-        const newMap: IUserCourse[] = [];
+        const newMap: IAssignmentLink[] = [];
         userCourses.forEach((ele) => {
             const crs = ele.getCourse();
             if (crs) {
@@ -140,18 +138,18 @@ export class CourseManager {
     }
 
     /**
-     * Load an IUserCourse object for a single user and a single course
+     * Load an IAssignmentLink object for a single user and a single course
      * @param student The student the information should be retrived from
      * @param course The course the data should be loaded for
      */
     public async getStudentCourseForTeacher(student: IUserRelation, course: Course, assignments: Assignment[]):
-        Promise<IUserCourse | null> {
+        Promise<IAssignmentLink | null> {
         const enrol = new Enrollment();
         enrol.setUserid(student.user.getId());
         enrol.setCourseid(course.getId());
         enrol.setStatus(student.link.getStatus());
 
-        const userCourse: IUserCourse = {
+        const userCourse: IAssignmentLink = {
             link: enrol,
             assignments: [],
             course,
@@ -166,7 +164,7 @@ export class CourseManager {
      * @param student The student to load the information for
      */
     public async getStudentCourses(student: User, state?: Enrollment.UserStatus[]): Promise<IAssignmentLink[]> {
-        const links: IUserCourse[] = [];
+        const links: IAssignmentLink[] = [];
         const enrols = await this.courseProvider.getCoursesFor(student, state);
         for (const enrol of enrols) {
             const crs = enrol.getCourse();
@@ -226,18 +224,18 @@ export class CourseManager {
     }
 
     /**
-     * Load an IGroupCourse object for a single group and a single course
+     * Load an IAssignmentLink object for a single group and a single course
      * @param group The group the information should be retrived from
      * @param course The course the data should be loaded for
      */
-    public async getGroupCourse(group: Group, course: Course): Promise<IGroupCourse | null> {
+    public async getGroupCourse(group: Group, course: Course): Promise<IAssignmentLink | null> {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
             const enrol = new Enrollment();
             enrol.setGroupid(group.getId());
             enrol.setCourseid(course.getId());
             enrol.setGroup(group);
-            const groupCourse: IGroupCourse = {
+            const groupCourse: IAssignmentLink = {
                 link: enrol,
                 assignments: [],
                 course,
@@ -249,14 +247,14 @@ export class CourseManager {
     }
 
     public async getGroupCourseForTeacher(group: Group, course: Course, assignments: Assignment[]):
-        Promise<IGroupCourse | null> {
+        Promise<IAssignmentLink | null> {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
             const enrol = new Enrollment();
             enrol.setGroupid(group.getId());
             enrol.setCourseid(course.getId());
             enrol.setGroup(group);
-            const groupCourse: IGroupCourse = {
+            const groupCourse: IAssignmentLink = {
                 link: enrol,
                 assignments: [],
                 course,
@@ -315,11 +313,11 @@ export class CourseManager {
     }
 
     /**
-     * Add IStudentSubmissions to an IUserCourse
+     * Add IStudentSubmissions to an IAssignmentLink
      * @param student The student
      * @param studentCourse The student course
      */
-    private async fillLinks(student: User, studentCourse: IUserCourse, assignments?: Assignment[]): Promise<void> {
+    private async fillLinks(student: User, studentCourse: IAssignmentLink, assignments?: Assignment[]): Promise<void> {
         if (!studentCourse.link) {
             return;
         }
@@ -338,11 +336,11 @@ export class CourseManager {
     }
 
     /**
-     * Add IStudentSubmissions to an IUserCourse
+     * Add IStudentSubmissions to an IAssignmentLink
      * @param group The group
      * @param groupCourse The group course
      */
-    private async fillLinksGroup(group: Group, groupCourse: IGroupCourse, assignments?: Assignment[]): Promise<void> {
+    private async fillLinksGroup(group: Group, groupCourse: IAssignmentLink, assignments?: Assignment[]): Promise<void> {
         if (!groupCourse.link) {
             return;
         }

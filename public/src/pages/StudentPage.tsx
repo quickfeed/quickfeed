@@ -6,7 +6,7 @@ import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
-import { IAssignmentLink, IGroupCourse, IStudentSubmission, IUserCourse } from "../models";
+import { IAssignmentLink, IStudentSubmission } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
@@ -59,8 +59,8 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         if (this.activeUserCourses) {
             return (<CoursesOverview
-                courseOverview={this.activeUserCourses as IUserCourse[]}
-                groupCourseOverview={this.GroupUserCourses as IGroupCourse[]}
+                courseOverview={this.activeUserCourses as IAssignmentLink[]}
+                groupCourseOverview={this.GroupUserCourses as IAssignmentLink[]}
                 navMan={this.navMan}
             />);
         }
@@ -91,8 +91,8 @@ export class StudentPage extends ViewPage {
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
             return (<SingleCourseOverview
-                courseAndLabs={this.selectedUserCourse as IUserCourse}
-                groupAndLabs={this.selectedUserGroupCourse as IGroupCourse}
+                courseAndLabs={this.selectedUserCourse as IAssignmentLink}
+                groupAndLabs={this.selectedUserGroupCourse as IAssignmentLink}
                 onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}
                 onGroupLabClick={(courseId: number, labId: number) => this.handleGroupLabClick(courseId, labId)} />);
         }
@@ -233,8 +233,8 @@ export class StudentPage extends ViewPage {
         return [];
     }
 
-    private onlyActiveCourses(studentCourse: IUserCourse[]): IUserCourse[] {
-        const userCourses: IUserCourse[] = [];
+    private onlyActiveCourses(studentCourse: IAssignmentLink[]): IAssignmentLink[] {
+        const userCourses: IAssignmentLink[] = [];
         studentCourse.forEach((a) => {
             if (a.link && (a.link.getStatus() === Enrollment.UserStatus.STUDENT
                 || a.link.getStatus() === Enrollment.UserStatus.TEACHER)) {
@@ -250,7 +250,7 @@ export class StudentPage extends ViewPage {
         if (curUser) {
             this.userCourses = await this.courseMan.getStudentCourses(curUser,
                 [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
-            this.activeUserCourses = this.onlyActiveCourses(this.userCourses as IUserCourse[]);
+            this.activeUserCourses = this.onlyActiveCourses(this.userCourses as IAssignmentLink[]);
 
             // preloading groupdata.
             this.GroupUserCourses = [];

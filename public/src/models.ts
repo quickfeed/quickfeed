@@ -33,17 +33,19 @@ export interface IAssignmentLink {
  * An interface which contains both the course, the course
  * link, all assignments and the latest submission to a single user
  */
+/*
 export interface IUserCourse extends IAssignmentLink {
     link?: Enrollment;
 }
-
+*/
 /**
  * An interface which contains both the course, the course
  * link, all assignments and the latest submission to a single group
  */
+/*
 export interface IGroupCourse extends IAssignmentLink {
     link?: Enrollment;
-}
+}*/
 
 /**
  * An IUserCourse instance which also contains the user it
@@ -52,7 +54,7 @@ export interface IGroupCourse extends IAssignmentLink {
  */
 export interface IUserCourseWithUser {
     user: User;
-    course: IUserCourse;
+    course: IAssignmentLink;
 }
 
 /**
@@ -62,7 +64,7 @@ export interface IUserCourseWithUser {
  */
 export interface IGroupCourseWithGroup {
     group: Group;
-    course: IGroupCourse;
+    course: IAssignmentLink;
 }
 
 /**
