@@ -92,8 +92,8 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
         let selector: Array<string | JSX.Element> = [name, slipdayPlaceholder];
         selector = selector.concat(group.assignments.filter((e) => e.assignment.getIsgrouplab()).map((e) => {
             let approvedCss;
-            if (e.latest) {
-                approvedCss = e.latest.approved ? this.approvedStyle : undefined;
+            if (e.latest && e.latest.approved) {
+                approvedCss = this.approvedStyle;
             }
             return <a className="lab-result-cell"
                 onClick={() => this.handleOnclick(e)}
