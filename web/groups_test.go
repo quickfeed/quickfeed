@@ -375,6 +375,14 @@ func TestDeleteGroup(t *testing.T) {
 	if err := db.EnrollStudent(user.ID, testCourse.ID); err != nil {
 		t.Fatal(err)
 	}
+	// create teacher and enroll as teacher
+	teacher := createFakeUser(t, db, 3)
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollTeacher(teacher.ID, testCourse.ID); err != nil {
+		t.Fatal(err)
+	}
 
 	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
 
@@ -387,6 +395,7 @@ func TestDeleteGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	ctx = withUserContext(context.Background(), teacher)
 	_, err = ags.DeleteGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
@@ -714,6 +723,7 @@ func TestGetGroups(t *testing.T) {
 
 	_, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	// admin will be enrolled as teacher because of course creation below
 	ctx := withUserContext(context.Background(), admin)
 
 	course := allCourses[1]
@@ -744,15 +754,12 @@ func TestGetGroups(t *testing.T) {
 	wantGroups := &pb.Groups{Groups: []*pb.Group{group1, group2}}
 
 	// check that request on non-existent course returns error
-	groups, err := ags.GetGroups(ctx, &pb.RecordRequest{ID: 15})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(groups.Groups) > 0 {
-		t.Error("no groups should be returned")
+	_, err = ags.GetGroups(ctx, &pb.RecordRequest{ID: 15})
+	if err == nil {
+		t.Error("expected error; no groups should be returned")
 	}
 
-	//get groups from the database
+	// get groups from the database; admin is in ctx, which is also teacher
 	gotGroups, err := ags.GetGroups(ctx, &pb.RecordRequest{ID: course.ID})
 	if err != nil {
 		t.Fatal(err)

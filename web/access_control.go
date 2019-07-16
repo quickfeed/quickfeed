@@ -68,13 +68,33 @@ func (s *AutograderService) isAdmin(ctx context.Context) bool {
 }
 
 // isTeacher returns true only if the given user is teacher for the given course.
-func (s *AutograderService) isTeacher(userID uint64, courseID uint64) bool {
+func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
 		s.logger.Error(err)
 		return false
 	}
 	return enrollment.Status == pb.Enrollment_TEACHER
+}
+
+// isEnrolled returns true only if the given user is enrolled as student or teacher for the given course.
+func (s *AutograderService) isOwner(userID, userID2, courseID uint64) bool {
+	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
+	if err != nil {
+		s.logger.Error(err)
+		return false
+	}
+	return enrollment.Status == pb.Enrollment_STUDENT && userID == userID2
+}
+
+// isInGroup returns true if the current user is in the provided group.
+func isInGroup(currentUser *pb.User, group *pb.Group) bool {
+	for _, u := range group.GetUsers() {
+		if currentUser.ID == u.ID {
+			return true
+		}
+	}
+	return false
 }
 
 // hasAccess returns true if the current user is administrator or the user with userID.
@@ -87,70 +107,14 @@ func (s *AutograderService) hasAccess(ctx context.Context, userID uint64) bool {
 	return currentUser.IsAdmin || currentUser.ID == userID
 }
 
-// hasGroupAccess returns true if the current user is administrator,
-// teacher of the given course, or one of the provided users.
-func (s *AutograderService) hasGroupAccess(ctx context.Context, courseID, userID, groupID uint64) bool {
-	currentUser, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return false
-	}
-	if currentUser.IsAdmin {
-		return true
-	}
-
-	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, currentUser.ID)
-	if err != nil {
-		s.logger.Error(err)
-		return false
-	}
-	if enrollment.Status == pb.Enrollment_TEACHER || enrollment.Status == pb.Enrollment_STUDENT {
-		return true
-	}
-
-	group, err := s.db.GetGroup(groupID)
-	if err != nil {
-		s.logger.Error(err)
-		return false
-	}
-	for _, u := range group.Users {
-		if currentUser.ID == u.ID {
-			return true
-		}
-	}
-	return false
-}
-
-// hasAccessG returns true if the current user is administrator or one of the provided users.
-func (s *AutograderService) hasAccessG(ctx context.Context, users []*pb.User) bool {
-	currentUser, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return false
-	}
-	if currentUser.IsAdmin {
-		return true
-	}
-	for _, u := range users {
-		if currentUser.ID == u.ID {
-			return true
-		}
-	}
-	return false
-}
-
 // getUserAndSCM returns the current user and scm for the given provider.
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.
-func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string, mustBeAdmin bool) (*pb.User, scm.SCM, error) {
+func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) (*pb.User, scm.SCM, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
-	if mustBeAdmin && !usr.IsAdmin {
-		s.logger.Error("user must be admin to create or update")
-		return nil, nil, status.Error(codes.PermissionDenied, "user must be admin to create or update")
 	}
 	scm, err := s.getSCM(ctx, usr, provider)
 	if err != nil {
@@ -163,13 +127,13 @@ func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string, 
 // getUserAndSCM2 returns the current user and scm for the given course.
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.
-func (s *AutograderService) getUserAndSCM2(ctx context.Context, courseID uint64, mustBeAdmin bool) (*pb.User, scm.SCM, error) {
+func (s *AutograderService) getUserAndSCM2(ctx context.Context, courseID uint64) (*pb.User, scm.SCM, error) {
 	crs, err := s.getCourse(courseID)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, nil, status.Errorf(codes.NotFound, "failed to get course")
 	}
-	return s.getUserAndSCM(ctx, crs.GetProvider(), mustBeAdmin)
+	return s.getUserAndSCM(ctx, crs.GetProvider())
 }
 
 // teacherScopes defines scopes that must be enabled for a teacher token to be valid.
