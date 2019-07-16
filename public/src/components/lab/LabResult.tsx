@@ -8,7 +8,7 @@ interface ILabResult {
     course_name: string;
     student?: User;
     status: string;
-    deliverd: string;
+    delivered: string;
 }
 class LabResult extends React.Component<ILabResult, any> {
 
@@ -34,7 +34,7 @@ class LabResult extends React.Component<ILabResult, any> {
                     <p><strong id="status">Status: {this.props.status}</strong></p>
                 </div>
                 <div className="col-lg-6">
-                    <p><strong id="pushtime">Code delievered: {this.props.deliverd} </strong></p>
+                    <p><strong id="pushtime">Delivered: {this.props.delivered} </strong></p>
                 </div>
             </Row>
         );
