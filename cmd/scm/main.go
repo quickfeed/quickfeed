@@ -285,7 +285,7 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 			}
 			return nil
 		}
-
+		// TODO(vera): same as with teams, have to adjust existing methods to delete by name
 		return cli.NewExitError("not implemented", 9)
 	}
 }
@@ -312,7 +312,6 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 			fmt.Println(s)
 			return nil
 		}
-
 		return cli.NewExitError("not implemented", 9)
 	}
 }
@@ -418,7 +417,9 @@ func deleteTeams(client *scm.SCM) cli.ActionFunc {
 			}
 			return nil
 		}
-
+		// delete team by name
+		// TODO(vera): we already have a method that can delete team by ID, if we change it to take a name too
+		// (possibly in a new option struct, or reuse CreateTeamOptions), it will be able to remove teams by name
 		return cli.NewExitError("not implemented", 9)
 	}
 }

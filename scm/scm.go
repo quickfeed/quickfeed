@@ -87,20 +87,13 @@ type CreateOrgOptions struct {
 
 // Repository represents a git remote repository.
 type Repository struct {
-	ID   uint64
-	Path string
-
-	// Only used by GitHub.
-	Owner string
-
-	// Repository website.
-	WebURL string
-	// SSH clone URL.
-	SSHURL string
-	// HTTP(S) clone URL.
-	HTTPURL string
-
-	OrgID uint64
+	ID      uint64
+	Path    string
+	Owner   string // Only used by GitHub.
+	WebURL  string // Repository website.
+	SSHURL  string // SSH clone URL.
+	HTTPURL string // HTTP(S) clone URL.
+	OrgID   uint64
 }
 
 // Hook contains information about a webhook for a repository.
@@ -120,9 +113,8 @@ type CreateRepositoryOptions struct {
 
 // CreateHookOptions contains information on how to create a webhook.
 type CreateHookOptions struct {
-	URL    string
-	Secret string
-
+	URL        string
+	Secret     string
 	Repository *Repository
 }
 
