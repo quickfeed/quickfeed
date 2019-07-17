@@ -20,7 +20,7 @@ interface IUserViewerState {
     rejectedUsers: IUserRelation[];
 }
 
-export class MemberView extends React.Component<IUserViewerProps, IUserViewerState, {}> {
+export class MemberView extends React.Component<IUserViewerProps, IUserViewerState> {
 
     constructor(props: IUserViewerProps) {
         super(props);
@@ -52,7 +52,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
          || (prevProps.pendingUsers.length !== this.props.pendingUsers.length)
           || (prevProps.rejectedUsers.length !== this.props.rejectedUsers.length)) {
             this.refreshState();
-            this.render();
+            this.forceUpdate();
         }
     }
 

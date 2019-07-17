@@ -46,16 +46,16 @@ func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, c
 // data from GitHub, processes the yml files and returns the assignments.
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
-func fetchAssignments(c context.Context, s scm.SCM, course *pb.Course) ([]*pb.Assignment, error) {
+func fetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, error) {
 	ctx, cancel := context.WithTimeout(c, MaxWait)
 	defer cancel()
 
-	org, err := s.GetOrganization(ctx, course.OrganizationID)
+	org, err := sc.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
 
-	cloneURL := s.CreateCloneURL(&scm.CreateClonePathOptions{
+	cloneURL := sc.CreateCloneURL(&scm.CreateClonePathOptions{
 		Organization: org.Path,
 		Repository:   pb.TestsRepo,
 	})

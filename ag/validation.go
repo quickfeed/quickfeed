@@ -36,6 +36,7 @@ func AGInterceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 		}
 		ctx, cancel := context.WithTimeout(ctx, MaxWait)
 		defer cancel()
+		// todo (vera): add remove remote IDs check
 		return handler(ctx, req)
 	}
 }

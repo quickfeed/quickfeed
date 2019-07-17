@@ -268,7 +268,6 @@ export class GrpcManager {
             if (currentUser != null) {
                 userId = currentUser.getId().toString();
             }
-
             method.call(this.agService, request, { "custom-header-1": "value1", "user": userId },
                 (err: grpcWeb.Error, response: T | undefined) => {
                     if (err) {

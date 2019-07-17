@@ -70,7 +70,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
             || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)
             || (prevProps.rejectedGroups.length !== this.props.rejectedGroups.length)) {
             this.refreshState();
-            this.render();
+            this.forceUpdate();
         }
     }
 

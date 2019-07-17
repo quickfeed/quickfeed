@@ -211,8 +211,8 @@ func (s *AutograderService) getGroupUsers(request *pb.Group, currentUser *pb.Use
 // createGroupRepoAndTeam creates the given group in course on the provided SCM.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, group *pb.Group) (*scm.Repository, *scm.Team, error) {
-	org, err := s.GetOrganization(ctx, course.OrganizationID)
+func createGroupRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *pb.Group) (*scm.Repository, *scm.Team, error) {
+	org, err := sc.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
 		return nil, nil, status.Errorf(codes.NotFound, "organization not found")
 	}
@@ -222,11 +222,11 @@ func createGroupRepoAndTeam(ctx context.Context, s scm.SCM, course *pb.Course, g
 		Path:         group.Name,
 		Private:      true,
 	}
-	return s.CreateRepoAndTeam(ctx, opt, group.Name, gitUserNames(group))
+	return sc.CreateRepoAndTeam(ctx, opt, group.Name, gitUserNames(group))
 }
 
-func updateGroupTeam(ctx context.Context, s scm.SCM, course *pb.Course, group *pb.Group) error {
-	org, err := s.GetOrganization(ctx, course.OrganizationID)
+func updateGroupTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *pb.Group) error {
+	org, err := sc.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
 		return status.Errorf(codes.NotFound, "organization not found")
 	}
@@ -237,7 +237,7 @@ func updateGroupTeam(ctx context.Context, s scm.SCM, course *pb.Course, group *p
 		TeamID:       group.TeamID,
 		Users:        gitUserNames(group),
 	}
-	return s.UpdateTeamMembers(ctx, opt)
+	return sc.UpdateTeamMembers(ctx, opt)
 }
 
 func gitUserNames(g *pb.Group) []string {
