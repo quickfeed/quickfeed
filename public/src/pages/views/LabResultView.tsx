@@ -31,7 +31,7 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
                                 lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
                                 status={this.getSubmissionInfo()}
-                                deliverd={this.getCodeDeliverdString(this.props.labInfo.latest.buildDate)}
+                                delivered={this.getCodeDeliveredString(this.props.labInfo.latest.buildDate)}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}
@@ -71,7 +71,7 @@ export class LabResultView extends React.Component<ILabInfoProps, {}> {
         return "Nothing built yet!";
     }
 
-    private getCodeDeliverdString(date?: Date | string): string {
+    private getCodeDeliveredString(date?: Date | string): string {
         if (date && isDate(date)) {
             return date.toDateString();
         } else if (typeof (date) === "string") {
