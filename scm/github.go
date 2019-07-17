@@ -229,21 +229,46 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 
 // DeleteTeam implements the SCM interface.
 func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error {
-	// if no id provided get it from github by slug
-	if opt.TeamID < 1 {
-		slug := strings.ToLower(opt.TeamName)
-		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, slug)
-		if err != nil {
-			log.Println("GitHub AddTeamMember: could not get team by slug")
-			return status.Errorf(codes.Internal, err.Error())
-		}
-		opt.TeamID = uint64(team.GetID())
+	team, err := s.GetTeam(ctx, opt)
+	if err != nil {
+		log.Println("GitHub DeleteTeam failed to get team: ", err.Error())
 	}
-	if _, err := s.client.Teams.DeleteTeam(ctx, int64(opt.TeamID)); err != nil {
+
+	if _, err := s.client.Teams.DeleteTeam(ctx, int64(team.ID)); err != nil {
 		log.Println("GitHub DeleteTeam failed: ", err.Error())
 		return err
 	}
 	return nil
+}
+
+// GetTeam implements the SCM interface
+func (s *GithubSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+	if opt.TeamID < 1 {
+		slug := strings.ToLower(opt.TeamName)
+		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, slug)
+		if err != nil {
+			log.Println("GitHub GetTeam: could not get team by slug")
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+		scmTeam := &Team{
+			ID:   uint64(team.GetID()),
+			Name: team.GetName(),
+			URL:  team.GetURL(),
+		}
+
+		return scmTeam, nil
+	}
+	team, _, err := s.client.Teams.GetTeam(ctx, int64(opt.TeamID))
+	if err != nil {
+		log.Println("GitHub GetTeam: could not get team by ID")
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	scmTeam := &Team{
+		ID:   uint64(team.GetID()),
+		Name: team.GetName(),
+		URL:  team.GetURL(),
+	}
+	return scmTeam, nil
 }
 
 // GetTeams implements the scm interface
@@ -263,17 +288,12 @@ func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team
 
 // AddTeamMember implements the scm interface
 func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
-	// if no id provided get it from github by slug
-	if opt.TeamID < 1 {
-		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, opt.TeamSlug)
-		if err != nil {
-			log.Println("GitHub AddTeamMember: could not get team by slug")
-			return status.Errorf(codes.Internal, err.Error())
-		}
-		opt.TeamID = team.GetID()
+	team, err := s.GetTeam(ctx, &CreateTeamOptions{TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
+	if err != nil {
+		log.Println("GitHub AddTeamMember failed to get team: ", err.Error())
 	}
 
-	isAlreadyMember, _, err := s.client.Teams.GetTeamMembership(ctx, opt.TeamID, opt.Username)
+	isAlreadyMember, _, err := s.client.Teams.GetTeamMembership(ctx, int64(team.ID), opt.Username)
 	if err != nil {
 		// will always return an error when user is not a team member, but this is expected, no error will be returned
 		// but it is useful to log it in case there were other reasons (invalid token and others)
@@ -281,27 +301,22 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 	}
 	// if already in team , take no action
 	if isAlreadyMember != nil {
-		log.Println("GitHub adding team member: user ", opt.TeamSlug, " is already in this team")
+		log.Println("GitHub adding team member: user ", opt.Username, " is already in the team ", opt.TeamSlug)
 		return nil
 	}
 	// otherwise add user as team member
-	_, _, err = s.client.Teams.AddTeamMembership(ctx, opt.TeamID, opt.Username, &github.TeamAddTeamMembershipOptions{})
+	_, _, err = s.client.Teams.AddTeamMembership(ctx, int64(team.ID), opt.Username, &github.TeamAddTeamMembershipOptions{Role: opt.Role})
 	return err
 }
 
 // RemoveTeamMember implements the scm interface
 func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
-	// if no id provided get it from github by slug
-	if opt.TeamID < 1 {
-		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, opt.TeamSlug)
-		if err != nil {
-			log.Println("GitHub RemoveTeamMember: failed to get team by slug: ", opt.TeamSlug)
-			return status.Errorf(codes.Internal, err.Error())
-		}
-		opt.TeamID = team.GetID()
+	team, err := s.GetTeam(ctx, &CreateTeamOptions{TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
+	if err != nil {
+		log.Println("GitHub RemoveTeamMember failed to get team: ", err.Error())
 	}
 
-	isMember, _, err := s.client.Teams.GetTeamMembership(ctx, opt.TeamID, opt.Username)
+	isMember, _, err := s.client.Teams.GetTeamMembership(ctx, int64(team.ID), opt.Username)
 	if isMember == nil {
 		log.Println("GitHub removing team member: user ", opt.Username, " is not a member of team ", opt.TeamSlug)
 		// user is not in this team

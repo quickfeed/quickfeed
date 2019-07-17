@@ -144,6 +144,12 @@ func (s *FakeSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error 
 	return nil
 }
 
+// GetTeam implements the SCM interface
+func (s *FakeSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // GetTeams implements the SCM interface
 func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	// TODO no implementation provided yet

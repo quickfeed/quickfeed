@@ -162,6 +162,12 @@ func (s *GitlabSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) erro
 	return nil
 }
 
+// GetTeam implements the SCM interface
+func (s *GitlabSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // GetTeams implements the SCM interface
 func (s *GitlabSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	// TODO no implementation provided yet
