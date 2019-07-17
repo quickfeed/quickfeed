@@ -228,9 +228,18 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 }
 
 // DeleteTeam implements the SCM interface.
-func (s *GithubSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
-
-	if _, err := s.client.Teams.DeleteTeam(ctx, int64(teamID)); err != nil {
+func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error {
+	// if no id provided get it from github by slug
+	if opt.TeamID < 1 {
+		slug := strings.ToLower(opt.TeamName)
+		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, slug)
+		if err != nil {
+			log.Println("GitHub AddTeamMember: could not get team by slug")
+			return status.Errorf(codes.Internal, err.Error())
+		}
+		opt.TeamID = uint64(team.GetID())
+	}
+	if _, err := s.client.Teams.DeleteTeam(ctx, int64(opt.TeamID)); err != nil {
 		log.Println("GitHub DeleteTeam failed: ", err.Error())
 		return err
 	}

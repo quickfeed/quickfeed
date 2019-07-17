@@ -139,7 +139,7 @@ func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team
 }
 
 // DeleteTeam implements the SCM interface.
-func (s *FakeSCM) DeleteTeam(ctx context.Context, teamID uint64) error {
+func (s *FakeSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }
