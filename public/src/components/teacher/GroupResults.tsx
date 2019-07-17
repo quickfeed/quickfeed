@@ -16,6 +16,7 @@ interface IResultsState {
 }
 
 export class GroupResults extends React.Component<IResultsProp, IResultsState> {
+
     private approvedStyle = {
         color: "green",
     };
