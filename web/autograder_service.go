@@ -48,22 +48,6 @@ func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.Reposit
 	return repoURL, nil
 }
 
-// GetUser returns user information for the given user, excluding remote identities.
-// Access policy: Admin can access all users;
-// Current User can access its own User object.
-func (s *AutograderService) GetUser(ctx context.Context, in *pb.RecordRequest) (*pb.User, error) {
-	if !s.hasAccess(ctx, in.ID) {
-		return nil, status.Errorf(codes.PermissionDenied, "only admin can access another user")
-	}
-	usr, err := s.getUser(in)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get user")
-	}
-	usr.RemoveRemoteID()
-	return usr, nil
-}
-
 // GetUsers returns a list of all users.
 // Access policy: Admin.
 // Frontend note: This method is called from AdminPage.

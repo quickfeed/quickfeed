@@ -123,14 +123,6 @@ export class UserManager {
     }
 
     /**
-     * This is not implemented
-     * @param id the id of a single userobject to be returned
-     */
-    public async getUser(id: number): Promise<User> {
-        throw new Error("Not implemented error");
-    }
-
-    /**
      * A way to promote a user to an administrator
      * @param user The user to premote to admin
      */

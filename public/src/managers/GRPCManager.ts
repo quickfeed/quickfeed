@@ -55,12 +55,6 @@ export class GrpcManager {
         return this.grpcSend<Users>(this.agService.getUsers, request);
     }
 
-    public getUser(id: number): Promise<IGrpcResponse<User>> {
-        const request = new RecordRequest();
-        request.setId(id);
-        return this.grpcSend<User>(this.agService.getUser, request);
-    }
-
     public updateUser(user: User, isadmin?: boolean): Promise<IGrpcResponse<User>> {
         const requrest = new User();
         requrest.setId(user.getId());
