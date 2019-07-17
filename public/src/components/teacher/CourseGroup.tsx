@@ -1,13 +1,10 @@
 import * as React from "react";
-
 import { Course, Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable, Search } from "../../components";
-import { CourseManager, ILink, NavigationManager } from "../../managers";
-
-import { bindFunc, RProp } from "../../helper";
-import { BootstrapClass } from "../bootstrap/BootstrapButton";
-
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
+import { bindFunc, RProp } from "../../helper";
+import { CourseManager, ILink, NavigationManager } from "../../managers";
+import { BootstrapClass } from "../bootstrap/BootstrapButton";
 
 interface ICourseGroupProp {
     approvedGroups: Group[];
@@ -25,7 +22,7 @@ interface ICourseGroupState {
     rejectedGroups: Group[];
 }
 
-export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupState, any> {
+export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupState> {
 
     constructor(props: any) {
         super(props);
@@ -35,6 +32,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
             rejectedGroups: this.props.rejectedGroups,
         };
     }
+
     public render() {
         let approvedGroups;
         if (this.props.approvedGroups.length > 0 || this.state.approvedGroups.length > 0) {
@@ -69,8 +67,8 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
 
     public componentDidUpdate(prevProps: ICourseGroupProp) {
         if ((prevProps.approvedGroups.length !== this.props.approvedGroups.length)
-         || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)
-          || (prevProps.rejectedGroups.length !== this.props.rejectedGroups.length)) {
+            || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)
+            || (prevProps.rejectedGroups.length !== this.props.rejectedGroups.length)) {
             this.refreshState();
             this.render();
         }
@@ -168,7 +166,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
         for (const user of users) {
             names.push(user.getName());
         }
-        return names.toString();
+        return names.join();
     }
 
     private async handleUpdateStatus(gid: number, status: Group.GroupStatus): Promise<void> {

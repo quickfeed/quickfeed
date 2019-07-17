@@ -1,12 +1,9 @@
 import * as React from "react";
-
-import { DynamicTable } from "../../components";
-
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { getDeadline } from "../../../proto/deadline";
-import { IStudentSubmission } from "../../models";
-
+import { DynamicTable } from "../../components";
 import { NavigationManager } from "../../managers/NavigationManager";
+import { IStudentSubmission } from "../../models";
 
 interface IPanelProps {
     course: Course;
@@ -14,8 +11,7 @@ interface IPanelProps {
     navMan: NavigationManager;
 }
 
-// TODO(meling) why is there an 'any' generic type for React.Component? Is it needed?
-class CoursePanel extends React.Component<IPanelProps, any> {
+export class CoursePanel extends React.Component<IPanelProps> {
 
     public render() {
         const labPath: string = "app/student/courses/" + this.props.course.getId() + "/lab/";
@@ -60,5 +56,3 @@ class CoursePanel extends React.Component<IPanelProps, any> {
         this.props.navMan.navigateTo(uri);
     }
 }
-
-export { CoursePanel };

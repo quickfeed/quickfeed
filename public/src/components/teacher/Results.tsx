@@ -1,8 +1,7 @@
 import * as React from "react";
-import { IAssignmentLink, IStudentSubmission } from "../../models";
-
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
+import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 
 interface IResultsProp {
@@ -11,11 +10,13 @@ interface IResultsProp {
     labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
 }
+
 interface IResultsState {
     assignment?: IStudentSubmission;
     students: IAssignmentLink[];
 }
-class Results extends React.Component<IResultsProp, IResultsState> {
+
+export class Results extends React.Component<IResultsProp, IResultsState> {
 
     private approvedStyle = {
         color: "green",
@@ -125,12 +126,12 @@ class Results extends React.Component<IResultsProp, IResultsState> {
             const usr = std.link.getUser();
             if (usr) {
                 if (usr.getName().toLowerCase().indexOf(query) !== -1
-                || usr.getEmail().toLowerCase().indexOf(query) !== -1
-                ){
+                    || usr.getEmail().toLowerCase().indexOf(query) !== -1
+                ) {
                     filteredData.push(std);
                 }
             }
-    });
+        });
 
         this.setState({
             students: filteredData,
@@ -138,4 +139,3 @@ class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
 }
-export { Results };

@@ -1,4 +1,5 @@
 import * as React from "react";
+// import { Table } from "react-bootstrap";
 import { Row } from "../../components";
 
 interface ILastBuildInfo {
@@ -15,15 +16,22 @@ interface ILastBuildInfo {
 export class LastBuildInfo extends React.Component<ILastBuildInfo> {
 
     public render() {
-        let approveButton: JSX.Element;
+        let approveButton = <p></p>;
         if (this.props.showApprove) {
             approveButton = <p> <button type="button"
                 id="approve"
                 className="btn btn-primary"
                 onClick={() => this.handleClick(this.props.onApproveClick)}> Approve </button> </p>;
-        } else {
-            approveButton = <p></p>;
         }
+        // const table = <Table striped borderless size="sm">
+        //     <tbody>
+        //         <tr><td>Tests passed</td><td id="passes">{this.props.pass_tests}</td></tr>
+        //         <tr><td>Tests failed</td><td id="fails">{this.props.fail_tests}</td></tr>
+        //         <tr><td>Execution time</td><td id="buildtime">{this.props.exec_time / 1000} s</td></tr>
+        //         <tr><td>Build date</td><td id="timedate">{this.props.build_time.toString()}</td></tr>
+        //         <tr><td>Build ID</td><td id="buildid">{this.props.build_id}</td></tr>
+        //     </tbody>
+        // </Table>;
         return (
             <Row>
                 <div className="col-lg-8">

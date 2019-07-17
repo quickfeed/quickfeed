@@ -1,10 +1,7 @@
 import * as React from "react";
-
 import { CoursePanel, Row } from "../../components";
-
-import { IAssignmentLink, IStudentSubmission } from "../../models";
-
 import { NavigationManager } from "../../managers/NavigationManager";
+import { IAssignmentLink, IStudentSubmission } from "../../models";
 
 interface ICourseOverviewProps {
     courseOverview: IAssignmentLink[];
@@ -12,31 +9,31 @@ interface ICourseOverviewProps {
     navMan: NavigationManager;
 }
 
-class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
+export class CoursesOverview extends React.Component<ICourseOverviewProps> {
 
     public render() {
+        // TODO(meling) this test for groupCourseOverview seems unnecessary;
+        // if it is non-null, then it is fine: if it is null or something else, it becomes null.
         const groupCourses = this.props.groupCourseOverview ? this.props.groupCourseOverview : null;
         const courses = this.props.courseOverview.map((val, key) => {
-            const courseAssignments: IStudentSubmission[] = val.assignments;
             if (groupCourses && groupCourses[key] && groupCourses[key].course.getId() === val.course.getId()) {
-
-                for (let iter = 0; iter < courseAssignments.length; iter++) {
-                    if (courseAssignments[iter].assignment.getIsgrouplab()) {
-                        courseAssignments[iter].latest = groupCourses[key].assignments[iter].latest;
+                for (let iter = 0; iter < val.assignments.length; iter++) {
+                    if (val.assignments[iter].assignment.getIsgrouplab()) {
+                        val.assignments[iter].latest = groupCourses[key].assignments[iter].latest;
                     }
                 }
             }
             return <CoursePanel
                 key={key}
                 course={val.course}
-                labs={courseAssignments}
+                labs={val.assignments}
                 navMan={this.props.navMan} />;
         });
 
-        let added: number = 0;
-        let index: number = 1;
-        let l: number = courses.length;
-        for (index; index < l; index++) {
+        // TODO(meling) WTF does this code do?
+        let added = 0;
+        let l = courses.length;
+        for (let index = 1; index < l; index++) {
             if (index % 4 === 0) {
                 courses.splice(index + added, 0,
                     <div
@@ -55,16 +52,11 @@ class CoursesOverview extends React.Component<ICourseOverviewProps, any> {
                 l += 1;
                 added += 1;
             }
-
         }
 
-        return (
-            <div>
-                <h1>Your Courses</h1>
-                <Row>{courses}</Row>
-            </div>
-        );
+        return <div>
+            <h1>Your Courses</h1>
+            <Row>{courses}</Row>
+        </div>;
     }
 }
-
-export { CoursesOverview };

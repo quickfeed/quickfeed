@@ -1,8 +1,7 @@
 import * as React from "react";
-import { IAssignmentLink, IStudentSubmission } from "../../models";
-
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
+import { IAssignmentLink, IStudentSubmission } from "../../models";
 
 interface IResultsProp {
     course: Course;
@@ -10,11 +9,13 @@ interface IResultsProp {
     labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
 }
+
 interface IResultsState {
     assignment?: IStudentSubmission;
     groups: IAssignmentLink[];
 }
-class GroupResults extends React.Component<IResultsProp, IResultsState> {
+
+export class GroupResults extends React.Component<IResultsProp, IResultsState> {
     private approvedStyle = {
         color: "green",
     };
@@ -126,4 +127,3 @@ class GroupResults extends React.Component<IResultsProp, IResultsState> {
     }
 
 }
-export { GroupResults };
