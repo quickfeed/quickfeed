@@ -98,7 +98,7 @@ func withUserContext(ctx context.Context, user *pb.User) context.Context {
 func fakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	t.Helper()
 	scms := auth.NewScms()
-	scm, err := scms.GetOrCreateSCMEntry("fake", "token")
+	scm, err := scms.GetOrCreateSCMEntry(zap.NewNop(), "fake", "token")
 	if err != nil {
 		t.Fatal(err)
 	}

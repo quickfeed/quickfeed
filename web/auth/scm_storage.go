@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/autograde/aguis/scm"
+	"go.uber.org/zap"
 )
 
 // Scms stores information about active scm clients.
@@ -29,14 +30,14 @@ func (s *Scms) GetSCM(accessToken string) (sc scm.SCM, ok bool) {
 // GetOrCreateSCMEntry returns an scm client for the given remote identity
 // (provider, access token) pair. If no scm client exists for the given
 // remote identity, one will be created and stored for later retrival.
-func (s *Scms) GetOrCreateSCMEntry(provider, accessToken string) (scm.SCM, error) {
+func (s *Scms) GetOrCreateSCMEntry(logger *zap.Logger, provider, accessToken string) (scm.SCM, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	client, ok := s.scms[accessToken]
 	if ok {
 		return client, nil
 	}
-	client, err := scm.NewSCMClient(provider, accessToken)
+	client, err := scm.NewSCMClient(logger, provider, accessToken)
 	if err != nil {
 		return nil, err
 	}

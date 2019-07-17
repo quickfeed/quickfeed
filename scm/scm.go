@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	pb "github.com/autograde/aguis/ag"
+	"go.uber.org/zap"
 )
 
 // SCM is a common interface for different source code management solutions,
@@ -68,10 +69,10 @@ type SCM interface {
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
-func NewSCMClient(provider, token string) (SCM, error) {
+func NewSCMClient(logger *zap.Logger, provider, token string) (SCM, error) {
 	switch provider {
 	case "github":
-		return NewGithubSCMClient(token), nil
+		return NewGithubSCMClient(logger, token), nil
 	case "gitlab":
 		return NewGitlabSCMClient(token), nil
 	case "fake":

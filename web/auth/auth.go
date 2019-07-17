@@ -295,7 +295,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 
 			foundSCMProvider := false
 			for _, remoteID := range user.RemoteIdentities {
-				scm, err := scms.GetOrCreateSCMEntry(remoteID.GetProvider(), remoteID.GetAccessToken())
+				scm, err := scms.GetOrCreateSCMEntry(logger, remoteID.GetProvider(), remoteID.GetAccessToken())
 				if err != nil {
 					logger.Error("unknown SCM provider", zap.Error(err))
 					continue

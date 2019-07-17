@@ -7,6 +7,7 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
+	"go.uber.org/zap"
 )
 
 const (
@@ -26,7 +27,7 @@ func TestFetchAssignments(t *testing.T) {
 	provider := "github"
 
 	var s scm.SCM
-	s, err := scm.NewSCMClient(provider, accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop(), provider, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}

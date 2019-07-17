@@ -75,15 +75,16 @@ func GithubHook(logger *zap.Logger, db database.Database, runner ci.Runner, scri
 
 func refreshAssignmentsFromTestsRepo(logger *zap.Logger, db database.Database, repo *pb.Repository, senderID uint64) {
 	logger.Debug("Refreshing course informaton in database")
+	provider := "github"
 
-	remoteIdentity, err := db.GetRemoteIdentity("github", senderID)
+	remoteIdentity, err := db.GetRemoteIdentity(provider, senderID)
 	if err != nil {
 		logger.Error("Failed to get sender's remote identity", zap.Error(err))
 		return
 	}
 	logger.Debug("Found sender's remote identity", zap.String("remote identity", remoteIdentity.String()))
 
-	s, err := scm.NewSCMClient("github", remoteIdentity.AccessToken)
+	s, err := scm.NewSCMClient(logger, provider, remoteIdentity.AccessToken)
 	if err != nil {
 		logger.Error("Failed to create SCM Client", zap.Error(err))
 		return

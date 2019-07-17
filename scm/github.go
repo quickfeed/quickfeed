@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 
 	pb "github.com/autograde/aguis/ag"
@@ -15,15 +16,17 @@ import (
 
 // GithubSCM implements the SCM interface.
 type GithubSCM struct {
+	logger *zap.SugaredLogger
 	client *github.Client
 	token  string
 }
 
 // NewGithubSCMClient returns a new Github client implementing the SCM interface.
-func NewGithubSCMClient(token string) *GithubSCM {
+func NewGithubSCMClient(logger *zap.Logger, token string) *GithubSCM {
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	client := github.NewClient(oauth2.NewClient(context.Background(), ts))
 	return &GithubSCM{
+		logger: logger.Sugar(),
 		client: client,
 		token:  token,
 	}
