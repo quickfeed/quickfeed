@@ -247,3 +247,11 @@ func gitUserNames(g *pb.Group) []string {
 	}
 	return gitUserNames
 }
+
+func hasTeam(ctx context.Context, sc scm.SCM, g *pb.Group) bool {
+	// try to get group team by ID or name
+	if team, _ := sc.GetTeam(ctx, &scm.CreateTeamOptions{TeamName: g.GetName(), TeamID: g.GetTeamID()}); team != nil {
+		return true
+	}
+	return false
+}
