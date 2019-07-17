@@ -418,9 +418,13 @@ func deleteTeams(client *scm.SCM) cli.ActionFunc {
 			return nil
 		}
 		// delete team by name
-		// TODO(vera): we already have a method that can delete team by ID, if we change it to take a name too
-		// (possibly in a new option struct, or reuse CreateTeamOptions), it will be able to remove teams by name
-		return cli.NewExitError("not implemented", 9)
+		teamName := c.String("name")
+		msg := fmt.Sprintf("Are you sure you want to delete team %s in %s?", teamName, c.String("namespace"))
+		if ok, err := confirm(msg); !ok || err != nil {
+			fmt.Println("Canceled")
+			return err
+		}
+		return (*client).DeleteTeam(ctx, &scm.CreateTeamOptions{TeamName: teamName})
 	}
 }
 
