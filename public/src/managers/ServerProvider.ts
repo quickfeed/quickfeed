@@ -279,22 +279,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return null;
         }
         const iusr = result.data;
-
-        // We want a user with full information provided to be set as currentUser
-        // Such user is retrieved by GRPC method getUser
-        const grpcResult = await this.grpcHelper.getUser(iusr.id);
-        // If grpc method fails, construct User object from JSON
-        if (grpcResult.status.getCode() !== 0 || !grpcResult.data) {
-            const usr: User = new User();
-            usr.setId(iusr.id);
-            usr.setStudentid(iusr.studentid);
-            usr.setName(iusr.name);
-            usr.setEmail(iusr.email);
-            usr.setAvatarurl(iusr.avatarurl);
-            usr.setIsadmin(iusr.isadmin);
-            return usr;
-        }
-        return grpcResult.data;
+        const usr: User = new User();
+        usr.setId(iusr.id);
+        usr.setStudentid(iusr.studentid);
+        usr.setName(iusr.name);
+        usr.setEmail(iusr.email);
+        usr.setAvatarurl(iusr.avatarurl);
+        usr.setIsadmin(iusr.isadmin);
+        return usr;
     }
 
     public async updateAssignments(courseID: number): Promise<boolean> {
