@@ -80,6 +80,9 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 <form className={this.props.className}
                     onSubmit={(e) => this.handleFormSubmit(e)}>
                     <div className="form-group row">
+                    <div className="col-sm-12 alert alert-warning">Choose wisely! Name cannot be changed after the group has been created.</div>
+                    </div>
+                    <div className="form-group row">
                         <label className="col-sm-1 col-form-label" htmlFor="tag">Name:</label>
                         <div className="col-sm-11">
                             <input type="text"
