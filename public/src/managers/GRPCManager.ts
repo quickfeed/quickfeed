@@ -8,6 +8,7 @@ import {
     Enrollment,
     EnrollmentRequest,
     Enrollments,
+    EnrollmentsRequest,
     Group,
     GroupRequest,
     Groups,
@@ -122,7 +123,7 @@ export class GrpcManager {
     public getEnrollmentsByCourse(courseid: number, noGroupMembers?: boolean, state?: any):
         Promise<IGrpcResponse<Enrollments>> {
 
-        const request = new EnrollmentRequest();
+        const request = new EnrollmentsRequest();
         request.setCourseid(courseid);
         if (noGroupMembers) {
             request.setFilteroutgroupmembers(noGroupMembers);

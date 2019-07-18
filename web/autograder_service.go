@@ -202,9 +202,14 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 	return courses, nil
 }
 
+// GetEnrollment returns a single enrollment in given course for user or group
+func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollment, error) {
+	return nil, nil
+}
+
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
+func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentsRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		return nil, err

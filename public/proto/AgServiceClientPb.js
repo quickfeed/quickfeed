@@ -58,6 +58,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateAssignments = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoGetEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Enrollment, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Enrollment.deserializeBinary);
         this.methodInfoGetEnrollmentsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Enrollments, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Enrollments.deserializeBinary);
@@ -159,6 +162,10 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.updateAssignments = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateAssignments', request, metadata || {}, this.methodInfoUpdateAssignments, callback);
+    };
+    AutograderServiceClient.prototype.getEnrollment = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetEnrollment', request, metadata || {}, this.methodInfoGetEnrollment, callback);
     };
     AutograderServiceClient.prototype.getEnrollmentsByCourse = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
