@@ -310,6 +310,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	// change group to only one student
 	users2 := make([]*pb.User, 0)
 	users2 = append(users2, user1)
+	// name must not update because group team and repo already exist
 	updateGroupReq1 := &pb.Group{ID: group.ID, Name: "Hein's single member Group", CourseID: course.ID, Users: users2}
 
 	// set teacher ID in context
@@ -337,7 +338,6 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal("expected only single member group")
 	}
 	wantGroup = updateGroupReq
-	wantGroup.Name = updateGroupReq1.Name
 	wantGroup.Users = grpUsers
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Status = pb.Group_APPROVED
