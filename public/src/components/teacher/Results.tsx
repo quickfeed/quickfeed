@@ -127,6 +127,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             if (usr) {
                 if (usr.getName().toLowerCase().indexOf(query) !== -1
                     || usr.getEmail().toLowerCase().indexOf(query) !== -1
+                    || usr.getLogin().toLowerCase().indexOf(query) !== -1
                 ) {
                     filteredData.push(std);
                 }

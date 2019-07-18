@@ -252,7 +252,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         const filteredData: IUserRelation[] = [];
         this.props.students.forEach((student) => {
             if ((student.user.getName().toLowerCase().indexOf(query) !== -1
-                || student.user.getEmail().toString().indexOf(query) !== -1)
+                || student.user.getEmail().indexOf(query) !== -1
+                || student.user.getLogin().indexOf(query)) !== -1
                 && this.state.selectedStudents.indexOf(student) === -1
             ) {
                 filteredData.push(student);

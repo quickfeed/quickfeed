@@ -4,6 +4,7 @@ import { Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
 import { ActionType, UserView } from "./UserView";
+import { bool } from "prop-types";
 
 interface IUserViewerProps {
     navMan: NavigationManager;
@@ -150,9 +151,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         // we filter out every student group separately to ensure that student status is easily visible to teacher
         // filter accepted students
         this.props.acceptedUsers.forEach((user) => {
-            if (user.user.getName().toLowerCase().indexOf(query) !== -1
-                || user.user.getStudentid().toLowerCase().indexOf(query) !== -1
-            ) {
+            if (this.found(query, user)) {
                 filteredAccepted.push(user);
             }
         });
@@ -163,9 +162,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
         // filter pending students
         this.props.pendingUsers.forEach((user) => {
-            if (user.user.getName().toLowerCase().indexOf(query) !== -1
-                || user.user.getStudentid().toLowerCase().indexOf(query) !== -1
-            ) {
+            if (this.found(query, user)) {
                 filteredPending.push(user);
             }
         });
@@ -176,9 +173,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
         // filter rejected students
         this.props.rejectedUsers.forEach((user) => {
-            if (user.user.getName().toLowerCase().indexOf(query) !== -1
-                || user.user.getStudentid().toLowerCase().indexOf(query) !== -1
-            ) {
+            if (this.found(query, user)) {
                 filteredRejected.push(user);
             }
         });
@@ -187,6 +182,16 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             rejectedUsers: filteredRejected,
         });
 
+    }
+
+    private found(query: string, user: IUserRelation): boolean {
+        if (user.user.getName().toLowerCase().indexOf(query) !== -1
+                || user.user.getStudentid().toLowerCase().indexOf(query) !== -1
+                || user.user.getLogin().toLowerCase().indexOf(query) !== -1
+            ) {
+                return true;
+            }
+        return false;
     }
 
     private refreshState() {
