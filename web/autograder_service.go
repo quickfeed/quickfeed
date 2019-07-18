@@ -60,7 +60,6 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get users")
 	}
-	usrs.RemoveRemoteIDs()
 	return usrs, nil
 }
 
@@ -77,7 +76,6 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
 	}
-	usr.RemoveRemoteID()
 	return usr, nil
 }
 
@@ -118,7 +116,6 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create course")
 	}
-	course.RemoveRemoteIDs()
 	return course, nil
 }
 
@@ -150,7 +147,6 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "course not found")
 	}
-	course.RemoveRemoteIDs()
 	return course, nil
 }
 
@@ -162,7 +158,6 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "no courses found")
 	}
-	courses.RemoveRemoteIDs()
 	return courses, nil
 }
 
@@ -204,7 +199,6 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "no courses with enrollment found")
 	}
-	courses.RemoveRemoteIDs()
 	return courses, nil
 }
 
@@ -223,7 +217,6 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 	if err != nil {
 		return nil, err
 	}
-	enrolls.RemoveRemoteIDs()
 	return enrolls, nil
 }
 
@@ -243,7 +236,6 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 	if !(s.isTeacher(usr.GetID(), group.GetCourseID()) || isInGroup(usr, group)) {
 		return nil, status.Errorf(codes.PermissionDenied, "only group members and teachers can access a group")
 	}
-	group.RemoveRemoteIDs()
 	return group, nil
 }
 
@@ -264,7 +256,6 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get groups")
 	}
-	groups.RemoveRemoteIDs()
 	return groups, nil
 }
 
@@ -284,7 +275,6 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 	if !(s.isTeacher(usr.GetID(), group.GetCourseID()) || isInGroup(usr, group)) {
 		return nil, status.Errorf(codes.PermissionDenied, "only group members and teachers can access another group")
 	}
-	group.RemoveRemoteIDs()
 	return group, nil
 }
 
@@ -306,7 +296,6 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 		// this err may be a grpc status type to be returned to the client
 		return nil, err
 	}
-	group.RemoveRemoteIDs()
 	return group, nil
 }
 

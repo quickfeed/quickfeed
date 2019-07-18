@@ -75,12 +75,8 @@ func TestGetUsers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// remote identities should not be loaded.
-	admin.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
-	user2.RemoteIdentities = make([]*pb.RemoteIdentity, 0)
 	wantUsers := make([]*pb.User, 0)
-	wantUsers = append(wantUsers, admin)
-	wantUsers = append(wantUsers, user2)
+	wantUsers = append(wantUsers, admin, user2)
 
 	if !cmp.Equal(foundUsers.Users, wantUsers) {
 		t.Errorf("have users %+v want %+v", foundUsers.Users, wantUsers)
