@@ -12,9 +12,7 @@ interface ICourseOverviewProps {
 export class CoursesOverview extends React.Component<ICourseOverviewProps> {
 
     public render() {
-        // TODO(meling) this test for groupCourseOverview seems unnecessary;
-        // if it is non-null, then it is fine: if it is null or something else, it becomes null.
-        const groupCourses = this.props.groupCourseOverview ? this.props.groupCourseOverview : null;
+        const groupCourses = this.props.groupCourseOverview;
         const courses = this.props.courseOverview.map((val, key) => {
             if (groupCourses && groupCourses[key] && groupCourses[key].course.getId() === val.course.getId()) {
                 for (let iter = 0; iter < val.assignments.length; iter++) {

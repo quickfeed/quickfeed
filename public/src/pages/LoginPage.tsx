@@ -22,7 +22,7 @@ export class LoginPage extends ViewPage {
 
     // TODO(meling) remove
     public async index(info: INavInfo<{ provider: string }>): View {
-        return <div>Quickly hide, you should not be here! Someone is going to get mad...</div>;
+        return <div>Index page</div>;
     }
 
     public async login(info: INavInfo<{ provider: string }>): View {

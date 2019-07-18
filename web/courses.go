@@ -38,7 +38,6 @@ func (s *AutograderService) createEnrollment(request *pb.Enrollment) error {
 }
 
 // updateEnrollment accepts or rejects a user to enroll in a course.
-// TODO(meling) simplify the flow of this func; too long; split into sub-functions
 func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, request *pb.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {

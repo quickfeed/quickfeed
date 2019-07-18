@@ -204,28 +204,6 @@ export class NavigationHelper {
         return undefined;
     }
 
-    // todo(vera): remove after testing
-    /*
-    private parseValue<K extends keyof ITypeMap>(value: string, type: K): ITypeMap[K] | undefined {
-        switch (type) {
-            case "string":
-                return value;
-            case "number":
-                const num = parseFloat(value);
-                if (isNaN(num)) {
-                    return undefined;
-                }
-                return num;
-            case "boolean":
-                if (value.toLowerCase() === "true") {
-                    return true;
-                } else if (value.toLowerCase() === "false") {
-                    return false;
-                }
-                return undefined;
-        }
-    }*/
-
     private createParamsObj(matchPath: string[], realPath: string[]): any | undefined {
         if (matchPath.length !== realPath.length) {
             throw new Error("trying to match different paths");

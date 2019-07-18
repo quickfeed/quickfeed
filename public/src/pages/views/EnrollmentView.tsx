@@ -24,7 +24,7 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         if (course.link) {
             if (course.link.getStatus() === Enrollment.UserStatus.STUDENT
                  || course.link.getStatus() === Enrollment.UserStatus.TEACHER) {
-                base.push("Enrolled");
+                base.push("");
             } else if (course.link.getStatus() === Enrollment.UserStatus.PENDING) {
                 base.push("Pending");
             } else if (course.link.getStatus() === Enrollment.UserStatus.NONE) {

@@ -69,7 +69,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             const enr: Enrollment = new Enrollment();
             enr.setCourse(ele);
             enr.setCourseid(ele.getId());
-            enr.setStatus(ele.getEnrolled());
             enr.setUser(user);
             enr.setUserid(user.getId());
             arr.push(enr);
@@ -240,8 +239,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return null;
     }
 
-    // TODO(vera): now admins can only promote users, but never demote
-    // what if we introduce a rule that would allow course creators to demote users?
     public async changeAdminRole(user: User): Promise<boolean> {
         const result = await this.grpcHelper.updateUser(user, true);
         // we are not interested in user data returned in this case, only checking that there were no errors
