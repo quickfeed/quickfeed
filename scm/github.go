@@ -288,7 +288,7 @@ func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team
 
 // AddTeamMember implements the scm interface
 func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
-	team, err := s.GetTeam(ctx, &CreateTeamOptions{TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
+	team, err := s.GetTeam(ctx, &CreateTeamOptions{Organization: opt.Organization, TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
 	if err != nil {
 		log.Println("GitHub AddTeamMember failed to get team: ", err.Error())
 	}

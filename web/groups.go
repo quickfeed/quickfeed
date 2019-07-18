@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -98,14 +99,13 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 	}
 
 	// the group is being updated or approved;
-	// will create group repository and set group status to approved
+	// will create group repository and team and set group status to approved
 
 	// get users of group, check consistency of group request
 	users, err := s.getGroupUsers(request, currentUser)
 	if err != nil {
 		return err
 	}
-	s.logger.Info("getGroupUsers got list of users: ", users)
 
 	// check whether the group repo already exists
 	groupRepoQuery := &pb.Repository{
@@ -116,13 +116,17 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 	if err != nil {
 		return err
 	}
-	// request.Users from frontend may only have IDs
-	// we need to get full user information from database
-	request.Users = users
 
-	if len(repos) == 0 {
+	group.Status = pb.Group_APPROVED
+	group.Users = users
+
+	if len(repos) == 0 && !hasTeam(ctx, sc, course.OrganizationID, group) {
 		// found no repos for the group; create group repo and team
-		repo, team, err := createGroupRepoAndTeam(ctx, sc, course, request)
+		if request.GetName() != "" {
+			group.Name = request.Name
+		}
+
+		repo, team, err := createGroupRepoAndTeam(ctx, sc, course, group)
 		if err != nil {
 			return err
 		}
@@ -138,25 +142,17 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 		if err := s.db.CreateRepository(groupRepo); err != nil {
 			return err
 		}
-		request.TeamID = team.ID
+		group.TeamID = team.ID
 	} else {
 		// github team already exists, update its members
 		// use the group's existing team ID obtained from the database above.
-		request.TeamID = group.TeamID
-		if err := updateGroupTeam(ctx, sc, course, request); err != nil {
+		if err := updateGroupTeam(ctx, sc, course, group); err != nil {
 			return err
 		}
 	}
 
 	// approve the updated group
-	return s.db.UpdateGroup(&pb.Group{
-		ID:       request.ID,
-		Name:     request.Name,
-		CourseID: request.CourseID,
-		TeamID:   request.TeamID,
-		Users:    users,
-		Status:   pb.Group_APPROVED,
-	})
+	return s.db.UpdateGroup(group)
 }
 
 // getGroupUsers returns the users of the specified group request, and checks
@@ -248,9 +244,10 @@ func gitUserNames(g *pb.Group) []string {
 	return gitUserNames
 }
 
-func hasTeam(ctx context.Context, sc scm.SCM, g *pb.Group) bool {
+func hasTeam(ctx context.Context, sc scm.SCM, orgID uint64, g *pb.Group) bool {
 	// try to get group team by ID or name
-	if team, _ := sc.GetTeam(ctx, &scm.CreateTeamOptions{TeamName: g.GetName(), TeamID: g.GetTeamID()}); team != nil {
+	if team, _ := sc.GetTeam(ctx, &scm.CreateTeamOptions{Organization: &pb.Organization{ID: orgID}, TeamName: g.GetName(), TeamID: g.GetTeamID()}); team != nil {
+		log.Println("Group ", g.Name, " already has team")
 		return true
 	}
 	return false
