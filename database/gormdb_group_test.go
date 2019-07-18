@@ -217,8 +217,8 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				}
 			}
 			group.Enrollments = enrollments
-			have.RemoveRemoteIDs()
-			group.RemoveRemoteIDs()
+			have.RemoveRemoteID()
+			group.RemoveRemoteID()
 			if diff := cmp.Diff(group, have); diff != "" {
 				t.Errorf("mismatch (-group +have):\n%s", diff)
 			}
