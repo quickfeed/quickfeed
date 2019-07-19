@@ -62,7 +62,7 @@ message Course {
     string tag = 6;
     string provider = 7;
     uint64 organizationID = 8;
-    Enrollment.UserStatus enrolled = 9;
+    Enrollment.UserStatus enrolled = 9 [(gogoproto.moretags) = "sql:\"-\""];
 
     repeated Enrollment enrollments = 10;
     repeated Assignment assignments = 12;
