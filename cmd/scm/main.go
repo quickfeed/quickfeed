@@ -15,6 +15,7 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/urfave/cli"
+	"go.uber.org/zap"
 )
 
 // To use this tool, there are two options:
@@ -217,7 +218,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
 		if accessToken != "" {
-			*client, err = scm.NewSCMClient(provider, accessToken)
+			*client, err = scm.NewSCMClient(zap.NewNop(), provider, accessToken)
 			return
 		}
 
@@ -245,7 +246,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		if accessToken == "" {
 			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
-		*client, err = scm.NewSCMClient(provider, accessToken)
+		*client, err = scm.NewSCMClient(zap.NewNop(), provider, accessToken)
 		return
 	}
 }
