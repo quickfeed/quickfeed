@@ -73,3 +73,4 @@ protoset:
 
 test:
 	@cd ./web; go test
+	@cd ./database; go test
