@@ -66,11 +66,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         const arr: Enrollment[] = [];
         result.data.getCoursesList().forEach((ele) => {
-            this.getEnrollment(ele.getId(), user.getId()).then((enrol) => {
-                if (enrol) {
-                    arr.push(enrol);
-                }
-            });
+            const enr: Enrollment = new Enrollment();
+            enr.setCourse(ele);
+            enr.setCourseid(ele.getId());
+            enr.setUser(user);
+            enr.setUserid(user.getId());
+            enr.setStatus(ele.getEnrolled());
+            arr.push(enr);
         });
         return arr;
     }
@@ -122,7 +124,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async isTeacher(user: User, courseID: number): Promise<boolean> {
-        const result = await this.grpcHelper.getEnrollment(courseID, user.getId())
+        const result = await this.grpcHelper.getEnrollment(courseID, user.getId());
         if (result.status.getCode() !== 0 || !result.data) {
             return false;
         }

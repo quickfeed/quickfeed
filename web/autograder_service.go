@@ -203,6 +203,8 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 }
 
 // GetEnrollment returns a single enrollment in given course for user or group
+// Access policy: Any User
+// todo(vera): probably should be restricted to teacher/admin/current user
 func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollment, error) {
 	return s.getEnrollment(in)
 }
