@@ -66,12 +66,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         const arr: Enrollment[] = [];
         result.data.getCoursesList().forEach((ele) => {
-            const enr: Enrollment = new Enrollment();
-            enr.setCourse(ele);
-            enr.setCourseid(ele.getId());
-            enr.setUser(user);
-            enr.setUserid(user.getId());
-            arr.push(enr);
+            this.getEnrollment(ele.getId(), user.getId()).then((enrol) => {
+                if (enrol) {
+                    arr.push(enrol);
+                }
+            });
         });
         return arr;
     }
@@ -85,6 +84,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return [];
         }
         return result.data.getEnrollmentsList();
+    }
+
+
+    public async getEnrollment(courseID: number, userID?: number, groupID?: number): Promise<Enrollment | null> {
+        const result = await this.grpcHelper.getEnrollment(courseID, userID, groupID);
+        if (result.status.getCode() !== 0 || !result.data) {
+            return null;
+        }
+        return result.data;
     }
 
     public async getAssignments(courseId: number): Promise<Assignment[]> {

@@ -120,6 +120,18 @@ export class GrpcManager {
 
     // /* ENROLLMENTS */ //
 
+    public getEnrollment(courseID: number, userID?: number, groupID?: number ): Promise<IGrpcResponse<Enrollment>> {
+
+        const request = new EnrollmentRequest();
+        request.setCourseid(courseID);
+        if (userID) {
+            request.setUserid(userID);
+        } else if (groupID) {
+            request.setGroupid(groupID);
+        }
+        return this.grpcSend<Enrollment>(this.agService.getEnrollment, request);
+    }
+
     public getEnrollmentsByCourse(courseid: number, noGroupMembers?: boolean, state?: any):
         Promise<IGrpcResponse<Enrollments>> {
 

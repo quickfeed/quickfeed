@@ -109,6 +109,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
+    public async getEnrollment(courseID: number, userID?: number, groupID?: number) {
+        return null;
+    }
+
     public async isAuthorizedTeacher(): Promise<boolean> {
         return true;
     }
