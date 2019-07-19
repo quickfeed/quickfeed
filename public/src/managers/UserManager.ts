@@ -12,6 +12,7 @@ export interface IUserProvider {
     getLoggedInUser(): Promise<User | null>;
     updateUser(user: User): Promise<boolean>;
     isAuthorizedTeacher(): Promise<boolean>;
+    isTeacher(user: User, courseID: number): Promise<boolean>;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -100,9 +101,9 @@ export class UserManager {
      * @param user User to check if is an teacher in a courses
      * @returns Returns true if user is teacher in one or more courses
      */
-    public async isTeacher(user: User): Promise<boolean> {
+    public async isTeacher(user: User, courseID: number): Promise<boolean> {
         // TODO(meling) we do distinguish between admin and teacher; should this be fixed?
-        return user.getIsadmin();
+        return this.userProvider.isTeacher(user, courseID);
     }
 
     /**
