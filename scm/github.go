@@ -70,33 +70,6 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organiz
 	}, nil
 }
 
-// CreateRepoAndTeam implements the SCM interface.
-func (s *GithubSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, *Team, error) {
-	repo, err := s.CreateRepository(ctx, opt)
-	if err != nil {
-		return nil, nil, err // just forward the error
-	}
-
-	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
-		Organization: opt.Organization,
-		TeamName:     teamName,
-		Users:        gitUserNames,
-	})
-	if err != nil {
-		return nil, nil, err // just forward the error
-	}
-
-	err = s.AddTeamRepo(ctx, &AddTeamRepoOptions{
-		TeamID: team.ID,
-		Owner:  repo.Owner,
-		Repo:   repo.Path,
-	})
-	if err != nil {
-		return nil, nil, err // just forward the error
-	}
-	return repo, team, nil
-}
-
 // CreateRepository implements the SCM interface.
 func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
 	repo, _, err := s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{

@@ -55,33 +55,6 @@ func (s *FakeSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organizat
 	return org, nil
 }
 
-// CreateRepoAndTeam implements the SCM interface.
-func (s *FakeSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, *Team, error) {
-	repo, err := s.CreateRepository(ctx, opt)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
-		Organization: opt.Organization,
-		TeamName:     teamName,
-		Users:        gitUserNames,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	err = s.AddTeamRepo(ctx, &AddTeamRepoOptions{
-		TeamID: team.ID,
-		Owner:  repo.Owner,
-		Repo:   repo.Path,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	return repo, team, nil
-}
-
 // CreateRepository implements the SCM interface.
 func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
 	id := len(s.Repositories) + 1
