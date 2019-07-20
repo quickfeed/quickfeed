@@ -119,34 +119,24 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 	}
 
 	switch state {
-	// if student, add to students team, create user repo and personal team
 	case pb.Enrollment_STUDENT:
-
-		// add to students team
+		// add student to the organization's "students" team
 		if err := sc.AddTeamMember(ctx, teamOpt); err != nil {
 			return nil, err
 		}
-
-		// the student's git user name is the same as the team name
-		opt := &scm.CreateRepositoryOptions{
-			Organization: org,
-			Path:         pb.StudentRepoName(login),
-			Private:      true,
-		}
-
-		// create personal team and user repo
-		repo, _, err := sc.CreateRepoAndTeam(ctx, opt, login, []string{login})
+		// create user repo and personal team for the student
+		repo, _, err := createRepoAndTeam(ctx, sc, course, pb.StudentRepoName(login), login, []string{login})
 		if err != nil {
 			return nil, err
 		}
 		return repo, nil
 
-		//if teacher, promote to owner, remove from students team, add to teachers team
 	case pb.Enrollment_TEACHER:
+		// if teacher, promote to owner, remove from students team, add to teachers team
 		orgUpdate := &scm.OrgMembership{
-			Username: login,
-			OrgID:    course.GetOrganizationID(),
-			Role:     "admin",
+			Organization: org,
+			Username:     login,
+			Role:         "admin",
 		}
 		// when promoting to teacher, promote to organization owner as well
 		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {

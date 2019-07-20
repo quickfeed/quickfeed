@@ -71,6 +71,8 @@ func (s *AutograderService) createGroup(currentUser *pb.User, request *pb.Group)
 // Only teachers can invoke this, and allows the teacher to add or remove
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
+// TODO(meling) this function must be broken up and simplified
+// TODO(meling) if error, add context and return original error
 func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, currentUser *pb.User, request *pb.Group) error {
 	// course must exist in the database
 	course, err := s.db.GetCourse(request.CourseID)
@@ -126,7 +128,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 			group.Name = request.Name
 		}
 
-		repo, team, err := createGroupRepoAndTeam(ctx, sc, course, group)
+		repo, team, err := createRepoAndTeam(ctx, sc, course, group.Name, group.Name, group.UserNames())
 		if err != nil {
 			return err
 		}
@@ -204,23 +206,6 @@ func (s *AutograderService) getGroupUsers(request *pb.Group, currentUser *pb.Use
 	return users, nil
 }
 
-// createGroupRepoAndTeam creates the given group in course on the provided SCM.
-// This function performs several sequential queries and updates on the SCM.
-// Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createGroupRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *pb.Group) (*scm.Repository, *scm.Team, error) {
-	org, err := sc.GetOrganization(ctx, course.OrganizationID)
-	if err != nil {
-		return nil, nil, status.Errorf(codes.NotFound, "organization not found")
-	}
-
-	opt := &scm.CreateRepositoryOptions{
-		Organization: org,
-		Path:         group.Name,
-		Private:      true,
-	}
-	return sc.CreateRepoAndTeam(ctx, opt, group.Name, gitUserNames(group))
-}
-
 func updateGroupTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *pb.Group) error {
 	org, err := sc.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
@@ -231,17 +216,9 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *
 		Organization: org,
 		TeamName:     group.Name,
 		TeamID:       group.TeamID,
-		Users:        gitUserNames(group),
+		Users:        group.UserNames(),
 	}
 	return sc.UpdateTeamMembers(ctx, opt)
-}
-
-func gitUserNames(g *pb.Group) []string {
-	var gitUserNames []string
-	for _, user := range g.Users {
-		gitUserNames = append(gitUserNames, user.GetLogin())
-	}
-	return gitUserNames
 }
 
 func hasTeam(ctx context.Context, sc scm.SCM, orgID uint64, g *pb.Group) bool {
