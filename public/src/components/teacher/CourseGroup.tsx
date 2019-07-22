@@ -69,8 +69,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
         if ((prevProps.approvedGroups.length !== this.props.approvedGroups.length)
             || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)
             || (prevProps.rejectedGroups.length !== this.props.rejectedGroups.length)) {
-            this.refreshState();
-            this.forceUpdate();
+            return this.refreshState();
         }
     }
 
@@ -255,6 +254,7 @@ ${group.getName()}?`,
             pendingGroups: this.props.pendingGroups,
             rejectedGroups: this.props.rejectedGroups,
         });
+        return this.forceUpdate();
     }
 
 }

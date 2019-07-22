@@ -52,9 +52,8 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         if ((prevProps.acceptedUsers.length !== this.props.acceptedUsers.length)
          || (prevProps.pendingUsers.length !== this.props.pendingUsers.length)
           || (prevProps.rejectedUsers.length !== this.props.rejectedUsers.length)) {
-            this.refreshState();
-            this.forceUpdate();
-        }
+            return this.refreshState();
+       }
     }
 
     public renderRejectedView() {
@@ -200,6 +199,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             acceptedUsers: this.props.acceptedUsers,
             rejectedUsers: this.props.rejectedUsers,
         });
+        return this.forceUpdate();
     }
 }
 
