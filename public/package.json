@@ -19,6 +19,7 @@
     "grpc-web": "^1.0.5",
     "lodash": "^4.17.14",
     "react": "^16.8.0",
+    "react-components": "^0.5.1",
     "react-dom": "^16.8.0"
   },
   "devDependencies": {
