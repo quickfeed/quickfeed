@@ -51,15 +51,39 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, path,
 	return repo, team, nil
 }
 
+// add user to the organization's "students" team.
 func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	opt := &scm.TeamMembershipOptions{
 		Organization: org,
 		TeamSlug:     "students",
 		Username:     userName,
 	}
-	// add userName to the organization's "students" team
 	if err := sc.AddTeamMember(ctx, opt); err != nil {
 		return fmt.Errorf("addUserToStudentsTeam: failed to add '%s' to students team: %w", userName, err)
+	}
+	return nil
+}
+
+// add user to the organization's "teachers" team, and remove user from "students" team.
+func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
+	studentsTeam := &scm.TeamMembershipOptions{
+		Organization: org,
+		Username:     userName,
+		TeamSlug:     "students",
+		Role:         "member",
+	}
+	if err := sc.RemoveTeamMember(ctx, studentsTeam); err != nil {
+		return fmt.Errorf("promoteUserToTeachersTeam: failed to remove '%s' from students team: %w", userName, err)
+	}
+
+	teachersTeam := &scm.TeamMembershipOptions{
+		Organization: org,
+		Username:     userName,
+		TeamSlug:     "teachers",
+		Role:         "maintainer",
+	}
+	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {
+		return fmt.Errorf("promoteUserToTeachersTeam: failed to add '%s' to teachers team: %w", userName, err)
 	}
 	return nil
 }

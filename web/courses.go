@@ -110,18 +110,10 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		return nil, err
 	}
 
-	// options to use when updating team membership
-	teamOpt := &scm.TeamMembershipOptions{
-		Organization: org,
-		TeamSlug:     "students",
-		TeamID:       0,
-		Username:     login,
-	}
-
 	switch state {
 	case pb.Enrollment_STUDENT:
 		// add student to the organization's "students" team
-		if err := sc.AddTeamMember(ctx, teamOpt); err != nil {
+		if err = addUserToStudentsTeam(ctx, sc, org, login); err != nil {
 			return nil, err
 		}
 		// create user repo and personal team for the student
@@ -143,17 +135,9 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 			log.Println("UpdateRepoAndTeam: failed to update org membership: ", err.Error())
 			return nil, err
 		}
-		// then remove from students team
-		if err = sc.RemoveTeamMember(ctx, teamOpt); err != nil {
-			log.Println("UpdateRepoAndTeam: failed to remove team member: ", err.Error())
-			return nil, err
-		}
-		// and add to teachers team
-		teamOpt.TeamSlug = "teachers"
-		teamOpt.Role = "maintainer"
-		return nil, sc.AddTeamMember(ctx, teamOpt)
+		err = promoteUserToTeachersTeam(ctx, sc, org, login)
 	}
-	return nil, fmt.Errorf("unknown enrollment")
+	return nil, err
 }
 
 // GetCourse returns a course object for the given course id.
