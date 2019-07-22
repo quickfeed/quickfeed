@@ -52,7 +52,6 @@ export class TeacherPage extends ViewPage {
         if (curUser && curUser.getIsadmin()) {
             if (!this.userMan.isAuthorizedTeacher()) {
                 window.location.assign("https://" + window.location.hostname + "/auth/github-teacher");
-                // window.location.href="https://" + window.location.hostname + "/auth/github-teacher";
             }
             return true;
         }
@@ -77,9 +76,8 @@ export class TeacherPage extends ViewPage {
                         classType="primary"
                         onClick={(e) => {
                             this.refreshState = 1;
-                            // TODO(meling) check if returning a boolean from updateAssignments is ok here?
                             this.courseMan.updateAssignments(course.getId())
-                                .then((value) => {
+                                .then(() => {
                                     this.refreshState = 2;
                                     this.navMan.refresh();
                                 });
@@ -101,9 +99,8 @@ export class TeacherPage extends ViewPage {
                         disabled={false}
                         onClick={(e) => {
                             this.refreshState = 1;
-                            // TODO(meling) check if returning a boolean from updateAssignments is ok here?
                             this.courseMan.updateAssignments(course.getId())
-                                .then((value) => {
+                                .then(() => {
                                     this.refreshState = 2;
                                     this.navMan.refresh();
                                 });
