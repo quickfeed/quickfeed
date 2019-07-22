@@ -117,7 +117,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 			return nil, err
 		}
 		// create user repo and personal team for the student
-		repo, _, err := createRepoAndTeam(ctx, sc, course, pb.StudentRepoName(login), login, []string{login})
+		repo, _, err := createRepoAndTeam(ctx, sc, org, pb.StudentRepoName(login), login, []string{login})
 		if err != nil {
 			return nil, err
 		}

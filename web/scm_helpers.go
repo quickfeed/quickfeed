@@ -16,12 +16,7 @@ import (
 // typically just the one student's user name.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, path, teamName string, userNames []string) (*scm.Repository, *scm.Team, error) {
-	org, err := sc.GetOrganization(ctx, course.OrganizationID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
-	}
-
+func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, path, teamName string, userNames []string) (*scm.Repository, *scm.Team, error) {
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
 		Path:         path,

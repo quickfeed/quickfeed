@@ -122,13 +122,18 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 	group.Status = pb.Group_APPROVED
 	group.Users = users
 
-	if len(repos) == 0 && !hasTeam(ctx, sc, course.OrganizationID, group) {
+	org, err := sc.GetOrganization(ctx, course.OrganizationID)
+	if err != nil {
+		return fmt.Errorf("updateGroup: organization not found: %w", err)
+	}
+
+	if len(repos) == 0 && !hasTeam(ctx, sc, org, group) {
 		// found no repos for the group; create group repo and team
 		if request.GetName() != "" {
 			group.Name = request.Name
 		}
 
-		repo, team, err := createRepoAndTeam(ctx, sc, course, group.Name, group.Name, group.UserNames())
+		repo, team, err := createRepoAndTeam(ctx, sc, org, group.Name, group.Name, group.UserNames())
 		if err != nil {
 			return err
 		}
@@ -148,7 +153,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 	} else {
 		// github team already exists, update its members
 		// use the group's existing team ID obtained from the database above.
-		if err := updateGroupTeam(ctx, sc, course, group); err != nil {
+		if err := updateGroupTeam(ctx, sc, org, group); err != nil {
 			return err
 		}
 	}
@@ -206,12 +211,7 @@ func (s *AutograderService) getGroupUsers(request *pb.Group, currentUser *pb.Use
 	return users, nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *pb.Group) error {
-	org, err := sc.GetOrganization(ctx, course.OrganizationID)
-	if err != nil {
-		return status.Errorf(codes.NotFound, "organization not found")
-	}
-
+func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, group *pb.Group) error {
 	opt := &scm.CreateTeamOptions{
 		Organization: org,
 		TeamName:     group.Name,
@@ -221,10 +221,16 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
-func hasTeam(ctx context.Context, sc scm.SCM, orgID uint64, g *pb.Group) bool {
+// hasTeam returns true if the SCM already has a team for the given group.
+func hasTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, group *pb.Group) bool {
 	// try to get group team by ID or name
-	if team, _ := sc.GetTeam(ctx, &scm.CreateTeamOptions{Organization: &pb.Organization{ID: orgID}, TeamName: g.GetName(), TeamID: g.GetTeamID()}); team != nil {
-		log.Println("Group ", g.Name, " already has team")
+	opt := &scm.CreateTeamOptions{
+		Organization: org,
+		TeamName:     group.GetName(),
+		TeamID:       group.GetTeamID(),
+	}
+	if team, _ := sc.GetTeam(ctx, opt); team != nil {
+		log.Println("Group ", group.Name, " already has team")
 		return true
 	}
 	return false
