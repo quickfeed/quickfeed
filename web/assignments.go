@@ -47,7 +47,7 @@ func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, c
 // The TempDir() function ensures that cloning is done in distinct temp
 // directories, should there be concurrent calls to this function.
 func fetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.Assignment, error) {
-	ctx, cancel := context.WithTimeout(c, MaxWait)
+	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
 	defer cancel()
 
 	org, err := sc.GetOrganization(ctx, course.OrganizationID)
