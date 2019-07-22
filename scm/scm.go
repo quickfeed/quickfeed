@@ -28,8 +28,6 @@ type SCM interface {
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *pb.Organization) ([]*Repository, error)
-	// Update repository settings
-	UpdateRepository(context.Context, *Repository) error
 	// Delete repository.
 	DeleteRepository(context.Context, uint64) error
 	// List the webhooks associated with the provided repository.

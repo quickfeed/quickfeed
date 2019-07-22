@@ -433,23 +433,6 @@ func (s *GithubSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentP
 	return plan, nil
 }
 
-// UpdateRepository implements the SCM interface
-func (s *GithubSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
-	// TODO - make this more flexible rather than only making stuff private.
-	// TODO(meling) remove this method??
-	gitRepo, _, err := s.client.Repositories.GetByID(ctx, int64(repo.ID))
-	if err != nil {
-		return fmt.Errorf("UpdateRepository: failed to get GitHub repository '%d': %w", repo.ID, err)
-	}
-
-	*gitRepo.Private = true
-	_, _, err = s.client.Repositories.Edit(ctx, gitRepo.Owner.GetLogin(), gitRepo.GetName(), gitRepo)
-	if err != nil {
-		return fmt.Errorf("UpdateRepository: failed to edit GitHub repository '%d': %w", repo.ID, err)
-	}
-	return nil
-}
-
 // GetOrgMembership implements the SCM interface
 func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
 	org, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))

@@ -202,11 +202,6 @@ func (s *FakeSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPla
 	}, nil
 }
 
-// UpdateRepository implements the SCM interface.
-func (s *FakeSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
-	return nil
-}
-
 // GetOrgMembership implements the SCM interface
 func (s *FakeSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
 	// TODO no implementation provided yet
