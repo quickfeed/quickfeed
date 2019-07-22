@@ -292,7 +292,7 @@ export class GrpcManager {
                         const code = new Status();
                         code.setCode(0);
                         // TODO(vera): this can be handled in another way, needs synchronization with backend
-                        code.setError("");
+                        code.setError("OK");
                         const temp: IGrpcResponse<T> = {
                             data: response as T,
                             status: code,

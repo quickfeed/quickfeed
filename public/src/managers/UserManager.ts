@@ -102,7 +102,6 @@ export class UserManager {
      * @returns Returns true if user is teacher in one or more courses
      */
     public async isTeacher(user: User, courseID: number): Promise<boolean> {
-        // TODO(meling) we do distinguish between admin and teacher; should this be fixed?
         return this.userProvider.isTeacher(user, courseID);
     }
 
