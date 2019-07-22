@@ -499,16 +499,12 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 
 // GetUserScopes implements the SCM interface
 func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
-	// this method will always return an error as it is OAuth2 API,
-	// but it will also return scopes info in the response headers
+	// Authorizations.List method will always return nill, response struct and error,
+	// we are only interested in user scopes that are always contained in response header
 	// TODO(meling) @Vera: the above comment needs to be clarified a little more.
-	_, resp, err := s.client.Authorizations.List(ctx, &github.ListOptions{})
-	if err != nil {
-		s.logger.Debugf("GetUserScopes: failed to get authorization list for user: %w", err)
-	}
+	_, resp, _ := s.client.Authorizations.List(ctx, &github.ListOptions{})
 	// header contains a single string with all scopes for authenticated user
 	stringScopes := resp.Header.Get("X-OAuth-Scopes")
-	// we split the string to check against the global slice of required scopes
 	gitScopes := strings.Split(stringScopes, ", ")
 	return &Authorization{Scopes: gitScopes}
 }
