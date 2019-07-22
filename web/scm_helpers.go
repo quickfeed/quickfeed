@@ -55,7 +55,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, path,
 func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	opt := &scm.TeamMembershipOptions{
 		Organization: org,
-		TeamSlug:     "students",
+		TeamSlug:     "team students",
 		Username:     userName,
 	}
 	if err := sc.AddTeamMember(ctx, opt); err != nil {
@@ -69,7 +69,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	studentsTeam := &scm.TeamMembershipOptions{
 		Organization: org,
 		Username:     userName,
-		TeamSlug:     "students",
+		TeamSlug:     "team students",
 		Role:         "member",
 	}
 	if err := sc.RemoveTeamMember(ctx, studentsTeam); err != nil {
@@ -79,7 +79,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	teachersTeam := &scm.TeamMembershipOptions{
 		Organization: org,
 		Username:     userName,
-		TeamSlug:     "teachers",
+		TeamSlug:     "team teachers",
 		Role:         "maintainer",
 	}
 	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {

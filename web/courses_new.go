@@ -90,14 +90,14 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	// create teacher team with course creator
 	opt := &scm.CreateTeamOptions{
 		Organization: org,
-		TeamName:     "teachers",
+		TeamName:     "team teachers",
 		Users:        []string{courseCreator.GetLogin()},
 	}
 	if _, err = sc.CreateTeam(ctx, opt); err != nil {
 		return nil, err
 	}
 	// create student team without any members
-	studOpt := &scm.CreateTeamOptions{Organization: org, TeamName: "students"}
+	studOpt := &scm.CreateTeamOptions{Organization: org, TeamName: "team students"}
 	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
 		return nil, err
 	}
