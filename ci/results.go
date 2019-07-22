@@ -34,6 +34,7 @@ func ExtractResult(out, secret string, execTime time.Duration) (*Result, error) 
 		// check if line has expected JSON score string
 		if score.HasPrefix(line) {
 			sc, err := score.Parse(line, secret)
+			log.Println("ci got score parsing ci results, line: ", sc)
 			if err != nil {
 				log.Println("ci got error parsing ci results, line: ", line)
 				continue
