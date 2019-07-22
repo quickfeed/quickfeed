@@ -251,6 +251,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 	if err != nil {
 		// just logging the error; not returning
 		s.logger.Debugf("AddTeamMember: failed to get GitHub team '%s': %w", opt.TeamSlug, err)
+		return err
 	}
 
 	isAlreadyMember, _, err := s.client.Teams.GetTeamMembership(ctx, int64(team.ID), opt.Username)
