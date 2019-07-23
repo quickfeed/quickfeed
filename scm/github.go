@@ -395,19 +395,6 @@ func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 	return user.GetLogin(), nil
 }
 
-// GetPaymentPlan implements the SCM interface.
-func (s *GithubSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
-	org, _, err := s.client.Organizations.GetByID(ctx, int64(orgID))
-	if err != nil {
-		return nil, fmt.Errorf("GetPaymentPlan: failed to get GitHub organization '%d': %w", orgID, err)
-	}
-	plan := &PaymentPlan{
-		Name:         org.Plan.GetName(),
-		PrivateRepos: uint64(org.Plan.GetPrivateRepos()),
-	}
-	return plan, nil
-}
-
 // GetOrgMembership implements the SCM interface
 func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
 	org, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))

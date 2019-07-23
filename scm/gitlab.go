@@ -207,11 +207,6 @@ func (s *GitlabSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 	return ""
 }
 
-// GetPaymentPlan implements the SCM interface.
-func (s *GitlabSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
-	return nil, nil
-}
-
 // GetOrgMembership implements the SCM interface
 func (s *GitlabSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
 	// TODO no implementation provided yet

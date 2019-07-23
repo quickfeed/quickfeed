@@ -167,14 +167,6 @@ func (s *FakeSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string,
 	return "", nil
 }
 
-// GetPaymentPlan implements the SCM interface.
-func (s *FakeSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
-	return &PaymentPlan{
-		Name:         "Donald Duck",
-		PrivateRepos: 5,
-	}, nil
-}
-
 // GetOrgMembership implements the SCM interface
 func (s *FakeSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
 	// TODO no implementation provided yet
