@@ -21,7 +21,6 @@ import { HttpHelper } from "../HttpHelper";
 import { ICourseProvider } from "./CourseManager";
 import { GrpcManager } from "./GRPCManager";
 
-import HttpStatusCode from "../HttpStatusCode";
 import {
     IUserProvider,
 } from "../managers";
@@ -289,7 +288,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getLoggedInUser(): Promise<User | null> {
         const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
-        if (result.statusCode !== HttpStatusCode.FOUND || !result.data) {
+        if (result.statusCode !== 302 || !result.data) {
             console.log("REST request to get logged in user resulted in error: " + result.statusCode);
             return null;
         }

@@ -3,7 +3,7 @@ import { Course, User } from "../../../proto/ag_pb";
 import { IStudentSubmission } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
 
-interface IStudentLabProbs {
+interface IStudentLabProps {
     course: Course;
     assignment: IStudentSubmission;
     student?: User;
@@ -12,7 +12,7 @@ interface IStudentLabProbs {
     onRebuildClick: () => void;
 }
 
-export class StudentLab extends React.Component<IStudentLabProbs> {
+export class StudentLab extends React.Component<IStudentLabProps> {
     public render() {
         return <LabResultView
             course={this.props.course}
