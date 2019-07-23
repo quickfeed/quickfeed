@@ -108,8 +108,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
             This is to keep the student roster for the different runs of the course separate.</p>
 
                 <p><b>Create an organization for your course.</b> When you
-                <a href="https://github.com/account/organizations/new" target="_blank">create an organization</a>,
-                be sure to select the “Free Plan.”</p>
+                 <a href="https://github.com/account/organizations/new" target="_blank">create an organization</a>,
+                 be sure to select the “Free Plan.”</p>
 
                 <p><b>Important:</b> <i>Don't create any repositories in your GitHub organization yet;
                     Autograder will create a repository structure for you.</i></p>
@@ -117,8 +117,8 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
                 <p><b>Apply for an Educator discount.</b></p>
                 <p>For teachers, GitHub is happy to upgrade your organization to serve private repositories.
                     Go ahead an apply for an
-                    <a href="https://education.github.com/discount_requests/new" target="_blank">Education discount</a>
-                    for your GitHub organization.</p>
+                     <a href="https://education.github.com/discount_requests/new" target="_blank">Education discount</a>
+                     for your GitHub organization.</p>
                 <p>Wait for your organization to be upgraded by GitHub.</p>
                 <p>Return to this page when your organization has been upgraded, to create the course.
                     This will allow Autograder to create the appropriate repository structure.</p>
@@ -261,10 +261,10 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
             let sibling = elem.parentNode.firstChild;
             for (; sibling; sibling = sibling.nextSibling) {
                 if (sibling.nodeType === 1) {
-                    sibling.classList.remove("active");
+                    sibling.classList.remove("alert-success");
                 }
             }
-            elem.classList.add("active");
+            elem.classList.add("alert-success");
         }
     }
 
