@@ -328,8 +328,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {
             buildInfoAsString = sbm.getBuildinfo();
         }
-        console.log("toISubmission: build: " + sbm.getBuildinfo());
-        console.log("toISubmission: parsed scores: " + buildInfoAsString);
+        
         if (sbm.getScoreobjects() && (sbm.getScoreobjects().trim().length > 2)) {
             scoreInfoAsString = sbm.getScoreobjects();
         }
@@ -363,6 +362,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 }
             });
         }
+        const bDate = new Date(buildInfo.builddate);
         const isbm: ISubmission = {
             id: sbm.getId(),
             userid: sbm.getUserid(),
@@ -372,13 +372,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             failedTests: failed,
             score: sbm.getScore(),
             buildId: buildInfo.buildid,
-            buildDate: buildInfo.builddate,
+            buildDate: bDate,
             executetionTime: buildInfo.execTime,
             buildLog: buildInfo.buildlog,
             testCases: scoreObj,
             approved: sbm.getApproved(),
         };
-        console.log("toISubmission: constructed submission " + isbm);
+        console.log("toISubmission: constructed submission with " + isbm);
         return isbm;
     }
 }

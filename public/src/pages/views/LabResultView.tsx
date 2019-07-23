@@ -17,7 +17,6 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         if (this.props.labInfo.latest) {
             const latest = this.props.labInfo.latest;
             const buildLog = latest.buildLog.split("\n").map((x) => <span>{x}<br /></span>);
-
             return (
                 <div className="col-md-9 col-sm-9 col-xs-12">
                     <div className="result-content" id="resultview">
@@ -27,7 +26,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
                                 status={this.getSubmissionInfo()}
-                                delivered={this.getDeliveredTime(this.props.labInfo.latest.buildDate)}
+                                delivered={this.getDeliveredTime(latest.buildDate)}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}
@@ -38,7 +37,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 pass_tests={latest.passedTests}
                                 fail_tests={latest.failedTests}
                                 exec_time={latest.executetionTime}
-                                build_time={latest.buildDate}
+                                build_time={this.getDeliveredTime(latest.buildDate)}
                                 build_id={latest.buildId}
                                 onApproveClick={this.props.onApproveClick}
                                 onRebuildClick={this.props.onRebuildClick}

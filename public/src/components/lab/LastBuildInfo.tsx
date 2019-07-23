@@ -6,7 +6,7 @@ interface ILastBuildInfo {
     pass_tests: number;
     fail_tests: number;
     exec_time: number;
-    build_time: Date;
+    build_time: string;
     build_id: number;
     showApprove: boolean;
     onApproveClick: () => void;
