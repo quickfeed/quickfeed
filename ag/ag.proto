@@ -152,6 +152,7 @@ message Organization {
     uint64 ID = 1;
     string path = 2;
     string avatar = 3;
+    string paymentPlan = 4;
 }
 
 message Organizations {

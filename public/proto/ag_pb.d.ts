@@ -575,6 +575,9 @@ export class Organization extends jspb.Message {
   getAvatar(): string;
   setAvatar(value: string): void;
 
+  getPaymentplan(): string;
+  setPaymentplan(value: string): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Organization.AsObject;
   static toObject(includeInstance: boolean, msg: Organization): Organization.AsObject;
@@ -588,6 +591,7 @@ export namespace Organization {
     id: number,
     path: string,
     avatar: string,
+    paymentplan: string,
   }
 }
 

@@ -4667,7 +4667,8 @@ proto.Organization.toObject = function(includeInstance, msg) {
   var obj = {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     path: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    avatar: jspb.Message.getFieldWithDefault(msg, 3, "")
+    avatar: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    paymentplan: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
   if (includeInstance) {
@@ -4715,6 +4716,10 @@ proto.Organization.deserializeBinaryFromReader = function(msg, reader) {
     case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setAvatar(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPaymentplan(value);
       break;
     default:
       reader.skipField();
@@ -4766,6 +4771,13 @@ proto.Organization.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getPaymentplan();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
 };
 
 
@@ -4811,6 +4823,21 @@ proto.Organization.prototype.getAvatar = function() {
 /** @param {string} value */
 proto.Organization.prototype.setAvatar = function(value) {
   jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string paymentPlan = 4;
+ * @return {string}
+ */
+proto.Organization.prototype.getPaymentplan = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/** @param {string} value */
+proto.Organization.prototype.setPaymentplan = function(value) {
+  jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
