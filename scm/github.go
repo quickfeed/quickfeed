@@ -64,9 +64,10 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organiz
 	}
 
 	return &pb.Organization{
-		ID:     uint64(org.GetID()),
-		Path:   org.GetLogin(),
-		Avatar: org.GetAvatarURL(),
+		ID:          uint64(org.GetID()),
+		Path:        org.GetLogin(),
+		Avatar:      org.GetAvatarURL(),
+		PaymentPlan: org.GetPlan().GetName(),
 	}, nil
 }
 

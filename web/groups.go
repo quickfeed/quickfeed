@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -230,7 +229,6 @@ func hasTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, group *pb.Gr
 		TeamID:       group.GetTeamID(),
 	}
 	if team, _ := sc.GetTeam(ctx, opt); team != nil {
-		log.Println("Group ", group.Name, " already has team")
 		return true
 	}
 	return false
