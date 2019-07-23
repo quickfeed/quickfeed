@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -19,8 +18,6 @@ func (s *AutograderService) getAvailableOrganizations(ctx context.Context, sc sc
 
 	organizations := make([]*pb.Organization, 0)
 	for _, org := range orgs {
-		// TODO(vera): delete after testing
-		log.Println("Payment plan for org ", org.GetPath(), ": ", org.GetPaymentPlan())
 		repos, err := sc.GetRepositories(ctx, org)
 		if err != nil {
 			s.logger.Errorf("couldn't fetch repos: %v", err)

@@ -39,11 +39,15 @@ func (s *GithubSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, 
 
 	var orgs []*pb.Organization
 	for _, org := range userOrgs {
-		orgs = append(orgs, &pb.Organization{
-			ID:     uint64(org.Organization.GetID()),
-			Path:   org.Organization.GetLogin(),
-			Avatar: org.Organization.GetAvatarURL(),
-		})
+		// TODO (vera) - with this update we will have to access GitHub for each organization
+		// we cannot just use org.Organization.GetPlan() to set payment plan, as it is always null here
+		// because of that we need to retrieve every organization from GitHub to get access to its payment plan
+		// not sure if it is really an improvement
+		userOrg, err := s.GetOrganization(ctx, uint64(org.Organization.GetID()))
+		if err != nil {
+			return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organization: %w", err)
+		}
+		orgs = append(orgs, userOrg)
 	}
 	return orgs, nil
 }
@@ -62,7 +66,6 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organiz
 	if err != nil {
 		return nil, fmt.Errorf("GetOrganization: failed to get GitHub organization: %w", err)
 	}
-
 	return &pb.Organization{
 		ID:          uint64(org.GetID()),
 		Path:        org.GetLogin(),
