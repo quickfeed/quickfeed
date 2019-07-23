@@ -26,6 +26,7 @@ interface ICourseFormStates {
     orgid: number;
     organisations: JSX.Element | null;
     errorFlash: JSX.Element | null;
+    clicked: boolean;
 }
 
 class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates> {
@@ -40,6 +41,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
             orgid: this.props.courseData ? this.props.courseData.getOrganizationid() : 0,
             organisations: null,
             errorFlash: null,
+            clicked: false,
         };
     }
 
@@ -88,7 +90,7 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
                     <div className="form-group">
                         <div className="col-sm-offset-2 col-sm-10">
                             <BootstrapButton classType="primary" type="submit">
-                                {this.props.courseData ? "Update" : "Create"}
+                                {this.setButtonString()}
                             </BootstrapButton>
                         </div>
                     </div>
@@ -193,6 +195,9 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
     private async handleFormSubmit(e: React.FormEvent<any>) {
         e.preventDefault();
         const errors: string[] = this.courseValidate();
+        this.setState({
+            clicked: true,
+        });
         if (errors.length > 0) {
             const flashErrors = this.getFlashErrors(errors);
             this.setState({
@@ -215,6 +220,9 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
                 this.props.navMan.navigateTo(redirectTo);
             }
         }
+        this.setState({
+            clicked: false,
+        });
     }
 
     private async updateCourse(courseId: number): Promise<Void | Status> {
@@ -364,6 +372,16 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
                 </ul>
             </div>;
         return flash;
+    }
+
+    private setButtonString(): string {
+        let str: string = "";
+        if (this.state.clicked) {
+            str = this.props.courseData ? "Updating" : "Creating";
+        } else {
+            str = this.props.courseData ? "Update" : "Create";
+        }
+        return str;
     }
 
 }
