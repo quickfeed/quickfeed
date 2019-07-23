@@ -150,6 +150,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 		}
 		group.TeamID = team.ID
 	} else {
+		//TODO(meling) this means that there must be both repos and team for the group; is that intended?
 		// github team already exists, update its members
 		// use the group's existing team ID obtained from the database above.
 		if err := updateGroupTeam(ctx, sc, org, group); err != nil {
@@ -166,6 +167,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 // that the group's users are enrolled in the course,
 // that the enrollment has been accepted, and
 // that the group's users are not already enrolled in another group.
+// TODO(meling) remove access control details from this function.
 func (s *AutograderService) getGroupUsers(request *pb.Group, currentUser *pb.User) ([]*pb.User, error) {
 	if len(request.Users) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "no users in group")
