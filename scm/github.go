@@ -254,25 +254,9 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 		TeamID:       uint64(opt.TeamID),
 	})
 	if err != nil {
-		// just logging the error; not returning
-		s.logger.Debugf("AddTeamMember: failed to get GitHub team '%s': %w", opt.TeamSlug, err)
-		return err
+		return fmt.Errorf("AddTeamMember: failed to get GitHub team '%s': %w", opt.TeamSlug, err)
 	}
 
-	isAlreadyMember, _, err := s.client.Teams.GetTeamMembership(ctx, int64(team.ID), opt.Username)
-	if err != nil {
-		// this will always return an error when the user is not member of team.
-		// this is expected and no error will be returned, but it is still useful
-		// to log it in case there were other reasons (invalid token and others).
-		s.logger.Debugf("AddTeamMember: failed to get GitHub team membership for '%s' (user %s): %w",
-			opt.TeamSlug, opt.Username, err)
-	}
-	if isAlreadyMember != nil {
-		// if already in team, log it, and return without further action
-		s.logger.Debugf("AddTeamMember: GitHub user '%s' is already member of team '%s'", opt.Username, opt.TeamSlug)
-		return nil
-	}
-	// otherwise add user to team
 	_, _, err = s.client.Teams.AddTeamMembership(ctx, int64(team.ID), opt.Username,
 		&github.TeamAddTeamMembershipOptions{Role: opt.Role})
 	if err != nil {
@@ -402,26 +386,11 @@ func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembershipOpti
 
 // UpdateOrgMembership implements the SCM interface
 func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
-	isMember, _, err := s.client.Organizations.IsMember(ctx, opt.Organization.Path, opt.Username)
-	if err != nil {
-		return fmt.Errorf("GetOrgMembership: failed to check if user '%s' is member of GitHub organization '%s': %w",
-			opt.Username, opt.Organization.Path, err)
-	}
-	if !isMember {
-		return fmt.Errorf("GetOrgMembership: user '%s' is not member of GitHub organization '%s': %w",
-			opt.Username, opt.Organization.Path, err)
-	}
-	gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, opt.Organization.Path)
-	if err != nil {
-		return fmt.Errorf("UpdateOrgMembership: failed to get GitHub org membership for user '%s': %w", opt.Username, err)
-	}
-	if opt.Role != "admin" && opt.Role != "member" {
-		return fmt.Errorf("UpdateOrgMembership: invalid role '%s'", opt.Role)
-	}
-	gitMembership.Role = &opt.Role
-	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, opt.Organization.Path, gitMembership)
+
+	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, opt.Organization.Path, &github.Membership{Role: &opt.Role})
 	if err != nil || newMembership.GetRole() != opt.Role {
-		return fmt.Errorf("UpdateOrgMembership: failed to edit GitHub org membership for user '%s': %w", opt.Username, err)
+		// we should not wrap error here because it is potentially nil
+		return fmt.Errorf("UpdateOrgMembership: failed to edit GitHub org membership for user '%s'", opt.Username)
 	}
 	return nil
 }
