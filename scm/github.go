@@ -317,30 +317,21 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOption
 		return fmt.Errorf("UpdateTeamMember: failed to get GitHub team '%s': %w", opt.TeamName, err)
 	}
 
-	// check whether group members are already in team; add missing members
-	for _, member := range opt.Users {
-		isMember, _, err := s.client.Teams.GetTeamMembership(ctx, groupTeam.GetID(), member)
-		if err != nil {
-			// this will always return an error when the user is not member of team.
-			// this is expected and no error will be returned, but it is still useful
-			// to log it in case there were other reasons (invalid token and others).
-			s.logger.Debugf("UpdateTeamMember: failed to get GitHub team membership for '%s' (user %s): %w",
-				opt.TeamName, member, err)
-		}
-		if isMember == nil {
-			s.logger.Debugf("UpdateTeamMember: GitHub user '%s' is not member of team '%s'", member, opt.TeamName)
-			_, _, err = s.client.Teams.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
-			if err != nil {
-				return fmt.Errorf("UpdateTeamMember: failed to add user '%s' to GitHub team '%s': %w", member, opt.TeamName, err)
-			}
-		}
-	}
-
 	// find current team members
 	oldUsers, _, err := s.client.Teams.ListTeamMembers(ctx, groupTeam.GetID(), nil)
 	if err != nil {
 		return fmt.Errorf("UpdateTeamMember: failed to get members for GitHub team '%s': %w", opt.TeamName, err)
 	}
+
+	// check whether group members are already in team; add missing members
+	for _, member := range opt.Users {
+		_, _, err = s.client.Teams.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
+		if err != nil {
+			return fmt.Errorf("UpdateTeamMember: failed to add user '%s' to GitHub team '%s': %w", member, opt.TeamName, err)
+		}
+
+	}
+
 	// check if all the team members are in the new group;
 	for _, teamMember := range oldUsers {
 		toRemove := true
