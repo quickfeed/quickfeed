@@ -401,12 +401,7 @@ func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 
 // GetOrgMembership implements the SCM interface
 func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
-	org, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))
-	if err != nil {
-		return nil, fmt.Errorf("GetOrgMembership: failed to get GitHub organization '%d': %w", opt.OrgID, err)
-	}
-
-	membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, org.GetLogin())
+	membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, opt.Organization.Path)
 	if err != nil {
 		return nil, fmt.Errorf("GetOrgMembership: failed to get GitHub org membership for user '%s': %w", opt.Username, err)
 	}
@@ -416,22 +411,16 @@ func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*
 
 // UpdateOrgMembership implements the SCM interface
 func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership) error {
-	s.logger.Debugf("UpdateOrgMembership: started with options: %v", opt)
-	gitOrg, _, err := s.client.Organizations.GetByID(ctx, int64(opt.OrgID))
-	if err != nil {
-		return fmt.Errorf("GetOrgMembership: failed to get GitHub organization '%d': %w", opt.OrgID, err)
-	}
-
-	isMember, _, err := s.client.Organizations.IsMember(ctx, gitOrg.GetLogin(), opt.Username)
+	isMember, _, err := s.client.Organizations.IsMember(ctx, opt.Organization.Path, opt.Username)
 	if err != nil {
 		return fmt.Errorf("GetOrgMembership: failed to check if user '%s' is member of GitHub organization '%s': %w",
-			opt.Username, gitOrg.GetLogin(), err)
+			opt.Username, opt.Organization.Path, err)
 	}
 	if !isMember {
 		return fmt.Errorf("GetOrgMembership: user '%s' is not member of GitHub organization '%s': %w",
-			opt.Username, gitOrg.GetLogin(), err)
+			opt.Username, opt.Organization.Path, err)
 	}
-	gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, gitOrg.GetLogin())
+	gitMembership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, opt.Organization.Path)
 	if err != nil {
 		return fmt.Errorf("UpdateOrgMembership: failed to get GitHub org membership for user '%s': %w", opt.Username, err)
 	}
@@ -439,7 +428,7 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership)
 		return fmt.Errorf("UpdateOrgMembership: invalid role '%s'", opt.Role)
 	}
 	gitMembership.Role = &opt.Role
-	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, gitOrg.GetLogin(), gitMembership)
+	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, opt.Organization.Path, gitMembership)
 	if err != nil || newMembership.GetRole() != opt.Role {
 		return fmt.Errorf("UpdateOrgMembership: failed to edit GitHub org membership for user '%s': %w", opt.Username, err)
 	}

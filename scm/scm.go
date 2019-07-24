@@ -170,9 +170,9 @@ type PaymentPlan struct {
 
 // OrgMembership represents user's membership in organization
 type OrgMembership struct {
-	Username string
-	OrgID    uint64
-	Role     string // role can be "admin" (organization owner) or "member"
+	Username     string
+	Organization *pb.Organization
+	Role         string // role can be "admin" (organization owner) or "member"
 }
 
 // Authorization stores information about user scopes
