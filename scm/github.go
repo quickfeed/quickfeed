@@ -302,7 +302,7 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 		return nil
 	}
 	// otherwise remove user from team
-	_, err = s.client.Teams.RemoveTeamMembership(ctx, opt.TeamID, opt.Username)
+	_, err = s.client.Teams.RemoveTeamMembership(ctx, int64(team.ID), opt.Username)
 	if err != nil {
 		return fmt.Errorf("RemoveTeamMember: failed to remove member '%s' from GitHub team '%s': %w", opt.Username, opt.TeamSlug, err)
 	}
