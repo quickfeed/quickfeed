@@ -138,6 +138,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
                 break;
         }
+        this.refreshState();
         this.props.navMan.refresh();
     }
 
