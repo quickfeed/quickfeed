@@ -233,7 +233,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	users := make([]*pb.User, 0)
 	users = append(users, user1)
 	users = append(users, user2)
-	newGroupReq := &pb.Group{Name: "Hein's two member Group", TeamID: 1, CourseID: course.ID, Users: users}
+	newGroupReq := &pb.Group{Name: "Hein's two member Group", CourseID: course.ID, Users: users}
 
 	// set ID of user3 to context, user3 is not member of group (should fail)
 	ctx := withUserContext(context.Background(), user3)
@@ -296,6 +296,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	wantGroup := group
 	wantGroup.Name = updateGroupReq.Name
 	wantGroup.Users = grpUsers
+	wantGroup.TeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Status = pb.Group_APPROVED
 	haveGroup.Enrollments = nil
@@ -339,9 +340,9 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	}
 	wantGroup = updateGroupReq
 	wantGroup.Users = grpUsers
+	wantGroup.TeamID = 1
 	// UpdateGroup will autoApprove group on update
 	wantGroup.Status = pb.Group_APPROVED
-	wantGroup.TeamID = 1
 	haveGroup.Enrollments = nil
 	wantGroup.Enrollments = nil
 	if !reflect.DeepEqual(wantGroup, haveGroup) {
