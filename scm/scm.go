@@ -162,12 +162,6 @@ type Team struct {
 	URL  string
 }
 
-// PaymentPlan represents the payment plan to use.
-type PaymentPlan struct {
-	Name         string
-	PrivateRepos uint64 // max number allowed on the org
-}
-
 // Authorization stores information about user scopes
 type Authorization struct {
 	Token  string
