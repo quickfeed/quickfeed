@@ -126,7 +126,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 		return fmt.Errorf("updateGroup: organization not found: %w", err)
 	}
 
-	if len(repos) == 0 && !hasTeam(ctx, sc, org, group) {
+	if len(repos) == 0 && group.GetTeamID() < 1 {
 		// found no repos for the group; create group repo and team
 		if request.GetName() != "" {
 			group.Name = request.Name
@@ -220,18 +220,4 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, grou
 		Users:        group.UserNames(),
 	}
 	return sc.UpdateTeamMembers(ctx, opt)
-}
-
-// hasTeam returns true if the SCM already has a team for the given group.
-func hasTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, group *pb.Group) bool {
-	// try to get group team by ID or name
-	opt := &scm.CreateTeamOptions{
-		Organization: org,
-		TeamName:     group.GetName(),
-		TeamID:       group.GetTeamID(),
-	}
-	if team, _ := sc.GetTeam(ctx, opt); team != nil {
-		return true
-	}
-	return false
 }
