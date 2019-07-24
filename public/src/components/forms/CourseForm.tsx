@@ -334,10 +334,10 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
     private courseValidate(): string[] {
         const errors: string[] = [];
         if (this.state.name === "") {
-            errors.push("Course Name cannot be blank");
+            errors.push("Course name cannot be blank");
         }
         if (this.state.code === "") {
-            errors.push("Course Tag cannot be blank.");
+            errors.push("Course tag cannot be blank.");
         }
         if (this.state.tag === "") {
             errors.push("Semester cannot be blank.");
@@ -375,7 +375,9 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
     }
 
     private setButtonString(): string {
-        let str: string = "";
+        let str: string;
+        // TODO (vera): is there a more elegant way to do this check?
+        // I can rewrite it as a pure conditional, as linter wants, but it will be unreadable
         if (this.state.clicked) {
             str = this.props.courseData ? "Updating" : "Creating";
         } else {

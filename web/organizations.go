@@ -28,7 +28,6 @@ func (s *AutograderService) getAvailableOrganizations(ctx context.Context, sc sc
 			if err != gorm.ErrRecordNotFound {
 				continue
 			}
-			s.logger.Errorf("couldn't fetch course from database: %v", err)
 		}
 
 		// only include organizations with non-free plan,
