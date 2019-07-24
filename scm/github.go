@@ -400,7 +400,7 @@ func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 }
 
 // GetOrgMembership implements the SCM interface
-func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*OrgMembership, error) {
+func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembershipOptions) (*OrgMembershipOptions, error) {
 	membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, opt.Organization.Path)
 	if err != nil {
 		return nil, fmt.Errorf("GetOrgMembership: failed to get GitHub org membership for user '%s': %w", opt.Username, err)
@@ -410,7 +410,7 @@ func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembership) (*
 }
 
 // UpdateOrgMembership implements the SCM interface
-func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembership) error {
+func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 	isMember, _, err := s.client.Organizations.IsMember(ctx, opt.Organization.Path, opt.Username)
 	if err != nil {
 		return fmt.Errorf("GetOrgMembership: failed to check if user '%s' is member of GitHub organization '%s': %w",

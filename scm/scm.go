@@ -50,9 +50,9 @@ type SCM interface {
 	// Returns a provider specific clone path.
 	CreateCloneURL(*CreateClonePathOptions) string
 	// Get user's membership in organization
-	GetOrgMembership(context.Context, *OrgMembership) (*OrgMembership, error)
+	GetOrgMembership(context.Context, *OrgMembershipOptions) (*OrgMembershipOptions, error)
 	// Promotes or demotes organization member, based on Role field in OrgMembership
-	UpdateOrgMembership(context.Context, *OrgMembership) error
+	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user
 	GetUserScopes(context.Context) *Authorization
 }
@@ -127,11 +127,11 @@ type TeamMembershipOptions struct {
 	Role         string // member or maintainer. Maintainer can add, remove and promote team members
 }
 
-// OrgMembershipOptions provides information on user to be invited to organization
+// OrgMembershipOptions represent user's membership in organization
 type OrgMembershipOptions struct {
 	Organization *pb.Organization
 	Username     string // GitHub username
-	Email        string // we can also send invites by email
+	Role         string // role can be "admin" (organization owner) or "member"
 }
 
 // ErrNotSupported is returned when the source code management solution used
@@ -166,13 +166,6 @@ type Team struct {
 type PaymentPlan struct {
 	Name         string
 	PrivateRepos uint64 // max number allowed on the org
-}
-
-// OrgMembership represents user's membership in organization
-type OrgMembership struct {
-	Username     string
-	Organization *pb.Organization
-	Role         string // role can be "admin" (organization owner) or "member"
 }
 
 // Authorization stores information about user scopes
