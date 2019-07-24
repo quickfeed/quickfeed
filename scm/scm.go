@@ -122,7 +122,7 @@ type CreateTeamOptions struct {
 type TeamMembershipOptions struct {
 	Organization *pb.Organization
 	TeamID       int64
-	TeamSlug     string // team name in all lowercase
+	TeamSlug     string // slugified team name
 	Username     string // GitHub username
 	Role         string // member or maintainer. Maintainer can add, remove and promote team members
 }

@@ -18,6 +18,7 @@ require (
 	github.com/google/go-github/v26 v26.0.5
 	github.com/gorilla/securecookie v0.0.0-20160422134519-667fe4e3466a // indirect
 	github.com/gorilla/sessions v0.0.0-20160922145804-ca9ada445741
+	github.com/gosimple/slug v1.6.0
 	github.com/jinzhu/gorm v1.9.9
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v0.0.0-20170803061611-b42edd791fad
@@ -28,6 +29,7 @@ require (
 	github.com/mattn/goveralls v0.0.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc0 // indirect
 	github.com/opencontainers/image-spec v1.0.0 // indirect
+	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
 	github.com/tebeka/selenium v0.9.3
 	github.com/urfave/cli v1.19.1
 	github.com/xanzy/go-gitlab v0.0.0-20170802104427-7e8e8eca9833

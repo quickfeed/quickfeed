@@ -9,6 +9,7 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/google/go-github/v26/github"
+	"github.com/gosimple/slug"
 	"golang.org/x/oauth2"
 )
 
@@ -213,7 +214,7 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) erro
 func (s *GithubSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (scmTeam *Team, err error) {
 	var team *github.Team
 	if opt.TeamID < 1 {
-		slug := strings.ToLower(opt.TeamName)
+		slug := slug.Make(opt.TeamName)
 		team, _, err = s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, slug)
 		if err != nil {
 			return nil, fmt.Errorf("GetTeam: failed to get GitHub team by slug '%s': %w", slug, err)
