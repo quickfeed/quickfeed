@@ -19,10 +19,11 @@ dep:
 	go get -u github.com/gogo/protobuf/protoc-gen-gofast
 	go get -u github.com/gogo/protobuf/protoc-gen-gogofast
 	go get -u github.com/gogo/protobuf/protoc-gen-gogofaster
-
+	
+# change back to 'go'
 install:
 	@echo go install
-	@go install
+	@go1.13beta1 install
 
 ui:
 	@echo Running webpack
@@ -71,6 +72,7 @@ protoset:
 	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
 	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
 
+# change commands to 'go' when v.13 hits
 test:
-	@cd ./web; go test
-	@cd ./database; go test
+	@cd ./web; go1.13beta1 test
+	@cd ./database; go1.13beta1 test
