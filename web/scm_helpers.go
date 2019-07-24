@@ -8,6 +8,12 @@ import (
 	"github.com/autograde/aguis/scm"
 )
 
+//
+const (
+	teachersTeam = "allteachers"
+	studentsTeam = "allstudents"
+)
+
 // createRepoAndTeam invokes the SCM to create a repository and team for the
 // specified namespace (typically the course name), the path of the repository
 // (typically the name of the student with a '-labs' suffix or the group name).
@@ -50,7 +56,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	opt := &scm.TeamMembershipOptions{
 		Organization: org,
-		TeamSlug:     "team-students",
+		TeamSlug:     studentsTeam,
 		Username:     userName,
 	}
 	if err := sc.AddTeamMember(ctx, opt); err != nil {
@@ -64,8 +70,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	studentsTeam := &scm.TeamMembershipOptions{
 		Organization: org,
 		Username:     userName,
-		TeamSlug:     "team-students",
-		Role:         "member",
+		TeamSlug:     studentsTeam,
 	}
 	if err := sc.RemoveTeamMember(ctx, studentsTeam); err != nil {
 		return fmt.Errorf("promoteUserToTeachersTeam: failed to remove '%s' from students team: %w", userName, err)
@@ -74,7 +79,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	teachersTeam := &scm.TeamMembershipOptions{
 		Organization: org,
 		Username:     userName,
-		TeamSlug:     "team-teachers",
+		TeamSlug:     teachersTeam,
 		Role:         "maintainer",
 	}
 	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {
