@@ -44,6 +44,12 @@ func (e *Enrollment) RemoveRemoteID() {
 	if e != nil && e.User != nil {
 		e.User.RemoveRemoteID()
 	}
+	if e.Group != nil {
+		e.Group.RemoveRemoteID()
+	}
+	if e.Course != nil {
+		e.Course.RemoveRemoteID()
+	}
 }
 
 // RemoveRemoteID removes remote identities for every enrollment
