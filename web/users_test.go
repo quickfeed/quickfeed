@@ -246,6 +246,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	// set user references to nil as db methods populating the first list will not have them
 	for _, u := range gotEnrollments.Enrollments {
 		u.User = nil
+		u.Course = nil
 	}
 
 	if !cmp.Equal(gotEnrollments.Enrollments, wantEnrollments) {

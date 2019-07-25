@@ -198,6 +198,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			}
 			sorted := make(map[uint64]*pb.Enrollment)
 			for _, enrollment := range enrollments {
+				enrollment.Course = nil
 				sorted[enrollment.UserID] = enrollment
 			}
 			for _, user := range group.Users {
