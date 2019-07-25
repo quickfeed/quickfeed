@@ -206,6 +206,14 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 // Access policy: Any User
 // todo(vera): probably should be restricted to teacher/admin/current user
 func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollment, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+	}
+	if !s.hasAccess(ctx, in.GetUserID()) && !s.isTeacher(usr.GetID(), in.GetCourseID()) {
+		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
+	}
 	return s.getEnrollment(in)
 }
 
