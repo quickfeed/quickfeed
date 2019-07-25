@@ -294,14 +294,20 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 }
 
 // CreateGroup creates a new group.
-// Access policy: Any User.
+// Access policy: Any User enrolled in course and specified as member of the group.
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	group, err := s.createGroup(usr, in)
+	if !s.isEnrolled(usr.GetID(), in.GetCourseID()) {
+		return nil, status.Errorf(codes.PermissionDenied, "user not enrolled in given course")
+	}
+	if !isInGroup(usr, in) {
+		return nil, status.Errorf(codes.PermissionDenied, "only group member can create group")
+	}
+	group, err := s.createGroup(in)
 	if err != nil {
 		s.logger.Error(err)
 		if _, ok := status.FromError(err); !ok {
@@ -321,11 +327,10 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update groups")
 	}
-
-	err = s.updateGroup(ctx, scm, usr, in)
+	err = s.updateGroup(ctx, scm, in)
 	if err != nil {
 		s.logger.Error(err)
 		if _, ok := status.FromError(err); !ok {

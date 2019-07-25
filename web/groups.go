@@ -51,12 +51,12 @@ func (s *AutograderService) deleteGroup(request *pb.RecordRequest) error {
 // This function is typically called by a student when creating
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
-func (s *AutograderService) createGroup(currentUser *pb.User, request *pb.Group) (*pb.Group, error) {
+func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 	if _, err := s.db.GetCourse(request.CourseID); err != nil {
 		return nil, status.Errorf(codes.NotFound, "course not found")
 	}
 	// get users of group, check consistency of group request
-	if _, err := s.getGroupUsers(request, currentUser); err != nil {
+	if _, err := s.getGroupUsers(request); err != nil {
 		return nil, err
 	}
 	// create new group and update groupid in enrollment table
@@ -72,7 +72,7 @@ func (s *AutograderService) createGroup(currentUser *pb.User, request *pb.Group)
 // the member details are updated in the database.
 // TODO(meling) this function must be broken up and simplified
 // TODO(meling) if error, add context and return original error
-func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, currentUser *pb.User, request *pb.Group) error {
+func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
 	// course must exist in the database
 	course, err := s.db.GetCourse(request.CourseID)
 	if err != nil {
@@ -103,7 +103,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 	// will create group repository and team and set group status to approved
 
 	// get users of group, check consistency of group request
-	users, err := s.getGroupUsers(request, currentUser)
+	users, err := s.getGroupUsers(request)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,6 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 		}
 		group.TeamID = team.ID
 	} else {
-		//TODO(meling) this means that there must be both repos and team for the group; is that intended?
 		// github team already exists, update its members
 		// use the group's existing team ID obtained from the database above.
 		if err := updateGroupTeam(ctx, sc, org, group); err != nil {
@@ -163,17 +162,11 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, current
 }
 
 // getGroupUsers returns the users of the specified group request, and checks
-// that the current signed in user is part of the group,
 // that the group's users are enrolled in the course,
 // that the enrollment has been accepted, and
 // that the group's users are not already enrolled in another group.
-// TODO(meling) remove access control details from this function.
-func (s *AutograderService) getGroupUsers(request *pb.Group, currentUser *pb.User) ([]*pb.User, error) {
-	if len(request.Users) == 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "no users in group")
-	}
+func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error) {
 	var userIds []uint64
-	currUserInGroup := false
 	for _, user := range request.Users {
 		enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, user.ID)
 		switch {
@@ -189,16 +182,10 @@ func (s *AutograderService) getGroupUsers(request *pb.Group, currentUser *pb.Use
 			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")
 		case enrollment.Status < pb.Enrollment_STUDENT:
 			return nil, status.Errorf(codes.InvalidArgument, "user not yet accepted for this course")
-		case enrollment.Status == pb.Enrollment_TEACHER && !s.isTeacher(currentUser.ID, request.CourseID):
-			return nil, status.Errorf(codes.InvalidArgument, "only teachers can create group with a teacher")
-		case currentUser.ID == user.ID:
-			currUserInGroup = true
+		case enrollment.Status == pb.Enrollment_TEACHER:
+			return nil, status.Errorf(codes.InvalidArgument, "cannot create group with a teacher")
 		}
 		userIds = append(userIds, user.ID)
-	}
-	// current user must be member of the group or teacher
-	if !(currUserInGroup || s.isTeacher(currentUser.ID, request.CourseID)) {
-		return nil, status.Errorf(codes.InvalidArgument, "signed in user not in group or is not teacher")
 	}
 
 	users, err := s.db.GetUsers(userIds...)

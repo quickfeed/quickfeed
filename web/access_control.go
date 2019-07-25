@@ -79,12 +79,17 @@ func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 
 // isOwner returns true only if the given user IDs match and is enrolled as student for the given course.
 func (s *AutograderService) isOwner(userID, userID2, courseID uint64) bool {
+	return s.isEnrolled(userID, courseID) && userID == userID2
+}
+
+// isEnrolled returns true if the given user is enrolled as student for the given course.
+func (s *AutograderService) isEnrolled(userID, courseID uint64) bool {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
 		s.logger.Error(err)
 		return false
 	}
-	return enrollment.Status == pb.Enrollment_STUDENT && userID == userID2
+	return enrollment.Status == pb.Enrollment_STUDENT
 }
 
 // isInGroup returns true if the current user is in the provided group.

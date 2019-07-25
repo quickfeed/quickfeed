@@ -46,6 +46,8 @@ func TestNewGroup(t *testing.T) {
 	users = append(users, &pb.User{ID: user.ID})
 	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
+	// current user (in context) must be in group being created
+	ctx = withUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group_req)
 	if err != nil {
 		t.Fatal(err)
@@ -55,10 +57,6 @@ func TestNewGroup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// JSON marshalling removes the enrollment field from respGroup,
-	// so we remove group.Enrollments obtained from the database before comparing.
-	//group.Enrollments = nil
 	if !reflect.DeepEqual(&respGroup, &group) {
 		t.Errorf("have response group %+v, while database has %+v", respGroup, group)
 	}
@@ -661,6 +659,8 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		Name:     "Test Group",
 		Users:    []*pb.User{user1, user2},
 	}
+	// current user1 (in context) must be in group being created
+	ctx = withUserContext(context.Background(), user1)
 	createdGroup, err := ags.CreateGroup(ctx, group)
 	if err != nil {
 		t.Fatal(err)
@@ -668,6 +668,8 @@ func TestDeleteApprovedGroup(t *testing.T) {
 
 	// first approve the group
 	createdGroup.Status = pb.Group_APPROVED
+	// current user (in context) must be teacher for the course
+	ctx = withUserContext(context.Background(), admin)
 	if _, err = ags.UpdateGroup(ctx, createdGroup); err != nil {
 		t.Fatal(err)
 	}
@@ -744,10 +746,13 @@ func TestGetGroups(t *testing.T) {
 		}
 	}
 	// place some students in groups
+	// current user (in context) must be in group being created
+	ctx = withUserContext(context.Background(), users[2])
 	group1, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group 1", CourseID: course.ID, Users: []*pb.User{users[1], users[2]}})
 	if err != nil {
 		t.Fatal(err)
 	}
+	ctx = withUserContext(context.Background(), users[5])
 	group2, err := ags.CreateGroup(ctx, &pb.Group{Name: "Group 2", CourseID: course.ID, Users: []*pb.User{users[4], users[5]}})
 	if err != nil {
 		t.Fatal(err)
@@ -761,6 +766,7 @@ func TestGetGroups(t *testing.T) {
 	}
 
 	// get groups from the database; admin is in ctx, which is also teacher
+	ctx = withUserContext(context.Background(), admin)
 	gotGroups, err := ags.GetGroups(ctx, &pb.RecordRequest{ID: course.ID})
 	if err != nil {
 		t.Fatal(err)
