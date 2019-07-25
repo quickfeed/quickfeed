@@ -8,6 +8,7 @@ protoc-grpcweb-long	:= $(protoc-grpcweb)-$(grpcweb-ver)-$(OS)-$(ARCH)
 grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ver)/$(protoc-grpcweb-long)
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
+testorg				:= ag-test-course
 
 # necessary when target is not tied to a file
 .PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run
@@ -76,3 +77,9 @@ protoset:
 test:
 	@cd ./web; go1.13beta1 test
 	@cd ./database; go1.13beta1 test
+
+
+purge:
+	rm -f /tmp/ag.db
+	scm delete repo -all -namespace=$(testorg)
+	scm delete team -all -namespace=$(testorg)
