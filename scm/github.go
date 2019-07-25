@@ -374,16 +374,6 @@ func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 	return user.GetLogin(), nil
 }
 
-// GetOrgMembership implements the SCM interface
-func (s *GithubSCM) GetOrgMembership(ctx context.Context, opt *OrgMembershipOptions) (*OrgMembershipOptions, error) {
-	membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, opt.Organization.Path)
-	if err != nil {
-		return nil, fmt.Errorf("GetOrgMembership: failed to get GitHub org membership for user '%s': %w", opt.Username, err)
-	}
-	opt.Role = membership.GetRole()
-	return opt, nil
-}
-
 // UpdateOrgMembership implements the SCM interface
 func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 

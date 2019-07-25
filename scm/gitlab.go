@@ -207,12 +207,6 @@ func (s *GitlabSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 	return ""
 }
 
-// GetOrgMembership implements the SCM interface
-func (s *GitlabSCM) GetOrgMembership(ctx context.Context, opt *OrgMembershipOptions) (*OrgMembershipOptions, error) {
-	// TODO no implementation provided yet
-	return nil, nil
-}
-
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)

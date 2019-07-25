@@ -49,8 +49,6 @@ type SCM interface {
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider specific clone path.
 	CreateCloneURL(*CreateClonePathOptions) string
-	// Get user's membership in organization
-	GetOrgMembership(context.Context, *OrgMembershipOptions) (*OrgMembershipOptions, error)
 	// Promotes or demotes organization member, based on Role field in OrgMembership
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user

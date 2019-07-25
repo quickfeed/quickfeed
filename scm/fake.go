@@ -167,12 +167,6 @@ func (s *FakeSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string,
 	return "", nil
 }
 
-// GetOrgMembership implements the SCM interface
-func (s *FakeSCM) GetOrgMembership(ctx context.Context, opt *OrgMembershipOptions) (*OrgMembershipOptions, error) {
-	// TODO no implementation provided yet
-	return nil, nil
-}
-
 // UpdateOrgMembership implements the SCM interface
 func (s *FakeSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 	// TODO no implementation provided yet
