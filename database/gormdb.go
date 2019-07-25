@@ -502,7 +502,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 		}
 	}
 	var enrollments []*pb.Enrollment
-	if err := db.conn.Preload("User").Model(model).
+	if err := db.conn.Preload("User").Preload("Course").Model(model).
 		Where("status in (?)", statuses).
 		Association("Enrollments").
 		Find(&enrollments).Error; err != nil {
