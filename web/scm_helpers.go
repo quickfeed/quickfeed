@@ -58,6 +58,7 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization
 		Organization: org,
 		TeamSlug:     studentsTeam,
 		Username:     userName,
+		Role:         "member",
 	}
 	if err := sc.AddTeamMember(ctx, opt); err != nil {
 		return fmt.Errorf("addUserToStudentsTeam: failed to add '%s' to students team: %w", userName, err)

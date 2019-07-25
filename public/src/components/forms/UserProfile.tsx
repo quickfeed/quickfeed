@@ -119,7 +119,6 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
                 break;
             }
             default: {
-                console.log("UserProfile: unknown field name when rendering user fields: " + field);
                 break;
             }
         }
@@ -163,7 +162,6 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
                     break;
                 }
                 default: {
-                    console.log("UserProfile change event gets some other value: " + name);
                     break;
                 }
             }

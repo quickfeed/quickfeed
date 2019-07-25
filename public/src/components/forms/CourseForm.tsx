@@ -29,7 +29,7 @@ interface ICourseFormStates {
     clicked: boolean;
 }
 
-class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates> {
+export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates> {
     constructor(props: any) {
         super(props);
         this.state = {
@@ -343,10 +343,10 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
             errors.push("Semester cannot be blank.");
         }
         if (this.state.provider === "") {
-            errors.push("Provider cannot be blank.");
+            errors.push("Unknown provider.");
         }
         if (this.state.orgid === 0) {
-            errors.push("Organisation cannot be blank.");
+            errors.push("Select organization for your course.");
         }
         const year = parseInt(this.state.year, 10);
         if (this.state.year === "") {
@@ -375,16 +375,10 @@ class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates>
     }
 
     private setButtonString(): string {
-        let str: string;
-        // TODO (vera): is there a more elegant way to do this check?
-        // I can rewrite it as a pure conditional, as linter wants, but it will be unreadable
+        let str = this.props.courseData ? "Update" : "Create";
         if (this.state.clicked) {
             str = this.props.courseData ? "Updating" : "Creating";
-        } else {
-            str = this.props.courseData ? "Update" : "Create";
         }
         return str;
     }
-
 }
-export { CourseForm };
