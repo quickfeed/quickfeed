@@ -61,6 +61,12 @@ func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOption
 	}
 }
 
+// UpdateOrganization implements the SCM interface.
+func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{DefaultRepoPermission: &opt.DefaultPermission})
+	return err
+}
+
 // GetOrganization implements the SCM interface.
 func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
 	org, _, err := s.client.Organizations.GetByID(ctx, int64(id))

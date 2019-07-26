@@ -46,6 +46,12 @@ func (s *FakeSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions)
 	return org, nil
 }
 
+// UpdateOrganization implements the SCM interface.
+func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // GetOrganization implements the SCM interface.
 func (s *FakeSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
 	org, ok := s.Organizations[id]

@@ -15,6 +15,8 @@ type SCM interface {
 	ListOrganizations(context.Context) ([]*pb.Organization, error)
 	// Creates a new organization.
 	CreateOrganization(context.Context, *CreateOrgOptions) (*pb.Organization, error)
+	// Updates an organization
+	UpdateOrganization(context.Context, *CreateOrgOptions) error
 	// Gets an organization.
 	GetOrganization(context.Context, uint64) (*pb.Organization, error)
 	// Create a new repository.
@@ -71,8 +73,9 @@ func NewSCMClient(logger *zap.Logger, provider, token string) (SCM, error) {
 // CreateOrgOptions contains information on how an organization should be
 // created.
 type CreateOrgOptions struct {
-	Path string
-	Name string
+	Path              string
+	Name              string
+	DefaultPermission string
 }
 
 // Repository represents a git remote repository.

@@ -50,8 +50,13 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, ErrAlreadyExists
 	}
 
+	// TODO(vera): requires new scm method
+	// set default repository access level for all students to "none"
+	// must not affect organization owners (teachers)
+
 	// create course repos and webhooks for each repo
 	for path, private := range RepoPaths {
+
 		repoOptions := &scm.CreateRepositoryOptions{
 			Path:         path,
 			Organization: org,

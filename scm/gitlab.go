@@ -56,6 +56,12 @@ func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOption
 	}, nil
 }
 
+// UpdateOrganization implements the SCM interface.
+func (s *GitlabSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // GetOrganization implements the SCM interface.
 func (s *GitlabSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
 	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
