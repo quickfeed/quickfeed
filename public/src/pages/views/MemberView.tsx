@@ -4,7 +4,6 @@ import { Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
 import { ActionType, UserView } from "./UserView";
-import { bool } from "prop-types";
 
 interface IUserViewerProps {
     navMan: NavigationManager;
@@ -204,4 +203,3 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 }
 
-export { UserView };

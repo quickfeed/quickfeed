@@ -2,7 +2,7 @@ import * as React from "react";
 import { Course } from "../../../proto/ag_pb";
 import { DynamicTable, Search } from "../../components";
 
-interface ICourseViewProp {
+interface ICourseViewProps {
     courses: Course[];
     onEditClick: (id: number) => void;
 }
@@ -11,7 +11,7 @@ interface ICourseViewState {
     courses: Course[];
 }
 
-export class CourseView extends React.Component<ICourseViewProp, ICourseViewState> {
+export class CourseView extends React.Component<ICourseViewProps, ICourseViewState> {
     constructor(props: any) {
         super(props);
         this.state = {

@@ -203,7 +203,7 @@ ${group.getName()}?`,
                     break;
                 }
         }
-        this.render();
+        this.refreshState();
         this.props.navMan.refresh();
     }
 

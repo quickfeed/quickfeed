@@ -9,7 +9,7 @@ import {
     INewGroup, IUserRelation,
 } from "../../models";
 
-interface IGroupProp {
+interface IGroupProps {
     className: string;
     students: IUserRelation[];
     freeStudents: IUserRelation[];
@@ -29,7 +29,7 @@ interface IGroupState {
     errorFlash: JSX.Element | null;
 }
 
-class GroupForm extends React.Component<IGroupProp, IGroupState> {
+class GroupForm extends React.Component<IGroupProps, IGroupState> {
     constructor(props: any) {
         super(props);
         const currentUser = this.props.students.find((v) => v.user.getId() === this.props.curUser.getId());
@@ -80,7 +80,8 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 <form className={this.props.className}
                     onSubmit={(e) => this.handleFormSubmit(e)}>
                     <div className="form-group row">
-                    <div className="col-sm-12 alert alert-warning">Choose wisely! Name cannot be changed after the group has been created.</div>
+                    <div className="col-sm-12 alert alert-warning">
+                        Choose wisely! Name cannot be changed after the group has been created.</div>
                     </div>
                     <div className="form-group row">
                         <label className="col-sm-1 col-form-label" htmlFor="tag">Name:</label>

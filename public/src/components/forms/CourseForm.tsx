@@ -375,10 +375,9 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     }
 
     private setButtonString(): string {
-        let str = this.props.courseData ? "Update" : "Create";
         if (this.state.clicked) {
-            str = this.props.courseData ? "Updating" : "Creating";
+            return this.props.courseData ? "Updating" : "Creating";
         }
-        return str;
+        return this.props.courseData ? "Update" : "Create";
     }
 }

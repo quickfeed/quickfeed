@@ -19,7 +19,7 @@ export class HomePage extends ViewPage {
                     <h2>GitHub Integration</h2>
                     <p>
                         Manage all students and courses on GitHub.
-                        Each student get their own repository.
+                        Each student gets their own repository.
                         Teachers get separate repositories for publishing assignments and information to students.
                         All taken care of automatically.
                     </p>
@@ -37,7 +37,7 @@ export class HomePage extends ViewPage {
                     />
                     <h2>Continuous Integration</h2>
                     <p>
-                        Instantaneous feedback to students on how well their code preforms.
+                        Instantaneous feedback to students on how well their code performs.
                         Students can quickly identify what they need to focus on to improve.
                         All customizable for the teaching staff.
                     </p>
@@ -131,8 +131,8 @@ export class HomePage extends ViewPage {
                         <p className="lead">
                             As code gets pushed up to GitHub, an automatic build process
                             defined by the teacher, generates feedback to students.
-                            When the build process is completed, students immediately
-                            gets access to this feedback on their personal course page.
+                            When the build process is completed, student gets immediate
+                            access to this feedback on their personal course page.
                             Tests defined by either teachers or students will be processed
                             and tell students about their progress on the assignments.
                         </p>
