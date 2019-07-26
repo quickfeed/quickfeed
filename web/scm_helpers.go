@@ -22,11 +22,16 @@ const (
 	teamMaintainer = "maintainer"
 	teamMember     = "member"
 
-	// repository permission levels
-	repoPull = "read"
-	repoPush = "write"
+	// repository permission levels for organization
+	orgPull = "read"
+	orgPush = "write"
+	orgFull = "admin"
+	orgNone = "none"
+
+	// repository permission levels for a user
+	repoPull = "pull"
+	repoPush = "push"
 	repoFull = "admin"
-	repoNone = "none"
 )
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the

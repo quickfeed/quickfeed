@@ -135,6 +135,12 @@ func (s *GitlabSCM) DeleteRepository(ctx context.Context, id uint64) (err error)
 	return
 }
 
+// UpdateRepoAccess implements the SCM interface.
+func (s *GitlabSCM) UpdateRepoAccess(ctx context.Context, repo Repository, user, permission string) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // ListHooks implements the SCM interface.
 func (s *GitlabSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
 	// TODO no implementation provided yet

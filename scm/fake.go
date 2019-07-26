@@ -96,6 +96,12 @@ func (s *FakeSCM) DeleteRepository(ctx context.Context, id uint64) error {
 	return nil
 }
 
+// UpdateRepoAccess implements the SCM interface.
+func (s *FakeSCM) UpdateRepoAccess(ctx context.Context, repo Repository, user, permission string) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // ListHooks implements the SCM interface.
 func (s *FakeSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
 	// TODO no implementation provided yet

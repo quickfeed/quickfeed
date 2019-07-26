@@ -70,7 +70,10 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 			return s.db.EnrollStudent(request.UserID, request.CourseID)
 		}
 
+		// grant student pull access to Assignments repository
+
 		// create user repo, user team, and add user to students team
+		// TODO(vera): creation of a single user team can be replaced by adding student as collaborator with push permission to user repo
 		repo, err := updateReposAndTeams(ctx, sc, course, student.GetLogin(), request.GetStatus())
 		if err != nil {
 			s.logger.Errorf("UpdateEnrollment: failed to update repos or team membersip for student %s: %s", student.Login, err.Error())
