@@ -166,6 +166,9 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 // that the enrollment has been accepted, and
 // that the group's users are not already enrolled in another group.
 func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error) {
+	if len(request.Users) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "no users in group")
+	}
 	var userIds []uint64
 	for _, user := range request.Users {
 		enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, user.ID)
