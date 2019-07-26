@@ -50,9 +50,15 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, ErrAlreadyExists
 	}
 
-	// TODO(vera): requires new scm method
 	// set default repository access level for all students to "none"
 	// must not affect organization owners (teachers)
+	orgOptions := &scm.CreateOrgOptions{
+		Path:              org.GetPath(),
+		DefaultPermission: repoNone,
+	}
+	if err = sc.UpdateOrganization(ctx, orgOptions); err != nil {
+		s.logger.Debugf("Could not update GitHub organization %s: %w", orgOptions.Path, err)
+	}
 
 	// create course repos and webhooks for each repo
 	for path, private := range RepoPaths {
