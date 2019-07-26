@@ -3,7 +3,7 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 
-interface IResultsProp {
+interface IResultsProps {
     course: Course;
     groups: IAssignmentLink[];
     labs: Assignment[];
@@ -15,13 +15,13 @@ interface IResultsState {
     groups: IAssignmentLink[];
 }
 
-export class GroupResults extends React.Component<IResultsProp, IResultsState> {
+export class GroupResults extends React.Component<IResultsProps, IResultsState> {
 
     private approvedStyle = {
         color: "green",
     };
 
-    constructor(props: IResultsProp) {
+    constructor(props: IResultsProps) {
         super(props);
 
         const currentGroup = this.props.groups.length > 0 ? this.props.groups[0] : null;
@@ -56,7 +56,6 @@ export class GroupResults extends React.Component<IResultsProp, IResultsState> {
                     }
                 }}
             />;
-
         }
 
         return (
@@ -126,5 +125,4 @@ export class GroupResults extends React.Component<IResultsProp, IResultsState> {
             groups: filteredData,
         });
     }
-
 }

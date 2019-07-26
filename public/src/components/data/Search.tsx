@@ -8,7 +8,7 @@ interface ISearchProp {
 interface ISearchState {
     query: string;
 }
-class Search extends React.Component<ISearchProp, ISearchState> {
+export class Search extends React.Component<ISearchProp, ISearchState> {
 
     constructor(props: any) {
         super(props);
@@ -45,4 +45,3 @@ class Search extends React.Component<ISearchProp, ISearchState> {
         }
     }
 }
-export { Search };

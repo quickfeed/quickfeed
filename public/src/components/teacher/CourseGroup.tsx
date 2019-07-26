@@ -6,7 +6,7 @@ import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
 
-interface ICourseGroupProp {
+interface ICourseGroupProps {
     approvedGroups: Group[];
     pendingGroups: Group[];
     rejectedGroups: Group[];
@@ -22,7 +22,7 @@ interface ICourseGroupState {
     rejectedGroups: Group[];
 }
 
-export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupState> {
+export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroupState> {
 
     constructor(props: any) {
         super(props);
@@ -65,7 +65,7 @@ export class CourseGroup extends React.Component<ICourseGroupProp, ICourseGroupS
         );
     }
 
-    public componentDidUpdate(prevProps: ICourseGroupProp) {
+    public componentDidUpdate(prevProps: ICourseGroupProps) {
         if ((prevProps.approvedGroups.length !== this.props.approvedGroups.length)
             || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)
             || (prevProps.rejectedGroups.length !== this.props.rejectedGroups.length)) {

@@ -13,8 +13,6 @@ interface IUserProfileState {
     editMode: boolean;
 }
 
-type RWrap<T> = (props: T) => JSX.Element;
-
 export class UserProfile extends React.Component<IUserProfileProps, IUserProfileState> {
     constructor(props: IUserProfileProps, context: any) {
         super(props, context);

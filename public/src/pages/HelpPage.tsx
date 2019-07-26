@@ -8,7 +8,6 @@ import { INavInfo } from "../NavigationHelper";
 export class HelpPage extends ViewPage {
 
     private navMan: NavigationManager;
-    // private pages: { [name: string]: JSX.Element } = {};
 
     constructor(navMan: NavigationManager) {
         super();

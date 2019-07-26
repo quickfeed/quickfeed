@@ -82,6 +82,7 @@ func (s *AutograderService) isOwner(userID, userID2, courseID uint64) bool {
 	return s.isStudent(userID, courseID) && userID == userID2
 }
 
+// isEnrolled returns true if the given user is enrolled in the given course
 func (s *AutograderService) isEnrolled(userID, courseID uint64) bool {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {

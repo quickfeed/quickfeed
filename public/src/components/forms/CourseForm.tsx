@@ -17,7 +17,7 @@ interface ICourseFormProps {
     providers: string[];
 }
 
-interface ICourseFormStates {
+interface ICourseFormState {
     name: string;
     code: string;
     tag: string;
@@ -29,7 +29,7 @@ interface ICourseFormStates {
     clicked: boolean;
 }
 
-export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormStates> {
+export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormState> {
     constructor(props: any) {
         super(props);
         this.state = {

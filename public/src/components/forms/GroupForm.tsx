@@ -29,7 +29,7 @@ interface IGroupState {
     errorFlash: JSX.Element | null;
 }
 
-class GroupForm extends React.Component<IGroupProps, IGroupState> {
+export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     constructor(props: any) {
         super(props);
         const currentUser = this.props.students.find((v) => v.user.getId() === this.props.curUser.getId());
@@ -337,4 +337,3 @@ class GroupForm extends React.Component<IGroupProps, IGroupState> {
         return as;
     }
 }
-export { GroupForm };

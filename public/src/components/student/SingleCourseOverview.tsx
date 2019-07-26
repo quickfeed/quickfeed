@@ -10,7 +10,7 @@ interface ISingleCourseOverviewProps {
     onGroupLabClick: (courseId: number, labId: number) => void;
 }
 
-class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
+export class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
     public render() {
         let groupLabs: IStudentSubmission[] = [];
         if (this.props.groupAndLabs !== undefined) {
@@ -86,4 +86,3 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
         return labAndGrouplabs;
     }
 }
-export { SingleCourseOverview };

@@ -138,5 +138,4 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             students: filteredData,
         });
     }
-
 }
