@@ -128,7 +128,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		orgUpdate := &scm.OrgMembershipOptions{
 			Organization: org,
 			Username:     login,
-			Role:         "admin",
+			Role:         orgOwner,
 		}
 		// when promoting to teacher, promote to organization owner as well
 		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {

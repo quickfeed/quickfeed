@@ -10,8 +10,12 @@ import (
 
 //
 const (
-	teachersTeam = "allteachers"
-	studentsTeam = "allstudents"
+	teachersTeam   = "allteachers"
+	studentsTeam   = "allstudents"
+	orgOwner       = "admin"
+	orgMember      = "member"
+	teamMaintainer = "maintainer"
+	teamMember     = "member"
 )
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
@@ -58,7 +62,7 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization
 		Organization: org,
 		TeamSlug:     studentsTeam,
 		Username:     userName,
-		Role:         "member",
+		Role:         teamMember,
 	}
 	if err := sc.AddTeamMember(ctx, opt); err != nil {
 		return fmt.Errorf("addUserToStudentsTeam: failed to add '%s' to students team: %w", userName, err)
@@ -81,7 +85,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 		Organization: org,
 		Username:     userName,
 		TeamSlug:     teachersTeam,
-		Role:         "maintainer",
+		Role:         teamMaintainer,
 	}
 	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {
 		return fmt.Errorf("promoteUserToTeachersTeam: failed to add '%s' to teachers team: %w", userName, err)
