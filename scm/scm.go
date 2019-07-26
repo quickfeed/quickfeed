@@ -99,6 +99,7 @@ type CreateRepositoryOptions struct {
 	Path         string
 	Private      bool
 	Owner        string // we can create user repositories
+	Permission   string // default permission level for the repo. Can be "read", "write", "admin", "none"
 }
 
 // CreateHookOptions contains information on how to create a webhook.

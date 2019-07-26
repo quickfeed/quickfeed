@@ -10,12 +10,23 @@ import (
 
 //
 const (
-	teachersTeam   = "allteachers"
-	studentsTeam   = "allstudents"
-	orgOwner       = "admin"
-	orgMember      = "member"
+	// standard team names for every course
+	teachersTeam = "allteachers"
+	studentsTeam = "allstudents"
+
+	// organization roles
+	orgOwner  = "admin"
+	orgMember = "member"
+
+	// team roles
 	teamMaintainer = "maintainer"
 	teamMember     = "member"
+
+	// repository permission levels
+	repoPull = "read"
+	repoPush = "write"
+	repoFull = "admin"
+	repoNone = "none"
 )
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
