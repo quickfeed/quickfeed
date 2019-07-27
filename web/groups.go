@@ -185,8 +185,6 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")
 		case enrollment.Status < pb.Enrollment_STUDENT:
 			return nil, status.Errorf(codes.InvalidArgument, "user not yet accepted for this course")
-		case enrollment.Status == pb.Enrollment_TEACHER:
-			return nil, status.Errorf(codes.InvalidArgument, "cannot create group with a teacher")
 		}
 		userIds = append(userIds, user.ID)
 	}
