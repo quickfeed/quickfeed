@@ -52,9 +52,6 @@ func (s *AutograderService) deleteGroup(request *pb.RecordRequest) error {
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
 func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
-	if _, err := s.db.GetCourse(request.CourseID); err != nil {
-		return nil, status.Errorf(codes.NotFound, "course not found")
-	}
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(request); err != nil {
 		return nil, err

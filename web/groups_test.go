@@ -62,6 +62,56 @@ func TestNewGroup(t *testing.T) {
 	}
 }
 
+func TestCreateGroupWithMissingFields(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	admin := createFakeUser(t, db, 1)
+	var course pb.Course
+	course.Provider = "fake"
+	// only created 1 directory, if we had created two directories ID would be 2
+	course.OrganizationID = 1
+	if err := db.CreateCourse(admin.ID, &course); err != nil {
+		t.Fatal(err)
+	}
+	user := createFakeUser(t, db, 2)
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := withUserContext(context.Background(), admin)
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+
+	fakeProvider.CreateOrganization(ctx,
+		&scm.CreateOrgOptions{Path: "path", Name: "name"},
+	)
+
+	users := make([]*pb.User, 0)
+	users = append(users, &pb.User{ID: user.ID})
+	group_wo_course_id := &pb.Group{Name: "Hein's Group", Users: users}
+	group_wo_name := &pb.Group{CourseID: course.ID, Users: users}
+	group_wo_users := &pb.Group{Name: "Hein's Group", CourseID: course.ID}
+
+	// current user (in context) must be in group being created
+	ctx = withUserContext(context.Background(), user)
+	_, err := ags.CreateGroup(ctx, group_wo_course_id)
+	if err == nil {
+		t.Fatal("expected CreateGroup to fail without a course ID")
+	}
+	if group_wo_name.IsValid() {
+		// emulate CreateGroup check without name
+		t.Fatal("expected CreateGroup to fail without group name")
+	}
+	_, err = ags.CreateGroup(ctx, group_wo_users)
+	if err == nil {
+		t.Fatal("expected CreateGroup to fail without users")
+	}
+}
+
 func TestNewGroupTeacherCreator(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
