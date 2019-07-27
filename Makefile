@@ -11,7 +11,7 @@ sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "se
 testorg				:= ag-test-course
 
 # necessary when target is not tied to a file
-.PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run
+.PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run scm
 
 dep:
 	go get -u github.com/golang/protobuf/protoc-gen-go
@@ -61,15 +61,15 @@ npmtools:
 	@npm install -g tslint
 
 envoy-build:
-	@echo Building Autograder Envoy proxy
+	@echo "Building Autograder Envoy proxy"
 	@cd envoy; docker build -t ag_envoy -f ./envoy/envoy.Dockerfile .
 
 envoy-run:
-	@echo Starting Autograder Envoy proxy
+	@echo "Starting Autograder Envoy proxy"
 	@cd envoy; docker run --name=envoy -p 8080:8080 --net=host ag_envoy
 
 protoset:
-	@echo Compiling protoset for grpcurl
+	@echo "Compiling protoset for grpcurl"
 	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
 	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
 
@@ -78,8 +78,11 @@ test:
 	@cd ./web; go1.13beta1 test
 	@cd ./database; go1.13beta1 test
 
+scm:
+	@echo "Compiling the scm tool"
+	@cd cmd/scm; go install
 
-purge:
+purge: scm
 	rm -f /tmp/ag.db
 	scm delete repo -all -namespace=$(testorg)
 	scm delete team -all -namespace=$(testorg)
