@@ -177,10 +177,13 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	group_req := &pb.Group{Name: "Hein's Group", CourseID: course.ID, Users: users}
 
 	_, err := ags.CreateGroup(ctx, group_req)
-	if err == nil {
-		t.Error("Student trying to enroll teacher should not be possible!")
+	if err != nil {
+		t.Fatal(err)
 	}
+	// we now allow teacher/student groups to be created,
+	// since if undesirable these can be rejected.
 }
+
 func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
