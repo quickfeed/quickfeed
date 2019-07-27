@@ -9,6 +9,9 @@ import (
 
 // CreateGroup creates a new group and assign users to newly created group.
 func (db *GormDB) CreateGroup(group *pb.Group) error {
+	if len(group.Users) == 0 {
+		return ErrEmptyGroup
+	}
 	if group.CourseID == 0 {
 		return gorm.ErrRecordNotFound
 	}

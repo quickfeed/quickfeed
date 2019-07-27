@@ -20,30 +20,43 @@ var createGroupTests = []struct {
 	err         error
 }{
 	{
-		name: "course id not set",
+		name: "course id not set with users",
 		desc: "Should fail with ErrRecordNotFound; cannot create a group that's not connected to a course.",
-		getGroup: func(uint64, ...uint64) *pb.Group {
-			return &pb.Group{}
+		getGroup: func(_ uint64, uids ...uint64) *pb.Group {
+			var users []*pb.User
+			for _, uid := range uids {
+				users = append(users, &pb.User{ID: uid})
+			}
+			return &pb.Group{
+				Users: users,
+			}
 		},
-		err: gorm.ErrRecordNotFound,
+		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
+		err:         gorm.ErrRecordNotFound,
 	},
-	//
 	{
-		name: "course not found",
+		name: "course not found with users",
 		desc: "Should fail with ErrRecordNotFound; cannot create a group that's not connected to a course.",
-		getGroup: func(uint64, ...uint64) *pb.Group {
-			return &pb.Group{CourseID: 999}
+		getGroup: func(_ uint64, uids ...uint64) *pb.Group {
+			var users []*pb.User
+			for _, uid := range uids {
+				users = append(users, &pb.User{ID: uid})
+			}
+			return &pb.Group{
+				CourseID: 999,
+				Users:    users,
+			}
 		},
-		err: gorm.ErrRecordNotFound,
+		enrollments: []uint{uint(pb.Enrollment_PENDING), uint(pb.Enrollment_PENDING)},
+		err:         gorm.ErrRecordNotFound,
 	},
-	// TODO: This is probably fine, but there needs to be a len(users) > 1
-	// check in the web handler.
 	{
-		name: "course found",
-		desc: "Should pass as long as it's useful? to create a group without any users.",
+		name: "course found but without users",
+		desc: "Should fail with ErrEmptyGroup; cannot create a group without any users.",
 		getGroup: func(cid uint64, _ ...uint64) *pb.Group {
 			return &pb.Group{CourseID: cid}
 		},
+		err: database.ErrEmptyGroup,
 	},
 	{
 		name: "with non existing users",
