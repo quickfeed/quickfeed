@@ -140,10 +140,10 @@ export class AdminPage extends ViewPage {
             const providers = await this.courseMan.getProviders();
             return (
                 <CourseForm className="form-horizontal"
-                    providers={providers}
                     courseMan={this.courseMan}
                     navMan={this.navMan}
                     pagePath={this.pagePath}
+                    providers={providers}
                     courseData={course}
                 />
             );

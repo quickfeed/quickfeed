@@ -289,7 +289,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async getLoggedInUser(): Promise<User | null> {
         const result = await this.helper.get<IUser>(URL_ENDPOINT.user);
         if (result.statusCode !== 302 || !result.data) {
-            console.log("REST request to get logged in user resulted in error: " + result.statusCode);
+            console.log("failed to get logged in user; status code: " + result.statusCode);
             return null;
         }
         const iusr = result.data;
@@ -327,7 +327,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {
             buildInfoAsString = sbm.getBuildinfo();
         }
-        
         if (sbm.getScoreobjects() && (sbm.getScoreobjects().trim().length > 2)) {
             scoreInfoAsString = sbm.getScoreobjects();
         }
