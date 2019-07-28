@@ -537,11 +537,13 @@ export namespace Repository {
   }
 
   export enum Type { 
-    USER = 0,
-    ASSIGNMENTS = 1,
-    TESTS = 2,
-    SOLUTIONS = 3,
-    COURSEINFO = 4,
+    NONE = 0,
+    COURSEINFO = 1,
+    ASSIGNMENTS = 2,
+    TESTS = 3,
+    SOLUTIONS = 4,
+    USER = 5,
+    GROUP = 6,
   }
 }
 

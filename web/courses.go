@@ -81,14 +81,14 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 		}
 
 		// add student repo to database if SCM interaction above was successful
-		dbRepo := pb.Repository{
+		userRepo := pb.Repository{
 			OrganizationID: course.GetOrganizationID(),
-			UserID:         request.GetUserID(),
-			RepoType:       pb.Repository_USER,
 			RepositoryID:   repo.ID,
+			UserID:         request.GetUserID(),
 			HTMLURL:        repo.WebURL,
+			RepoType:       pb.Repository_USER,
 		}
-		if err := s.db.CreateRepository(&dbRepo); err != nil {
+		if err := s.db.CreateRepository(&userRepo); err != nil {
 			return err
 		}
 		return s.db.EnrollStudent(request.UserID, request.CourseID)

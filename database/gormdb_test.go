@@ -1128,9 +1128,8 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 	user := createFakeUser(t, db, 10)
 	repo := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 100,
-		UserID:       user.ID,
+		RepositoryID:   100,
+		UserID:         user.ID,
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
@@ -1147,9 +1146,8 @@ func TestGormDBCreateSingleRepoWithMissingUser(t *testing.T) {
 
 	repo := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 100,
-		UserID:       20,
+		RepositoryID:   100,
+		UserID:         20,
 	}
 	if err := db.CreateRepository(&repo); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
@@ -1164,7 +1162,6 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 		OrganizationID: 120,
 		RepositoryID:   100,
 		RepoType:       pb.Repository_COURSEINFO,
-		// Name:         "Name",
 	}
 	if err := db.CreateRepository(&repo); err != nil {
 		t.Fatal(err)
@@ -1348,11 +1345,10 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 100,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_COURSEINFO,
-		HTMLURL:      "http://repoCourseInfo.com/",
+		RepositoryID:   100,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_COURSEINFO,
+		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -1361,11 +1357,10 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 	// Creating solution
 	repoSolution := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 101,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_SOLUTIONS,
-		HTMLURL:      "http://repoSolution.com/",
+		RepositoryID:   101,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_SOLUTIONS,
+		HTMLURL:        "http://repoSolution.com/",
 	}
 	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
@@ -1374,11 +1369,10 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 102,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_ASSIGNMENTS,
-		HTMLURL:      "http://repoAssignment.com/",
+		RepositoryID:   102,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_ASSIGNMENTS,
+		HTMLURL:        "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -1485,11 +1479,10 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
 		OrganizationID: 1234,
-		// Name:         "Name",
-		RepositoryID: 100,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_COURSEINFO,
-		HTMLURL:      "http://repoCourseInfo.com/",
+		RepositoryID:   100,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_COURSEINFO,
+		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -1498,11 +1491,10 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	// Creating solution
 	repoSolution := pb.Repository{
 		OrganizationID: 1234,
-		// Name:         "Name",
-		RepositoryID: 101,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_SOLUTIONS,
-		HTMLURL:      "http://repoSolution.com/",
+		RepositoryID:   101,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_SOLUTIONS,
+		HTMLURL:        "http://repoSolution.com/",
 	}
 	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
@@ -1511,11 +1503,10 @@ func TestGetRepositoriesByCourseIdAndType(t *testing.T) {
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
 		OrganizationID: 1234,
-		// Name:         "Name",
-		RepositoryID: 102,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_ASSIGNMENTS,
-		HTMLURL:      "http://repoAssignment.com/",
+		RepositoryID:   102,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_ASSIGNMENTS,
+		HTMLURL:        "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -1562,11 +1553,10 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 100,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_COURSEINFO,
-		HTMLURL:      "http://repoCourseInfo.com/",
+		RepositoryID:   100,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_COURSEINFO,
+		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -1575,11 +1565,10 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 	// Creating solution
 	repoSolution := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 101,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_SOLUTIONS,
-		HTMLURL:      "http://repoSolution.com/",
+		RepositoryID:   101,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_SOLUTIONS,
+		HTMLURL:        "http://repoSolution.com/",
 	}
 	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
@@ -1588,11 +1577,10 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 102,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_ASSIGNMENTS,
-		HTMLURL:      "http://repoAssignment.com/",
+		RepositoryID:   102,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_ASSIGNMENTS,
+		HTMLURL:        "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -1601,11 +1589,10 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 	// Creating UserRepo for user
 	repoUser := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 103,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_USER,
-		HTMLURL:      "http://repoAssignment.com/",
+		RepositoryID:   103,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_USER,
+		HTMLURL:        "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUser); err != nil {
 		t.Fatal(err)
@@ -1614,11 +1601,10 @@ func TestGetRepoByCourseIdUserIdandType(t *testing.T) {
 	// Creating UserRepo for userTwo
 	repoUserTwo := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 104,
-		UserID:       userTwo.ID,
-		RepoType:     pb.Repository_USER,
-		HTMLURL:      "http://repoAssignment.com/",
+		RepositoryID:   104,
+		UserID:         userTwo.ID,
+		RepoType:       pb.Repository_USER,
+		HTMLURL:        "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUserTwo); err != nil {
 		t.Fatal(err)
@@ -1665,11 +1651,10 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	// Creating Course info repo
 	repoCourseInfo := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 100,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_COURSEINFO,
-		HTMLURL:      "http://repoCourseInfo.com/",
+		RepositoryID:   100,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_COURSEINFO,
+		HTMLURL:        "http://repoCourseInfo.com/",
 	}
 	if err := db.CreateRepository(&repoCourseInfo); err != nil {
 		t.Fatal(err)
@@ -1678,11 +1663,10 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	// Creating solution
 	repoSolution := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 101,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_SOLUTIONS,
-		HTMLURL:      "http://repoSolution.com/",
+		RepositoryID:   101,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_SOLUTIONS,
+		HTMLURL:        "http://repoSolution.com/",
 	}
 	if err := db.CreateRepository(&repoSolution); err != nil {
 		t.Fatal(err)
@@ -1691,11 +1675,10 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	// Creating AssignmentRepo
 	repoAssignment := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 102,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_ASSIGNMENTS,
-		HTMLURL:      "http://repoAssignment.com/",
+		RepositoryID:   102,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_ASSIGNMENTS,
+		HTMLURL:        "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoAssignment); err != nil {
 		t.Fatal(err)
@@ -1704,11 +1687,10 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	// Creating UserRepo for user
 	repoUser := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 103,
-		UserID:       user.ID,
-		RepoType:     pb.Repository_USER,
-		HTMLURL:      "http://repoAssignment.com/",
+		RepositoryID:   103,
+		UserID:         user.ID,
+		RepoType:       pb.Repository_USER,
+		HTMLURL:        "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUser); err != nil {
 		t.Fatal(err)
@@ -1717,11 +1699,10 @@ func TestGetRepositoryByCourseUser(t *testing.T) {
 	// Creating UserRepo for userTwo
 	repoUserTwo := pb.Repository{
 		OrganizationID: 120,
-		// Name:         "Name",
-		RepositoryID: 104,
-		UserID:       userTwo.ID,
-		RepoType:     pb.Repository_USER,
-		HTMLURL:      "http://repoAssignment.com/",
+		RepositoryID:   104,
+		UserID:         userTwo.ID,
+		RepoType:       pb.Repository_USER,
+		HTMLURL:        "http://repoAssignment.com/",
 	}
 	if err := db.CreateRepository(&repoUserTwo); err != nil {
 		t.Fatal(err)

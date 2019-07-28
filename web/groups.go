@@ -109,6 +109,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	groupRepoQuery := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		GroupID:        request.GetID(),
+		RepoType:       pb.Repository_GROUP,
 	}
 	repos, err := s.db.GetRepositories(groupRepoQuery)
 	if err != nil {
@@ -137,10 +138,9 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		groupRepo := &pb.Repository{
 			OrganizationID: course.OrganizationID,
 			RepositoryID:   repo.ID,
-			UserID:         0,
 			GroupID:        request.ID,
 			HTMLURL:        repo.WebURL,
-			RepoType:       pb.Repository_USER, // TODO(meling) should we distinguish GroupRepo?
+			RepoType:       pb.Repository_GROUP,
 		}
 		if err := s.db.CreateRepository(groupRepo); err != nil {
 			return err
