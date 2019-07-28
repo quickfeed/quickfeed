@@ -160,7 +160,7 @@ export class TeacherPage extends ViewPage {
                 const grpLink = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
                 if (grpCourse && grpLink) {
                     grpLink.link.setGroup(grpCourse);
-                    grpLink.link.setGroupid(grpCourse.getId())
+                    grpLink.link.setGroupid(grpCourse.getId());
                     linkedGroups.push(grpLink);
                 }
             }

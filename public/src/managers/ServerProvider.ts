@@ -87,7 +87,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getEnrollmentsList();
     }
 
-
     public async getEnrollment(courseID: number, userID?: number, groupID?: number): Promise<Enrollment | null> {
         const result = await this.grpcHelper.getEnrollment(courseID, userID, groupID);
         if (result.status.getCode() !== 0 || !result.data) {
@@ -293,7 +292,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return null;
         }
         const iusr = result.data;
-        const usr: User = new User();
+        const usr = new User();
         usr.setId(iusr.id);
         usr.setStudentid(iusr.studentid);
         usr.setName(iusr.name);
