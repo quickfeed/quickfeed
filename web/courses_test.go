@@ -8,6 +8,7 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/google/go-cmp/cmp"
+	"github.com/markbates/goth"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -105,18 +106,30 @@ func fakeProviderMap(t *testing.T) (scm.SCM, *auth.Scms) {
 	return scm, scms
 }
 
+func fakeGothProvider() {
+	baseURL := "fake"
+	goth.UseProviders(&auth.FakeProvider{
+		Callback: auth.GetCallbackURL(baseURL, "fake"),
+	})
+	goth.UseProviders(&auth.FakeProvider{
+		Callback: auth.GetCallbackURL(baseURL, "fake-teacher"),
+	})
+}
+
 func TestNewCourse(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	// set up fake goth provider (only needs to be done once)
+	fakeGothProvider()
 	admin := createFakeUser(t, db, 10)
 	ctx := withUserContext(context.Background(), admin)
-	fakeProvider, scms := fakeProviderMap(t)
+	fakeScmProvider, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
 
 	for _, testCourse := range allCourses {
 		// each course needs a separate directory
-		fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+		fakeScmProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
 
 		respCourse, err := ags.CreateCourse(ctx, testCourse)
 		if err != nil {
