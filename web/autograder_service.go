@@ -294,7 +294,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 }
 
 // CreateGroup creates a new group.
-// Access policy: Any User enrolled in course and specified as member of the group.
+// Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -304,7 +304,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	if !s.isEnrolled(usr.GetID(), in.GetCourseID()) {
 		return nil, status.Errorf(codes.PermissionDenied, "user not enrolled in given course")
 	}
-	if !isInGroup(usr, in) {
+	if !(isInGroup(usr, in) || s.isTeacher(usr.GetID(), in.GetCourseID())) {
 		return nil, status.Errorf(codes.PermissionDenied, "only group member can create group")
 	}
 	group, err := s.createGroup(in)
