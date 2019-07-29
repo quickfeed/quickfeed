@@ -42,13 +42,13 @@ func init() {
 
 func main() {
 	var (
-		httpAddr  = flag.String("http.addr", ":8081", "HTTP listen address")
-		public    = flag.String("http.public", "public", "directory to server static files from")
-		ciScripts = flag.String("script.path", "ci/scripts", "Directory with docker CI scripts")
-		dbFile    = flag.String("database.file", tempFile("ag.db"), "database file")
-		baseURL   = flag.String("service.url", "localhost", "service base url")
-		fake      = flag.Bool("provider.fake", false, "enable fake provider")
-		grpcAddr  = flag.String("grpc.addr", ":9090", "gRPC listen address")
+		httpAddr   = flag.String("http.addr", ":8081", "HTTP listen address")
+		public     = flag.String("http.public", "public", "path to static files to serve")
+		scriptPath = flag.String("script.path", "ci/scripts", "path to continuous integration scripts")
+		dbFile     = flag.String("database.file", tempFile("ag.db"), "database file")
+		baseURL    = flag.String("service.url", "localhost", "service base url")
+		fake       = flag.Bool("provider.fake", false, "enable fake provider")
+		grpcAddr   = flag.String("grpc.addr", ":9090", "gRPC listen address")
 	)
 	flag.Parse()
 
@@ -83,7 +83,7 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
-	go http.NewWebServer(db, bh, logger, *public, *httpAddr, *fake, *ciScripts, scms)
+	go http.NewWebServer(db, bh, logger, *public, *httpAddr, *scriptPath, *fake, scms)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {

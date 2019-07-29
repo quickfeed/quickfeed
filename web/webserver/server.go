@@ -29,7 +29,7 @@ import (
 )
 
 // NewWebServer starts a new web server
-func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, public, httpAddr string, fake bool, buildscripts string, scms *auth.Scms) {
+func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, public, httpAddr, scriptPath string, fake bool, scms *auth.Scms) {
 	entryPoint := filepath.Join(public, "index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
 		l.Fatal("file not found", zap.String("path", entryPoint))
@@ -40,7 +40,7 @@ func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, pu
 	e := newServer(l, store)
 
 	enabled := enableProviders(l, bh.BaseURL, fake)
-	registerWebhooks(l, e, db, bh.Secret, enabled, &buildscripts)
+	registerWebhooks(l, e, db, bh.Secret, enabled, scriptPath)
 	registerAuth(l, e, db, scms)
 
 	registerFrontend(e, entryPoint, public)
@@ -112,7 +112,7 @@ func enableProviders(l *zap.Logger, baseURL string, fake bool) map[string]bool {
 	return enabled
 }
 
-func registerWebhooks(logger *zap.Logger, e *echo.Echo, db database.Database, secret string, enabled map[string]bool, buildscripts *string) {
+func registerWebhooks(logger *zap.Logger, e *echo.Echo, db database.Database, secret string, enabled map[string]bool, scriptPath string) {
 	webhooks.DefaultLog = web.WebhookLogger{Logger: logger}
 
 	docker := ci.Docker{
@@ -122,7 +122,7 @@ func registerWebhooks(logger *zap.Logger, e *echo.Echo, db database.Database, se
 
 	ghHook := whgithub.New(&whgithub.Config{Secret: secret})
 	if enabled["github"] {
-		ghHook.RegisterEvents(web.GithubHook(logger, db, &docker, *buildscripts), whgithub.PushEvent)
+		ghHook.RegisterEvents(web.GithubHook(logger, db, &docker, scriptPath), whgithub.PushEvent)
 	}
 	glHook := whgitlab.New(&whgitlab.Config{Secret: secret})
 	if enabled["gitlab"] {
