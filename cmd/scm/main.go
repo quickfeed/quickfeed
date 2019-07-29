@@ -152,6 +152,27 @@ func main() {
 					},
 					Action: getUser(&client),
 				},
+				{
+					Name:  "hook",
+					Usage: "Get repository hooks",
+					Flags: []cli.Flag{
+						cli.Uint64Flag{
+							Name:  "repo",
+							Usage: "Repository ID",
+							Value: 0,
+						},
+						cli.StringFlag{
+							Name: "namespace",
+							Usage: "Organization name",
+							Value: "ag-test-course",
+						},
+						cli.BoolFlag{
+							Name: "all",
+							Usage: "Get all hooks for repository / in namespace organization",
+							Value: false,
+						}
+					},
+				},
 			},
 		},
 		{
