@@ -30,7 +30,6 @@ import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";
 
-// will have either data or message
 export interface IGrpcResponse<T> {
     status: Status;
     data?: T;
