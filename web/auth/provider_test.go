@@ -50,7 +50,7 @@ func TestEnableProvider(t *testing.T) {
 		KeyEnv:      keyEnv,
 		SecretEnv:   secretEnv,
 		CallbackURL: callbackURL,
-	}, func(key string, secret string, callback string, scopes ...string) goth.Provider {
+	}, func(key, secret, callback string, scopes ...string) goth.Provider {
 		return github.New(key, secret, callback, scopes...)
 	})
 
