@@ -64,7 +64,7 @@ npmtools:
 
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
-	@cd envoy; docker build -t ag_envoy -f ./envoy/envoy.Dockerfile .
+	@cd envoy; docker build -t ag_envoy -f envoy.Dockerfile .
 
 envoy-run:
 	@echo "Starting Autograder Envoy proxy"
