@@ -108,7 +108,7 @@ export class AdminPage extends ViewPage {
                         lab.getId().toString(),
                         lab.getName(),
                         lab.getIsgrouplab() ? "Group lab" : "Individual",
-                        getDeadline(lab),
+                        getDeadline(lab)[0],
                     ]}>
                 </DynamicTable>
             </div>);

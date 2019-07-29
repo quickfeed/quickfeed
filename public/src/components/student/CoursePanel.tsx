@@ -31,7 +31,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                                 return [
                                     item.assignment.getName(),
                                     score,
-                                    getDeadline(item.assignment),
+                                    getDeadline(item.assignment)[0],
                                 ];
                             }}
                             onRowClick={(lab: IStudentSubmission) => {

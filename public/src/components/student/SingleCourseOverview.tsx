@@ -26,6 +26,7 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
         const labs: JSX.Element[] = submissionArray.map((submission, k) => {
             let submissionInfo = <div>No submissions</div>;
             if (submission.latest) {
+                const deadlineDate = getDeadline(submission.assignment);
                 submissionInfo = <div className="row">
                     <div className="col-md-6 col-lg-8">
                         <ProgressBar progress={submission.latest.score} />
@@ -37,8 +38,8 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
                     <div className="col-md-3 col-lg-2">
                         Deadline:
                         <span style={{ display: "inline-block", verticalAlign: "top", paddingLeft: "10px" }}>
-                            {getDeadline(submission.assignment)} <br />
-                            {/*TODO(hein) what's this? {submission.assignment.deadline.toLocaleTimeString("en-GB")} */}
+                            {deadlineDate[0]} <br />
+                            {deadlineDate[1]}
                         </span>
                     </div>
                 </div>;
