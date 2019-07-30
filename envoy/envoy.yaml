@@ -25,7 +25,7 @@ static_resources:
               domains: ["*"]
               routes:
               - match: { prefix: "/" }
-                route: { cluster: ag_service }
+                route: { cluster: ag_service, max_grpc_timeout: 0s }
               cors:
                 allow_origin: ["*"]
                 allow_methods: GET, PUT, DELETE, POST, OPTIONS
