@@ -11,7 +11,6 @@ require (
 	github.com/docker/go-connections v0.3.0 // indirect
 	github.com/docker/go-units v0.3.1 // indirect
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
-	github.com/go-playground/overalls v0.0.0-20180201144345-22ec1a223b7c // indirect
 	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/google/go-cmp v0.3.0
@@ -26,24 +25,20 @@ require (
 	github.com/labstack/gommon v0.2.9 // indirect
 	github.com/markbates/goth v0.0.0-20170721181425-c55b917ee947
 	github.com/mattn/go-sqlite3 v1.10.0
-	github.com/mattn/goveralls v0.0.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc0 // indirect
 	github.com/opencontainers/image-spec v1.0.0 // indirect
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
 	github.com/tebeka/selenium v0.9.3
 	github.com/urfave/cli v1.19.1
 	github.com/xanzy/go-gitlab v0.0.0-20170802104427-7e8e8eca9833
-	github.com/yookoala/realpath v1.0.0 // indirect
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
-	golang.org/dl v0.0.0-20190708215927-a23d87f20b66 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
 	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20190706070813-72ffa07ba3db // indirect
 	google.golang.org/grpc v1.21.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/webhooks.v3 v3.2.0
