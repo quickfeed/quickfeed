@@ -10,7 +10,7 @@ grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
 endpoint 			:= pedersen.itest.run
-agport				:= 3001
+agport				:= 8081
 
 # necessary when target is not tied to a file
 .PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run scm
@@ -90,4 +90,4 @@ purge: scm
 	scm delete team -all -namespace=$(testorg)
 
 run:
-	aguis -service.url  $(endpoint)  -http.addr $(agport) -http.public ./public
+	aguis -service.url  $(endpoint)  -http.addr :$(agport) -http.public ./public
