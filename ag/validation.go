@@ -22,12 +22,12 @@ type idCleaner interface {
 	RemoveRemoteID()
 }
 
-// AGInterceptor returns a new unary server interceptor that validates requests
+// Interceptor returns a new unary server interceptor that validates requests
 // that implements the validator interface.
 // Invalid requests are rejected without logging and before it reaches any
 // user-level code and returns an illegal argument to the client.
 // In addition, the interceptor also implements a cancel mechanism.
-func AGInterceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
+func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		if v, ok := req.(validator); ok {
 			if !v.IsValid() {
