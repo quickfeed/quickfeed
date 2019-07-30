@@ -211,7 +211,6 @@ export class CourseManager {
         return userlinks;
     }
 
-
     public async getEnrollment(courseID: number, userID?: number, groupID?: number): Promise<Enrollment | null> {
         return this.courseProvider.getEnrollment(courseID, userID, groupID);
     }
@@ -350,7 +349,7 @@ export class CourseManager {
      * @param groupCourse The group course
      */
     private async fillLinksGroup(group: Group, groupCourse: IAssignmentLink, assignments?: Assignment[]):
-     Promise<void> {
+        Promise<void> {
         if (!groupCourse.link) {
             return;
         }

@@ -120,7 +120,6 @@ export class GrpcManager {
     // /* ENROLLMENTS */ //
 
     public getEnrollment(courseID: number, userID?: number, groupID?: number): Promise<IGrpcResponse<Enrollment>> {
-
         const request = new EnrollmentRequest();
         request.setCourseid(courseID);
         if (userID) {
