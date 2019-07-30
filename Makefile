@@ -70,6 +70,13 @@ envoy-run:
 	@echo "Starting Autograder Envoy proxy"
 	@cd envoy; docker run --name=envoy -p 8080:8080 --net=host ag_envoy
 
+# will stop envoy container, prune docker containers and remove envoy images
+# use before rebuilding envoy with changed configuration in envoy.yaml
+envoy-purge:
+	docker kill envoy
+	docker container prune
+	docker image rm envoyproxy/envoy ag_envoy
+
 protoset:
 	@echo "Compiling protoset for grpcurl"
 	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
@@ -84,10 +91,13 @@ scm:
 	@echo "Compiling the scm tool"
 	@cd cmd/scm; go install
 
+# will remove all repositories and teams from provided organization 'testorg'
 purge: scm
 	rm -f /tmp/ag.db
 	scm delete repo -all -namespace=$(testorg)
 	scm delete team -all -namespace=$(testorg)
 
+# will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
+# use the number of bound port when using tunnel script
 run:
 	aguis -service.url  $(endpoint)  -http.addr :$(agport) -http.public ./public
