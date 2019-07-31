@@ -156,21 +156,17 @@ func main() {
 					Name:  "hook",
 					Usage: "Get repository hooks",
 					Flags: []cli.Flag{
-						cli.Uint64Flag{
+						cli.StringFlag{
 							Name:  "repo",
 							Usage: "Repository ID",
-							Value: 0,
 						},
 						cli.StringFlag{
 							Name:  "namespace",
 							Usage: "Organization name",
 							Value: "ag-test-course",
 						},
-						cli.BoolFlag{
-							Name:  "all",
-							Usage: "Get all hooks for repository / in namespace organization",
-						},
 					},
+					Action: getHooks(&client),
 				},
 			},
 		},
@@ -308,6 +304,32 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 		}
 		// TODO(vera): same as with teams, have to adjust existing methods to delete by name
 		return cli.NewExitError("not implemented", 9)
+	}
+}
+
+func getHooks(client *scm.SCM) cli.ActionFunc {
+	ctx := context.Background()
+	return func(c *cli.Context) error {
+		if !c.IsSet("namespace") && !c.IsSet("repo") {
+			return cli.NewExitError("repo name or organization namespace must be provided", 3)
+		}
+		if c.IsSet("repo") {
+			owner, err := (*client).GetUserName(ctx)
+			if err != nil {
+				return err
+			}
+			hooks, err := (*client).ListHooks(ctx, &scm.Repository{Owner: owner, Path: c.String("repo")})
+			if err != nil {
+				return err
+			}
+			h, err := toJSON(&hooks)
+			if err != nil {
+				return err
+			}
+			fmt.Println(h)
+		}
+		// TODO (vera): add functinality for all org hooks
+		return nil
 	}
 }
 
