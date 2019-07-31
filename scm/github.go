@@ -173,6 +173,23 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, e
 	return hooks, nil
 }
 
+// ListOrgHooks implements the SCM interface
+func (s *GithubSCM) ListOrgHooks(ctx context.Context, org string) ([]*Hook, error) {
+
+	gitHooks, _, err := s.client.Organizations.ListHooks(ctx, org, nil)
+	if err != nil {
+		return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks for organization %s: %w", org, err)
+	}
+	var hooks []*Hook
+	for _, hook := range gitHooks {
+		hooks = append(hooks, &Hook{
+			ID:  uint64(hook.GetID()),
+			URL: hook.GetURL(),
+		})
+	}
+	return hooks, nil
+}
+
 // CreateHook implements the SCM interface.
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
 	_, _, err := s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path,

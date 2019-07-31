@@ -29,6 +29,8 @@ type SCM interface {
 	UpdateRepoAccess(context.Context, Repository, string, string) error
 	// List the webhooks associated with the provided repository.
 	ListHooks(context.Context, *Repository) ([]*Hook, error)
+	// List all webhooks associated eith the provided organization
+	ListOrgHooks(context.Context, string) ([]*Hook, error)
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
