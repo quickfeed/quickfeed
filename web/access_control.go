@@ -56,70 +56,36 @@ func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider 
 	return nil, errors.New("no SCM found")
 }
 
-// isAdmin returns true only if the current user is administrator.
-// Any non-admin user in the context returns false.
-func (s *AutograderService) isAdmin(ctx context.Context) bool {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return false
-	}
-	return usr.IsAdmin
-}
-
-// isTeacher returns true only if the given user is teacher for the given course.
-func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
+// hasCourseAccess returns true if the given user has access to the given course,
+// as defined by the check function.
+func (s *AutograderService) hasCourseAccess(userID, courseID uint64, check func(*pb.Enrollment) bool) bool {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
 		s.logger.Error(err)
 		return false
 	}
-	return enrollment.Status == pb.Enrollment_TEACHER
+	return check(enrollment)
 }
 
-// isOwner returns true only if the given user IDs match and is enrolled as student for the given course.
-func (s *AutograderService) isOwner(userID, userID2, courseID uint64) bool {
-	return s.isStudent(userID, courseID) && userID == userID2
-}
-
-// isEnrolled returns true if the given user is enrolled in the given course
+// isEnrolled returns true if the given user is enrolled in the given course.
 func (s *AutograderService) isEnrolled(userID, courseID uint64) bool {
-	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
-	if err != nil {
-		s.logger.Error(err)
-		return false
-	}
-	return enrollment.Status == pb.Enrollment_STUDENT || enrollment.Status == pb.Enrollment_TEACHER
+	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
+		return e.Status == pb.Enrollment_STUDENT || e.Status == pb.Enrollment_TEACHER
+	})
 }
 
 // isEnrolled returns true if the given user is enrolled as student for the given course.
 func (s *AutograderService) isStudent(userID, courseID uint64) bool {
-	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
-	if err != nil {
-		s.logger.Error(err)
-		return false
-	}
-	return enrollment.Status == pb.Enrollment_STUDENT
+	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
+		return e.Status == pb.Enrollment_STUDENT
+	})
 }
 
-// isInGroup returns true if the current user is in the provided group.
-func isInGroup(currentUser *pb.User, group *pb.Group) bool {
-	for _, u := range group.GetUsers() {
-		if currentUser.ID == u.ID {
-			return true
-		}
-	}
-	return false
-}
-
-// hasAccess returns true if the current user is administrator or the user with userID.
-func (s *AutograderService) hasAccess(ctx context.Context, userID uint64) bool {
-	currentUser, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return false
-	}
-	return currentUser.IsAdmin || currentUser.ID == userID
+// isTeacher returns true if the given user is teacher for the given course.
+func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
+	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
+		return e.Status == pb.Enrollment_TEACHER
+	})
 }
 
 // getUserAndSCM returns the current user and scm for the given provider.

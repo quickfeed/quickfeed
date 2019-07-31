@@ -8,3 +8,13 @@ func (g *Group) UserNames() []string {
 	}
 	return gitUserNames
 }
+
+// Contains returns true if the given user is in the group.
+func (g *Group) Contains(user *User) bool {
+	for _, u := range g.GetUsers() {
+		if user.ID == u.ID {
+			return true
+		}
+	}
+	return false
+}
