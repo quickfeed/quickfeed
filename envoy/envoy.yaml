@@ -41,6 +41,8 @@ static_resources:
     connect_timeout: 0.25s
     type: logical_dns
     http2_protocol_options: {}
+    # experimental, if build/connection suddenly fails, try to remove that line first
+    upstream_connection_options: { tcp_keepalive: { keepalive_time: 300 }}
     lb_policy: round_robin
     # win/mac hosts: Use address: host.docker.internal instead of address: 127.0.0.1 or address:localhost in the line below
     hosts: [{ socket_address: { address: 127.0.0.1, port_value: 9090 }}]
