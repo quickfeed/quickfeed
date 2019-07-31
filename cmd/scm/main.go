@@ -162,15 +162,14 @@ func main() {
 							Value: 0,
 						},
 						cli.StringFlag{
-							Name: "namespace",
+							Name:  "namespace",
 							Usage: "Organization name",
 							Value: "ag-test-course",
 						},
 						cli.BoolFlag{
-							Name: "all",
+							Name:  "all",
 							Usage: "Get all hooks for repository / in namespace organization",
-							Value: false,
-						}
+						},
 					},
 				},
 			},
