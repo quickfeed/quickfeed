@@ -24,14 +24,14 @@ func (t Repository) IsTestsRepo() bool {
 	return t.RepoType == Repository_TESTS
 }
 
-// IsStudentRepo returns true if the repository is a user or group repo type.
+// IsStudentRepo returns true if the repository is a user repo type.
 func (t Repository) IsStudentRepo() bool {
 	return t.RepoType == Repository_USER
 }
 
-// IsStudentRepo returns true if the repository is a user or group repo type.
+// IsStudentRepo returns true if the repository is a user repo type.
 func (t Repository_Type) IsStudentRepo() bool {
-	return t == Repository_USER
+	return t == Repository_USER || t == Repository_GROUP
 }
 
 // RepoType returns the repository type for the given path name.
