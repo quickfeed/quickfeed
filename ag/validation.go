@@ -89,7 +89,7 @@ func (req RecordRequest) IsValid() bool {
 
 // IsValid checks required fields of a repository request
 func (req RepositoryRequest) IsValid() bool {
-	return req.GetCourseID() > 0 && req.GetType() >= Repository_COURSEINFO
+	return req.GetCourseID() > 0 && req.GetType() > Repository_NONE
 }
 
 // IsValid checks required fields of an action request.
