@@ -179,21 +179,16 @@ export class NavigationHelper {
     }
 
     private parseValue(value: string, type: string): string | number | boolean | undefined {
-        console.log("Parsing value: " + value + " of type " + type);
         switch (type) {
             case "string":
-                console.log("It is string");
                 return value;
             case "number":
-                console.log("It is number");
                 const num = parseFloat(value);
                 if (isNaN(num)) {
-                    console.log("failed to parse number");
-                    return undefined;
+                   return undefined;
                 }
                 return num;
             case "boolean":
-                console.log("It is bool");
                 if (value.toLowerCase() === "true") {
                     return true;
                 } else if (value.toLowerCase() === "false") {
