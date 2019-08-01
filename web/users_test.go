@@ -2,7 +2,6 @@ package web_test
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,14 +17,15 @@ import (
 
 //TODO(vera): reimplement
 func TestGetSelf(t *testing.T) {
-	t.Skip("must be updated")
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	_ = createFakeUser(t, db, 1)
+
 	const (
 		selfURL   = "/user"
 		apiPrefix = "/api/v1"
 	)
-
-	db, cleanup := setup(t)
-	defer cleanup()
 
 	r := httptest.NewRequest(http.MethodGet, selfURL, nil)
 	w := httptest.NewRecorder()
@@ -40,14 +40,10 @@ func TestGetSelf(t *testing.T) {
 		t.Error(err)
 	}
 
-	userURL := fmt.Sprintf("/users/%d", user.ID)
-	location := w.Header().Get("Location")
-	if location != apiPrefix+userURL {
-		t.Errorf("have Location '%v' want '%v'", location, apiPrefix+userURL)
-	}
 	if w.Code == http.StatusNotFound {
 		t.Fatal("not found")
 	}
+	assertCode(t, w.Code, http.StatusFound)
 }
 
 func TestGetUsers(t *testing.T) {
