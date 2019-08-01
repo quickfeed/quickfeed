@@ -13,7 +13,6 @@ import (
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
