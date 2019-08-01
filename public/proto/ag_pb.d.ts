@@ -832,6 +832,9 @@ export namespace Providers {
 }
 
 export class URLRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
   getRepotypesList(): Array<Repository.Type>;
   setRepotypesList(value: Array<Repository.Type>): void;
   clearRepotypesList(): void;
@@ -847,6 +850,7 @@ export class URLRequest extends jspb.Message {
 
 export namespace URLRequest {
   export type AsObject = {
+    courseid: number,
     repotypesList: Array<Repository.Type>,
   }
 }
@@ -870,10 +874,10 @@ export namespace URLResponse {
 }
 
 export class Repositories extends jspb.Message {
-  getUrlsList(): Array<URLResponse>;
-  setUrlsList(value: Array<URLResponse>): void;
+  getUrlsList(): Array<string>;
+  setUrlsList(value: Array<string>): void;
   clearUrlsList(): void;
-  addUrls(value?: URLResponse, index?: number): URLResponse;
+  addUrls(value: string, index?: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Repositories.AsObject;
@@ -885,7 +889,7 @@ export class Repositories extends jspb.Message {
 
 export namespace Repositories {
   export type AsObject = {
-    urlsList: Array<URLResponse.AsObject>,
+    urlsList: Array<string>,
   }
 }
 

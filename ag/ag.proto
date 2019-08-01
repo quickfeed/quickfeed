@@ -214,7 +214,8 @@ message Providers {
 }
 
 message URLRequest {
-    repeated Repository.Type repoTypes = 1;
+    uint64 courseID = 1;
+    repeated Repository.Type repoTypes = 2;
 }
 
 message URLResponse {
@@ -222,7 +223,7 @@ message URLResponse {
 }
 
 message Repositories {
-    repeated URLResponse URLs = 1;
+    repeated string URLs = 1;
 }
 
 message AuthorizationResponse {

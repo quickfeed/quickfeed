@@ -6519,7 +6519,7 @@ proto.Providers.prototype.clearProvidersList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.URLRequest.repeatedFields_ = [1];
+proto.URLRequest.repeatedFields_ = [2];
 
 
 
@@ -6550,7 +6550,8 @@ proto.URLRequest.prototype.toObject = function(opt_includeInstance) {
  */
 proto.URLRequest.toObject = function(includeInstance, msg) {
   var obj = {
-    repotypesList: jspb.Message.getRepeatedField(msg, 1)
+    courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    repotypesList: jspb.Message.getRepeatedField(msg, 2)
   };
 
   if (includeInstance) {
@@ -6588,6 +6589,10 @@ proto.URLRequest.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setCourseid(value);
+      break;
+    case 2:
       var value = /** @type {!Array<!proto.Repository.Type>} */ (reader.readPackedEnum());
       msg.setRepotypesList(value);
       break;
@@ -6620,10 +6625,17 @@ proto.URLRequest.prototype.serializeBinary = function() {
  */
 proto.URLRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getCourseid();
+  if (f !== 0) {
+    writer.writeUint64(
+      1,
+      f
+    );
+  }
   f = message.getRepotypesList();
   if (f.length > 0) {
     writer.writePackedEnum(
-      1,
+      2,
       f
     );
   }
@@ -6631,17 +6643,32 @@ proto.URLRequest.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * repeated Repository.Type repoTypes = 1;
+ * optional uint64 courseID = 1;
+ * @return {number}
+ */
+proto.URLRequest.prototype.getCourseid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/** @param {number} value */
+proto.URLRequest.prototype.setCourseid = function(value) {
+  jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * repeated Repository.Type repoTypes = 2;
  * @return {!Array<!proto.Repository.Type>}
  */
 proto.URLRequest.prototype.getRepotypesList = function() {
-  return /** @type {!Array<!proto.Repository.Type>} */ (jspb.Message.getRepeatedField(this, 1));
+  return /** @type {!Array<!proto.Repository.Type>} */ (jspb.Message.getRepeatedField(this, 2));
 };
 
 
 /** @param {!Array<!proto.Repository.Type>} value */
 proto.URLRequest.prototype.setRepotypesList = function(value) {
-  jspb.Message.setField(this, 1, value || []);
+  jspb.Message.setField(this, 2, value || []);
 };
 
 
@@ -6650,7 +6677,7 @@ proto.URLRequest.prototype.setRepotypesList = function(value) {
  * @param {number=} opt_index
  */
 proto.URLRequest.prototype.addRepotypes = function(value, opt_index) {
-  jspb.Message.addToRepeatedField(this, 1, value, opt_index);
+  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
 };
 
 
@@ -6824,8 +6851,7 @@ proto.Repositories.prototype.toObject = function(opt_includeInstance) {
  */
 proto.Repositories.toObject = function(includeInstance, msg) {
   var obj = {
-    urlsList: jspb.Message.toObjectList(msg.getUrlsList(),
-    proto.URLResponse.toObject, includeInstance)
+    urlsList: jspb.Message.getRepeatedField(msg, 1)
   };
 
   if (includeInstance) {
@@ -6863,8 +6889,7 @@ proto.Repositories.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = new proto.URLResponse;
-      reader.readMessage(value,proto.URLResponse.deserializeBinaryFromReader);
+      var value = /** @type {string} */ (reader.readString());
       msg.addUrls(value);
       break;
     default:
@@ -6898,38 +6923,35 @@ proto.Repositories.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getUrlsList();
   if (f.length > 0) {
-    writer.writeRepeatedMessage(
+    writer.writeRepeatedString(
       1,
-      f,
-      proto.URLResponse.serializeBinaryToWriter
+      f
     );
   }
 };
 
 
 /**
- * repeated URLResponse URLs = 1;
- * @return {!Array<!proto.URLResponse>}
+ * repeated string URLs = 1;
+ * @return {!Array<string>}
  */
 proto.Repositories.prototype.getUrlsList = function() {
-  return /** @type{!Array<!proto.URLResponse>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.URLResponse, 1));
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 1));
 };
 
 
-/** @param {!Array<!proto.URLResponse>} value */
+/** @param {!Array<string>} value */
 proto.Repositories.prototype.setUrlsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 1, value);
+  jspb.Message.setField(this, 1, value || []);
 };
 
 
 /**
- * @param {!proto.URLResponse=} opt_value
+ * @param {string} value
  * @param {number=} opt_index
- * @return {!proto.URLResponse}
  */
-proto.Repositories.prototype.addUrls = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.URLResponse, opt_index);
+proto.Repositories.prototype.addUrls = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 1, value, opt_index);
 };
 
 

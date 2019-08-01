@@ -92,8 +92,11 @@ func (req RepositoryRequest) IsValid() bool {
 	return req.GetCourseID() > 0 && req.GetType() > Repository_NONE
 }
 
-// IsValid checks that all requested repo types are valid types
+// IsValid checks that all requested repo types are valid types and course ID field is set
 func (req URLRequest) IsValid() bool {
+	if req.GetCourseID() <= 0 {
+		return false
+	}
 	valid := true
 	for _, r := range req.GetRepoTypes() {
 		if r <= Repository_NONE || r > Repository_GROUP {

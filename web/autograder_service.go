@@ -489,8 +489,22 @@ func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.Provide
 	return orgs, nil
 }
 
-// GetRepository is not yet implemented
+// GetRepositories returns URL strings for repositories of given type for the given course
 // Access policy: Any User.
-func (s *AutograderService) GetRepository(ctx context.Context, in *pb.RepositoryRequest) (*pb.Repository, error) {
-	return nil, status.Errorf(codes.Unimplemented, "not implemented")
+func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLRequest) (*pb.Repositories, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+	}
+	var urls []string
+	for _, i := range in.GetRepoTypes() {
+		repo, err := s.getRepositoryURL(usr, &pb.RepositoryRequest{CourseID: in.GetCourseID(), Type: i})
+		if err != nil {
+			s.logger.Debugf("Failed to get repository URL for repo of type %s.", i.String())
+			return nil, status.Errorf(codes.NotFound, "failed to get repository URL")
+		}
+		urls = append(urls, repo.URL)
+	}
+	return &pb.Repositories{URLs: urls}, nil
 }
