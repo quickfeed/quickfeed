@@ -164,6 +164,10 @@ func main() {
 							Name:  "owner",
 							Usage: "Repository owner name",
 						},
+						cli.StringFlag{
+							Name:  "org",
+							Usage: "Name of organization",
+						},
 					},
 					Action: getHooks(&client),
 				},
@@ -309,17 +313,28 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 func getHooks(client *scm.SCM) cli.ActionFunc {
 	ctx := context.Background()
 	return func(c *cli.Context) error {
-		if !(c.IsSet("owner") && c.IsSet("repo")) {
-			return cli.NewExitError("repo and owner names must be provided", 3)
+		var hooks []*scm.Hook
+		// if organization name is set, list all hook asociated with that organization
+		if c.IsSet("org") {
+			gitHooks, err := (*client).ListHooks(ctx, nil, c.String("org"))
+			if err != nil {
+				return err
+			}
+			hooks = gitHooks
 		}
 
-		hooks, err := (*client).ListHooks(ctx, &scm.Repository{Owner: c.String("owner"), Path: c.String("repo")})
-		if err != nil {
-			return err
+		// if repo and owner provided, list hooks for that repo
+		if c.IsSet("owner") && c.IsSet("repo") {
+			gitHooks, err := (*client).ListHooks(ctx, &scm.Repository{Owner: c.String("owner"), Path: c.String("repo")}, "")
+			if err != nil {
+				return err
+			}
+			hooks = gitHooks
 		}
 		for _, hook := range hooks {
 			log.Printf("Hook: %s with url %s", hook.Name, hook.URL)
 		}
+
 		return nil
 	}
 }
