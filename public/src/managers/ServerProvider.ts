@@ -6,6 +6,7 @@ import {
     Organization,
     Status,
     Submission,
+    URLRequest,
     User,
     Void,
 } from "../../proto/ag_pb";
@@ -313,6 +314,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return "";
         }
         return result.data.getUrl();
+    }
+
+    public async getRepositories(req: URLRequest): Promise<string[]> {
+        const result = await this.grpcHelper.getRepositories(req);
+        if (result.status.getCode() !== 0 || !result.data) {
+            return [];
+        }
+        return result.data.getUrlsList();
     }
 
     public async approveSubmission(submissionID: number, courseID: number): Promise<void> {

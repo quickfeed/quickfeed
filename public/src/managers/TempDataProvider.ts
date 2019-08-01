@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, Group, Organization, Status, User } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Organization, Status, URLRequest, User } from "../../proto/ag_pb";
 import {
     INewGroup,
     ISubmission,
@@ -290,6 +290,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async getRepositoryURL(cid: number, type: number): Promise<string> {
         throw new Error("Method not implemented.");
+    }
+
+    public async getRepositories(req: URLRequest): Promise<string[]> {
+        throw new Error("Method not implemented");
     }
 
     private addLocalUsers() {

@@ -21,10 +21,12 @@ import {
     Submission,
     SubmissionRequest,
     Submissions,
+    URLRequest,
     URLResponse,
     User,
     Users,
     Void,
+    Repositories,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { INewGroup } from "../models";
@@ -247,6 +249,10 @@ export class GrpcManager {
         request.setCourseid(courseid);
         request.setType(repotype);
         return this.grpcSend<URLResponse>(this.agService.getRepositoryURL, request);
+    }
+
+    public getRepositories(req: URLRequest): Promise<IGrpcResponse<Repositories>> {
+        return this.grpcSend<Repositories>(this.agService.getRepositories, req)
     }
 
     public getProviders(): Promise<IGrpcResponse<Providers>> {
