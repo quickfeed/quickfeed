@@ -231,7 +231,7 @@ export class GrpcManager {
         const req = new URLRequest();
         req.setCourseid(cid);
         req.setRepotypesList(types);
-        return this.grpcSend<Repositories>(this.agService.getRepositories, req)
+        return this.grpcSend<Repositories>(this.agService.getRepositories, req);
     }
 
     public getProviders(): Promise<IGrpcResponse<Providers>> {
