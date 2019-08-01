@@ -92,6 +92,17 @@ func (req RepositoryRequest) IsValid() bool {
 	return req.GetCourseID() > 0 && req.GetType() > Repository_NONE
 }
 
+// IsValid checks that all requested repo types are valid types
+func (req URLRequest) IsValid() bool {
+	valid := true
+	for _, r := range req.GetRepoTypes() {
+		if r <= Repository_NONE || r > Repository_GROUP {
+			valid = false
+		}
+	}
+	return valid
+}
+
 // IsValid checks required fields of an action request.
 // It must have a positive course ID and
 // a positive user ID or group ID but not both.
