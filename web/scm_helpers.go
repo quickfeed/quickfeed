@@ -72,6 +72,22 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	return repo, team, nil
 }
 
+// creates {username}-labs repository and provides pull/push access to it for the given student
+func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, path string, student string) (*scm.Repository, error) {
+	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
+		Organization: org,
+		Path:         path,
+		Private:      true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
+	}
+	if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: repo.Owner, Path: repo.Path}, student, repoPush); err != nil {
+		return nil, err
+	}
+	return repo, nil
+}
+
 // add user to the organization's "students" team.
 func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	opt := &scm.TeamMembershipOptions{

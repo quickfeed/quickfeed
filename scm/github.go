@@ -90,6 +90,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	if err != nil {
 		return nil, fmt.Errorf("CreateRepositories: failed to create GitHub repository: %w", err)
 	}
+	s.logger.Infof("GitHub CreateRepository: created repo %s on organization %s with owner %s", repo.GetName(), opt.Organization.Path, repo.Owner.GetLogin())
 
 	return &Repository{
 		ID:      uint64(repo.GetID()),
@@ -158,7 +159,6 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 }
 
 // ListHooks implements the SCM interface.
-// TODO(vera) - these 2 hooks methods can be simplified/consolidated
 func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
 	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
 	if err != nil {

@@ -70,11 +70,6 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 			return s.db.EnrollStudent(request.UserID, request.CourseID)
 		}
 
-		// grant student read access to Assignments and Course-Info repositories
-		// TODO(vera) refactor later
-
-		// get ass and info repos from db
-
 		// create user repo, user team, and add user to students team
 		// TODO(vera): creation of a single user team can be replaced by adding student as collaborator with push permission to user repo
 		repo, err := updateReposAndTeams(ctx, sc, course, student.GetLogin(), request.GetStatus())
@@ -129,7 +124,6 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 			log.Println("Looking for repos in org ", org.GetPath(), " found repo ", r.Path, " with owner ", r.Owner)
 			if r.Path == "assignments" || r.Path == "course-info" {
 				if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: r.Owner, Path: r.Path}, login, repoPull); err != nil {
-					log.Println("Failed to update repo access for repo ", r.Path, " for user ", login)
 					return nil, fmt.Errorf("Failed to update repo access to repo %s for user %s ", r.Path, login)
 				}
 			}
@@ -139,12 +133,15 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		if err = addUserToStudentsTeam(ctx, sc, org, login); err != nil {
 			return nil, err
 		}
+
+		return createStudentRepo(ctx, sc, org, pb.StudentRepoName(login), login)
+		/* TODO(vera) - clean after testing
 		// create user repo and personal team for the student
 		repo, _, err := createRepoAndTeam(ctx, sc, org, pb.StudentRepoName(login), login, []string{login})
 		if err != nil {
 			return nil, err
 		}
-		return repo, nil
+		return repo, nil*/
 
 	case pb.Enrollment_TEACHER:
 		// if teacher, promote to owner, remove from students team, add to teachers team
