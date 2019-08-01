@@ -159,30 +159,33 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 }
 
 // ListHooks implements the SCM interface.
-func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
-	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
-	if err != nil {
-		return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks: %w", err)
-	}
+func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) ([]*Hook, error) {
+	var gitHooks []*github.Hook
 	var hooks []*Hook
-	for _, hook := range githubHooks {
-		hooks = append(hooks, &Hook{
-			ID:  uint64(hook.GetID()),
-			URL: hook.GetURL(),
-		})
-	}
-	return hooks, nil
-}
 
-// ListOrgHooks implements the SCM interface
-func (s *GithubSCM) ListOrgHooks(ctx context.Context, org string) ([]*Hook, error) {
-
-	gitHooks, _, err := s.client.Organizations.ListHooks(ctx, org, nil)
-	if err != nil {
-		return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks for organization %s: %w", org, err)
+	// if required fields provided, get hooks for that repository
+	if repo != nil && repo.ValidForHooks() {
+		githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
+		if err != nil {
+			return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks: %w", err)
+		}
+		gitHooks = githubHooks
 	}
-	var hooks []*Hook
+
+	// if org name provided, get all hooks existing on that organization
+	if org != "" {
+		githubHooks, _, err := s.client.Organizations.ListHooks(ctx, org, nil)
+		if err != nil {
+			return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks for organization %s: %w", org, err)
+		}
+		gitHooks = githubHooks
+	}
+	if len(gitHooks) < 1 {
+		s.logger.Debugf("ListHooks: invalid payload. Repo: %v, org: %s", repo, org)
+		return nil, fmt.Errorf("ListHooks: found no hooks")
+	}
 	for _, hook := range gitHooks {
+		s.logger.Infof("Found hook with events: %s", hook.Events)
 		hooks = append(hooks, &Hook{
 			ID:  uint64(hook.GetID()),
 			URL: hook.GetURL(),

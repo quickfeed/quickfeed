@@ -28,9 +28,7 @@ type SCM interface {
 	// Add user as repository collaborator with provided permissions
 	UpdateRepoAccess(context.Context, *Repository, string, string) error
 	// List the webhooks associated with the provided repository.
-	ListHooks(context.Context, *Repository) ([]*Hook, error)
-	// List all webhooks associated eith the provided organization
-	ListOrgHooks(context.Context, string) ([]*Hook, error)
+	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
@@ -91,6 +89,11 @@ type Repository struct {
 	SSHURL  string // SSH clone URL.
 	HTTPURL string // HTTP(S) clone URL.
 	OrgID   uint64
+}
+
+// ValidForHooks checks that repository object can be used in hooks related methods
+func (r Repository) ValidForHooks() bool {
+	return r.Path != "" && r.Owner != ""
 }
 
 // Hook contains information about a webhook for a repository.

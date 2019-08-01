@@ -102,18 +102,6 @@ func (s *FakeSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user, 
 	return nil
 }
 
-// ListHooks implements the SCM interface.
-func (s *FakeSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
-	// TODO no implementation provided yet
-	return nil, nil
-}
-
-// ListOrgHooks implements the SCM interface
-func (s *FakeSCM) ListOrgHooks(ctx context.Context, org string) ([]*Hook, error) {
-	// TODO no implementation provided yet
-	return nil, nil
-}
-
 // CreateHook implements the SCM interface.
 func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
 	if _, ok := s.Repositories[opt.Repository.ID]; !ok {

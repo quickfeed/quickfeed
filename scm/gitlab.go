@@ -142,13 +142,7 @@ func (s *GitlabSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 }
 
 // ListHooks implements the SCM interface.
-func (s *GitlabSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
-	// TODO no implementation provided yet
-	return nil, nil
-}
-
-// ListOrgHooks implements the SCM interface
-func (s *GitlabSCM) ListOrgHooks(ctx context.Context, org string) ([]*Hook, error) {
+func (s *GitlabSCM) ListHooks(ctx context.Context, repo *Repository, org string) ([]*Hook, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }
