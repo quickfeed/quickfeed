@@ -153,7 +153,7 @@ func main() {
 					Action: getUser(&client),
 				},
 				{
-					Name:  "hook",
+					Name:  "hooks",
 					Usage: "Get repository hooks",
 					Flags: []cli.Flag{
 						cli.StringFlag{
@@ -161,9 +161,8 @@ func main() {
 							Usage: "Repository ID",
 						},
 						cli.StringFlag{
-							Name:  "namespace",
-							Usage: "Organization name",
-							Value: "ag-test-course",
+							Name:  "owner",
+							Usage: "Repository owner name",
 						},
 					},
 					Action: getHooks(&client),
@@ -310,25 +309,17 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 func getHooks(client *scm.SCM) cli.ActionFunc {
 	ctx := context.Background()
 	return func(c *cli.Context) error {
-		if !c.IsSet("namespace") && !c.IsSet("repo") {
-			return cli.NewExitError("repo name or organization namespace must be provided", 3)
+		if !(c.IsSet("owner") && c.IsSet("repo")) {
+			return cli.NewExitError("repo and owner names must be provided", 3)
 		}
-		if c.IsSet("repo") {
-			owner, err := (*client).GetUserName(ctx)
-			if err != nil {
-				return err
-			}
-			hooks, err := (*client).ListHooks(ctx, &scm.Repository{Owner: owner, Path: c.String("repo")})
-			if err != nil {
-				return err
-			}
-			h, err := toJSON(&hooks)
-			if err != nil {
-				return err
-			}
-			fmt.Println(h)
+
+		hooks, err := (*client).ListHooks(ctx, &scm.Repository{Owner: c.String("owner"), Path: c.String("repo")})
+		if err != nil {
+			return err
 		}
-		// TODO (vera): add functinality for all org hooks
+		for _, hook := range hooks {
+			log.Printf("Hook: %s with url %s", hook.Name, hook.URL)
+		}
 		return nil
 	}
 }
