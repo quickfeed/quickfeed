@@ -174,9 +174,10 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string)
 
 	// if org name provided, get all hooks existing on that organization
 	if org != "" {
-		githubHooks, _, err := s.client.Organizations.ListHooks(ctx, org, nil)
+		orgName := slug.Make(org)
+		githubHooks, _, err := s.client.Organizations.ListHooks(ctx, orgName, nil)
 		if err != nil {
-			return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks for organization %s: %w", org, err)
+			return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks for organization %s: %w", orgName, err)
 		}
 		gitHooks = githubHooks
 	}
