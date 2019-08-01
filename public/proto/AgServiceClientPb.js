@@ -88,9 +88,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetOrganizations = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Organizations, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Organizations.deserializeBinary);
-        this.methodInfoGetRepository = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Repository, function (request) {
+        this.methodInfoGetRepositories = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Repositories, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.Repository.deserializeBinary);
+        }, ag_pb_1.Repositories.deserializeBinary);
         if (!options)
             options = {};
         options['format'] = 'binary';
@@ -203,9 +203,9 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetOrganizations', request, metadata || {}, this.methodInfoGetOrganizations, callback);
     };
-    AutograderServiceClient.prototype.getRepository = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.getRepositories = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetRepository', request, metadata || {}, this.methodInfoGetRepository, callback);
+            '/AutograderService/GetRepositories', request, metadata || {}, this.methodInfoGetRepositories, callback);
     };
     return AutograderServiceClient;
 }());

@@ -146,10 +146,6 @@ message Repository {
     Type repoType = 7;
 }
 
-message Repositories {
-    repeated Repository repositories = 1;
-}
-
 message Organization {
     uint64 ID = 1;
     string path = 2;
@@ -217,8 +213,16 @@ message Providers {
     repeated string providers = 1;
 }
 
+message URLRequest {
+    repeated Repository.Type repoTypes = 1;
+}
+
 message URLResponse {
     string URL = 1;
+}
+
+message Repositories {
+    repeated URLResponse URLs = 1;
 }
 
 message AuthorizationResponse {
@@ -287,7 +291,6 @@ service AutograderService {
     rpc GetProviders(Void) returns (Providers) {}
     rpc GetOrganizations(Provider) returns (Organizations) {}
 
-    // The sole purpose of this RPC is to provide a reference to Repository type to TypeScript client
-    // Might later be used as a more general type for retrieval of repo information 
-    rpc GetRepository(RepositoryRequest) returns (Repository) {}
+    // use to batch all repository URL requests into one gRPC call
+    rpc GetRepositories(URLRequest) returns (Repositories) {}
 }

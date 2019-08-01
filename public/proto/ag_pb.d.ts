@@ -547,26 +547,6 @@ export namespace Repository {
   }
 }
 
-export class Repositories extends jspb.Message {
-  getRepositoriesList(): Array<Repository>;
-  setRepositoriesList(value: Array<Repository>): void;
-  clearRepositoriesList(): void;
-  addRepositories(value?: Repository, index?: number): Repository;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Repositories.AsObject;
-  static toObject(includeInstance: boolean, msg: Repositories): Repositories.AsObject;
-  static serializeBinaryToWriter(message: Repositories, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Repositories;
-  static deserializeBinaryFromReader(message: Repositories, reader: jspb.BinaryReader): Repositories;
-}
-
-export namespace Repositories {
-  export type AsObject = {
-    repositoriesList: Array<Repository.AsObject>,
-  }
-}
-
 export class Organization extends jspb.Message {
   getId(): number;
   setId(value: number): void;
@@ -851,6 +831,26 @@ export namespace Providers {
   }
 }
 
+export class URLRequest extends jspb.Message {
+  getRepotypesList(): Array<Repository.Type>;
+  setRepotypesList(value: Array<Repository.Type>): void;
+  clearRepotypesList(): void;
+  addRepotypes(value: Repository.Type, index?: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): URLRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: URLRequest): URLRequest.AsObject;
+  static serializeBinaryToWriter(message: URLRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): URLRequest;
+  static deserializeBinaryFromReader(message: URLRequest, reader: jspb.BinaryReader): URLRequest;
+}
+
+export namespace URLRequest {
+  export type AsObject = {
+    repotypesList: Array<Repository.Type>,
+  }
+}
+
 export class URLResponse extends jspb.Message {
   getUrl(): string;
   setUrl(value: string): void;
@@ -866,6 +866,26 @@ export class URLResponse extends jspb.Message {
 export namespace URLResponse {
   export type AsObject = {
     url: string,
+  }
+}
+
+export class Repositories extends jspb.Message {
+  getUrlsList(): Array<URLResponse>;
+  setUrlsList(value: Array<URLResponse>): void;
+  clearUrlsList(): void;
+  addUrls(value?: URLResponse, index?: number): URLResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Repositories.AsObject;
+  static toObject(includeInstance: boolean, msg: Repositories): Repositories.AsObject;
+  static serializeBinaryToWriter(message: Repositories, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Repositories;
+  static deserializeBinaryFromReader(message: Repositories, reader: jspb.BinaryReader): Repositories;
+}
+
+export namespace Repositories {
+  export type AsObject = {
+    urlsList: Array<URLResponse.AsObject>,
   }
 }
 

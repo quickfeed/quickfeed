@@ -28,11 +28,12 @@ import {
   Provider,
   Providers,
   RecordRequest,
-  Repository,
+  Repositories,
   RepositoryRequest,
   Submission,
   SubmissionRequest,
   Submissions,
+  URLRequest,
   URLResponse,
   User,
   Users,
@@ -628,25 +629,25 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoGetRepository = new grpcWeb.AbstractClientBase.MethodInfo(
-    Repository,
-    (request: RepositoryRequest) => {
+  methodInfoGetRepositories = new grpcWeb.AbstractClientBase.MethodInfo(
+    Repositories,
+    (request: URLRequest) => {
       return request.serializeBinary();
     },
-    Repository.deserializeBinary
+    Repositories.deserializeBinary
   );
 
-  getRepository(
-    request: RepositoryRequest,
+  getRepositories(
+    request: URLRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Repository) => void) {
+               response: Repositories) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/GetRepository',
+        '/AutograderService/GetRepositories',
       request,
       metadata || {},
-      this.methodInfoGetRepository,
+      this.methodInfoGetRepositories,
       callback);
   }
 
