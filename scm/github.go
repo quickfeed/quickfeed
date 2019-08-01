@@ -149,7 +149,7 @@ func (s *GithubSCM) DeleteRepository(ctx context.Context, id uint64) error {
 }
 
 // UpdateRepoAccess implements the SCM interface.
-func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo Repository, user, permission string) error {
+func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user, permission string) error {
 	opt := &github.RepositoryAddCollaboratorOptions{
 		Permission: permission,
 	}
@@ -158,6 +158,7 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo Repository, user,
 }
 
 // ListHooks implements the SCM interface.
+// TODO(vera) - these 2 hooks methods can be simplified/consolidated
 func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
 	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
 	if err != nil {
