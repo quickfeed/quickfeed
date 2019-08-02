@@ -9,6 +9,8 @@ import {
     URLRequest,
     User,
     Void,
+    Repositories,
+    Repository,
 } from "../../proto/ag_pb";
 import {
     IBuildInfo,
@@ -316,8 +318,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getUrl();
     }
 
-    public async getRepositories(req: URLRequest): Promise<string[]> {
-        const result = await this.grpcHelper.getRepositories(req);
+    public async getRepositories(cid: number, types: Repository.Type[]): Promise<string[]> {
+        const result = await this.grpcHelper.getRepositories(cid, types);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
         }

@@ -27,6 +27,7 @@ import {
     Users,
     Void,
     Repositories,
+    Repository,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { INewGroup } from "../models";
@@ -251,7 +252,10 @@ export class GrpcManager {
         return this.grpcSend<URLResponse>(this.agService.getRepositoryURL, request);
     }
 
-    public getRepositories(req: URLRequest): Promise<IGrpcResponse<Repositories>> {
+    public getRepositories(cid: number, types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
+        const req = new URLRequest();
+        req.setCourseid(cid);
+        req.setRepotypesList(types);
         return this.grpcSend<Repositories>(this.agService.getRepositories, req)
     }
 

@@ -197,13 +197,18 @@ export class StudentPage extends ViewPage {
                 allLinks.push(...gLabs);
                 allLinks.push({ name: "Repositories" });
 
-                const userRepoURL = await this.courseMan.getRepositoryURL(courseID, Repository.Type.USER);
-                const informationURL = await this.courseMan.getRepositoryURL(courseID, Repository.Type.COURSEINFO);
-                const assignmentURL = await this.courseMan.getRepositoryURL(courseID, Repository.Type.ASSIGNMENTS);
+                // TODO(vera): check if proto preserves the order of items in arrays
+                // if not, consider using a map
+                const repos = await this.courseMan.getRepositories(
+                    courseID,
+                    [Repository.Type.USER,
+                    Repository.Type.COURSEINFO,
+                    Repository.Type.ASSIGNMENTS],
+                    );
 
-                allLinks.push({ name: "User Repository", uri: userRepoURL, absolute: true });
-                allLinks.push({ name: "Course Info", uri: informationURL, absolute: true });
-                allLinks.push({ name: "Assignments", uri: assignmentURL, absolute: true });
+                allLinks.push({ name: "User Repository", uri: repos[0], absolute: true });
+                allLinks.push({ name: "Course Info", uri: repos[1], absolute: true });
+                allLinks.push({ name: "Assignments", uri: repos[2], absolute: true });
 
                 allLinks.push({ name: "Settings" });
                 allLinks.push({

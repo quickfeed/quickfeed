@@ -5,7 +5,7 @@ import {
     IUserRelation,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Status, URLRequest, User, Void } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Organization, Status, URLRequest, User, Void, Repository } from "../../proto/ag_pb";
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
@@ -39,7 +39,7 @@ export interface ICourseProvider {
     updateAssignments(courseID: number): Promise<boolean>;
     approveSubmission(submissionID: number, courseID: number): Promise<void>;
     getRepositoryURL(cid: number, type: number): Promise<string>;
-    getRepositories(req: URLRequest): Promise<string[]>;
+    getRepositories(cid: number, types: Repository.Type[]): Promise<string[]>;
 }
 
 export class CourseManager {
@@ -317,8 +317,8 @@ export class CourseManager {
         return this.courseProvider.getRepositoryURL(cid, type);
     }
 
-    public async getRepositories(req: URLRequest): Promise<string[]> {
-        return this.courseProvider.getRepositories(req);
+    public async getRepositories(cid: number, types: Repository.Type[]): Promise<string[]> {
+        return this.courseProvider.getRepositories(cid, types);
     }
 
     public async approveSubmission(submissionID: number, courseID: number): Promise<void> {
