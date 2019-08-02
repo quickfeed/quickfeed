@@ -223,25 +223,25 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentsReques
 }
 
 // getRepositoryURL returns the repository information
-func (s *AutograderService) getRepositoryURL(currentUser *pb.User, request *pb.RepositoryRequest) (*pb.URLResponse, error) {
-	course, err := s.db.GetCourse(request.GetCourseID())
+func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint64, repoType pb.Repository_Type) (string, error) {
+	course, err := s.db.GetCourse(courseID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	userRepoQuery := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
-		RepoType:       request.GetType(),
+		RepoType:       repoType,
 	}
-	if request.Type == pb.Repository_USER {
+	if repoType == pb.Repository_USER {
 		userRepoQuery.UserID = currentUser.GetID()
 	}
 
 	repos, err := s.db.GetRepositories(userRepoQuery)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if len(repos) != 1 {
-		return nil, fmt.Errorf("found %d repositories for query %+v", len(repos), userRepoQuery)
+		return "", fmt.Errorf("found %d repositories for query %+v", len(repos), userRepoQuery)
 	}
-	return &pb.URLResponse{URL: repos[0].HTMLURL}, nil
+	return repos[0].HTMLURL, nil
 }

@@ -31,23 +31,6 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 	}
 }
 
-// GetRepositoryURL returns a repository URL for the requested repository type.
-// Access policy: Any User can request these URLs. However, only those with access
-// to the different repositories can actually use the URL.
-func (s *AutograderService) GetRepositoryURL(ctx context.Context, in *pb.RepositoryRequest) (*pb.URLResponse, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
-	}
-	repoURL, err := s.getRepositoryURL(usr, in)
-	if err != nil {
-		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get repository URL")
-	}
-	return repoURL, nil
-}
-
 // GetUsers returns a list of all users.
 // Access policy: Admin.
 // Frontend note: This method is called from AdminPage.
@@ -499,10 +482,10 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 	}
 	var urls []string
 	for _, repoType := range in.GetRepoTypes() {
-		repo, _ := s.getRepositoryURL(usr, &pb.RepositoryRequest{CourseID: in.GetCourseID(), Type: repoType})
+		repo, _ := s.getRepositoryURL(usr, in.GetCourseID(), repoType)
 		// we do not care if some repo was not found, this will append an empty url string in that case
 		// frontend will take care of the rest
-		urls = append(urls, repo.GetURL())
+		urls = append(urls, repo)
 	}
 	return &pb.Repositories{URLs: urls}, nil
 }
