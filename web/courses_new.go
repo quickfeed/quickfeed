@@ -72,7 +72,6 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		if err != nil {
 			return nil, err
 		}
-		s.logger.Info("New repo created: ", repo.Path, " with owner ", repo.Owner)
 
 		hookOptions := &scm.CreateHookOptions{
 			URL:        auth.GetEventsURL(s.bh.BaseURL, request.Provider),

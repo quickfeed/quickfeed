@@ -120,8 +120,6 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		}
 		// grant read access to Assignments and Course-info repositories
 		for _, r := range repos {
-			// TODO(vera): remove after testing phase
-			log.Println("Looking for repos in org ", org.GetPath(), " found repo ", r.Path, " with owner ", r.Owner)
 			if r.Path == "assignments" || r.Path == "course-info" {
 				if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: r.Owner, Path: r.Path}, login, repoPull); err != nil {
 					return nil, fmt.Errorf("Failed to update repo access to repo %s for user %s ", r.Path, login)
@@ -135,13 +133,6 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		}
 
 		return createStudentRepo(ctx, sc, org, pb.StudentRepoName(login), login)
-		/* TODO(vera) - clean after testing
-		// create user repo and personal team for the student
-		repo, _, err := createRepoAndTeam(ctx, sc, org, pb.StudentRepoName(login), login, []string{login})
-		if err != nil {
-			return nil, err
-		}
-		return repo, nil*/
 
 	case pb.Enrollment_TEACHER:
 		// if teacher, promote to owner, remove from students team, add to teachers team
