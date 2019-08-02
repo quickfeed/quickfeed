@@ -498,10 +498,10 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
 	var urls []string
-	for _, i := range in.GetRepoTypes() {
-		repo, err := s.getRepositoryURL(usr, &pb.RepositoryRequest{CourseID: in.GetCourseID(), Type: i})
+	for _, repoType := range in.GetRepoTypes() {
+		repo, err := s.getRepositoryURL(usr, &pb.RepositoryRequest{CourseID: in.GetCourseID(), Type: repoType})
 		if err != nil {
-			s.logger.Debugf("Failed to get repository URL for repo of type %s.", i.String())
+			s.logger.Debugf("Failed to get repository URL for repo of type %s.", repoType.String())
 			return nil, status.Errorf(codes.NotFound, "failed to get repository URL")
 		}
 		urls = append(urls, repo.URL)
