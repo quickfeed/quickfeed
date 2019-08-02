@@ -499,12 +499,10 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 	}
 	var urls []string
 	for _, repoType := range in.GetRepoTypes() {
-		repo, err := s.getRepositoryURL(usr, &pb.RepositoryRequest{CourseID: in.GetCourseID(), Type: repoType})
-		if err != nil {
-			s.logger.Debugf("Failed to get repository URL for repo of type %s.", repoType.String())
-			return nil, status.Errorf(codes.NotFound, "failed to get repository URL")
-		}
-		urls = append(urls, repo.URL)
+		repo, _ := s.getRepositoryURL(usr, &pb.RepositoryRequest{CourseID: in.GetCourseID(), Type: repoType})
+		// we do not care if some repo was not found, this will append an empty url string in that case
+		// frontend will take care of the rest
+		urls = append(urls, repo.GetURL())
 	}
 	return &pb.Repositories{URLs: urls}, nil
 }
