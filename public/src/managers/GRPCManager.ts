@@ -18,13 +18,11 @@ import {
     RecordRequest,
     Repositories,
     Repository,
-    RepositoryRequest,
     Status,
     Submission,
     SubmissionRequest,
     Submissions,
     URLRequest,
-    URLResponse,
     User,
     Users,
     Void,
@@ -243,13 +241,6 @@ export class GrpcManager {
     }
 
     // /* REPOSITORY */ //
-
-    public getRepositoryURL(courseid: number, repotype: number): Promise<IGrpcResponse<URLResponse>> {
-        const request = new RepositoryRequest();
-        request.setCourseid(courseid);
-        request.setType(repotype);
-        return this.grpcSend<URLResponse>(this.agService.getRepositoryURL, request);
-    }
 
     public getRepositories(cid: number, types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
         const req = new URLRequest();

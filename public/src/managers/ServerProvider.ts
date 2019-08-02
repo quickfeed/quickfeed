@@ -307,14 +307,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status.getCode() === 0;
     }
 
-    public async getRepositoryURL(courseID: number, repoType: number): Promise<string> {
-        const result = await this.grpcHelper.getRepositoryURL(courseID, repoType);
-        if (result.status.getCode() !== 0 || !result.data) {
-            return "";
-        }
-        return result.data.getUrl();
-    }
-
     public async getRepositories(cid: number, types: Repository.Type[]): Promise<string[]> {
         const result = await this.grpcHelper.getRepositories(cid, types);
         if (result.status.getCode() !== 0 || !result.data) {

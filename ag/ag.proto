@@ -171,15 +171,6 @@ message GroupRequest {
     uint64 courseID = 3;
 }
 
-message RepositoryRequest {
-    uint64 ID = 1;
-    Repository.Type type = 2;
-    uint64 organizationID = 3;
-    uint64 repositoryID = 4;
-    uint64 userID = 5;
-    uint64 courseID = 6;
-}
-
 message Provider {
     string provider = 1;
 }
@@ -216,10 +207,6 @@ message Providers {
 message URLRequest {
     uint64 courseID = 1;
     repeated Repository.Type repoTypes = 2;
-}
-
-message URLResponse {
-    string URL = 1;
 }
 
 message Repositories {
@@ -288,7 +275,6 @@ service AutograderService {
    
     // misc //
     
-    rpc GetRepositoryURL(RepositoryRequest) returns (URLResponse) {}
     rpc GetProviders(Void) returns (Providers) {}
     rpc GetOrganizations(Provider) returns (Organizations) {}
 

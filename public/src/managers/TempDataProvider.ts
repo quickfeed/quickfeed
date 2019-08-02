@@ -285,10 +285,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return Promise.resolve(true);
     }
 
-    public async getRepositoryURL(cid: number, type: number): Promise<string> {
-        throw new Error("Method not implemented.");
-    }
-
     public async getRepositories(cid: number, types: Repository.Type[]): Promise<string[]> {
         throw new Error("Method not implemented");
     }

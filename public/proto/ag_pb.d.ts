@@ -653,44 +653,6 @@ export namespace GroupRequest {
   }
 }
 
-export class RepositoryRequest extends jspb.Message {
-  getId(): number;
-  setId(value: number): void;
-
-  getType(): Repository.Type;
-  setType(value: Repository.Type): void;
-
-  getOrganizationid(): number;
-  setOrganizationid(value: number): void;
-
-  getRepositoryid(): number;
-  setRepositoryid(value: number): void;
-
-  getUserid(): number;
-  setUserid(value: number): void;
-
-  getCourseid(): number;
-  setCourseid(value: number): void;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): RepositoryRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: RepositoryRequest): RepositoryRequest.AsObject;
-  static serializeBinaryToWriter(message: RepositoryRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): RepositoryRequest;
-  static deserializeBinaryFromReader(message: RepositoryRequest, reader: jspb.BinaryReader): RepositoryRequest;
-}
-
-export namespace RepositoryRequest {
-  export type AsObject = {
-    id: number,
-    type: Repository.Type,
-    organizationid: number,
-    repositoryid: number,
-    userid: number,
-    courseid: number,
-  }
-}
-
 export class Provider extends jspb.Message {
   getProvider(): string;
   setProvider(value: string): void;
@@ -852,24 +814,6 @@ export namespace URLRequest {
   export type AsObject = {
     courseid: number,
     repotypesList: Array<Repository.Type>,
-  }
-}
-
-export class URLResponse extends jspb.Message {
-  getUrl(): string;
-  setUrl(value: string): void;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): URLResponse.AsObject;
-  static toObject(includeInstance: boolean, msg: URLResponse): URLResponse.AsObject;
-  static serializeBinaryToWriter(message: URLResponse, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): URLResponse;
-  static deserializeBinaryFromReader(message: URLResponse, reader: jspb.BinaryReader): URLResponse;
-}
-
-export namespace URLResponse {
-  export type AsObject = {
-    url: string,
   }
 }
 
