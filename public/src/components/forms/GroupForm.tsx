@@ -6,7 +6,7 @@ import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { UserManager } from "../../managers/UserManager";
 import {
-    INewGroup, IUserRelation,
+    IUserRelation,
 } from "../../models";
 
 interface IGroupProps {
@@ -142,13 +142,10 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                 errorFlash: flashErrors,
             });
         } else {
-            const formData: INewGroup = {
-                name: this.state.name,
-                userids: this.state.selectedStudents.map((u, i) => u.user.getId()),
-            };
-
+            const userids = this.state.selectedStudents.map((u, i) => u.user.getId());
             const result = this.props.groupData ?
-                await this.updateGroup(formData, this.props.groupData.getId()) : await this.createGroup(formData);
+                await this.updateGroup(this.state.name, userids, this.props.groupData.getId())
+                 : await this.createGroup(this.state.name, userids);
             if ((result instanceof Status) && (result.getCode() > 0)) {
                 const errMsg = result.getError();
                 const serverErrors: string[] = [];
@@ -194,17 +191,17 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         return flash;
     }
 
-    private async createGroup(formData: INewGroup): Promise<Group | Status> {
-        return this.props.courseMan.createGroup(formData, this.props.course.getId());
+    private async createGroup(name: string, users: number[]): Promise<Group | Status> {
+        return this.props.courseMan.createGroup(name, users, this.props.course.getId());
     }
 
-    private async updateGroup(formData: INewGroup, gid: number): Promise<Status> {
+    private async updateGroup(name: string, users: number[], gid: number): Promise<Status> {
         const groupData = new Group();
         groupData.setId(gid);
-        groupData.setName(formData.name);
+        groupData.setName(name);
         groupData.setCourseid(this.props.course.getId());
         const groupUsers: User[] = [];
-        formData.userids.forEach((ele) => {
+        users.forEach((ele) => {
             const usr = new User();
             usr.setId(ele);
             groupUsers.push(usr);

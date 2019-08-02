@@ -16,6 +16,8 @@ import {
     Provider,
     Providers,
     RecordRequest,
+    Repositories,
+    Repository,
     RepositoryRequest,
     Status,
     Submission,
@@ -26,11 +28,8 @@ import {
     User,
     Users,
     Void,
-    Repositories,
-    Repository,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
-import { INewGroup } from "../models";
 import { UserManager } from "./UserManager";
 
 export interface IGrpcResponse<T> {
@@ -200,12 +199,12 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.deleteGroup, request);
     }
 
-    public createGroup(igrp: INewGroup, courseid: number): Promise<IGrpcResponse<Group>> {
+    public createGroup(name: string, users: number[], courseid: number): Promise<IGrpcResponse<Group>> {
         const request = new Group();
-        request.setName(igrp.name);
+        request.setName(name);
         request.setCourseid(courseid);
         const grpusers: User[] = [];
-        igrp.userids.forEach((ele) => {
+        users.forEach((ele) => {
             const usr = new User();
             usr.setId(ele);
             grpusers.push(usr);

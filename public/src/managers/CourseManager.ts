@@ -1,11 +1,10 @@
 import {
     IAssignmentLink,
-    INewGroup,
     ISubmission,
     IUserRelation,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Status, URLRequest, User, Void, Repository } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void } from "../../proto/ag_pb";
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
@@ -26,7 +25,7 @@ export interface ICourseProvider {
 
     getCourseGroups(courseID: number): Promise<Group[]>;
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
-    createGroup(groupData: INewGroup, courseId: number): Promise<Group | Status>;
+    createGroup(name: string, users: number[], courseId: number): Promise<Group | Status>;
     getGroup(groupID: number): Promise<Group | null>;
     deleteGroup(groupID: number): Promise<boolean>;
     getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null>;
@@ -216,8 +215,8 @@ export class CourseManager {
         return this.courseProvider.getEnrollment(courseID, userID, groupID);
     }
 
-    public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | Status> {
-        return this.courseProvider.createGroup(groupData, courseID);
+    public async createGroup(name: string, users: number[], courseID: number): Promise<Group | Status> {
+        return this.courseProvider.createGroup(name, users, courseID);
     }
 
     public async updateGroup(groupData: Group): Promise<Status> {

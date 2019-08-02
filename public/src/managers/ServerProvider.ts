@@ -4,17 +4,14 @@ import {
     Enrollment,
     Group,
     Organization,
+    Repository,
     Status,
     Submission,
-    URLRequest,
     User,
     Void,
-    Repositories,
-    Repository,
 } from "../../proto/ag_pb";
 import {
     IBuildInfo,
-    INewGroup,
     ISubmission,
     ITestCases,
     IUser,
@@ -156,8 +153,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return new Void();
     }
 
-    public async createGroup(groupData: INewGroup, courseID: number): Promise<Group | Status> {
-        const result = await this.grpcHelper.createGroup(groupData, courseID);
+    public async createGroup(name: string, users: number[], courseID: number): Promise<Group | Status> {
+        const result = await this.grpcHelper.createGroup(name, users, courseID);
         if (result.status.getCode() !== 0 || !result.data) {
             return result.status;
         }

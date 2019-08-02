@@ -87,11 +87,3 @@ export interface ISubmission {
 
     approved: boolean;
 }
-
-/**
- * INewGroup represent data structure for a new group
- */
-export interface INewGroup {
-    name: string;
-    userids: number[];
-}

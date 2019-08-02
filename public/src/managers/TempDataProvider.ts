@@ -1,8 +1,5 @@
-import { Assignment, Course, Enrollment, Group, Organization, Status, URLRequest, User, Repository } from "../../proto/ag_pb";
-import {
-    INewGroup,
-    ISubmission,
-} from "../models";
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User } from "../../proto/ag_pb";
+import { ISubmission } from "../models";
 
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
@@ -241,7 +238,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         }
         return courses;
     }
-    public async createGroup(groupData: INewGroup, courseId: number): Promise<Group | Status> {
+    public async createGroup(name: string, users: number[], courseId: number): Promise<Group | Status> {
         throw new Error("Method not implemented");
     }
     public async getCourseGroups(courseId: number): Promise<Group[]> {
