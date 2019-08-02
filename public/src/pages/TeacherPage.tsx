@@ -23,6 +23,7 @@ export class TeacherPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
     private courses: Course[] = [];
+    private repositories: Map<Repository.Type, string>;
 
     private refreshState = 0;
 
@@ -291,19 +292,17 @@ export class TeacherPage extends ViewPage {
         };
     }
 
-    public async repositoryLink(cid: string, repoType: number, msg: string): View {
-        const courseId = parseInt(cid, 10);
-        const repoURL = await this.courseMan.getRepositoryURL(courseId, repoType);
-        if (repoURL === "") {
+    public async repositoryLink(url: string, msg: string): View {
+        if (url === "") {
             return <div>404 not found</div>;
         }
         // open new window for the repository link
-        const popup = window.open(repoURL, "_blank");
+        const popup = window.open(url, "_blank");
         if (!popup) {
             // fallback if the pop window was blocked by the browser
             // TODO(meling) format this more nicely with larger font
             return <div>(popup window was blocked by the browser)
-                {msg} repository is found <a href={repoURL}> here </a> </div>;
+                {msg} repository is found <a href={url}> here </a> </div>;
         }
         this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
         // TODO(meling) it is unclear if we can get here, and if so, is the error msg below is accurate?
@@ -311,22 +310,26 @@ export class TeacherPage extends ViewPage {
         return <div> Popup blocker prevented the page to load. </div>;
     }
 
-    public async courseInformation(navInfo: INavInfo<{ cid: string }>): View {
-        return this.repositoryLink(navInfo.params.cid, Repository.Type.COURSEINFO, "Course information");
+    public async courseInformation(): View {
+        const url = this.repositories.get(Repository.Type.COURSEINFO);
+        return url ? this.repositoryLink(url, "Course information") : this.repositoryLink("", "Course information");
     }
 
     public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
-        return this.repositoryLink(navInfo.params.cid, Repository.Type.ASSIGNMENTS, "Assignments");
+        const url = this.repositories.get(Repository.Type.ASSIGNMENTS);
+        return url ? this.repositoryLink(url, "Assignments") : this.repositoryLink("", "Assignments");
     }
 
     public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
         // TODO(meling) BUG using Safari with popups enabled on ag3; need more analysis:
         // If you allow popups for this tests repo link, it creates new popups infinitely.
-        return this.repositoryLink(navInfo.params.cid, Repository.Type.TESTS, "Tests");
+        const url = this.repositories.get(Repository.Type.TESTS);
+        return url ? this.repositoryLink(url, "Tests") : this.repositoryLink("", "Tests");
     }
 
     public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
-        return this.repositoryLink(navInfo.params.cid, Repository.Type.SOLUTIONS, "Solutions");
+        const url = this.repositories.get(Repository.Type.SOLUTIONS);
+        return url ? this.repositoryLink(url, "Solutions") : this.repositoryLink("", "Solutions");
     }
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
@@ -385,9 +388,25 @@ export class TeacherPage extends ViewPage {
         const courseId = parseInt(courseParam, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
+            this.repositories = await this.repositoryURLs(course.getId());
             return fn(course);
         }
         return <div>404 Page not found</div>;
+    }
+
+    private repositoryURLs(cid: number): Map<Repository.Type, string> {
+        const urlMap = new  Map<Repository.Type, string>();
+        this.courseMan.getRepositories(cid,
+             [Repository.Type.COURSEINFO,
+             Repository.Type.ASSIGNMENTS,
+             Repository.Type.TESTS,
+             Repository.Type.SOLUTIONS]).then((urls) => {
+                urlMap.set(Repository.Type.COURSEINFO, urls[0]);
+                urlMap.set(Repository.Type.ASSIGNMENTS, urls[1]);
+                urlMap.set(Repository.Type.TESTS, urls[2]);
+                urlMap.set(Repository.Type.SOLUTIONS, urls[3]);
+             });
+        return urlMap;
     }
 
 }
