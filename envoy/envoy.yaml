@@ -38,7 +38,7 @@ static_resources:
           - name: envoy.router
   clusters:
   - name: ag_service
-    connect_timeout: 0.25s
+    connect_timeout: 15s
     type: logical_dns
     http2_protocol_options: {}
     # experimental, if build/connection suddenly fails, try to remove that line first
