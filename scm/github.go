@@ -188,8 +188,9 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string)
 	for _, hook := range gitHooks {
 		s.logger.Infof("Found hook with events: %s", hook.Events)
 		hooks = append(hooks, &Hook{
-			ID:  uint64(hook.GetID()),
-			URL: hook.GetURL(),
+			ID:     uint64(hook.GetID()),
+			URL:    hook.GetURL(),
+			Events: hook.Events,
 		})
 	}
 	return hooks, nil

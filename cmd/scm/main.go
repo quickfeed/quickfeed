@@ -332,7 +332,7 @@ func getHooks(client *scm.SCM) cli.ActionFunc {
 			hooks = gitHooks
 		}
 		for _, hook := range hooks {
-			log.Printf("Hook: %s with url %s", hook.Name, hook.URL)
+			log.Printf("Hook: %s, hook events: %s", hook.URL, hook.Events)
 		}
 
 		return nil
