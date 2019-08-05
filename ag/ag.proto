@@ -210,7 +210,7 @@ message URLRequest {
 }
 
 message Repositories {
-    repeated string URLs = 1;
+    map<string, string> URLs = 1;
 }
 
 message AuthorizationResponse {

@@ -818,10 +818,8 @@ export namespace URLRequest {
 }
 
 export class Repositories extends jspb.Message {
-  getUrlsList(): Array<string>;
-  setUrlsList(value: Array<string>): void;
-  clearUrlsList(): void;
-  addUrls(value: string, index?: number): void;
+  getUrlsMap(): jspb.Map<string, string>;
+  clearUrlsMap(): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Repositories.AsObject;
@@ -833,7 +831,7 @@ export class Repositories extends jspb.Message {
 
 export namespace Repositories {
   export type AsObject = {
-    urlsList: Array<string>,
+    urlsMap: Array<[string, string]>,
   }
 }
 
