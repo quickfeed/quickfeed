@@ -23,7 +23,7 @@ export class TeacherPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
     private courses: Course[] = [];
-    private repositories: Map<Repository.Type, string>;
+    private repositories: Map<string, string>;
 
     private refreshState = 0;
 
@@ -311,24 +311,24 @@ export class TeacherPage extends ViewPage {
     }
 
     public async courseInformation(): View {
-        const url = this.repositories.get(Repository.Type.COURSEINFO);
+        const url = this.repositories.get("COURSEINFO");
         return url ? this.repositoryLink(url, "Course information") : this.repositoryLink("", "Course information");
     }
 
     public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const url = this.repositories.get(Repository.Type.ASSIGNMENTS);
+        const url = this.repositories.get("ASSIGNMENTS");
         return url ? this.repositoryLink(url, "Assignments") : this.repositoryLink("", "Assignments");
     }
 
     public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
         // TODO(meling) BUG using Safari with popups enabled on ag3; need more analysis:
         // If you allow popups for this tests repo link, it creates new popups infinitely.
-        const url = this.repositories.get(Repository.Type.TESTS);
+        const url = this.repositories.get("TESTS");
         return url ? this.repositoryLink(url, "Tests") : this.repositoryLink("", "Tests");
     }
 
     public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const url = this.repositories.get(Repository.Type.SOLUTIONS);
+        const url = this.repositories.get("SOLUTIONS");
         return url ? this.repositoryLink(url, "Solutions") : this.repositoryLink("", "Solutions");
     }
 
@@ -388,25 +388,14 @@ export class TeacherPage extends ViewPage {
         const courseId = parseInt(courseParam, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
-            this.repositories = await this.repositoryURLs(course.getId());
+            this.repositories = await this.courseMan.getRepositories(courseId,
+                [Repository.Type.COURSEINFO,
+                Repository.Type.ASSIGNMENTS,
+                Repository.Type.TESTS,
+                Repository.Type.SOLUTIONS]);
             return fn(course);
         }
         return <div>404 Page not found</div>;
-    }
-
-    private repositoryURLs(cid: number): Map<Repository.Type, string> {
-        const urlMap = new  Map<Repository.Type, string>();
-        this.courseMan.getRepositories(cid,
-             [Repository.Type.COURSEINFO,
-             Repository.Type.ASSIGNMENTS,
-             Repository.Type.TESTS,
-             Repository.Type.SOLUTIONS]).then((urls) => {
-                urlMap.set(Repository.Type.COURSEINFO, urls[0]);
-                urlMap.set(Repository.Type.ASSIGNMENTS, urls[1]);
-                urlMap.set(Repository.Type.TESTS, urls[2]);
-                urlMap.set(Repository.Type.SOLUTIONS, urls[3]);
-             });
-        return urlMap;
     }
 
 }

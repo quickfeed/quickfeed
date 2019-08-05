@@ -480,12 +480,12 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 		s.logger.Error(err)
 		return nil, status.Errorf(codes.NotFound, "failed to get current user")
 	}
-	var urls []string
+	var urls = make(map[string]string)
 	for _, repoType := range in.GetRepoTypes() {
 		repo, _ := s.getRepositoryURL(usr, in.GetCourseID(), repoType)
 		// we do not care if some repo was not found, this will append an empty url string in that case
 		// frontend will take care of the rest
-		urls = append(urls, repo)
+		urls[repoType.String()] = repo
 	}
 	return &pb.Repositories{URLs: urls}, nil
 }

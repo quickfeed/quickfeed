@@ -206,9 +206,15 @@ export class StudentPage extends ViewPage {
                     Repository.Type.ASSIGNMENTS],
                     );
 
-                allLinks.push({ name: "User Repository", uri: repos[0], absolute: true });
-                allLinks.push({ name: "Course Info", uri: repos[1], absolute: true });
-                allLinks.push({ name: "Assignments", uri: repos[2], absolute: true });
+                allLinks.push({
+                    name: "User Repository", uri: repos.get("USER"), absolute: true,
+                });
+                allLinks.push({
+                    name: "Course Info", uri: repos.get("COURSEINFO"), absolute: true,
+                });
+                allLinks.push({
+                    name: "Assignments", uri: repos.get("ASSIGNMENTS"), absolute: true,
+                });
 
                 allLinks.push({ name: "Settings" });
                 allLinks.push({
