@@ -382,9 +382,12 @@ func (s *GithubSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 
 // AddTeamRepo implements the SCM interface.
 func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
+	if !opt.Valid() {
+		return fmt.Errorf("AddTeamRepo failed: invalid fields in options")
+	}
 	_, err := s.client.Teams.AddTeamRepo(ctx, int64(opt.TeamID), opt.Owner, opt.Repo,
 		&github.TeamAddTeamRepoOptions{
-			Permission: "push", // make sure users can pull and push
+			Permission: opt.Permission, // make sure users can pull and push
 		})
 	if err != nil {
 		return fmt.Errorf("AddTeamRepo: failed to add team '%d' to GitHub repository '%s': %w",

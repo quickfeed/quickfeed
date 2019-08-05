@@ -62,9 +62,10 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	}
 
 	err = sc.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
-		TeamID: team.ID,
-		Owner:  repo.Owner,
-		Repo:   repo.Path,
+		TeamID:     team.ID,
+		Owner:      repo.Owner,
+		Repo:       repo.Path,
+		Permission: repoPush,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
