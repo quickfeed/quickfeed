@@ -92,10 +92,11 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
-		return nil, err
+		s.logger.Errorf("CreateCourse: error getting current user and scm")
+		return nil, status.Error(codes.PermissionDenied, "invalid user information")
 	}
 	if !usr.IsAdmin {
-		s.logger.Error("user must be admin to create course")
+		s.logger.Error("CreateCourse: user is not admin")
 		return nil, status.Error(codes.PermissionDenied, "user must be admin to create course")
 	}
 
@@ -103,7 +104,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	in.CourseCreatorID = usr.GetID()
 	course, err := s.createCourse(ctx, scm, in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Error("CreateCourse failed: ", err)
 		if err == ErrAlreadyExists {
 			return nil, status.Errorf(codes.AlreadyExists, err.Error())
 		}

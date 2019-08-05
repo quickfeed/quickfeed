@@ -31,7 +31,7 @@ var (
 
 	// ErrAlreadyExists indicates that one or more Autograder repositories
 	// already exists for the directory (or GitHub organization).
-	ErrAlreadyExists = errors.New("repositories already exists in SCM " + repoNames)
+	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
 )
 
 // createCourse creates a new course for the directory specified in the request
@@ -57,7 +57,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		DefaultPermission: orgNone,
 	}
 	if err = sc.UpdateOrganization(ctx, orgOptions); err != nil {
-		s.logger.Debugf("Could not update GitHub organization %s: %w", orgOptions.Path, err)
+		s.logger.Debugf("createCourse: failed to update permissions for GitHub organization %s: %s", orgOptions.Path, err)
 	}
 
 	// create course repos and webhooks for each repo
@@ -89,6 +89,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 			RepoType:       pb.RepoType(path),
 		}
 		if err := s.db.CreateRepository(&dbRepo); err != nil {
+			s.logger.Debugf("createCourse: failed to create database record for repository %s: %s", path, err)
 			return nil, err
 		}
 	}
@@ -96,7 +97,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	// add course creator to teacher team
 	courseCreator, err := s.db.GetUser(request.GetCourseCreatorID())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("createCourse: failed to get course creator record from database: %w", err)
 	}
 	// create teacher team with course creator
 	opt := &scm.CreateTeamOptions{
@@ -105,15 +106,18 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		Users:        []string{courseCreator.GetLogin()},
 	}
 	if _, err = sc.CreateTeam(ctx, opt); err != nil {
+		s.logger.Debugf("createCourse: failed to create teachers team: %s", err)
 		return nil, err
 	}
 	// create student team without any members
 	studOpt := &scm.CreateTeamOptions{Organization: org, TeamName: studentsTeam}
 	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
+		s.logger.Debugf("createCourse: failed to create students team: %s", err)
 		return nil, err
 	}
 
 	if err := s.db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
+		s.logger.Debugf("createCourse: failed to create database record for course %s: %s", request.Name, err)
 		return nil, err
 	}
 	return request, nil

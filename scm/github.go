@@ -71,7 +71,7 @@ func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOption
 func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
 	org, _, err := s.client.Organizations.GetByID(ctx, int64(id))
 	if err != nil {
-		return nil, fmt.Errorf("GetOrganization: failed to get GitHub organization: %w", err)
+		return nil, fmt.Errorf("failed to get GitHub organization by ID (%v): %w", id, err)
 	}
 	return &pb.Organization{
 		ID:          uint64(org.GetID()),
@@ -88,7 +88,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		Private: &opt.Private,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("CreateRepositories: failed to create GitHub repository: %w", err)
+		return nil, fmt.Errorf("failed to create GitHub repository (%s): %w", opt.Path, err)
 	}
 
 	return &Repository{
@@ -110,14 +110,14 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) (
 	} else {
 		org, err := s.GetOrganization(ctx, org.ID)
 		if err != nil {
-			return nil, fmt.Errorf("GetRepositories: failed to get GitHub organization: %w", err)
+			return nil, fmt.Errorf("GetRepositories: failed to get GitHub organization (%v): %w", org.ID, err)
 		}
 		path = org.Path
 	}
 
 	repos, _, err := s.client.Repositories.ListByOrg(ctx, path, nil)
 	if err != nil {
-		return nil, fmt.Errorf("GetRepositories: failed to get GitHub repositories: %w", err)
+		return nil, fmt.Errorf("GetRepositories: failed to get GitHub repositories for organization %s: %w", path, err)
 	}
 
 	var repositories []*Repository
@@ -218,7 +218,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 		Name: opt.TeamName,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("CreateTeam: failed to create GitHub team: %w", err)
+		return nil, fmt.Errorf("CreateTeam: failed to create GitHub team %s: %w", opt.TeamName, err)
 	}
 
 	for _, user := range opt.Users {
