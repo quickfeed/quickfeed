@@ -307,17 +307,18 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status.getCode() === 0;
     }
 
-    public async getRepositories(cid: number, types: Repository.Type[]): Promise<Map<string, string>> {
+    public async getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
         const result = await this.grpcHelper.getRepositories(cid, types);
-        const tsMap = new Map<string, string>();
+        const tsMap = new Map<Repository.Type, string>();
         if (result.status.getCode() !== 0 || !result.data) {
             return tsMap;
         }
         // protobuf and typescript maps have class method mismatch. we need to convert one into another here
         const tmp = result.data.getUrlsMap();
         tmp.forEach((v, k) => {
-            tsMap.set(k, v);
+            tsMap.set((Repository.Type as any)[k], v);
         });
+
         return tsMap;
     }
 

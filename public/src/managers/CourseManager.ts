@@ -37,7 +37,7 @@ export interface ICourseProvider {
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
     approveSubmission(submissionID: number, courseID: number): Promise<void>;
-    getRepositories(cid: number, types: Repository.Type[]): Promise<Map<string, string>>;
+    getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
 }
 
 export class CourseManager {
@@ -311,7 +311,7 @@ export class CourseManager {
         return this.courseProvider.getProviders();
     }
 
-    public async getRepositories(cid: number, types: Repository.Type[]): Promise<Map<string, string>> {
+    public async getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
         return this.courseProvider.getRepositories(cid, types);
     }
 

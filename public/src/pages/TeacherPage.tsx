@@ -23,7 +23,7 @@ export class TeacherPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
     private courses: Course[] = [];
-    private repositories: Map<string, string>;
+    private repositories: Map<Repository.Type, string>;
 
     private refreshState = 0;
 
@@ -311,24 +311,24 @@ export class TeacherPage extends ViewPage {
     }
 
     public async courseInformation(): View {
-        const url = this.repositories.get("COURSEINFO");
+        const url = this.repositories.get(Repository.Type.COURSEINFO);
         return url ? this.repositoryLink(url, "Course information") : this.repositoryLink("", "Course information");
     }
 
     public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const url = this.repositories.get("ASSIGNMENTS");
+        const url = this.repositories.get(Repository.Type.ASSIGNMENTS);
         return url ? this.repositoryLink(url, "Assignments") : this.repositoryLink("", "Assignments");
     }
 
     public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
         // TODO(meling) BUG using Safari with popups enabled on ag3; need more analysis:
         // If you allow popups for this tests repo link, it creates new popups infinitely.
-        const url = this.repositories.get("TESTS");
+        const url = this.repositories.get(Repository.Type.TESTS);
         return url ? this.repositoryLink(url, "Tests") : this.repositoryLink("", "Tests");
     }
 
     public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const url = this.repositories.get("SOLUTIONS");
+        const url = this.repositories.get(Repository.Type.SOLUTIONS);
         return url ? this.repositoryLink(url, "Solutions") : this.repositoryLink("", "Solutions");
     }
 
