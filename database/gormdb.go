@@ -12,7 +12,7 @@ import (
 var (
 	// ErrDuplicateIdentity is returned when trying to associate a remote identity
 	// with a user account and the identity is already in use.
-	ErrDuplicateIdentity = errors.New("remote identity register with another user")
+	ErrDuplicateIdentity = errors.New("remote identity registered with another user")
 	// ErrEmptyGroup is returned when trying to create a group without users.
 	ErrEmptyGroup = errors.New("cannot create group without users")
 	// ErrDuplicateGroup is returned when trying to create a group with the same

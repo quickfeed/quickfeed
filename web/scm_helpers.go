@@ -98,7 +98,7 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization
 		Role:         teamMember,
 	}
 	if err := sc.AddTeamMember(ctx, opt); err != nil {
-		return fmt.Errorf("addUserToStudentsTeam: failed to add '%s' to students team: %w", userName, err)
+		return err
 	}
 	return nil
 }
@@ -111,7 +111,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 		TeamSlug:     studentsTeam,
 	}
 	if err := sc.RemoveTeamMember(ctx, studentsTeam); err != nil {
-		return fmt.Errorf("promoteUserToTeachersTeam: failed to remove '%s' from students team: %w", userName, err)
+		return err
 	}
 
 	teachersTeam := &scm.TeamMembershipOptions{
@@ -121,7 +121,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 		Role:         teamMaintainer,
 	}
 	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {
-		return fmt.Errorf("promoteUserToTeachersTeam: failed to add '%s' to teachers team: %w", userName, err)
+		return err
 	}
 	return nil
 }
