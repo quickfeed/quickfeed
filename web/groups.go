@@ -54,6 +54,7 @@ func (s *AutograderService) deleteGroup(request *pb.RecordRequest) error {
 func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(request); err != nil {
+		s.logger.Errorf("CreateGroup: failed to retrieve users fro group %s: %s", request.GetName(), err)
 		return nil, err
 	}
 	// create new group and update groupid in enrollment table
@@ -174,6 +175,8 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 			return nil, status.Errorf(codes.NotFound, "user not enrolled in this course")
 		case err != nil:
 			return nil, err
+		// TODO(vera): it seems that the next check will also check that condition
+		// they can probably be merged into one
 		case enrollment.GroupID > 0 && request.ID == 0:
 			// new group check (request group ID should be 0)
 			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")

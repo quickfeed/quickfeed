@@ -17,7 +17,7 @@ var (
 	ErrEmptyGroup = errors.New("cannot create group without users")
 	// ErrDuplicateGroup is returned when trying to create a group with the same
 	// name as a previously registered group.
-	ErrDuplicateGroup = errors.New("group name already registered")
+	ErrDuplicateGroup = errors.New("group with this name already registered")
 	// ErrUpdateGroup is returned when updating a group's enrollment fails.
 	ErrUpdateGroup = errors.New("failed to update group enrollment")
 	// ErrCourseExists is returned when trying to create an association in

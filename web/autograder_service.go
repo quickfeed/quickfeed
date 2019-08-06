@@ -301,7 +301,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 		return nil, status.Errorf(codes.PermissionDenied, "user not enrolled in given course")
 	}
 	if !(in.Contains(usr) || s.isTeacher(usr.GetID(), in.GetCourseID())) {
-		return nil, status.Errorf(codes.PermissionDenied, "only group member can create group")
+		return nil, status.Errorf(codes.PermissionDenied, "only group member or teacher can create group")
 	}
 	group, err := s.createGroup(in)
 	if err != nil {
