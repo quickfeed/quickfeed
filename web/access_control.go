@@ -14,6 +14,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// ErrInvalidUserInfo is returned to user if user information in context is invalid
+var ErrInvalidUserInfo = status.Errorf(codes.PermissionDenied, "authorization failed. please try to logout and sign in again")
+
 func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error) {
 	// process user id from context
 	meta, ok := metadata.FromIncomingContext(ctx)
@@ -95,7 +98,7 @@ func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) 
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, nil, ErrInvalidUserInfo
 	}
 	scm, err := s.getSCM(ctx, usr, provider)
 	if err != nil {

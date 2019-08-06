@@ -38,7 +38,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other users")
@@ -59,7 +59,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	if !(usr.IsAdmin || usr.IsOwner(in.GetID())) {
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
@@ -205,7 +205,7 @@ func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.Enrollment
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	if !(usr.IsAdmin || usr.IsOwner(in.GetUserID()) || s.isTeacher(usr.GetID(), in.GetCourseID())) {
 		return nil, status.Errorf(codes.PermissionDenied, "cannot get enrollment for given course and user")
@@ -218,7 +218,7 @@ func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.Enrollment
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentsRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		return nil, err
+		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can get enrollments")
@@ -237,7 +237,7 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	group, err := s.getGroup(in)
 	if err != nil {
@@ -256,7 +256,7 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
 	if !s.isTeacher(usr.GetID(), courseID) {
@@ -276,7 +276,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	group, err := s.getGroupByUserAndCourse(in)
 	if err != nil {
@@ -295,7 +295,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	if !s.isEnrolled(usr.GetID(), in.GetCourseID()) {
 		return nil, status.Errorf(codes.PermissionDenied, "user not enrolled in given course")
@@ -345,7 +345,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordReques
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
 	if !s.isTeacher(usr.GetID(), courseID) {
@@ -364,7 +364,7 @@ func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequ
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	submission, err := s.getSubmission(usr, in)
 	if err != nil {
@@ -380,7 +380,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	// ensure that current user is teacher or the current user is owner of the submission request
 	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
@@ -403,7 +403,7 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.ID, in.GetCourseID()) {
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can approve submissions")
@@ -479,7 +479,7 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Error(err)
-		return nil, status.Errorf(codes.NotFound, "failed to get current user")
+		return nil, ErrInvalidUserInfo
 	}
 	var urls = make(map[string]string)
 	for _, repoType := range in.GetRepoTypes() {
