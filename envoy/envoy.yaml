@@ -36,12 +36,12 @@ static_resources:
           - name: envoy.grpc_web
           - name: envoy.cors
           - name: envoy.router
+          http_protocol_options: { accept_http_10: true }
   clusters:
   - name: ag_service
     connect_timeout: 15s
     type: logical_dns
     http2_protocol_options: {}
-    # experimental, if build/connection suddenly fails, try to remove that line first
     upstream_connection_options: { tcp_keepalive: { keepalive_time: 300 }}
     lb_policy: round_robin
     # win/mac hosts: Use address: host.docker.internal instead of address: 127.0.0.1 or address:localhost in the line below
