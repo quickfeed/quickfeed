@@ -26,7 +26,7 @@ func (t Repository) IsTestsRepo() bool {
 
 // IsStudentRepo returns true if the repository is a user repo type.
 func (t Repository) IsStudentRepo() bool {
-	return t.RepoType == Repository_USER
+	return t.RepoType == Repository_USER || t.RepoType == Repository_GROUP
 }
 
 // IsStudentRepo returns true if the repository is a user repo type.

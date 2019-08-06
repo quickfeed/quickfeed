@@ -125,6 +125,8 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		return fmt.Errorf("updateGroup: organization not found: %w", err)
 	}
 
+	// TODO(vera): this will cause troubles on old database, as all team IDs for old will be 0
+	// can be remedied with new check (if ID=0, but repos exist, retrieve group team and update team ID)
 	if len(repos) == 0 && group.GetTeamID() < 1 {
 		// found no repos for the group; create group repo and team
 		if request.GetName() != "" {
