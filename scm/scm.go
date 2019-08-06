@@ -11,7 +11,7 @@ import (
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
-	// Lists organizations which can be used as a course directory.
+	// Lists organizations (for logged in user) which can be used as a course directory.
 	ListOrganizations(context.Context) ([]*pb.Organization, error)
 	// Creates a new organization.
 	CreateOrganization(context.Context, *CreateOrgOptions) (*pb.Organization, error)
@@ -78,6 +78,12 @@ type CreateOrgOptions struct {
 	Path              string
 	Name              string
 	DefaultPermission string
+}
+
+// Valid checks that required struct fields are set
+func (opt CreateOrgOptions) valid() bool {
+	return opt.Path != "" &&
+		opt.DefaultPermission != ""
 }
 
 // Repository represents a git remote repository.
@@ -190,3 +196,7 @@ type Authorization struct {
 func (e ErrNotSupported) Error() string {
 	return "method " + e.Method + " not supported by " + e.SCM + " SCM"
 }
+
+// ErrMissingFields is returned when scm struct validation fails.
+// This error only used for development/debugging and never goes to frontend user.
+var ErrMissingFields = errors.New("invalid argument: missing required fields")

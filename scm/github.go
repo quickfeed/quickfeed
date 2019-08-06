@@ -40,15 +40,15 @@ func (s *GithubSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, 
 
 	var orgs []*pb.Organization
 	for _, org := range userOrgs {
-		// TODO (vera) - with this update we will have to access GitHub for each organization
-		// we cannot just use org.Organization.GetPlan() to set payment plan, as it is always null here
-		// because of that we need to retrieve every organization from GitHub to get access to its payment plan
-		// not sure if it is really an improvement
-		userOrg, err := s.GetOrganization(ctx, uint64(org.Organization.GetID()))
-		if err != nil {
-			return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organization: %w", err)
+		// limit scm requests to organizations where the user is owner ("admin")
+		// owner membership role is required to create a course
+		if org.GetRole() == "admin" {
+			userOrg, err := s.GetOrganization(ctx, uint64(org.Organization.GetID()))
+			if err != nil {
+				return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organization %s: %w", org.Organization.GetLogin(), err)
+			}
+			orgs = append(orgs, userOrg)
 		}
-		orgs = append(orgs, userOrg)
 	}
 	return orgs, nil
 }
@@ -63,6 +63,9 @@ func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOption
 
 // UpdateOrganization implements the SCM interface.
 func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+	if !opt.valid() {
+		return ErrMissingFields
+	}
 	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{DefaultRepoPermission: &opt.DefaultPermission})
 	return err
 }
@@ -162,14 +165,15 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string)
 	var gitHooks []*github.Hook
 	var hooks []*Hook
 
-	// if required fields provided, get hooks for that repository
-	if repo != nil && repo.ValidForHooks() {
-		githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
-		if err != nil {
-			return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks: %w", err)
-		}
-		gitHooks = githubHooks
+	if repo == nil || !repo.ValidForHooks() {
+		return nil, ErrMissingFields
 	}
+
+	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks: %w", err)
+	}
+	gitHooks = githubHooks
 
 	// if org name provided, get all hooks existing on that organization
 	if org != "" {
@@ -383,7 +387,7 @@ func (s *GithubSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 // AddTeamRepo implements the SCM interface.
 func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.Valid() {
-		return fmt.Errorf("AddTeamRepo failed: invalid fields in options")
+		return ErrMissingFields
 	}
 	_, err := s.client.Teams.AddTeamRepo(ctx, int64(opt.TeamID), opt.Owner, opt.Repo,
 		&github.TeamAddTeamRepoOptions{
