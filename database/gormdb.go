@@ -63,7 +63,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 	return &GormDB{conn}, nil
 }
 
-// GetUser implements the Database interface.
+// GetUser fetches a user by ID with remote identities.
 func (db *GormDB) GetUser(uid uint64) (*pb.User, error) {
 	var user pb.User
 	if err := db.conn.Preload("RemoteIdentities").First(&user, uid).Error; err != nil {
@@ -72,7 +72,7 @@ func (db *GormDB) GetUser(uid uint64) (*pb.User, error) {
 	return &user, nil
 }
 
-// GetUserByRemoteIdentity implements the Database interface.
+// GetUserByRemoteIdentity fetches user by remote identity.
 func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, error) {
 	tx := db.conn.Begin()
 
@@ -101,7 +101,7 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 	return &user, nil
 }
 
-// UpdateAccessToken implements the Database interface.
+// UpdateAccessToken refreshes the token info for the given remote identity.
 func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
 	tx := db.conn.Begin()
 
@@ -125,7 +125,7 @@ func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
 	return tx.Commit().Error
 }
 
-// GetUsers implements the Database interface.
+// GetUsers fetches all users by provided IDs.
 func (db *GormDB) GetUsers(uids ...uint64) ([]*pb.User, error) {
 	m := db.conn
 	if len(uids) > 0 {
@@ -140,23 +140,24 @@ func (db *GormDB) GetUsers(uids ...uint64) ([]*pb.User, error) {
 	return users, nil
 }
 
-// UpdateUser implements the Database interface
+// UpdateUser updates user information.
 func (db *GormDB) UpdateUser(user *pb.User) error {
 	return db.conn.Model(&pb.User{}).Updates(user).Error
 }
 
-// SetAdmin implements the Database interface.
+// SetAdmin promotes user with given ID to admin.
 func (db *GormDB) SetAdmin(uid uint64) error {
 	var user pb.User
 	if err := db.conn.First(&user, uid).Error; err != nil {
 		return err
 	}
+	// TODO(vera): is there a reason we are doing it in two steps?
 	admin := true
 	user.IsAdmin = admin
 	return db.conn.Save(&user).Error
 }
 
-// GetRemoteIdentity implements the Database interface.
+// GetRemoteIdentity fetches remote identity by provider and ID.
 func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*pb.RemoteIdentity, error) {
 	var remoteIdentity pb.RemoteIdentity
 	if err := db.conn.Model(&pb.RemoteIdentity{}).
@@ -170,7 +171,7 @@ func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*pb.RemoteIden
 	return &remoteIdentity, nil
 }
 
-// CreateUserFromRemoteIdentity implements the Database interface.
+// CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
 func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb.RemoteIdentity) error {
 	user.RemoteIdentities = []*pb.RemoteIdentity{remoteIdentity}
 	if err := db.conn.Create(&user).Error; err != nil {
@@ -187,7 +188,7 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb
 	return nil
 }
 
-// AssociateUserWithRemoteIdentity implements the Database interface.
+// AssociateUserWithRemoteIdentity associates remote identity with the user with given ID.
 func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error {
 	var count uint64
 	if err := db.conn.
@@ -213,7 +214,7 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 		FirstOrCreate(&remoteIdentity).Error
 }
 
-// CreateCourse implements the Database interface.
+// CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
 func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 	user, err := db.GetUser(uid)
 	if err != nil {
@@ -246,9 +247,8 @@ func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 	return nil
 }
 
-// GetCourses implements the Database interface.
-// If one or more course ids are provided, the corresponding courses
-// are returned. Otherwise, all courses are returned.
+// GetCourses returns a list of courses. If one or more course ids are provided,
+// the corresponding courses are returned. Otherwise, all courses are returned.
 func (db *GormDB) GetCourses(cids ...uint64) ([]*pb.Course, error) {
 	m := db.conn
 	if len(cids) > 0 {
@@ -261,7 +261,7 @@ func (db *GormDB) GetCourses(cids ...uint64) ([]*pb.Course, error) {
 	return courses, nil
 }
 
-// GetAssignmentsByCourse implements the Database interface
+// GetAssignmentsByCourse fetches all assignments for a course with given ID
 func (db *GormDB) GetAssignmentsByCourse(cid uint64) ([]*pb.Assignment, error) {
 	var course pb.Course
 	if err := db.conn.Preload("Assignments").First(&course, cid).Error; err != nil {
@@ -316,7 +316,7 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Ass
 	return nxtToApprove, nil
 }
 
-// CreateSubmission implements the Database interface
+// CreateSubmission creates a new submission record
 // TODO: Also check enrollment to see if the user is
 // enrolled in the course the assignment belongs to
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
@@ -358,7 +358,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	return db.conn.Create(submission).Error
 }
 
-// UpdateSubmission implements the Database interface
+// UpdateSubmission updates submission approved status
 func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 	//TODO(meling) consider to make this into a transaction
 	var submission pb.Submission
@@ -369,7 +369,7 @@ func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 	return db.conn.Model(&pb.Submission{}).Update(submission).Error
 }
 
-// GetSubmission implements the Database interface
+// GetSubmission fetches a submission record
 func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	var submission pb.Submission
 	if err := db.conn.Where(query).Last(&submission).Error; err != nil {
@@ -378,7 +378,7 @@ func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	return &submission, nil
 }
 
-// GetSubmissions implements the Database interface
+// GetSubmissions returns all submissions for the active assignment for the given course
 func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
 	var course pb.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
@@ -403,7 +403,7 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 	return latestSubs, nil
 }
 
-// CreateAssignment implements the Database interface
+// CreateAssignment creates new assignment record
 func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 	// Course id and assignment order must be given.
 	if assignment.CourseID < 1 || assignment.Order < 1 {
@@ -433,7 +433,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 		}).FirstOrCreate(assignment).Error
 }
 
-// UpdateAssignments implements the Database interface.
+// UpdateAssignments updates assignment information.
 func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 	//TODO(meling) Updating the database may need locking?? Or maybe rewrite as a single query or txn.
 	for _, v := range assignments {
@@ -445,8 +445,7 @@ func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 	return nil
 }
 
-// CreateEnrollment implements the Database interface.
-// This method will overwrite the status field with models.Pending.
+// CreateEnrollment creates a new pending enrollment.
 func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 	var user, course uint64
 	if err := db.conn.Model(&pb.User{}).Where(&pb.User{
@@ -467,27 +466,27 @@ func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 	return db.conn.Create(&enrollment).Error
 }
 
-// EnrollStudent implements the Database interface.
+// EnrollStudent enrolls user as course student.
 func (db *GormDB) EnrollStudent(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, pb.Enrollment_STUDENT)
 }
 
-// RejectEnrollment implements the Database interface.
+// RejectEnrollment rejects user enrollment.
 func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, pb.Enrollment_REJECTED)
 }
 
-// EnrollTeacher implements the Database interface.
+// EnrollTeacher enrolls user as course teacher.
 func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, pb.Enrollment_TEACHER)
 }
 
-// SetPendingEnrollment implements the Database interface.
+// SetPendingEnrollment sets enrollment status to pending.
 func (db *GormDB) SetPendingEnrollment(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, pb.Enrollment_PENDING)
 }
 
-// GetEnrollmentsByCourse implements the Database interface.
+// GetEnrollmentsByCourse fetches all course enrollments with given statuses.
 func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
 	return db.getEnrollments(&pb.Course{ID: cid}, statuses...)
 }
@@ -513,7 +512,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 	return enrollments, nil
 }
 
-// GetEnrollmentByCourseAndUser return a record of Enrollment
+// GetEnrollmentByCourseAndUser return a record of Enrollment.
 func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enrollment, error) {
 	var enrollment pb.Enrollment
 	m := db.conn.Preload("Course").Preload("User")
@@ -528,7 +527,7 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enro
 	return &enrollment, nil
 }
 
-// UpdateGroupEnrollment will set GroupID of a student enrollment to 0
+// UpdateGroupEnrollment sets GroupID of a student enrollment to 0.
 func (db *GormDB) UpdateGroupEnrollment(uid, cid uint64) error {
 	return db.conn.
 		Model(&pb.Enrollment{}).
@@ -536,6 +535,7 @@ func (db *GormDB) UpdateGroupEnrollment(uid, cid uint64) error {
 		Update("group_id", uint64(0)).Error
 }
 
+// setEnrollment updates enrollment status
 func (db *GormDB) setEnrollment(uid, cid uint64, status pb.Enrollment_UserStatus) error {
 	return db.conn.
 		Model(&pb.Enrollment{}).
@@ -580,7 +580,7 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserSta
 	return courses, nil
 }
 
-// GetCourse implements the Database interface
+// GetCourse fetches course by ID.
 func (db *GormDB) GetCourse(cid uint64) (*pb.Course, error) {
 	var course pb.Course
 	if err := db.conn.First(&course, cid).Error; err != nil {
@@ -589,7 +589,7 @@ func (db *GormDB) GetCourse(cid uint64) (*pb.Course, error) {
 	return &course, nil
 }
 
-// GetCourseByOrganizationID implements the Database interface
+// GetCourseByOrganizationID fetches course by organization ID.
 func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	var course pb.Course
 	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
@@ -598,12 +598,12 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	return &course, nil
 }
 
-// UpdateCourse implements the Database interface
+// UpdateCourse updates course information.
 func (db *GormDB) UpdateCourse(course *pb.Course) error {
 	return db.conn.Model(&pb.Course{}).Updates(course).Error
 }
 
-// CreateRepository implements the Database interface
+// CreateRepository creates a new repository record.
 func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	if repo.OrganizationID == 0 || repo.RepositoryID == 0 {
 		// both organization and repository must be non-zero
@@ -624,14 +624,14 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 			return err
 		}
 	case !repo.RepoType.IsCourseRepo():
-		// both user and group unset, then repository type must an autograder repo type
+		// both user and group unset, then repository type must be an autograder repo type
 		return ErrCreateRepo
 	}
 
 	return db.conn.Create(repo).Error
 }
 
-// GetRepository imlements the Database interface
+// GetRepository fetches repository by ID.
 func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
 	// This uses the repository ID from the provider to search with,
 	// and not the id of the entry in the database
@@ -642,7 +642,7 @@ func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
 	return &repo, nil
 }
 
-// GetRepositories implements the database interface
+// GetRepositories fetches all repositories satisfying the given repository fields
 func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error) {
 	var repos []*pb.Repository
 	if err := db.conn.Find(&repos, query).Error; err != nil {
