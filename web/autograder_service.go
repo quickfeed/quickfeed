@@ -37,15 +37,16 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetUsers failed: %s", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
+		s.logger.Error("GetUsers failed: user must be admin to access other users")
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other users")
 	}
 	usrs, err := s.getUsers()
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetUsers failed: %s", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get users")
 	}
 	return usrs, nil
@@ -58,7 +59,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("UpdateUser failed: %s", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !(usr.IsAdmin || usr.IsOwner(in.GetID())) {
@@ -120,15 +121,17 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
-		return nil, err
+		s.logger.Errorf("UpdateCourse failed: %s", err)
+		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
 	if !s.isTeacher(usr.GetID(), courseID) {
+		s.logger.Error("UpdateCourse failed: only teachers can update course")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update course")
 	}
 
 	if err = s.updateCourse(ctx, scm, in); err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("UpdateCourse failed: %s", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update course")
 	}
 	return &pb.Void{}, nil
@@ -140,7 +143,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 	courseID := in.GetID()
 	course, err := s.getCourse(courseID)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetCourse failed: %s", err)
 		return nil, status.Errorf(codes.NotFound, "course not found")
 	}
 	return course, nil
@@ -151,7 +154,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Courses, error) {
 	courses, err := s.getCourses()
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetCourses failed: %s", err)
 		return nil, status.Errorf(codes.NotFound, "no courses found")
 	}
 	return courses, nil
@@ -162,7 +165,7 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	err := s.createEnrollment(in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("CreateEnrollment failed: %s", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
 	}
 	return &pb.Void{}, nil
@@ -173,15 +176,17 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
 	if err != nil {
-		return nil, err
+		s.logger.Errorf("UpdateEnrollment failed: %s", err)
+		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
+		s.logger.Error("UpdateEnrollment failed: only teachers can update enrollment status")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
 
 	err = s.updateEnrollment(ctx, scm, in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("UpdateEnrollment failed: %s", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update enrollment")
 	}
 	return &pb.Void{}, nil
@@ -192,7 +197,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.RecordRequest) (*pb.Courses, error) {
 	courses, err := s.getCoursesWithEnrollment(in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetCoursesWithEnrollment failed: %s", err)
 		return nil, status.Errorf(codes.NotFound, "no courses with enrollment found")
 	}
 	return courses, nil
@@ -206,10 +211,11 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollment, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetEnrollment failed: ", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !(usr.IsAdmin || usr.IsOwner(in.GetUserID()) || s.isTeacher(usr.GetID(), in.GetCourseID())) {
+		s.logger.Error("GetEnrollment failed: user must be teacher, admin or enrollment owner")
 		return nil, status.Errorf(codes.PermissionDenied, "cannot get enrollment for given course and user")
 	}
 	return s.getEnrollment(in)
@@ -220,15 +226,18 @@ func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.Enrollment
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentsRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
+		s.logger.Errorf("GetEnrollmentsByCourse failed: %s", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
-		return nil, status.Errorf(codes.PermissionDenied, "only teachers can get enrollments")
+		s.logger.Error("GetEnrollmentsByCourse failed: only teachers can get course enrollments")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can get course enrollments")
 	}
 
 	enrolls, err := s.getEnrollmentsByCourse(in)
 	if err != nil {
-		return nil, err
+		s.logger.Errorf("GetEnrollmentsByCourse failed: %s", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to get enrollments for given course")
 	}
 	return enrolls, nil
 }

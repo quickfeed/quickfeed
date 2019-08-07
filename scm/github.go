@@ -311,8 +311,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	team, err := s.GetTeam(ctx, &CreateTeamOptions{Organization: opt.Organization, TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
 	if err != nil {
-		// just logging the error; not returning
-		s.logger.Debugf("RemoveTeamMember: failed to get GitHub team '%s': %w", opt.TeamSlug, err)
+		return fmt.Errorf("RemoveTeamMember: failed to get GitHub team '%s': %w", opt.TeamSlug, err)
 	}
 
 	isMember, _, err := s.client.Teams.GetTeamMembership(ctx, int64(team.ID), opt.Username)

@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -74,7 +73,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 		// TODO(vera): creation of a single user team can be replaced by adding student as collaborator with push permission to user repo
 		repo, err := updateReposAndTeams(ctx, sc, course, student.GetLogin(), request.GetStatus())
 		if err != nil {
-			s.logger.Errorf("UpdateEnrollment: failed to update repos or team membersip for student %s: %s", student.Login, err.Error())
+			s.logger.Errorf("failed to update repos or team membersip for student %s: %s", student.Login, err.Error())
 			return err
 		}
 
@@ -96,7 +95,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 
 		// make owner, remove from students, add to teachers
 		if _, err := updateReposAndTeams(ctx, sc, course, teacher.GetLogin(), request.GetStatus()); err != nil {
-			s.logger.Errorf("UpdateEnrollment: failed to update team membersip for teacher %s: %s", teacher.Login, err.Error())
+			s.logger.Errorf("failed to update team membersip for teacher %s: %s", teacher.Login, err.Error())
 			return err
 		}
 		return s.db.EnrollTeacher(teacher.ID, course.ID)
@@ -122,7 +121,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		for _, r := range repos {
 			if r.Path == "assignments" || r.Path == "course-info" {
 				if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: r.Owner, Path: r.Path}, login, scm.RepoPull); err != nil {
-					return nil, fmt.Errorf("Failed to update repo access to repo %s for user %s ", r.Path, login)
+					return nil, fmt.Errorf("updateReposAndTeams: failed to update repo access to repo %s for user %s: %w ", r.Path, login, err)
 				}
 			}
 		}
@@ -143,8 +142,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		}
 		// when promoting to teacher, promote to organization owner as well
 		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
-			log.Println("UpdateRepoAndTeam: failed to update org membership: ", err.Error())
-			return nil, err
+			return nil, fmt.Errorf("UpdateReposAndTeams: failed to update org membership for %s: %w", login, err)
 		}
 		err = promoteUserToTeachersTeam(ctx, sc, org, login)
 	}
