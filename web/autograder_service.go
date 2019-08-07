@@ -62,11 +62,12 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 		return nil, ErrInvalidUserInfo
 	}
 	if !(usr.IsAdmin || usr.IsOwner(in.GetID())) {
+		s.logger.Errorf("UpdateUser failed to update user %d: mustbe admin or course creator", in.GetID())
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
 	}
 	usr, err = s.updateUser(usr.IsAdmin, in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("UpdateUser failed to update user %d: %s", in.GetID(), err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
 	}
 	return usr, nil
@@ -80,7 +81,8 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 	// any user can ask if they have teacher scopes.
 	_, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
-		return nil, err
+		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error (%s)", err)
+		return nil, ErrInvalidUserInfo
 	}
 	return &pb.AuthorizationResponse{
 		IsAuthorized: hasTeacherScopes(ctx, scm),
@@ -92,8 +94,8 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
-		s.logger.Errorf("CreateCourse: error getting current user and scm")
-		return nil, status.Error(codes.PermissionDenied, "invalid user information")
+		s.logger.Errorf("CreateCourse: error getting current user and scm: %s", err)
+		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
 		s.logger.Error("CreateCourse: user is not admin")

@@ -97,13 +97,11 @@ func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) (*pb.User, scm.SCM, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, nil, ErrInvalidUserInfo
+		return nil, nil, err
 	}
 	scm, err := s.getSCM(ctx, usr, provider)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, nil, status.Errorf(codes.NotFound, "failed to get SCM for user")
+		return nil, nil, err
 	}
 	return usr, scm, nil
 }
@@ -114,8 +112,7 @@ func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) 
 func (s *AutograderService) getUserAndSCM2(ctx context.Context, courseID uint64) (*pb.User, scm.SCM, error) {
 	crs, err := s.getCourse(courseID)
 	if err != nil {
-		s.logger.Error(err)
-		return nil, nil, status.Errorf(codes.NotFound, "failed to get course")
+		return nil, nil, status.Errorf(codes.NotFound, "failed to get course with ID %d: %w", courseID, err)
 	}
 	return s.getUserAndSCM(ctx, crs.GetProvider())
 }
