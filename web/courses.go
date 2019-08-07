@@ -195,13 +195,8 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 	return s.db.UpdateCourse(request)
 }
 
-func (s *AutograderService) getEnrollment(request *pb.EnrollmentRequest) (*pb.Enrollment, error) {
-	return s.db.GetEnrollmentByCourseAndUser(request.GetCourseID(), request.GetUserID())
-
-}
-
 // getEnrollmentsByCourse get all enrollments for a course that match the given enrollment request.
-func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentsRequest) (*pb.Enrollments, error) {
+func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.States...)
 	if err != nil {
 		return nil, err

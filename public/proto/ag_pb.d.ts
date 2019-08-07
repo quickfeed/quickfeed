@@ -672,32 +672,6 @@ export namespace Provider {
 }
 
 export class EnrollmentRequest extends jspb.Message {
-  getUserid(): number;
-  setUserid(value: number): void;
-
-  getGroupid(): number;
-  setGroupid(value: number): void;
-
-  getCourseid(): number;
-  setCourseid(value: number): void;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): EnrollmentRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: EnrollmentRequest): EnrollmentRequest.AsObject;
-  static serializeBinaryToWriter(message: EnrollmentRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): EnrollmentRequest;
-  static deserializeBinaryFromReader(message: EnrollmentRequest, reader: jspb.BinaryReader): EnrollmentRequest;
-}
-
-export namespace EnrollmentRequest {
-  export type AsObject = {
-    userid: number,
-    groupid: number,
-    courseid: number,
-  }
-}
-
-export class EnrollmentsRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
@@ -710,14 +684,14 @@ export class EnrollmentsRequest extends jspb.Message {
   addStates(value: Enrollment.UserStatus, index?: number): void;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): EnrollmentsRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: EnrollmentsRequest): EnrollmentsRequest.AsObject;
-  static serializeBinaryToWriter(message: EnrollmentsRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): EnrollmentsRequest;
-  static deserializeBinaryFromReader(message: EnrollmentsRequest, reader: jspb.BinaryReader): EnrollmentsRequest;
+  toObject(includeInstance?: boolean): EnrollmentRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: EnrollmentRequest): EnrollmentRequest.AsObject;
+  static serializeBinaryToWriter(message: EnrollmentRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): EnrollmentRequest;
+  static deserializeBinaryFromReader(message: EnrollmentRequest, reader: jspb.BinaryReader): EnrollmentRequest;
 }
 
-export namespace EnrollmentsRequest {
+export namespace EnrollmentRequest {
   export type AsObject = {
     courseid: number,
     filteroutgroupmembers: boolean,

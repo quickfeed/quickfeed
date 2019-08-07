@@ -204,27 +204,9 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 	return courses, nil
 }
 
-// GetEnrollment returns a single enrollment in given course for user or group.
-// Access policy: Admin, Current User if Owner, Current User if Teacher of CourseID.
-// Frontend note: This method is not really used, but is accessible from
-// ServerProvider.getEnrollment(), and used by ServerProvider.isTeacher() = UserManager.isTeacher().
-// TODO(meling) it is not clear if this will be used and by who.
-func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollment, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("GetEnrollment failed: authentication error (%s)", err)
-		return nil, ErrInvalidUserInfo
-	}
-	if !(usr.IsAdmin || usr.IsOwner(in.GetUserID()) || s.isTeacher(usr.GetID(), in.GetCourseID())) {
-		s.logger.Error("GetEnrollment failed: user is not teacher, admin or enrollment owner")
-		return nil, status.Errorf(codes.PermissionDenied, "cannot get enrollment for given course and user")
-	}
-	return s.getEnrollment(in)
-}
-
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentsRequest) (*pb.Enrollments, error) {
+func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByCourse failed: authentication error (%s)", err)

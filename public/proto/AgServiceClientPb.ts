@@ -20,7 +20,6 @@ import {
   Enrollment,
   EnrollmentRequest,
   Enrollments,
-  EnrollmentsRequest,
   Group,
   GroupRequest,
   Groups,
@@ -407,38 +406,16 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoGetEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
-    Enrollment,
-    (request: EnrollmentRequest) => {
-      return request.serializeBinary();
-    },
-    Enrollment.deserializeBinary
-  );
-
-  getEnrollment(
-    request: EnrollmentRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: Enrollment) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/GetEnrollment',
-      request,
-      metadata || {},
-      this.methodInfoGetEnrollment,
-      callback);
-  }
-
   methodInfoGetEnrollmentsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
     Enrollments,
-    (request: EnrollmentsRequest) => {
+    (request: EnrollmentRequest) => {
       return request.serializeBinary();
     },
     Enrollments.deserializeBinary
   );
 
   getEnrollmentsByCourse(
-    request: EnrollmentsRequest,
+    request: EnrollmentRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Enrollments) => void) {

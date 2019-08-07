@@ -123,15 +123,8 @@ func (req GroupRequest) IsValid() bool {
 }
 
 // IsValid checks that course ID is positive.
-func (req EnrollmentsRequest) IsValid() bool {
-	return req.GetCourseID() > 0
-}
-
-// IsValid checks that course ID and group or user IDs are set
 func (req EnrollmentRequest) IsValid() bool {
-	uid := req.GetUserID()
-	gid := req.GetGroupID()
-	return (uid > 0 || gid > 0) && req.GetCourseID() > 0
+	return req.GetCourseID() > 0
 }
 
 // IsValid ensures that provider string is one of implemented providers

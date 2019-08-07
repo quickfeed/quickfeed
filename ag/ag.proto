@@ -175,15 +175,9 @@ message Provider {
     string provider = 1;
 }
 
-message EnrollmentRequest {
-    uint64 userID = 1;
-    uint64 groupID = 2;
-    uint64 courseID = 3;
-}
-
 // depending on situation frontend will have all enrolled users or only those that are not members of any group
 // set filterOutGroupMembers go get list of students not belonging to any group for given course
-message EnrollmentsRequest {
+message EnrollmentRequest {
     uint64 courseID = 1;
     bool filterOutGroupMembers = 2;
     repeated Enrollment.UserStatus states = 3;
@@ -260,8 +254,7 @@ service AutograderService {
 
     // enrollments //
 
-    rpc GetEnrollment(EnrollmentRequest) returns (Enrollment) {}
-    rpc GetEnrollmentsByCourse(EnrollmentsRequest) returns (Enrollments) {}
+    rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {} 
     rpc UpdateEnrollment(Enrollment) returns (Void) {} 
 
