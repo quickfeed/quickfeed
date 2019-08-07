@@ -12,7 +12,6 @@ export interface IUserProvider {
     getLoggedInUser(): Promise<User | null>;
     updateUser(user: User): Promise<boolean>;
     isAuthorizedTeacher(): Promise<boolean>;
-    isTeacher(user: User, courseID: number): Promise<boolean>;
 }
 
 interface IUserLoginEvent extends IEventData {
@@ -94,15 +93,6 @@ export class UserManager {
             this.currentUser = null;
             this.onLogout({ target: this });
         }
-    }
-
-    /**
-     * Function to see if a user is a teacher in any courses at all
-     * @param user User to check if is an teacher in a courses
-     * @returns Returns true if user is teacher in one or more courses
-     */
-    public async isTeacher(user: User, courseID: number): Promise<boolean> {
-        return this.userProvider.isTeacher(user, courseID);
     }
 
     /**

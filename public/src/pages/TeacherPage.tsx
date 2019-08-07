@@ -7,7 +7,7 @@ import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
 
-import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository, User } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
     IAssignmentLink,
@@ -50,7 +50,7 @@ export class TeacherPage extends ViewPage {
 
     public checkAuthentication(): boolean {
         const curUser = this.userMan.getCurrentUser();
-        if (curUser && curUser.getIsadmin()) {
+        if (curUser && (curUser.getIsadmin() || this.isCourseTeacher(curUser))) {
             if (!this.userMan.isAuthorizedTeacher()) {
                 window.location.assign("https://" + window.location.hostname + "/auth/github-teacher");
             }
@@ -396,6 +396,13 @@ export class TeacherPage extends ViewPage {
             return fn(course);
         }
         return <div>404 Page not found</div>;
+    }
+
+    private isCourseTeacher(usr: User): boolean {
+        this.courseMan.getCoursesFor(usr, [Enrollment.UserStatus.TEACHER]).then((teacherCourses) => {
+            return teacherCourses.length > 0;
+        });
+        return false;
     }
 
 }
