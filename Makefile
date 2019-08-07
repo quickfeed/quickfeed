@@ -11,6 +11,7 @@ sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "se
 testorg				:= ag-test-course
 endpoint 			:= pedersen.itest.run
 agport				:= 8081
+ag2port				:= 3001
 
 # necessary when target is not tied to a file
 .PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run scm
@@ -101,3 +102,8 @@ purge: scm
 # use the number of bound port when using tunnel script
 run:
 	aguis -service.url  $(endpoint)  -http.addr :$(agport) -http.public ./public
+
+run2:
+	aguis -service.url  $(endpoint)  -http.addr :$(ag2port) -http.public ./public &
+	# disowns the job with ID 1, change ID if you have more jobs running
+	disown -h %1
