@@ -54,7 +54,7 @@ func (s *AutograderService) deleteGroup(request *pb.RecordRequest) error {
 func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(request); err != nil {
-		s.logger.Errorf("CreateGroup: failed to retrieve users fro group %s: %s", request.GetName(), err)
+		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %s", request.GetName(), err)
 		return nil, err
 	}
 	// create new group and update groupid in enrollment table
@@ -74,11 +74,13 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	// course must exist in the database
 	course, err := s.db.GetCourse(request.CourseID)
 	if err != nil {
+		s.logger.Errorf("UpdateGroup failed: %s", err)
 		return status.Errorf(codes.NotFound, "course not found")
 	}
 	// group must exist in the database
 	group, err := s.db.GetGroup(request.ID)
 	if err != nil {
+		s.logger.Errorf("UpdateGroup failed: %s", err)
 		return status.Errorf(codes.NotFound, "group not found")
 	}
 

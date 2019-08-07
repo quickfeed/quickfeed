@@ -37,11 +37,11 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetUsers failed: %s", err)
+		s.logger.Errorf("GetUsers failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
-		s.logger.Error("GetUsers failed: user must be admin to access other users")
+		s.logger.Error("GetUsers failed: user is not admin")
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access other users")
 	}
 	usrs, err := s.getUsers()
@@ -59,11 +59,12 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("UpdateUser failed: %s", err)
+		s.logger.Errorf("UpdateUser failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
+	// TODO(vera): this check feels a bit excessive: course creator user is always admin
 	if !(usr.IsAdmin || usr.IsOwner(in.GetID())) {
-		s.logger.Errorf("UpdateUser failed to update user %d: mustbe admin or course creator", in.GetID())
+		s.logger.Errorf("UpdateUser failed to update user %d: user is not admin or course creator", in.GetID())
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
 	}
 	usr, err = s.updateUser(usr.IsAdmin, in)
@@ -95,11 +96,11 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
-		s.logger.Errorf("CreateCourse: error getting current user and scm: %s", err)
+		s.logger.Errorf("CreateCourse failed: scm authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
-		s.logger.Error("CreateCourse: user is not admin")
+		s.logger.Error("CreateCourse failed: user is not admin")
 		return nil, status.Error(codes.PermissionDenied, "user must be admin to create course")
 	}
 
@@ -121,12 +122,12 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: %s", err)
+		s.logger.Errorf("UpdateCourse failed: scm authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
 	if !s.isTeacher(usr.GetID(), courseID) {
-		s.logger.Error("UpdateCourse failed: only teachers can update course")
+		s.logger.Error("UpdateCourse failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update course")
 	}
 
@@ -176,11 +177,11 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollment failed: %s", err)
+		s.logger.Errorf("UpdateEnrollment failed: scm authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
-		s.logger.Error("UpdateEnrollment failed: only teachers can update enrollment status")
+		s.logger.Error("UpdateEnrollment failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
 
@@ -211,11 +212,11 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollment, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetEnrollment failed: ", err)
+		s.logger.Errorf("GetEnrollment failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !(usr.IsAdmin || usr.IsOwner(in.GetUserID()) || s.isTeacher(usr.GetID(), in.GetCourseID())) {
-		s.logger.Error("GetEnrollment failed: user must be teacher, admin or enrollment owner")
+		s.logger.Error("GetEnrollment failed: user is not teacher, admin or enrollment owner")
 		return nil, status.Errorf(codes.PermissionDenied, "cannot get enrollment for given course and user")
 	}
 	return s.getEnrollment(in)
@@ -226,11 +227,11 @@ func (s *AutograderService) GetEnrollment(ctx context.Context, in *pb.Enrollment
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentsRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetEnrollmentsByCourse failed: %s", err)
+		s.logger.Errorf("GetEnrollmentsByCourse failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
-		s.logger.Error("GetEnrollmentsByCourse failed: only teachers can get course enrollments")
+		s.logger.Error("GetEnrollmentsByCourse failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can get course enrollments")
 	}
 
@@ -247,15 +248,16 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetGroup failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	group, err := s.getGroup(in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetGroup failed: %s", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get group")
 	}
 	if !(group.Contains(usr) || s.isTeacher(usr.GetID(), group.GetCourseID())) {
+		s.logger.Error("GetGroup failed: user is not group member or teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only group members and teachers can access a group")
 	}
 	return group, nil
@@ -266,16 +268,17 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest) (*pb.Groups, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetGroups failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
 	if !s.isTeacher(usr.GetID(), courseID) {
+		s.logger.Error("GetGroups failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can access other groups")
 	}
 	groups, err := s.getGroups(in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetGroups failed: %s", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get groups")
 	}
 	return groups, nil
@@ -286,15 +289,16 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetGroupByUserAndCourse failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	group, err := s.getGroupByUserAndCourse(in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("GetGroupByUserAndCourse failed: %s", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get group for given user and course")
 	}
 	if !(group.Contains(usr) || s.isTeacher(usr.GetID(), group.GetCourseID())) {
+		s.logger.Error("GetGroupByUserAndCourse failed: user is not group member or teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only group members and teachers can access another group")
 	}
 	return group, nil
@@ -305,18 +309,20 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("CreateGroup failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isEnrolled(usr.GetID(), in.GetCourseID()) {
+		s.logger.Errorf("CreateGroup failed: user %s not enrolled in course %d", usr.GetLogin(), in.GetCourseID())
 		return nil, status.Errorf(codes.PermissionDenied, "user not enrolled in given course")
 	}
 	if !(in.Contains(usr) || s.isTeacher(usr.GetID(), in.GetCourseID())) {
+		s.logger.Error("CreateGroup failed: user is not group member or teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only group member or teacher can create group")
 	}
 	group, err := s.createGroup(in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("CreateGroup failed: %s", err)
 		if _, ok := status.FromError(err); !ok {
 			// set err to generic error for the frontend
 			err = status.Error(codes.InvalidArgument, "failed to create group")
@@ -332,14 +338,16 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
 	if err != nil {
-		return nil, err
+		s.logger.Errorf("UpdateGroup failed: scm authentication error (%s)", err)
+		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
+		s.logger.Error("UpdateGroup failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update groups")
 	}
 	err = s.updateGroup(ctx, scm, in)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("UpdateGroup failed: %s", err)
 		if _, ok := status.FromError(err); !ok {
 			// set err to generic error for the frontend
 			err = status.Error(codes.InvalidArgument, "failed to update group")
@@ -355,15 +363,16 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("DeleteGroup failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
 	if !s.isTeacher(usr.GetID(), courseID) {
+		s.logger.Error("DeleteGroup failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can delete groups")
 	}
 	if err = s.deleteGroup(in); err != nil {
-		s.logger.Error(err)
+		s.logger.Errorf("DeleteGroup failed: %s", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to delete group")
 	}
 	return &pb.Void{}, nil
