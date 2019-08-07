@@ -36,7 +36,7 @@ func (s *GithubSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, 
 
 	memberships, _, err := s.client.Organizations.ListOrgMemberships(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organizations: %w", err)
+		return nil, fmt.Errorf("ListOrganizations: failed to get GitHub memberships: %w", err)
 	}
 
 	var orgs []*pb.Organization
