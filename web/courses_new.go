@@ -54,7 +54,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	// will not affect organization owners (teachers)
 	orgOptions := &scm.CreateOrgOptions{
 		Path:              org.GetPath(),
-		DefaultPermission: orgNone,
+		DefaultPermission: scm.OrgNone,
 	}
 	if err = sc.UpdateOrganization(ctx, orgOptions); err != nil {
 		s.logger.Debugf("createCourse: failed to update permissions for GitHub organization %s: %s", orgOptions.Path, err)

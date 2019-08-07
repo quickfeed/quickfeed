@@ -33,19 +33,20 @@ func NewGithubSCMClient(logger *zap.Logger, token string) *GithubSCM {
 
 // ListOrganizations implements the SCM interface.
 func (s *GithubSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
-	userOrgs, _, err := s.client.Organizations.ListOrgMemberships(ctx, nil)
+
+	memberships, _, err := s.client.Organizations.ListOrgMemberships(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organizations: %w", err)
 	}
 
 	var orgs []*pb.Organization
-	for _, org := range userOrgs {
+	for _, membership := range memberships {
 		// limit scm requests to organizations where the user is owner ("admin")
 		// owner membership role is required to create a course
-		if org.GetRole() == "admin" {
-			userOrg, err := s.GetOrganization(ctx, uint64(org.Organization.GetID()))
+		if membership.GetRole() == OrgOwner {
+			userOrg, err := s.GetOrganization(ctx, uint64(membership.Organization.GetID()))
 			if err != nil {
-				return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organization %s: %w", org.Organization.GetLogin(), err)
+				return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organization %s: %w", membership.Organization.GetLogin(), err)
 			}
 			orgs = append(orgs, userOrg)
 		}
@@ -432,7 +433,7 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipO
 // GetUserScopes implements the SCM interface
 func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// Authorizations.List method will always return nill, response struct and error,
-	// we are only interested in user scopes that are always contained in response header
+	// we are only interested in response. Its header will contain all scopes for current user
 	// TODO(meling) @Vera: the above comment needs to be clarified a little more.
 	_, resp, _ := s.client.Authorizations.List(ctx, &github.ListOptions{})
 	// header contains a single string with all scopes for authenticated user

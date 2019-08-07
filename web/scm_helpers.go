@@ -13,25 +13,6 @@ const (
 	// standard team names for every course
 	teachersTeam = "allteachers"
 	studentsTeam = "allstudents"
-
-	// organization roles
-	orgOwner  = "admin"
-	orgMember = "member"
-
-	// team roles
-	teamMaintainer = "maintainer"
-	teamMember     = "member"
-
-	// repository permission levels for organization
-	orgPull = "read"
-	orgPush = "write"
-	orgFull = "admin"
-	orgNone = "none"
-
-	// repository permission levels for a user
-	repoPull = "pull"
-	repoPush = "push"
-	repoFull = "admin"
 )
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
@@ -65,7 +46,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 		TeamID:     team.ID,
 		Owner:      repo.Owner,
 		Repo:       repo.Path,
-		Permission: repoPush,
+		Permission: scm.RepoPush,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
@@ -83,7 +64,7 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	if err != nil {
 		return nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
 	}
-	if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: repo.Owner, Path: repo.Path}, student, repoPush); err != nil {
+	if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: repo.Owner, Path: repo.Path}, student, scm.RepoPush); err != nil {
 		return nil, err
 	}
 	return repo, nil
@@ -95,7 +76,7 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization
 		Organization: org,
 		TeamSlug:     studentsTeam,
 		Username:     userName,
-		Role:         teamMember,
+		Role:         scm.TeamMember,
 	}
 	if err := sc.AddTeamMember(ctx, opt); err != nil {
 		return err
@@ -118,7 +99,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 		Organization: org,
 		Username:     userName,
 		TeamSlug:     teachersTeam,
-		Role:         teamMaintainer,
+		Role:         scm.TeamMaintainer,
 	}
 	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {
 		return err

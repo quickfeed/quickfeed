@@ -8,6 +8,39 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+
+	// OrgOwner is organization owner
+	OrgOwner = "admin"
+	// OrgMember is organization member
+	OrgMember = "member"
+
+	// TeamMaintainer can add and delete team users and repos
+	TeamMaintainer = "maintainer"
+	// TeamMember is a regular member
+	TeamMember = "member"
+
+	// repository permission levels for organization
+
+	// OrgPull allows only pull access to organization repositories
+	OrgPull = "read"
+	// OrgPush allows pull and push acces to organization repositories
+	OrgPush = "write"
+	// OrgFull allows to pull/push, create, remove and update organization repositories
+	OrgFull = "admin"
+	// OrgNone allows no access to organization repositories
+	OrgNone = "none"
+
+	// repository permission levels for a user
+
+	// RepoPull allows only pull access to repository
+	RepoPull = "pull"
+	// RepoPush allows pull and push access to repository
+	RepoPush = "push"
+	// RepoFull allows full access to repository
+	RepoFull = "admin"
+)
+
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
