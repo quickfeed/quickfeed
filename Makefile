@@ -78,6 +78,7 @@ envoy-purge:
 	docker container prune
 	docker image rm envoyproxy/envoy ag_envoy
 
+# protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
 	@echo "Compiling protoset for grpcurl"
 	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
@@ -99,10 +100,13 @@ purge: scm
 	scm delete team -all -namespace=$(testorg)
 
 # will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
-# use the number of bound port when using tunnel script
+# change agport variable to the number of bound local port when using tunnel script
 run:
 	aguis -service.url  $(endpoint)  -http.addr :$(agport) -http.public ./public
 
+# to run server on itest.run, ag2port variable must corespond to endpoint
+# endpoint is used for github callbacks, and port is used to proxy client calls
+# (TODO): this has to be moved to dev/testing documentation
 run2:
 	aguis -service.url  $(endpoint)  -http.addr :$(ag2port) -http.public ./public &
 	# disowns the job with ID 1, change ID if you have more jobs running
