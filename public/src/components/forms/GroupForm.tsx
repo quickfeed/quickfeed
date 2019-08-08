@@ -171,11 +171,6 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                         });
                     }
                 } else { // Teacher created group, so no group data.
-                    const flash = this.genCurUserMissingFromGroupWarn();
-
-                    this.setState({
-                        errorFlash: flash,
-                    });
                     this.props.navMan.refresh();
                 }
 
