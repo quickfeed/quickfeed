@@ -8,39 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-
-	// OrgOwner is organization owner
-	OrgOwner = "admin"
-	// OrgMember is organization member
-	OrgMember = "member"
-
-	// TeamMaintainer can add and delete team users and repos
-	TeamMaintainer = "maintainer"
-	// TeamMember is a regular member
-	TeamMember = "member"
-
-	// repository permission levels for organization
-
-	// OrgPull allows only pull access to organization repositories
-	OrgPull = "read"
-	// OrgPush allows pull and push acces to organization repositories
-	OrgPush = "write"
-	// OrgFull allows to pull/push, create, remove and update organization repositories
-	OrgFull = "admin"
-	// OrgNone allows no access to organization repositories
-	OrgNone = "none"
-
-	// repository permission levels for a user
-
-	// RepoPull allows only pull access to repository
-	RepoPull = "pull"
-	// RepoPush allows pull and push access to repository
-	RepoPush = "push"
-	// RepoFull allows full access to repository
-	RepoFull = "admin"
-)
-
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
@@ -113,12 +80,6 @@ type CreateOrgOptions struct {
 	DefaultPermission string
 }
 
-// Valid checks that required struct fields are set
-func (opt CreateOrgOptions) valid() bool {
-	return opt.Path != "" &&
-		opt.DefaultPermission != ""
-}
-
 // Repository represents a git remote repository.
 type Repository struct {
 	ID      uint64
@@ -128,11 +89,6 @@ type Repository struct {
 	SSHURL  string // SSH clone URL.
 	HTTPURL string // HTTP(S) clone URL.
 	OrgID   uint64
-}
-
-// ValidForHooks checks that repository object can be used in hooks related methods
-func (r Repository) ValidForHooks() bool {
-	return r.Path != "" && r.Owner != ""
 }
 
 // Hook contains information about a webhook for a repository.
@@ -183,13 +139,6 @@ type OrgMembershipOptions struct {
 	Role         string // role can be "admin" (organization owner) or "member"
 }
 
-// ErrNotSupported is returned when the source code management solution used
-// does not provide a sufficient API for the method called.
-type ErrNotSupported struct {
-	SCM    string
-	Method string
-}
-
 // CreateClonePathOptions holds elements used when constructing a clone URL string.
 type CreateClonePathOptions struct {
 	UserToken    string
@@ -205,14 +154,6 @@ type AddTeamRepoOptions struct {
 	Permission string // permission level for team members. Can be "push", "pull", "admin"
 }
 
-// Valid checks that every field is set to avoid unnecessary scm calls with invalid arguments
-func (opt AddTeamRepoOptions) Valid() bool {
-	return opt.TeamID > 0 &&
-		opt.Repo != "" &&
-		opt.Owner != "" &&
-		opt.Permission != ""
-}
-
 // Team represents a git Team
 type Team struct {
 	ID   uint64
@@ -225,11 +166,3 @@ type Authorization struct {
 	Token  string
 	Scopes []string
 }
-
-func (e ErrNotSupported) Error() string {
-	return "method " + e.Method + " not supported by " + e.SCM + " SCM"
-}
-
-// ErrMissingFields is returned when scm struct validation fails.
-// This error only used for development/debugging and never goes to frontend user.
-var ErrMissingFields = errors.New("invalid argument: missing required fields")

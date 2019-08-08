@@ -117,8 +117,7 @@ func (req ApproveSubmissionRequest) IsValid() bool {
 
 // IsValid ensures that course ID and group or user IDs are set
 func (req GroupRequest) IsValid() bool {
-	uid := req.GetUserID()
-	gid := req.GetGroupID()
+	uid, gid := req.GetUserID(), req.GetGroupID()
 	return (uid > 0 || gid > 0) && req.GetCourseID() > 0
 }
 
@@ -133,6 +132,12 @@ func (req Provider) IsValid() bool {
 	return provider == "github" ||
 		provider == "gitlab" ||
 		provider == "fake"
+}
+
+// IsValid checks that either ID or path field is set
+func (org Organization) IsValid() bool {
+	id, path := org.GetID(), org.GetPath()
+	return id > 0 || path != ""
 }
 
 // IsValidProvider validates provider string coming from front end
