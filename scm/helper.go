@@ -3,17 +3,21 @@ package scm
 import "fmt"
 
 const (
+	// Organization roles //
+
 	// OrgOwner is organization owner
 	OrgOwner = "admin"
 	// OrgMember is organization member
 	OrgMember = "member"
+
+	// Team roles //
 
 	// TeamMaintainer can add and delete team users and repos
 	TeamMaintainer = "maintainer"
 	// TeamMember is a regular member
 	TeamMember = "member"
 
-	// repository permission levels for organization
+	// Repository permission levels for organization //
 
 	// OrgPull allows only pull access to organization repositories
 	OrgPull = "read"
@@ -24,7 +28,7 @@ const (
 	// OrgNone allows no access to organization repositories
 	OrgNone = "none"
 
-	// repository permission levels for a user
+	// Repository permission levels for a user //
 
 	// RepoPull allows only pull access to repository
 	RepoPull = "pull"
@@ -40,7 +44,6 @@ func (opt CreateOrgOptions) valid() bool {
 	return opt.Path != "" && opt.DefaultPermission != ""
 }
 
-// validForHooks checks that repository object can be used in hooks related methods
 func (r Repository) valid() bool {
 	return r.Path != "" && r.Owner != ""
 }

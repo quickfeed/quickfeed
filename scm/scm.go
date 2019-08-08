@@ -104,7 +104,7 @@ type CreateRepositoryOptions struct {
 	Organization *pb.Organization
 	Path         string
 	Private      bool
-	Owner        string // we can create user repositories
+	Owner        string // we can create user repositories. Default owner is github organization
 	Permission   string // default permission level for the repo. Can be "read", "write", "admin", "none"
 }
 
@@ -123,7 +123,7 @@ type CreateTeamOptions struct {
 	Users        []string
 }
 
-// TeamMembershipOptions contain information on organization team and user to be added
+// TeamMembershipOptions contain information on organization team and associated user
 type TeamMembershipOptions struct {
 	Organization *pb.Organization
 	TeamID       int64
@@ -150,7 +150,7 @@ type CreateClonePathOptions struct {
 type AddTeamRepoOptions struct {
 	TeamID     uint64
 	Repo       string
-	Owner      string // only used by GitHub
+	Owner      string // Name of the team to associate repo with. Only used by GitHub.
 	Permission string // permission level for team members. Can be "push", "pull", "admin"
 }
 
@@ -163,6 +163,5 @@ type Team struct {
 
 // Authorization stores information about user scopes
 type Authorization struct {
-	Token  string
 	Scopes []string
 }
