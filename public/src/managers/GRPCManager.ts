@@ -201,12 +201,6 @@ export class GrpcManager {
 
     // /* SUBMISSIONS */ //
 
-    public getSubmission(assignmentID: number): Promise<IGrpcResponse<Submission>> {
-        const request = new RecordRequest();
-        request.setId(assignmentID);
-        return this.grpcSend<Submission>(this.agService.getSubmission, request);
-    }
-
     public getSubmissions(courseID: number, userID: number): Promise<IGrpcResponse<Submissions>> {
         const request = new SubmissionRequest();
         request.setCourseid(courseID);

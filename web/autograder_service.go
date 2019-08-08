@@ -360,22 +360,6 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordReques
 	return &pb.Void{}, nil
 }
 
-// GetSubmission returns a student submission.
-// Access policy: Current User.
-func (s *AutograderService) GetSubmission(ctx context.Context, in *pb.RecordRequest) (*pb.Submission, error) {
-	usr, err := s.getCurrentUser(ctx)
-	if err != nil {
-		s.logger.Errorf("GetSubmission failed: authentication error (%s)", err)
-		return nil, ErrInvalidUserInfo
-	}
-	submission, err := s.getSubmission(usr, in)
-	if err != nil {
-		s.logger.Errorf("GetSubmission failed: %s", err)
-		return nil, status.Errorf(codes.NotFound, "no submission found")
-	}
-	return submission, nil
-}
-
 // GetSubmissions returns the submissions matching the query encoded in the action request.
 // Access policy: Current User if Owner of submission, Teacher of CourseID.
 func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {

@@ -202,4 +202,3 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         return this.forceUpdate();
     }
 }
-

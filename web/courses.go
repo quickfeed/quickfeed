@@ -154,13 +154,6 @@ func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID)
 }
 
-// getSubmission returns the submission of the current user for the given assignment.
-func (s *AutograderService) getSubmission(currentUser *pb.User, request *pb.RecordRequest) (*pb.Submission, error) {
-	// ensure that the submission belongs to the current user
-	query := &pb.Submission{AssignmentID: request.ID, UserID: currentUser.ID}
-	return s.db.GetSubmission(query)
-}
-
 // getSubmissions returns all the latests submissions for a user of the given course.
 func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.Submissions, error) {
 	// only one of user ID and group ID will be set; enforced by IsValid on pb.SubmissionRequest

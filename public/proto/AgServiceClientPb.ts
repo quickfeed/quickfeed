@@ -28,7 +28,6 @@ import {
   Providers,
   RecordRequest,
   Repositories,
-  Submission,
   SubmissionRequest,
   Submissions,
   URLRequest,
@@ -469,28 +468,6 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoUpdateEnrollment,
-      callback);
-  }
-
-  methodInfoGetSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
-    Submission,
-    (request: RecordRequest) => {
-      return request.serializeBinary();
-    },
-    Submission.deserializeBinary
-  );
-
-  getSubmission(
-    request: RecordRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: Submission) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/GetSubmission',
-      request,
-      metadata || {},
-      this.methodInfoGetSubmission,
       callback);
   }
 

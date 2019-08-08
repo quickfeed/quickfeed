@@ -173,7 +173,6 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                 } else { // Teacher created group, so no group data.
                     this.props.navMan.refresh();
                 }
-
             }
         }
     }

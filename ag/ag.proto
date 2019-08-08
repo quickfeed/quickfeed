@@ -260,7 +260,6 @@ service AutograderService {
 
     // submissions //
 
-    rpc GetSubmission(RecordRequest) returns (Submission) {}
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
     // ApproveSubmission approves the given submission for a course.
     // Only teachers can invoke this.
