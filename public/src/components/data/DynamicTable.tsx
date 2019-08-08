@@ -17,7 +17,7 @@ function isICellElement(obj: any): obj is ICellElement {
     return obj.value;
 }
 
-export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>, {}> {
+export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>> {
 
     public render() {
         const footer = this.props.footer;

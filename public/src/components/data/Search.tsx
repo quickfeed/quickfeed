@@ -1,6 +1,6 @@
 import * as React from "react";
 
-interface ISearchProp {
+interface ISearchProps {
     className?: string;
     placeholder?: string;
     onChange?: (val: string) => void;
@@ -8,7 +8,7 @@ interface ISearchProp {
 interface ISearchState {
     query: string;
 }
-export class Search extends React.Component<ISearchProp, ISearchState> {
+export class Search extends React.Component<ISearchProps, ISearchState> {
 
     constructor(props: any) {
         super(props);
@@ -18,7 +18,6 @@ export class Search extends React.Component<ISearchProp, ISearchState> {
     }
 
     public render() {
-
         return (
             <div className={this.props.className ? this.props.className : ""} >
                 <span className="input-group-addon">

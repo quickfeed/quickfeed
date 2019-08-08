@@ -266,7 +266,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     private groupValidate(): string[] {
         const errors: string[] = [];
         if (this.state.name === "") {
-            errors.push("Group Name cannot be blank");
+            errors.push("Group name cannot be blank");
         }
         if (this.state.selectedStudents.length === 0) {
             errors.push("Group mush have members.");
