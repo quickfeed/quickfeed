@@ -58,16 +58,27 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, path string, student string) (*scm.Repository, error) {
 	// we have to check that repository for that user has not already been created on github
 	// if repo is found, it is safe to reuse it
-	// TODO(vera): implement this check (needs a new scm method to get a single repo without excessive github calls)
-
-	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
-		Organization: org,
-		Path:         path,
-		Private:      true,
+	repo, err := sc.GetRepository(ctx, &scm.GetRepoOptions{
+		Path:  path,
+		Owner: student,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
+		return nil, err
 	}
+
+	// if no github repository found, create it
+	if repo == nil {
+		repo, err = sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
+			Organization: org,
+			Path:         path,
+			Private:      true,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
+		}
+	}
+
+	// add push access to student repo
 	if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: repo.Owner, Path: repo.Path}, student, scm.RepoPush); err != nil {
 		return nil, err
 	}
