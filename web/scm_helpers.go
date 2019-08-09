@@ -56,6 +56,10 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 
 // creates {username}-labs repository and provides pull/push access to it for the given student
 func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, path string, student string) (*scm.Repository, error) {
+	// we have to check that repository for that user has not already been created on github
+	// if repo is found, it is safe to reuse it
+	// TODO(vera): implement this check (needs a new scm method to get a single repo without excessive github calls)
+
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
 		Path:         path,
