@@ -255,7 +255,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 
 // DeleteTeam implements the SCM interface.
 func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error {
-	if !opt.validWithOrg() {
+	if !opt.valid() {
 		return ErrMissingFields
 	}
 	team, err := s.GetTeam(ctx, opt)
@@ -271,7 +271,7 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) erro
 
 // GetTeam implements the SCM interface
 func (s *GithubSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (scmTeam *Team, err error) {
-	if !opt.validWithOrg() {
+	if !opt.valid() {
 		return nil, ErrMissingFields
 	}
 	var team *github.Team
