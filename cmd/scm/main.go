@@ -280,6 +280,9 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 		if !c.IsSet("namespace") {
 			return cli.NewExitError("namespace must be provided", 3)
 		}
+		if c.IsSet("name") && !c.IsSet("namespace") {
+			return cli.NewExitError("name and namespace must be provided", 3)
+		}
 		if c.Bool("all") {
 			msg := fmt.Sprintf("Are you sure you want to delete all repositories in %s?", c.String("namespace"))
 			if ok, err := confirm(msg); !ok || err != nil {
@@ -294,7 +297,7 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 
 			for _, repo := range repos {
 				var errs []error
-				if err := (*client).DeleteRepository(ctx, repo.ID); err != nil {
+				if err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.ID}); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted repository", repo.WebURL)
@@ -306,6 +309,11 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 			return nil
 		}
 		// TODO(vera): same as with teams, have to adjust existing methods to delete by name
+		err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{Path: c.String("name"), Owner: c.String("namespace")})
+		if err != nil {
+			return err
+		}
+		fmt.Println("Deleted repository ", c.String("name"), " on organization ", c.String("namespace"))
 		return cli.NewExitError("not implemented", 9)
 	}
 }
