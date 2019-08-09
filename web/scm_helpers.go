@@ -58,7 +58,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, path string, student string) (*scm.Repository, error) {
 	// we have to check that repository for that user has not already been created on github
 	// if repo is found, it is safe to reuse it
-	repo, err := sc.GetRepository(ctx, &scm.GetRepoOptions{
+	repo, err := sc.GetRepository(ctx, &scm.RepositoryOptions{
 		Path:  path,
 		Owner: student,
 	})

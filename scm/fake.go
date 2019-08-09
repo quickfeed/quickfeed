@@ -77,7 +77,7 @@ func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 }
 
 // GetRepository implements the SCM interface.
-func (s *FakeSCM) GetRepository(cts context.Context, opt *GetRepoOptions) (*Repository, error) {
+func (s *FakeSCM) GetRepository(cts context.Context, opt *RepositoryOptions) (*Repository, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }
@@ -94,11 +94,11 @@ func (s *FakeSCM) GetRepositories(ctx context.Context, org *pb.Organization) ([]
 }
 
 // DeleteRepository implements the SCM interface.
-func (s *FakeSCM) DeleteRepository(ctx context.Context, id uint64) error {
-	if _, ok := s.Repositories[id]; !ok {
+func (s *FakeSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
+	if _, ok := s.Repositories[opt.ID]; !ok {
 		return errors.New("repository not found")
 	}
-	delete(s.Repositories, id)
+	delete(s.Repositories, opt.ID)
 	return nil
 }
 

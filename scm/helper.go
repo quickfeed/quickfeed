@@ -87,7 +87,7 @@ func (opt OrgMembershipOptions) valid() bool {
 		opt.Username != ""
 }
 
-func (opt GetRepoOptions) valid() bool {
+func (opt RepositoryOptions) valid() bool {
 	return opt.ID > 0 ||
 		(opt.Path != "" && opt.Owner != "")
 }

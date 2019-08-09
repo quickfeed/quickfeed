@@ -101,7 +101,7 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 }
 
 // GetRepository implements the SCM interface.
-func (s *GitlabSCM) GetRepository(cts context.Context, opt *GetRepoOptions) (*Repository, error) {
+func (s *GitlabSCM) GetRepository(cts context.Context, opt *RepositoryOptions) (*Repository, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }
@@ -136,8 +136,8 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Organizat
 }
 
 // DeleteRepository implements the SCM interface.
-func (s *GitlabSCM) DeleteRepository(ctx context.Context, id uint64) (err error) {
-	_, err = s.client.Projects.DeleteProject(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
+func (s *GitlabSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) (err error) {
+	_, err = s.client.Projects.DeleteProject(strconv.FormatUint(opt.ID, 10), gitlab.WithContext(ctx))
 	return
 }
 

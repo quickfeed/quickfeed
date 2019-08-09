@@ -22,11 +22,11 @@ type SCM interface {
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repository by ID or name
-	GetRepository(context.Context, *GetRepoOptions) (*Repository, error)
+	GetRepository(context.Context, *RepositoryOptions) (*Repository, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *pb.Organization) ([]*Repository, error)
 	// Delete repository.
-	DeleteRepository(context.Context, uint64) error
+	DeleteRepository(context.Context, *RepositoryOptions) error
 	// Add user as repository collaborator with provided permissions
 	UpdateRepoAccess(context.Context, *Repository, string, string) error
 	// List the webhooks associated with the provided repository.
@@ -93,10 +93,10 @@ type Repository struct {
 	OrgID   uint64
 }
 
-// GetRepoOptions used to fetch a single repository by ID or name
+// RepositoryOptions used to fetch a single repository by ID or name
 // either ID or both Path and Owner info must be provided
-type GetRepoOptions struct {
-	ID    int64
+type RepositoryOptions struct {
+	ID    uint64
 	Path  string
 	Owner string
 }

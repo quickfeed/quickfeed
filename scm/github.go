@@ -112,16 +112,16 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 }
 
 // GetRepository implements the SCM interface.
-func (s *GithubSCM) GetRepository(ctx context.Context, opt *GetRepoOptions) (*Repository, error) {
+func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
 	if !opt.valid() {
-		s.logger.Errorf("GetRepository got invalid GetRepoOptions: %+v", opt)
+		s.logger.Errorf("GetRepository got invalid RepositoryOptions: %+v", opt)
 		return nil, ErrMissingFields
 	}
 	var gitRepo *github.Repository
 	var err error
 	// if ID is set, get by ID
 	if opt.ID > 0 {
-		gitRepo, _, err = s.client.Repositories.GetByID(ctx, opt.ID)
+		gitRepo, _, err = s.client.Repositories.GetByID(ctx, int64(opt.ID))
 	} else {
 		// otherwise get by repo name and owner (usually owner = organization name)
 		gitRepo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
@@ -179,12 +179,22 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) (
 }
 
 // DeleteRepository implements the SCM interface.
-func (s *GithubSCM) DeleteRepository(ctx context.Context, id uint64) error {
-	repo, _, err := s.client.Repositories.GetByID(ctx, int64(id))
-	if err != nil {
-		return fmt.Errorf("DeleteRepository: failed to get GitHub repository: %w", err)
+func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
+	if !opt.valid() {
+		s.logger.Errorf("DeleteRepository got invalid RepositoryOptions: %+v", opt)
 	}
-	if _, err := s.client.Repositories.Delete(ctx, repo.Owner.GetLogin(), repo.GetName()); err != nil {
+
+	// if ID provided, get path and owner from github
+	if opt.ID > 0 {
+		repo, _, err := s.client.Repositories.GetByID(ctx, int64(opt.ID))
+		if err != nil {
+			return fmt.Errorf("DeleteRepository: failed to get GitHub repository: %w", err)
+		}
+		opt.Path = repo.GetName()
+		opt.Owner = repo.Owner.GetLogin()
+	}
+
+	if _, err := s.client.Repositories.Delete(ctx, opt.Owner, opt.Path); err != nil {
 		return fmt.Errorf("DeleteRepository: failed to delete GitHub repository: %w", err)
 	}
 	return nil
