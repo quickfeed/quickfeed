@@ -21,6 +21,8 @@ type SCM interface {
 	GetOrganization(context.Context, uint64) (*pb.Organization, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
+	// Get repository by ID or name
+	GetRepository(context.Context, *GetRepoOptions) (*Repository, error)
 	// Get repositories within organization.
 	GetRepositories(context.Context, *pb.Organization) ([]*Repository, error)
 	// Delete repository.
@@ -89,6 +91,14 @@ type Repository struct {
 	SSHURL  string // SSH clone URL.
 	HTTPURL string // HTTP(S) clone URL.
 	OrgID   uint64
+}
+
+// GetRepoOptions used to fetch a single repository by ID or name
+// either ID or both Path and Owner info must be provided
+type GetRepoOptions struct {
+	ID    int64
+	Path  string
+	Owner string
 }
 
 // Hook contains information about a webhook for a repository.

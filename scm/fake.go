@@ -76,6 +76,12 @@ func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOpt
 	return repo, nil
 }
 
+// GetRepository implements the SCM interface.
+func (s *FakeSCM) GetRepository(cts context.Context, opt *GetRepoOptions) (*Repository, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // GetRepositories implements the SCM interface.
 func (s *FakeSCM) GetRepositories(ctx context.Context, org *pb.Organization) ([]*Repository, error) {
 	var repos []*Repository

@@ -87,6 +87,11 @@ func (opt OrgMembershipOptions) valid() bool {
 		opt.Username != ""
 }
 
+func (opt GetRepoOptions) valid() bool {
+	return opt.ID > 0 ||
+		(opt.Path != "" && opt.Owner != "")
+}
+
 // Errors //
 
 // ErrNotSupported is returned when the source code management solution used
@@ -103,3 +108,5 @@ func (e ErrNotSupported) Error() string {
 // ErrMissingFields is returned when scm struct validation fails.
 // This error only used for development/debugging and never goes to frontend user.
 var ErrMissingFields = fmt.Errorf("invalid argument: missing required fields")
+
+// TODO(vera): add a method to convert github repo into scm repo, as it is being done manually in >3 methods

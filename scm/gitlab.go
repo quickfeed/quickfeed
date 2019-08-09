@@ -100,6 +100,12 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}, nil
 }
 
+// GetRepository implements the SCM interface.
+func (s *GitlabSCM) GetRepository(cts context.Context, opt *GetRepoOptions) (*Repository, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // GetRepositories implements the SCM interface.
 func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Organization) ([]*Repository, error) {
 	var gid interface{}
