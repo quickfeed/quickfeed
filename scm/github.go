@@ -100,15 +100,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 		return nil, fmt.Errorf("failed to create GitHub repository (%s): %w", opt.Path, err)
 	}
 
-	return &Repository{
-		ID:      uint64(repo.GetID()),
-		Path:    repo.GetName(),
-		Owner:   repo.Owner.GetLogin(),
-		WebURL:  repo.GetHTMLURL(),
-		SSHURL:  repo.GetSSHURL(),
-		HTTPURL: repo.GetCloneURL(),
-		OrgID:   opt.Organization.ID,
-	}, nil
+	return toRepository(repo), nil
 }
 
 // GetRepository implements the SCM interface.
@@ -117,28 +109,20 @@ func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (
 		s.logger.Errorf("GetRepository got invalid RepositoryOptions: %+v", opt)
 		return nil, ErrMissingFields
 	}
-	var gitRepo *github.Repository
+	var repo *github.Repository
 	var err error
 	// if ID is set, get by ID
 	if opt.ID > 0 {
-		gitRepo, _, err = s.client.Repositories.GetByID(ctx, int64(opt.ID))
+		repo, _, err = s.client.Repositories.GetByID(ctx, int64(opt.ID))
 	} else {
 		// otherwise get by repo name and owner (usually owner = organization name)
-		gitRepo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
+		repo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
 	}
 	if err != nil {
 		return nil, err
 	}
-	repo := &Repository{
-		ID:      uint64(gitRepo.GetID()),
-		Path:    gitRepo.GetName(),
-		Owner:   gitRepo.Owner.GetLogin(),
-		WebURL:  gitRepo.GetHTMLURL(),
-		SSHURL:  gitRepo.GetSSHURL(),
-		HTTPURL: gitRepo.GetCloneURL(),
-		OrgID:   uint64(gitRepo.Organization.GetID()),
-	}
-	return repo, nil
+
+	return toRepository(repo), nil
 }
 
 // GetRepositories implements the SCM interface.
@@ -165,15 +149,7 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) (
 
 	var repositories []*Repository
 	for _, repo := range repos {
-		repositories = append(repositories, &Repository{
-			ID:      uint64(repo.GetID()),
-			Path:    repo.GetName(),
-			Owner:   repo.Owner.GetLogin(),
-			WebURL:  repo.GetHTMLURL(),
-			SSHURL:  repo.GetSSHURL(),
-			HTTPURL: repo.GetCloneURL(),
-			OrgID:   org.ID,
-		})
+		repositories = append(repositories, toRepository(repo))
 	}
 	return repositories, nil
 }
@@ -528,4 +504,16 @@ func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 	stringScopes := resp.Header.Get("X-OAuth-Scopes")
 	gitScopes := strings.Split(stringScopes, ", ")
 	return &Authorization{Scopes: gitScopes}
+}
+
+func toRepository(repo *github.Repository) *Repository {
+	return &Repository{
+		ID:      uint64(repo.GetID()),
+		Path:    repo.GetName(),
+		Owner:   repo.Owner.GetLogin(),
+		WebURL:  repo.GetHTMLURL(),
+		SSHURL:  repo.GetSSHURL(),
+		HTTPURL: repo.GetCloneURL(),
+		OrgID:   uint64(repo.Organization.GetID()),
+	}
 }
