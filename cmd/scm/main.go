@@ -357,6 +357,9 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 		if !c.IsSet("namespace") {
 			return cli.NewExitError("namespace must be provided", 3)
 		}
+		if c.IsSet("name") && !c.IsSet("namespace") {
+			return cli.NewExitError("name and namespace must be provided", 3)
+		}
 		if c.Bool("all") {
 			repos, err := (*client).GetRepositories(ctx, &pb.Organization{Path: c.String("namespace")})
 			if err != nil {
@@ -369,7 +372,12 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 			fmt.Println(s)
 			return nil
 		}
-		return cli.NewExitError("not implemented", 9)
+		repo, err := (*client).GetRepository(ctx, &scm.RepositoryOptions{Path: c.String("name"), Owner: c.String("namespace")})
+		if err != nil {
+			return err
+		}
+		fmt.Println("Found repository ", repo.WebURL)
+		return nil
 	}
 }
 
