@@ -102,12 +102,12 @@ purge: scm
 # will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
 # change agport variable to the number of bound local port when using tunnel script
 run:
-	aguis -service.url  $(endpoint)  -http.addr :$(agport) -http.public ./public
+	aguis -service.url $(endpoint)  -http.addr :$(agport) -http.public ./public
 
 # to run server on itest.run, ag2port variable must corespond to endpoint
 # endpoint is used for github callbacks, and port is used to proxy client calls
 # (TODO): this has to be moved to dev/testing documentation
 run2:
-	aguis -service.url  $(endpoint)  -http.addr :$(ag2port) -http.public ./public &
+	aguis -service.url $(endpoint)  -http.addr :$(ag2port) -http.public ./public &
 	# disowns the job with ID 1, change ID if you have more jobs running
 	disown -h %1

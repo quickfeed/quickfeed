@@ -111,5 +111,3 @@ func (e ErrNotSupported) Error() string {
 // then we cn skip logging it every time it occures. The question is if it even is reasonable to pass a failng struct back to
 // ag_service for logging when it can be logged right here
 var ErrMissingFields = fmt.Errorf("invalid argument: missing required fields")
-
-// TODO(vera): add a method to convert github repo into scm repo, as it is being done manually in >3 methods

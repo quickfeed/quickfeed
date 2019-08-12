@@ -119,7 +119,7 @@ func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (
 		repo, _, err = s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRepository failed to fetch a repo with ID %d and path % s: %w", opt.ID, opt.Path, err)
 	}
 
 	return toRepository(repo), nil
