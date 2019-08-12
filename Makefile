@@ -63,6 +63,14 @@ npmtools:
 	@npm install -g webpack-cli
 	@npm install -g tslint
 
+# TODO(meling) this is just for macOS; we should guard against non-macOS.
+# TODO(meling) also do we need to install envoy? It doesn't have a homebrew package.
+brew:
+	@echo "Install homebrew packages needed for development"
+	@brew update
+	@brew cleanup
+	@brew install go protobuf npm webpack docker
+
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
 	@cd envoy; docker build -t ag_envoy -f envoy.Dockerfile .
