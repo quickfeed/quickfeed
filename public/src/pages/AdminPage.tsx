@@ -153,7 +153,8 @@ export class AdminPage extends ViewPage {
 
     public async renderMenu(index: number): Promise<JSX.Element[]> {
         // if user has no teacher scopes, redirect to authorization page
-        if (!this.userMan.isAuthorizedTeacher()) {
+        const authorized = await this.userMan.isAuthorizedTeacher();
+        if (!authorized) {
             window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
         }
         if (index === 0) {
