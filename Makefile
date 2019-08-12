@@ -9,7 +9,8 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
-endpoint 			:= pedersen.itest.run
+endpoint 			:= junaid.itest.run
+ag2endpoint			:= pedersen.itest.run
 agport				:= 8081
 ag2port				:= 3001
 
