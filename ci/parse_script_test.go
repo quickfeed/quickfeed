@@ -37,4 +37,10 @@ func TestParseScript(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	info.Language = "java8"
+	_, err = ParseScriptTemplate("scripts", info)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
