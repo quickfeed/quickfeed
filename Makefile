@@ -104,7 +104,6 @@ scm:
 
 # will remove all repositories and teams from provided organization 'testorg'
 purge: scm
-	rm -f /tmp/ag.db
 	scm delete repo -all -namespace=$(testorg)
 	scm delete team -all -namespace=$(testorg)
 
@@ -120,3 +119,9 @@ run2:
 	aguis -service.url $(endpoint)  -http.addr :$(ag2port) -http.public ./public &
 	# disowns the job with ID 1, change ID if you have more jobs running
 	disown -h %1
+# test nginx configuration syntax
+nginx-test:
+	sudo nginx -t
+# restart nginx with updated configuration
+nginx: nginx-test
+	sudo nginx -s reload
