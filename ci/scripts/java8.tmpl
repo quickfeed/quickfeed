@@ -1,0 +1,48 @@
+#image/gradle:5.5.1-jdk8
+
+echo "\n=== Preparing for Test Execution ===\n"
+
+git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+
+git clone {{ .RawGetURL }} user
+git clone {{ .RawTestURL }} test
+
+
+# Make sure there are tests in the student repo
+rm -rf user/{{ .AssignmentName }}/src/test/*
+
+# Generate new Secret.java with new secret value for each run
+cd test
+cat <<EOF > test/{{ .AssignmentName }}/src/test/java/common/Secret.java
+package common;
+
+public class Secret {
+public static String getSecret() {
+  return "{{ .RandomSecret }}";
+}
+EOF
+
+# Fail student code that attempts to access secret
+cd user/{{ .AssignmentName }}/
+if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
+  echo "\n=== Misbehavior Detected: Failed ===\n"
+  exit
+fi
+
+# Copy tests into student assignments folder for running tests
+cp -r test/{{ .AssignmentName }}/src/test/* user/{{ .AssignmentName }}/src/test/
+cp test/{{ .AssignmentName }}/build.gradle user/{{ .AssignmentName }}/
+cd user/{{ .AssignmentName }}/
+# Clear access token and the shell history to avoid leaking information to student test code.
+git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+history -c
+
+# Perform lab specific setup
+if [ -f "setup.sh" ]; then
+    bash setup.sh
+fi
+
+echo "\n=== Running Tests ===\n"
+gradle clean test 2>&1 | grep Secret
+echo "\n=== Finished Running Tests ===\n"
