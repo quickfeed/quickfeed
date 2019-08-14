@@ -74,7 +74,7 @@ func enableProviders(l *zap.Logger, baseURL string, fake bool) map[string]bool {
 		SecretEnv:     "GITHUB_SECRET",
 		CallbackURL:   auth.GetCallbackURL(baseURL, "github"),
 		StudentScopes: []string{},
-		TeacherScopes: []string{"user", "repo", "delete_repo", "admin:org"},
+		TeacherScopes: []string{"user", "repo", "delete_repo", "admin:org", "admin:org_hook"},
 	}, func(key, secret, callback string, scopes ...string) goth.Provider {
 		return github.New(key, secret, callback, scopes...)
 	}); ok {

@@ -119,10 +119,11 @@ func (s *AutograderService) getUserAndSCM2(ctx context.Context, courseID uint64)
 
 // teacherScopes defines scopes that must be enabled for a teacher token to be valid.
 var teacherScopes = map[string]bool{
-	"admin:org":   true,
-	"delete_repo": true,
-	"repo":        true,
-	"user":        true,
+	"admin:org":      true,
+	"delete_repo":    true,
+	"repo":           true,
+	"user":           true,
+	"admin:org_hook": true,
 }
 
 // hasTeacherScopes checks whether current user has upgraded scopes on provided scm client.
