@@ -41,9 +41,9 @@ export class GrpcManager {
 
     constructor() {
         // use this option if testing locally
-        this.agService = new AutograderServiceClient("http://localhost:8080", null, null);
+        // this.agService = new AutograderServiceClient("http://localhost:8080", null, null);
         // use this option if running on server
-        // this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
     }
 
     public setUserMan(man: UserManager) {

@@ -61,6 +61,6 @@ if [ -f "setup.sh" ]; then
 fi
 
 echo "\n=== Running Tests ===\n"
-gradle clean test
-gradle clean test 2>&1 
+gradle test
+gradle test 2>&1 
 echo "\n=== Finished Running Tests ===\n"
