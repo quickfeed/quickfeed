@@ -250,6 +250,28 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 	return nil
 }
 
+// CreateOrgHook implements the scm interface
+func (s *GithubSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
+	if !opt.valid() {
+		s.logger.Errorf("CreateOrgHook got invalid OrgHookOptions: %+v with organization %+v", opt, opt.Organization)
+		return ErrMissingFields
+	}
+	hook := &github.Hook{
+		Config: map[string]interface{}{
+			"url":          opt.URL,
+			"secret":       opt.Secret,
+			"content_type": "json",
+			"insecure_ssl": "0",
+		},
+	}
+
+	_, _, err := s.client.Organizations.CreateHook(ctx, opt.Organization.GetPath(), hook)
+	if err != nil {
+		return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.Organization.Path, err)
+	}
+	return nil
+}
+
 // CreateTeam implements the SCM interface.
 func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
 	if !opt.validWithOrg() {
@@ -500,8 +522,19 @@ func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// we are only interested in response. Its header will contain all scopes for current user
 	// TODO(meling) @Vera: the above comment needs to be clarified a little more.
 	_, resp, _ := s.client.Authorizations.List(ctx, &github.ListOptions{})
+	if resp == nil {
+		s.logger.Errorf("GetUserScopes: got no scopes: no authorized user")
+		tmpScopes := make([]string, 0)
+		return &Authorization{Scopes: tmpScopes}
+	}
 	// header contains a single string with all scopes for authenticated user
 	stringScopes := resp.Header.Get("X-OAuth-Scopes")
+	if stringScopes == "" {
+		s.logger.Errorf("GetUserScopes: header was empty")
+		tmpScopes := make([]string, 0)
+		return &Authorization{Scopes: tmpScopes}
+	}
+	s.logger.Debugf("GetUserScopes got scopes: %v", stringScopes)
 	gitScopes := strings.Split(stringScopes, ", ")
 	return &Authorization{Scopes: gitScopes}
 }

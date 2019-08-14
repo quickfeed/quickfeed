@@ -65,6 +65,12 @@ func (opt CreateHookOptions) valid() bool {
 		opt.URL != ""
 }
 
+func (opt OrgHookOptions) valid() bool {
+	return opt.Organization != nil &&
+		opt.Organization.IsValid() &&
+		opt.URL != ""
+}
+
 func (opt CreateTeamOptions) validWithOrg() bool {
 	return opt.Organization != nil &&
 		opt.Organization.IsValid() &&
