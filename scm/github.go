@@ -250,6 +250,28 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 	return nil
 }
 
+// CreateOrgHook implements the scm interface
+func (s *GithubSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
+	if !opt.valid() {
+		s.logger.Errorf("CreateOrgHook got invalid OrgHookOptions: %+v with organization %+v", opt, opt.Organization)
+		return ErrMissingFields
+	}
+	hook := &github.Hook{
+		Config: map[string]interface{}{
+			"url":          opt.URL,
+			"secret":       opt.Secret,
+			"content_type": "json",
+			"insecure_ssl": "0",
+		},
+	}
+
+	_, _, err := s.client.Organizations.CreateHook(ctx, opt.Organization.GetPath(), hook)
+	if err != nil {
+		return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.Organization.Path, err)
+	}
+	return nil
+}
+
 // CreateTeam implements the SCM interface.
 func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
 	if !opt.validWithOrg() {
