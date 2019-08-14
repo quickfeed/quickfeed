@@ -63,6 +63,7 @@ npmtools:
 	@npm install -g webpack
 	@npm install -g webpack-cli
 	@npm install -g tslint
+	@npm install -g serve
 
 # TODO(meling) this is just for macOS; we should guard against non-macOS.
 brew:
