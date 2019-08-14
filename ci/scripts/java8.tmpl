@@ -14,7 +14,7 @@ rm -rf user/{{ .AssignmentName }}/src/test/*
 
 # Generate new Secret.java with new secret value for each run
 cd test
-cat <<EOF > test/{{ .AssignmentName }}/src/test/java/common/Secret.java
+cat <<EOF > test/{{ .AssignmentName }}/src/test/java/common/SecretClass.java
 package common;
 
 public class Secret {
