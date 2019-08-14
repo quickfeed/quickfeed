@@ -522,8 +522,19 @@ func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// we are only interested in response. Its header will contain all scopes for current user
 	// TODO(meling) @Vera: the above comment needs to be clarified a little more.
 	_, resp, _ := s.client.Authorizations.List(ctx, &github.ListOptions{})
+	if resp == nil {
+		s.logger.Errorf("GetUserScopes: got no scopes: no authorized user")
+		tmpScopes := make([]string, 0)
+		return &Authorization{Scopes: tmpScopes}
+	}
 	// header contains a single string with all scopes for authenticated user
 	stringScopes := resp.Header.Get("X-OAuth-Scopes")
+	if stringScopes == "" {
+		s.logger.Errorf("GetUserScopes: header was empty")
+		tmpScopes := make([]string, 0)
+		return &Authorization{Scopes: tmpScopes}
+	}
+	s.logger.Debugf("GetUserScopes got scopes: %v", stringScopes)
 	gitScopes := strings.Split(stringScopes, ", ")
 	return &Authorization{Scopes: gitScopes}
 }
