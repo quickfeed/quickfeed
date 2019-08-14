@@ -4,8 +4,15 @@ echo "\n=== Preparing for Test Execution ===\n"
 
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
+
 git clone {{ .RawGetURL }} user
 git clone {{ .RawTestURL }} test
+
+cat <<EOF> /root/.gradle/gradle.properties
+org.gradle.parallel=true
+org.gradle.daemon=true
+org.gradle.jvmargs=-Xms256m -Xmx1024m
+EOF
 
 # Make sure there are tests in the student repo
 rm -rf user/{{ .AssignmentName }}/src/test/*
@@ -23,6 +30,8 @@ public static String getSecret() {
 }
 EOF
 
+
+
 echo "created SecretClass.java \n"
 
 # Fail student code that attempts to access secret
@@ -35,7 +44,8 @@ fi
 # Copy tests into student assignments folder for running tests
 cp -r test/{{ .AssignmentName }}/src/test/* user/{{ .AssignmentName }}/src/test/
 echo "copied test files to user folder \n"
-ls user/{{ .AssignmentName }}/src/test/
+echo "user/{{ .AssignmentName }}/src/test/"
+echo `ls user/{{ .AssignmentName }}/src/test/`
 cp test/{{ .AssignmentName }}/build.gradle user/{{ .AssignmentName }}/
 cd user/{{ .AssignmentName }}/
 
