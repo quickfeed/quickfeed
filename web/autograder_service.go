@@ -205,14 +205,14 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
-// Access policy: Teacher of CourseID.
+// Access policy: Teacher or student of CourseID.
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByCourse failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
+	if !s.isEnrolled(usr.GetID(), in.GetCourseID()) {
 		s.logger.Error("GetEnrollmentsByCourse failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can get course enrollments")
 	}
