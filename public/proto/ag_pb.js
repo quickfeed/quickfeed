@@ -11,8 +11,6 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = Function('return this')();
 
-var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
-goog.object.extend(proto, google_protobuf_timestamp_pb);
 goog.exportSymbol('proto.ApproveSubmissionRequest', null, global);
 goog.exportSymbol('proto.Assignment', null, global);
 goog.exportSymbol('proto.Assignments', null, global);
@@ -3137,7 +3135,7 @@ proto.Assignment.toObject = function(includeInstance, msg) {
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     name: jspb.Message.getFieldWithDefault(msg, 3, ""),
     language: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    deadline: (f = msg.getDeadline()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
+    deadline: jspb.Message.getFieldWithDefault(msg, 5, ""),
     autoapprove: jspb.Message.getFieldWithDefault(msg, 6, false),
     order: jspb.Message.getFieldWithDefault(msg, 7, 0),
     isgrouplab: jspb.Message.getFieldWithDefault(msg, 8, false),
@@ -3195,8 +3193,7 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setLanguage(value);
       break;
     case 5:
-      var value = new google_protobuf_timestamp_pb.Timestamp;
-      reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
+      var value = /** @type {string} */ (reader.readString());
       msg.setDeadline(value);
       break;
     case 6:
@@ -3274,11 +3271,10 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
     );
   }
   f = message.getDeadline();
-  if (f != null) {
-    writer.writeMessage(
+  if (f.length > 0) {
+    writer.writeString(
       5,
-      f,
-      google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
+      f
     );
   }
   f = message.getAutoapprove();
@@ -3374,35 +3370,17 @@ proto.Assignment.prototype.setLanguage = function(value) {
 
 
 /**
- * optional google.protobuf.Timestamp deadline = 5;
- * @return {?proto.google.protobuf.Timestamp}
+ * optional string deadline = 5;
+ * @return {string}
  */
 proto.Assignment.prototype.getDeadline = function() {
-  return /** @type{?proto.google.protobuf.Timestamp} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 5));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
-/** @param {?proto.google.protobuf.Timestamp|undefined} value */
+/** @param {string} value */
 proto.Assignment.prototype.setDeadline = function(value) {
-  jspb.Message.setWrapperField(this, 5, value);
-};
-
-
-/**
- * Clears the message field making it undefined.
- */
-proto.Assignment.prototype.clearDeadline = function() {
-  this.setDeadline(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return {boolean}
- */
-proto.Assignment.prototype.hasDeadline = function() {
-  return jspb.Message.getField(this, 5) != null;
+  jspb.Message.setProto3StringField(this, 5, value);
 };
 
 

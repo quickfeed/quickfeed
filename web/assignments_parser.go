@@ -6,10 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	pb "github.com/autograde/aguis/ag"
-	tspb "github.com/gogo/protobuf/types"
 
 	"gopkg.in/yaml.v2"
 )
@@ -56,23 +54,24 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					log.Println("parseAssignment: error while unmarshalling: ", err.Error())
 					return err
 				}
-				// we need to parse the deadline in two stages;
-				// first regular Go time.Time and then protobuf timestamp
-				d, err := time.Parse("02-01-2006 15:04", newAssignment.Deadline)
-				if err != nil {
-					log.Println("parseAssignment: error parsing deadline: ", err.Error())
-					return err
-				}
-				deadline, err := tspb.TimestampProto(d)
-				if err != nil {
-					log.Println("parseAssignment: error converting deadline to timestamp: ", err.Error())
-					return err
-				}
+				/*
+					// we need to parse the deadline in two stages;
+					// first regular Go time.Time and then protobuf timestamp
+					d, err := time.Parse("02-01-2006 15:04", newAssignment.Deadline)
+					if err != nil {
+						log.Println("parseAssignment: error parsing deadline: ", err.Error())
+						return err
+					}
+					deadline, err := tspb.TimestampProto(d)
+					if err != nil {
+						log.Println("parseAssignment: error converting deadline to timestamp: ", err.Error())
+						return err
+					}*/
 
 				assignment := &pb.Assignment{
 					ID:          uint64(newAssignment.AssignmentID),
 					CourseID:    courseID,
-					Deadline:    deadline,
+					Deadline:    newAssignment.Deadline, // replaced with string for database compatibility
 					Language:    strings.ToLower(newAssignment.Language),
 					Name:        newAssignment.Name,
 					Order:       uint32(newAssignment.AssignmentID),

@@ -6,7 +6,7 @@ import { Assignment } from "./ag_pb";
 export function getDeadline(lab: Assignment): string[] {
     const deadline = lab.getDeadline();
     if (deadline) {
-        const deadline1 = deadline.toDate();
+        const deadline1 = new Date(deadline);
         const date = deadline1.toDateString();
         const time = deadline1.toLocaleTimeString("en-GB");
         return [date, time];

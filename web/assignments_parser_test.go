@@ -7,11 +7,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
-	"time"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
-	tspb "github.com/gogo/protobuf/types"
 )
 
 func TestParseWithInvalidDir(t *testing.T) {
@@ -64,38 +62,39 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	d, err := time.Parse("02-01-2006 15:04", "27-08-2017 12:00")
-	if err != nil {
-		t.Fatal(err)
-	}
-	deadline, err := tspb.TimestampProto(d)
-	if err != nil {
-		t.Fatal(err)
-	}
+	/*
+		d, err := time.Parse("02-01-2006 15:04", "27-08-2017 12:00")
+		if err != nil {
+			t.Fatal(err)
+		}
+		deadline, err := tspb.TimestampProto(d)
+		if err != nil {
+			t.Fatal(err)
+		}*/
 
 	wantAssignment1 := &pb.Assignment{
 		ID:          1,
 		Name:        "For loops",
 		Language:    "go",
-		Deadline:    deadline,
+		Deadline:    "27-08-2017 12:00",
 		AutoApprove: false,
 		Order:       1,
 	}
-
-	d, err = time.Parse("02-01-2006 15:04", "27-08-2018 12:00")
-	if err != nil {
-		t.Fatal(err)
-	}
-	deadline, err = tspb.TimestampProto(d)
-	if err != nil {
-		t.Fatal(err)
-	}
+	/*
+		d, err = time.Parse("02-01-2006 15:04", "27-08-2018 12:00")
+		if err != nil {
+			t.Fatal(err)
+		}
+		deadline, err = tspb.TimestampProto(d)
+		if err != nil {
+			t.Fatal(err)
+		}
+	*/
 	wantAssignment2 := &pb.Assignment{
 		ID:          2,
 		Name:        "Nested loops",
 		Language:    "java",
-		Deadline:    deadline,
+		Deadline:    "27-08-2018 12:00",
 		AutoApprove: false,
 		Order:       2,
 	}
