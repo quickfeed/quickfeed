@@ -5,8 +5,8 @@ echo "\n=== Preparing for Test Execution ===\n"
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
 echo `pwd`
-git clone {{ .RawGetURL }} user
-git clone {{ .RawTestURL }} test
+git clone {{ .RawGetURL }} /home/gradle/user
+git clone {{ .RawTestURL }} /home/gradle/test
 echo `ls`
 
 cat <<EOF> /home/gradle/.gradle/gradle.properties
@@ -22,7 +22,7 @@ echo "Removed tests folder on user file\n"
 
 # Generate new Secret.java with new secret value for each run
 cd test
-cat <<EOF > test/{{ .AssignmentName }}/src/test/java/common/SecretClass.java
+cat <<EOF > /home/gradle/test/{{ .AssignmentName }}/src/test/java/common/SecretClass.java
 package common;
 
 public class Secret {
@@ -36,20 +36,20 @@ EOF
 echo "created SecretClass.java \n"
 
 # Fail student code that attempts to access secret
-cd user/{{ .AssignmentName }}/
+cd /home/gradle/user/{{ .AssignmentName }}/
 if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
   echo "\n=== Misbehavior Detected: Failed ===\n"
   exit
 fi
 
 # Copy tests into student assignments folder for running tests
-cp -r test/{{ .AssignmentName }}/src/test/* user/{{ .AssignmentName }}/src/test/
+cp -r /home/gradle/test/{{ .AssignmentName }}/src/test/* /home/gradle/user/{{ .AssignmentName }}/src/test/
 echo "copied test files to user folder \n"
-echo "user/{{ .AssignmentName }}/src/test/"
-echo `ls user/{{ .AssignmentName }}/src/test/`
+echo "/home/gradle/user/{{ .AssignmentName }}/src/test/"
+echo `ls /home/gradle/user/{{ .AssignmentName }}/src/test/`
 
-cp test/{{ .AssignmentName }}/build.gradle user/{{ .AssignmentName }}/build.gradle
-cd user/{{ .AssignmentName }}/
+cp /home/gradle/test/{{ .AssignmentName }}/build.gradle user/{{ .AssignmentName }}/build.gradle
+cd /home/gradle/user/{{ .AssignmentName }}/
 
 echo 'executed cd to'
 echo `pwd` 2>&1
