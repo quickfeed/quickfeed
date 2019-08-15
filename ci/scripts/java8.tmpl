@@ -8,7 +8,7 @@ git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.
 git clone {{ .RawGetURL }} user
 git clone {{ .RawTestURL }} test
 
-cat <<EOF> /root/.gradle/gradle.properties
+cat <<EOF> /home/gradle/.gradle/gradle.properties
 org.gradle.parallel=true
 org.gradle.daemon=true
 org.gradle.jvmargs=-Xms256m -Xmx1024m
@@ -46,10 +46,10 @@ cp -r test/{{ .AssignmentName }}/src/test/* user/{{ .AssignmentName }}/src/test/
 echo "copied test files to user folder \n"
 echo "user/{{ .AssignmentName }}/src/test/"
 echo `ls user/{{ .AssignmentName }}/src/test/`
-echo `pwd`
+
 cp test/{{ .AssignmentName }}/build.gradle user/{{ .AssignmentName }}/build.gradle
 cd user/{{ .AssignmentName }}/
-
+echo `pwd`
 # Clear access token and the shell history to avoid leaking information to student test code.
 git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 history -c
