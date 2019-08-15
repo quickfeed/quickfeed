@@ -48,7 +48,8 @@ echo "copied test files to user folder \n"
 echo "/home/gradle/user/{{ .AssignmentName }}/src/test/"
 echo `ls /home/gradle/user/{{ .AssignmentName }}/src/test/`
 
-cp /home/gradle/test/{{ .AssignmentName }}/build.gradle user/{{ .AssignmentName }}/build.gradle
+cp /home/gradle/test/{{ .AssignmentName }}/build.gradle /home/gradl/euser/{{ .AssignmentName }}/build.gradle
+cp /home/gradle/test/{{ .AssignmentName }}/gradlew /home/gradle/user/{{ .AssignmentName }}/gradlew
 cd /home/gradle/user/{{ .AssignmentName }}/
 
 echo 'executed cd to'
@@ -67,6 +68,6 @@ if [ -f "setup.sh" ]; then
 fi
 
 echo "\n=== Running Tests ===\n"
-gradle test
-gradle test 2>&1 
+./home/gradle/user/{{ .AssignmentName }}/gradlew -p /home/gradle/user/{{ .AssignmentName }}/ test 2>&1 
+#gradle test 2>&1 
 echo "\n=== Finished Running Tests ===\n"
