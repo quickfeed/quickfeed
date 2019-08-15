@@ -5,8 +5,8 @@ echo "\n=== Preparing for Test Execution ===\n"
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
 echo `pwd`
-git clone --progress --verbose {{ .RawGetURL }} /home/gradle/user 2>&1 
-git clone --progress --verbose {{ .RawTestURL }} /home/gradle/test 2>&1
+git clone --progress --verbose {{ .GetURL }} /home/gradle/user 2>&1 
+git clone --progress --verbose {{ .TestURL }} /home/gradle/test 2>&1
 echo `ls`
 
 cat <<EOF> /home/gradle/.gradle/gradle.properties
