@@ -152,6 +152,7 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
 		RandomSecret:       randomSecret,
 	}
+
 	job, err := ci.ParseScriptTemplate(scriptPath, info)
 	if err != nil {
 		logger.Error("Failed to parse script template", zap.Error(err))
@@ -159,11 +160,13 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 	}
 
 	start := time.Now()
+	logger.Debug("Job started successfully")
 	out, err := runner.Run(context.Background(), job)
 	if err != nil {
 		logger.Error("Docker execution failed", zap.Error(err))
 		return
 	}
+	logger.Sugar().Debugf("Job output: ", out)
 	execTime := time.Since(start)
 	logger.Debug("Docker execution successful", zap.String("output", out), zap.Duration("execution time", execTime))
 
