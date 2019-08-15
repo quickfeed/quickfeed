@@ -2,6 +2,7 @@
 
 echo "\n=== Preparing for Test Execution ===\n"
 
+ping -c 4 google.com 2>&1
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 ls
 echo `pwd`
