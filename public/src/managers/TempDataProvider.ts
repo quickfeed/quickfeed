@@ -4,7 +4,6 @@ import { ISubmission } from "../models";
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
-import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
 import { isNull } from "util";
 import { IMap, MapHelper, mapify } from "../map";
 
@@ -327,8 +326,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     }
 
     private addLocalAssignments() {
-        const ts = new Timestamp();
-        ts.fromDate(new Date(2017, 5, 25));
+        const ts = new Date(2017, 5, 25);
         const a0 = new Assignment();
         const a1 = new Assignment();
         const a2 = new Assignment();
@@ -345,67 +343,67 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         a0.setCourseid(0);
         a0.setName("Lab 1");
         a0.setLanguage("Go");
-        a0.setDeadline(ts);
+        a0.setDeadline(ts.toDateString());
 
         a1.setId(1);
         a1.setCourseid(0);
         a1.setName("Lab 2");
         a1.setLanguage("Go");
-        a1.setDeadline(ts);
+        a1.setDeadline(ts.toDateString());
 
         a2.setId(2);
         a2.setCourseid(0);
         a2.setName("Lab 3");
         a2.setLanguage("Go");
-        a2.setDeadline(ts);
+        a2.setDeadline(ts.toDateString());
 
         a3.setId(3);
         a3.setCourseid(0);
         a3.setName("Lab 4");
         a3.setLanguage("Go");
-        a3.setDeadline(ts);
+        a3.setDeadline(ts.toDateString());
 
         a4.setId(4);
         a4.setCourseid(1);
         a4.setName("Lab 1");
         a4.setLanguage("Go");
-        a4.setDeadline(ts);
+        a4.setDeadline(ts.toDateString());
 
         a5.setId(5);
         a5.setCourseid(1);
         a5.setName("Lab 2");
         a5.setLanguage("Go");
-        a5.setDeadline(ts);
+        a5.setDeadline(ts.toDateString());
 
         a6.setId(6);
         a6.setCourseid(1);
         a6.setName("Lab 3");
         a6.setLanguage("Go");
-        a6.setDeadline(ts);
+        a6.setDeadline(ts.toDateString());
 
         a7.setId(7);
         a7.setCourseid(2);
         a7.setName("Lab 1");
         a7.setLanguage("TypeScript");
-        a7.setDeadline(ts);
+        a7.setDeadline(ts.toDateString());
 
         a8.setId(8);
         a8.setCourseid(2);
         a8.setName("Lab 2");
         a8.setLanguage("Go");
-        a8.setDeadline(ts);
+        a8.setDeadline(ts.toDateString());
 
         a9.setId(9);
         a9.setCourseid(3);
         a9.setName("Lab 1");
         a9.setLanguage("Go");
-        a9.setDeadline(ts);
+        a9.setDeadline(ts.toDateString());
 
         a10.setId(10);
         a10.setCourseid(4);
         a10.setName("Lab 1");
         a10.setLanguage("TypeScript");
-        a10.setDeadline(ts);
+        a10.setDeadline(ts.toDateString());
 
         const tempAssignments: Assignment[] = [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10];
         this.localAssignments = mapify(tempAssignments, (ele) => ele.getId());

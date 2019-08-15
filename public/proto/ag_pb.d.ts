@@ -1,6 +1,5 @@
 import * as jspb from "google-protobuf"
 
-import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/timestamp_pb';
 
 export class User extends jspb.Message {
   getId(): number;
@@ -364,10 +363,8 @@ export class Assignment extends jspb.Message {
   getLanguage(): string;
   setLanguage(value: string): void;
 
-  getDeadline(): google_protobuf_timestamp_pb.Timestamp | undefined;
-  setDeadline(value?: google_protobuf_timestamp_pb.Timestamp): void;
-  hasDeadline(): boolean;
-  clearDeadline(): void;
+  getDeadline(): string;
+  setDeadline(value: string): void;
 
   getAutoapprove(): boolean;
   setAutoapprove(value: boolean): void;
@@ -397,7 +394,7 @@ export namespace Assignment {
     courseid: number,
     name: string,
     language: string,
-    deadline?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    deadline: string,
     autoapprove: boolean,
     order: number,
     isgrouplab: boolean,

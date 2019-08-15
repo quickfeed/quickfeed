@@ -66,8 +66,10 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		Secret:       s.bh.Secret,
 		Organization: org,
 	}
-	if err = sc.CreateOrgHook(ctx, hookOptions); err != nil {
-		return nil, err
+
+	err = sc.CreateOrgHook(ctx, hookOptions)
+	if err != nil {
+		s.logger.Debugf("createCourse: failed to create organization hook for %s: %s", org.GetPath(), err)
 	}
 
 	// create course repos and webhooks for each repo

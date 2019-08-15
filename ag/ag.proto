@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
 
 // USERS AND USERGROUPS //
 
@@ -100,7 +99,7 @@ message Assignment {
     uint64 courseID = 2;
     string name = 3;
     string language = 4;
-    google.protobuf.Timestamp deadline = 5; 
+    string deadline = 5; 
     bool autoApprove = 6;
     uint32 order = 7;
     bool isGroupLab = 8;
