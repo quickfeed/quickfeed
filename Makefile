@@ -131,3 +131,7 @@ nginx-test:
 # restart nginx with updated configuration
 nginx: nginx-test
 	sudo nginx -s reload
+
+local:
+	@echo "Changing grpc client location"
+	@cd ./public/src/managers/; sed -i 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
