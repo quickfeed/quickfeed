@@ -132,6 +132,11 @@ nginx-test:
 nginx: nginx-test
 	sudo nginx -s reload
 
+# changes where the grpc-client is being run, use "remote" target when starting from ag2
 local:
-	@echo "Changing grpc client location"
+	@echo "Changing grpc client location to localhost"
 	@cd ./public/src/managers/; sed -i 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
+
+remote:
+	@echo "Changing grpc client location to remote domain"
+	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
