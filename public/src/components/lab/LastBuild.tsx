@@ -17,9 +17,11 @@ export class LastBuild extends React.Component<ILastBuild> {
                     <DynamicTable
                         header={["Test name", "Score", "Weight"]}
                         data={this.props.test_cases}
-                        selector={(item: ITestCases) => [item.name, item.score.toString() + "/"
-                            + item.points.toString() + " pts", item.weight.toString() + " pts"]}
-                        footer={["Total score", this.props.score.toString() + "%", this.props.weight.toString() + "%"]}
+                        selector={(item: ITestCases) => [item.name, item.score ? item.score.toString() : "0" + "/"
+                            + item.points ? item.points.toString() : "0" + " pts", item.weight ? item.weight.toString()
+                            : "0" + " pts"]}
+                        footer={["Total score", this.props.score ? this.props.toString()
+                        : "0" + "%", this.props.weight ? this.props.weight.toString() : "0" + "%"]}
                     />
                 </div>
             </Row>
