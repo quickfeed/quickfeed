@@ -39,7 +39,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo> {
                     <p id="passes">Passed tests:  {this.props.pass_tests}</p>
                     <p id="fails">Failed tests:  {this.props.fail_tests}</p>
                     <p id="buildtime">Execution time:  {this.props.exec_time / 1000} s</p>
-                    <p id="timedate">Build date:  {this.props.build_time.toString()}</p>
+                    <p id="timedate">Build date:  {this.props.build_time ? this.props.build_time.toString() : ""}</p>
                     <p id="buildid">Build ID: {this.props.build_id}</p>
                 </div>
                 <div className="col-lg-4 hidden-print">
