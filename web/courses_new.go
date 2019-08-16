@@ -114,7 +114,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	// create teacher team with course creator
 	opt := &scm.CreateTeamOptions{
 		Organization: org,
-		TeamName:     teachersTeam,
+		TeamName:     scm.TeachersTeam,
 		Users:        []string{courseCreator.GetLogin()},
 	}
 	if _, err = sc.CreateTeam(ctx, opt); err != nil {
@@ -122,7 +122,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, err
 	}
 	// create student team without any members
-	studOpt := &scm.CreateTeamOptions{Organization: org, TeamName: studentsTeam}
+	studOpt := &scm.CreateTeamOptions{Organization: org, TeamName: scm.StudentsTeam}
 	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
 		s.logger.Debugf("createCourse: failed to create students team: %s", err)
 		return nil, err

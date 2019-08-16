@@ -282,7 +282,11 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 		Name: opt.TeamName,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("CreateTeam: failed to create GitHub team %s: %w", opt.TeamName, err)
+		if opt.TeamName != TeachersTeam && opt.TeamName != StudentsTeam {
+			return nil, fmt.Errorf("CreateTeam: failed to create GitHub team %s: %w", opt.TeamName, err)
+		}
+		// continue if it is one of standard teacher/student teams. Such teams can be safely reused
+		s.logger.Infof("Team %s already exists on organization %s", opt.TeamName, opt.Organization.Path)
 	}
 
 	for _, user := range opt.Users {
