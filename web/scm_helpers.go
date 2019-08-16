@@ -60,10 +60,10 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	// if repo is found, it is safe to reuse it
 	repo, err := sc.GetRepository(ctx, &scm.RepositoryOptions{
 		Path:  path,
-		Owner: student,
+		Owner: org.GetPath(),
 	})
 	if err != nil {
-		return nil, err
+		fmt.Println("createStudentRepo: repo not found (as expected). Error: ", err.Error())
 	}
 
 	// if no github repository found, create it
@@ -74,7 +74,7 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 			Private:      true,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
+			return nil, fmt.Errorf("createStudentRepo: failed to create repo: %w", err)
 		}
 	}
 

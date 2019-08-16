@@ -33,6 +33,8 @@ type SCM interface {
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
+	// Create an organization level webhook
+	CreateOrgHook(context.Context, *OrgHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *CreateTeamOptions) (*Team, error)
 	// Delete team.
@@ -123,6 +125,13 @@ type CreateHookOptions struct {
 	URL        string
 	Secret     string
 	Repository *Repository
+}
+
+// OrgHookOptions contains information about an organization level hook
+type OrgHookOptions struct {
+	URL          string
+	Secret       string
+	Organization *pb.Organization
 }
 
 // CreateTeamOptions contains information about the team and the users of the team.

@@ -162,6 +162,12 @@ func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 	return
 }
 
+// CreateOrgHook implements the scm interface
+func (s *GitlabSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // CreateTeam implements the SCM interface.
 func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
 	// TODO no implementation provided yet

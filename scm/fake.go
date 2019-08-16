@@ -123,6 +123,12 @@ func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error 
 	return nil
 }
 
+// CreateOrgHook implements the scm interface
+func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // CreateTeam implements the SCM interface.
 func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
 	// TODO no implementation provided yet

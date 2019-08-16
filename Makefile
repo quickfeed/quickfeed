@@ -65,7 +65,6 @@ npmtools:
 	@npm install -g tslint
 
 # TODO(meling) this is just for macOS; we should guard against non-macOS.
-# TODO(meling) also do we need to install envoy? It doesn't have a homebrew package.
 brew:
 	@echo "Install homebrew packages needed for development"
 	@brew update
@@ -112,13 +111,20 @@ purge: scm
 run:
 	aguis -service.url $(endpoint)  -http.addr :$(agport) -http.public ./public
 
-# to run server on itest.run, ag2port variable must corespond to endpoint
+# to run server on itest.run, ag2port variable must correspond to endpoint
 # endpoint is used for github callbacks, and port is used to proxy client calls
 # (TODO): this has to be moved to dev/testing documentation
-run2:
+
+# will run the server as a background job, will still log to stdout
+itestrun:
+	aguis -service.url $(ag2endpoint)  -http.addr :$(ag2port) -http.public ./public &
+
+# will run (and disown) the server, logs will log to ag.logs file
+itestrun2:
 	aguis -service.url $(ag2endpoint)  -http.addr :$(ag2port) -http.public ./public &> ag.logs &
 	# disowns the job with ID 1, change ID if you have more jobs running
 	disown -h %1
+
 # test nginx configuration syntax
 nginx-test:
 	sudo nginx -t
