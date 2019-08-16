@@ -370,7 +370,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	}
 	// ensure that current user is teacher or the current user is owner of the submission request
 	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
-		return e.Status == pb.Enrollment_TEACHER ||
+		return e.Status == pb.Enrollment_TEACHER || usr.GetIsAdmin() || // TODO: remove isadmin after testing stage
 			(e.Status == pb.Enrollment_STUDENT && usr.IsOwner(in.GetUserID()))
 	}) {
 		s.logger.Error("GetSubmissions failed: user is not teacher or submission author")
