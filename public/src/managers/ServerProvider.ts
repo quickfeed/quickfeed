@@ -350,7 +350,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 }
             });
         }
+        console.log("buildinfo date: " + buildInfo.builddate);
         const bDate = new Date(buildInfo.builddate);
+        console.log("got submission date: " + bDate);
         const isbm: ISubmission = {
             id: sbm.getId(),
             userid: sbm.getUserid(),
