@@ -5,10 +5,9 @@ echo "\n=== Preparing for Test Execution ===\n"
 ping -c 4 google.com 2>&1
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 ls
-echo `pwd`
-git clone --progress --verbose {{ .GetURL }} /home/gradle/user 2>&1 
-git clone --progress --verbose {{ .TestURL }} /home/gradle/test 2>&1
-echo `ls`
+
+git clone  {{ .GetURL }} /home/gradle/user  
+git clone  {{ .TestURL }} /home/gradle/test
 
 cat <<EOF> /home/gradle/.gradle/gradle.properties
 org.gradle.parallel=true
@@ -26,22 +25,21 @@ cd test
 cat <<EOF > /home/gradle/test/{{ .AssignmentName }}/src/test/java/common/SecretClass.java
 package common;
 
-public class Secret {
+public class SecretClass {
 public static String getSecret() {
   return "{{ .RandomSecret }}";
+}
 }
 EOF
 
 
 
-echo "created SecretClass.java \n"
-
 # Fail student code that attempts to access secret
-cd /home/gradle/user/{{ .AssignmentName }}/
-if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
-  echo "\n=== Misbehavior Detected: Failed ===\n"
-  exit
-fi
+#cd /home/gradle/user/{{ .AssignmentName }}/
+#if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
+#  echo "\n=== Misbehavior Detected: Failed ===\n"
+#  exit
+#fi
 
 # Copy tests into student assignments folder for running tests
 cp -r /home/gradle/test/{{ .AssignmentName }}/src/test/* /home/gradle/user/{{ .AssignmentName }}/src/test/
@@ -53,15 +51,9 @@ cp /home/gradle/test/{{ .AssignmentName }}/build.gradle /home/gradl/euser/{{ .As
 cp /home/gradle/test/{{ .AssignmentName }}/gradlew /home/gradle/user/{{ .AssignmentName }}/gradlew
 cd /home/gradle/user/{{ .AssignmentName }}/
 
-echo 'executed cd to'
-echo `pwd` 2>&1
-echo `ls` 2>&1 
-
 # Clear access token and the shell history to avoid leaking information to student test code.
 git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 history -c
-
-echo "cleared tokens history etc"
 
 # Perform lab specific setup
 if [ -f "setup.sh" ]; then
@@ -69,6 +61,6 @@ if [ -f "setup.sh" ]; then
 fi
 
 echo "\n=== Running Tests ===\n"
-./home/gradle/user/{{ .AssignmentName }}/gradlew -p /home/gradle/user/{{ .AssignmentName }}/ test 2>&1 
-#gradle test 2>&1 
+gradle clean test 2>&1 
 echo "\n=== Finished Running Tests ===\n"
+
