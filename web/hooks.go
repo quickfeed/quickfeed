@@ -101,6 +101,9 @@ func refreshAssignmentsFromTestsRepo(logger *zap.Logger, db database.Database, r
 		logger.Error("Failed to fetch assignments from 'tests' repository", zap.Error(err))
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
+		for _, assignment := range assignments {
+			logger.Sugar().Debug("Fetched assignment with ID: ", assignment.GetID())
+		}
 		logger.Error("Failed to update assignments in database", zap.Error(err))
 	}
 }
