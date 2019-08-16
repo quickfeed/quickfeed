@@ -170,7 +170,7 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 	execTime := time.Since(start)
 	logger.Debug("Docker execution successful", zap.String("output", out), zap.Duration("execution time", execTime))
 
-	result, err := ci.ExtractResult(out, randomSecret, execTime)
+	result, err := ci.ExtractResult(logger, out, randomSecret, execTime)
 	if err != nil {
 		logger.Error("Failed to extract results from log", zap.Error(err))
 		return
