@@ -10,9 +10,9 @@ grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
 endpoint 			:= junaid.itest.run
-ag2endpoint			:= pedersen.itest.run
+ag2endpoint			:= test.itest.run
 agport				:= 8081
-ag2port				:= 3001
+ag2port				:= 3006
 
 # necessary when target is not tied to a file
 .PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run scm
@@ -82,9 +82,9 @@ envoy-run:
 # will stop envoy container, prune docker containers and remove envoy images
 # use before rebuilding envoy with changed configuration in envoy.yaml
 envoy-purge:
-	docker kill envoy
-	docker container prune
-	docker image rm envoyproxy/envoy ag_envoy
+	@docker kill envoy
+	@docker container prune
+	@docker image rm envoyproxy/envoy ag_envoy
 
 # protoset is a file used as a server reflection to mock-testing of grpc methods via command line
 protoset:
@@ -103,34 +103,34 @@ scm:
 
 # will remove all repositories and teams from provided organization 'testorg'
 purge: scm
-	scm delete repo -all -namespace=$(testorg)
-	scm delete team -all -namespace=$(testorg)
+	@scm delete repo -all -namespace=$(testorg)
+	@scm delete team -all -namespace=$(testorg)
 
 # will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
 # change agport variable to the number of bound local port when using tunnel script
-run:
-	aguis -service.url $(endpoint)  -http.addr :$(agport) -http.public ./public
+run: local
+	@aguis -service.url $(endpoint)  -http.addr :$(agport) -http.public ./public
 
 # to run server on itest.run, ag2port variable must correspond to endpoint
 # endpoint is used for github callbacks, and port is used to proxy client calls
 # (TODO): this has to be moved to dev/testing documentation
 
 # will run the server as a background job, will still log to stdout
-itestrun:
-	aguis -service.url $(ag2endpoint)  -http.addr :$(ag2port) -http.public ./public &
+itestrun: remote
+	@aguis -service.url $(ag2endpoint) -database.file ./temp.db -http.addr :$(ag2port) -http.public ./public &
 
 # will run (and disown) the server, logs will log to ag.logs file
-itestrun2:
-	aguis -service.url $(ag2endpoint)  -http.addr :$(ag2port) -http.public ./public &> ag.logs &
+# itestrun2: remote
+	# @aguis -service.url $(ag2endpoint)  -http.addr :$(ag2port) -http.public ./public &> ag.logs &
 	# disowns the job with ID 1, change ID if you have more jobs running
-	disown -h %1
+	# @disown -h %1
 
 # test nginx configuration syntax
 nginx-test:
-	sudo nginx -t
+	@sudo nginx -t
 # restart nginx with updated configuration
 nginx: nginx-test
-	sudo nginx -s reload
+	@sudo nginx -s reload
 
 # changes where the grpc-client is being run, use "remote" target when starting from ag2
 local:
