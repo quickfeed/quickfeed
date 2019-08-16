@@ -89,9 +89,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     }
                     return links;
                 });
-
         }
-
     }
 
     public renderPendingView(pendingActions: ILink[]) {
