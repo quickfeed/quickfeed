@@ -8,13 +8,6 @@ import (
 	"github.com/autograde/aguis/scm"
 )
 
-//
-const (
-	// standard team names for every course
-	teachersTeam = "allteachers"
-	studentsTeam = "allstudents"
-)
-
 // createRepoAndTeam invokes the SCM to create a repository and team for the
 // specified namespace (typically the course name), the path of the repository
 // (typically the name of the student with a '-labs' suffix or the group name).
@@ -89,7 +82,7 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	opt := &scm.TeamMembershipOptions{
 		Organization: org,
-		TeamSlug:     studentsTeam,
+		TeamSlug:     scm.StudentsTeam,
 		Username:     userName,
 		Role:         scm.TeamMember,
 	}
@@ -104,7 +97,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	studentsTeam := &scm.TeamMembershipOptions{
 		Organization: org,
 		Username:     userName,
-		TeamSlug:     studentsTeam,
+		TeamSlug:     scm.StudentsTeam,
 	}
 	if err := sc.RemoveTeamMember(ctx, studentsTeam); err != nil {
 		return err
@@ -113,7 +106,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	teachersTeam := &scm.TeamMembershipOptions{
 		Organization: org,
 		Username:     userName,
-		TeamSlug:     teachersTeam,
+		TeamSlug:     scm.TeachersTeam,
 		Role:         scm.TeamMaintainer,
 	}
 	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {

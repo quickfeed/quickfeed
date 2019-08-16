@@ -265,11 +265,11 @@ export class TeacherPage extends ViewPage {
                 }
             });
             return <MemberView
-                acceptedUsers={acceptedUsers}
                 course={course}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
                 rejectedUsers={rejectedUsers}
+                acceptedUsers={acceptedUsers}
                 courseMan={this.courseMan}
             >
             </MemberView>;

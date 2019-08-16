@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/Microsoft/go-winio v0.4.4 // indirect
-	github.com/autograde/kit v0.0.0-20190529235645-fe220d7df6e6
+	github.com/autograde/kit v0.0.0-20190816163914-9287f111e6fb
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
 	github.com/docker/docker v0.0.0-20170803041405-316b4ba9c289

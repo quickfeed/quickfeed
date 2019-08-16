@@ -66,8 +66,10 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		Secret:       s.bh.Secret,
 		Organization: org,
 	}
-	if err = sc.CreateOrgHook(ctx, hookOptions); err != nil {
-		return nil, err
+
+	err = sc.CreateOrgHook(ctx, hookOptions)
+	if err != nil {
+		s.logger.Debugf("createCourse: failed to create organization hook for %s: %s", org.GetPath(), err)
 	}
 
 	// create course repos and webhooks for each repo
@@ -112,7 +114,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	// create teacher team with course creator
 	opt := &scm.CreateTeamOptions{
 		Organization: org,
-		TeamName:     teachersTeam,
+		TeamName:     scm.TeachersTeam,
 		Users:        []string{courseCreator.GetLogin()},
 	}
 	if _, err = sc.CreateTeam(ctx, opt); err != nil {
@@ -120,7 +122,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, err
 	}
 	// create student team without any members
-	studOpt := &scm.CreateTeamOptions{Organization: org, TeamName: studentsTeam}
+	studOpt := &scm.CreateTeamOptions{Organization: org, TeamName: scm.StudentsTeam}
 	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
 		s.logger.Debugf("createCourse: failed to create students team: %s", err)
 		return nil, err

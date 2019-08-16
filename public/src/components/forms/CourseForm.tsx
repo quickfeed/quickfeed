@@ -47,6 +47,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
     public render() {
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
+        const fetchingText = (<div><label className="control-label col-sm-2">Information:</label>
+        <div className="col-sm-10">  Fetching GitHub organizations... </div></div>);
         return (
             <div>
                 <h1>{getTitleText}</h1>
@@ -64,7 +66,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         <div className="col-sm-10">
                             {this.renderInfo()}
                         </div>
-                        {this.state.organisations}
+                        {this.state.organisations == null ? fetchingText : this.state.organisations}
                     </div>
                     {this.renderFormControler("Course Name:",
                         "Enter course name",

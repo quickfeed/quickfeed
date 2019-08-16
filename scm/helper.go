@@ -36,6 +36,13 @@ const (
 	RepoPush = "push"
 	// RepoFull allows full access to repository
 	RepoFull = "admin"
+
+	// Standard team names
+
+	// team with all course teachers and teaching assistants
+	TeachersTeam = "allteachers"
+	// team with all course students
+	StudentsTeam = "allstudents"
 )
 
 // Validators //

@@ -2,11 +2,12 @@ package ci
 
 import (
 	"encoding/json"
-	"log"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/autograde/kit/score"
+	"go.uber.org/zap"
 )
 
 // Result holds scores and build information for one test execution
@@ -24,19 +25,28 @@ type BuildInfo struct {
 	ExecTime  int64  `json:"execTime"`
 }
 
+var globalBuildID = new(int64)
+
 // ExtractResult returns a result struct for the given log.
-func ExtractResult(out, secret string, execTime time.Duration) (*Result, error) {
-	log.Println("ci ExtractResults has result string: ", out)
+func ExtractResult(logger *zap.Logger, out, secret string, execTime time.Duration) (*Result, error) {
+	logger.Debug("ci.ExtractResults",
+		zap.String("secret", secret),
+		zap.String("out", out),
+		zap.Any("execTime", execTime),
+	)
 	var filteredLog []string
 	scores := make([]*score.Score, 0)
 	for _, line := range strings.Split(out, "\n") {
-		log.Println("ci ExtractResults: split result line: ", line)
+		logger.Debug("ci.ExtractResults", zap.String("line", line))
 		// check if line has expected JSON score string
 		if score.HasPrefix(line) {
 			sc, err := score.Parse(line, secret)
-			log.Println("ci got score parsing ci results, line: ", sc)
+			logger.Debug("ci.ExtractResults", zap.Any("score", sc))
 			if err != nil {
-				log.Println("ci got error parsing ci results, line: ", line)
+				logger.Error("ci.ExtractResults",
+					zap.Error(err),
+					zap.String("line", line),
+				)
 				continue
 			}
 			scores = append(scores, sc)
@@ -45,11 +55,14 @@ func ExtractResult(out, secret string, execTime time.Duration) (*Result, error) 
 			filteredLog = append(filteredLog, line)
 		}
 	}
-	log.Println("ci ExtractResults got results: ", scores, " and filtedLog: ", filteredLog)
+	logger.Debug("ci.ExtractResults",
+		zap.Any("scores", scores),
+		zap.Any("filteredLog", filteredLog),
+	)
 	return &Result{
 		Scores: scores,
 		BuildInfo: &BuildInfo{
-			BuildID:   1, //TODO(meling) this should be changed
+			BuildID:   atomic.AddInt64(globalBuildID, 1),
 			BuildDate: time.Now().Format("2006-01-02"),
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  int64(execTime),
