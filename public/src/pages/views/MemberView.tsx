@@ -73,22 +73,25 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     public renderUserView() {
-        return this.renderUsers(
-            "Registered users",
-            this.state.acceptedUsers,
-            [],
-            ActionType.Menu,
-            (user: IUserRelation) => {
-                const links = [];
-                if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
-                    links.push({ name: "This is a teacher", extra: "primary" });
-                } else {
-                    links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });
-                    links.push({ name: "Reject", uri: "reject", extra: "danger" });
-                }
+        if (this.state.acceptedUsers.length > 0 || this.props.acceptedUsers.length > 0) {
+            return this.renderUsers(
+                "Registered users",
+                this.state.acceptedUsers,
+                [],
+                ActionType.Menu,
+                (user: IUserRelation) => {
+                    const links = [];
+                    if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
+                        links.push({ name: "This is a teacher", extra: "primary" });
+                    } else {
+                        links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });
+                        links.push({ name: "Reject", uri: "reject", extra: "danger" });
+                    }
+                    return links;
+                });
 
-                return links;
-            });
+        }
+
     }
 
     public renderPendingView(pendingActions: ILink[]) {
