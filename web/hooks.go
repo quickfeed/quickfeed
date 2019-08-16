@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -175,13 +174,16 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 		logger.Error("Failed to extract results from log", zap.Error(err))
 		return
 	}
-	log.Println("hooks: RunTests got result from CI with score: ", result.TotalScore())
 	buildInfo, scores, err := result.Marshal()
 	if err != nil {
 		logger.Error("Failed to marshal build info and scores", zap.Error(err))
 	}
-	logger.Debug("Extracted results", zap.Any("result", result))
-	log.Println("hooks: RunTests marshalled score is ", scores)
+	logger.Debug("Extracted results",
+		zap.Any("result", result),
+		zap.Uint8("total score", result.TotalScore()),
+		zap.String("marshalled build info", buildInfo),
+		zap.String("marshalled scores", scores),
+	)
 	err = db.CreateSubmission(&pb.Submission{
 		AssignmentID: selectedAssignment.ID,
 		BuildInfo:    buildInfo,
