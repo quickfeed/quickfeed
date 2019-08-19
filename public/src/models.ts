@@ -60,10 +60,10 @@ export interface IBuildInfo {
  * A description of a single test case object
  */
 export interface ITestCases {
-    name: string;
-    score: number;
-    points: number;
-    weight: number;
+    TestName: string;
+    Score: number;
+    MaxScore: number;
+    Weight: number;
 }
 
 /**

@@ -494,9 +494,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
             {
@@ -513,9 +513,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
             {
@@ -532,9 +532,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
             {
@@ -551,9 +551,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
             {
@@ -570,9 +570,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
         ] as ISubmission[], (ele: ISubmission) => {
