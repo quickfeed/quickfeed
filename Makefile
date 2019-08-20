@@ -109,7 +109,7 @@ purge: scm
 
 # will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
 # change agport variable to the number of bound local port when using tunnel script
-run: local
+run:
 	@aguis -service.url $(endpoint)  -http.addr :$(agport) -http.public ./public
 
 # to run server on itest.run, ag2port variable must correspond to endpoint
@@ -117,7 +117,7 @@ run: local
 # (TODO): this has to be moved to dev/testing documentation
 
 # will run the server as a background job, will still log to stdout
-itestrun: remote
+itestrun:
 	@aguis -service.url $(ag2endpoint) -database.file ./temp.db -http.addr :$(ag2port) -http.public ./public &
 
 # test nginx configuration syntax
@@ -131,7 +131,8 @@ nginx: nginx-test
 local:
 	@echo "Changing grpc client location to localhost"
 	@cd ./public/src/managers/; sed -i 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
-
+	@cd ./public; webpack
 remote:
 	@echo "Changing grpc client location to remote domain"
 	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
+	@cd ./public; webpack
