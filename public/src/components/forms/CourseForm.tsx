@@ -37,7 +37,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             code: this.props.courseData ? this.props.courseData.getCode() : "",
             tag: this.props.courseData ? this.props.courseData.getTag() : "",
             year: this.props.courseData ? this.props.courseData.getYear().toString() : "",
-            provider: this.props.courseData ? this.props.courseData.getProvider() : "",
+            provider: "github",
             orgid: this.props.courseData ? this.props.courseData.getOrganizationid() : 0,
             organisations: null,
             errorFlash: null,
@@ -49,18 +49,13 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
         const fetchingText = (<div><label className="control-label col-sm-2">Information:</label>
         <div className="col-sm-10">  Fetching GitHub organizations... </div></div>);
+        this.renderOrgs()
         return (
             <div>
                 <h1>{getTitleText}</h1>
                 {this.state.errorFlash}
                 <form className={this.props.className ? this.props.className : ""}
                     onSubmit={(e) => this.handleFormSubmit(e)}>
-                    <div className="form-group">
-                        <label className="control-label col-sm-2">Provider:</label>
-                        <div className="col-sm-10">
-                            {this.renderProviders()}
-                        </div>
-                    </div>
                     <div className="form-group" id="organisation-container">
                         <label className="control-label col-sm-2">Information:</label>
                         <div className="col-sm-10">
@@ -144,6 +139,11 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         return gitMsg;
     }
 
+    private renderOrgs() {
+        if (!this.state.organisations) {
+            this.getOrganizations(this.state.provider);
+        }
+    }
     private renderProviders(): JSX.Element | JSX.Element[] {
         let providers;
         if (this.props.providers.length > 1) {

@@ -18,7 +18,6 @@ import {
     Repositories,
     Repository,
     Status,
-    Submission,
     SubmissionRequest,
     Submissions,
     URLRequest,
@@ -41,7 +40,7 @@ export class GrpcManager {
 
     constructor() {
         // to test on localhost via port forwarding, use make local Makefile target
-        this.agService = new AutograderServiceClient("https://" + window.location.hostname, null, null);
+        this.agService = new AutograderServiceClient("http://localhost:8080", null, null);
     }
 
     public setUserMan(man: UserManager) {
