@@ -55,8 +55,9 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					return err
 				}
 
+				// ID from the parsed yaml is used to set Order, not assignment ID,
+				// or it will cause a database constraint violation (IDs must be unique)
 				assignment := &pb.Assignment{
-					// ID:          uint64(newAssignment.AssignmentID),
 					CourseID:    courseID,
 					Deadline:    newAssignment.Deadline, // replaced with string for database compatibility
 					Language:    strings.ToLower(newAssignment.Language),

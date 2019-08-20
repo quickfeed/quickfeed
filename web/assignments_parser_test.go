@@ -64,7 +64,6 @@ func TestParse(t *testing.T) {
 	}
 
 	wantAssignment1 := &pb.Assignment{
-		ID:          1,
 		Name:        "For loops",
 		Language:    "go",
 		Deadline:    "27-08-2017 12:00",
@@ -73,7 +72,6 @@ func TestParse(t *testing.T) {
 	}
 
 	wantAssignment2 := &pb.Assignment{
-		ID:          2,
 		Name:        "Nested loops",
 		Language:    "java",
 		Deadline:    "27-08-2018 12:00",
