@@ -62,15 +62,6 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	/*
-		d, err := time.Parse("02-01-2006 15:04", "27-08-2017 12:00")
-		if err != nil {
-			t.Fatal(err)
-		}
-		deadline, err := tspb.TimestampProto(d)
-		if err != nil {
-			t.Fatal(err)
-		}*/
 
 	wantAssignment1 := &pb.Assignment{
 		ID:          1,
@@ -80,16 +71,7 @@ func TestParse(t *testing.T) {
 		AutoApprove: false,
 		Order:       1,
 	}
-	/*
-		d, err = time.Parse("02-01-2006 15:04", "27-08-2018 12:00")
-		if err != nil {
-			t.Fatal(err)
-		}
-		deadline, err = tspb.TimestampProto(d)
-		if err != nil {
-			t.Fatal(err)
-		}
-	*/
+
 	wantAssignment2 := &pb.Assignment{
 		ID:          2,
 		Name:        "Nested loops",

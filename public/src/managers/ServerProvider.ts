@@ -314,15 +314,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     private toISUbmission(sbm: Submission): ISubmission {
         let buildInfoAsString = "";
         let scoreInfoAsString = "";
-        console.log("Isubmission parsing: checking build info");
         if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {
             buildInfoAsString = sbm.getBuildinfo();
-            console.log("ISubmission parsing: got build info " + buildInfoAsString);
         }
-        console.log("Isubmission parsing: checking score objects ");
         if (sbm.getScoreobjects() && (sbm.getScoreobjects().trim().length > 2)) {
             scoreInfoAsString = sbm.getScoreobjects();
-            console.log("Isubmission parsing: got score objects " + scoreInfoAsString);
         }
 
         let buildInfo: IBuildInfo;
@@ -347,7 +343,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         let passed = 0;
         if (scoreObj) {
             scoreObj.forEach((ele) => {
-                console.log("Got score object with name " + ele.TestName + " score " + ele.Score + " points " + ele.MaxScore + " and weight " + ele.Weight);
                 if (ele.MaxScore !== ele.Score) {
                     failed++;
                 } else {
@@ -355,7 +350,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 }
             });
         }
-        console.log("Isubmission parsing: passed tests: " + passed + ", failed tests: " + failed);
         const bDate = new Date(buildInfo.builddate);
         const isbm: ISubmission = {
             id: sbm.getId(),
@@ -372,8 +366,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             testCases: scoreObj,
             approved: sbm.getApproved(),
         };
-        console.log("Isubmission parsing: final Isubmission has " + isbm.testCases.length + " score objects");
-        console.log(isbm);
         return isbm;
     }
 }

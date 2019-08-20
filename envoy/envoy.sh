@@ -7,5 +7,5 @@ if [ "$#" -eq 1 ]; then
     echo "got 1 arg"
     docker build -t ag_envoy -f ./envoy/envoy.Dockerfile .
 else
-    docker run --name=envoy -p 8082:8082 --net=host ag_envoy 
+    docker run --name=envoy -p 8080:8080 --net=host ag_envoy 
 fi

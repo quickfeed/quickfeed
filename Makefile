@@ -120,12 +120,6 @@ run: local
 itestrun: remote
 	@aguis -service.url $(ag2endpoint) -database.file ./temp.db -http.addr :$(ag2port) -http.public ./public &
 
-# will run (and disown) the server, logs will log to ag.logs file
-# itestrun2: remote
-	# @aguis -service.url $(ag2endpoint)  -http.addr :$(ag2port) -http.public ./public &> ag.logs &
-	# disowns the job with ID 1, change ID if you have more jobs running
-	# @disown -h %1
-
 # test nginx configuration syntax
 nginx-test:
 	@sudo nginx -t
@@ -136,8 +130,8 @@ nginx: nginx-test
 # changes where the grpc-client is being run, use "remote" target when starting from ag2
 local:
 	@echo "Changing grpc client location to localhost"
-	@cd ./public/src/managers/; sed -i 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8082"/g' GRPCManager.ts
+	@cd ./public/src/managers/; sed -i 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
 
 remote:
 	@echo "Changing grpc client location to remote domain"
-	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8082"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
+	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
