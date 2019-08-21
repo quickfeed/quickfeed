@@ -52,6 +52,28 @@ export class AutograderServiceClient {
     this.options_ = options;
   }
 
+  methodInfoGetUser = new grpcWeb.AbstractClientBase.MethodInfo(
+    User,
+    (request: Void) => {
+      return request.serializeBinary();
+    },
+    User.deserializeBinary
+  );
+
+  getUser(
+    request: Void,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: User) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetUser',
+      request,
+      metadata || {},
+      this.methodInfoGetUser,
+      callback);
+  }
+
   methodInfoGetUsers = new grpcWeb.AbstractClientBase.MethodInfo(
     Users,
     (request: Void) => {

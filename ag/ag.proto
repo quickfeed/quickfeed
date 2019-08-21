@@ -221,7 +221,7 @@ service AutograderService {
 
     // users //
 
-    //rpc GetUser(RecordRequest) returns (User) {}
+    rpc GetUser(Void) returns (User) {}
     rpc GetUsers(Void) returns (Users) {}
     rpc UpdateUser(User) returns (User) {}
     rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}  

@@ -49,6 +49,11 @@ export class GrpcManager {
 
     // /* USERS */ //
 
+    public getUser(): Promise<IGrpcResponse<User>> {
+        const request = new Void();
+        return this.grpcSend<User>(this.agService.getUser, request);
+    }
+
     public getUsers(): Promise<IGrpcResponse<Users>> {
         const request = new Void();
         return this.grpcSend<Users>(this.agService.getUsers, request);

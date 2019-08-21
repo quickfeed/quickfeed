@@ -10,6 +10,9 @@ var grpcWeb = require("grpc-web");
 var ag_pb_1 = require("./ag_pb");
 var AutograderServiceClient = /** @class */ (function () {
     function AutograderServiceClient(hostname, credentials, options) {
+        this.methodInfoGetUser = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.User, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.User.deserializeBinary);
         this.methodInfoGetUsers = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Users, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Users.deserializeBinary);
@@ -90,6 +93,10 @@ var AutograderServiceClient = /** @class */ (function () {
         this.credentials_ = credentials;
         this.options_ = options;
     }
+    AutograderServiceClient.prototype.getUser = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetUser', request, metadata || {}, this.methodInfoGetUser, callback);
+    };
     AutograderServiceClient.prototype.getUsers = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetUsers', request, metadata || {}, this.methodInfoGetUsers, callback);

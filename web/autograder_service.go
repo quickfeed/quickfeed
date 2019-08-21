@@ -31,6 +31,18 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 	}
 }
 
+// GetUser returns a current user with preloaded enrollments
+// Access policy: everyone
+func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetUsers failed: authentication error (%s)", err)
+		return nil, ErrInvalidUserInfo
+	}
+	return usr, nil
+
+}
+
 // GetUsers returns a list of all users.
 // Access policy: Admin.
 // Frontend note: This method is called from AdminPage.
