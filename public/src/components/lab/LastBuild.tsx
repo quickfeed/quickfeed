@@ -21,8 +21,8 @@ export class LastBuild extends React.Component<ILastBuild> {
                          (item.Score ? item.Score.toString() : "0")
                           + "/" + (item.MaxScore ? item.MaxScore.toString() : "0") + " pts",
                           item.Weight ? item.Weight.toString() : "0" + " pts"]}
-                        footer={["Total score", this.props.score.toString()
-                         + "%", this.props.weight ? this.props.weight.toString() : "-" + "%"]}
+                        footer={["Total score", this.props.score.toString() + "%",
+                         this.props.weight ? this.props.weight.toString() : "-" + "%"]}
                     />
                 </div>
             </Row>

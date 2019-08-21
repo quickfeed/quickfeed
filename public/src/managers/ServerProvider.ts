@@ -343,10 +343,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             scoreObj = JSON.parse(scoreInfoAsString);
         } catch (e) {
             scoreObj = JSON.parse(
-                "[{\"name\": \"Test 1\", \"score\": 3, \"points\": 4, \"weight\": 100}]",
+                "[{\"TestName\": \"Test 1\", \"Score\": 3, \"MaxScore\": 4, \"Weight\": 100}]",
             );
         }
-
+        console.log("Got build info: " + buildInfo);
+        console.log("Got score objects: " + scoreObj);
         let failed = 0;
         let passed = 0;
         if (scoreObj) {
