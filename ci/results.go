@@ -29,19 +29,12 @@ var globalBuildID = new(int64)
 
 // ExtractResult returns a result struct for the given log.
 func ExtractResult(logger *zap.Logger, out, secret string, execTime time.Duration) (*Result, error) {
-	logger.Debug("ci.ExtractResults",
-		zap.String("secret", secret),
-		zap.String("out", out),
-		zap.Any("execTime", execTime),
-	)
 	var filteredLog []string
 	scores := make([]*score.Score, 0)
 	for _, line := range strings.Split(out, "\n") {
-		logger.Debug("ci.ExtractResults", zap.String("line", line))
 		// check if line has expected JSON score string
 		if score.HasPrefix(line) {
 			sc, err := score.Parse(line, secret)
-			logger.Debug("ci.ExtractResults", zap.Any("score", sc))
 			if err != nil {
 				logger.Error("ci.ExtractResults",
 					zap.Error(err),
