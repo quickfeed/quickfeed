@@ -58,7 +58,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	updatedUser.Enrollments = nil
 	if !reflect.DeepEqual(updatedUser, wantUser) {
 		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
 	}
@@ -73,7 +73,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	updatedUser.Enrollments = nil
 	if !reflect.DeepEqual(updatedUser, wantUser) {
 		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
 	}

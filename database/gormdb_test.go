@@ -123,7 +123,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	updatedUser.Enrollments = nil
 	if !reflect.DeepEqual(updatedUser, wantUser) {
 		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
 	}
@@ -591,7 +591,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	user2.Enrollments = nil
 	if !reflect.DeepEqual(user2, wantUser2) {
 		t.Errorf("have user %+v want %+v", user2, wantUser2)
 	}
@@ -604,7 +604,7 @@ func TestGormDBAssociateUserWithRemoteIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	user3.Enrollments = nil
 	wantUser2.RemoteIdentities[1].AccessToken = secret3
 	if !reflect.DeepEqual(user3, wantUser2) {
 		t.Errorf("have user %+v want %+v", user3, wantUser2)

@@ -300,6 +300,8 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	withName.Enrollments = nil
+	// withName.Enrollments = make([]*pb.Enrollment, 0)
 	wantUser := &pb.User{
 		ID:               withName.ID,
 		Name:             "Scrooge McDuck",
@@ -348,6 +350,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	}
 
 	noChangeAdmin, err := db.GetUser(adminUser.ID)
+	noChangeAdmin.Enrollments = nil
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -371,6 +374,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	withName.Enrollments = nil
 	wantUser := &pb.User{
 		ID:               withName.ID,
 		Name:             "Scrooge McDuck",
