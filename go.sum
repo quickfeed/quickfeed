@@ -14,6 +14,8 @@ github.com/autograde/kit v0.0.0-20190529235645-fe220d7df6e6 h1:XbhCui4xyqr9bc5HR
 github.com/autograde/kit v0.0.0-20190529235645-fe220d7df6e6/go.mod h1:XeyZ5cke0FNrwvxtT3A/bWk27Vt+NvOFm2yiXwQ4+zM=
 github.com/autograde/kit v0.0.0-20190816163914-9287f111e6fb h1:x/RPNd6qRbx9b8Du/jrJfOIw0i6/EegGiQe8SQz3720=
 github.com/autograde/kit v0.0.0-20190816163914-9287f111e6fb/go.mod h1:XeyZ5cke0FNrwvxtT3A/bWk27Vt+NvOFm2yiXwQ4+zM=
+github.com/autograde/kit v0.0.0-20190817180210-34457ff57972 h1:5mFRja3H7oBrRJc2siRaYapD5SRtAUTtqOM4hmYhta0=
+github.com/autograde/kit v0.0.0-20190817180210-34457ff57972/go.mod h1:aOfOQy2ZUtUt9TWPKBLoekaq4z7HvMQ9yRKupLD3TOI=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
