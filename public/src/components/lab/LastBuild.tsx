@@ -18,10 +18,11 @@ export class LastBuild extends React.Component<ILastBuild> {
                         header={["Test name", "Score", "Weight"]}
                         data={this.props.test_cases}
                         selector={(item: ITestCases) => [item.TestName ? item.TestName : "-",
-                         (item.Score ? item.Score.toString() : "-") + "/" + (item.MaxScore ? item.MaxScore.toString() : "-")
-                          + " pts", item.Weight ? item.Weight.toString() : "-" + " pts"]}
-                        footer={["Total score", this.props.score ? this.props.score.toString()
-                        : "-" + "%", this.props.weight ? this.props.weight.toString() : "-" + "%"]}
+                         (item.Score ? item.Score.toString() : "0")
+                          + "/" + (item.MaxScore ? item.MaxScore.toString() : "0") + " pts",
+                          item.Weight ? item.Weight.toString() : "0" + " pts"]}
+                        footer={["Total score", this.props.score.toString()
+                         + "%", this.props.weight ? this.props.weight.toString() : "-" + "%"]}
                     />
                 </div>
             </Row>
