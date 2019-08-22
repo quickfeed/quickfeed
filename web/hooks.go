@@ -170,7 +170,6 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 	}
 	logger.Sugar().Debugf("Job output: ", out)
 	execTime := time.Since(start)
-	logger.Debug("Docker execution successful", zap.String("output", out), zap.Duration("execution time", execTime))
 
 	result, err := ci.ExtractResult(logger, out, randomSecret, execTime)
 	if err != nil {

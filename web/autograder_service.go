@@ -36,10 +36,14 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetUsers failed: authentication error (%s)", err)
+		s.logger.Errorf("GetUser failed: authentication error (%s)", err)
 		return nil, ErrInvalidUserInfo
 	}
-	return usr, nil
+	dbUsr, err := s.db.GetUserWithEnrollments(usr.GetID())
+	if err != nil {
+		s.logger.Errorf("GetUser failed to get user with enrollments: %s ", err)
+	}
+	return dbUsr, nil
 
 }
 
