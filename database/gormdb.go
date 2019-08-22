@@ -68,7 +68,16 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 // GetUser fetches a user by ID with remote identities.
 func (db *GormDB) GetUser(uid uint64) (*pb.User, error) {
 	var user pb.User
-	if err := db.conn.Preload("RemoteIdentities").Preload("Enrollments").First(&user, uid).Error; err != nil {
+	if err := db.conn.Preload("RemoteIdentities").First(&user, uid).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// GetUserWithEnrollments will return a user by ID with active enrollments
+func (db *GormDB) GetUserWithEnrollments(uid uint64) (*pb.User, error) {
+	var user pb.User
+	if err := db.conn.Preload("Enrollments").First(&user, uid).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil

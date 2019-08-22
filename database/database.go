@@ -19,6 +19,8 @@ type Database interface {
 
 	// GetUser returns the given user, including remote identities.
 	GetUser(uint64) (*pb.User, error)
+	// GetUserWithEnrollments returns the user by ID with preloaded user enrollments
+	GetUserWithEnrollments(uint64) (*pb.User, error)
 	// GetUsers returns the users for the given set of user IDs.
 	GetUsers(...uint64) ([]*pb.User, error)
 	// UpdateUser updates the user's details, excluding remote identities.
