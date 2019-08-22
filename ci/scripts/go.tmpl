@@ -4,26 +4,35 @@ echo "\n=== Preparing for Test Execution ===\n"
 
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
+pwd
+
 # Fetch student repo
-go get {{ .RawGetURL }}
+# go get {{ .RawGetURL }}
+git clone {{ .GetURL }} assignments
 
 # Fail student code that attempts to access secret
-cd $GOPATH/src/{{ .RawGetURL }}/{{ .AssignmentName }}/
-if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
+# TODO(meling) remove this: cd $GOPATH/src/{{ .RawGetURL }}/{{ .AssignmentName }}/
+if grep --quiet -r -e common.Secret -e GlobalSecret assignments/* ; then
   echo "\n=== Misbehavior Detected: Failed ===\n"
   exit
 fi
 
 # Fetch tests repo (must come after secret access check above)
-go get {{ .RawTestURL }}
+#go get {{ .RawTestURL }}
+git clone {{ .TestURL }}
 
 # Make sure there are no Autograder tests in the student repo
-rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
+#rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
+#rm $(find {{ .RawGetURL }}/ | grep _ag_test.go)
+rm $(find assignments/ | grep _ag_test.go)
 
 # Generate new secret.go with new secret value for each run
-cd $GOPATH/src/{{ .RawTestURL }}/
+#cd $GOPATH/src/{{ .RawTestURL }}/
+cd tests
+
 # Create common dir (silently, if already exists)
 mkdir -p common
+
 cat <<EOF > common/secret.go
 package common
 
@@ -33,7 +42,10 @@ func Secret() string {
 EOF
 
 # Copy tests into student assignments folder for running tests
-cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
+# cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
+# cp -r {{ .RawTestURL }}/* assignments/
+cd ..
+cp -r tests/* assignments/
 
 # Clear access token and the shell history to avoid leaking information to student test code.
 git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
@@ -43,6 +55,11 @@ history -c
 if [ -f "setup.sh" ]; then
     bash setup.sh
 fi
+
+cd assignments
+
+# Not sure if needed, but for testing
+export GOPROXY=direct
 
 echo "\n=== Running Tests ===\n"
 go test -v ./... 2>&1
