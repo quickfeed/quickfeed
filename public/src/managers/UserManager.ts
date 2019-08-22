@@ -2,11 +2,12 @@ import { IEventData, newEvent } from "../event";
 import { ILogger } from "./LogManager";
 
 import { Enrollment, User } from "../../proto/ag_pb";
+import { ENFILE } from "constants";
 
 export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<User | null>;
     logout(user: User): Promise<boolean>;
-    getUser(): Promise<User | null>;
+    getUser(): Promise<User>;
     getAllUser(): Promise<User[]>;
     tryRemoteLogin(provider: string): Promise<User | null>;
     changeAdminRole(user: User): Promise<boolean>;
@@ -129,23 +130,22 @@ export class UserManager {
         return this.userProvider.updateUser(user);
     }
 
-    public getUser(): Promise<User | null> {
+    public getUser(): Promise<User> {
         return this.userProvider.getUser();
     }
 
     public async isTeacher(): Promise<boolean> {
+        let valid = false;
         const user = await this.getUser();
+
         if (user) {
-            let valid = false;
             user.getEnrollmentsList().forEach((ele) => {
                 if (ele.getStatus() === Enrollment.UserStatus.TEACHER) {
-                    // cannot return from inside the forEach() loop
                     valid = true;
                 }
             });
-            return valid;
         }
-        return false;
+        return valid;
     }
 
     /**

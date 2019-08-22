@@ -50,7 +50,7 @@ export class TeacherPage extends ViewPage {
 
     public checkAuthentication(): boolean {
         const curUser = this.userMan.getCurrentUser();
-        if (curUser && (curUser.getIsadmin() || this.isCourseTeacher(curUser))) {
+        if (curUser && (curUser.getIsadmin() || this.userMan.isTeacher())) {
             this.userMan.isAuthorizedTeacher().then((answer) => {
                 if (!answer) {
                     window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
@@ -336,10 +336,11 @@ export class TeacherPage extends ViewPage {
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
         const curUser = this.userMan.getCurrentUser();
+        const confirmedTeacher = await this.userMan.isTeacher();
         if (curUser) {
             if (menu === 0) {
                 const states = [Enrollment.UserStatus.TEACHER];
-                if (curUser.getIsadmin()) {
+                if (curUser.getIsadmin() || confirmedTeacher) {
                     states.push(Enrollment.UserStatus.PENDING);
                     states.push(Enrollment.UserStatus.STUDENT);
                 }
@@ -399,12 +400,4 @@ export class TeacherPage extends ViewPage {
         }
         return <div>404 Page not found</div>;
     }
-
-    private isCourseTeacher(usr: User): boolean {
-        this.courseMan.getCoursesFor(usr, [Enrollment.UserStatus.TEACHER]).then((teacherCourses) => {
-            return teacherCourses.length > 0;
-        });
-        return false;
-    }
-
 }
