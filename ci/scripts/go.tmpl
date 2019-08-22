@@ -1,39 +1,32 @@
 #image/golang:latest
 
 echo "\n=== Preparing for Test Execution ===\n"
+echo "Current dir: `pwd`"
 
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
-pwd
-
 # Fetch student repo
-# go get {{ .RawGetURL }}
 git clone {{ .GetURL }} assignments
+# Fetch tests repo
+git clone {{ .TestURL }}
+
+# Move to folder for assignment to test.
+cd assignments/{{ .AssignmentName }}/
 
 # Fail student code that attempts to access secret
-# TODO(meling) remove this: cd $GOPATH/src/{{ .RawGetURL }}/{{ .AssignmentName }}/
-if grep --quiet -r -e common.Secret -e GlobalSecret assignments/* ; then
+if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
   echo "\n=== Misbehavior Detected: Failed ===\n"
   exit
 fi
 
-# Fetch tests repo (must come after secret access check above)
-#go get {{ .RawTestURL }}
-git clone {{ .TestURL }}
-
 # Make sure there are no Autograder tests in the student repo
-#rm $(find $GOPATH/src/{{ .RawGetURL }}/ | grep _ag_test.go)
-#rm $(find {{ .RawGetURL }}/ | grep _ag_test.go)
-rm $(find assignments/ | grep _ag_test.go)
-
-# Generate new secret.go with new secret value for each run
-#cd $GOPATH/src/{{ .RawTestURL }}/
-cd tests
+rm $(find ./ | grep _ag_test.go)
 
 # Create common dir (silently, if already exists)
-mkdir -p common
+mkdir -p /go/tests/common
 
-cat <<EOF > common/secret.go
+# Generate new secret.go with new secret value for each run
+cat <<EOF > /go/tests/common/secret.go
 package common
 
 func Secret() string {
@@ -42,23 +35,21 @@ func Secret() string {
 EOF
 
 # Copy tests into student assignments folder for running tests
-# cp -r $GOPATH/src/{{ .RawTestURL }}/* $GOPATH/src/{{ .RawGetURL }}/
-# cp -r {{ .RawTestURL }}/* assignments/
-cd ..
-cp -r tests/* assignments/
+cp -r /go/tests/* assignments/
 
 # Clear access token and the shell history to avoid leaking information to student test code.
 git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 history -c
+
+# (ensure) Move to folder for assignment to test.
+cd /go/assignments/{{ .AssignmentName }}/
 
 # Perform lab specific setup
 if [ -f "setup.sh" ]; then
     bash setup.sh
 fi
 
-cd assignments
-
-# Not sure if needed, but for testing
+# Avoid fetching dependencies from proxy.
 export GOPROXY=direct
 
 echo "\n=== Running Tests ===\n"
