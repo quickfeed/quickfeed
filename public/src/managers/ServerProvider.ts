@@ -346,8 +346,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 "[{\"TestName\": \"Test 1\", \"Score\": 3, \"MaxScore\": 4, \"Weight\": 100}]",
             );
         }
-        console.log("Got build info: " + sbm.getBuildinfo());
-        console.log("Got score objects: " + sbm.getScoreobjects());
         let failed = 0;
         let passed = 0;
         if (scoreObj) {
