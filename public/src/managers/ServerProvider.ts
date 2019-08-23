@@ -319,6 +319,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return;
     }
 
+    public async refreshSubmission(): Promise<void> {
+        await this.grpcHelper.refreshSubmission();
+        return;
+    }
+
     private toISUbmission(sbm: Submission): ISubmission {
         let buildInfoAsString = "";
         let scoreInfoAsString = "";

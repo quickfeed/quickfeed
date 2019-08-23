@@ -420,6 +420,17 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 	return &pb.Void{}, nil
 }
 
+// RefreshSubmission rebuilds the latest student submission for the logged in user
+func (s *AutograderService) RefreshSubmission(ctx context.Context, in *pb.Void) (*pb.Void, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("ApproveSubmission failed: authentication error (%s)", err)
+		return nil, ErrInvalidUserInfo
+	}
+	s.logger.Info("Submission rebuilding for user ", usr.GetLogin())
+	return nil, status.Errorf(codes.Unimplemented, "Server got rebuild request, rebuilding is not implemented yet")
+}
+
 // GetAssignments returns a list of all assignments for the given course.
 // Access policy: Any User.
 func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Assignments, error) {

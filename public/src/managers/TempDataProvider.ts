@@ -286,6 +286,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
+    public async refreshSubmission(): Promise<void> {
+        throw new Error("Method not implemented");
+    }
+
     private addLocalUsers() {
         const dummyUsers: IGrpcDummyUser[] = [];
         const tempUser: User = new User();
