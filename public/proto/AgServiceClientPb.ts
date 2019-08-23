@@ -536,6 +536,28 @@ export class AutograderServiceClient {
       callback);
   }
 
+  methodInfoRefreshSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: Void) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  refreshSubmission(
+    request: Void,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/RefreshSubmission',
+      request,
+      metadata || {},
+      this.methodInfoRefreshSubmission,
+      callback);
+  }
+
   methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(
     Providers,
     (request: Void) => {

@@ -76,6 +76,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoApproveSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoRefreshSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Providers, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Providers.deserializeBinary);
@@ -180,6 +183,10 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.approveSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/ApproveSubmission', request, metadata || {}, this.methodInfoApproveSubmission, callback);
+    };
+    AutograderServiceClient.prototype.refreshSubmission = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/RefreshSubmission', request, metadata || {}, this.methodInfoRefreshSubmission, callback);
     };
     AutograderServiceClient.prototype.getProviders = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
