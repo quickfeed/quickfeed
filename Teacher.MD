@@ -28,7 +28,7 @@ The following concepts are important to understand.
  ### A course organization has several requirements:
 
  - Third-party access must not be restricted. This is necessary so that Autograder can access the organization on your behalf. To enable third-party access, go to your organization's main page and select **Settings > Third-party access**, and remove restrictions or go to 
- https://github.com/organizations/{organization_name}/settings/oauth_application_policy 
+ https://github.com/organizations/{organization_name}/settings/oauth_application_policy.
  
  - You must be able to create private repositories in your organization. If you are associated with University of Stavanger, you can create such organizations under the [UiS Campus Enterprise account](https://github.com/enterprises/university-of-stavanger).
 
@@ -65,7 +65,6 @@ Currently, teaching staff needs to populate these repositories manually for the 
 ### To give your teaching assistants access to your course you have to:
 
 - Accept their enrollments into your course
-- Promote them to admins on `Manage users` page
 - Promote them to your course's teacher on course members page
 
 Assistants will automatically be given organization `owner` role to be able to accept student enrollments, approve student groups and access all course repositories. They will also be added to the `allteachers` team.
