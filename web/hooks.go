@@ -168,7 +168,6 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 		logger.Error("Docker execution failed", zap.Error(err))
 		return
 	}
-	logger.Sugar().Debugf("Job output: ", out)
 	execTime := time.Since(start)
 
 	result, err := ci.ExtractResult(logger, out, randomSecret, execTime)
@@ -180,12 +179,7 @@ func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *
 	if err != nil {
 		logger.Error("Failed to marshal build info and scores", zap.Error(err))
 	}
-	logger.Debug("Extracted results",
-		zap.Any("result", result),
-		zap.Uint8("total score", result.TotalScore()),
-		zap.String("marshalled build info", buildInfo),
-		zap.String("marshalled scores", scores),
-	)
+
 	err = db.CreateSubmission(&pb.Submission{
 		AssignmentID: selectedAssignment.ID,
 		BuildInfo:    buildInfo,
