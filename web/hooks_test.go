@@ -44,7 +44,7 @@ func TestGithubHook(t *testing.T) {
 	}
 
 	runner := &mockRunner{}
-	hook := web.GithubHook(zap.NewNop(), db, runner, "buildscripts")
+	hook := web.GithubHook(zap.NewNop().Sugar(), db, runner, "buildscripts")
 
 	var h http.Header = make(map[string][]string)
 	h.Set("X-Github-Event", string(github.PushEvent))

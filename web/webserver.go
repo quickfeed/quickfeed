@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
@@ -39,7 +38,7 @@ func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool)
 
 	enabled := enableProviders(ags.logger, ags.bh.BaseURL, fake)
 	registerWebhooks(ags, e, enabled, scriptPath)
-	registerAuth(ags.logger.Desugar(), e, ags.db, ags.scms)
+	registerAuth(ags, e)
 
 	registerFrontend(e, entryPoint, public)
 	runWebServer(ags.logger, e, httpAddr)
@@ -147,7 +146,8 @@ func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]b
 	})
 }
 
-func registerAuth(logger *zap.Logger, e *echo.Echo, db database.Database, scms *auth.Scms) {
+func registerAuth(ags *AutograderService, e *echo.Echo) {
+	logger := ags.logger.Desugar()
 	// makes the oauth2 provider available in the request query so that
 	// markbates/goth/gothic.GetProviderName can find it.
 	withProvider := func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -159,14 +159,14 @@ func registerAuth(logger *zap.Logger, e *echo.Echo, db database.Database, scms *
 		}
 	}
 
-	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(logger, db))
-	oauth2.GET("", auth.OAuth2Login(logger, db))
-	oauth2.GET("/callback", auth.OAuth2Callback(logger, db))
+	oauth2 := e.Group("/auth/:provider", withProvider, auth.PreAuth(logger, ags.db))
+	oauth2.GET("", auth.OAuth2Login(logger, ags.db))
+	oauth2.GET("/callback", auth.OAuth2Callback(logger, ags.db))
 	e.GET("/logout", auth.OAuth2Logout(logger))
 
 	api := e.Group("/api/v1")
-	api.Use(auth.AccessControl(logger, db, scms))
-	api.GET("/user", GetSelf(db))
+	api.Use(auth.AccessControl(logger, ags.db, ags.scms))
+	api.GET("/user", GetSelf(ags.db))
 }
 
 func registerFrontend(e *echo.Echo, entryPoint, public string) {

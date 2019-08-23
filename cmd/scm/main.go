@@ -237,7 +237,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
 		if accessToken != "" {
-			*client, err = scm.NewSCMClient(zap.NewNop(), provider, accessToken)
+			*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
 			return
 		}
 
@@ -265,7 +265,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		if accessToken == "" {
 			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
-		*client, err = scm.NewSCMClient(zap.NewNop(), provider, accessToken)
+		*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
 		return
 	}
 }
