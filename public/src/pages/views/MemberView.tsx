@@ -41,8 +41,8 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     placeholder="Search for users"
                     onChange={(query) => this.handleSearch(query)}
                 />
-            {this.renderUserView()}
             {this.renderPendingView(pendingActions)}
+            {this.renderUserView()}
             {this.renderRejectedView()}
         </div>;
     }
