@@ -9,6 +9,7 @@ interface IResultsProp {
     students: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
+    onRebuildClick: () => void;
 }
 
 interface IResultsState {
@@ -52,7 +53,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
-                onRebuildClick={() => { }}
+                onRebuildClick={this.props.onRebuildClick}
                 onApproveClick={() => {
                     if (this.state.assignment && this.state.assignment.latest) {
                         this.props.onApproveClick(this.state.assignment.latest.id);
