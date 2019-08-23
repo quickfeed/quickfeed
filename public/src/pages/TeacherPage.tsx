@@ -139,7 +139,10 @@ export class TeacherPage extends ViewPage {
                 course={course}
                 labs={labs}
                 students={linkedStudents}
-                onRebuildClick={() => this.courseMan.refreshSubmission()}
+                onRebuildClick={async (submissionID: number) => {
+                    await this.courseMan.refreshSubmission(submissionID);
+                    this.navMan.refresh();
+                }}
                 onApproveClick={async (submissionID: number) => {
                     if (confirm(
                         `Warning! This action is irriversible!

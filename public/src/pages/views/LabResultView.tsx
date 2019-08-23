@@ -8,7 +8,7 @@ interface ILabInfoProps {
     labInfo: IStudentSubmission;
     showApprove: boolean;
     onApproveClick: () => void;
-    onRebuildClick: () => void;
+    onRebuildClick: (submissionID: number) => void;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps> {
@@ -34,6 +34,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 weight={100}
                             />
                             <LastBuildInfo
+                                submission_id={latest.id}
                                 pass_tests={latest.passedTests}
                                 fail_tests={latest.failedTests}
                                 exec_time={latest.executetionTime}

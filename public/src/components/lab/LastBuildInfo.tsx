@@ -3,6 +3,7 @@ import * as React from "react";
 import { Row } from "../../components";
 
 interface ILastBuildInfo {
+    submission_id: number;
     pass_tests: number;
     fail_tests: number;
     exec_time: number;
@@ -10,7 +11,7 @@ interface ILastBuildInfo {
     build_id: number;
     showApprove: boolean;
     onApproveClick: () => void;
-    onRebuildClick: () => void;
+    onRebuildClick: (submissionID: number) => void;
 }
 
 export class LastBuildInfo extends React.Component<ILastBuildInfo> {
@@ -48,7 +49,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo> {
                         <div className="col-lg-12">
                             <p>
                                 <button type="button" id="rebuild" className="btn btn-primary"
-                                    onClick={() => this.handleClick(this.props.onRebuildClick)}>Rebuild
+                                    onClick={() => this.props.onRebuildClick(this.props.submission_id)}>Rebuild
                                 </button>
                             </p>
                             {approveButton}

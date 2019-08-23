@@ -220,8 +220,9 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
-    public refreshSubmission(): Promise<IGrpcResponse<Void>> {
-        const request = new Void();
+    public refreshSubmission(id: number): Promise<IGrpcResponse<Void>> {
+        const request = new RecordRequest();
+        request.setId(id);
         return this.grpcSend<Void>(this.agService.refreshSubmission, request);
     }
 

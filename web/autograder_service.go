@@ -421,7 +421,7 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 }
 
 // RefreshSubmission rebuilds the latest student submission for the logged in user
-func (s *AutograderService) RefreshSubmission(ctx context.Context, in *pb.Void) (*pb.Void, error) {
+func (s *AutograderService) RefreshSubmission(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("ApproveSubmission failed: authentication error (%s)", err)

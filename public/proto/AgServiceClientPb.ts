@@ -538,14 +538,14 @@ export class AutograderServiceClient {
 
   methodInfoRefreshSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: Void) => {
+    (request: RecordRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   refreshSubmission(
-    request: Void,
+    request: RecordRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {

@@ -319,8 +319,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return;
     }
 
-    public async refreshSubmission(): Promise<void> {
-        await this.grpcHelper.refreshSubmission();
+    public async refreshSubmission(id: number): Promise<void> {
+        await this.grpcHelper.refreshSubmission(id);
         return;
     }
 

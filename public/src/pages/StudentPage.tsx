@@ -109,7 +109,10 @@ export class StudentPage extends ViewPage {
                     course={this.selectedUserCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
-                    onRebuildClick={() => {this.courseMan.refreshSubmission()}}
+                    onRebuildClick={async (submissionID: number) => {
+                        await this.courseMan.refreshSubmission(submissionID);
+                        this.navMan.refresh();
+                    }}
                     onApproveClick={() => { }}>
                 </StudentLab>;
             }
