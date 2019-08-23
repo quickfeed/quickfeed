@@ -82,11 +82,11 @@ var jsonLog = []struct {
 	out *Score
 	err error
 }{
-	{`{"Secret":"` + theSecret + `","TestName":"init.ializers","Score":0,"MaxScore":10,"Weight":10}`,
+	{`{"Secret":"` + theSecret + `","TestName":"init","Score":0,"MaxScore":10,"Weight":10}`,
 		NewScore(10, 10),
 		nil,
 	},
-	{`{"Secret":"the wrong secret","TestName":"init.ializers","Score":0,"MaxScore":10,"Weight":10}`,
+	{`{"Secret":"the wrong secret","TestName":"init","Score":0,"MaxScore":10,"Weight":10}`,
 		nil,
 		ErrScoreNotFound,
 	},

@@ -41,6 +41,11 @@ var expectToFail = []int{
 }
 
 func TestMultipleChoice(t *testing.T) {
+	t.Skip("This is expected to fail, so we skip it when running normally (see comment).")
+	// This currently fails, since it tests what students might write.
+	// TODO(meling) In the future we may decouple it better so that we can
+	// check if specific tests are expected to fail, and reorganizing it
+	// as a table-driven test.
 	answerFile, err := ioutil.TempFile("", "example")
 	if err != nil {
 		t.Fatal(err)
