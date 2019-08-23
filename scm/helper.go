@@ -39,9 +39,9 @@ const (
 
 	// Standard team names
 
-	// team with all course teachers and teaching assistants
+	// TeachersTeam is the team with all teachers and teaching assistants of a course.
 	TeachersTeam = "allteachers"
-	// team with all course students
+	// StudentsTeam is the team with all students of a course.
 	StudentsTeam = "allstudents"
 )
 
