@@ -28,7 +28,7 @@ type BuildInfo struct {
 var globalBuildID = new(int64)
 
 // ExtractResult returns a result struct for the given log.
-func ExtractResult(logger *zap.Logger, out, secret string, execTime time.Duration) (*Result, error) {
+func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.Duration) (*Result, error) {
 	var filteredLog []string
 	scores := make([]*score.Score, 0)
 	for _, line := range strings.Split(out, "\n") {

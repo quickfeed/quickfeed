@@ -71,20 +71,20 @@ func Logger(log *zap.Logger) echo.MiddlewareFunc {
 // interface using a zap.Logger.
 //TODO(meling) with webhooks.v5 it does not use a logger; so we should not need this?
 type WebhookLogger struct {
-	*zap.Logger
+	*zap.SugaredLogger
 }
 
 // Info prints basic information.
 func (l WebhookLogger) Info(msg string) {
-	l.Logger.Info(msg)
+	l.SugaredLogger.Info(msg)
 }
 
 // Error prints error information.
 func (l WebhookLogger) Error(msg string) {
-	l.Logger.Error(msg)
+	l.SugaredLogger.Error(msg)
 }
 
 // Debug prints information useful for debugging.
 func (l WebhookLogger) Debug(msg string) {
-	l.Logger.Debug(msg)
+	l.SugaredLogger.Debug(msg)
 }

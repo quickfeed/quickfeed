@@ -37,7 +37,7 @@ func (s *Scms) GetOrCreateSCMEntry(logger *zap.Logger, provider, accessToken str
 	if ok {
 		return client, nil
 	}
-	client, err := scm.NewSCMClient(logger, provider, accessToken)
+	client, err := scm.NewSCMClient(logger.Sugar(), provider, accessToken)
 	if err != nil {
 		return nil, err
 	}

@@ -64,7 +64,7 @@ type SCM interface {
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
-func NewSCMClient(logger *zap.Logger, provider, token string) (SCM, error) {
+func NewSCMClient(logger *zap.SugaredLogger, provider, token string) (SCM, error) {
 	switch provider {
 	case "github":
 		return NewGithubSCMClient(logger, token), nil

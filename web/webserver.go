@@ -10,7 +10,6 @@ import (
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
@@ -27,31 +26,31 @@ import (
 	whgitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
-// NewWebServer starts a new web server
-func NewWebServer(db *database.GormDB, bh web.BaseHookOptions, l *zap.Logger, public, httpAddr, scriptPath string, fake bool, scms *auth.Scms) {
+// New starts a new web server
+func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool) {
 	entryPoint := filepath.Join(public, "index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
-		l.Fatal("file not found", zap.String("path", entryPoint))
+		ags.logger.Fatalf("file note found %s", entryPoint)
 	}
 
 	store := newStore([]byte("secret"))
 	gothic.Store = store
-	e := newServer(l, store)
+	e := newServer(ags.logger, store)
 
-	enabled := enableProviders(l, bh.BaseURL, fake)
-	registerWebhooks(l, e, db, bh.Secret, enabled, scriptPath)
-	registerAuth(l, e, db, scms)
+	enabled := enableProviders(ags.logger, ags.bh.BaseURL, fake)
+	registerWebhooks(ags, e, enabled, scriptPath)
+	registerAuth(ags.logger.Desugar(), e, ags.db, ags.scms)
 
 	registerFrontend(e, entryPoint, public)
-	runWebServer(l, e, httpAddr)
+	runWebServer(ags.logger, e, httpAddr)
 }
 
-func newServer(l *zap.Logger, store sessions.Store) *echo.Echo {
+func newServer(l *zap.SugaredLogger, store sessions.Store) *echo.Echo {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(
 		middleware.Recover(),
-		web.Logger(l),
+		Logger(l.Desugar()),
 		middleware.Secure(),
 		session.Middleware(store),
 	)
@@ -65,7 +64,7 @@ func newStore(keyPairs ...[]byte) sessions.Store {
 	return store
 }
 
-func enableProviders(l *zap.Logger, baseURL string, fake bool) map[string]bool {
+func enableProviders(l *zap.SugaredLogger, baseURL string, fake bool) map[string]bool {
 	enabled := make(map[string]bool)
 
 	if ok := auth.EnableProvider(&auth.Provider{
@@ -111,21 +110,21 @@ func enableProviders(l *zap.Logger, baseURL string, fake bool) map[string]bool {
 	return enabled
 }
 
-func registerWebhooks(logger *zap.Logger, e *echo.Echo, db database.Database, secret string, enabled map[string]bool, scriptPath string) {
-	webhooks.DefaultLog = web.WebhookLogger{Logger: logger}
+func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]bool, scriptPath string) {
+	webhooks.DefaultLog = WebhookLogger{SugaredLogger: ags.logger}
 
 	docker := ci.Docker{
 		Endpoint: envString("DOCKER_HOST", "http://localhost:4243"),
 		Version:  envString("DOCKER_VERSION", "1.30"),
 	}
 
-	ghHook := whgithub.New(&whgithub.Config{Secret: secret})
+	ghHook := whgithub.New(&whgithub.Config{Secret: ags.bh.Secret})
 	if enabled["github"] {
-		ghHook.RegisterEvents(web.GithubHook(logger, db, &docker, scriptPath), whgithub.PushEvent)
+		ghHook.RegisterEvents(GithubHook(ags.logger, ags.db, &docker, scriptPath), whgithub.PushEvent)
 	}
-	glHook := whgitlab.New(&whgitlab.Config{Secret: secret})
+	glHook := whgitlab.New(&whgitlab.Config{Secret: ags.bh.Secret})
 	if enabled["gitlab"] {
-		glHook.RegisterEvents(web.GitlabHook(logger), whgitlab.PushEvents)
+		glHook.RegisterEvents(GitlabHook(ags.logger), whgitlab.PushEvents)
 	}
 
 	e.POST("/hook/:provider/events", func(c echo.Context) error {
@@ -167,7 +166,7 @@ func registerAuth(logger *zap.Logger, e *echo.Echo, db database.Database, scms *
 
 	api := e.Group("/api/v1")
 	api.Use(auth.AccessControl(logger, db, scms))
-	api.GET("/user", web.GetSelf(db))
+	api.GET("/user", GetSelf(db))
 }
 
 func registerFrontend(e *echo.Echo, entryPoint, public string) {
@@ -181,7 +180,7 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 	e.Static("/", public)
 }
 
-func runWebServer(l *zap.Logger, e *echo.Echo, httpAddr string) {
+func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {
 	srvErr := e.Start(httpAddr)
 	if srvErr == http.ErrServerClosed {
 		l.Warn("shutting down the server")

@@ -17,7 +17,6 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 
-	http "github.com/autograde/aguis/web/webserver"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"google.golang.org/grpc"
 )
@@ -83,7 +82,8 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
-	go http.NewWebServer(db, bh, logger, *public, *httpAddr, *scriptPath, *fake, scms)
+	agService := web.NewAutograderService(logger, db, scms, bh)
+	go web.New(agService, *public, *httpAddr, *scriptPath, *fake)
 
 	lis, err := net.Listen("tcp", *grpcAddr)
 	if err != nil {
@@ -91,7 +91,7 @@ func main() {
 	}
 	opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
-	pb.RegisterAutograderServiceServer(grpcServer, web.NewAutograderService(logger, db, scms, bh))
+	pb.RegisterAutograderServiceServer(grpcServer, agService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)
 	}

@@ -32,7 +32,7 @@ type BaseHookOptions struct {
 }
 
 // GithubHook handles webhook events from GitHub.
-func GithubHook(logger *zap.Logger, db database.Database, runner ci.Runner, scriptPath string) webhooks.ProcessPayloadFunc {
+func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, scriptPath string) webhooks.ProcessPayloadFunc {
 	return func(payload interface{}, header webhooks.Header) {
 		h := http.Header(header)
 		event := github.Event(h.Get("X-GitHub-Event"))
@@ -73,7 +73,7 @@ func GithubHook(logger *zap.Logger, db database.Database, runner ci.Runner, scri
 	}
 }
 
-func refreshAssignmentsFromTestsRepo(logger *zap.Logger, db database.Database, repo *pb.Repository, senderID uint64) {
+func refreshAssignmentsFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, senderID uint64) {
 	logger.Debug("Refreshing course informaton in database")
 	provider := "github"
 
@@ -102,14 +102,14 @@ func refreshAssignmentsFromTestsRepo(logger *zap.Logger, db database.Database, r
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
-			logger.Sugar().Debug("Fetched assignment with ID: ", assignment.GetID())
+			logger.Debug("Fetched assignment with ID: ", assignment.GetID())
 		}
 		logger.Error("Failed to update assignments in database", zap.Error(err))
 	}
 }
 
 // runTests runs the ci from a RemoteIdentity
-func runTests(logger *zap.Logger, db database.Database, runner ci.Runner, repo *pb.Repository,
+func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, repo *pb.Repository,
 	getURL string, commitHash string, scriptPath string) {
 
 	course, err := db.GetCourseByOrganizationID(repo.OrganizationID)
@@ -205,7 +205,7 @@ func randomSecret() string {
 }
 
 // GitlabHook handles events from Gitlab.
-func GitlabHook(logger *zap.Logger) webhooks.ProcessPayloadFunc {
+func GitlabHook(logger *zap.SugaredLogger) webhooks.ProcessPayloadFunc {
 	return func(payload interface{}, header webhooks.Header) {
 		h := http.Header(header)
 		event := gitlab.Event(h.Get("X-Gitlab-Event"))

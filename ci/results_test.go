@@ -15,7 +15,7 @@ func TestExtractResult(t *testing.T) {
 Here are some more logs for the student.
 `
 
-	res, err := ExtractResult(zap.NewNop(), out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	res, err := ExtractResult(zap.NewNop().Sugar(), out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestExtractResultWithWhitespace(t *testing.T) {
 Here are some more logs for the student.
 `
 
-	res, err := ExtractResult(zap.NewNop(), out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	res, err := ExtractResult(zap.NewNop().Sugar(), out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
 	if err != nil {
 		t.Fatal(err)
 	}

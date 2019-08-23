@@ -27,7 +27,7 @@ func TestFetchAssignments(t *testing.T) {
 	provider := "github"
 
 	var s scm.SCM
-	s, err := scm.NewSCMClient(zap.NewNop(), provider, accessToken)
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
