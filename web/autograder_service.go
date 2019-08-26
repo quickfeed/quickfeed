@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web/auth"
 )
@@ -19,15 +20,17 @@ type AutograderService struct {
 	db     *database.GormDB
 	scms   *auth.Scms
 	bh     BaseHookOptions
+	runner ci.Runner
 }
 
 // NewAutograderService returns an AutograderService object.
-func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Scms, bh BaseHookOptions) *AutograderService {
+func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Scms, bh BaseHookOptions, runner ci.Runner) *AutograderService {
 	return &AutograderService{
 		logger: logger.Sugar(),
 		db:     db,
 		scms:   scms,
 		bh:     bh,
+		runner: runner,
 	}
 }
 
@@ -428,7 +431,7 @@ func (s *AutograderService) RefreshSubmission(ctx context.Context, in *pb.Record
 		return nil, ErrInvalidUserInfo
 	}
 	s.logger.Info("Submission rebuilding for user ", usr.GetLogin())
-	return nil, status.Errorf(codes.Unimplemented, "Server got rebuild request, rebuilding is not implemented yet")
+	return &pb.Void{}, s.rebuildSubmission(ctx, in.GetID())
 }
 
 // GetAssignments returns a list of all assignments for the given course.

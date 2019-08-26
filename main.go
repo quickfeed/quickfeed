@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/envoy"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
@@ -37,6 +38,14 @@ func init() {
 	mustAddExtensionType(".jsx", "application/javascript")
 	mustAddExtensionType(".map", "application/json")
 	mustAddExtensionType(".ts", "application/x-typescript")
+}
+
+func envString(env, fallback string) string {
+	e := os.Getenv(env)
+	if e == "" {
+		return fallback
+	}
+	return e
 }
 
 func main() {
@@ -82,7 +91,13 @@ func main() {
 		BaseURL: *baseURL,
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
-	agService := web.NewAutograderService(logger, db, scms, bh)
+
+	docker := ci.Docker{
+		Endpoint: envString("DOCKER_HOST", "http://localhost:4243"),
+		Version:  envString("DOCKER_VERSION", "1.30"),
+	}
+
+	agService := web.NewAutograderService(logger, db, scms, bh, &docker)
 	go web.New(agService, *public, *httpAddr, *scriptPath, *fake)
 
 	lis, err := net.Listen("tcp", *grpcAddr)

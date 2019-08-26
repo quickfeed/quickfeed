@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
@@ -112,14 +111,9 @@ func enableProviders(l *zap.SugaredLogger, baseURL string, fake bool) map[string
 func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]bool, scriptPath string) {
 	webhooks.DefaultLog = WebhookLogger{SugaredLogger: ags.logger}
 
-	docker := ci.Docker{
-		Endpoint: envString("DOCKER_HOST", "http://localhost:4243"),
-		Version:  envString("DOCKER_VERSION", "1.30"),
-	}
-
 	ghHook := whgithub.New(&whgithub.Config{Secret: ags.bh.Secret})
 	if enabled["github"] {
-		ghHook.RegisterEvents(GithubHook(ags.logger, ags.db, &docker, scriptPath), whgithub.PushEvent)
+		ghHook.RegisterEvents(GithubHook(ags.logger, ags.db, ags.runner, scriptPath), whgithub.PushEvent)
 	}
 	glHook := whgitlab.New(&whgitlab.Config{Secret: ags.bh.Secret})
 	if enabled["gitlab"] {
@@ -197,12 +191,4 @@ func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {
 	if err := e.Shutdown(ctx); err != nil {
 		l.Fatal("failure during server shutdown", zap.Error(err))
 	}
-}
-
-func envString(env, fallback string) string {
-	e := os.Getenv(env)
-	if e == "" {
-		return fallback
-	}
-	return e
 }
