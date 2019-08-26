@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web"
 	_ "github.com/mattn/go-sqlite3"
@@ -36,7 +37,7 @@ func TestNewGroup(t *testing.T) {
 
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 
 	fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
@@ -84,7 +85,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 
 	ctx := withUserContext(context.Background(), admin)
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 
 	fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
@@ -142,7 +143,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 
 	fakeProvider.CreateOrganization(context.Background(),
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
@@ -215,7 +216,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 
 	fakeProvider, scms := fakeProviderMap(t)
 	ctx := withUserContext(context.Background(), user)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 
 	fakeProvider.CreateOrganization(ctx,
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
@@ -239,7 +240,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	defer cleanup()
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	fakeProvider.CreateOrganization(context.Background(),
 		&scm.CreateOrgOptions{Path: "path", Name: "name"},
 	)
@@ -439,7 +440,7 @@ func TestDeleteGroup(t *testing.T) {
 	group := &pb.Group{Name: "Test Delete Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 
 	ctx := withUserContext(context.Background(), user)
 	respGroup, err := ags.CreateGroup(ctx, group)
@@ -481,7 +482,7 @@ func TestGetGroup(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	ctx := withUserContext(context.Background(), user)
 
 	group := &pb.Group{Name: "Test Group", CourseID: testCourse.ID, Users: []*pb.User{user}}
@@ -532,7 +533,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	ctx := withUserContext(context.Background(), teacher)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
@@ -615,7 +616,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	ctx := withUserContext(context.Background(), admin)
 
 	user1 := createFakeUser(t, db, 2)
@@ -674,7 +675,7 @@ func TestDeleteApprovedGroup(t *testing.T) {
 	}
 
 	fakeProvider, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	ctx := withUserContext(context.Background(), admin)
 
 	if _, err := fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{
@@ -778,7 +779,7 @@ func TestGetGroups(t *testing.T) {
 	admin := users[0]
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	// admin will be enrolled as teacher because of course creation below
 	ctx := withUserContext(context.Background(), admin)
 

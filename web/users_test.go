@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
@@ -51,7 +52,7 @@ func TestGetUsers(t *testing.T) {
 	defer cleanup()
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
 	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
 		t.Fatalf("found unexpected users %+v", unexpectedUsers)
@@ -115,7 +116,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	}
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	ctx := withUserContext(context.Background(), admin)
 
 	// users to enroll in course DAT520 Distributed Systems
@@ -187,7 +188,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	admin := users[0]
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	ctx := withUserContext(context.Background(), admin)
 
 	course := allCourses[1]
@@ -264,7 +265,7 @@ func TestUpdateUser(t *testing.T) {
 	nonAdminUser := createFakeUser(t, db, 11)
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 	ctx := withUserContext(context.Background(), firstAdminUser)
 
 	// we want to update nonAdminUser to become admin
@@ -325,7 +326,7 @@ func TestUpdateUserFailures(t *testing.T) {
 	createFakeUser(t, db, 11)
 
 	_, scms := fakeProviderMap(t)
-	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{})
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Docker{})
 
 	u := createFakeUser(t, db, 3)
 	if u.IsAdmin {
