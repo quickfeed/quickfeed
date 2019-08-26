@@ -1,5 +1,4 @@
 import * as React from "react";
-import { getDeadline } from "../../../proto/deadline";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
@@ -26,7 +25,6 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
         const labs: JSX.Element[] = submissionArray.map((submission, k) => {
             let submissionInfo = <div>No submissions</div>;
             if (submission.latest) {
-                const deadlineDate = getDeadline(submission.assignment);
                 submissionInfo = <div className="row">
                     <div className="col-md-6 col-lg-8">
                         <ProgressBar progress={submission.latest.score} />
@@ -38,8 +36,7 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
                     <div className="col-md-3 col-lg-2">
                         Deadline:
                         <span style={{ display: "inline-block", verticalAlign: "top", paddingLeft: "10px" }}>
-                            {deadlineDate[0]} <br />
-                            {deadlineDate[1]}
+                            {submission.assignment.getDeadline()}
                         </span>
                     </div>
                 </div>;

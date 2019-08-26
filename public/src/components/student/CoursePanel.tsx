@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Assignment, Course } from "../../../proto/ag_pb";
-import { getDeadline } from "../../../proto/deadline";
 import { DynamicTable } from "../../components";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { IStudentSubmission } from "../../models";
@@ -31,7 +30,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                                 return [
                                     item.assignment.getName(),
                                     score,
-                                    getDeadline(item.assignment)[0],
+                                    item.assignment.getDeadline(),
                                 ];
                             }}
                             onRowClick={(lab: IStudentSubmission) => {
