@@ -106,12 +106,12 @@ The `tests` repository must contain one `assignment.yaml` file for each lab assi
 assignmentid: 1
 name: "lab1"
 language: "go"
-deadline: "03-25-2019 14:00"
+deadline: "2019-09-23T12:00:00"
 autoapprove: false
 isgrouplab: false
 ```
 
-The `deadline` date format is `MM-DD-YYYY`.
+The `deadline` date format is `YYYY-MM-DD`.
 
 The `autoapprove` indicates whether or not Autograder will automatically approve the assignment when sufficient number of tests pass.
 
