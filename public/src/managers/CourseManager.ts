@@ -16,6 +16,7 @@ export interface ICourseProvider {
 
     addUserToCourse(user: User, course: Course): Promise<boolean>;
     changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean>;
+    approveAll(courseID: number): Promise<boolean>;
 
     createNewCourse(courseData: Course): Promise<Course | Status>;
     getCourse(id: number): Promise<Course | null>;
@@ -119,6 +120,10 @@ export class CourseManager {
      */
     public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
         return this.courseProvider.changeUserState(link, state);
+    }
+
+    public async approveAll(courseID: number): Promise<boolean> {
+        return this.courseProvider.approveAll(courseID);
     }
 
     /**

@@ -152,6 +152,12 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateEnrollment, request);
     }
 
+    public updateEnrollments(courseID: number): Promise<IGrpcResponse<Void>> {
+        const request = new RecordRequest();
+        request.setId(courseID);
+        return this.grpcSend<Void>(this.agService.updateEnrollments, request);
+    }
+
     // /* GROUPS */ //
 
     public getGroup(groupID: number): Promise<IGrpcResponse<Group>> {
