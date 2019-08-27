@@ -212,6 +212,24 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 	return &pb.Void{}, nil
 }
 
+// UpdateEnrollments changes status of all pending enrollments for the given course to approved
+// Access policy: Teacher of CourseID
+func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("UpdateEnrollments failed: authentication error (%s)", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.GetID(), in.GetID()) {
+		s.logger.Error("UpdateEnrollment failed: user is not teacher")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update enrollment status")
+	}
+	// TODO: a separate private method that will retrieve all pending assignments for the course (can later be used to check if there are
+	// any assignments pending) and (probably another one) that will change their status to approved
+	// will return void, frontend will construct a boolean answer based on responce status code
+	return nil, nil
+}
+
 // GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.
 // Access policy: Any User.
 func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.RecordRequest) (*pb.Courses, error) {

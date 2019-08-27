@@ -492,6 +492,28 @@ export class AutograderServiceClient {
       callback);
   }
 
+  methodInfoUpdateEnrollments = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: RecordRequest) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  updateEnrollments(
+    request: RecordRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateEnrollments',
+      request,
+      metadata || {},
+      this.methodInfoUpdateEnrollments,
+      callback);
+  }
+
   methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
     Submissions,
     (request: SubmissionRequest) => {
