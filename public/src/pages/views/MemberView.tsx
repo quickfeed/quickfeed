@@ -42,6 +42,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     onChange={(query) => this.handleSearch(query)}
                 />
             {this.renderPendingView(pendingActions)}
+            {this.props.pendingUsers.length > 0 ? this.approveAll() : null}
             {this.renderUserView()}
             {this.renderRejectedView()}
         </div>;
@@ -192,6 +193,15 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 return true;
             }
         return false;
+    }
+
+    private approveAll() {
+        return <p> <button type="button"
+                id="approve"
+                className="btn btn-success"
+                onClick={() => {
+                    console.log("Approving " + this.props.pendingUsers.length + " pending users...");
+                }}> Approve all pending </button> </p>;
     }
 
     private refreshState() {

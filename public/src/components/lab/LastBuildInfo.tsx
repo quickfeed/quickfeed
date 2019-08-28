@@ -59,6 +59,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                                             rebuilding: true,
                                         });
                                         this.props.onRebuildClick(this.props.submission_id);
+                                        
                                     }}>
                                         {this.state.rebuilding ? "Rebuilding" : "Rebuild"}
                                 </button>
