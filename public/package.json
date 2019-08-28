@@ -20,12 +20,14 @@
     "lodash": "^4.17.15",
     "react": "^16.8.0",
     "react-components": "^0.5.1",
-    "react-dom": "^16.8.0"
+    "react-dom": "^16.8.0",
+    "webpack": "^4.39.3"
   },
   "devDependencies": {
     "awesome-typescript-loader": "^5.2.1",
     "source-map-loader": "^0.2.4",
-    "typescript": "^3.5.3"
+    "typescript": "^3.5.3",
+    "webpack-cli": "^3.3.7"
   },
   "repository": {
     "type": "git",
