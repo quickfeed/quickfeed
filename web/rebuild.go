@@ -24,7 +24,7 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, submissionID 
 	if err != nil {
 		return err
 	}
-	if len(repos) != 1 {
+	if len(repos) < 1 {
 		s.logger.Error(len(repos), " user repositories found for user ", submission.GetUserID())
 		return fmt.Errorf("Failed to get user repository for the submission")
 	}
