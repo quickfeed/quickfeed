@@ -14,9 +14,14 @@ interface ILastBuildInfo {
     onRebuildClick: (submissionID: number) => void;
 }
 
-export class LastBuildInfo extends React.Component<ILastBuildInfo> {
+interface ILastBuildInfoState {
+    rebuilding: boolean;
+}
+
+export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInfoState> {
 
     public render() {
+        this.state = { rebuilding: false };
         let approveButton = <p></p>;
         if (this.props.showApprove) {
             approveButton = <p> <button type="button"
@@ -49,7 +54,13 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo> {
                         <div className="col-lg-12">
                             <p>
                                 <button type="button" id="rebuild" className="btn btn-primary"
-                                    onClick={() => this.props.onRebuildClick(this.props.submission_id)}>Rebuild
+                                    onClick={() => {
+                                        this.setState({
+                                            rebuilding: true,
+                                        });
+                                        this.props.onRebuildClick(this.props.submission_id);
+                                    }}>
+                                        {this.state.rebuilding ? "Rebuilding" : "Rebuild"}
                                 </button>
                             </p>
                             {approveButton}
