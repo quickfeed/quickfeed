@@ -85,9 +85,16 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 			HTMLURL:        repo.WebURL,
 			RepoType:       pb.Repository_USER,
 		}
-		if err := s.db.CreateRepository(&userRepo); err != nil {
-			return err
+
+		// only create database record if there are no user repos
+		// TODO(vera): this can be set as a unique constraint in go tag in proto
+		// but will it be compatible with the database created without this constraint?
+		if dbRepo, _ := s.db.GetRepositories(&userRepo); dbRepo == nil {
+			if err := s.db.CreateRepository(&userRepo); err != nil {
+				return err
+			}
 		}
+
 		return s.db.EnrollStudent(request.UserID, request.CourseID)
 
 	case pb.Enrollment_TEACHER:
