@@ -104,6 +104,24 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 	return fmt.Errorf("unknown enrollment")
 }
 
+func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, cid uint64) error {
+	// get all pending enrolmets for the course ID
+	enrolls, err := s.db.GetEnrollmentsByCourse(cid, pb.Enrollment_PENDING)
+	if err != nil {
+		return err
+	}
+	// TODO(vera): feels like a really bad idea to pass the same context multiple times
+	// we probably need a new scm method to batch scm requests
+	// it is certainly possible to add all approved students to org and student team in one request
+	// but can be a bit more tricky with repos
+	for _, enrol := range enrolls {
+		if err = s.updateEnrollment(ctx, sc, enrol); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
 	org, err := sc.GetOrganization(ctx, course.OrganizationID)
 	if err != nil {
