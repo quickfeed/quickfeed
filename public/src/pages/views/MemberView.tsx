@@ -18,6 +18,7 @@ interface IUserViewerState {
     acceptedUsers: IUserRelation[];
     pendingUsers: IUserRelation[];
     rejectedUsers: IUserRelation[];
+    approveAllClicked: boolean;
 }
 
 export class MemberView extends React.Component<IUserViewerProps, IUserViewerState> {
@@ -28,6 +29,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             acceptedUsers: this.props.acceptedUsers,
             pendingUsers: this.props.pendingUsers,
             rejectedUsers: this.props.rejectedUsers,
+            approveAllClicked: false,
         };
     }
     public render() {
@@ -201,6 +203,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 className="btn btn-success"
                 onClick={() => {
                     console.log("Approving " + this.props.pendingUsers.length + " pending users...");
+                    // set clicked
+                    // await return
+                    // then reset clicked
                 }}> Approve all pending </button> </p>;
     }
 
