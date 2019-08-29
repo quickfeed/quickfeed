@@ -13,6 +13,8 @@ git clone {{ .TestURL }}
 # Move to folder for assignment to test.
 cd assignments/{{ .AssignmentName }}/
 
+
+
 # Fail student code that attempts to access secret
 if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
   echo "\n=== Misbehavior Detected: Failed ===\n"
@@ -35,7 +37,7 @@ func Secret() string {
 EOF
 
 # Copy tests into student assignments folder for running tests
-cp -r /go/tests/* assignments/
+cp -r /go/tests/* /go/assignments/
 
 # Clear access token and the shell history to avoid leaking information to student test code.
 git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
