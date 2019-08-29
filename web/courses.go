@@ -117,11 +117,8 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 	if err != nil {
 		return err
 	}
-	// TODO(vera): feels like a really bad idea to pass the same context multiple times
-	// we probably need a new scm method to batch scm requests
-	// it is certainly possible to add all approved students to org and student team in one request
-	// but can be a bit more tricky with repos
 	for _, enrol := range enrolls {
+		enrol.Status = pb.Enrollment_STUDENT
 		if err = s.updateEnrollment(ctx, sc, enrol); err != nil {
 			return err
 		}
