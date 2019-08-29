@@ -163,12 +163,6 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                             : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
 
                         this.props.navMan.navigateTo(redirectTo);
-                    } else {
-                        // There is group data, but cur user is not part of that group
-                        const flash = this.genCurUserMissingFromGroupWarn();
-                        this.setState({
-                            errorFlash: flash,
-                        });
                     }
                 } else { // Teacher created group, so no group data.
                     this.props.navMan.refresh();
