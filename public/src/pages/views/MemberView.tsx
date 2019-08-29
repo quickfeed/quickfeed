@@ -44,7 +44,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     onChange={(query) => this.handleSearch(query)}
                 />
             {this.renderPendingView(pendingActions)}
-            {this.props.pendingUsers.length > 0 ? this.approveAll() : null}
+            {this.props.pendingUsers.length > 0 ? this.approveButton() : null}
             {this.renderUserView()}
             {this.renderRejectedView()}
         </div>;
@@ -197,16 +197,30 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         return false;
     }
 
-    private approveAll() {
+    private approveButton() {
         return <p> <button type="button"
                 id="approve"
                 className="btn btn-success"
-                onClick={() => {
-                    console.log("Approving " + this.props.pendingUsers.length + " pending users...");
-                    // set clicked
-                    // await return
-                    // then reset clicked
-                }}> Approve all pending </button> </p>;
+                // only activate the approve function if is not already approving
+                onClick={this.state.approveAllClicked ?
+                    () => {} : async () => {
+                        await this.handleApproveClick().then(() => {
+                            this.setState({approveAllClicked: false});
+                        });
+                    }
+                }> {this.approveButtonString()} </button> </p>;
+    }
+
+    private async handleApproveClick(): Promise<boolean> {
+        this.setState({approveAllClicked: true});
+        const ans = await this.props.courseMan.approveAll(this.props.course.getId());
+        console.log("ApproveAll got answer: " + ans);
+        this.props.navMan.refresh();
+        return ans;
+    }
+
+    private approveButtonString(): string {
+        return this.state.approveAllClicked ? "Approving..." : "Approve all pending";
     }
 
     private refreshState() {
