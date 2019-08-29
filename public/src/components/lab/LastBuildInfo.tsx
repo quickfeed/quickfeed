@@ -57,11 +57,9 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                                     onClick={() => {
                                         this.setState({
                                             rebuilding: true,
-                                        });
-                                        this.props.onRebuildClick(this.props.submission_id);
-                                        
+                                        }, () => this.props.onRebuildClick(this.props.submission_id));
                                     }}>
-                                        {this.state.rebuilding ? "Rebuilding" : "Rebuild"}
+                                        {this.setButtonString()}
                                 </button>
                             </p>
                             {approveButton}
@@ -72,9 +70,12 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
         );
     }
 
+    private setButtonString(): string {
+        return this.state.rebuilding ? "Rebuilding" : "Rebuild";
+    }
+
     private handleClick(rebuild: () => void) {
         // TODO: implement rebuild functionality
         rebuild();
-        console.log("Rebuilding...");
     }
 }
