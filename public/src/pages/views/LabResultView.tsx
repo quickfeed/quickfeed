@@ -8,7 +8,7 @@ interface ILabInfoProps {
     labInfo: IStudentSubmission;
     showApprove: boolean;
     onApproveClick: () => void;
-    onRebuildClick: (submissionID: number) => void;
+    onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps> {

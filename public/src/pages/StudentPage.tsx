@@ -110,8 +110,9 @@ export class StudentPage extends ViewPage {
                     assignment={this.selectedAssignment}
                     showApprove={false}
                     onRebuildClick={async (submissionID: number) => {
-                        await this.courseMan.refreshSubmission(submissionID);
+                        const ans = await this.courseMan.refreshSubmission(submissionID);
                         this.navMan.refresh();
+                        return ans;
                     }}
                     onApproveClick={() => { }}>
                 </StudentLab>;
@@ -132,7 +133,10 @@ export class StudentPage extends ViewPage {
                     course={this.selectedUserGroupCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
-                    onRebuildClick={() => { }}
+                    onRebuildClick={async (assignmentID: number) => {
+                        console.log("Group rebuild not implemented yet");
+                        return false;
+                    }}
                     onApproveClick={() => { }}>
                 </StudentLab>;
             }

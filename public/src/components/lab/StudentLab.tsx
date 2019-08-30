@@ -9,7 +9,7 @@ interface IStudentLabProps {
     student?: User;
     showApprove: boolean;
     onApproveClick: () => void;
-    onRebuildClick: (submissionID: number) => void;
+    onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
 
 export class StudentLab extends React.Component<IStudentLabProps> {

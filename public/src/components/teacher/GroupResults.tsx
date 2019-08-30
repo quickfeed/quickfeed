@@ -8,6 +8,7 @@ interface IResultsProps {
     groups: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
+    onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
 
 interface IResultsState {
@@ -49,7 +50,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
-                onRebuildClick={() => { }}
+                onRebuildClick={this.props.onRebuildClick}
                 onApproveClick={() => {
                     if (this.state.assignment && this.state.assignment.latest) {
                         this.props.onApproveClick(this.state.assignment.latest.id);

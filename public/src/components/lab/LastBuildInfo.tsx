@@ -11,7 +11,7 @@ interface ILastBuildInfo {
     build_id: number;
     showApprove: boolean;
     onApproveClick: () => void;
-    onRebuildClick: (submissionID: number) => void;
+    onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
 
 interface ILastBuildInfoState {
@@ -20,8 +20,11 @@ interface ILastBuildInfoState {
 
 export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInfoState> {
 
-    public render() {
+    constructor(props: ILastBuildInfo) {
+        super(props);
         this.state = { rebuilding: false };
+    }
+    public render() {
         let approveButton = <p></p>;
         if (this.props.showApprove) {
             approveButton = <p> <button type="button"
@@ -54,11 +57,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                         <div className="col-lg-12">
                             <p>
                                 <button type="button" id="rebuild" className="btn btn-primary"
-                                    onClick={() => {
-                                        this.setState({
-                                            rebuilding: true,
-                                        }, () => this.props.onRebuildClick(this.props.submission_id));
-                                    }}>{this.setButtonString()}</button>
+                                    onClick={() => {this.rebuildSubmission()}}>{this.setButtonString()}</button>
                             </p>
                             {approveButton}
                         </div>
@@ -66,6 +65,17 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                 </div>
             </Row>
         );
+    }
+
+    private async rebuildSubmission() {
+        this.setState({
+            rebuilding: true,
+        });
+        await this.props.onRebuildClick(this.props.submission_id).then(() => {
+            this.setState({
+                rebuilding: false,
+            });
+        });
     }
 
     private setButtonString(): string {

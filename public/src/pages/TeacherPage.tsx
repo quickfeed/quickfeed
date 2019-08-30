@@ -140,8 +140,9 @@ export class TeacherPage extends ViewPage {
                 labs={labs}
                 students={linkedStudents}
                 onRebuildClick={async (submissionID: number) => {
-                    await this.courseMan.refreshSubmission(submissionID);
+                    const ans = await this.courseMan.refreshSubmission(submissionID);
                     this.navMan.refresh();
+                    return ans;
                 }}
                 onApproveClick={async (submissionID: number) => {
                     if (confirm(
@@ -176,6 +177,10 @@ export class TeacherPage extends ViewPage {
                 course={course}
                 labs={labs}
                 groups={linkedGroups}
+                onRebuildClick={async (submissionID: number) => {
+                    console.log("Group rebuilds are not implemented, submission ID is " + submissionID);
+                    return false;
+                }}
                 onApproveClick={async (submissionID: number) => {
                     await this.courseMan.approveSubmission(submissionID, course.getId());
                     this.navMan.refresh();
