@@ -1,4 +1,4 @@
-# Autogradee developer manual
+# Autograder developer manual
 
 ## Technology stack
 
@@ -10,38 +10,37 @@
 - [Envoy](https://www.envoyproxy.io/)
 - [NGINX](https://www.nginx.com/resources/wiki/)
 
-### Package management // Download and Install
+## Download and Install
 
-- [installation guide](./Installation.md)  (TODO - update with go modules information)
-- GOPATH environmental variable (go get)
-- go modules (git clone + go install): 
-    [go mod](https://blog.golang.org/using-go-modules)
+[Installation guide](./Installation.md)  
 
-## GitHub integration: OAuth2 application setup
+[Working with go modules](https://blog.golang.org/using-go-modules)
 
-[GitHub setup instructions](./GithubSetup.MD)
+## GitHub integration
 
-[Setting up the course organization](./Teacher.MD)
+[GitHub OAuth2 application setup instructions](./GithubSetup.MD)
+
+[Setting up course organization](./Teacher.MD)
 
 ## Starting up the server
 
-The command to start up the server is of the following form:
+The command to start up the server:
 `aguis -service.url <url> -database.file <path to database> -http.addr <HTTP listener address> -http.public <path to static files>`
 
 ### Flags
 
-- `service.url` - the URL you have set up as callback URL for your Autograder GitHub OAuth2 application. Defaul value: localhost
-- `database.file` - the path to application's database. Default: `/tmp/ag.db` - will be temporary, i.e., removed after reboot
-- `http.addr` - the port number for HTTP listener. Default value: :8081
-- `http.public` - the path to the static files to serve. Default value: `./public`
+- `service.url` - URL you have set up as callback URL for your Autograder GitHub OAuth2 application. Defaul value: `localhost`
+- `database.file` - path to application's database. Default: `/tmp/ag.db` - will be temporary, i.e., removed after reboot
+- `http.addr` - port number for HTTP listener. Default value: `:8081`
+- `http.public` - path to the static files to serve. Default value: `./public`
 
 ## SCM tool
 
-SCM tool can be used for working with github organization from command line. This way you can remove all repositories and teams from your test organization withiout going to github page and removing them manually.
+SCM tool can be used for working with github organization from command line. This way you can list or remove all repositories and teams for your test organization withiout going to GitHub page and doing everything them manually.
 
 ### Prerequisites
 
-SCM tool must be compiled before it can be used. To compile, run `make scm` command or go to `cmd/csm` folder and run `go compile`.
+SCM tool must be compiled before it can be used. To compile, run `make scm` command or go to `cmd/csm` folder and run `go install`.
 After that `scm` command will become active.
 
 To use SCM tool, you have to create a personal github access token. This is done on GitHub's web page:
@@ -56,14 +55,14 @@ To use SCM tool, you have to create a personal github access token. This is done
 ```sh
   export GITHUB_ACCESS_TOKEN=<your token>
 ```
-You must also be owner of the GitHub organization to be able to access its repositories and teams with SCM tool.
+You must also be an owner of the GitHub organization to be able to access its repositories and teams with SCM tool.
 
 ### Example usage:
 
 ```
 scm --provider github get repo -all -namespace autograder-test
 ```
-  will print out information about all repos existing for the **autograder-test** organization.
+  will print out information about all repositories existing for the **autograder-test** organization.
 
 ```
 scm delete team -all -namespace autograder-test
@@ -74,17 +73,18 @@ Other examples and instructions are provided in comments in the `cmd/ci/main.go`
 
 ## Makefile
 
-Makefile allows to simplify running different tasks, i.e. compiling, updating and starting the server.
+Makefile allows to simplify running different tasks, such as compiling, updating and starting up the server.
 
 The list at the top of `Makefile` compises variables, that can be altered according to situation (especially port numbers, organization name, and URIs).
 
 ### Compiling tasks
 
-Use `make proto` if you want to introduce any changes to ag.proto file. It will compile all the frontend and backend code and make all the necesary changes to compiled files. You will have to recompile the server and the client code after that. Use 'make install' and 'make ui' for these tasks.
+Use `make proto` if you want to introduce any changes to ag.proto file. It will recompile all the frontend and backend code and make all the necessary changes to compiled files.
+'make install' will recompile Go code for the Autograder server, and 'make ui' will start build `bundle.js` file for Autograder browser-based client.
 
 ### Proxy
 
-Use `make envoy-build` to rebuild the envoy container, and `make envoy-run` to start it manually.
+Use `make envoy-build` to rebuild the Envoy docker container, and `make envoy-run` to start it manually.
 Use `make envoy-purge` to clean up all envoy containers and images before rebuilding.
 
 Use `make nginx` to reload nginx. It will not reload if configuration file has invalid syntax.
@@ -95,7 +95,7 @@ Use `make test` to run all the tests in `web` and `database` packages.
 
 ### Utility
 
-`make local` and `make remote` will switch where and how the gRPC client is being run, then will recompile the frontend. Use `make local` when running server locally with port forwarding, otherwise use `make remote`.
+`make local` and `make remote` will switch where and how the gRPC client is being run, then will recompile the frontend. Use `make local` when running server on localhost with port forwarding, otherwise use `make remote`.
 
 **Warning:** never push code with local gRPC client settings to the `aguis` repository, it will cause the server to stop responding to client requests. If this happens, just run `make remote` on the server location.
 
@@ -104,15 +104,16 @@ Use `make test` to run all the tests in `web` and `database` packages.
 
 ### Default setup
 
-By default, the gRPC server will be started at port **:9090**. A docker container with Envoy proxy will listen on port **:8080** and redirect gRPC traffic to the server. Webserver is running on one of internal ports and NGINX erving the static content is set up to redirect HTTP traffic to that port, and all gRPC traffic to the port **:8080** where Envoy proxy is listening.
+By default, the gRPC server will be started at port **:9090**. A docker container with Envoy proxy will listen on port **:8080** and redirect gRPC traffic to the gRPC server. 
+Webserver is running on one of internal ports, and NGINX, serving the static content, is set up to redirect HTTP traffic to that port, and all gRPC traffic to the port **:8080** (same port Envoy proxy is listening on).
 NGINX and Envoy take care of all the relevant heades for gRPC traffic. 
 
 ##  Envoy 
-Envoy proxy allows making gRPC call from a browser application.
+Envoy proxy allows making gRPC calls from a browser application.
 
 ### Basic configuration
 [Default configuration from grpc-web repository](https://github.com/grpc/grpc-web/blob/master/net/grpc/gateway/examples/echo/envoy.yaml)
-The main difference in [our configuration](https://github.com/autograde/aguis/blob/grpc-web-merge/envoy/envoy.yaml) is `http_protocol_options: { accept_http_10: true }` line inside HTTP filter options and an additional header name.
+The main difference in [our configuration](https://github.com/autograde/aguis/blob/grpc-web-merge/envoy/envoy.yaml) is `http_protocol_options: { accept_http_10: true }` line inside HTTP filters list, and an additional header name.
 
 ## NGINX
 
@@ -130,7 +131,7 @@ server {
 
         server_name <your callback url>;
 
-        # takes care og general traffic, redirects everythin to port 3333 (http.add port from aguis command)
+        # takes care of general traffic, redirects everything to port 3333 (http.add port provided in aguis command)
         location / {
                 proxy_pass http://127.0.0.1:3333;
                 proxy_redirect off;
@@ -183,13 +184,13 @@ Then run `sudo certbot---nginx -d <URL you wish to protect>`. When working with 
 
 ### Backend
 
-Errors are being logged at `Autograder Service` level. All other methods called from there (including database and scm methods) will just wrap and return all error messages directly. Introduce logging on layerd deeper than `Autograder Service` only if necessary. 
+Errors are being logged at `Autograder Service` level. All other methods called from there (including database and scm methods) will just wrap and return all error messages directly. Introduce logging on layers deeper than `Autograder Service` only if necessary. 
 
 Errors returned to user interface must be few and informative, yet should not provide too many information about server routines. User must only be informed about details he or she can do something about.
 
 ### Frontend
 
-When receiving responce from the server, responce status code is checked on the frontend. Any message with code different from 0 (0 = OK status code for gRPC) will be logged to console. Relevant error messages will be displayed to user on course and group creation, and user and group enrollment updates.
+When receiving response from the server, response status code is checked on the frontend. Any message with code different from 0 (0 = OK status code for gRPC) will be logged to console. Relevant error messages will be displayed to user on course and group creation, and user and group enrollment updates.
 
 [gRPC status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md)
 
@@ -199,10 +200,10 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 
 ### Webhooks
 
-- GitHub [Webhooks API](https://developer.github.com/webhooks/) is used for building and testing of student solutions.
-- Webhook is set automatically on course creation. It will react to every push event to any of course organization's repositories. 
-- Depending on the repository, assignment information will be updated in the Autograder's databae, or a docker container with a student solution will be built
-- `name` argument for any GitHub webhook is always "web"
+- GitHub [Webhooks API](https://developer.github.com/webhooks/) is used for building and testing of code submitted by students.
+- webhook is created automatically on course creation. It will react to every push event to any of course organization's repositories. 
+- depending on the repository the push event is coming from, assignment information will be updated in the Autograder's database, or a docker container with a student solution code will be built
+- `name` field for any GitHub webhook is always "web"
 - webhook will be using the same callback URL you have provided to the Autograder OAuth2 application and in the server startup command
 
 ### User roles/access levels for organization / team / repository
@@ -214,7 +215,7 @@ For GitHub integration we are using [Go implementation](https://github.com/googl
 ### Slugs
 
 When retrieving team, organization or repository by name, GitHub expects a slugified string instead of a full name as displayed on the organization page. 
-For example, organization with a name like `Ag Test Org` will have slugified name `ag-test-org`.
+For example, organization with a name like `Autograder Test Org` will have slugified name `autograder-test-org`.
 
 [URL slugs explained](http://patterns.dataincubator.org/book/url-slug.html)
 
@@ -222,8 +223,8 @@ For example, organization with a name like `Ag Test Org` will have slugified nam
 
 - `owner` field for any organization repository is a slugified name for that organization
 - access policy:
-  - on course creation - default repository access across the whole organization is set to `none`, which means only the organization owners can see any private repository on that organization
-  - when students enroll, they receive read/pull access to `assignments` repository and write/push access to a personal student repository
+  - on course creation - default repository access across the whole organization is set to `none`, which means that only the organization owners can see any private repository on that organization
+  - when students enroll, they receive read/pull access to `assignments` repository and write/push access to a personal student repository as GitHub invitations to their registered GitHub email
 
 ### Teams
 
@@ -239,13 +240,15 @@ Now to get around the problem, we have to use the built in navigation manager, n
 ## Docker
 
 Autograder application will build code submitted by students, and run tests provided by teachers inside docker containers. An often encountered problem is Docker being unable to resolve DNS due to disabled public DNS.
-If you get a build error of a form:
+If you get a build error like that:
 
 ```
 Docker execution failed{error 25 0  Error response from daemon: Get https://registry-1.docker.io/v2/: dial tcp: lookup registry-1.docker.io on [::1]:53: read udp [::1]:50111->[::1]:53: read: connection refused}
 ```
 
-One of the solutions is to go to uncomment or change `DOCKER_OPTS` line in `/etc/default/docker` file, then restart Docker deamon with `service docker restart`.
+then it must be a DNS problem.
+
+One of the solutions is to uncomment or change `DOCKER_OPTS` line in `/etc/default/docker` file, then restart Docker deamon with `service docker restart`.
 
 [Problem description and possible solutions](https://development.robinwinslow.uk/2016/06/23/fix-docker-networking-dns/)
 
