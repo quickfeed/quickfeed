@@ -188,6 +188,7 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		ScoreObjects: scores,
 		UserID:       repo.UserID,
 		GroupID:      repo.GroupID,
+		Approved:     selectedAssignment.AutoApprove,
 	})
 	if err != nil {
 		logger.Error("Failed to add submission to database", zap.Error(err))
