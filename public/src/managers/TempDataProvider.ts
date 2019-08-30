@@ -290,7 +290,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async refreshSubmission(id: number): Promise<void> {
+    public async refreshSubmission(id: number): Promise<boolean> {
         throw new Error("Method not implemented");
     }
 
