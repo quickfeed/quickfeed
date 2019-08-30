@@ -31,7 +31,7 @@ The command to start up the server is of the following form:
 ### Flags
 
 - `service.url` - the URL you have set up as callback URL for your Autograder GitHub OAuth2 application. Defaul value: localhost
-- `database.file` - the path to application's database. Default: `tmp/ag.db` - will be temporary, i.e., removed after reboot
+- `database.file` - the path to application's database. Default: `/tmp/ag.db` - will be temporary, i.e., removed after reboot
 - `http.addr` - the port number for HTTP listener. Default value: :8081
 - `http.public` - the path to the static files to serve. Default value: `./public`
 
