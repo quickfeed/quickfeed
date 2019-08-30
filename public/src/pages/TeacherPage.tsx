@@ -7,7 +7,7 @@ import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
 
-import { Assignment, Course, Enrollment, Group, Repository, User } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
     IAssignmentLink,
@@ -178,8 +178,9 @@ export class TeacherPage extends ViewPage {
                 labs={labs}
                 groups={linkedGroups}
                 onRebuildClick={async (submissionID: number) => {
-                    console.log("Group rebuilds are not implemented, submission ID is " + submissionID);
-                    return false;
+                    const ans = await this.courseMan.refreshSubmission(submissionID);
+                    this.navMan.refresh();
+                    return ans;
                 }}
                 onApproveClick={async (submissionID: number) => {
                     await this.courseMan.approveSubmission(submissionID, course.getId());
