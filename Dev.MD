@@ -236,6 +236,19 @@ Group records in the Autograder's database will have references to the correspon
 Since this is a single page application, then you would only be able to navigate to the default index page, every other navigation is handle by javascript. The way this works at the server, is that every request to /app/ returns the index.html page.
 Now to get around the problem, we have to use the built in navigation manager, navMan. To do this, go to the main page of the application and open developer tools in the browser. In the command line type in the following command debugData.navMan.navigateTo("/app/admin/courses/new"). You could replace the url with any other url as you like.
 
+## Docker
+
+Autograder application will build code submitted by students, and run tests provided by teachers inside docker containers. An often encountered problem is Docker being unable to resolve DNS due to disabled public DNS.
+If you get a build error of a form:
+
+```
+Docker execution failed{error 25 0  Error response from daemon: Get https://registry-1.docker.io/v2/: dial tcp: lookup registry-1.docker.io on [::1]:53: read udp [::1]:50111->[::1]:53: read: connection refused}
+```
+
+One of the solutions is to go to uncomment or change `DOCKER_OPTS` line in `/etc/default/docker` file, then restart Docker deamon with `service docker restart`.
+
+[Problem description and possible solutions](https://development.robinwinslow.uk/2016/06/23/fix-docker-networking-dns/)
+
 
 
 
