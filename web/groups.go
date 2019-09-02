@@ -69,19 +69,16 @@ func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
 // TODO(meling) this function must be broken up and simplified
-// TODO(meling) if error, add context and return original error
 func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
 	// course must exist in the database
 	course, err := s.db.GetCourse(request.CourseID)
 	if err != nil {
-		s.logger.Errorf("UpdateGroup failed: %s", err)
-		return status.Errorf(codes.NotFound, "course not found")
+		return err
 	}
 	// group must exist in the database
 	group, err := s.db.GetGroup(request.ID)
 	if err != nil {
-		s.logger.Errorf("UpdateGroup failed: %s", err)
-		return status.Errorf(codes.NotFound, "group not found")
+		return err
 	}
 
 	if request.Status == pb.Group_REJECTED || request.Status == pb.Group_DELETED {
