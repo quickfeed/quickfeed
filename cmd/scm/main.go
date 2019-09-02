@@ -308,7 +308,6 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 			}
 			return nil
 		}
-		// TODO(vera): same as with teams, have to adjust existing methods to delete by name
 		err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{Path: c.String("name"), Owner: c.String("namespace")})
 		if err != nil {
 			return err

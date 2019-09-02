@@ -250,10 +250,7 @@ export class GrpcManager {
         return this.grpcSend<Repositories>(this.agService.getRepositories, req);
     }
 
-    public getProviders(): Promise<IGrpcResponse<Providers>> {
-        const request = new Void();
-        return this.grpcSend<Providers>(this.agService.getProviders, request);
-    }
+    // /* ORGANIZATIONS */ //
 
     public getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
         const request = new OrgRequest();
@@ -265,6 +262,11 @@ export class GrpcManager {
         const request = new Provider();
         request.setProvider(provider);
         return this.grpcSend<Organizations>(this.agService.getOrganizations, request);
+    }
+
+    public getProviders(): Promise<IGrpcResponse<Providers>> {
+        const request = new Void();
+        return this.grpcSend<Providers>(this.agService.getProviders, request);
     }
 
     // /* UTILITY */ //

@@ -16,7 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//TODO(vera): reimplement
 func TestGetSelf(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()

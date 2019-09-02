@@ -205,8 +205,6 @@ export class StudentPage extends ViewPage {
                 allLinks.push(...gLabs);
                 allLinks.push({ name: "Repositories" });
 
-                // TODO(vera): check if proto preserves the order of items in arrays
-                // if not, consider using a map
                 const repos = await this.courseMan.getRepositories(
                     courseID,
                     [Repository.Type.USER,

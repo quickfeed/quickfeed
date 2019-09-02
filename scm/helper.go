@@ -122,9 +122,6 @@ func (e ErrNotSupported) Error() string {
 
 // ErrMissingFields is returned when scm struct validation fails.
 // This error only used for development/debugging and never goes to frontend user.
-// TODO(vera): this error can be a struct just as ErrNotSupported with method and interface fields
-// then we cn skip logging it every time it occures. The question is if it even is reasonable to pass a failng struct back to
-// ag_service for logging when it can be logged right here
 type ErrMissingFields struct {
 	Message string
 	Method  string

@@ -61,7 +61,6 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	}
 
 	// create a push hook on organization level
-	// todo(vera): this will probably let us stop adding repo hooks for assignments and tests
 	hookOptions := &scm.OrgHookOptions{
 		URL:          auth.GetEventsURL(s.bh.BaseURL, request.Provider),
 		Secret:       s.bh.Secret,
