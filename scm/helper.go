@@ -130,5 +130,3 @@ type ErrMissingFields struct {
 func (e ErrMissingFields) Error() string {
 	return "github method " + e.Method + " got argument with some of required fields missing: " + e.Message
 }
-
-// = fmt.Errorf("invalid argument: missing required fields")

@@ -63,7 +63,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         <div className="col-sm-10">
                             {this.renderInfo()}
                         </div>
-                        {this.courseByName()}
                         {this.state.organisations == null ? fetchingText : this.state.organisations}
                     </div>
                     {this.renderFormControler("Course Name:",
@@ -282,6 +281,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     }
 
     private async getOrgByName(orgName: string) {
+        console.log("Getting org by name: " + orgName);
         const result = await this.props.courseMan.getOrganization(orgName);
         const orgs: Organization[] = [];
         if (result instanceof Status) {
@@ -292,6 +292,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             this.setState({
                     errorFlash: flashErrors,
             });
+
         } else {
             orgs.push(result);
             this.updateOrganisationDivs(orgs);
@@ -355,16 +356,17 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
     private courseByName() {
         return <div className="form-group">
-            <label className="control-label col-sm-2" htmlFor="orgName">Organization name:</label>
+            <label className="control-label col-sm-2" htmlFor="orgName">Organization:</label>
             <div className="col-sm-10">
                 <input type="text" className="form-control"
                     id="orgname"
-                    placeholder={"Course organization name"}
+                    placeholder="Course organization name"
                     name="orgname"
-                    value="Organization name"
                     onChange={(e) => this.handleInputChange(e)}
-                    onSubmit={() => this.getOrgByName(this.state.orgname)}
                 />
+                 <BootstrapButton classType="primary" type="submit"
+                    onClick={(e) => this.getOrgByName(this.state.orgname)}
+                 >Find</BootstrapButton>
             </div>
         </div>;
     }

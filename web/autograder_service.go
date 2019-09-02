@@ -513,7 +513,7 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 	org, err := s.getOrganization(ctx, scm, in.GetOrgName())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %s", err)
-		return nil, status.Errorf(codes.NotFound, "found no organizations to host course")
+		return nil, status.Errorf(codes.NotFound, "organization not found. Please make sure that 3rd-party access is enabled for your organization")
 	}
 	return org, nil
 }
