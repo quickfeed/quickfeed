@@ -126,6 +126,10 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 	return nil
 }
 
+func (s *AutograderService) getOrganization(ctx context.Context, sc scm.SCM, org string) (*pb.Organization, error) {
+	return sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org})
+}
+
 func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
 	if err != nil {
