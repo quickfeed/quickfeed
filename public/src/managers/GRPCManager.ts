@@ -11,7 +11,9 @@ import {
     Group,
     GroupRequest,
     Groups,
+    Organization,
     Organizations,
+    OrgRequest,
     Provider,
     Providers,
     RecordRequest,
@@ -253,6 +255,12 @@ export class GrpcManager {
         return this.grpcSend<Providers>(this.agService.getProviders, request);
     }
 
+    public getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
+        const request = new OrgRequest();
+        request.setOrgname(orgName);
+        return this.grpcSend<Organization>(this.agService.getOrganization, request)
+    }
+
     public getOrganizations(provider: string): Promise<IGrpcResponse<Organizations>> {
         const request = new Provider();
         request.setProvider(provider);
@@ -288,7 +296,6 @@ export class GrpcManager {
                     } else {
                         const code = new Status();
                         code.setCode(0);
-                        // TODO(vera): this can be handled in another way, needs synchronization with backend
                         code.setError("OK");
                         const temp: IGrpcResponse<T> = {
                             data: response as T,

@@ -24,6 +24,7 @@ interface ICourseFormState {
     year: string;
     provider: string;
     orgid: number;
+    orgname: string;
     organisations: JSX.Element | null;
     errorFlash: JSX.Element | null;
     clicked: boolean;
@@ -37,6 +38,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             code: this.props.courseData ? this.props.courseData.getCode() : "",
             tag: this.props.courseData ? this.props.courseData.getTag() : "",
             year: this.props.courseData ? this.props.courseData.getYear().toString() : "",
+            orgname: "",
             provider: "github",
             orgid: this.props.courseData ? this.props.courseData.getOrganizationid() : 0,
             organisations: null,
@@ -49,7 +51,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
         const fetchingText = (<div><label className="control-label col-sm-2">Information:</label>
         <div className="col-sm-10">  Fetching GitHub organizations... </div></div>);
-        this.renderOrgs()
+        this.renderOrgs();
         return (
             <div>
                 <h1>{getTitleText}</h1>
@@ -61,6 +63,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         <div className="col-sm-10">
                             {this.renderInfo()}
                         </div>
+                        {this.courseByName()}
                         {this.state.organisations == null ? fetchingText : this.state.organisations}
                     </div>
                     {this.renderFormControler("Course Name:",
@@ -278,6 +281,23 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         }
     }
 
+    private async getOrgByName(orgName: string) {
+        const result = await this.props.courseMan.getOrganization(orgName);
+        const orgs: Organization[] = [];
+        if (result instanceof Status) {
+            const errMsg = result.getError();
+            const serverErrors: string[] = [];
+            serverErrors.push(errMsg);
+            const flashErrors = this.getFlashErrors(serverErrors);
+            this.setState({
+                    errorFlash: flashErrors,
+            });
+        } else {
+            orgs.push(result);
+            this.updateOrganisationDivs(orgs);
+        }
+    }
+
     private async getOrganizations(provider: string): Promise<void> {
         const orgs = await this.props.courseMan.getOrganizations(provider);
         this.setState({
@@ -331,6 +351,22 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             organisations: orgDivs,
             orgid: 0,
         });
+    }
+
+    private courseByName() {
+        return <div className="form-group">
+            <label className="control-label col-sm-2" htmlFor="orgName">Organization name:</label>
+            <div className="col-sm-10">
+                <input type="text" className="form-control"
+                    id="orgname"
+                    placeholder={"Course organization name"}
+                    name="orgname"
+                    value="Organization name"
+                    onChange={(e) => this.handleInputChange(e)}
+                    onSubmit={() => this.getOrgByName(this.state.orgname)}
+                />
+            </div>
+        </div>;
     }
 
     private courseValidate(): string[] {

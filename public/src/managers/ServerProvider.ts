@@ -269,6 +269,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async getOrganization(orgName: string): Promise<Organization | Status> {
+        const result = await this.grpcHelper.getOrganization(orgName);
+        if (result.status.getCode() !== 0 || !result.data) {
+            return result.status;
+        }
+        return result.data;
+    }
+
     public async getOrganizations(provider: string): Promise<Organization[]> {
         const result = await this.grpcHelper.getOrganizations(provider);
         if (result.status.getCode() !== 0 || !result.data) {

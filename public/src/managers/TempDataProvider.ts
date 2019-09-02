@@ -254,6 +254,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
+    public async getOrganization(orgName: string): Promise<Organization | Status > {
+        throw new Error("Method not implemented");
+    }
+
     public async updateGroupStatus(groupId: number, status: Group.GroupStatus): Promise<boolean> {
         throw new Error("Method not implemented");
     }
