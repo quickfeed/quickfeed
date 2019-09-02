@@ -87,6 +87,11 @@ func (req RecordRequest) IsValid() bool {
 	return req.GetID() > 0
 }
 
+// IsValid checks whether OrgRequest fields are valid
+func (req OrgRequest) IsValid() bool {
+	return req.GetOrgName() != ""
+}
+
 // IsValid checks that all requested repo types are valid types and course ID field is set
 func (req URLRequest) IsValid() bool {
 	if req.GetCourseID() < 1 {
