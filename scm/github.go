@@ -65,8 +65,10 @@ func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOption
 // UpdateOrganization implements the SCM interface.
 func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("UpdateOrganization got invalid CreateOrgOptions: %v", opt)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "UpdateOrganization",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	_, _, err := s.client.Organizations.Edit(ctx, opt.Path, &github.Organization{DefaultRepoPermission: &opt.DefaultPermission})
 	return err
@@ -89,8 +91,10 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organiz
 // CreateRepository implements the SCM interface.
 func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
 	if !opt.valid() {
-		s.logger.Errorf("CreateRepository got invalid CreateRepositoryOptions: %v", opt)
-		return nil, ErrMissingFields
+		return nil, ErrMissingFields{
+			Method:  "CreateRepository",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	repo, _, err := s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
 		Name:    &opt.Path,
@@ -106,8 +110,10 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 // GetRepository implements the SCM interface.
 func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (*Repository, error) {
 	if !opt.valid() {
-		s.logger.Errorf("GetRepository got invalid RepositoryOptions: %+v", opt)
-		return nil, ErrMissingFields
+		return nil, ErrMissingFields{
+			Method:  "GetRepository",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	var repo *github.Repository
 	var err error
@@ -128,8 +134,10 @@ func (s *GithubSCM) GetRepository(ctx context.Context, opt *RepositoryOptions) (
 // GetRepositories implements the SCM interface.
 func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) ([]*Repository, error) {
 	if !org.IsValid() {
-		s.logger.Errorf("GetRepositories got invalid Organization: %+v", org)
-		return nil, ErrMissingFields
+		return nil, ErrMissingFields{
+			Method:  "GetRepositories",
+			Message: fmt.Sprintf("%+v", org),
+		}
 	}
 	var path string
 	if org.Path != "" {
@@ -179,8 +187,10 @@ func (s *GithubSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions
 // UpdateRepoAccess implements the SCM interface.
 func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user, permission string) error {
 	if repo == nil || !repo.valid() {
-		s.logger.Errorf("UpdateRepoAccess got invalid Repository: %+v", repo)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "UpdateRepoAccess",
+			Message: fmt.Sprintf("%+v", repo),
+		}
 	}
 	opt := &github.RepositoryAddCollaboratorOptions{
 		Permission: permission,
@@ -195,8 +205,10 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string)
 	var hooks []*Hook
 
 	if repo == nil || !repo.valid() {
-		s.logger.Errorf("ListHooks got invalid Repository: %+v", repo)
-		return nil, ErrMissingFields
+		return nil, ErrMissingFields{
+			Method:  "ListHooks",
+			Message: fmt.Sprintf("%+v", org),
+		}
 	}
 
 	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
@@ -232,8 +244,10 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string)
 // CreateHook implements the SCM interface.
 func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("CreateHook got invalid CreateHookOptions: %+v with repository %+v", opt, opt.Repository)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "CreateHook",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	_, _, err := s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path,
 		&github.Hook{
@@ -253,8 +267,10 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 // CreateOrgHook implements the scm interface
 func (s *GithubSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("CreateOrgHook got invalid OrgHookOptions: %+v with organization %+v", opt, opt.Organization)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "CreateOrgHook",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	hook := &github.Hook{
 		Config: map[string]interface{}{
@@ -275,8 +291,10 @@ func (s *GithubSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) erro
 // CreateTeam implements the SCM interface.
 func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
 	if !opt.validWithOrg() {
-		s.logger.Errorf("CreateTeam got invalid CreateTeamOptions: %+v", opt)
-		return nil, ErrMissingFields
+		return nil, ErrMissingFields{
+			Method:  "CreateTeam",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	t, _, err := s.client.Teams.CreateTeam(ctx, opt.Organization.Path, github.NewTeam{
 		Name: opt.TeamName,
@@ -305,8 +323,10 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 // DeleteTeam implements the SCM interface.
 func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("DeleteTeam got invalid CreateTeamOptions: %+v", opt)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "DeleteTeam",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	team, err := s.GetTeam(ctx, opt)
 	if err != nil {
@@ -322,8 +342,10 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) erro
 // GetTeam implements the SCM interface
 func (s *GithubSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (scmTeam *Team, err error) {
 	if !opt.valid() {
-		s.logger.Errorf("GetTeam got invalid CreateTeamOptions: %+v", opt)
-		return nil, ErrMissingFields
+		return nil, ErrMissingFields{
+			Method:  "GetTeam",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	var team *github.Team
 	if opt.TeamID < 1 {
@@ -348,8 +370,10 @@ func (s *GithubSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (scmTea
 // GetTeams implements the scm interface
 func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	if !org.IsValid() {
-		s.logger.Errorf("GetTeams got invalid Organization: %+v", org)
-		return nil, ErrMissingFields
+		return nil, ErrMissingFields{
+			Method:  "GetTeams",
+			Message: fmt.Sprintf("%+v", org),
+		}
 	}
 	gitTeams, _, err := s.client.Teams.ListTeams(ctx, org.Path, &github.ListOptions{})
 	if err != nil {
@@ -366,8 +390,10 @@ func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team
 // AddTeamMember implements the scm interface
 func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("AddTeamMember got invalid TeamMembershipOptions: %+v", opt)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "AddTeamMember",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	team, err := s.GetTeam(ctx, &CreateTeamOptions{
 		Organization: opt.Organization,
@@ -389,8 +415,10 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 // RemoveTeamMember implements the scm interface
 func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("RemoveTeamMember got invalid TeamMembershipOptions: %+v", opt)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "RemoveTeamMember",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	team, err := s.GetTeam(ctx, &CreateTeamOptions{Organization: opt.Organization, TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
 	if err != nil {
@@ -421,8 +449,10 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 // UpdateTeamMembers implements the SCM interface
 func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("UpdateTeamMembers got invalid CreateTeamOptions: %+v", opt)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "UpdateTeamMembers",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	groupTeam, _, err := s.client.Teams.GetTeam(ctx, int64(opt.TeamID))
 	if err != nil {
@@ -474,8 +504,10 @@ func (s *GithubSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 // AddTeamRepo implements the SCM interface.
 func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("AddTeamRepo got invalid AddTeamRepoOptions: %+v", opt)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "AddTeamRepo",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	_, err := s.client.Teams.AddTeamRepo(ctx, int64(opt.TeamID), opt.Owner, opt.Repo,
 		&github.TeamAddTeamRepoOptions{
@@ -509,8 +541,10 @@ func (s *GithubSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (strin
 // UpdateOrgMembership implements the SCM interface
 func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 	if !opt.valid() {
-		s.logger.Errorf("UpdateOrgMembership got invalid OrgMembershipOptions: %+v", opt)
-		return ErrMissingFields
+		return ErrMissingFields{
+			Method:  "UpdateOrgMembership",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
 	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, opt.Organization.Path, &github.Membership{Role: &opt.Role})
 	if err != nil || newMembership.GetRole() != opt.Role {

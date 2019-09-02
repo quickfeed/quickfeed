@@ -1,7 +1,5 @@
 package scm
 
-import "fmt"
-
 const (
 	// Organization roles //
 
@@ -123,4 +121,13 @@ func (e ErrNotSupported) Error() string {
 // TODO(vera): this error can be a struct just as ErrNotSupported with method and interface fields
 // then we cn skip logging it every time it occures. The question is if it even is reasonable to pass a failng struct back to
 // ag_service for logging when it can be logged right here
-var ErrMissingFields = fmt.Errorf("invalid argument: missing required fields")
+type ErrMissingFields struct {
+	Message string
+	Method  string
+}
+
+func (e ErrMissingFields) Error() string {
+	return "github method " + e.Method + " got argument with some of required fields missing: " + e.Message
+}
+
+// = fmt.Errorf("invalid argument: missing required fields")

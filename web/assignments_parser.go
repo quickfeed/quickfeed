@@ -59,7 +59,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				// or it will cause a database constraint violation (IDs must be unique)
 				assignment := &pb.Assignment{
 					CourseID:    courseID,
-					Deadline:    newAssignment.Deadline, // replaced with string for database compatibility
+					Deadline:    newAssignment.Deadline,
 					Language:    strings.ToLower(newAssignment.Language),
 					Name:        newAssignment.Name,
 					Order:       uint32(newAssignment.AssignmentID),
