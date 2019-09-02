@@ -44,7 +44,10 @@ func (s *GithubSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, 
 		// limit scm requests to organizations where the user is owner ("admin")
 		// owner membership role is required to create a course
 		if membership.GetRole() == OrgOwner {
-			userOrg, err := s.GetOrganization(ctx, uint64(membership.Organization.GetID()))
+			opt := &GetOrgOptions{
+				ID: uint64(membership.Organization.GetID()),
+			}
+			userOrg, err := s.GetOrganization(ctx, opt)
 			if err != nil {
 				return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organization %s: %w", membership.Organization.GetLogin(), err)
 			}
@@ -75,16 +78,35 @@ func (s *GithubSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOption
 }
 
 // GetOrganization implements the SCM interface.
-func (s *GithubSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
-	org, _, err := s.client.Organizations.GetByID(ctx, int64(id))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get GitHub organization by ID (%v): %w", id, err)
+func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
+	if !opt.valid() {
+		return nil, ErrMissingFields{
+			Method:  "GetOrganization",
+			Message: fmt.Sprintf("%+v", opt),
+		}
 	}
+	var gitOrg *github.Organization
+	var err error
+	// priority is getting the organization by ID
+	if opt.ID > 0 {
+		gitOrg, _, err = s.client.Organizations.GetByID(ctx, int64(opt.ID))
+		// if no ID provided, get by name
+	} else {
+		gitOrg, _, err = s.client.Organizations.Get(ctx, slug.Make(opt.Name))
+
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get GitHub organization: %w", err)
+	}
+	if gitOrg == nil {
+		return nil, fmt.Errorf("Failed to get github organization %+v", opt)
+	}
+
 	return &pb.Organization{
-		ID:          uint64(org.GetID()),
-		Path:        org.GetLogin(),
-		Avatar:      org.GetAvatarURL(),
-		PaymentPlan: org.GetPlan().GetName(),
+		ID:          uint64(gitOrg.GetID()),
+		Path:        gitOrg.GetLogin(),
+		Avatar:      gitOrg.GetAvatarURL(),
+		PaymentPlan: gitOrg.GetPlan().GetName(),
 	}, nil
 }
 
@@ -143,7 +165,10 @@ func (s *GithubSCM) GetRepositories(ctx context.Context, org *pb.Organization) (
 	if org.Path != "" {
 		path = org.Path
 	} else {
-		org, err := s.GetOrganization(ctx, org.ID)
+		opt := &GetOrgOptions{
+			ID: org.ID,
+		}
+		org, err := s.GetOrganization(ctx, opt)
 		if err != nil {
 			return nil, fmt.Errorf("GetRepositories: failed to get GitHub organization (%+v): %w", org.ID, err)
 		}

@@ -50,7 +50,7 @@ func fetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	ctx, cancel := context.WithTimeout(c, pb.MaxWait)
 	defer cancel()
 
-	org, err := sc.GetOrganization(ctx, course.OrganizationID)
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
 	if err != nil {
 		return nil, err
 	}

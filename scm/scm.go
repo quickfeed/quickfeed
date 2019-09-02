@@ -18,7 +18,7 @@ type SCM interface {
 	// Updates an organization
 	UpdateOrganization(context.Context, *CreateOrgOptions) error
 	// Gets an organization.
-	GetOrganization(context.Context, uint64) (*pb.Organization, error)
+	GetOrganization(context.Context, *GetOrgOptions) (*pb.Organization, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
 	// Get repository by ID or name
@@ -82,6 +82,12 @@ type CreateOrgOptions struct {
 	Path              string
 	Name              string
 	DefaultPermission string
+}
+
+// GetOrgOptions contains information on the organization to fetch
+type GetOrgOptions struct {
+	ID   uint64
+	Name string
 }
 
 // Repository represents a git remote repository.

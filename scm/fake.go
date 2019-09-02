@@ -53,8 +53,8 @@ func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions)
 }
 
 // GetOrganization implements the SCM interface.
-func (s *FakeSCM) GetOrganization(ctx context.Context, id uint64) (*pb.Organization, error) {
-	org, ok := s.Organizations[id]
+func (s *FakeSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
+	org, ok := s.Organizations[opt.ID]
 	if !ok {
 		return nil, errors.New("directory not found")
 	}

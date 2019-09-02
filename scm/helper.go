@@ -49,6 +49,10 @@ func (opt CreateOrgOptions) valid() bool {
 	return opt.Path != "" && opt.DefaultPermission != ""
 }
 
+func (opt GetOrgOptions) valid() bool {
+	return opt.ID != 0 || opt.Name != ""
+}
+
 func (r Repository) valid() bool {
 	return r.Path != "" && r.Owner != ""
 }

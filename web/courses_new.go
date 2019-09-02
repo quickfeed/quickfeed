@@ -38,7 +38,7 @@ var (
 // and creates the repositories for the course. Requires that the directory
 // does not contain the Autograder repositories that will be created.
 func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, request *pb.Course) (*pb.Course, error) {
-	org, err := sc.GetOrganization(ctx, request.OrganizationID)
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
 	if err != nil {
 		return nil, err
 	}
