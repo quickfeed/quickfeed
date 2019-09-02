@@ -668,6 +668,24 @@ export namespace Provider {
   }
 }
 
+export class OrgRequest extends jspb.Message {
+  getOrgname(): string;
+  setOrgname(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): OrgRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: OrgRequest): OrgRequest.AsObject;
+  static serializeBinaryToWriter(message: OrgRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): OrgRequest;
+  static deserializeBinaryFromReader(message: OrgRequest, reader: jspb.BinaryReader): OrgRequest;
+}
+
+export namespace OrgRequest {
+  export type AsObject = {
+    orgname: string,
+  }
+}
+
 export class EnrollmentRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;

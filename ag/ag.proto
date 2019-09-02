@@ -174,6 +174,10 @@ message Provider {
     string provider = 1;
 }
 
+message OrgRequest {
+    string orgName = 1;
+}
+
 // depending on situation frontend will have all enrolled users or only those that are not members of any group
 // set filterOutGroupMembers go get list of students not belonging to any group for given course
 message EnrollmentRequest {
@@ -271,6 +275,8 @@ service AutograderService {
     // misc //
     
     rpc GetProviders(Void) returns (Providers) {}
+    // GetOrganuzation will be used in updated CreateCourse UI to get a course organization by name
+    rpc GetOrganization(OrgRequest) returns (Organization) {}
     rpc GetOrganizations(Provider) returns (Organizations) {}
 
     // use to batch all repository URL requests into one gRPC call

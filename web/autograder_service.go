@@ -498,6 +498,22 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 	return providers, nil
 }
 
+// GetOrganization fetches an organizatino by name.
+// Access policy: Admin
+func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgRequest) (*pb.Organization, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetOrganization failed: scm authentication error (%s)", err)
+		return nil, err
+	}
+	if !usr.IsAdmin {
+		s.logger.Error("GetOrganization failed: user is not admin")
+		return nil, status.Errorf(codes.PermissionDenied, "only admin can access organizations")
+	}
+	// requires a new scm method to get org by name
+	return nil, nil
+}
+
 // GetOrganizations returns list of organizations available for course creation.
 // Access policy: Any User.
 func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.Provider) (*pb.Organizations, error) {
