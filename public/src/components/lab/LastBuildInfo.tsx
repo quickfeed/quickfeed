@@ -63,14 +63,15 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
     }
 
     private async rebuildSubmission() {
-        this.setState({
+        console.log("Rebuilds are disabled");
+        /*this.setState({
             rebuilding: true,
         });
         await this.props.onRebuildClick(this.props.submission_id).then(() => {
             this.setState({
                 rebuilding: false,
             });
-        });
+        });*/
     }
 
     private setButtonColor(): string {

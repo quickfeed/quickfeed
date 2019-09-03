@@ -19,7 +19,6 @@ export class LabResult extends React.Component<ILabResult> {
             labHeading = <h3>{this.props.student.getName()}: {this.props.lab}</h3>;
         } else {
             labHeading = <div>
-                <h1>{this.props.course_name}</h1>
                 <p className="lead">Your progress on <strong><span
                     id="lab-headline">{this.props.lab}</span></strong>
                 </p>
