@@ -48,8 +48,11 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                     <Row>
                         <div className="col-lg-12">
                             <p>
-                                <button type="button" id="rebuild" className="btn btn-primary"
-                                    onClick={() => {this.rebuildSubmission()}}>{this.setButtonString()}</button>
+                                <button type="button" id="rebuild" className={this.setButtonColor()}
+                                    onClick={
+                                        this.state.rebuilding ? () => {console.log("Rebuilding..."); }
+                                         : () => {this.rebuildSubmission(); }
+                                    }>{this.setButtonString()}</button>
                             </p>
                             {approveButton}
                         </div>
@@ -70,6 +73,9 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
         });
     }
 
+    private setButtonColor(): string {
+        return this.state.rebuilding ? "btn btn-secondary" : "btn btn-primary";
+    }
     private setButtonString(): string {
         return this.state.rebuilding ? "Rebuilding" : "Rebuild";
     }
