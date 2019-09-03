@@ -39,7 +39,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		Image:       job.Image,
 		Cmd:         []string{"/bin/sh", "-c", strings.Join(job.Commands, "\n")},
 		StopTimeout: &containerTimeout,
-	}, &container.HostConfig{AutoRemove: true}, nil, "")
+	}, nil, nil, "")
 	if err != nil {
 		return "", err
 	}
