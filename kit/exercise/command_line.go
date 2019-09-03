@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/autograde/kit/score"
+	"github.com/autograde/aguis/kit/score"
 )
 
 type SearchType int

@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/autograde/kit/exercise"
-	"github.com/autograde/kit/score"
+	"github.com/autograde/aguis/kit/exercise"
+	"github.com/autograde/aguis/kit/score"
 )
 
 var answers = exercise.Choices{

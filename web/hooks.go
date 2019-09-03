@@ -73,6 +73,7 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 	}
 }
 
+// refreshAssignmentFromTestsRepo updates the database record for the course assignments
 func refreshAssignmentsFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, senderID uint64) {
 	logger.Debug("Refreshing course informaton in database")
 	provider := "github"

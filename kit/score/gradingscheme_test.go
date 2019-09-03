@@ -1,9 +1,7 @@
-package score_test
+package score
 
 import (
 	"testing"
-
-	"github.com/autograde/kit/score"
 )
 
 func TestPassFailGradingScheme(t *testing.T) {
@@ -19,7 +17,7 @@ func TestPassFailGradingScheme(t *testing.T) {
 		{100, "Pass"},
 		{101, "bad points"},
 	}
-	g := score.GradingScheme{
+	g := GradingScheme{
 		Name:        "Pass/Fail (60 % pass level)",
 		GradePoints: []uint8{60, 0},
 		GradeNames:  []string{"Pass", "Fail"},
@@ -56,7 +54,7 @@ func TestCBiasGradingScheme(t *testing.T) {
 		{100, "A"},
 		{101, "bad points"},
 	}
-	g := score.GradingScheme{
+	g := GradingScheme{
 		Name:        "C Bias (UiS Scheme)",
 		GradePoints: []uint8{90, 80, 60, 50, 40, 0},
 		GradeNames:  []string{"A", "B", "C", "D", "E", "F"},
@@ -91,7 +89,7 @@ func TestNoBiasGradingScheme(t *testing.T) {
 		{100, "A"},
 		{101, "bad points"},
 	}
-	g := score.GradingScheme{
+	g := GradingScheme{
 		Name:        "No Bias (NTNU Scheme)",
 		GradePoints: []uint8{88, 76, 64, 52, 40, 0},
 		GradeNames:  []string{"A", "B", "C", "D", "E", "F"},
