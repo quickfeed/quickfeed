@@ -25,7 +25,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 course_name={this.props.course.getName()}
                                 lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
-                                status={this.getSubmissionInfo()}
+                                isApproved={latest.approved}
                                 delivered={this.getDeliveredTime(latest.buildDate)}
                             />
                             <LastBuild
@@ -40,6 +40,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 exec_time={latest.executetionTime}
                                 build_time={this.getDeliveredTime(latest.buildDate)}
                                 build_id={latest.buildId}
+                                isApproved={latest.approved}
                                 onApproveClick={this.props.onApproveClick}
                                 onRebuildClick={this.props.onRebuildClick}
                                 showApprove={this.props.showApprove}

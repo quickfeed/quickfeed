@@ -149,6 +149,7 @@ export class TeacherPage extends ViewPage {
                         `Warning! This action is irriversible!
                         Do you want to approve this lab?`,
                     )) {
+                        console.log("approving submission for course " + course.getCode());
                         await this.courseMan.approveSubmission(submissionID, course.getId());
                         this.navMan.refresh();
                     }
