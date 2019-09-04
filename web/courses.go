@@ -91,14 +91,10 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 		// TODO(vera): this can be set as a unique constraint in go tag in proto
 		// but will it be compatible with the database created without this constraint?
 		if dbRepo, _ := s.db.GetRepositories(&userRepo); len(dbRepo) < 1 {
-			s.logger.Debug("Enrolling student: ", student.GetLogin(), " found no repos in database")
 			if err := s.db.CreateRepository(&userRepo); err != nil {
-				s.logger.Debug("Enrolling student: ", student.GetLogin(), " failed to add database repo: ", err.Error())
 				return err
 			}
 		}
-		newRepo, err := s.db.GetRepositories(&userRepo)
-		s.logger.Debug("Enrolling student: ", student.GetLogin(), " requesting repo, got ", newRepo, err)
 
 		return s.db.EnrollStudent(request.UserID, request.CourseID)
 
