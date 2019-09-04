@@ -181,6 +181,12 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		logger.Error("Failed to marshal build info and scores", zap.Error(err))
 	}
 
+	// set approved if autoapprove is on and total score is above 80%
+	var approve = false
+	if selectedAssignment.AutoApprove && result.TotalScore() >= 80 {
+		approve = true
+	}
+
 	err = db.CreateSubmission(&pb.Submission{
 		AssignmentID: selectedAssignment.ID,
 		BuildInfo:    buildInfo,
@@ -189,7 +195,7 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		ScoreObjects: scores,
 		UserID:       repo.UserID,
 		GroupID:      repo.GroupID,
-		Approved:     selectedAssignment.AutoApprove,
+		Approved:     approve,
 	})
 	if err != nil {
 		logger.Error("Failed to add submission to database", zap.Error(err))
