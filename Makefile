@@ -28,7 +28,7 @@ dep:
 # change back to 'go'
 install:
 	@echo go install
-	@go1.13beta1 install
+	@go install
 
 ui:
 	@echo Running webpack
@@ -95,8 +95,8 @@ protoset:
 
 # change commands to 'go' when v.13 hits
 test:
-	@cd ./web; go1.13beta1 test
-	@cd ./database; go1.13beta1 test
+	@cd ./web; go test
+	@cd ./database; go test
 
 scm:
 	@echo "Compiling the scm tool"
