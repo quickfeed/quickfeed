@@ -150,6 +150,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             if (user.user.getName().toLowerCase().indexOf(query) !== -1
                 || user.user.getEmail().toLowerCase().indexOf(query) !== -1
                 || user.user.getStudentid().toString().indexOf(query) !== -1
+                || user.user.getLogin().toLowerCase().indexOf(query) !== -1
             ) {
                 filteredData.push(user);
             }
