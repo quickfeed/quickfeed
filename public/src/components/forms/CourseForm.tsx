@@ -27,6 +27,7 @@ interface ICourseFormState {
     orgname: string;
     organisations: JSX.Element | null;
     errorFlash: JSX.Element | null;
+    userMessage: string;
     clicked: boolean;
 }
 
@@ -43,6 +44,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             orgid: this.props.courseData ? this.props.courseData.getOrganizationid() : 0,
             organisations: null,
             errorFlash: null,
+            userMessage: "",
             clicked: false,
         };
     }
@@ -63,6 +65,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         <div className="col-sm-10">
                             {this.renderInfo()}
                         </div>
+                        {this.courseByName()}
                         {this.state.organisations == null ? fetchingText : this.state.organisations}
                     </div>
                     {this.renderFormControler("Course Name:",
@@ -285,6 +288,10 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         const result = await this.props.courseMan.getOrganization(orgName);
         const orgs: Organization[] = [];
         if (result instanceof Status) {
+            // show error message with code 9 to user
+            if (result.getCode() === 9) {
+                this.setState({userMessage: result.getError()});
+            }
             const errMsg = result.getError();
             const serverErrors: string[] = [];
             serverErrors.push(errMsg);
@@ -357,17 +364,20 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     private courseByName() {
         return <div className="form-group">
             <label className="control-label col-sm-2" htmlFor="orgName">Organization:</label>
-            <div className="col-sm-10">
-                <input type="text" className="form-control"
+            <div className="input-group col-sm-8">
+                <input type="text"
+                    className="form-control"
                     id="orgname"
                     placeholder="Course organization name"
                     name="orgname"
                     onChange={(e) => this.handleInputChange(e)}
-                />
-                 <BootstrapButton classType="primary" type="submit"
+                /> <span className="input-group-btn"><BootstrapButton classType="primary" type="submit"
                     onClick={(e) => this.getOrgByName(this.state.orgname)}
-                 >Find</BootstrapButton>
-            </div>
+                 >Find</BootstrapButton></span>
+            </div> 
+            <label className="control-label col-sm-2" htmlFor="orgName"></label>
+            <div id="message" className="col-sm-8" >{this.state.userMessage}</div>
+
         </div>;
     }
 
