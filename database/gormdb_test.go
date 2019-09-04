@@ -65,6 +65,61 @@ func TestGormDBGetUsers(t *testing.T) {
 	}
 }
 
+func TestGormDBGetUserWithEnrollments(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	teacher := createFakeUser(t, db, 11)
+	var course pb.Course
+	if err := db.CreateCourse(teacher.ID, &course); err != nil {
+		t.Fatal(err)
+	}
+
+	student := createFakeUser(t, db, 13)
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		CourseID: course.ID,
+		UserID:   student.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(student.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	// user entries from the database will have to be enrolled as
+	// teacher ans student respectively
+	teacher.Enrollments = append(teacher.Enrollments, &pb.Enrollment{
+		ID:       1,
+		CourseID: course.ID,
+		UserID:   teacher.ID,
+		Status:   pb.Enrollment_TEACHER,
+	})
+	teacher.RemoteIdentities = nil
+
+	student.Enrollments = append(student.Enrollments, &pb.Enrollment{
+		ID:       2,
+		CourseID: course.ID,
+		UserID:   student.ID,
+		Status:   pb.Enrollment_STUDENT,
+	})
+	student.RemoteIdentities = nil
+
+	gotTeacher, err := db.GetUserWithEnrollments(teacher.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotStudent, err := db.GetUserWithEnrollments(student.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(teacher, gotTeacher) {
+		t.Errorf("want %+v \n got %+v", teacher, gotTeacher)
+	}
+	if !reflect.DeepEqual(student, gotStudent) {
+		t.Errorf("want %+v \n got %+v", student, gotStudent)
+	}
+}
+
 func TestGormDBUpdateUser(t *testing.T) {
 	const (
 		uID = 1
