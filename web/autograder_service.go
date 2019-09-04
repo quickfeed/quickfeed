@@ -128,8 +128,10 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	course, err := s.createCourse(ctx, scm, in)
 	if err != nil {
 		s.logger.Error("CreateCourse failed: ", err)
-		if err == ErrAlreadyExists {
-			return nil, status.Errorf(codes.AlreadyExists, err.Error())
+		// errors informing about requested organization state will have code 9: FailedPrecondition
+		// error message will be displayed to the user
+		if err == ErrAlreadyExists || err == ErrFreePlan {
+			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create course")
 	}
@@ -513,6 +515,9 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 	org, err := s.getOrganization(ctx, scm, in.GetOrgName())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %s", err)
+		if err == ErrFreePlan || err == ErrAlreadyExists {
+			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
+		}
 		return nil, status.Errorf(codes.NotFound, "organization not found. Please make sure that 3rd-party access is enabled for your organization")
 	}
 	return org, nil

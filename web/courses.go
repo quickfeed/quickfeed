@@ -128,7 +128,15 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 }
 
 func (s *AutograderService) getOrganization(ctx context.Context, sc scm.SCM, org string) (*pb.Organization, error) {
-	return sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org})
+	gitOrg, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org})
+	if err != nil {
+		return nil, err
+	}
+	if gitOrg.GetPaymentPlan() == "free" {
+		return nil, ErrFreePlan
+	}
+	// TODO(vera): should we also check for course repos here or allow to reuse already created and just set them to private if they are not?
+	return gitOrg, nil
 }
 
 func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {

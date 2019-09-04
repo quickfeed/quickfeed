@@ -32,6 +32,9 @@ var (
 	// ErrAlreadyExists indicates that one or more Autograder repositories
 	// already exists for the directory (or GitHub organization).
 	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
+	// ErrFreePlan indicates that payment plan for given organization does not allow provate
+	// repositories and must be upgraded
+	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
 )
 
 // createCourse creates a new course for the directory specified in the request
@@ -41,6 +44,9 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
 	if err != nil {
 		return nil, err
+	}
+	if org.GetPaymentPlan() == "free" {
+		return nil, ErrFreePlan
 	}
 	repos, err := sc.GetRepositories(ctx, org)
 	if err != nil {
