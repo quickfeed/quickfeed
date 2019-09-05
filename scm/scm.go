@@ -86,8 +86,9 @@ type CreateOrgOptions struct {
 
 // GetOrgOptions contains information on the organization to fetch
 type GetOrgOptions struct {
-	ID   uint64
-	Name string
+	ID       uint64
+	Name     string
+	Username string
 }
 
 // Repository represents a git remote repository.

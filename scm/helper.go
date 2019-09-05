@@ -1,5 +1,7 @@
 package scm
 
+import "errors"
+
 const (
 	// Organization roles //
 
@@ -41,6 +43,14 @@ const (
 	TeachersTeam = "allteachers"
 	// StudentsTeam is the team with all students of a course.
 	StudentsTeam = "allstudents"
+)
+
+var (
+	// ErrNotMember indicates that the requested organization exists, but the current user
+	// is not its member
+	ErrNotMember = errors.New("user is not a member of the organization")
+	// ErrNotOwner indicates that user has no admin rights in the requested organization
+	ErrNotOwner = errors.New("user is not an owner of the organization")
 )
 
 // Validators //

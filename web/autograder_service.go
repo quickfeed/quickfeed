@@ -10,6 +10,7 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
+	scms "github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web/auth"
 )
 
@@ -512,12 +513,13 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 		s.logger.Error("GetOrganization failed: user is not admin")
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can access organizations")
 	}
-	org, err := s.getOrganization(ctx, scm, in.GetOrgName())
+	org, err := s.getOrganization(ctx, scm, in.GetOrgName(), usr.GetLogin())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %s", err)
-		if err == ErrFreePlan || err == ErrAlreadyExists {
+		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotMember || err == scms.ErrNotOwner {
 			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 		}
+
 		return nil, status.Errorf(codes.NotFound, "organization not found. Please make sure that 3rd-party access is enabled for your organization")
 	}
 	return org, nil

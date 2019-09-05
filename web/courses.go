@@ -127,8 +127,8 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 	return nil
 }
 
-func (s *AutograderService) getOrganization(ctx context.Context, sc scm.SCM, org string) (*pb.Organization, error) {
-	gitOrg, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org})
+func (s *AutograderService) getOrganization(ctx context.Context, sc scm.SCM, org string, user string) (*pb.Organization, error) {
+	gitOrg, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org, Username: user})
 	if err != nil {
 		return nil, err
 	}

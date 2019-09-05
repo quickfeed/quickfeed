@@ -102,6 +102,19 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*p
 		return nil, fmt.Errorf("Failed to get github organization %+v", opt)
 	}
 
+	// if user name is provided, return the found organization only if the user is one of its owners
+	if opt.Username != "" {
+		// fetch user membersip in that organization, if exists
+		membership, _, err := s.client.Organizations.GetOrgMembership(ctx, opt.Username, slug.Make(opt.Name))
+		if err != nil {
+			return nil, ErrNotMember
+		}
+		// membership role must be "admin", if not, return error (possibly to show user)
+		if membership.GetRole() != OrgOwner {
+			return nil, ErrNotOwner
+		}
+	}
+
 	return &pb.Organization{
 		ID:          uint64(gitOrg.GetID()),
 		Path:        gitOrg.GetLogin(),
