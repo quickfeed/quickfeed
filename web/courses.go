@@ -132,10 +132,18 @@ func (s *AutograderService) getOrganization(ctx context.Context, sc scm.SCM, org
 	if err != nil {
 		return nil, err
 	}
+	// check payment plan
 	if gitOrg.GetPaymentPlan() == FreeOrgPlan {
 		return nil, ErrFreePlan
 	}
-	// TODO(vera): should we also check for course repos here or allow to reuse already created and just set them to private if they are not?
+	// check course repos
+	repos, err := sc.GetRepositories(ctx, gitOrg)
+	if err != nil {
+		return nil, err
+	}
+	if isDirty(repos) {
+		return nil, ErrAlreadyExists
+	}
 	return gitOrg, nil
 }
 
