@@ -157,7 +157,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         if (this.state.activePage) {
             return this.renderTemplate(this.state.activePage, this.state.activePage.template);
         }
-        return <div>404 Error</div>;
+        return <div>404 not found</div>;
     }
 
     private handleClick(link: ILink) {

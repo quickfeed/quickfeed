@@ -70,22 +70,22 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         {this.state.organisations == null ? fetchingText : this.state.organisations}
                     </div>
                     {this.courseByName()}
-                    {this.renderFormControler("Course Name:",
+                    {this.renderFormController("Course Name:",
                         "Enter course name",
                         "name",
                         this.state.name,
                         (e) => this.handleInputChange(e))}
-                    {this.renderFormControler("Course code:",
+                    {this.renderFormController("Course code:",
                         "Enter course code",
                         "code",
                         this.state.code,
                         (e) => this.handleInputChange(e))}
-                    {this.renderFormControler("Course year:",
+                    {this.renderFormController("Course year:",
                         "Enter year",
                         "year",
                         this.state.year,
                         (e) => this.handleInputChange(e))}
-                    {this.renderFormControler("Semester:",
+                    {this.renderFormController("Semester:",
                         "Enter semester",
                         "tag",
                         this.state.tag,
@@ -180,7 +180,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         return providers;
     }
 
-    private renderFormControler(
+    private renderFormController(
         title: string,
         placeholder: string,
         name: string,
