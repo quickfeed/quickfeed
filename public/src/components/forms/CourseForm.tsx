@@ -27,7 +27,7 @@ interface ICourseFormState {
     orgname: string;
     organisations: JSX.Element | null;
     errorFlash: JSX.Element | null;
-    userMessage: string;
+    userMessage: JSX.Element | null;
     success: number;
     clicked: boolean;
 }
@@ -45,7 +45,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             orgid: this.props.courseData ? this.props.courseData.getOrganizationid() : 0,
             organisations: null,
             errorFlash: null,
-            userMessage: "",
+            userMessage: null,
             success: 0,
             clicked: false,
         };
@@ -286,6 +286,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     }
 
     private async getOrgByName(orgName: string) {
+        const accessLinkString = "https://github.com/organizations/" + orgName + "/settings/oauth_application_policy";
+        const accessLink = <a href={accessLinkString}>here</a>
         console.log("Getting org by name: " + orgName);
         const result = await this.props.courseMan.getOrganization(orgName);
         const orgs: Organization[] = [];
@@ -295,10 +297,10 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             });
             // show error message with code 9 to user
             if (result.getCode() === 9) {
-                this.setState({userMessage: result.getError()});
+                this.setState({userMessage: <span>{result.getError()}</span>});
             } else {
                 this.setState({
-                    userMessage: "Organization not found, make sure that 3rd party access allowed",
+                    userMessage: <span>not found, make sure to allow application access {accessLink}</span>,
                 });
             }
             const errMsg = result.getError();
@@ -311,7 +313,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
         } else {
             this.setState({
-                userMessage: "Organization found",
+                userMessage: <span>Organization found</span>,
                 success: 1,
                 orgid: result.getId(),
             });
@@ -429,7 +431,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         }
         const flash: JSX.Element =
             <div className="alert alert-danger">
-                <h4>{errorArr.length} errors prevented new course creation: </h4>
+                <h4> Cannot create a new course: </h4>
                 <ul>
                     {errorArr}
                 </ul>
