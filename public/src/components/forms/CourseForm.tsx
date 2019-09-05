@@ -33,6 +33,7 @@ interface ICourseFormState {
 }
 
 export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseFormState> {
+
     constructor(props: any) {
         super(props);
         this.state = {
@@ -386,13 +387,15 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                     id="orgname"
                     placeholder="Course organization name"
                     name="orgname"
+                    value={this.state.orgname}
                     onChange={(e) => this.handleInputChange(e)}
                 /> <span className="input-group-btn"><button className="btn btn-primary" type="button"
                     onClick={(e) => this.getOrgByName(this.state.orgname)}
                  >Find</button></span></div>
             <label className="control-label col-sm-2" htmlFor="name"></label>
             <div id="message" className="col-sm-10" >
-                <span className={this.setMessageIcon()}></span>{this.state.userMessage}</div>
+                <span className={this.setMessageIcon()} style={this.setIconColor()}>
+                </span>{this.state.userMessage}</div>
         </div>;
     }
 
@@ -442,15 +445,19 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     private setMessageIcon(): string {
         switch (this.state.success) {
             case 1 : {
-                return "glyphicon glyphicon-ok";
+                return "glyphicon glyphicon-ok green";
             }
             case 2 : {
-                return "glyphicon glyphicon-remove";
+                return "glyphicon glyphicon-remove red";
             }
             default : {
                 return "";
             }
         }
+    }
+
+    private setIconColor(): any {
+        return this.state.success === 1 ? { color: "green" } : { color: "red" };
     }
 
     private setButtonString(): string {
