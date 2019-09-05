@@ -33,7 +33,7 @@ func (s *AutograderService) getAvailableOrganizations(ctx context.Context, sc sc
 		// only include organizations with non-free plan,
 		// that are not already used for another course (has Autograder Repos), and
 		// that do not already exist in the database.
-		if org.GetPaymentPlan() != "free" && !isDirty(repos) && course == nil {
+		if org.GetPaymentPlan() != FreeOrgPlan && !isDirty(repos) && course == nil {
 			organizations = append(organizations, org)
 		}
 	}

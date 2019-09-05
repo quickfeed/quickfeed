@@ -35,6 +35,8 @@ var (
 	// ErrFreePlan indicates that payment plan for given organization does not allow provate
 	// repositories and must be upgraded
 	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
+	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
+	FreeOrgPlan = "free"
 )
 
 // createCourse creates a new course for the directory specified in the request
@@ -45,7 +47,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	if err != nil {
 		return nil, err
 	}
-	if org.GetPaymentPlan() == "free" {
+	if org.GetPaymentPlan() == FreeOrgPlan {
 		return nil, ErrFreePlan
 	}
 	repos, err := sc.GetRepositories(ctx, org)
