@@ -20,8 +20,6 @@ type Docker struct {
 	Version  string
 }
 
-var containerTimeout = 600
-
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
 func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
@@ -36,9 +34,8 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	}
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image:       job.Image,
-		Cmd:         []string{"/bin/sh", "-c", strings.Join(job.Commands, "\n")},
-		StopTimeout: &containerTimeout,
+		Image: job.Image,
+		Cmd:   []string{"/bin/sh", "-c", strings.Join(job.Commands, "\n")},
 	}, nil, nil, "")
 	if err != nil {
 		return "", err
