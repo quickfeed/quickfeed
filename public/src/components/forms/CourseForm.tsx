@@ -28,6 +28,7 @@ interface ICourseFormState {
     organisations: JSX.Element | null;
     errorFlash: JSX.Element | null;
     userMessage: string;
+    success: number;
     clicked: boolean;
 }
 
@@ -45,6 +46,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             organisations: null,
             errorFlash: null,
             userMessage: "",
+            success: 0,
             clicked: false,
         };
     }
@@ -65,9 +67,9 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         <div className="col-sm-10">
                             {this.renderInfo()}
                         </div>
-                        {this.courseByName()}
                         {this.state.organisations == null ? fetchingText : this.state.organisations}
                     </div>
+                    {this.courseByName()}
                     {this.renderFormControler("Course Name:",
                         "Enter course name",
                         "name",
@@ -288,9 +290,16 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         const result = await this.props.courseMan.getOrganization(orgName);
         const orgs: Organization[] = [];
         if (result instanceof Status) {
+            this.setState({
+                success: 2,
+            });
             // show error message with code 9 to user
             if (result.getCode() === 9) {
                 this.setState({userMessage: result.getError()});
+            } else {
+                this.setState({
+                    userMessage: "Organization not found, make sure that 3rd party access allowed",
+                });
             }
             const errMsg = result.getError();
             const serverErrors: string[] = [];
@@ -301,6 +310,11 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             });
 
         } else {
+            this.setState({
+                userMessage: "Organization found",
+                success: 1,
+                orgid: result.getId(),
+            });
             orgs.push(result);
             this.updateOrganisationDivs(orgs);
         }
@@ -363,21 +377,20 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
     private courseByName() {
         return <div className="form-group">
-            <label className="control-label col-sm-2" htmlFor="orgName">Organization:</label>
-            <div className="input-group col-sm-8">
+            <label className="control-label col-sm-2">Organization:</label>
+            <div className="input-group">
                 <input type="text"
                     className="form-control"
                     id="orgname"
                     placeholder="Course organization name"
                     name="orgname"
                     onChange={(e) => this.handleInputChange(e)}
-                /> <span className="input-group-btn"><BootstrapButton classType="primary" type="submit"
+                /> <span className="input-group-btn"><button className="btn btn-primary" type="button"
                     onClick={(e) => this.getOrgByName(this.state.orgname)}
-                 >Find</BootstrapButton></span>
-            </div> 
-            <label className="control-label col-sm-2" htmlFor="orgName"></label>
-            <div id="message" className="col-sm-8" >{this.state.userMessage}</div>
-
+                 >Find</button></span></div>
+            <label className="control-label col-sm-2" htmlFor="name"></label>
+            <div id="message" className="col-sm-10" >
+                <span className={this.setMessageIcon()}></span>{this.state.userMessage}</div>
         </div>;
     }
 
@@ -422,6 +435,20 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 </ul>
             </div>;
         return flash;
+    }
+
+    private setMessageIcon(): string {
+        switch (this.state.success) {
+            case 1 : {
+                return "glyphicon glyphicon-ok";
+            }
+            case 2 : {
+                return "glyphicon glyphicon-remove";
+            }
+            default : {
+                return "";
+            }
+        }
     }
 
     private setButtonString(): string {
