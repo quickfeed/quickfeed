@@ -95,6 +95,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         selector = selector.concat(group.assignments.filter((e) => e.assignment.getIsgrouplab()).map((e) => {
             let approvedCss;
             if (e.latest && e.latest.approved) {
+                // replace this value with "approved-cell" to follow the same style as Results page
                 approvedCss = this.approvedStyle;
             }
             return <a className="lab-result-cell"

@@ -152,34 +152,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             this.getOrganizations(this.state.provider);
         }
     }
-    private renderProviders(): JSX.Element | JSX.Element[] {
-        let providers;
-        if (this.props.providers.length > 1) {
-            providers = this.props.providers.map((provider, index: number) => {
-                return <label className="radio-inline" key={index}>
-                    <input type="radio"
-                        name="provider"
-                        value={provider}
-                        defaultChecked={this.props.courseData
-                            && this.props.courseData.getProvider() === provider ? true : false}
-                        onClick={() => this.getOrganizations(provider)}
-                    />{provider}
-                </label>;
-            });
-        } else {
-            const curProvider = this.props.providers[0];
-            providers = <label className="radio-inline">
-                <input type="hidden"
-                    name="provider"
-                    value={curProvider}
-                />{curProvider}
-            </label>;
-            if (this.state.provider !== curProvider) {
-                this.getOrganizations(curProvider);
-            }
-        }
-        return providers;
-    }
 
     private renderFormController(
         title: string,
@@ -395,7 +367,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             <label className="control-label col-sm-2" htmlFor="name"></label>
             <div id="message" className="col-sm-10" >
                 <span className={this.setMessageIcon()} style={this.setIconColor()}>
-                </span>{this.state.userMessage}</div>
+                </span>  {this.state.userMessage}</div>
         </div>;
     }
 

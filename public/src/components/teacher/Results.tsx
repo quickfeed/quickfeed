@@ -19,10 +19,6 @@ interface IResultsState {
 
 export class Results extends React.Component<IResultsProp, IResultsState> {
 
-    private approvedStyle = {
-        color: "green",
-    };
-
     constructor(props: IResultsProp) {
         super(props);
 
