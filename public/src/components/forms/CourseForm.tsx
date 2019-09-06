@@ -56,7 +56,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
         const fetchingText = (<div><label className="control-label col-sm-2">Information:</label>
         <div className="col-sm-10">  Fetching GitHub organizations... </div></div>);
-        this.renderOrgs();
         return (
             <div>
                 <h1>{getTitleText}</h1>
@@ -68,9 +67,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         <div className="col-sm-10">
                             {this.renderInfo()}
                         </div>
-                        {this.state.organisations == null ? fetchingText : this.state.organisations}
+                        {this.courseByName()}
                     </div>
-                    {this.courseByName()}
                     {this.renderFormController("Course Name:",
                         "Enter course name",
                         "name",
@@ -141,16 +139,12 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 <p>You can populate these with your course's content.</p>
                 <p>Only the assignments and tests repositories must contain meta-data and tests
                     for Autograder to function.</p>
-                <p>Please read the documentation for further instructions on how to work with
+                <p>Please read <a
+                 href="https://github.com/autograde/aguis/blob/grpc-web-merge/Teacher.MD" target="_blank">the
+                  documentation</a> for further instructions on how to work with
                     the various repositories.</p>
             </div>;
         return gitMsg;
-    }
-
-    private renderOrgs() {
-        if (!this.state.organisations) {
-            this.getOrganizations(this.state.provider);
-        }
     }
 
     private renderFormController(
@@ -268,7 +262,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             this.setState({
                 success: 2,
             });
-            // show error message with code 9 to user
+            // if error message has code 9, it is supposed to be shown to user
             if (result.getCode() === 9) {
                 this.setState({userMessage: <span>{result.getError()}</span>});
             } else {
@@ -290,70 +284,14 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 success: 1,
                 orgid: result.getId(),
             });
-            orgs.push(result);
-            this.updateOrganisationDivs(orgs);
         }
-    }
-
-    private async getOrganizations(provider: string): Promise<void> {
-        const orgs = await this.props.courseMan.getOrganizations(provider);
-        this.setState({
-            provider,
-            errorFlash: null,
-        });
-        this.updateOrganisationDivs(orgs);
-    }
-
-    private updateOrganisationDivs(orgs: Organization[]): void {
-        const organisationDetails: JSX.Element[] = [];
-        for (let i: number = 0; i < orgs.length; i++) {
-            organisationDetails.push(
-                <button type="button" key={i} className="btn organisation"
-                    onClick={(e) => this.handleOrgClick(e, orgs[i].getId())}
-                    title={orgs[i].getPath()}>
-
-                    <div className="organisationInfo">
-                        <img src={orgs[i].getAvatar()}
-                            className="img-rounded"
-                            width={80}
-                            height={80} />
-                        <div className="caption">{orgs[i].getPath()}</div>
-                    </div>
-                    <input type="radio" />
-                </button>,
-            );
-
-        }
-
-        let orgMsg: JSX.Element;
-        if (this.state.provider === "github") {
-            orgMsg = <div>
-                <p>List of available GitHub organizations:</p>
-            </div>;
-        } else {
-            orgMsg = <p>Select a GitLab group.</p>;
-        }
-
-        const orgDivs: JSX.Element = <div>
-            <label className="control-label col-sm-2">Organization:</label>
-            <div className="organisationWrap col-sm-10">
-                {orgMsg}
-                <div className="btn-group organisationBtnGroup" data-toggle="buttons">
-                    {organisationDetails}
-                </div>
-            </div>
-        </div>;
-
-        this.setState({
-            organisations: orgDivs,
-            //orgid: 0,
-        });
     }
 
     private courseByName() {
-        return <div className="form-group">
-            <label className="control-label col-sm-2">Organization:</label>
+        return <div className="form-group col-sm-12 orgform">
+
             <div className="input-group">
+            <label className="input-group-addon">Organization:</label>
                 <input type="text"
                     className="form-control"
                     id="orgname"
@@ -364,8 +302,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 /> <span className="input-group-btn"><button className="btn btn-primary" type="button"
                     onClick={(e) => this.getOrgByName(this.state.orgname)}
                  >Find</button></span></div>
-            <label className="control-label col-sm-2" htmlFor="name"></label>
-            <div id="message" className="col-sm-10" >
+            <label className="control-label col-sm-1" htmlFor="name"></label>
+            <div id="message" className="col-sm-11" >
                 <span className={this.setMessageIcon()}>
                 </span>  {this.state.userMessage}</div>
         </div>;
