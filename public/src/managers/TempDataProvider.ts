@@ -40,10 +40,6 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented.");
     }
 
-    public async getOrganizations(provider: string): Promise<Organization[]> {
-        throw new Error("Not implemented");
-    }
-
     public async getAllUser(): Promise<User[]> {
         const users: User[] = [];
         const dummyUsers = MapHelper.toArray(this.localUsers);

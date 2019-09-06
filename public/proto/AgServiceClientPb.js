@@ -88,9 +88,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetOrganization = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Organization, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Organization.deserializeBinary);
-        this.methodInfoGetOrganizations = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Organizations, function (request) {
-            return request.serializeBinary();
-        }, ag_pb_1.Organizations.deserializeBinary);
         this.methodInfoGetRepositories = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Repositories, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Repositories.deserializeBinary);
@@ -205,10 +202,6 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.getOrganization = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetOrganization', request, metadata || {}, this.methodInfoGetOrganization, callback);
-    };
-    AutograderServiceClient.prototype.getOrganizations = function (request, metadata, callback) {
-        return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetOrganizations', request, metadata || {}, this.methodInfoGetOrganizations, callback);
     };
     AutograderServiceClient.prototype.getRepositories = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

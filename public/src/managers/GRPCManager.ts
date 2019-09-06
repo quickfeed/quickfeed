@@ -258,12 +258,6 @@ export class GrpcManager {
         return this.grpcSend<Organization>(this.agService.getOrganization, request)
     }
 
-    public getOrganizations(provider: string): Promise<IGrpcResponse<Organizations>> {
-        const request = new Provider();
-        request.setProvider(provider);
-        return this.grpcSend<Organizations>(this.agService.getOrganizations, request);
-    }
-
     public getProviders(): Promise<IGrpcResponse<Providers>> {
         const request = new Void();
         return this.grpcSend<Providers>(this.agService.getProviders, request);

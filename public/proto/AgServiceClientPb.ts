@@ -24,8 +24,6 @@ import {
   Groups,
   OrgRequest,
   Organization,
-  Organizations,
-  Provider,
   Providers,
   RecordRequest,
   Repositories,
@@ -623,28 +621,6 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoGetOrganization,
-      callback);
-  }
-
-  methodInfoGetOrganizations = new grpcWeb.AbstractClientBase.MethodInfo(
-    Organizations,
-    (request: Provider) => {
-      return request.serializeBinary();
-    },
-    Organizations.deserializeBinary
-  );
-
-  getOrganizations(
-    request: Provider,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: Organizations) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/GetOrganizations',
-      request,
-      metadata || {},
-      this.methodInfoGetOrganizations,
       callback);
   }
 

@@ -277,8 +277,7 @@ service AutograderService {
     rpc GetProviders(Void) returns (Providers) {}
     // GetOrganuzation will be used in updated CreateCourse UI to get a course organization by name
     rpc GetOrganization(OrgRequest) returns (Organization) {}
-    rpc GetOrganizations(Provider) returns (Organizations) {}
-
+   
     // use to batch all repository URL requests into one gRPC call
     rpc GetRepositories(URLRequest) returns (Repositories) {}
 }

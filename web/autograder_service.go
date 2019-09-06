@@ -525,22 +525,6 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 	return org, nil
 }
 
-// GetOrganizations returns list of organizations available for course creation.
-// Access policy: Any User.
-func (s *AutograderService) GetOrganizations(ctx context.Context, in *pb.Provider) (*pb.Organizations, error) {
-	_, scm, err := s.getUserAndSCM(ctx, in.Provider)
-	if err != nil {
-		s.logger.Errorf("GetOrganizations failed: scm authentication error (%s)", err)
-		return nil, err
-	}
-	orgs, err := s.getAvailableOrganizations(ctx, scm)
-	if err != nil {
-		s.logger.Errorf("GetOrganizations failed: %s", err)
-		return nil, status.Errorf(codes.NotFound, "found no organizations to host course")
-	}
-	return orgs, nil
-}
-
 // GetRepositories returns URL strings for repositories of given type for the given course
 // Access policy: Any User.
 func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLRequest) (*pb.Repositories, error) {

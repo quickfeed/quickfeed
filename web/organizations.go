@@ -5,38 +5,24 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
-	"github.com/jinzhu/gorm"
 )
 
-// getAvailableOrganizations returns all organizations that can be used as a course
-// organization from the given SCM provider.
-func (s *AutograderService) getAvailableOrganizations(ctx context.Context, sc scm.SCM) (*pb.Organizations, error) {
-	orgs, err := sc.ListOrganizations(ctx)
+func (s *AutograderService) getOrganization(ctx context.Context, sc scm.SCM, org string, user string) (*pb.Organization, error) {
+	gitOrg, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{Name: org, Username: user})
 	if err != nil {
 		return nil, err
 	}
-
-	organizations := make([]*pb.Organization, 0)
-	for _, org := range orgs {
-		repos, err := sc.GetRepositories(ctx, org)
-		if err != nil {
-			s.logger.Errorf("couldn't fetch repos: %v", err)
-			continue
-		}
-		course, err := s.db.GetCourseByOrganizationID(org.ID)
-		if err != nil {
-			if err != gorm.ErrRecordNotFound {
-				continue
-			}
-		}
-
-		// only include organizations with non-free plan,
-		// that are not already used for another course (has Autograder Repos), and
-		// that do not already exist in the database.
-		if org.GetPaymentPlan() != FreeOrgPlan && !isDirty(repos) && course == nil {
-			organizations = append(organizations, org)
-		}
+	// check payment plan
+	if gitOrg.GetPaymentPlan() == FreeOrgPlan {
+		return nil, ErrFreePlan
 	}
-
-	return &pb.Organizations{Organizations: organizations}, nil
+	// check course repos
+	repos, err := sc.GetRepositories(ctx, gitOrg)
+	if err != nil {
+		return nil, err
+	}
+	if isDirty(repos) {
+		return nil, ErrAlreadyExists
+	}
+	return gitOrg, nil
 }
