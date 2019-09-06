@@ -54,48 +54,53 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
     public render() {
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
-        const fetchingText = (<div><label className="control-label col-sm-2">Information:</label>
-        <div className="col-sm-10">  Fetching GitHub organizations... </div></div>);
         return (
-            <div>
-                <h1>{getTitleText}</h1>
-                {this.state.errorFlash}
-                <form className={this.props.className ? this.props.className : ""}
-                    onSubmit={(e) => this.handleFormSubmit(e)}>
-                    <div className="form-group" id="organisation-container">
-                        <label className="control-label col-sm-2">Information:</label>
-                        <div className="col-sm-10">
-                            {this.renderInfo()}
+            <div className="container">
+                <div className="row"><div className="col-sm-2">
+                    </div> <h1 id="form-header" className="col-sm-10">{getTitleText}</h1></div>
+                <div className="row">{this.state.errorFlash}</div>
+                    <form className={this.props.className ? this.props.className : ""}
+                        onSubmit={(e) => this.handleFormSubmit(e)}>
+                        <div className="form-group" id="organisation-container">
+                            <div className="col-sm-10">
+                                {this.renderInfo()}
+                            </div>
                         </div>
-                        {this.courseByName()}
+                    <div className="row spacefix">
+                    {this.courseByName()}
                     </div>
-                    {this.renderFormController("Course Name:",
+                    <div className="row spacefix">
+                    {this.renderFormController("Name:",
                         "Enter course name",
                         "name",
                         this.state.name,
                         (e) => this.handleInputChange(e))}
-                    {this.renderFormController("Course code:",
+                    {this.renderFormController("Code:",
                         "Enter course code",
                         "code",
                         this.state.code,
                         (e) => this.handleInputChange(e))}
-                    {this.renderFormController("Course year:",
+                    </div>
+                    <div className="row spacefix">
+                    {this.renderFormController("Year:",
                         "Enter year",
                         "year",
                         this.state.year,
                         (e) => this.handleInputChange(e))}
-                    {this.renderFormController("Semester:",
+                    {this.renderFormController("Tag:",
                         "Enter semester",
                         "tag",
                         this.state.tag,
                         (e) => this.handleInputChange(e))}
-
-                    <div className="form-group">
-                        <div className="col-sm-offset-2 col-sm-10">
+                    </div>
+                    <div className="row spacefix">
+                    <div className="col-sm-12 text-center">
+                        <div className="form-group">
                             <BootstrapButton classType="primary" type="submit">
                                 {this.setButtonString()}
                             </BootstrapButton>
                         </div>
+                    </div>
                     </div>
                 </form>
             </div>
@@ -121,8 +126,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
                 <p><b>Apply for an Educator discount.</b></p>
                 <p>For teachers, GitHub is happy to upgrade your organization to serve private repositories.
-                    Go ahead an apply for an <a 
-                    href="https://education.github.com/discount_requests/new" target="_blank">Education discount
+                    Go ahead an apply for an <a
+                     href="https://education.github.com/discount_requests/new" target="_blank">Education discount
                     </a> for your GitHub organization.</p>
                 <p>Wait for your organization to be upgraded by GitHub.</p>
                 <p>Return to this page when your organization has been upgraded, to create the course.
@@ -154,9 +159,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         value: any,
         onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
     ) {
-        return <div className="form-group">
-            <label className="control-label col-sm-2" htmlFor="name">{title}</label>
-            <div className="col-sm-10">
+        return <div className="col-sm-6"><div className="input-group">
+            <label className="input-group-addon addon-mini" htmlFor="name">{title}</label>
                 <input type="text" className="form-control"
                     id={name}
                     placeholder={placeholder}
@@ -164,8 +168,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                     value={value}
                     onChange={onChange}
                 />
-            </div>
-        </div>;
+        </div></div>;
     }
 
     private async handleFormSubmit(e: React.FormEvent<any>) {
@@ -254,7 +257,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
     private async getOrgByName(orgName: string) {
         const accessLinkString = "https://github.com/organizations/" + orgName + "/settings/oauth_application_policy";
-        const accessLink = <a href={accessLinkString}>here</a>
+        const accessLink = <a href={accessLinkString}>here</a>;
         console.log("Getting org by name: " + orgName);
         const result = await this.props.courseMan.getOrganization(orgName);
         const orgs: Organization[] = [];
@@ -288,9 +291,8 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     }
 
     private courseByName() {
-        return <div className="form-group col-sm-12 orgform">
-
-            <div className="input-group">
+        return <div className="col-sm-12">
+            <div className="input-group orgform">
             <label className="input-group-addon">Organization:</label>
                 <input type="text"
                     className="form-control"

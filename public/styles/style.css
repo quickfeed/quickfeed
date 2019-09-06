@@ -242,3 +242,16 @@
 .orgform {
     float: right;
 }
+
+#form-header {
+    text-align: left;
+}
+
+.addon-mini {
+    min-width: 70px;
+    text-align: left;
+}
+
+#message {
+    font-size: 75%;
+}
