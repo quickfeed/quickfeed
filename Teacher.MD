@@ -21,7 +21,7 @@ The following concepts are important to understand.
 
 ## GitHub
 
- To use Autograder, both teachers and students must have an active GitHub account. https://github.com/
+ To use Autograder, both teachers and students must have an active [GitHub](https://github.com/) account. 
 
  Each course in Autograder is based on a GitHub organization. 
  
@@ -44,7 +44,7 @@ Autograder uses the following repository structure. These will be created automa
 |-----------------|--------------------------------------------------|----------|
 | course-info	  | Holds information about the course.              | Public   |
 | assignments	  | Contains a separate folder for each assignment.  |Students, Teachers,<br>Autograder |
-| username-labs   |	Created for each user username in autograder	 |Student, Teachers,<br> Autograder |
+| username-labs   |	Created for each student username in autograder	 |Student, Teachers,<br> Autograder |
 | tests	          | Contains a separate folder for each assignment<br> with tests for that assignment. |Teachers, Autograder|
 | solutions	      | Typically contains assignments, tests, and<br> solutions that pass the tests. |	Teachers |
 
