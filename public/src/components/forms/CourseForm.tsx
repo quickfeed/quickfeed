@@ -346,7 +346,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
         this.setState({
             organisations: orgDivs,
-            orgid: 0,
+            //orgid: 0,
         });
     }
 
@@ -366,7 +366,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                  >Find</button></span></div>
             <label className="control-label col-sm-2" htmlFor="name"></label>
             <div id="message" className="col-sm-10" >
-                <span className={this.setMessageIcon()} style={this.setIconColor()}>
+                <span className={this.setMessageIcon()}>
                 </span>  {this.state.userMessage}</div>
         </div>;
     }
@@ -417,19 +417,15 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     private setMessageIcon(): string {
         switch (this.state.success) {
             case 1 : {
-                return "glyphicon glyphicon-ok green";
+                return "glyphicon glyphicon-ok";
             }
             case 2 : {
-                return "glyphicon glyphicon-remove red";
+                return "glyphicon glyphicon-remove";
             }
             default : {
                 return "";
             }
         }
-    }
-
-    private setIconColor(): any {
-        return this.state.success === 1 ? { color: "green" } : { color: "red" };
     }
 
     private setButtonString(): string {

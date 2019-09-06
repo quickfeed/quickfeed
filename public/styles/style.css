@@ -230,3 +230,11 @@
 .approved-cell {
     background-color: #dff0d8;
 }
+
+.glyphicon-remove {
+    color: #601203;
+}
+
+.glyphicon-ok {
+    color: #087d2a; 
+}
