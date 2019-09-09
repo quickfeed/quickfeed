@@ -69,15 +69,14 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
     }
 
     private async rebuildSubmission() {
-        console.log("Rebuilds are disabled");
-        /*this.setState({
+        this.setState({
             rebuilding: true,
         });
         await this.props.onRebuildClick(this.props.submission_id).then(() => {
             this.setState({
                 rebuilding: false,
             });
-        });*/
+        });
     }
 
     private async approve() {
