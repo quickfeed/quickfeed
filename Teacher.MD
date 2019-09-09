@@ -32,6 +32,10 @@ The following concepts are important to understand.
  
  - You must be able to create private repositories in your organization. If you are associated with University of Stavanger, you can create such organizations under the [UiS Campus Enterprise account](https://github.com/enterprises/university-of-stavanger).
 
+ - You can also [apply for an Educator discount](https://education.github.com/discount_requests/new) on GitHub.
+
+For teachers, GitHub is happy to upgrade your organization to serve private repositories
+
  - There should not be any course repositories in your organization before the course creation, as Autograder will create repositories with GitHub webhook events automatically. Course repositories are repositories with names `assignments`, `tests`, `solutions` or `course-info`. If you already have such repositories in your organization, you will have to remove (or temporarily rename) them in order to be able to create a new course.
 
 ## Course
