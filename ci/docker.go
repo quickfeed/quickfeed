@@ -3,6 +3,7 @@ package ci
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -19,6 +20,8 @@ type Docker struct {
 	Endpoint string
 	Version  string
 }
+
+var containerTimeout = time.Duration(10 * time.Minute)
 
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
@@ -45,17 +48,16 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 		return "", csErr
 	}
 
-	deadline, _ := ctx.Deadline()
-	timeout := time.Until(deadline)
-	if timeout < 0 {
-		timeout = 0
-	}
-	defer cli.ContainerKill(ctx, resp.ID, "SIGTERM")
-
+	// will wait until the container stops
 	waitc, errc := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+
 	select {
 	case wErr := <-errc:
 		return "", wErr
+	// if the container still running after predefined time interval, force kill it
+	case <-time.After(containerTimeout):
+		cli.ContainerKill(ctx, resp.ID, "SIGTERM")
+		return "Container timed out", fmt.Errorf("Container timed out after %s", containerTimeout)
 	case <-waitc:
 	}
 
