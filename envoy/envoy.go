@@ -72,7 +72,7 @@ func hasEnvoyImage(ctx context.Context, l *zap.Logger, cli *client.Client) bool 
 	l.Debug("checking for Autograder's Envoy image")
 	for _, img := range images {
 		l.Debug("found image", zap.Strings("repo", img.RepoTags))
-		if img.RepoTags[0] == "ag_envoy:latest" {
+		if len(img.RepoTags) > 0 && img.RepoTags[0] == "ag_envoy:latest" {
 			l.Debug("found Envoy image")
 			return true
 		}
