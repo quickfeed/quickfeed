@@ -119,7 +119,8 @@ export class CourseManager {
      * @param state The new state of the relation
      */
     public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
-        return this.courseProvider.changeUserState(link, state);
+        const ans = await this.courseProvider.changeUserState(link, state);
+        return ans;
     }
 
     public async approveAll(courseID: number): Promise<boolean> {

@@ -124,7 +124,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     public handleAction(userRel: IUserRelation, link: ILink) {
         switch (link.uri) {
             case "accept":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT).then((ans) => {
+                    console.log("List of accepted users updated: " + ans);
+                });
                 break;
             case "reject":
                 this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
