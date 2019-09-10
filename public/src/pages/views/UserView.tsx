@@ -10,6 +10,7 @@ interface IUserViewerProps {
     users: IUserRelation[];
     userMan?: UserManager;
     navMan?: NavigationManager;
+    courseCode?: string;
     searchable?: boolean;
     actions?: ILink[];
     optionalActions?: (user: IUserRelation) => ILink[];
@@ -72,16 +73,19 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private renderRow(user: IUserRelation): Array<string | JSX.Element> {
         const selector: Array<string | JSX.Element> = [];
+        const gitLink = "https://github.com/" + user.user.getLogin();
+        const repoLink = "https://github.com/" + this.props.courseCode + "/" + user.user.getLogin() + "-labs";
+        // if there is course information present, link to the student's labs repo,
+        // otherwise link to the student's git account
+        const studentLink = this.props.courseCode ? repoLink : gitLink;
         if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
             selector.push(
                 <span className="text-muted">
-                    <a href={"https://github.com/" + user.user.getLogin()} target="_blank">{user.user.getName()}</a>
-                </span>
-            );
+                    <a href={gitLink} target="_blank">{user.user.getName()}</a>
+                </span>);
         } else {
             selector.push(
-                <a href={"https://github.com/" + user.user.getLogin()} target="_blank">{user.user.getName()}</a>
-                );
+                <a href={studentLink} target="_blank">{user.user.getName()}</a>);
         }
         selector.push(
             <a href={"mailto:" + user.user.getEmail()}>{user.user.getEmail()}</a>,
