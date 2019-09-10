@@ -117,18 +117,14 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             return students;
         }
         const assignmentID = this.props.labs[this.props.labs.length - 1].getId();
-        console.log("Latest assignment has ID " + assignmentID);
         const withSubmission: IAssignmentLink[] = [];
         const withoutSubmission: IAssignmentLink[] = [];
-         // split all students into two arrays: with and without submissions
+         // split all students into two arrays: with and without submission to the last lab
         students.forEach((ele) => {
-            console.log("Checking student " + ele.link.getUserid());
             let hasSubmission = false;
             ele.assignments.forEach((a) => {
-                console.log("Checking assignment " + a.assignment.getName() + " for student " + ele.link.getUserid());
                 // check if there is a submission for the latest course assignment
                 if (a.assignment.getId() === assignmentID && a.latest) {
-                    console.log("added to withSubmissions");
                     hasSubmission = true;
                 }
             });
@@ -138,8 +134,6 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 withoutSubmission.push(ele);
             }
         });
-        console.log("WithSubmissions are: " + withSubmission);
-        console.log("WithoutSubmissions are: " + withoutSubmission);
         // sort students with submissions
         const sorted = withSubmission.sort((left, right) => {
             const leftLab = left.assignments[left.assignments.length - 1].latest;
@@ -155,9 +149,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             }
             return 0;
         });
-        console.log("Sorted is now: " + sorted);
         const fullList = sorted.concat(withoutSubmission);
-        console.log("Full list is now: " + fullList);
         return fullList;
     }
 
