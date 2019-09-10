@@ -245,6 +245,14 @@
 
 #form-header {
     text-align: left;
+    display: inline-block;
+    float: none;
+}
+
+#form-button {
+    display: inline-block;
+    margin: auto;
+    float: none;
 }
 
 .addon-mini {

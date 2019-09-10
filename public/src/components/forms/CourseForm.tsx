@@ -25,7 +25,6 @@ interface ICourseFormState {
     provider: string;
     orgid: number;
     orgname: string;
-    organisations: JSX.Element | null;
     errorFlash: JSX.Element | null;
     userMessage: JSX.Element | null;
     success: number;
@@ -44,7 +43,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             orgname: "",
             provider: "github",
             orgid: this.props.courseData ? this.props.courseData.getOrganizationid() : 0,
-            organisations: null,
             errorFlash: null,
             userMessage: null,
             success: 0,
@@ -56,8 +54,9 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         const getTitleText: string = this.props.courseData ? "Edit Course" : "Create New Course";
         return (
             <div className="container">
-                <div className="row"><div className="col-sm-2">
-                    </div> <h1 id="form-header" className="col-sm-10">{getTitleText}</h1></div>
+                <div className="row">
+                 <div className="form-header col-sm-12"><h1>{getTitleText}</h1></div>
+                 </div>
                 <div className="row">{this.state.errorFlash}</div>
                     <form className={this.props.className ? this.props.className : ""}
                         onSubmit={(e) => this.handleFormSubmit(e)}>
@@ -94,12 +93,10 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         (e) => this.handleInputChange(e))}
                     </div>
                     <div className="row spacefix">
-                    <div className="col-sm-12 text-center">
-                        <div className="form-group">
+                        <div className="form-button col-sm-12">
                             <BootstrapButton classType="primary" type="submit">
                                 {this.setButtonString()}
                             </BootstrapButton>
-                        </div>
                     </div>
                     </div>
                 </form>
@@ -113,7 +110,9 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 <p>For each new semester of a course, Autograder requires a new GitHub organization.
             This is to keep the student roster for the different runs of the course separate.</p>
 
-                <p><a href="https://github.com/account/organizations/new" target="_blank">Create an organization for your course</a>. The course organization must allow private repositories. </p>
+                <p><a href="https://github.com/account/organizations/new"
+                 target="_blank">Create an organization for your course</a>.
+                  The course organization must allow private repositories. </p>
 
                 <p>Autograder will create a following repository structure for you:</p>
 
@@ -127,7 +126,9 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 </div>
 
                 <p>Please read <a
-                 href="https://github.com/autograde/aguis/blob/grpc-web-merge/Teacher.MD" target="_blank">the documentation</a> for further instructions on how to work with the various repositories.</p>
+                 href="https://github.com/autograde/aguis/blob/grpc-web-merge/Teacher.MD"
+                  target="_blank">the documentation</a> for further
+                   instructions on how to work with the various repositories.</p>
             </div>;
         return gitMsg;
     }
