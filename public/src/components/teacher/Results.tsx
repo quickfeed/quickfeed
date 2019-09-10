@@ -28,12 +28,12 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             this.state = {
                 // Only using the first student to fetch assignments.
                 assignment: currentStudent.assignments[0],
-                students: this.props.students,
+                students: this.sortStudentsByScore(this.props.students),
             };
         } else {
             this.state = {
                 assignment: undefined,
-                students: this.props.students,
+                students: this.sortStudentsByScore(this.props.students),
             };
         }
     }
@@ -108,6 +108,57 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 return iCell;
             }));
         return selector;
+    }
+
+    private sortStudentsByScore(students: IAssignmentLink[]): IAssignmentLink[] {
+        // if no assignments yet, disregard
+        // TODO: move this to the caller function later
+        if (this.props.labs.length < 1) {
+            return students;
+        }
+        const assignmentID = this.props.labs[this.props.labs.length - 1].getId();
+        console.log("Latest assignment has ID " + assignmentID);
+        const withSubmission: IAssignmentLink[] = [];
+        const withoutSubmission: IAssignmentLink[] = [];
+         // split all students into two arrays: with and without submissions
+        students.forEach((ele) => {
+            console.log("Checking student " + ele.link.getUserid());
+            let hasSubmission = false;
+            ele.assignments.forEach((a) => {
+                console.log("Checking assignment " + a.assignment.getName() + " for student " + ele.link.getUserid());
+                // check if there is a submission for the latest course assignment
+                if (a.assignment.getId() === assignmentID && a.latest) {
+                    console.log("added to withSubmissions");
+                    hasSubmission = true;
+                }
+            });
+            if (hasSubmission) {
+                withSubmission.push(ele);
+            } else {
+                withoutSubmission.push(ele);
+            }
+        });
+        console.log("WithSubmissions are: " + withSubmission);
+        console.log("WithoutSubmissions are: " + withoutSubmission);
+        // sort students with submissions
+        const sorted = withSubmission.sort((left, right) => {
+            const leftLab = left.assignments[left.assignments.length - 1].latest;
+            const rightLab = right.assignments[right.assignments.length - 1].latest;
+            if (leftLab && rightLab) {
+                if (leftLab.score > rightLab.score) {
+                    return -1;
+                } else if (leftLab.score < rightLab.score) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+            return 0;
+        });
+        console.log("Sorted is now: " + sorted);
+        const fullList = sorted.concat(withoutSubmission);
+        console.log("Full list is now: " + fullList);
+        return fullList;
     }
 
     private handleOnclick(item: IStudentSubmission): void {
