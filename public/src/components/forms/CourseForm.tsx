@@ -220,22 +220,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         });
     }
 
-    private handleOrgClick(e: any, dirId: number) {
-        const elem = e.target;
-        if (dirId) {
-            this.setState({
-                orgid: dirId,
-            });
-            let sibling = elem.parentNode.firstChild;
-            for (; sibling; sibling = sibling.nextSibling) {
-                if (sibling.nodeType === 1) {
-                    sibling.classList.remove("alert-success");
-                }
-            }
-            elem.classList.add("alert-success");
-        }
-    }
-
     private async getOrgByName(orgName: string) {
         const accessLinkString = "https://github.com/organizations/" + orgName + "/settings/oauth_application_policy";
         const accessLink = <a href={accessLinkString}>here</a>;
