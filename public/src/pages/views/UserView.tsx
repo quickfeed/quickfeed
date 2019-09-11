@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Enrollment} from "../../../proto/ag_pb";
+import { Enrollment, User } from "../../../proto/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
 import { IUserRelation } from "../../models";
@@ -8,6 +8,7 @@ import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 
 interface IUserViewerProps {
     users: IUserRelation[];
+    isCourseList: boolean;
     userMan?: UserManager;
     navMan?: NavigationManager;
     courseCode?: string;
@@ -73,19 +74,14 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     private renderRow(user: IUserRelation): Array<string | JSX.Element> {
         const selector: Array<string | JSX.Element> = [];
-        const gitLink = "https://github.com/" + user.user.getLogin();
-        const repoLink = "https://github.com/" + this.props.courseCode + "/" + user.user.getLogin() + "-labs";
-        // if there is course information present, link to the student's labs repo,
-        // otherwise link to the student's git account
-        const studentLink = this.props.courseCode ? repoLink : gitLink;
         if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
             selector.push(
                 <span className="text-muted">
-                    <a href={gitLink} target="_blank">{user.user.getName()}</a>
+                    <a href={this.gitLink(user.user.getLogin())} target="_blank">{user.user.getName()}</a>
                 </span>);
         } else {
             selector.push(
-                <a href={studentLink} target="_blank">{user.user.getName()}</a>);
+                <a href={this.repoLink(user.user.getLogin())} target="_blank">{user.user.getName()}</a>);
         }
         selector.push(
             <a href={"mailto:" + user.user.getEmail()}>{user.user.getEmail()}</a>,
@@ -163,5 +159,15 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         this.setState({
             users: filteredData,
         });
+    }
+
+    private gitLink(user: string): string {
+        return "https://github.com/" + user;
+    }
+
+    // return link to github account if there is no course information, otherwise return link to the student labs repo
+    private repoLink(user: string): string {
+        const repoLink = "https://github.com/" + this.props.courseCode + "/" + user + "-labs";
+        return this.props.isCourseList ? repoLink : this.gitLink(user);
     }
 }

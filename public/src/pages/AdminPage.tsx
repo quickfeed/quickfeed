@@ -49,6 +49,7 @@ export class AdminPage extends ViewPage {
             <h1>All Users</h1>
             <UserView
                 users={allUsers}
+                isCourseList={false}
                 optionalActions={(user: IUserRelation) => {
                     if (user.user.getIsadmin()) {
                         return [{ uri: "demote", name: "Demote", extra: "danger" }];
