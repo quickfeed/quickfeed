@@ -32,7 +32,7 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, submissionID 
 
 	s.logger.Info("Rebuilding user submission: repo url is: ", repo.GetHTMLURL())
 
-	runTests(s.logger, s.db, s.runner, repo, repo.GetHTMLURL(), submission.GetCommitHash(), "ci/scripts")
+	runTests(s.logger, s.db, s.runner, repo, repo.GetHTMLURL(), submission.GetCommitHash(), "ci/scripts", submission.GetAssignmentID())
 
 	return nil
 }

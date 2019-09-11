@@ -56,8 +56,26 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 				refreshAssignmentsFromTestsRepo(logger, db, repo, uint64(p.Sender.ID))
 
 			case repo.IsStudentRepo():
-				// the push event is from a student or group repo; run the tests
-				runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath)
+
+				// parse the lab name from the push payload
+				modifiedLabs := p.HeadCommit.Modified
+				var labNames []string
+				for _, lab := range modifiedLabs {
+					labName := strings.Split(lab, "/")[0]
+					if !contains(labNames, labName) {
+						labNames = append(labNames, labName)
+						logger.Debug("Got lab name: ", labName)
+					}
+				}
+
+				// run tests for every lab updated by student
+				for _, lab := range labNames {
+					assignment, err := db.GetAssignment(&pb.Assignment{Name: lab})
+					if err != nil {
+						logger.Error("Could not find assignment ", lab, ": ", zap.Error(err))
+					}
+					runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID())
+				}
 
 			default:
 				logger.Debug("Nothing to do for this push event")
@@ -111,7 +129,7 @@ func refreshAssignmentsFromTestsRepo(logger *zap.SugaredLogger, db database.Data
 
 // runTests runs the ci from a RemoteIdentity
 func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, repo *pb.Repository,
-	getURL string, commitHash string, scriptPath string) {
+	getURL string, commitHash string, scriptPath string, assignmentID uint64) {
 
 	course, err := db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
@@ -124,11 +142,24 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		logger.Error("Failed to fetch course creator", zap.Error(err))
 	}
 
-	selectedAssignment, err := db.GetNextAssignment(course.ID, repo.UserID, repo.GroupID)
-	if err != nil {
-		logger.Error("Failed to find a next unapproved assignment", zap.Error(err))
-		return
+	var selectedAssignment *pb.Assignment
+
+	// if assignment ID is defined, fetch the assignment by ID
+	if assignmentID > 0 {
+		selectedAssignment, err = db.GetAssignment(&pb.Assignment{ID: assignmentID})
+		if err != nil {
+			logger.Error("Failed to fetch assignment by ID: ", zap.Error(err))
+			return
+		}
+		// otherwise use the last unapproved assignment for the given student/group
+	} else {
+		selectedAssignment, err = db.GetNextAssignment(course.ID, repo.UserID, repo.GroupID)
+		if err != nil {
+			logger.Error("Failed to find a next unapproved assignment", zap.Error(err))
+			return
+		}
 	}
+
 	logger.Debug("Found assignment", zap.String("assignment", selectedAssignment.String()))
 
 	testsRepoQuery := &pb.Repository{
@@ -230,4 +261,13 @@ func GitlabHook(logger *zap.SugaredLogger) webhooks.ProcessPayloadFunc {
 			)
 		}
 	}
+}
+
+func contains(names []string, name string) bool {
+	for _, n := range names {
+		if n == name {
+			return true
+		}
+	}
+	return false
 }
