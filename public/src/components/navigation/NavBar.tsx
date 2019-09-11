@@ -11,7 +11,15 @@ interface INavBarProps {
     onClick?: (lin: ILink) => void;
 }
 
+interface INavBarState {
+    collapsed: boolean;
+}
+
 class NavBar extends React.Component<INavBarProps, {}> {
+
+    public state: INavBarState = {
+        collapsed: true,
+    };
 
     public render() {
         return <nav className={this.renderNavBarClass()}>
@@ -19,14 +27,27 @@ class NavBar extends React.Component<INavBarProps, {}> {
                 <NavHeaderBar
                     id={this.props.id}
                     brandName={this.props.brandName}
-                    brandClick={() => this.handleClick({ name: "Home", uri: "/" })}>
+                    isCollapsed={this.state.collapsed}
+                    brandClick={() => this.handleClick({ name: "Home", uri: "/" })}
+                    toggleNavbar={this.toggleNavbar}>
                 </NavHeaderBar>
 
-                <div className="collapse navbar-collapse" id={this.props.id}>
+                <div
+                    className={`collapse navbar-collapse ${this.state.collapsed ? "" : "show"}`}
+                    id={this.props.id}
+                >
                     {this.props.children}
                 </div>
             </div>
         </nav>;
+    }
+
+    private toggleNavbar = () => {
+        this.setState((state: INavBarState) => {
+            return {
+                collapsed: !state.collapsed,
+            };
+        });
     }
 
     private handleClick(link: ILink) {
