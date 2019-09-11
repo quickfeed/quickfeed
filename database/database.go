@@ -54,6 +54,7 @@ type Database interface {
 	UpdateAssignments([]*pb.Assignment) error
 	GetAssignmentsByCourse(uint64) ([]*pb.Assignment, error)
 	GetNextAssignment(cid, uid, gid uint64) (*pb.Assignment, error)
+	GetAssignment(query *pb.Assignment) (*pb.Assignment, error)
 
 	// CreateSubmission creates a submission in the database.
 	CreateSubmission(*pb.Submission) error

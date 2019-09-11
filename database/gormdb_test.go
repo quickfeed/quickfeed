@@ -248,6 +248,10 @@ func TestGormDBGetAssignment(t *testing.T) {
 	if _, err := db.GetAssignmentsByCourse(10); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
+
+	if _, err := db.GetAssignment(10); err != gorm.ErrRecordNotFound {
+		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
+	}
 }
 
 func TestGormDBCreateAssignmentNoRecord(t *testing.T) {
@@ -294,6 +298,10 @@ func TestGormDBCreateAssignment(t *testing.T) {
 
 	if !reflect.DeepEqual(assignments[0], &assignment) {
 		t.Fatalf("want %v have %v", assignments[0], &assignment)
+	}
+
+	if _, err = db.GetAssignment(1); err != nil {
+		t.Errorf("failed to get existing assignment by ID: %s", err)
 	}
 }
 

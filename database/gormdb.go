@@ -281,6 +281,15 @@ func (db *GormDB) GetAssignmentsByCourse(cid uint64) ([]*pb.Assignment, error) {
 	return course.Assignments, nil
 }
 
+// GetAssignment returns assignment with given ID
+func (db *GormDB) GetAssignment(query *pb.Assignment) (*pb.Assignment, error) {
+	var assignment pb.Assignment
+	if err := db.conn.Where(query).First(&assignment).Error; err != nil {
+		return nil, err
+	}
+	return &assignment, nil
+}
+
 // GetNextAssignment returns the next assignment to be approved for
 // the given course, user, or group if the next assignment is a group lab.
 func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Assignment, error) {
