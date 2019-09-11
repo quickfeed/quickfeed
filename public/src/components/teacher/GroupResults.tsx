@@ -2,6 +2,7 @@ import * as React from "react";
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
+import { sortByScore } from "./sorter";
 
 interface IResultsProps {
     course: Course;
@@ -30,12 +31,12 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             this.state = {
                 // Only using the first group to fetch assignments.
                 assignment: currentGroup.assignments[0],
-                groups: this.props.groups,
+                groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         } else {
             this.state = {
                 assignment: undefined,
-                groups: this.props.groups,
+                groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         }
     }
@@ -105,6 +106,11 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 {e.latest ? (e.latest.score + "%") : "N/A"}</a>;
         }));
         return selector;
+    }
+    private sortGroupsByScore(groups: IAssignmentLink[]): IAssignmentLink[] {
+        
+
+        return [];
     }
 
     private handleOnclick(item: IStudentSubmission): void {

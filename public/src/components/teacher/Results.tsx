@@ -3,6 +3,7 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
+import { sortByScore } from "./sorter";
 
 interface IResultsProp {
     course: Course;
@@ -28,12 +29,12 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             this.state = {
                 // Only using the first student to fetch assignments.
                 assignment: currentStudent.assignments[0],
-                students: this.sortStudentsByScore(this.props.students),
+                students: sortByScore(this.props.students, this.props.labs, false),
             };
         } else {
             this.state = {
                 assignment: undefined,
-                students: this.sortStudentsByScore(this.props.students),
+                students: sortByScore(this.props.students, this.props.labs, false),
             };
         }
     }
@@ -108,60 +109,6 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 return iCell;
             }));
         return selector;
-    }
-
-    private sortStudentsByScore(students: IAssignmentLink[]): IAssignmentLink[] {
-        // if no assignments yet, disregard
-        // TODO: move this to the caller function later
-        if (this.props.labs.length < 1) {
-            return students;
-        }
-        const allLabs = this.props.labs.slice().reverse();
-        // find the latest individual assignment and its index
-        let assignmentID = 0;
-        let assignmentIndex = 0;
-        const latestLab = allLabs.find((lab) => {
-            return !lab.getIsgrouplab();
-        });
-        if (latestLab) {
-            assignmentID = latestLab.getId();
-            assignmentIndex = this.props.labs.indexOf(latestLab);
-        }
-        const withSubmission: IAssignmentLink[] = [];
-        const withoutSubmission: IAssignmentLink[] = [];
-         // split all students into two arrays: with and without submission to the last lab
-        students.forEach((ele) => {
-            let hasSubmission = false;
-            ele.assignments.forEach((a) => {
-                // check if there is a submission for the latest course assignment
-                if (a.assignment.getId() === assignmentID && a.latest) {
-                    hasSubmission = true;
-                }
-            });
-            if (hasSubmission) {
-                withSubmission.push(ele);
-            } else {
-                withoutSubmission.push(ele);
-            }
-        });
-        // sort students with submissions
-        const sorted = withSubmission.sort((left, right) => {
-            const leftLab = left.assignments[assignmentIndex].latest;
-            const rightLab = right.assignments[assignmentIndex].latest;
-            if (leftLab && rightLab) {
-                if (leftLab.score > rightLab.score) {
-                    return -1;
-                } else if (leftLab.score < rightLab.score) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            }
-            return 0;
-        });
-        // then add students without submission at the end of list
-        const fullList = sorted.concat(withoutSubmission);
-        return fullList;
     }
 
     private handleOnclick(item: IStudentSubmission): void {
