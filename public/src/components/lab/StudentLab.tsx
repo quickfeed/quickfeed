@@ -17,6 +17,7 @@ export class StudentLab extends React.Component<IStudentLabProps> {
         return <LabResultView
             course={this.props.course}
             labInfo={this.props.assignment}
+            student={this.props.student}
             onApproveClick={this.props.onApproveClick}
             onRebuildClick={this.props.onRebuildClick}
             showApprove={this.props.showApprove}>

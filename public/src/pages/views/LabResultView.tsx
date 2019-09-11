@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course } from "../../../proto/ag_pb";
+import { Course, User } from "../../../proto/ag_pb";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentSubmission } from "../../models";
 
@@ -7,6 +7,7 @@ interface ILabInfoProps {
     course: Course;
     labInfo: IStudentSubmission;
     showApprove: boolean;
+    student?: User;
     onApproveClick: () => void;
     onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
@@ -26,6 +27,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
                                 isApproved={latest.approved}
+                                student={this.props.student}
                                 delivered={this.getDeliveredTime(latest.buildDate)}
                             />
                             <LastBuild

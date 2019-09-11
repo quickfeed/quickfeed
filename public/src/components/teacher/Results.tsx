@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course } from "../../../proto/ag_pb";
+import { Assignment, Course, User } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
@@ -16,6 +16,7 @@ interface IResultsProp {
 interface IResultsState {
     assignment?: IStudentSubmission;
     students: IAssignmentLink[];
+    student?: User;
 }
 
 export class Results extends React.Component<IResultsProp, IResultsState> {
@@ -50,6 +51,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
+                student={this.state.student}
                 onRebuildClick={this.props.onRebuildClick}
                 onApproveClick={() => {
                     if (this.state.assignment && this.state.assignment.latest) {
@@ -115,6 +117,11 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         this.setState({
             assignment: item,
         });
+        if (item.student) {
+            this.setState({
+                student: item.student,
+            });
+        }
     }
 
     private handleOnchange(query: string): void {

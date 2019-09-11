@@ -27,7 +27,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
     public render() {
         let labHeading: JSX.Element;
         if (this.props.student) {
-            labHeading = <h3>{this.props.student.getName()}: {this.props.lab}</h3>;
+            labHeading = <h3>{this.props.student.getName() + " progress on " + this.props.lab}: {this.props.lab}</h3>;
         } else {
             labHeading = <div>
                 <p className="lead">Your progress on <strong><span

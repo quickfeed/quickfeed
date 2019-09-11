@@ -36,6 +36,7 @@ export interface IAssignmentLink {
 export interface IStudentSubmission {
     assignment: Assignment;
     latest?: ISubmission;
+    student?: User;
 }
 
 /**
