@@ -116,7 +116,17 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         if (this.props.labs.length < 1) {
             return students;
         }
-        const assignmentID = this.props.labs[this.props.labs.length - 1].getId();
+        const allLabs = this.props.labs.slice().reverse();
+        // find the latest individual assignment and its index
+        let assignmentID = 0;
+        let assignmentIndex = 0;
+        const latestLab = allLabs.find((lab) => {
+            return !lab.getIsgrouplab();
+        });
+        if (latestLab) {
+            assignmentID = latestLab.getId();
+            assignmentIndex = this.props.labs.indexOf(latestLab);
+        }
         const withSubmission: IAssignmentLink[] = [];
         const withoutSubmission: IAssignmentLink[] = [];
          // split all students into two arrays: with and without submission to the last lab
@@ -136,8 +146,8 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         });
         // sort students with submissions
         const sorted = withSubmission.sort((left, right) => {
-            const leftLab = left.assignments[left.assignments.length - 1].latest;
-            const rightLab = right.assignments[right.assignments.length - 1].latest;
+            const leftLab = left.assignments[assignmentIndex].latest;
+            const rightLab = right.assignments[assignmentIndex].latest;
             if (leftLab && rightLab) {
                 if (leftLab.score > rightLab.score) {
                     return -1;
@@ -149,6 +159,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             }
             return 0;
         });
+        // then add students without submission at the end of list
         const fullList = sorted.concat(withoutSubmission);
         return fullList;
     }
