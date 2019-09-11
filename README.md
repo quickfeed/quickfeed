@@ -103,17 +103,3 @@ plugin and the Go plugin together with the following configuration settings.
     "tslint.run": "onSave",
 }
 ```
-
-## Signing in to github and gitlab with teacher priviliges
-
-If autograder has not been authenticated with the provider yet, there is to ways of doing in the first time. The first method is as a student, and only require the user to use the normal sing in button for the provider. If the user is a teacher, and wants to be able to create courses, extra proviliges in the APIs are required, and the url:
-
-  ```sh
-  https://{your_domain}/auth/{provider}-teacher
-  ```
-
-where provider could be `github` or `gitlab`. As an example:
-
-  ```sh
-  https://example.com/auth/github-teacher
-  ```
