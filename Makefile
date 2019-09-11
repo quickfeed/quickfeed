@@ -25,7 +25,6 @@ dep:
 	go get -u github.com/gogo/protobuf/protoc-gen-gogofast
 	go get -u github.com/gogo/protobuf/protoc-gen-gogofaster
 	
-# change back to 'go'
 install:
 	@echo go install
 	@go install
@@ -93,7 +92,6 @@ protoset:
 	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf \
 	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
 
-# change commands to 'go' when v.13 hits
 test:
 	@cd ./web; go test
 	@cd ./database; go test
@@ -110,7 +108,7 @@ purge: scm
 # will start ag client and server, serve static files at 'endpoint' and webserver at 'agport'
 # change agport variable to the number of bound local port when using tunnel script
 run:
-	@aguis -service.url $(endpoint)  -http.addr :$(agport) -http.public ./public
+	@aguis -service.url $(endpoint) -http.addr :$(agport) -http.public ./public
 
 # to run server on itest.run, ag2port variable must correspond to endpoint
 # endpoint is used for github callbacks, and port is used to proxy client calls
@@ -123,6 +121,7 @@ itestrun:
 # test nginx configuration syntax
 nginx-test:
 	@sudo nginx -t
+
 # restart nginx with updated configuration
 nginx: nginx-test
 	@sudo nginx -s reload
@@ -132,6 +131,7 @@ local:
 	@echo "Changing grpc client location to localhost"
 	@cd ./public/src/managers/; sed -i 's/"https:\/\/" + window.location.hostname/"http:\/\/localhost:8080"/g' GRPCManager.ts
 	@cd ./public; webpack
+
 remote:
 	@echo "Changing grpc client location to remote domain"
 	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
