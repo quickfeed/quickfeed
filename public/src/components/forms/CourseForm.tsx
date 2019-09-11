@@ -238,13 +238,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                     userMessage: <span>not found, make sure to allow application access {accessLink}</span>,
                 });
             }
-            const errMsg = result.getError();
-            const serverErrors: string[] = [];
-            serverErrors.push(errMsg);
-            const flashErrors = this.getFlashErrors(serverErrors);
-            this.setState({
-                    errorFlash: flashErrors,
-            });
 
         } else {
             this.setState({
