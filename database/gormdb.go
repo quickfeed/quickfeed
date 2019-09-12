@@ -450,6 +450,7 @@ func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 			Language:    assignment.Language,
 			Deadline:    assignment.Deadline,
 			AutoApprove: assignment.AutoApprove,
+			IsGroupLab:  assignment.IsGroupLab,
 		}).FirstOrCreate(assignment).Error
 }
 
