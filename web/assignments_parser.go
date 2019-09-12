@@ -27,7 +27,7 @@ type assignmentData struct {
 	Language     string `yaml:"language"`
 	Deadline     string `yaml:"deadline"`
 	AutoApprove  bool   `yaml:"autoapprove"`
-	IsGroupLab   bool   `yaml:"IsGroupLab"`
+	IsGroupLab   bool   `yaml:"isgrouplab"`
 }
 
 // ParseAssignments recursively walks the given directory and parses
@@ -54,7 +54,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					log.Println("parseAssignment: error while unmarshalling: ", err.Error())
 					return err
 				}
-
 				// ID from the parsed yaml is used to set Order, not assignment ID,
 				// or it will cause a database constraint violation (IDs must be unique)
 				assignment := &pb.Assignment{
@@ -66,7 +65,6 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					AutoApprove: newAssignment.AutoApprove,
 					IsGroupLab:  newAssignment.IsGroupLab,
 				}
-
 				assignments = append(assignments, assignment)
 			}
 		}
