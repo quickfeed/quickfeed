@@ -2,7 +2,6 @@ import { IEventData, newEvent } from "../event";
 import { ILogger } from "./LogManager";
 
 import { Enrollment, User } from "../../proto/ag_pb";
-import { ENFILE } from "constants";
 
 export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<User | null>;
