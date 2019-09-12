@@ -342,7 +342,7 @@ export class CourseManager {
 
             for (const a of assignments) {
                 const submission = submissions.find((sub) => sub.assignmentid === a.getId());
-                studentCourse.assignments.push({ assignment: a, latest: submission, student: student });
+                studentCourse.assignments.push({ assignment: a, latest: submission, authorName: student.getName() });
             }
         }
     }
@@ -366,7 +366,7 @@ export class CourseManager {
 
             for (const a of assignments) {
                 const submission = submissions.find((sub) => sub.assignmentid === a.getId());
-                groupCourse.assignments.push({ assignment: a, latest: submission });
+                groupCourse.assignments.push({ assignment: a, latest: submission, authorName: group.getName() });
             }
         }
     }

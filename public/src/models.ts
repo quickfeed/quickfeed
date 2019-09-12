@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, User } from "../proto/ag_pb";
+import { Assignment, Course, Enrollment, User, Group } from "../proto/ag_pb";
 
 export interface IUser {
     id: number;
@@ -36,7 +36,7 @@ export interface IAssignmentLink {
 export interface IStudentSubmission {
     assignment: Assignment;
     latest?: ISubmission;
-    student?: User;
+    authorName?: string;
 }
 
 /**

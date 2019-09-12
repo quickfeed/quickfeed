@@ -6,7 +6,7 @@ import { LabResultView } from "../../pages/views/LabResultView";
 interface IStudentLabProps {
     course: Course;
     assignment: IStudentSubmission;
-    student?: User;
+    authorName?: string;
     showApprove: boolean;
     onApproveClick: () => void;
     onRebuildClick: (submissionID: number) => Promise<boolean>;
@@ -17,7 +17,7 @@ export class StudentLab extends React.Component<IStudentLabProps> {
         return <LabResultView
             course={this.props.course}
             labInfo={this.props.assignment}
-            student={this.props.student}
+            authorName={this.props.authorName}
             onApproveClick={this.props.onApproveClick}
             onRebuildClick={this.props.onRebuildClick}
             showApprove={this.props.showApprove}>
