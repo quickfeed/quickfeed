@@ -46,7 +46,8 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         let message: JSX.Element | undefined;
         if (!this.props.userMan.isValidUser(curUser)) {
             message = <div style={{ color: "red" }}>
-                To sign up, please complete the form below.
+                <p>To sign up, please complete the form below.</p> 
+                <p>Please provide your real name, it is used to approve your lab submissions.</p>
                 </div>;
         }
 
