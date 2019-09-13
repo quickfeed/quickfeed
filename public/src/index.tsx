@@ -149,7 +149,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         if (this.state.activePage) {
             return this.state.currentContent;
         } else {
-            return <div className="load-text"><h1>Loading...</h1></div>;
+            return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
         }
     }
 
