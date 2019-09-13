@@ -35,6 +35,6 @@ export abstract class ViewPage {
         if (pageContent) {
             return pageContent;
         }
-        return <div>Choose a course or create a new one.</div>;
+        return <div className="info"><p>Choose a course or create a new one.</p></div>;
     }
 }
