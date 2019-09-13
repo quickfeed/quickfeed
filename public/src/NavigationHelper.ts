@@ -1,12 +1,6 @@
 
 import { IEventData, newEvent } from "./event";
 
-export interface ITypeMap {
-    string?: string;
-    boolean?: boolean;
-    number?: number;
-}
-
 export function trimChars(str: string, char: string): string {
     if (str.length === 0) {
         return "";

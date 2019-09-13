@@ -3,7 +3,6 @@ import { IAssignmentLink } from "../../models";
 
 export function sortByScore(students: IAssignmentLink[], labs: Assignment[], isGroupLab: boolean): IAssignmentLink[] {
     // if no assignments yet, disregard
-    // TODO: move this to the caller function later
     if (labs.length < 1) {
         return students;
     }
@@ -28,7 +27,7 @@ export function sortByScore(students: IAssignmentLink[], labs: Assignment[], isG
     }
     const withSubmission: IAssignmentLink[] = [];
     const withoutSubmission: IAssignmentLink[] = [];
-        // split all students into two arrays: with and without submission to the last lab
+    // split all students into two arrays: with and without submission to the last lab
     students.forEach((ele) => {
         let hasSubmission = false;
         ele.assignments.forEach((a) => {
@@ -62,4 +61,3 @@ export function sortByScore(students: IAssignmentLink[], labs: Assignment[], isG
     const fullList = sorted.concat(withoutSubmission);
     return fullList;
 }
-
