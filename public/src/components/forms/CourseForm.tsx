@@ -126,7 +126,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 </div>
 
                 <p>Please read <a
-                 href="https://github.com/autograde/aguis/blob/grpc-web-merge/Teacher.MD"
+                 href="https://github.com/autograde/aguis/blob/master/doc/teacher.md"
                   target="_blank">the documentation</a> for further
                    instructions on how to work with the various repositories.</p>
             </div>;
