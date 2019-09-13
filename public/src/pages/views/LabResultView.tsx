@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, User } from "../../../proto/ag_pb";
+import { Course } from "../../../proto/ag_pb";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentSubmission } from "../../models";
 

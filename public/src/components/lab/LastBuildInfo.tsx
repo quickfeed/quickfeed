@@ -1,5 +1,4 @@
 import * as React from "react";
-// import { Table } from "react-bootstrap";
 import { Row } from "../../components";
 
 interface ILastBuildInfo {
@@ -80,7 +79,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
     }
 
     private async approve() {
-        await this.props.onApproveClick();
+        this.props.onApproveClick();
         this.setState({
             approved: true,
         });

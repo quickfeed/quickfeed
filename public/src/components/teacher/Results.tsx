@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, User } from "../../../proto/ag_pb";
+import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";

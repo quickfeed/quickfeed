@@ -1,5 +1,4 @@
 import * as React from "react";
-import { User } from "../../../proto/ag_pb";
 import { ProgressBar, Row } from "../../components";
 
 interface ILabResult {
@@ -7,7 +6,6 @@ interface ILabResult {
     lab: string;
     course_name: string;
     authorName?: string;
-    group?: string;
     isApproved: boolean;
     delivered: string;
 }
@@ -37,7 +35,8 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
                 </p>
             </div>;
         }
-        console.log("Progress is " + this.props.progress + " and status is " + this.setApprovedString() + " delivered on " + this.props.delivered);
+        console.log("Progress is " + this.props.progress
+         + " and status is " + this.setApprovedString() + " delivered on " + this.props.delivered);
         return (
             <Row>
                 <div className="col-lg-12">

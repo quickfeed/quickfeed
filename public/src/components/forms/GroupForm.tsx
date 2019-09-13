@@ -100,8 +100,6 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                         <div className="col-sm-6">
                             <fieldset>
                                 <legend>Available Students
-                                    {/* <small className="hint">
-                                    select {this.props.capacity} students for your group</small> */}
                                 </legend>
                                 {studentSearchBar} <br />
                                 <ul className="student-group list-group">
