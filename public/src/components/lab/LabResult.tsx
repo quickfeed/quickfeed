@@ -54,6 +54,6 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
     }
 
     private setApprovedString(): string {
-        return this.state.approved ? "Approved" : "Not approved";
+        return this.props.isApproved ? "Approved" : "Not approved";
     }
 }

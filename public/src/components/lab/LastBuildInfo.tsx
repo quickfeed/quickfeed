@@ -91,7 +91,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                 return this.state.rebuilding ? "btn btn-secondary" : "btn btn-primary";
             }
             case "approve" : {
-                return this.state.approved ? "btn btn-success" : "btn btn-primary";
+                return this.props.isApproved ? "btn btn-success" : "btn btn-primary";
             }
             default: {
                 return "";
@@ -105,7 +105,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                 return this.state.rebuilding ? "Rebuilding" : "Rebuild";
             }
             case "approve" : {
-                return this.state.approved ? "Approved" : "Approve";
+                return this.props.isApproved ? "Approved" : "Approve";
             }
             default : {
                 return "";
