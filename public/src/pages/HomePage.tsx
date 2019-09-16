@@ -113,7 +113,7 @@ export class HomePage extends ViewPage {
                         <p className="lead">
                             A course is an organization on GitHub.
                             Students get access to their own private GitHub repository.
-                            Uploading their code for review or grading students can
+                            Uploading their code for review or grading, students can
                              learn to use git for version control.
                         </p>
                     </div>
