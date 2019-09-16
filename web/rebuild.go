@@ -31,8 +31,12 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, submissionID 
 	repo := repos[0]
 
 	s.logger.Info("Rebuilding user submission: repo url is: ", repo.GetHTMLURL())
+	// only rerun tests for unapproved submissions
+	if !submission.GetApproved() {
+		runTests(s.logger, s.db, s.runner, repo, repo.GetHTMLURL(), submission.GetCommitHash(), "ci/scripts", submission.GetAssignmentID())
 
-	runTests(s.logger, s.db, s.runner, repo, repo.GetHTMLURL(), submission.GetCommitHash(), "ci/scripts", submission.GetAssignmentID())
-
+	} else {
+		s.logger.Infof("Submission for this lab has already been approved")
+	}
 	return nil
 }
