@@ -56,15 +56,13 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 				refreshAssignmentsFromTestsRepo(logger, db, repo, uint64(p.Sender.ID))
 
 			case repo.IsStudentRepo():
-
-				// parse the lab name from the push payload
+				// parse the lab names from the push payload
 				modifiedLabs := p.HeadCommit.Modified
 				var labNames []string
 				for _, lab := range modifiedLabs {
 					labName := strings.Split(lab, "/")[0]
 					if !contains(labNames, labName) {
 						labNames = append(labNames, labName)
-						logger.Debug("Got lab name: ", labName)
 					}
 				}
 
@@ -77,7 +75,7 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 
 					// check whether the last submission to that assignment has already been approved
 					// if yes - ignore the tests for approved lab
-					lastSubmission, _ := db.GetSubmission(&pb.Submission{AssignmentID: assignment.GetID()})
+					lastSubmission, _ := db.GetSubmission(&pb.Submission{AssignmentID: assignment.GetID(), UserID: repo.GetUserID(), GroupID: repo.GetGroupID()})
 					if lastSubmission == nil || !lastSubmission.GetApproved() {
 						runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID())
 					} else {
