@@ -34,6 +34,11 @@ func (t Repository_Type) IsStudentRepo() bool {
 	return t == Repository_USER || t == Repository_GROUP
 }
 
+// IsGroupRepo returns true if the repository is a group repo type
+func (t Repository) IsGroupRepo() bool {
+	return t.RepoType == Repository_GROUP
+}
+
 // RepoType returns the repository type for the given path name.
 func RepoType(path string) (repoType Repository_Type) {
 	switch path {
