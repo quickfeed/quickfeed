@@ -12,6 +12,7 @@ import (
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
+	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 
 	webhooks "gopkg.in/go-playground/webhooks.v3"
@@ -73,15 +74,7 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 						logger.Error("Could not find assignment ", lab, ": ", zap.Error(err))
 					}
 
-					// check whether the last submission to that assignment has already been approved
-					// if yes - ignore the tests for approved lab
-					lastSubmission, _ := db.GetSubmission(&pb.Submission{AssignmentID: assignment.GetID(), UserID: repo.GetUserID(), GroupID: repo.GetGroupID()})
-					if lastSubmission == nil || !lastSubmission.GetApproved() {
-						runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID())
-					} else {
-						logger.Infof("Submission for lab %s has already been approved for student %s", lab, p.Pusher.Name)
-					}
-
+					runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID())
 				}
 
 			default:
@@ -219,8 +212,20 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		logger.Error("Failed to marshal build info and scores", zap.Error(err))
 	}
 
-	// set approved if autoapprove is on and total score is above 80%
+	// check the approved status for the last submission
+	lastSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignmentID, UserID: repo.GetUserID(), GroupID: repo.GetGroupID()})
+	if err != nil && err != gorm.ErrRecordNotFound {
+		logger.Error("Failed to get submission info from the database", zap.Error(err))
+		return
+	}
+
 	var approve = false
+	// approve if the previous submission has already been approved
+	if lastSubmission != nil {
+		approve = lastSubmission.GetApproved()
+	}
+
+	// also approved if autoapprove is on and total score is above 80%
 	if selectedAssignment.AutoApprove && result.TotalScore() >= 80 {
 		approve = true
 	}
