@@ -74,7 +74,16 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 					if err != nil {
 						logger.Error("Could not find assignment ", lab, ": ", zap.Error(err))
 					}
-					runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID())
+
+					// check whether the last submission to that assignment has already been approved
+					// if yes - ignore the tests for approved lab
+					lastSubmission, _ := db.GetSubmission(&pb.Submission{AssignmentID: assignment.GetID()})
+					if lastSubmission == nil || !lastSubmission.GetApproved() {
+						runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID())
+					} else {
+						logger.Infof("Submission for lab %s has already been approved for student %s", lab, p.Pusher.Name)
+					}
+
 				}
 
 			default:
