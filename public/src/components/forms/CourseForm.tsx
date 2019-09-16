@@ -223,7 +223,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     private async getOrgByName(orgName: string) {
         const accessLinkString = "https://github.com/organizations/" + orgName + "/settings/oauth_application_policy";
         const accessLink = <a href={accessLinkString}>here</a>;
-        console.log("Getting org by name: " + orgName);
         const result = await this.props.courseMan.getOrganization(orgName);
         const orgs: Organization[] = [];
         if (result instanceof Status) {

@@ -26,7 +26,6 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
     public render() {
         let labHeading: JSX.Element;
         if (this.props.authorName) {
-            console.log("Author name is " + this.props.authorName);
             labHeading = <h3>{this.props.authorName + ": "} {this.props.lab}</h3>;
         } else {
             labHeading = <div>
@@ -35,8 +34,6 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
                 </p>
             </div>;
         }
-        console.log("Progress is " + this.props.progress
-         + " and status is " + this.setApprovedString() + " delivered on " + this.props.delivered);
         return (
             <Row>
                 <div className="col-lg-12">
