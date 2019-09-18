@@ -24,6 +24,12 @@ import (
 	whgitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
+// timeouts for http server
+var (
+	readTimeout  = 10 * time.Second
+	writeTimeout = 45 * time.Second
+)
+
 // New starts a new web server
 func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool) {
 	entryPoint := filepath.Join(public, "index.html")
@@ -175,6 +181,8 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 }
 
 func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {
+	e.Server.WriteTimeout = writeTimeout
+	e.Server.ReadTimeout = readTimeout
 	srvErr := e.Start(httpAddr)
 	if srvErr == http.ErrServerClosed {
 		l.Warn("shutting down the server")
