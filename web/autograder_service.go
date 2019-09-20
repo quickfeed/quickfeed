@@ -40,12 +40,12 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetUser failed: authentication error (%s)", err)
+		s.logger.Errorf("GetUser failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	dbUsr, err := s.db.GetUserWithEnrollments(usr.GetID())
 	if err != nil {
-		s.logger.Errorf("GetUser failed to get user with enrollments: %s ", err)
+		s.logger.Errorf("GetUser failed to get user with enrollments: %w ", err)
 	}
 	return dbUsr, nil
 
@@ -57,7 +57,7 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User,
 func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.Users, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetUsers failed: authentication error (%s)", err)
+		s.logger.Errorf("GetUsers failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
@@ -66,7 +66,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 	}
 	usrs, err := s.getUsers()
 	if err != nil {
-		s.logger.Errorf("GetUsers failed: %s", err)
+		s.logger.Errorf("GetUsers failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get users")
 	}
 	return usrs, nil
@@ -79,7 +79,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("UpdateUser failed: authentication error (%s)", err)
+		s.logger.Errorf("UpdateUser failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	// TODO(vera): this check feels a bit excessive: course creator user is always admin
@@ -89,7 +89,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	}
 	usr, err = s.updateUser(usr.IsAdmin, in)
 	if err != nil {
-		s.logger.Errorf("UpdateUser failed to update user %d: %s", in.GetID(), err)
+		s.logger.Errorf("UpdateUser failed to update user %d: %w", in.GetID(), err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
 	}
 	return usr, nil
@@ -102,7 +102,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 	// any user can ask if they have teacher scopes.
 	_, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
-		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error (%s)", err)
+		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	return &pb.AuthorizationResponse{
@@ -115,7 +115,7 @@ func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void
 func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*pb.Course, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
-		s.logger.Errorf("CreateCourse failed: scm authentication error (%s)", err)
+		s.logger.Errorf("CreateCourse failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !usr.IsAdmin {
@@ -143,7 +143,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, in.Provider)
 	if err != nil {
-		s.logger.Errorf("UpdateCourse failed: scm authentication error (%s)", err)
+		s.logger.Errorf("UpdateCourse failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
@@ -153,7 +153,7 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 	}
 
 	if err = s.updateCourse(ctx, scm, in); err != nil {
-		s.logger.Errorf("UpdateCourse failed: %s", err)
+		s.logger.Errorf("UpdateCourse failed: %w", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update course")
 	}
 	return &pb.Void{}, nil
@@ -165,7 +165,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 	courseID := in.GetID()
 	course, err := s.getCourse(courseID)
 	if err != nil {
-		s.logger.Errorf("GetCourse failed: %s", err)
+		s.logger.Errorf("GetCourse failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "course not found")
 	}
 	return course, nil
@@ -176,7 +176,7 @@ func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest)
 func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Courses, error) {
 	courses, err := s.getCourses()
 	if err != nil {
-		s.logger.Errorf("GetCourses failed: %s", err)
+		s.logger.Errorf("GetCourses failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no courses found")
 	}
 	return courses, nil
@@ -187,7 +187,7 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	err := s.createEnrollment(in)
 	if err != nil {
-		s.logger.Errorf("CreateEnrollment failed: %s", err)
+		s.logger.Errorf("CreateEnrollment failed: %w", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
 	}
 	return &pb.Void{}, nil
@@ -198,7 +198,7 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollment failed: scm authentication error (%s)", err)
+		s.logger.Errorf("UpdateEnrollment failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
@@ -208,7 +208,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 
 	err = s.updateEnrollment(ctx, scm, in)
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollment failed: %s", err)
+		s.logger.Errorf("UpdateEnrollment failed: %w", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to update enrollment")
 	}
 	return &pb.Void{}, nil
@@ -219,7 +219,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetID())
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments failed: authentication error (%s)", err)
+		s.logger.Errorf("UpdateEnrollments failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetID()) {
@@ -228,7 +228,7 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Record
 	}
 	err = s.updateEnrollments(ctx, scm, in.GetID())
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments failed: %s", err)
+		s.logger.Errorf("UpdateEnrollments failed: %w", err)
 		err = status.Error(codes.InvalidArgument, "failed to update pending enrollments")
 	}
 	return &pb.Void{}, err
@@ -239,7 +239,7 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Record
 func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.RecordRequest) (*pb.Courses, error) {
 	courses, err := s.getCoursesWithEnrollment(in)
 	if err != nil {
-		s.logger.Errorf("GetCoursesWithEnrollment failed: %s", err)
+		s.logger.Errorf("GetCoursesWithEnrollment failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no courses with enrollment found")
 	}
 	return courses, nil
@@ -250,7 +250,7 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetEnrollmentsByCourse failed: authentication error (%s)", err)
+		s.logger.Errorf("GetEnrollmentsByCourse failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isEnrolled(usr.GetID(), in.GetCourseID()) {
@@ -260,7 +260,7 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 
 	enrolls, err := s.getEnrollmentsByCourse(in)
 	if err != nil {
-		s.logger.Errorf("GetEnrollmentsByCourse failed: %s", err)
+		s.logger.Errorf("GetEnrollmentsByCourse failed: %w", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to get enrollments for given course")
 	}
 	return enrolls, nil
@@ -271,12 +271,12 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetGroup failed: authentication error (%s)", err)
+		s.logger.Errorf("GetGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	group, err := s.getGroup(in)
 	if err != nil {
-		s.logger.Errorf("GetGroup failed: %s", err)
+		s.logger.Errorf("GetGroup failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get group")
 	}
 	if !(group.Contains(usr) || s.isTeacher(usr.GetID(), group.GetCourseID())) {
@@ -291,7 +291,7 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest) (*pb.Groups, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetGroups failed: authentication error (%s)", err)
+		s.logger.Errorf("GetGroups failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
@@ -301,7 +301,7 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 	}
 	groups, err := s.getGroups(in)
 	if err != nil {
-		s.logger.Errorf("GetGroups failed: %s", err)
+		s.logger.Errorf("GetGroups failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get groups")
 	}
 	return groups, nil
@@ -312,12 +312,12 @@ func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest)
 func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetGroupByUserAndCourse failed: authentication error (%s)", err)
+		s.logger.Errorf("GetGroupByUserAndCourse failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	group, err := s.getGroupByUserAndCourse(in)
 	if err != nil {
-		s.logger.Errorf("GetGroupByUserAndCourse failed: %s", err)
+		s.logger.Errorf("GetGroupByUserAndCourse failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get group for given user and course")
 	}
 	if !(group.Contains(usr) || s.isTeacher(usr.GetID(), group.GetCourseID())) {
@@ -332,7 +332,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("CreateGroup failed: authentication error (%s)", err)
+		s.logger.Errorf("CreateGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isEnrolled(usr.GetID(), in.GetCourseID()) {
@@ -345,7 +345,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	}
 	group, err := s.createGroup(in)
 	if err != nil {
-		s.logger.Errorf("CreateGroup failed: %s", err)
+		s.logger.Errorf("CreateGroup failed: %w", err)
 		if _, ok := status.FromError(err); !ok {
 			// set err to generic error for the frontend
 			err = status.Error(codes.InvalidArgument, "failed to create group")
@@ -361,7 +361,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("UpdateGroup failed: scm authentication error (%s)", err)
+		s.logger.Errorf("UpdateGroup failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
@@ -370,7 +370,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	}
 	err = s.updateGroup(ctx, scm, in)
 	if err != nil {
-		s.logger.Errorf("UpdateGroup failed: %s", err)
+		s.logger.Errorf("UpdateGroup failed: %w", err)
 		if _, ok := status.FromError(err); !ok {
 			// set err to generic error for the frontend
 			err = status.Error(codes.InvalidArgument, "failed to update group")
@@ -386,7 +386,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("DeleteGroup failed: authentication error (%s)", err)
+		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	courseID := in.GetID()
@@ -395,7 +395,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordReques
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can delete groups")
 	}
 	if err = s.deleteGroup(in); err != nil {
-		s.logger.Errorf("DeleteGroup failed: %s", err)
+		s.logger.Errorf("DeleteGroup failed: %w", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to delete group")
 	}
 	return &pb.Void{}, nil
@@ -406,7 +406,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordReques
 func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetSubmissions failed: authentication error (%s)", err)
+		s.logger.Errorf("GetSubmissions failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	// ensure that current user is teacher or the current user is owner of the submission request
@@ -419,7 +419,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	}
 	submissions, err := s.getSubmissions(in)
 	if err != nil {
-		s.logger.Errorf("GetSubmissions failed: %s", err)
+		s.logger.Errorf("GetSubmissions failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no submissions found")
 	}
 	return submissions, nil
@@ -430,7 +430,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.ApproveSubmissionRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("ApproveSubmission failed: authentication error (%s)", err)
+		s.logger.Errorf("ApproveSubmission failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.ID, in.GetCourseID()) {
@@ -439,7 +439,7 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 	}
 	err = s.approveSubmission(in.GetSubmissionID())
 	if err != nil {
-		s.logger.Errorf("ApproveSubmission failed: %s", err)
+		s.logger.Errorf("ApproveSubmission failed: %w", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to approve submission")
 	}
 	return &pb.Void{}, nil
@@ -449,7 +449,7 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 func (s *AutograderService) RefreshSubmission(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("ApproveSubmission failed: authentication error (%s)", err)
+		s.logger.Errorf("ApproveSubmission failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	s.logger.Info("Submission rebuilding for user ", usr.GetLogin())
@@ -462,7 +462,7 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordReq
 	courseID := in.GetID()
 	assignments, err := s.getAssignments(courseID)
 	if err != nil {
-		s.logger.Errorf("GetAssignments failed: %s", err)
+		s.logger.Errorf("GetAssignments failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no assignments found for course")
 	}
 	return assignments, nil
@@ -474,7 +474,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Record
 	courseID := in.GetID()
 	usr, scm, err := s.getUserAndSCM2(ctx, courseID)
 	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: scm authentication error (%s)", err)
+		s.logger.Errorf("UpdateAssignments failed: scm authentication error: %w", err)
 		return nil, err
 	}
 	if !s.isTeacher(usr.ID, courseID) {
@@ -483,7 +483,7 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Record
 	}
 	err = s.updateAssignments(ctx, scm, courseID)
 	if err != nil {
-		s.logger.Errorf("UpdateAssignments failed: %s", err)
+		s.logger.Errorf("UpdateAssignments failed: %w", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update course assignments")
 	}
 	return &pb.Void{}, nil
@@ -505,7 +505,7 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgRequest) (*pb.Organization, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
-		s.logger.Errorf("GetOrganization failed: scm authentication error (%s)", err)
+		s.logger.Errorf("GetOrganization failed: scm authentication error: %w", err)
 		return nil, err
 	}
 	if !usr.IsAdmin {
@@ -514,7 +514,7 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 	}
 	org, err := s.getOrganization(ctx, scm, in.GetOrgName(), usr.GetLogin())
 	if err != nil {
-		s.logger.Errorf("GetOrganization failed: %s", err)
+		s.logger.Errorf("GetOrganization failed: %w", err)
 		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotMember || err == scms.ErrNotOwner {
 			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 		}
@@ -529,7 +529,7 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLRequest) (*pb.Repositories, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
-		s.logger.Errorf("GetRepositories failed: authentication error (%s)", err)
+		s.logger.Errorf("GetRepositories failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	var urls = make(map[string]string)
