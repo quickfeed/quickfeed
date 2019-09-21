@@ -3,7 +3,6 @@ package ci
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -54,10 +53,6 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	select {
 	case wErr := <-errc:
 		return "", wErr
-	// if the container still running after predefined time interval, force kill it
-	case <-time.After(containerTimeout):
-		cli.ContainerKill(ctx, resp.ID, "SIGTERM")
-		return "Container timed out", fmt.Errorf("Container timed out after %s", containerTimeout)
 	case <-waitc:
 	}
 
