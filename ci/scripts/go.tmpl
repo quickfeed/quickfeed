@@ -20,7 +20,7 @@ if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
 fi
 
 # Make sure there are no Autograder tests in the student repo
-rm $(find ./ | grep _test.go)
+rm $(find ./ | grep _ag_test.go)
 
 echo "Removing `pwd`/go.mod, if any"
 rm -f go.mod
