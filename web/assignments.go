@@ -75,7 +75,7 @@ func fetchAssignments(c context.Context, sc scm.SCM, course *pb.Course) ([]*pb.A
 	}
 
 	runner := ci.Local{}
-	_, err = runner.Run(ctx, job)
+	_, err = runner.Run(ctx, job, "")
 	if err != nil {
 		return nil, err
 	}

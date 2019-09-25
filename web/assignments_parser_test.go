@@ -50,7 +50,7 @@ func TestParse(t *testing.T) {
 		},
 	}
 	runner := ci.Local{}
-	_, err = runner.Run(context.Background(), job)
+	_, err = runner.Run(context.Background(), job, "")
 	if err != nil {
 		t.Fatal(err)
 	}

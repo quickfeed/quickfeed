@@ -193,9 +193,16 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		return
 	}
 
+	// get user by the user ID of the repo, then add user's github username as a container name
+	usr, err := db.GetUser(repo.GetUserID())
+	if err != nil {
+		logger.Error("Could not found the user: ", zap.Error(err))
+		return
+	}
+
 	start := time.Now()
 	logger.Debug("Job started successfully")
-	out, err := runner.Run(context.Background(), job)
+	out, err := runner.Run(context.Background(), job, usr.GetLogin())
 	if err != nil {
 		logger.Error("Docker execution failed", zap.Error(err))
 		return

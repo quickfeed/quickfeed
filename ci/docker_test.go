@@ -50,7 +50,7 @@ func TestDocker(t *testing.T) {
 	out, err := docker.Run(context.Background(), &ci.Job{
 		Image:    "golang:1.12.8",
 		Commands: []string{script},
-	})
+	}, "")
 	if err != nil {
 		t.Fatal(err)
 	}

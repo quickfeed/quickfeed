@@ -24,7 +24,7 @@ var containerTimeout = time.Duration(10 * time.Minute)
 
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
-func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
+func (d *Docker) Run(ctx context.Context, job *Job, user string) (string, error) {
 	// cli, err := client.NewClient(d.Endpoint, d.Version, nil, nil)
 	cli, err := client.NewEnvClient()
 	if err != nil {
@@ -38,7 +38,7 @@ func (d *Docker) Run(ctx context.Context, job *Job) (string, error) {
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: job.Image,
 		Cmd:   []string{"/bin/sh", "-c", strings.Join(job.Commands, "\n")},
-	}, nil, nil, "")
+	}, nil, nil, user)
 	if err != nil {
 		return "", err
 	}
