@@ -389,8 +389,12 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordReques
 		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	courseID := in.GetID()
-	if !s.isTeacher(usr.GetID(), courseID) {
+	grp, err := s.getGroup(in)
+	if err != nil {
+		s.logger.Errorf("DeleteGroup failed: %w", err)
+		return nil, status.Errorf(codes.NotFound, "failed to get group")
+	}
+	if !s.isTeacher(usr.GetID(), grp.GetCourseID()) {
 		s.logger.Error("DeleteGroup failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can delete groups")
 	}
