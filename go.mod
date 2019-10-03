@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/Microsoft/go-winio v0.4.4 // indirect
+	github.com/autograde/kit v0.0.0-20190817180210-34457ff57972
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
 	github.com/docker/docker v0.0.0-20170803041405-316b4ba9c289
@@ -36,10 +37,8 @@ require (
 	golang.org/x/crypto v0.0.0-20191001170739-f9e2070545dc // indirect
 	golang.org/x/net v0.0.0-20191002035440-2ec189313ef0 // indirect
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20191002091554-b397fe3ad8ed // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20191001184121-329c8d646ebe // indirect
 	google.golang.org/grpc v1.21.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/webhooks.v3 v3.2.0
