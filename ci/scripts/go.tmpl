@@ -1,8 +1,8 @@
 #image/golang:latest
 
-echo "\n=== Preparing for Test Execution ===\n"
-echo "Current dir: `pwd`"
-echo "Path: $PATH"
+echo "*** Preparing for Test Execution ***\n"
+# echo "Current dir: `pwd`"
+# echo "Path: $PATH"
 
 # create bin dir (silently, if already exists)
 mkdir -p /go/bin
@@ -18,10 +18,11 @@ git clone {{ .GetURL }} assignments
 git clone {{ .TestURL }}
 
 # Run gosecret for all tests
-/go/bin/gosecret -path /go/tests -secret {{ .RandomSecret }}
+cd /go/tests
+/go/bin/gosecret -secret {{ .RandomSecret }}
 
 # Move to folder for assignment to test.
-cd assignments/{{ .AssignmentName }}/
+cd /go/assignments/{{ .AssignmentName }}/
 
 # Fail student code that attempts to access secret
 if grep --quiet -r -e common.Secret -e GlobalSecret * ; then
@@ -32,7 +33,7 @@ fi
 # Make sure there are no Autograder tests in the student repo
 rm $(find ./ | grep _ag_test.go)
 
-echo "Removing `pwd`/go.mod, if any"
+# echo "Removing `pwd`/go.mod, if any"
 rm -f go.mod
 
 # Create common dir (silently, if already exists)
@@ -65,6 +66,7 @@ fi
 # Avoid fetching dependencies from proxy.
 export GOPROXY=direct
 
-echo "\n=== Running Tests ===\n"
+echo "\n*** Running Tests ***\n"
 go test -v ./... 2>&1
-echo "\n=== Finished Running Tests ===\n"
+echo "\n*** Finished Running Tests ***\n"
+
