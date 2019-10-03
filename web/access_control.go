@@ -63,6 +63,7 @@ func (s *AutograderService) getSCM(ctx context.Context, user *pb.User, provider 
 // as defined by the check function.
 func (s *AutograderService) hasCourseAccess(userID, courseID uint64, check func(*pb.Enrollment) bool) bool {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(courseID, userID)
+	s.logger.Debugf("(user=%d, course=%d) has enrollment status %+v", userID, courseID, enrollment.GetStatus())
 	if err != nil {
 		s.logger.Error(err)
 		return false
