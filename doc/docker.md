@@ -10,7 +10,14 @@ First check that the docker group exists
 cat /etc/group | grep docker
 ```
 This command can also be used to check which users are in that particular group.
+
+```console
+To stop all containers: docker stop $(docker ps -a -q)
+To delete all containers: docker rm $(docker ps -a -q)
+```
+
 ### Missing docker group
+
 If it does not exist, add it manualy with the command 
 ```
 sudo groupadd docker
@@ -24,6 +31,7 @@ or
 ```
 sudo service docker restart
 ```
+
 ### Docker group exists
 If it does add the user that should be running docker to this group with the given command
 
