@@ -2,6 +2,13 @@
 
 echo "\n=== Preparing for Test Execution ===\n"
 echo "Current dir: `pwd`"
+echo "Path: $PATH"
+
+# create bin dir (silently, if already exists)
+mkdir -p /go/bin
+# fetch gosecret binary (This is a HACK)
+wget -q http://www.ux.uis.no/~meling/tmp/gosecret -P /go/bin
+chmod 700 /go/bin/gosecret
 
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
@@ -9,6 +16,9 @@ git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.
 git clone {{ .GetURL }} assignments
 # Fetch tests repo
 git clone {{ .TestURL }}
+
+# Run gosecret for all tests
+/go/bin/gosecret -path /go/tests -secret {{ .RandomSecret }}
 
 # Move to folder for assignment to test.
 cd assignments/{{ .AssignmentName }}/
