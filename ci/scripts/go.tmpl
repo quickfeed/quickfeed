@@ -67,6 +67,6 @@ fi
 export GOPROXY=direct
 
 echo "\n*** Running Tests ***\n"
-go test -v ./... 2>&1
+go test -v -timeout 30s ./... 2>&1
 echo "\n*** Finished Running Tests ***\n"
 
