@@ -18,7 +18,7 @@ type mockRunner struct {
 	runs []*ci.Job
 }
 
-func (m *mockRunner) Run(_ context.Context, job *ci.Job) (string, error) {
+func (m *mockRunner) Run(_ context.Context, job *ci.Job, user string) (string, error) {
 	m.runs = append(m.runs, job)
 	return "", nil
 }
