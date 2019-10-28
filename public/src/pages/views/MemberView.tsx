@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment } from "../../../proto/ag_pb";
+import { Course, Enrollment, Repository } from "../../../proto/ag_pb";
 import { Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
@@ -19,6 +19,7 @@ interface IUserViewerState {
     pendingUsers: IUserRelation[];
     rejectedUsers: IUserRelation[];
     approveAllClicked: boolean;
+    courseCode: string;
 }
 
 export class MemberView extends React.Component<IUserViewerProps, IUserViewerState> {
@@ -26,6 +27,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     constructor(props: IUserViewerProps) {
         super(props);
         this.state = {
+            courseCode: "",
             acceptedUsers: this.props.acceptedUsers,
             pendingUsers: this.props.pendingUsers,
             rejectedUsers: this.props.rejectedUsers,
@@ -48,6 +50,14 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             {this.renderUserView()}
             {this.renderRejectedView()}
         </div>;
+    }
+
+    public componentDidMount() {
+        this.getCourseCodeURL().then((ans) => {
+            this.setState({
+                courseCode: ans,
+            });
+        });
     }
 
     public componentDidUpdate(prevProps: IUserViewerProps) {
@@ -113,7 +123,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 users={users}
                 actions={actions}
                 isCourseList={true}
-                courseCode={this.props.course.getCode()}
+                courseCode={this.state.courseCode}
                 optionalActions={optionalActions}
                 linkType={linkType}
                 actionClick={(user, link) => this.handleAction(user, link)}
@@ -225,6 +235,15 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private approveButtonString(): string {
         return this.state.approveAllClicked ? "Approving..." : "Approve all pending";
+    }
+
+    private async getCourseCodeURL(): Promise<string> {
+        const repoMap = await this.props.courseMan.getRepositories(
+            this.props.course.getId(),
+            [Repository.Type.COURSEINFO],
+            );
+        const fullRepoName = repoMap.get(Repository.Type.COURSEINFO);
+        return fullRepoName ? fullRepoName.split("/course-info")[0] : "";
     }
 
     private refreshState() {
