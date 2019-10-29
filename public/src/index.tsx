@@ -157,7 +157,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         if (this.state.activePage) {
             return this.renderTemplate(this.state.activePage, this.state.activePage.template);
         }
-        return <div>404 not found</div>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     private handleClick(link: ILink) {
@@ -185,7 +185,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             this.currentBodyContent = await page.renderContent(subPage);
             return this.currentBodyContent;
         }
-        return <h1>404 Page not found</h1>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     private checkLinks(links: ILink[]): void {

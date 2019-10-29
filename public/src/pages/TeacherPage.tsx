@@ -249,7 +249,7 @@ export class TeacherPage extends ViewPage {
                 groupData={group}
             />;
         }
-        return <div>404 Page not found</div>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
@@ -408,6 +408,6 @@ export class TeacherPage extends ViewPage {
                 Repository.Type.SOLUTIONS]);
             return fn(course);
         }
-        return <div>404 Page not found</div>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 }
