@@ -176,6 +176,7 @@ export class TeacherPage extends ViewPage {
 
             return <GroupResults
                 course={course}
+                courseCodeURL={await this.getCourseCodeURL(course.getId())}
                 labs={labs}
                 groups={linkedGroups}
                 onRebuildClick={async (submissionID: number) => {
