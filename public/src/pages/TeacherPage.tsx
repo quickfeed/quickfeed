@@ -137,6 +137,7 @@ export class TeacherPage extends ViewPage {
             }
             return <Results
                 course={course}
+                courseCodeURL={await this.getCourseCodeURL(course.getId())}
                 labs={labs}
                 students={linkedStudents}
                 onRebuildClick={async (submissionID: number) => {
@@ -269,6 +270,7 @@ export class TeacherPage extends ViewPage {
             });
             return <MemberView
                 course={course}
+                courseCodeURL={await this.getCourseCodeURL(course.getId())}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
                 rejectedUsers={rejectedUsers}
@@ -400,6 +402,15 @@ export class TeacherPage extends ViewPage {
             return this.courseMan.getCoursesFor(curUsr);
         }
         return [];
+    }
+
+    private async getCourseCodeURL(courseID: number): Promise<string> {
+        const repoMap = await this.courseMan.getRepositories(
+            courseID,
+            [Repository.Type.COURSEINFO],
+            );
+        const fullRepoName = repoMap.get(Repository.Type.COURSEINFO);
+        return fullRepoName ? fullRepoName.split("course-info")[0] : "";
     }
 
     private async courseFunc(courseParam: string, fn: (course: Course) => View): View {

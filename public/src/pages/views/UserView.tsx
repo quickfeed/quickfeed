@@ -167,7 +167,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     // return link to github account if there is no course information, otherwise return link to the student labs repo
     private repoLink(user: string): string {
-        const repoLink = this.props.courseCode + "/" + user + "-labs";
+        const repoLink = this.props.courseCode + user + "-labs";
         return this.props.isCourseList ? repoLink : this.gitLink(user);
     }
 }
