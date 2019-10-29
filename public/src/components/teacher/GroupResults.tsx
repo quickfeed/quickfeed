@@ -3,9 +3,11 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { sortByScore } from "./sorter";
+import { slugify } from "../../helper"
 
 interface IResultsProps {
     course: Course;
+    courseCodeURL: string;
     groups: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => Promise<boolean>;
@@ -93,7 +95,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
     private getGroupResultSelector(group: IAssignmentLink): Array<string | JSX.Element> {
         const slipdayPlaceholder = "5";
         const grp = group.link.getGroup();
-        const name = grp ? grp.getName() : "";
+        const name = grp ? this.generateGroupRepoLink(grp.getName()) : "";
         let selector: Array<string | JSX.Element> = [name, slipdayPlaceholder];
         selector = selector.concat(group.assignments.filter((e) => e.assignment.getIsgrouplab()).map((e) => {
             let approvedCss;
@@ -119,6 +121,10 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 authorName: item.authorName,
             });
         }
+    }
+
+    private generateGroupRepoLink(groupname: string): JSX.Element {
+        return <a href={this.props.courseCodeURL + slugify(groupname)}>{ groupname }</a>;
     }
 
     private handleOnchange(query: string): void {
