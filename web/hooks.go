@@ -213,7 +213,7 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 	}
 
 	// check the approved status for the last submission
-	lastSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: assignmentID, UserID: repo.GetUserID(), GroupID: repo.GetGroupID()})
+	lastSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: selectedAssignment.GetID(), UserID: repo.GetUserID(), GroupID: repo.GetGroupID()})
 	if err != nil && err != gorm.ErrRecordNotFound {
 		logger.Error("Failed to get submission info from the database", zap.Error(err))
 		return
