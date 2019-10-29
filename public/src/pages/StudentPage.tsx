@@ -64,14 +64,14 @@ export class StudentPage extends ViewPage {
                 navMan={this.navMan}
             />);
         }
-        return <h1>404</h1>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     public async enroll(navInfo: INavInfo<any>): View {
         await this.setupData();
         const curUser = this.userMan.getCurrentUser();
         if (!curUser) {
-            return <h1>404</h1>;
+            return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
         }
         return <div>
             <h1>Enrollment page</h1>
@@ -96,14 +96,14 @@ export class StudentPage extends ViewPage {
                 onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}
                 onGroupLabClick={(courseId: number, labId: number) => this.handleGroupLabClick(courseId, labId)} />);
         }
-        return <h1>404 not found</h1>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     public async courseWithLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
-            await this.selectAssignment(navInfo.params.labid);
+            this.selectAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
                 return <StudentLab
                     course={this.selectedUserCourse.course}
@@ -118,7 +118,7 @@ export class StudentPage extends ViewPage {
                 </StudentLab>;
             }
         }
-        return <div>404 not found</div>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     // TODO - Instead of requesting to server for each time
@@ -172,7 +172,7 @@ export class StudentPage extends ViewPage {
             }
 
         }
-        return <div>404 not found</div>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     public async courseMissing(navInfo: INavInfo<{ courseid: number, page: string }>): View {
