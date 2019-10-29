@@ -7,6 +7,7 @@ import { sortByScore } from "./sorter";
 
 interface IResultsProp {
     course: Course;
+    courseCodeURL: string;
     students: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
@@ -93,7 +94,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         const slipdayPlaceholder = "5";
         // enrollment object, user field on enrollment object, or name field on user object can be null
         const user = student.link.getUser();
-        const displayName = user ? user.getName() : "";
+        const displayName = user ? this.generateUserRepoLink(user.getName(), user.getLogin()) : "";
         let selector: Array<string | JSX.Element | ICellElement> = [displayName, slipdayPlaceholder];
         selector = selector.concat(student.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
@@ -111,6 +112,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 return iCell;
             }));
         return selector;
+    }
+
+    private generateUserRepoLink(name: string, username: string): JSX.Element {
+        return <a href={this.props.courseCodeURL + username + "-labs"}>{ name }</a>;
     }
 
     private handleOnclick(item: IStudentSubmission): void {
