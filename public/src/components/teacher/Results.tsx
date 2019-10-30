@@ -9,7 +9,7 @@ interface IResultsProp {
     course: Course;
     students: IAssignmentLink[];
     labs: Assignment[];
-    onApproveClick: (submissionID: number) => void;
+    onApproveClick: (submissionID: number) => Promise<boolean>;
     onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
 
@@ -53,9 +53,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 showApprove={true}
                 authorName={this.state.authorName}
                 onRebuildClick={this.props.onRebuildClick}
-                onApproveClick={() => {
+                onApproveClick={ async () => {
                     if (this.state.assignment && this.state.assignment.latest) {
-                        this.props.onApproveClick(this.state.assignment.latest.id);
+                        this.state.assignment.latest.approved
+                         = await this.props.onApproveClick(this.state.assignment.latest.id);
                     }
                 }}
             />;

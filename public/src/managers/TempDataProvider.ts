@@ -36,7 +36,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalCourseGroups();
     }
 
-    public async approveSubmission(submissionid: number, courseID: number): Promise<void> {
+    public async approveSubmission(submissionid: number, courseID: number): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 

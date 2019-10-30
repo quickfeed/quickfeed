@@ -8,7 +8,7 @@ interface IResultsProps {
     course: Course;
     groups: IAssignmentLink[];
     labs: Assignment[];
-    onApproveClick: (submissionID: number) => void;
+    onApproveClick: (submissionID: number) => Promise<boolean>;
     onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
 

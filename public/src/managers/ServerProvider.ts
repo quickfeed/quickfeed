@@ -322,14 +322,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return tsMap;
     }
 
-    public async approveSubmission(submissionID: number, courseID: number): Promise<void> {
-        await this.grpcHelper.approveSubmission(submissionID, courseID);
-        return;
+    public async approveSubmission(submissionID: number, courseID: number): Promise<boolean> {
+        const result = await this.grpcHelper.approveSubmission(submissionID, courseID);
+        if (result.status.getCode() !== 0) {
+            return false;
+        }
+        return true;
     }
 
     public async refreshSubmission(id: number): Promise<boolean> {
         const result = await this.grpcHelper.refreshSubmission(id);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (result.status.getCode() !== 0) {
             return false;
         }
         return true;
