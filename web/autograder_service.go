@@ -406,7 +406,11 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordReques
 }
 
 // GetSubmissions returns the submissions matching the query encoded in the action request.
-// Access policy: Current User if Owner of submission (or member of the group in case of group submission), Teacher of CourseID.
+// Access policy:
+// Admin enrolled in CourseID,
+// Current User if Owner of submission,
+// Current User is member of group for group submission,
+// Teacher of CourseID.
 func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -414,12 +418,12 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 		return nil, ErrInvalidUserInfo
 	}
 
-	// even if there is no group ID in request and the grp value is nil, checking whether it contains the current user will just return false
+	// grp may be nil if there is no group ID in request; this is fine, since the grp.Contains() returns false in this case.
 	grp, _ := s.getGroup(&pb.RecordRequest{ID: in.GetGroupID()})
 
-	// ensure that current user is teacher or the current user is owner of the submission request
+	// ensure that current user is teacher, enrolled admin, or the current user is owner of the submission request
 	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
-		return e.Status == pb.Enrollment_TEACHER || usr.GetIsAdmin() ||
+		return e.Status == pb.Enrollment_TEACHER || (usr.GetIsAdmin() && e.Status == pb.Enrollment_STUDENT) ||
 			(e.Status == pb.Enrollment_STUDENT && (usr.IsOwner(in.GetUserID()) || grp.Contains(usr)))
 	}) {
 		s.logger.Error("GetSubmissions failed: user is not teacher or submission author")
