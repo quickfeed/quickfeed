@@ -16,7 +16,6 @@ interface ILastBuildInfo {
 
 interface ILastBuildInfoState {
     rebuilding: boolean;
-    approved: boolean;
 }
 
 export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInfoState> {
@@ -25,7 +24,6 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
         super(props);
         this.state = {
             rebuilding: false,
-            approved: this.props.isApproved,
          };
     }
     public render() {
@@ -34,7 +32,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
             approveButton = <p> <button type="button"
                 id="approve"
                 className={this.setButtonColor("approve")}
-                onClick={this.state.approved ?
+                onClick={this.props.isApproved ?
                     () => { console.log("Already approved"); } : () => this.approve()}>
                      {this.setButtonString("approve")} </button> </p>; }
 
@@ -80,9 +78,6 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
 
     private async approve() {
         this.props.onApproveClick();
-        this.setState({
-            approved: true,
-        });
     }
 
     private setButtonColor(id: string): string {

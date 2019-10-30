@@ -144,14 +144,8 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onApproveClick={async (submissionID: number) => {
-                    if (confirm(
-                        `Warning! This action is irriversible!
-                        Do you want to approve this lab?`,
-                    )) {
-                        await this.courseMan.approveSubmission(submissionID, course.getId());
-                        this.navMan.refresh();
-                    }
+                                onApproveClick={async (submissionID: number): Promise<boolean> => {
+                    return this.approveFunc(submissionID, course.getId());
                 }}
             >
             </Results>;
@@ -182,9 +176,8 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onApproveClick={async (submissionID: number) => {
-                    await this.courseMan.approveSubmission(submissionID, course.getId());
-                    this.navMan.refresh();
+                onApproveClick={async (submissionID: number): Promise<boolean> => {
+                    return this.approveFunc(submissionID, course.getId());
                 }}
             >
             </GroupResults>;
@@ -344,6 +337,18 @@ export class TeacherPage extends ViewPage {
         return url ? this.repositoryLink(url, "Solutions") : this.repositoryLink("", "Solutions");
     }
 
+    public async approveFunc(submissionID: number, courseID: number): Promise<boolean> {
+        if (confirm(
+            `Warning! This action is irriversible!
+            Do you want to approve this lab?`,
+        )) {
+            const ans = await this.courseMan.approveSubmission(submissionID, courseID);
+            this.navMan.refresh();
+            return ans;
+        }
+        return false;
+    }
+
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
         const curUser = this.userMan.getCurrentUser();
         const confirmedTeacher = await this.userMan.isTeacher();
@@ -410,4 +415,5 @@ export class TeacherPage extends ViewPage {
         }
         return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
+
 }
