@@ -11,6 +11,7 @@ export class HelpView extends React.Component<{}, {}> {
                         <a href="#autograder" className="list-group-item">Autograder</a>
                         <a href="#reg" className="list-group-item">Registration</a>
                         <a href="#signup" className="list-group-item">Sign up for a course</a>
+                        <a href="#groups" className="list-group-item">Creating a group</a>
 
                     </div>
                 </div>
@@ -60,7 +61,16 @@ export class HelpView extends React.Component<{}, {}> {
                                     requested parts of your account. It is possible to make a
                                      separate GitHub account for Autograder if you do not
                                       want the application to access your personal one with
-                                    the requested permissions.</p>
+                                    the requested permissions.
+                                    </p>
+                            </li>
+                            <li>
+                                <p>
+                                    Fill in your information and register as a new user.
+                                     Please provide your real name in the "Name" field.
+                                     This name will be used to approve your submissions
+                                     to course assignments during the lab hours.
+                                </p>
                             </li>
                         </ol>
 
@@ -101,8 +111,31 @@ export class HelpView extends React.Component<{}, {}> {
                             </li>
 
                         </ol>
-                    </article>
 
+                        <h1 id="groups">Create a new group</h1>
+
+                        <ol>
+
+                            <li>
+                                <p>
+                                    Choose "Members" tab in the course menu on the left.
+                                    Select yourself and other members of your group
+                                    from the list of course members. Enter your group's
+                                    desired name and click "Create".
+                                </p>
+                            </li>
+                            <li>
+                                <p>
+                                The group is created after it has been approved
+                                    by the course teacher. After that the group name
+                                    cannot be changed. Please contact teaching staff if
+                                    you wish to add or remove group members.
+                                </p>
+                            </li>
+                        </ol>
+
+
+                    </article>
                 </div>
             </Row>
         );
