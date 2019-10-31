@@ -27,7 +27,7 @@ import (
 // timeouts for http server
 var (
 	readTimeout  = 10 * time.Second
-	writeTimeout = 45 * time.Second
+	writeTimeout = 10 * time.Second
 )
 
 // New starts a new web server

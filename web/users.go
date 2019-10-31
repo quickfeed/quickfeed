@@ -24,6 +24,10 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
 		usr := c.Get("user").(*pb.User)
+
+		// defer closing the http response body
+		defer c.Request().Body.Close()
+
 		user, err := db.GetUser(usr.ID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
