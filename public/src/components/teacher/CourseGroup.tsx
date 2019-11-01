@@ -2,15 +2,17 @@ import * as React from "react";
 import { Course, Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { bindFunc, RProp } from "../../helper";
+import { bindFunc, RProp, slugify } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
+import { ICellElement } from "../data/DynamicTable";
 
 interface ICourseGroupProps {
     approvedGroups: Group[];
     pendingGroups: Group[];
     rejectedGroups: Group[];
     course: Course;
+    courseCodeURL: string;
     navMan: NavigationManager;
     courseMan: CourseManager;
     pagePath: string;
@@ -81,7 +83,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                     header={["Name", "Members"]}
                     data={this.state.approvedGroups}
                     selector={
-                        (group: Group) => this.renderRow(group)
+                        (group: Group) => this.renderRow(group, true)
                     }
                 />
             </div>
@@ -96,18 +98,23 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 <DynamicTable
                     header={["Name", "Members", "Actions"]}
                     data={this.state.pendingGroups}
-                    selector={(group: Group) => this.renderRow(group)}
+                    selector={(group: Group) => this.renderRow(group, false)}
                 />
             </div>
         );
     }
 
-    private renderRow(group: Group): Array<string | JSX.Element> {
+    private renderRow(group: Group, withLink: boolean): Array<string | JSX.Element> {
         const selector: Array<string | JSX.Element> = [];
-        selector.push(group.getName(), this.getMembers(group.getUsersList()));
+        const groupName = withLink ? this.generateGroupRepoLink(group.getName()) : group.getName();
+        selector.push(groupName, this.getMembers(group.getUsersList()));
         const dropdownMenu = this.renderDropdownMenu(group);
         selector.push(dropdownMenu);
         return selector;
+    }
+
+    private generateGroupRepoLink(groupname: string): JSX.Element {
+        return <a href={this.props.courseCodeURL + slugify(groupname)}>{ groupname }</a>;
     }
 
     private renderDropdownMenu(group: Group): JSX.Element {
@@ -160,12 +167,19 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         </BootstrapButton>;
     }
 
-    private getMembers(users: User[]): string {
-        const names: string[] = [];
-        for (const user of users) {
-            names.push(user.getName());
-        }
-        return names.join();
+    private getMembers(users: User[]): JSX.Element {
+        const names: JSX.Element[] = [];
+        users.forEach((user, i) => {
+            let separator = ", ";
+            if (i >= users.length - 1) {
+                separator = " ";
+            }
+
+            const nameLink = <span><a href={this.props.courseCodeURL
+                 + user.getLogin() + "-labs"}>{ user.getName() }</a>{separator}</span>;
+            names.push(nameLink);
+            });
+        return <div>{names}</div>;
     }
 
     private async handleUpdateStatus(gid: number, status: Group.GroupStatus): Promise<void> {
