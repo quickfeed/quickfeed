@@ -2,7 +2,7 @@ import * as React from "react";
 import { Course, Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { bindFunc, RProp } from "../../helper";
+import { bindFunc, RProp, slugify } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
 import { generateGroupRepoLink } from "./groupHelper"
