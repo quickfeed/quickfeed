@@ -127,7 +127,7 @@ export class HelpView extends React.Component<{}, {}> {
                             <li>
                                 <p>
                                 The group is created after it has been approved
-                                    by the course teacher. After that the group name
+                                    by the teaching staff. After that the group name
                                     cannot be changed. Please contact teaching staff if
                                     you wish to add or remove group members.
                                 </p>
