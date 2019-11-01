@@ -28,6 +28,7 @@ import (
 var (
 	readTimeout  = 10 * time.Second
 	writeTimeout = 10 * time.Second
+	idleTimeout  = 5 * time.Minute
 )
 
 // New starts a new web server
@@ -181,8 +182,15 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 }
 
 func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {
+
 	e.Server.WriteTimeout = writeTimeout
 	e.Server.ReadTimeout = readTimeout
+	e.Server.IdleTimeout = idleTimeout
+
+	e.TLSServer.ReadTimeout = readTimeout
+	e.TLSServer.WriteTimeout = writeTimeout
+	e.TLSServer.IdleTimeout = idleTimeout
+
 	srvErr := e.Start(httpAddr)
 	if srvErr == http.ErrServerClosed {
 		l.Warn("shutting down the server")
