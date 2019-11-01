@@ -339,7 +339,7 @@ export class TeacherPage extends ViewPage {
 
     public async approveFunc(submissionID: number, courseID: number): Promise<boolean> {
         if (confirm(
-            `Warning! This action is irriversible!
+            `Warning! This action is irreversible!
             Do you want to approve this lab?`,
         )) {
             const ans = await this.courseMan.approveSubmission(submissionID, courseID);
