@@ -3,7 +3,7 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
-import { sortByScore } from "./sorter";
+import { sortByScore } from "./groupHelper";
 
 interface IResultsProp {
     course: Course;

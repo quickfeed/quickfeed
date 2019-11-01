@@ -2,10 +2,10 @@ import * as React from "react";
 import { Course, Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { bindFunc, RProp, slugify } from "../../helper";
+import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
-import { ICellElement } from "../data/DynamicTable";
+import { generateGroupRepoLink } from "./groupHelper"
 
 interface ICourseGroupProps {
     approvedGroups: Group[];
@@ -106,16 +106,13 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
     private renderRow(group: Group, withLink: boolean): Array<string | JSX.Element> {
         const selector: Array<string | JSX.Element> = [];
-        const groupName = withLink ? this.generateGroupRepoLink(group.getName()) : group.getName();
+        const groupName = withLink ? generateGroupRepoLink(group.getName(), this.props.courseURL) : group.getName();
         selector.push(groupName, this.getMembers(group.getUsersList()));
         const dropdownMenu = this.renderDropdownMenu(group);
         selector.push(dropdownMenu);
         return selector;
     }
 
-    private generateGroupRepoLink(groupname: string): JSX.Element {
-        return <a href={this.props.courseURL + slugify(groupname)}>{ groupname }</a>;
-    }
 
     private renderDropdownMenu(group: Group): JSX.Element {
         const links = [];

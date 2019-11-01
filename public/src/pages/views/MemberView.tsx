@@ -114,7 +114,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 users={users}
                 actions={actions}
                 isCourseList={true}
-                courseCode={this.props.courseURL}
+                courseURL={this.props.courseURL}
                 optionalActions={optionalActions}
                 linkType={linkType}
                 actionClick={(user, link) => this.handleAction(user, link)}
