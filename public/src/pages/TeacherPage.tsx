@@ -137,7 +137,7 @@ export class TeacherPage extends ViewPage {
             }
             return <Results
                 course={course}
-                courseCodeURL={await this.getCourseCodeURL(course.getId())}
+                courseURL={await this.getCourseURL(course.getId())}
                 labs={labs}
                 students={linkedStudents}
                 onRebuildClick={async (submissionID: number) => {
@@ -170,7 +170,7 @@ export class TeacherPage extends ViewPage {
 
             return <GroupResults
                 course={course}
-                courseCodeURL={await this.getCourseCodeURL(course.getId())}
+                courseURL={await this.getCourseURL(course.getId())}
                 labs={labs}
                 groups={linkedGroups}
                 onRebuildClick={async (submissionID: number) => {
@@ -210,7 +210,7 @@ export class TeacherPage extends ViewPage {
                 pendingGroups={pendingGroups}
                 rejectedGroups={rejectedGroups}
                 course={course}
-                courseCodeURL={await this.getCourseCodeURL(course.getId())}
+                courseURL={await this.getCourseURL(course.getId())}
                 navMan={this.navMan}
                 courseMan={this.courseMan}
                 pagePath={this.pagePath}
@@ -272,7 +272,7 @@ export class TeacherPage extends ViewPage {
             });
             return <MemberView
                 course={course}
-                courseCodeURL={await this.getCourseCodeURL(course.getId())}
+                courseURL={await this.getCourseURL(course.getId())}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
                 rejectedUsers={rejectedUsers}
@@ -406,7 +406,7 @@ export class TeacherPage extends ViewPage {
         return [];
     }
 
-    private async getCourseCodeURL(courseID: number): Promise<string> {
+    private async getCourseURL(courseID: number): Promise<string> {
         const repoMap = await this.courseMan.getRepositories(
             courseID,
             [Repository.Type.COURSEINFO],

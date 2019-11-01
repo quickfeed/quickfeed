@@ -7,7 +7,7 @@ import { sortByScore } from "./sorter";
 
 interface IResultsProp {
     course: Course;
-    courseCodeURL: string;
+    courseURL: string;
     students: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => Promise<boolean>;
@@ -116,7 +116,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private generateUserRepoLink(name: string, username: string): JSX.Element {
-        return <a href={this.props.courseCodeURL + username + "-labs"}>{ name }</a>;
+        return <a href={this.props.courseURL + username + "-labs"}>{ name }</a>;
     }
 
     private handleOnclick(item: IStudentSubmission): void {
