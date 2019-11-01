@@ -2,10 +2,11 @@ import * as React from "react";
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
-import { sortByScore } from "./sorter";
+import { generateGroupRepoLink, sortByScore } from "./groupHelper";
 
 interface IResultsProps {
     course: Course;
+    courseURL: string;
     groups: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => Promise<boolean>;
@@ -93,7 +94,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
     private getGroupResultSelector(group: IAssignmentLink): Array<string | JSX.Element> {
         const slipdayPlaceholder = "5";
         const grp = group.link.getGroup();
-        const name = grp ? grp.getName() : "";
+        const name = grp ? generateGroupRepoLink(grp.getName(), this.props.courseURL) : "";
         let selector: Array<string | JSX.Element> = [name, slipdayPlaceholder];
         selector = selector.concat(group.assignments.filter((e) => e.assignment.getIsgrouplab()).map((e) => {
             let approvedCss;

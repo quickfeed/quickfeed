@@ -3,10 +3,11 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
-import { sortByScore } from "./sorter";
+import { sortByScore } from "./groupHelper";
 
 interface IResultsProp {
     course: Course;
+    courseURL: string;
     students: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => Promise<boolean>;
@@ -94,7 +95,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         const slipdayPlaceholder = "5";
         // enrollment object, user field on enrollment object, or name field on user object can be null
         const user = student.link.getUser();
-        const displayName = user ? user.getName() : "";
+        const displayName = user ? this.generateUserRepoLink(user.getName(), user.getLogin()) : "";
         let selector: Array<string | JSX.Element | ICellElement> = [displayName, slipdayPlaceholder];
         selector = selector.concat(student.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
@@ -112,6 +113,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 return iCell;
             }));
         return selector;
+    }
+
+    private generateUserRepoLink(name: string, username: string): JSX.Element {
+        return <a href={this.props.courseURL + username + "-labs"}>{ name }</a>;
     }
 
     private handleOnclick(item: IStudentSubmission): void {

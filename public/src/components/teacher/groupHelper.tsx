@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Assignment } from "../../../proto/ag_pb";
 import { IAssignmentLink } from "../../models";
 
@@ -60,4 +61,25 @@ export function sortByScore(students: IAssignmentLink[], labs: Assignment[], isG
     // then add students without submission at the end of list
     const fullList = sorted.concat(withoutSubmission);
     return fullList;
+}
+
+export function slugify(str: string): string {
+
+    str = str.replace(/^\s+|\s+$/g, "").toLowerCase();
+
+    // Remove accents, swap ñ for n, etc
+    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
+    const to   = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
+    for (let i = 0 ; i < from.length ; i++) {
+        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
+    }
+
+    // Remove invalid chars, replace whitespace by dashes, collapse dashes
+    str = str.replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
+
+    return str;
+}
+
+export function generateGroupRepoLink(groupname: string, courseURL: string): JSX.Element {
+    return <a href={courseURL + slugify(groupname)}>{ groupname }</a>;
 }

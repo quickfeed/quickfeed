@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment } from "../../../proto/ag_pb";
+import { Course, Enrollment, Repository } from "../../../proto/ag_pb";
 import { Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
@@ -12,6 +12,7 @@ interface IUserViewerProps {
     pendingUsers: IUserRelation[];
     rejectedUsers: IUserRelation[];
     course: Course;
+    courseURL: string;
 }
 
 interface IUserViewerState {
@@ -113,7 +114,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 users={users}
                 actions={actions}
                 isCourseList={true}
-                courseCode={this.props.course.getCode()}
+                courseURL={this.props.courseURL}
                 optionalActions={optionalActions}
                 linkType={linkType}
                 actionClick={(user, link) => this.handleAction(user, link)}

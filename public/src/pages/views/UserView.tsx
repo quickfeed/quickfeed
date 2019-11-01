@@ -11,7 +11,7 @@ interface IUserViewerProps {
     isCourseList: boolean;
     userMan?: UserManager;
     navMan?: NavigationManager;
-    courseCode?: string;
+    courseURL?: string;
     searchable?: boolean;
     actions?: ILink[];
     optionalActions?: (user: IUserRelation) => ILink[];
@@ -167,7 +167,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     // return link to github account if there is no course information, otherwise return link to the student labs repo
     private repoLink(user: string): string {
-        const repoLink = "https://github.com/" + this.props.courseCode + "/" + user + "-labs";
+        const repoLink = this.props.courseURL + user + "-labs";
         return this.props.isCourseList ? repoLink : this.gitLink(user);
     }
 }

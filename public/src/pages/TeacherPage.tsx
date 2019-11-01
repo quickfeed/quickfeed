@@ -137,6 +137,7 @@ export class TeacherPage extends ViewPage {
             }
             return <Results
                 course={course}
+                courseURL={await this.getCourseURL(course.getId())}
                 labs={labs}
                 students={linkedStudents}
                 onRebuildClick={async (submissionID: number) => {
@@ -169,6 +170,7 @@ export class TeacherPage extends ViewPage {
 
             return <GroupResults
                 course={course}
+                courseURL={await this.getCourseURL(course.getId())}
                 labs={labs}
                 groups={linkedGroups}
                 onRebuildClick={async (submissionID: number) => {
@@ -208,6 +210,7 @@ export class TeacherPage extends ViewPage {
                 pendingGroups={pendingGroups}
                 rejectedGroups={rejectedGroups}
                 course={course}
+                courseURL={await this.getCourseURL(course.getId())}
                 navMan={this.navMan}
                 courseMan={this.courseMan}
                 pagePath={this.pagePath}
@@ -269,6 +272,7 @@ export class TeacherPage extends ViewPage {
             });
             return <MemberView
                 course={course}
+                courseURL={await this.getCourseURL(course.getId())}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
                 rejectedUsers={rejectedUsers}
@@ -400,6 +404,15 @@ export class TeacherPage extends ViewPage {
             return this.courseMan.getCoursesFor(curUsr);
         }
         return [];
+    }
+
+    private async getCourseURL(courseID: number): Promise<string> {
+        const repoMap = await this.courseMan.getRepositories(
+            courseID,
+            [Repository.Type.COURSEINFO],
+            );
+        const fullRepoName = repoMap.get(Repository.Type.COURSEINFO);
+        return fullRepoName ? fullRepoName.split("course-info")[0] : "";
     }
 
     private async courseFunc(courseParam: string, fn: (course: Course) => View): View {
