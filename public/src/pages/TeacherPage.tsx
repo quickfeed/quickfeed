@@ -217,6 +217,7 @@ export class TeacherPage extends ViewPage {
                 pendingGroups={pendingGroups}
                 rejectedGroups={rejectedGroups}
                 course={course}
+                courseCodeURL={await this.getCourseCodeURL(course.getId())}
                 navMan={this.navMan}
                 courseMan={this.courseMan}
                 pagePath={this.pagePath}
