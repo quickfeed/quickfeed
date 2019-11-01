@@ -12,7 +12,7 @@ interface ICourseGroupProps {
     pendingGroups: Group[];
     rejectedGroups: Group[];
     course: Course;
-    courseCodeURL: string;
+    courseURL: string;
     navMan: NavigationManager;
     courseMan: CourseManager;
     pagePath: string;
@@ -114,7 +114,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private generateGroupRepoLink(groupname: string): JSX.Element {
-        return <a href={this.props.courseCodeURL + slugify(groupname)}>{ groupname }</a>;
+        return <a href={this.props.courseURL + slugify(groupname)}>{ groupname }</a>;
     }
 
     private renderDropdownMenu(group: Group): JSX.Element {
@@ -175,7 +175,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 separator = " ";
             }
 
-            const nameLink = <span><a href={this.props.courseCodeURL
+            const nameLink = <span><a href={this.props.courseURL
                  + user.getLogin() + "-labs"}>{ user.getName() }</a>{separator}</span>;
             names.push(nameLink);
             });

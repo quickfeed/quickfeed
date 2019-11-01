@@ -7,7 +7,7 @@ import { slugify } from "../../helper"
 
 interface IResultsProps {
     course: Course;
-    courseCodeURL: string;
+    courseURL: string;
     groups: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => void;
@@ -124,7 +124,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
     }
 
     private generateGroupRepoLink(groupname: string): JSX.Element {
-        return <a href={this.props.courseCodeURL + slugify(groupname)}>{ groupname }</a>;
+        return <a href={this.props.courseURL + slugify(groupname)}>{ groupname }</a>;
     }
 
     private handleOnchange(query: string): void {
