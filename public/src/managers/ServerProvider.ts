@@ -27,7 +27,6 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
-import { StudentLab } from "../components/lab/StudentLab";
 
 interface IEndpoints {
     user: string;
@@ -262,8 +261,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 assignments: subs,
             };
             labs.push(labLink);
-            // TODO: debug, to be removed
-            console.log(labLink);
         }
         return labs;
     }

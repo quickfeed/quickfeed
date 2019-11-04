@@ -12,6 +12,8 @@ import {
     Group,
     GroupRequest,
     Groups,
+    LabRequest,
+    LabResultLinks,
     Organization,
     OrgRequest,
     Providers,
@@ -26,8 +28,6 @@ import {
     User,
     Users,
     Void,
-    LabResultLinks,
-    LabRequest,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
