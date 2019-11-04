@@ -1,5 +1,5 @@
 import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User } from "../../proto/ag_pb";
-import { ISubmission } from "../models";
+import { IAssignmentLink, ISubmission } from "../models";
 
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
@@ -206,6 +206,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             }
         });
         return temp;
+    }
+
+    public async getCourseLabs(courseID: number): Promise<IAssignmentLink[]> {
+        return [];
     }
 
     public async getProviders(): Promise<string[]> {
