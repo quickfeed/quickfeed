@@ -442,14 +442,26 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 // GetCourseLabSubmissions returns all the latest submissions for every individual course assignment for each course student
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
 func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
-	// TODO: add access policy here
 
-	// TODO: web method to populate results (returns result slice)
-	// do not forget to preload users for assignments
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
 
+	if !(s.isTeacher(usr.GetID(), in.GetCourseID()) || usr.IsAdmin && s.isEnrolled(usr.GetID(), in.GetCourseID())) {
+		s.logger.Errorf("GetCourseLabSubmissions failed: user %s is not teacher or submission author", usr.GetLogin())
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can get all lab submissions")
+	}
+
+	labs, err := s.getAllLabs(in)
+	if err != nil {
+		s.logger.Errorf("GetCourseLabSubmissions failed: %w", err)
+		return nil, status.Errorf(codes.NotFound, "no submissions found")
+	}
 	// TODO: add remove remote identities method
 
-	return nil, nil
+	return &pb.LabResultLinks{Labs: labs}, nil
 }
 
 // ApproveSubmission approves the given submission.
