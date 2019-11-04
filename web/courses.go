@@ -191,6 +191,38 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
+func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultLink, error) {
+
+	labLinks := make([]*pb.LabResultLink, 0)
+	req := &pb.EnrollmentRequest{
+		CourseID:              request.GetCourseID(),
+		FilterOutGroupMembers: false,
+		States:                []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_TEACHER},
+	}
+	users, err := s.getEnrollmentsByCourse(req)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users.GetEnrollments() {
+		labs, err := s.getSubmissions(&pb.SubmissionRequest{
+			UserID:   user.GetUserID(),
+			CourseID: request.GetCourseID(),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("getAllLabs failed: could not get submissions for user: %s", user.GetUser().GetLogin())
+		}
+		labLink := &pb.LabResultLink{
+			AuthorName:  user.GetUser().GetName(),
+			Enrollment:  user,
+			Submissions: labs,
+		}
+		labLinks = append(labLinks, labLink)
+	}
+
+	return labLinks, nil
+}
+
 // approveSubmission approves the given submission.
 func (s *AutograderService) approveSubmission(submissionID uint64) error {
 	return s.db.UpdateSubmission(submissionID, true)
