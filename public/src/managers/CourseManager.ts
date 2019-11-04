@@ -1,5 +1,6 @@
 import {
     IAssignmentLink,
+    IStudentSubmission,
     ISubmission,
     IUserRelation,
 } from "../models";
@@ -349,10 +350,21 @@ export class CourseManager {
                     lab.assignment = suggestedAssignment;
                 }
             }
+
+            // fill up cells for all assignments, even with no submissions,
+            // to display properly in the table with lab results
+            for (const asm of assignments) {
+                const exists = studentLabs.assignments.find((ele) => asm.getId() === ele.assignment.getId());
+                if (!exists) {
+                    const voidSubmission: IStudentSubmission = {
+                        assignment: asm,
+                    };
+                    studentLabs.assignments.push(voidSubmission);
+                }
+            }
         }
         return labLinks;
     }
-
 
     /**
      * Add IStudentSubmissions to an IAssignmentLink
