@@ -125,7 +125,7 @@ export class TeacherPage extends ViewPage {
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
-
+            /*
             const students = await this.courseMan.getUsersForCourse(
                 course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             const linkedStudents: IAssignmentLink[] = [];
@@ -135,12 +135,14 @@ export class TeacherPage extends ViewPage {
                     userCourses.link.setUser(student.user);
                     linkedStudents.push(userCourses);
                 }
-            }
+            }*/
+            const results = await this.courseMan.getCourseLabs(course.getId());
+            const labResults = await this.courseMan.fillLabLinks(course, results, labs)
             return <Results
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
                 labs={labs}
-                students={linkedStudents}
+                students={labResults}
                 onRebuildClick={async (submissionID: number) => {
                     const ans = await this.courseMan.refreshSubmission(submissionID);
                     this.navMan.refresh();
