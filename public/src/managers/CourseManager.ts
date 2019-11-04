@@ -336,6 +336,24 @@ export class CourseManager {
         return this.courseProvider.isEmptyRepo(courseID, userID, groupID);
     }
 
+    public async fillLabLinks(course: Course, labLinks: IAssignmentLink[], assignments?: Assignment[]): Promise<IAssignmentLink[]> {
+        if (!assignments) {
+            assignments = await this.getAssignments(course.getId());
+        }
+        for (const studentLabs of labLinks) {
+            studentLabs.course = course;
+
+            for (const lab of studentLabs.assignments) {
+                const suggestedAssignment = assignments.find((asm) => lab.assignment.getId() === asm.getId());
+                if (suggestedAssignment) {
+                    lab.assignment = suggestedAssignment;
+                }
+            }
+        }
+        return labLinks;
+    }
+
+
     /**
      * Add IStudentSubmissions to an IAssignmentLink
      * @param student The student
