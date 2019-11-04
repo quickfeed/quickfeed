@@ -82,6 +82,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoRefreshSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoGetCourseLabSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.LabResultLinks, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.LabResultLinks.deserializeBinary);
         this.methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Providers, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Providers.deserializeBinary);
@@ -197,6 +200,10 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.refreshSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/RefreshSubmission', request, metadata || {}, this.methodInfoRefreshSubmission, callback);
+    };
+    AutograderServiceClient.prototype.getCourseLabSubmissions = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetCourseLabSubmissions', request, metadata || {}, this.methodInfoGetCourseLabSubmissions, callback);
     };
     AutograderServiceClient.prototype.getProviders = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

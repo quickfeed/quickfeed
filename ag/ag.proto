@@ -72,6 +72,36 @@ message Courses {
     repeated Course courses = 1;
 }
 
+message Repository {
+    enum Type {
+        NONE = 0;
+        COURSEINFO = 1;
+        ASSIGNMENTS = 2;
+        TESTS = 3;
+        SOLUTIONS = 4;
+        USER = 5;
+        GROUP = 6;
+    }
+    uint64 ID = 1;
+    uint64 organizationID = 2;
+    uint64 repositoryID = 3;
+    uint64 userID = 4;
+    uint64 groupID = 5;
+    string HTMLURL = 6;
+    Type repoType = 7;
+}
+
+message Organization {
+    uint64 ID = 1;
+    string path = 2;
+    string avatar = 3;
+    string paymentPlan = 4;
+}
+
+message Organizations {
+    repeated Organization organizations = 1;
+}
+
 message Enrollment {
     enum UserStatus {
         NONE = 0;
@@ -93,6 +123,8 @@ message Enrollment {
 message Enrollments {
     repeated Enrollment enrollments = 1;
 }
+
+//   LABS    //
 
 message Assignment {
     uint64 ID = 1;
@@ -126,35 +158,17 @@ message Submissions {
     repeated Submission submissions = 1;
 }
 
-message Repository {
-    enum Type {
-        NONE = 0;
-        COURSEINFO = 1;
-        ASSIGNMENTS = 2;
-        TESTS = 3;
-        SOLUTIONS = 4;
-        USER = 5;
-        GROUP = 6;
-    }
-    uint64 ID = 1;
-    uint64 organizationID = 2;
-    uint64 repositoryID = 3;
-    uint64 userID = 4;
-    uint64 groupID = 5;
-    string HTMLURL = 6;
-    Type repoType = 7;
+message LabResultLink {
+    
+    string authorName = 1;
+    Enrollment enrollment = 2;
+    Submissions submissions = 3;
 }
 
-message Organization {
-    uint64 ID = 1;
-    string path = 2;
-    string avatar = 3;
-    string paymentPlan = 4;
+message LabResultLinks {
+    repeated LabResultLink labs = 1;
 }
 
-message Organizations {
-    repeated Organization organizations = 1;
-}
 
 ////    REQUESTS AND RESPONSES      \\\\
 
@@ -232,6 +246,10 @@ message Status {
     string Error = 2;
 }
 
+message LabRequest {
+    uint64 courseID = 1;
+}
+
 message Void {}
 
 service AutograderService {
@@ -284,6 +302,7 @@ service AutograderService {
     // Only teachers can invoke this.
     rpc ApproveSubmission(ApproveSubmissionRequest) returns (Void) {}
     rpc RefreshSubmission(RecordRequest) returns (Void) {}
+    rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
    
     // misc //
     

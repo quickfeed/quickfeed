@@ -270,6 +270,108 @@ export namespace Courses {
   }
 }
 
+export class Repository extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getOrganizationid(): number;
+  setOrganizationid(value: number): void;
+
+  getRepositoryid(): number;
+  setRepositoryid(value: number): void;
+
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  getHtmlurl(): string;
+  setHtmlurl(value: string): void;
+
+  getRepotype(): Repository.Type;
+  setRepotype(value: Repository.Type): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Repository.AsObject;
+  static toObject(includeInstance: boolean, msg: Repository): Repository.AsObject;
+  static serializeBinaryToWriter(message: Repository, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Repository;
+  static deserializeBinaryFromReader(message: Repository, reader: jspb.BinaryReader): Repository;
+}
+
+export namespace Repository {
+  export type AsObject = {
+    id: number,
+    organizationid: number,
+    repositoryid: number,
+    userid: number,
+    groupid: number,
+    htmlurl: string,
+    repotype: Repository.Type,
+  }
+
+  export enum Type { 
+    NONE = 0,
+    COURSEINFO = 1,
+    ASSIGNMENTS = 2,
+    TESTS = 3,
+    SOLUTIONS = 4,
+    USER = 5,
+    GROUP = 6,
+  }
+}
+
+export class Organization extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getPath(): string;
+  setPath(value: string): void;
+
+  getAvatar(): string;
+  setAvatar(value: string): void;
+
+  getPaymentplan(): string;
+  setPaymentplan(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Organization.AsObject;
+  static toObject(includeInstance: boolean, msg: Organization): Organization.AsObject;
+  static serializeBinaryToWriter(message: Organization, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Organization;
+  static deserializeBinaryFromReader(message: Organization, reader: jspb.BinaryReader): Organization;
+}
+
+export namespace Organization {
+  export type AsObject = {
+    id: number,
+    path: string,
+    avatar: string,
+    paymentplan: string,
+  }
+}
+
+export class Organizations extends jspb.Message {
+  getOrganizationsList(): Array<Organization>;
+  setOrganizationsList(value: Array<Organization>): void;
+  clearOrganizationsList(): void;
+  addOrganizations(value?: Organization, index?: number): Organization;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Organizations.AsObject;
+  static toObject(includeInstance: boolean, msg: Organizations): Organizations.AsObject;
+  static serializeBinaryToWriter(message: Organizations, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Organizations;
+  static deserializeBinaryFromReader(message: Organizations, reader: jspb.BinaryReader): Organizations;
+}
+
+export namespace Organizations {
+  export type AsObject = {
+    organizationsList: Array<Organization.AsObject>,
+  }
+}
+
 export class Enrollment extends jspb.Message {
   getId(): number;
   setId(value: number): void;
@@ -492,105 +594,53 @@ export namespace Submissions {
   }
 }
 
-export class Repository extends jspb.Message {
-  getId(): number;
-  setId(value: number): void;
+export class LabResultLink extends jspb.Message {
+  getAuthorname(): string;
+  setAuthorname(value: string): void;
 
-  getOrganizationid(): number;
-  setOrganizationid(value: number): void;
+  getEnrollment(): Enrollment | undefined;
+  setEnrollment(value?: Enrollment): void;
+  hasEnrollment(): boolean;
+  clearEnrollment(): void;
 
-  getRepositoryid(): number;
-  setRepositoryid(value: number): void;
-
-  getUserid(): number;
-  setUserid(value: number): void;
-
-  getGroupid(): number;
-  setGroupid(value: number): void;
-
-  getHtmlurl(): string;
-  setHtmlurl(value: string): void;
-
-  getRepotype(): Repository.Type;
-  setRepotype(value: Repository.Type): void;
+  getSubmissions(): Submissions | undefined;
+  setSubmissions(value?: Submissions): void;
+  hasSubmissions(): boolean;
+  clearSubmissions(): void;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Repository.AsObject;
-  static toObject(includeInstance: boolean, msg: Repository): Repository.AsObject;
-  static serializeBinaryToWriter(message: Repository, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Repository;
-  static deserializeBinaryFromReader(message: Repository, reader: jspb.BinaryReader): Repository;
+  toObject(includeInstance?: boolean): LabResultLink.AsObject;
+  static toObject(includeInstance: boolean, msg: LabResultLink): LabResultLink.AsObject;
+  static serializeBinaryToWriter(message: LabResultLink, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): LabResultLink;
+  static deserializeBinaryFromReader(message: LabResultLink, reader: jspb.BinaryReader): LabResultLink;
 }
 
-export namespace Repository {
+export namespace LabResultLink {
   export type AsObject = {
-    id: number,
-    organizationid: number,
-    repositoryid: number,
-    userid: number,
-    groupid: number,
-    htmlurl: string,
-    repotype: Repository.Type,
-  }
-
-  export enum Type { 
-    NONE = 0,
-    COURSEINFO = 1,
-    ASSIGNMENTS = 2,
-    TESTS = 3,
-    SOLUTIONS = 4,
-    USER = 5,
-    GROUP = 6,
+    authorname: string,
+    enrollment?: Enrollment.AsObject,
+    submissions?: Submissions.AsObject,
   }
 }
 
-export class Organization extends jspb.Message {
-  getId(): number;
-  setId(value: number): void;
-
-  getPath(): string;
-  setPath(value: string): void;
-
-  getAvatar(): string;
-  setAvatar(value: string): void;
-
-  getPaymentplan(): string;
-  setPaymentplan(value: string): void;
+export class LabResultLinks extends jspb.Message {
+  getLabsList(): Array<LabResultLink>;
+  setLabsList(value: Array<LabResultLink>): void;
+  clearLabsList(): void;
+  addLabs(value?: LabResultLink, index?: number): LabResultLink;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Organization.AsObject;
-  static toObject(includeInstance: boolean, msg: Organization): Organization.AsObject;
-  static serializeBinaryToWriter(message: Organization, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Organization;
-  static deserializeBinaryFromReader(message: Organization, reader: jspb.BinaryReader): Organization;
+  toObject(includeInstance?: boolean): LabResultLinks.AsObject;
+  static toObject(includeInstance: boolean, msg: LabResultLinks): LabResultLinks.AsObject;
+  static serializeBinaryToWriter(message: LabResultLinks, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): LabResultLinks;
+  static deserializeBinaryFromReader(message: LabResultLinks, reader: jspb.BinaryReader): LabResultLinks;
 }
 
-export namespace Organization {
+export namespace LabResultLinks {
   export type AsObject = {
-    id: number,
-    path: string,
-    avatar: string,
-    paymentplan: string,
-  }
-}
-
-export class Organizations extends jspb.Message {
-  getOrganizationsList(): Array<Organization>;
-  setOrganizationsList(value: Array<Organization>): void;
-  clearOrganizationsList(): void;
-  addOrganizations(value?: Organization, index?: number): Organization;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): Organizations.AsObject;
-  static toObject(includeInstance: boolean, msg: Organizations): Organizations.AsObject;
-  static serializeBinaryToWriter(message: Organizations, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): Organizations;
-  static deserializeBinaryFromReader(message: Organizations, reader: jspb.BinaryReader): Organizations;
-}
-
-export namespace Organizations {
-  export type AsObject = {
-    organizationsList: Array<Organization.AsObject>,
+    labsList: Array<LabResultLink.AsObject>,
   }
 }
 
@@ -913,6 +963,24 @@ export namespace Status {
   export type AsObject = {
     code: number,
     error: string,
+  }
+}
+
+export class LabRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): LabRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: LabRequest): LabRequest.AsObject;
+  static serializeBinaryToWriter(message: LabRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): LabRequest;
+  static deserializeBinaryFromReader(message: LabRequest, reader: jspb.BinaryReader): LabRequest;
+}
+
+export namespace LabRequest {
+  export type AsObject = {
+    courseid: number,
   }
 }
 
