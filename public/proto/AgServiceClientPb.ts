@@ -23,6 +23,8 @@ import {
   Group,
   GroupRequest,
   Groups,
+  LabRequest,
+  LabResultLinks,
   OrgRequest,
   Organization,
   Providers,
@@ -579,6 +581,28 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoRefreshSubmission,
+      callback);
+  }
+
+  methodInfoGetCourseLabSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
+    LabResultLinks,
+    (request: LabRequest) => {
+      return request.serializeBinary();
+    },
+    LabResultLinks.deserializeBinary
+  );
+
+  getCourseLabSubmissions(
+    request: LabRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: LabResultLinks) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetCourseLabSubmissions',
+      request,
+      metadata || {},
+      this.methodInfoGetCourseLabSubmissions,
       callback);
   }
 

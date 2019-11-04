@@ -153,6 +153,11 @@ func (req Provider) IsValid() bool {
 		provider == "fake"
 }
 
+// IsValid ensures that course ID is positive
+func (req LabRequest) IsValid() bool {
+	return req.GetCourseID() > 0
+}
+
 // IsValid checks that either ID or path field is set
 func (org Organization) IsValid() bool {
 	id, path := org.GetID(), org.GetPath()
