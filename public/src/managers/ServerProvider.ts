@@ -11,7 +11,9 @@ import {
     Void,
 } from "../../proto/ag_pb";
 import {
+    IAssignmentLink,
     IBuildInfo,
+    IStudentSubmission,
     ISubmission,
     ITestCases,
     IUser,
@@ -25,6 +27,7 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
+import { StudentLab } from "../components/lab/StudentLab";
 
 interface IEndpoints {
     user: string;
@@ -203,7 +206,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
         const isubmissions: ISubmission[] = [];
         result.data.getSubmissionsList().forEach((ele) => {
-            const isbm = this.toISUbmission(ele);
+            const isbm = this.toISubmission(ele);
             isubmissions.push(isbm);
         });
         return isubmissions;
@@ -216,10 +219,53 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         const isubmissions: ISubmission[] = [];
         result.data.getSubmissionsList().forEach((ele) => {
-            const isbm = this.toISUbmission(ele);
+            const isbm = this.toISubmission(ele);
             isubmissions.push(isbm);
         });
         return isubmissions;
+    }
+
+    public async getCourseLabs(courseID: number): Promise<IAssignmentLink[]> {
+        const result = await this.grpcHelper.getCourseLabSubmissions(courseID);
+        if (result.status.getCode() !== 0 || !result.data) {
+            return [];
+        }
+
+        const results = result.data.getLabsList();
+        const labCourse = new Course();
+        labCourse.setId(courseID);
+        const labs: IAssignmentLink[] = [];
+        for (const studentLabs of results) {
+            const subs: IStudentSubmission[] = [];
+            const allSubs = studentLabs.getSubmissions();
+            if (allSubs) {
+                for (const lab of allSubs.getSubmissionsList()) {
+                    // populate student submissions
+                    const labAssignment = new Assignment();
+                    labAssignment.setId(lab.getAssignmentid());
+                    const ILab: IStudentSubmission = {
+                        assignment:  labAssignment,
+                        latest: this.toISubmission(lab),
+                        authorName: studentLabs.getAuthorname(),
+                    };
+                    subs.push(ILab);
+                }
+            }
+            // populate assignment links
+            let enrol = studentLabs.getEnrollment();
+            if (!enrol) {
+                enrol = new Enrollment();
+            }
+            const labLink: IAssignmentLink = {
+                course: labCourse,
+                link: enrol,
+                assignments: subs,
+            };
+            labs.push(labLink);
+            // TODO: debug, to be removed
+            console.log(labLink);
+        }
+        return labs;
     }
 
     public async tryLogin(username: string, password: string): Promise<User | null> {
@@ -343,7 +389,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status.getCode() === 0;
     }
 
-    private toISUbmission(sbm: Submission): ISubmission {
+    private toISubmission(sbm: Submission): ISubmission {
         let buildInfoAsString = "";
         let scoreInfoAsString = "";
         if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {

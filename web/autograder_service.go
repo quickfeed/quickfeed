@@ -411,7 +411,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.DeleteGroupR
 // Access policy:
 // Admin enrolled in CourseID,
 // Current User if Owner of submission,
-// Current User is member of group for group submission,
+// Current User if member of group for group submission,
 // Teacher of CourseID.
 func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.SubmissionRequest) (*pb.Submissions, error) {
 	usr, err := s.getCurrentUser(ctx)
@@ -437,6 +437,19 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 		return nil, status.Errorf(codes.NotFound, "no submissions found")
 	}
 	return submissions, nil
+}
+
+// GetCourseLabSubmissions returns all the latest submissions for every individual course assignment for each course student
+// Access policy: Admin enrolled in CourseID, Teacher of CourseID.
+func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
+	// TODO: add access policy here
+
+	// TODO: web method to populate results (returns result slice)
+	// do not forget to preload users for assignments
+
+	// TODO: add remove remote identities method
+
+	return nil, nil
 }
 
 // ApproveSubmission approves the given submission.

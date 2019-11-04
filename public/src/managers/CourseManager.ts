@@ -32,6 +32,8 @@ export interface ICourseProvider {
 
     getAllLabInfos(courseID: number, userId: number): Promise<ISubmission[]>;
     getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]>;
+    getCourseLabs(courseID: number): Promise<IAssignmentLink[]>;
+
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
@@ -166,6 +168,10 @@ export class CourseManager {
         };
         await this.fillLinks(student.user, userCourse, assignments);
         return userCourse;
+    }
+
+    public async getCourseLabs(courseID: number): Promise<IAssignmentLink[]> {
+        return this.courseProvider.getCourseLabs(courseID);
     }
 
     /**

@@ -26,6 +26,8 @@ import {
     User,
     Users,
     Void,
+    LabResultLinks,
+    LabRequest,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
@@ -228,6 +230,12 @@ export class GrpcManager {
         request.setCourseid(courseID);
         request.setGroupid(groupID);
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
+    }
+
+    public getCourseLabSubmissions(courseID: number): Promise<IGrpcResponse<LabResultLinks>> {
+        const request = new LabRequest();
+        request.setCourseid(courseID);
+        return this.grpcSend<LabResultLinks>(this.agService.getCourseLabSubmissions, request);
     }
 
     public refreshSubmission(id: number): Promise<IGrpcResponse<Void>> {
