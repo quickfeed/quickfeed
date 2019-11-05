@@ -236,9 +236,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const labs: IAssignmentLink[] = [];
         for (const studentLabs of results) {
             const subs: IStudentSubmission[] = [];
-            const allSubs = studentLabs.getSubmissions();
+            const allSubs = studentLabs.getSubmissionsList();
             if (allSubs) {
-                for (const lab of allSubs.getSubmissionsList()) {
+                for (const lab of allSubs) {
                     // populate student submissions
                     const labAssignment = new Assignment();
                     labAssignment.setId(lab.getAssignmentid());
