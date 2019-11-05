@@ -444,7 +444,6 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 // GetCourseLabSubmissions returns all the latest submissions for every individual course assignment for each course student
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
 func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
-	log.Println("GetCourseLabSubmission started")
 	start := time.Now()
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
@@ -457,27 +456,13 @@ func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can get all lab submissions")
 	}
 
-	mark := time.Since(start)
-	log.Println("GetCourseLabSubmission got and checked current user, took : ", mark)
-
 	labs, err := s.getAllLabs(in)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no submissions found")
 	}
 
-	mark = time.Since(start)
-	log.Println("GetCourseLabSubmissions got all submissions, took : ", mark)
-
-	startRemID := time.Now()
-	for _, lab := range labs {
-		lab.RemoveRemoteID()
-	}
-	mark1 := time.Since(startRemID)
-	log.Println("GetCOurseLabSubmissions removed remote IDs for ", mark1)
-
-	mark = time.Since(start)
-	log.Println("GetCourseLabSubmissions ready to send response, whole method took : ", mark)
+	log.Println("GetCourseLabSubmissions got all submissions, took : ", time.Since(start))
 
 	return &pb.LabResultLinks{Labs: labs}, nil
 }
