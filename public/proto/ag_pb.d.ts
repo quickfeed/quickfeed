@@ -603,10 +603,10 @@ export class LabResultLink extends jspb.Message {
   hasEnrollment(): boolean;
   clearEnrollment(): void;
 
-  getSubmissions(): Submissions | undefined;
-  setSubmissions(value?: Submissions): void;
-  hasSubmissions(): boolean;
-  clearSubmissions(): void;
+  getSubmissionsList(): Array<Submission>;
+  setSubmissionsList(value: Array<Submission>): void;
+  clearSubmissionsList(): void;
+  addSubmissions(value?: Submission, index?: number): Submission;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): LabResultLink.AsObject;
@@ -620,7 +620,7 @@ export namespace LabResultLink {
   export type AsObject = {
     authorname: string,
     enrollment?: Enrollment.AsObject,
-    submissions?: Submissions.AsObject,
+    submissionsList: Array<Submission.AsObject>,
   }
 }
 

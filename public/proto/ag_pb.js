@@ -395,7 +395,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.LabResultLink = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.LabResultLink.repeatedFields_, null);
 };
 goog.inherits(proto.LabResultLink, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -4910,6 +4910,13 @@ proto.Submissions.prototype.clearSubmissionsList = function() {
 
 
 
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.LabResultLink.repeatedFields_ = [3];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -4941,7 +4948,8 @@ proto.LabResultLink.toObject = function(includeInstance, msg) {
   var obj = {
     authorname: jspb.Message.getFieldWithDefault(msg, 1, ""),
     enrollment: (f = msg.getEnrollment()) && proto.Enrollment.toObject(includeInstance, f),
-    submissions: (f = msg.getSubmissions()) && proto.Submissions.toObject(includeInstance, f)
+    submissionsList: jspb.Message.toObjectList(msg.getSubmissionsList(),
+    proto.Submission.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -4988,9 +4996,9 @@ proto.LabResultLink.deserializeBinaryFromReader = function(msg, reader) {
       msg.setEnrollment(value);
       break;
     case 3:
-      var value = new proto.Submissions;
-      reader.readMessage(value,proto.Submissions.deserializeBinaryFromReader);
-      msg.setSubmissions(value);
+      var value = new proto.Submission;
+      reader.readMessage(value,proto.Submission.deserializeBinaryFromReader);
+      msg.addSubmissions(value);
       break;
     default:
       reader.skipField();
@@ -5036,12 +5044,12 @@ proto.LabResultLink.serializeBinaryToWriter = function(message, writer) {
       proto.Enrollment.serializeBinaryToWriter
     );
   }
-  f = message.getSubmissions();
-  if (f != null) {
-    writer.writeMessage(
+  f = message.getSubmissionsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
       3,
       f,
-      proto.Submissions.serializeBinaryToWriter
+      proto.Submission.serializeBinaryToWriter
     );
   }
 };
@@ -5096,35 +5104,36 @@ proto.LabResultLink.prototype.hasEnrollment = function() {
 
 
 /**
- * optional Submissions submissions = 3;
- * @return {?proto.Submissions}
+ * repeated Submission submissions = 3;
+ * @return {!Array<!proto.Submission>}
  */
-proto.LabResultLink.prototype.getSubmissions = function() {
-  return /** @type{?proto.Submissions} */ (
-    jspb.Message.getWrapperField(this, proto.Submissions, 3));
+proto.LabResultLink.prototype.getSubmissionsList = function() {
+  return /** @type{!Array<!proto.Submission>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.Submission, 3));
 };
 
 
-/** @param {?proto.Submissions|undefined} value */
-proto.LabResultLink.prototype.setSubmissions = function(value) {
-  jspb.Message.setWrapperField(this, 3, value);
-};
-
-
-/**
- * Clears the message field making it undefined.
- */
-proto.LabResultLink.prototype.clearSubmissions = function() {
-  this.setSubmissions(undefined);
+/** @param {!Array<!proto.Submission>} value */
+proto.LabResultLink.prototype.setSubmissionsList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 3, value);
 };
 
 
 /**
- * Returns whether this field is set.
- * @return {boolean}
+ * @param {!proto.Submission=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.Submission}
  */
-proto.LabResultLink.prototype.hasSubmissions = function() {
-  return jspb.Message.getField(this, 3) != null;
+proto.LabResultLink.prototype.addSubmissions = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.Submission, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ */
+proto.LabResultLink.prototype.clearSubmissionsList = function() {
+  this.setSubmissionsList([]);
 };
 
 

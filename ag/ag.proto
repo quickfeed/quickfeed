@@ -162,7 +162,7 @@ message LabResultLink {
     
     string authorName = 1;
     Enrollment enrollment = 2;
-    Submissions submissions = 3;
+    repeated Submission submissions = 3;
 }
 
 message LabResultLinks {
