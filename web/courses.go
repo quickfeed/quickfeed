@@ -3,6 +3,8 @@ package web
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -192,6 +194,9 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 }
 
 func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultLink, error) {
+	s.db.GetCourseSubmissions(request.GetCourseID())
+	start := time.Now()
+	log.Println("getAllLabs started ")
 
 	labLinks := make([]*pb.LabResultLink, 0)
 	req := &pb.EnrollmentRequest{
@@ -204,7 +209,10 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 		return nil, err
 	}
 
-	for _, user := range users.GetEnrollments() {
+	mark := time.Since(start)
+	log.Println("getAllLabs finished getting all user enrollments, took ", mark)
+
+	for i, user := range users.GetEnrollments() {
 		labs, err := s.getSubmissions(&pb.SubmissionRequest{
 			UserID:   user.GetUserID(),
 			CourseID: request.GetCourseID(),
@@ -218,8 +226,12 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 			Submissions: labs,
 		}
 		labLinks = append(labLinks, labLink)
-	}
 
+		mark := time.Since(start)
+		log.Println("getAllLabs user loop, step ", i, " took ", mark)
+	}
+	mark = time.Since(start)
+	log.Println("getAllLabs whole method took ", mark)
 	return labLinks, nil
 }
 
