@@ -64,6 +64,7 @@ type Database interface {
 	GetSubmission(query *pb.Submission) (*pb.Submission, error)
 	// GetSubmissions returns a list of submission entries for the given course, matching the given query.
 	GetSubmissions(cid uint64, query *pb.Submission) ([]*pb.Submission, error)
+	GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error)
 
 	// CreateGroup creates a new group and assign users to newly created group.
 	CreateGroup(*pb.Group) error

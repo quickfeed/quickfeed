@@ -3,7 +3,9 @@ package database
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sort"
+	"time"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/jinzhu/gorm"
@@ -387,6 +389,47 @@ func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 	}
 	submission.Approved = approved
 	return db.conn.Model(&pb.Submission{}).Update(submission).Error
+}
+
+// GetCourseSubmissions does the thing
+func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) {
+
+	start := time.Now()
+	// preload assignments and active enrollments for the course
+
+	userStates := []pb.Enrollment_UserStatus{
+		pb.Enrollment_STUDENT,
+		pb.Enrollment_TEACHER,
+	}
+
+	var course pb.Course
+	if err := db.conn.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).First(&course, cid).Error; err != nil {
+		return nil, err
+	}
+	/*
+		var assignments []uint64
+		for _, a := range course.Assignments {
+			assignments = append(assignments, a.GetID())
+		}*/
+
+	mark := time.Since(start)
+	log.Println("New method: preloading took ", mark)
+
+	// fetch all submission for every user from the database to process them here
+	for i, usr := range course.Enrollments {
+
+		var userSubmissions []pb.Submission
+
+		if err := db.conn.Where(&pb.Submission{UserID: usr.GetUserID()}).Find(&userSubmissions).Error; err != nil {
+			return nil, err
+		}
+
+		log.Println("For user ", i+1, " with id ", usr.GetUserID(), " found total submissions: ", len(userSubmissions))
+
+	}
+	mark = time.Since(start)
+	log.Println("New method: fetching all user submissions took: ", mark)
+	return nil, nil
 }
 
 // GetSubmission fetches a submission record
