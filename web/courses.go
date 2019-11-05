@@ -3,8 +3,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
-	"time"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -194,45 +192,7 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 }
 
 func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultLink, error) {
-	s.db.GetCourseSubmissions(request.GetCourseID())
-	start := time.Now()
-	log.Println("getAllLabs started ")
-
-	labLinks := make([]*pb.LabResultLink, 0)
-	req := &pb.EnrollmentRequest{
-		CourseID:              request.GetCourseID(),
-		FilterOutGroupMembers: false,
-		States:                []pb.Enrollment_UserStatus{pb.Enrollment_STUDENT, pb.Enrollment_TEACHER},
-	}
-	users, err := s.getEnrollmentsByCourse(req)
-	if err != nil {
-		return nil, err
-	}
-
-	mark := time.Since(start)
-	log.Println("getAllLabs finished getting all user enrollments, took ", mark)
-
-	for i, user := range users.GetEnrollments() {
-		labs, err := s.getSubmissions(&pb.SubmissionRequest{
-			UserID:   user.GetUserID(),
-			CourseID: request.GetCourseID(),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("getAllLabs failed: could not get submissions for user: %s", user.GetUser().GetLogin())
-		}
-		labLink := &pb.LabResultLink{
-			AuthorName:  user.GetUser().GetName(),
-			Enrollment:  user,
-			Submissions: labs,
-		}
-		labLinks = append(labLinks, labLink)
-
-		mark := time.Since(start)
-		log.Println("getAllLabs user loop, step ", i, " took ", mark)
-	}
-	mark = time.Since(start)
-	log.Println("getAllLabs whole method took ", mark)
-	return labLinks, nil
+	return s.db.GetCourseSubmissions(request.GetCourseID())
 }
 
 // approveSubmission approves the given submission.

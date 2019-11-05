@@ -402,34 +402,42 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) 
 		pb.Enrollment_TEACHER,
 	}
 
+	m := db.conn
 	var course pb.Course
-	if err := db.conn.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).First(&course, cid).Error; err != nil {
+
+	if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").First(&course, cid).Error; err != nil {
 		return nil, err
 	}
-	/*
-		var assignments []uint64
+
+	allCourseLabs := make([]*pb.LabResultLink, 0)
+
+	for _, usr := range course.Enrollments {
+
+		userSubmissions := make([]*pb.Submission, 0)
+
 		for _, a := range course.Assignments {
-			assignments = append(assignments, a.GetID())
-		}*/
-
-	mark := time.Since(start)
-	log.Println("New method: preloading took ", mark)
-
-	// fetch all submission for every user from the database to process them here
-	for i, usr := range course.Enrollments {
-
-		var userSubmissions []pb.Submission
-
-		if err := db.conn.Where(&pb.Submission{UserID: usr.GetUserID()}).Find(&userSubmissions).Error; err != nil {
-			return nil, err
+			var lab pb.Submission
+			if err := m.Where(&pb.Submission{UserID: usr.GetID(), AssignmentID: a.GetID()}).Last(&lab).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					continue
+				}
+				return nil, err
+			}
+			userSubmissions = append(userSubmissions, &lab)
 		}
 
-		log.Println("For user ", i+1, " with id ", usr.GetUserID(), " found total submissions: ", len(userSubmissions))
+		// nullify user reference for enrollment before adding it to slice
+		labResult := &pb.LabResultLink{
+			AuthorName:  usr.GetUser().GetName(),
+			Enrollment:  usr,
+			Submissions: userSubmissions,
+		}
 
+		allCourseLabs = append(allCourseLabs, labResult)
 	}
-	mark = time.Since(start)
-	log.Println("New method: fetching all user submissions took: ", mark)
-	return nil, nil
+
+	log.Println("New method: fetching all user submissions took: ", time.Since(start))
+	return allCourseLabs, nil
 }
 
 // GetSubmission fetches a submission record
