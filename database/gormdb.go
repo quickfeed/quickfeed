@@ -429,7 +429,7 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) 
 		return nil, err
 	}
 
-	// populate cache map with student labs, filtering the latest submissions for every lab
+	// populate cache map with student labs, filtering the latest submissions for every assignment
 	for _, lab := range allLabs {
 		_, ok := labCache[lab.GetUserID()]
 		if !ok {
@@ -439,15 +439,20 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) 
 		labCache[lab.GetUserID()][lab.GetAssignmentID()] = lab
 	}
 
-	// populate lab structs to return to the client
+	// populate the final slice to return to the client
 	for _, usr := range course.Enrollments {
-		// collect all submissions from the map
+		// collect all submission values for the user
 		userSubmissions := make([]*pb.Submission, 0)
 		for _, v := range labCache[usr.GetUserID()] {
 			var tmp pb.Submission
 			tmp = v
 			userSubmissions = append(userSubmissions, &tmp)
 		}
+
+		// sort latest submissions by lab ID
+		sort.Slice(userSubmissions, func(i, j int) bool {
+			return userSubmissions[i].GetAssignmentID() < userSubmissions[j].GetAssignmentID()
+		})
 
 		labResult := &pb.LabResultLink{
 			AuthorName:  usr.GetUser().GetName(),
@@ -458,31 +463,6 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) 
 		allCourseLabs = append(allCourseLabs, labResult)
 
 	}
-
-	/*
-		for _, usr := range course.Enrollments {
-
-			userSubmissions := make([]*pb.Submission, 0)
-
-			for _, a := range course.Assignments {
-				var lab pb.Submission
-				if err := m.Where(&pb.Submission{UserID: usr.GetID(), AssignmentID: a.GetID()}).Last(&lab).Error; err != nil {
-					if err == gorm.ErrRecordNotFound {
-						continue
-					}
-					return nil, err
-				}
-				userSubmissions = append(userSubmissions, &lab)
-			}
-
-			labResult := &pb.LabResultLink{
-				AuthorName:  usr.GetUser().GetName(),
-				Enrollment:  usr,
-				Submissions: userSubmissions,
-			}
-
-			allCourseLabs = append(allCourseLabs, labResult)
-		}*/
 
 	log.Println("New method: fetching all user submissions took: ", time.Since(start))
 	return allCourseLabs, nil
