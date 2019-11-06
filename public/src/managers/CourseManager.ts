@@ -344,6 +344,11 @@ export class CourseManager {
         for (const studentLabs of labLinks) {
             studentLabs.course = course;
 
+            let studentName = "";
+            if (studentLabs.assignments.length > 0) {
+                studentName = studentLabs.assignments[0].authorName;
+            }
+
             for (const lab of studentLabs.assignments) {
                 const suggestedAssignment = assignments.find((asm) => lab.assignment.getId() === asm.getId());
                 if (suggestedAssignment) {
@@ -358,6 +363,7 @@ export class CourseManager {
                 if (!exists) {
                     const voidSubmission: IStudentSubmission = {
                         assignment: asm,
+                        authorName: studentName,
                     };
                     studentLabs.assignments.push(voidSubmission);
                 }

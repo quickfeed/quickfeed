@@ -17,7 +17,6 @@ interface IResultsProp {
 interface IResultsState {
     assignment?: IStudentSubmission;
     students: IAssignmentLink[];
-    authorName?: string;
 }
 
 export class Results extends React.Component<IResultsProp, IResultsState> {
@@ -52,7 +51,6 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
-                authorName={this.state.authorName}
                 onRebuildClick={this.props.onRebuildClick}
                 onApproveClick={ async () => {
                     if (this.state.assignment && this.state.assignment.latest) {
@@ -123,11 +121,6 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         this.setState({
             assignment: item,
         });
-        if (item.authorName) {
-            this.setState({
-                authorName: item.authorName,
-            });
-        }
     }
 
     private handleOnchange(query: string): void {
