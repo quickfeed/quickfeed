@@ -403,30 +403,52 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) 
 	}
 
 	m := db.conn
-	var course pb.Course
 
+	// fetch the course entry with all associated assignments and active enrollments
+	var course pb.Course
 	if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").First(&course, cid).Error; err != nil {
 		return nil, err
 	}
 
 	allCourseLabs := make([]*pb.LabResultLink, 0)
 
-	for _, usr := range course.Enrollments {
+	// get IDs of all non-group labs for the course
+	courseAssignmentIDs := make([]uint64, 0)
+	for _, a := range course.Assignments {
+		if !a.IsGroupLab {
+			courseAssignmentIDs = append(courseAssignmentIDs, a.GetID())
+		}
+	}
 
-		userSubmissions := make([]*pb.Submission, 0)
+	// make a local map to store database values to avoid querying the database multiple times
+	// format: [studentID][assignmentID]{latest submission}
+	labCache := make(map[uint64]map[uint64]pb.Submission)
 
-		for _, a := range course.Assignments {
-			var lab pb.Submission
-			if err := m.Where(&pb.Submission{UserID: usr.GetID(), AssignmentID: a.GetID()}).Last(&lab).Error; err != nil {
-				if err == gorm.ErrRecordNotFound {
-					continue
-				}
-				return nil, err
-			}
-			userSubmissions = append(userSubmissions, &lab)
+	var allLabs []pb.Submission
+	if err := m.Where("assignment_id IN (?)", courseAssignmentIDs).Find(&allLabs).Error; err != nil {
+		return nil, err
+	}
+
+	// populate cache map with student labs, filtering the latest submissions for every lab
+	for _, lab := range allLabs {
+		_, ok := labCache[lab.GetUserID()]
+		if !ok {
+			labCache[lab.GetUserID()] = make(map[uint64]pb.Submission)
 		}
 
-		// nullify user reference for enrollment before adding it to slice
+		labCache[lab.GetUserID()][lab.GetAssignmentID()] = lab
+	}
+
+	// populate lab structs to return to the client
+	for _, usr := range course.Enrollments {
+		// collect all submissions from the map
+		userSubmissions := make([]*pb.Submission, 0)
+		for _, v := range labCache[usr.GetUserID()] {
+			var tmp pb.Submission
+			tmp = v
+			userSubmissions = append(userSubmissions, &tmp)
+		}
+
 		labResult := &pb.LabResultLink{
 			AuthorName:  usr.GetUser().GetName(),
 			Enrollment:  usr,
@@ -434,7 +456,33 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) 
 		}
 
 		allCourseLabs = append(allCourseLabs, labResult)
+
 	}
+
+	/*
+		for _, usr := range course.Enrollments {
+
+			userSubmissions := make([]*pb.Submission, 0)
+
+			for _, a := range course.Assignments {
+				var lab pb.Submission
+				if err := m.Where(&pb.Submission{UserID: usr.GetID(), AssignmentID: a.GetID()}).Last(&lab).Error; err != nil {
+					if err == gorm.ErrRecordNotFound {
+						continue
+					}
+					return nil, err
+				}
+				userSubmissions = append(userSubmissions, &lab)
+			}
+
+			labResult := &pb.LabResultLink{
+				AuthorName:  usr.GetUser().GetName(),
+				Enrollment:  usr,
+				Submissions: userSubmissions,
+			}
+
+			allCourseLabs = append(allCourseLabs, labResult)
+		}*/
 
 	log.Println("New method: fetching all user submissions took: ", time.Since(start))
 	return allCourseLabs, nil
