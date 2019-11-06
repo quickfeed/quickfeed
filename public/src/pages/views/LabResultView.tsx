@@ -7,7 +7,6 @@ interface ILabInfoProps {
     course: Course;
     labInfo: IStudentSubmission;
     showApprove: boolean;
-    authorName?: string;
     onApproveClick: () => void;
     onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
@@ -27,7 +26,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
                                 isApproved={latest.approved}
-                                authorName={this.props.authorName}
+                                authorName={this.props.labInfo.authorName}
                                 delivered={this.getDeliveredTime(latest.buildDate)}
                             />
                             <LastBuild

@@ -16,7 +16,6 @@ interface IResultsProps {
 interface IResultsState {
     assignment?: IStudentSubmission;
     groups: IAssignmentLink[];
-    authorName?: string;
 }
 
 export class GroupResults extends React.Component<IResultsProps, IResultsState> {
@@ -52,7 +51,6 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             groupLab = <StudentLab
                 course={this.props.course}
                 assignment={this.state.assignment}
-                authorName={this.state.authorName}
                 showApprove={true}
                 onRebuildClick={this.props.onRebuildClick}
                 onApproveClick={() => {
@@ -115,11 +113,6 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         this.setState({
             assignment: item,
         });
-        if (item.authorName) {
-            this.setState({
-                authorName: item.authorName,
-            });
-        }
     }
 
     private handleOnchange(query: string): void {

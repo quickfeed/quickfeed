@@ -36,7 +36,7 @@ export interface IAssignmentLink {
 export interface IStudentSubmission {
     assignment: Assignment;
     latest?: ISubmission;
-    authorName?: string;
+    authorName: string;
 }
 
 /**
