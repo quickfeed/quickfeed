@@ -650,6 +650,28 @@ export namespace GroupRequest {
   }
 }
 
+export class DeleteGroupRequest extends jspb.Message {
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  getWithrepo(): boolean;
+  setWithrepo(value: boolean): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DeleteGroupRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DeleteGroupRequest): DeleteGroupRequest.AsObject;
+  static serializeBinaryToWriter(message: DeleteGroupRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DeleteGroupRequest;
+  static deserializeBinaryFromReader(message: DeleteGroupRequest, reader: jspb.BinaryReader): DeleteGroupRequest;
+}
+
+export namespace DeleteGroupRequest {
+  export type AsObject = {
+    groupid: number,
+    withrepo: boolean,
+  }
+}
+
 export class Provider extends jspb.Message {
   getProvider(): string;
   setProvider(value: string): void;
@@ -803,6 +825,32 @@ export namespace URLRequest {
   export type AsObject = {
     courseid: number,
     repotypesList: Array<Repository.Type>,
+  }
+}
+
+export class RepositoryRequest extends jspb.Message {
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RepositoryRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: RepositoryRequest): RepositoryRequest.AsObject;
+  static serializeBinaryToWriter(message: RepositoryRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RepositoryRequest;
+  static deserializeBinaryFromReader(message: RepositoryRequest, reader: jspb.BinaryReader): RepositoryRequest;
+}
+
+export namespace RepositoryRequest {
+  export type AsObject = {
+    userid: number,
+    groupid: number,
+    courseid: number,
   }
 }
 

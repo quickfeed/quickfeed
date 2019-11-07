@@ -170,6 +170,11 @@ message GroupRequest {
     uint64 courseID = 3;
 }
 
+message DeleteGroupRequest {
+    uint64 groupID = 1;
+    bool withRepo = 2;
+}
+
 message Provider {
     string provider = 1;
 }
@@ -206,6 +211,13 @@ message URLRequest {
     repeated Repository.Type repoTypes = 2;
 }
 
+// used to check whether student/group submission repo is empty
+message RepositoryRequest {
+    uint64 userID = 1;
+    uint64 groupID = 2;
+    uint64 courseID = 3;
+}
+
 message Repositories {
     map<string, string> URLs = 1;
 }
@@ -239,7 +251,7 @@ service AutograderService {
     rpc GetGroups(RecordRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 
     rpc UpdateGroup(Group) returns (Void) {}
-    rpc DeleteGroup(RecordRequest) returns (Void) {}
+    rpc DeleteGroup(DeleteGroupRequest) returns (Void) {}
 
     // courses //
 
@@ -280,4 +292,7 @@ service AutograderService {
    
     // use to batch all repository URL requests into one gRPC call
     rpc GetRepositories(URLRequest) returns (Repositories) {}
+
+    // returns status code 0 (grpc OK code) if the requested repository is empty
+    rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
 }
