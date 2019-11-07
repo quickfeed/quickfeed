@@ -383,13 +383,15 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 
 // DeleteGroup removes group record from the database.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
+func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.DeleteGroupRequest) (*pb.Void, error) {
+
+	// TODO(vera): will neen an scm passed to the web method in case we want to delete the group repo too (in.WithRepo == true)
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	grp, err := s.getGroup(in)
+	grp, err := s.getGroup(&pb.RecordRequest{ID: in.GetGroupID()})
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get group")
@@ -552,4 +554,11 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 		urls[repoType.String()] = repo
 	}
 	return &pb.Repositories{URLs: urls}, nil
+}
+
+// IsEmptyRepo ensures that group repository is empty and can be deleted
+// Access policy: Teacher of Course ID
+func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRequest) (*pb.Void, error) {
+
+	return nil, status.Errorf(codes.Unimplemented, "not implemented")
 }
