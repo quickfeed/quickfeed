@@ -24,6 +24,8 @@ import {
     User,
     Users,
     Void,
+    DeleteGroupRequest,
+    RepositoryRequest,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
@@ -190,9 +192,12 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateGroup, grp);
     }
 
-    public deleteGroup(groupid: number): Promise<IGrpcResponse<Void>> {
-        const request = new RecordRequest();
-        request.setId(groupid);
+    public deleteGroup(groupid: number, withRepo?: boolean): Promise<IGrpcResponse<Void>> {
+        const request = new DeleteGroupRequest();
+        request.setGroupid(groupid);
+        if (withRepo) {
+            request.setWithrepo(withRepo);
+        }
         return this.grpcSend<Void>(this.agService.deleteGroup, request);
     }
 
@@ -259,6 +264,14 @@ export class GrpcManager {
     public getProviders(): Promise<IGrpcResponse<Providers>> {
         const request = new Void();
         return this.grpcSend<Providers>(this.agService.getProviders, request);
+    }
+
+    public isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Void>> {
+        const request = new RepositoryRequest();
+        request.setUserid(userID);
+        request.setGroupid(groupID);
+        request.setCourseid(courseID);
+        return this.grpcSend<Void>(this.agService.isEmptyRepo, request)
     }
 
     // /* UTILITY */ //
