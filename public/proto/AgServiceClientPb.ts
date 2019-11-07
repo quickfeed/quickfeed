@@ -16,6 +16,7 @@ import {
   AuthorizationResponse,
   Course,
   Courses,
+  DeleteGroupRequest,
   Enrollment,
   EnrollmentRequest,
   Enrollments,
@@ -27,6 +28,7 @@ import {
   Providers,
   RecordRequest,
   Repositories,
+  RepositoryRequest,
   SubmissionRequest,
   Submissions,
   URLRequest,
@@ -252,14 +254,14 @@ export class AutograderServiceClient {
 
   methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: RecordRequest) => {
+    (request: DeleteGroupRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   deleteGroup(
-    request: RecordRequest,
+    request: DeleteGroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
@@ -643,6 +645,28 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoGetRepositories,
+      callback);
+  }
+
+  methodInfoIsEmptyRepo = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: RepositoryRequest) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  isEmptyRepo(
+    request: RepositoryRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/IsEmptyRepo',
+      request,
+      metadata || {},
+      this.methodInfoIsEmptyRepo,
       callback);
   }
 

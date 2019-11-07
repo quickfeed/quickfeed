@@ -91,6 +91,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetRepositories = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Repositories, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Repositories.deserializeBinary);
+        this.methodInfoIsEmptyRepo = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
         if (!options)
             options = {};
         options['format'] = 'binary';
@@ -206,6 +209,10 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.getRepositories = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetRepositories', request, metadata || {}, this.methodInfoGetRepositories, callback);
+    };
+    AutograderServiceClient.prototype.isEmptyRepo = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/IsEmptyRepo', request, metadata || {}, this.methodInfoIsEmptyRepo, callback);
     };
     return AutograderServiceClient;
 }());
