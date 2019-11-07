@@ -179,12 +179,11 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private async handleUpdateStatus(gid: number, status: Group.GroupStatus): Promise<void> {
-        const result = status === Group.GroupStatus.DELETED ?
+        // delete or update group depending on the chosen status, then refresh the page
+        status === Group.GroupStatus.DELETED ?
             await this.deleteGroup(gid) :
             await this.props.courseMan.updateGroupStatus(gid, status);
-        if (result) {
-            this.props.navMan.refresh();
-        }
+        this.props.navMan.refresh();
     }
 
     private async deleteGroup(gid: number) {
