@@ -115,7 +115,10 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
     private renderDropdownMenu(group: Group): JSX.Element {
         const links = [];
-        links.push({ name: "Approve", uri: "approve", extra: "primary" });
+        // only add approve link to not approved groups
+        if (group.getStatus() !== Group.GroupStatus.APPROVED) {
+            links.push({ name: "Approve", uri: "approve", extra: "primary" });
+        }
         links.push({ name: "Edit", uri: "edit", extra: "primary" });
         links.push({ name: "Reject", uri: "reject", extra: "danger" });
         links.push({ name: "Delete", uri: "delete", extra: "danger" });
