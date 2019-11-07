@@ -153,25 +153,16 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                     errorFlash: flashErrors,
                 });
             } else {
-                // remove students added to the new group from the list of available students
-                this.updateStudentList();
-                // clean the form fields on successful group creation
-                this.setState({
-                    name: "",
-                    selectedStudents: [],
-                });
-                if (this.props.groupData) {
-                    if (this.props.groupData.getUsersList().filter((x) =>
-                         x.getId() === this.props.curUser.getId()).length > 0) {
-                        const redirectTo: string = this.props.groupData ?
-                            this.props.pagePath + "/courses/" + this.props.course.getId() + "/groups"
-                            : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
+                    const isTeacher = await this.props.userMan.isTeacher(this.props.course.getId());
+                    // if current user is a course teacher, redirect to the groups list
+                    // TODO(vera): this is a temporary solution, there must be another way to 
+                    // inform about group creation without redirecting the user from the page
+                    const redirectTo: string = isTeacher ?
+                        "/app/teacher/courses/" + this.props.course.getId() + "/groups"
+                        : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
 
-                        this.props.navMan.navigateTo(redirectTo);
-                    }
-                } else { // Teacher created group, so no group data.
-                    this.props.navMan.refresh();
-                }
+                    this.props.navMan.navigateTo(redirectTo);
+
             }
         }
     }
