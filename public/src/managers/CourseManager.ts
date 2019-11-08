@@ -26,7 +26,7 @@ export interface ICourseProvider {
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
     createGroup(name: string, users: number[], courseId: number): Promise<Group | Status>;
     getGroup(groupID: number): Promise<Group | null>;
-    deleteGroup(groupID: number): Promise<boolean>;
+    deleteGroup(groupID: number, courseID: number, withRepo: boolean): Promise<boolean>;
     getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null>;
     updateGroup(groupData: Group): Promise<Status>;
 
@@ -38,6 +38,8 @@ export interface ICourseProvider {
     approveSubmission(submissionID: number, courseID: number): Promise<boolean>;
     refreshSubmission(id: number): Promise<boolean>;
     getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
+
+    isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
 }
 
 export class CourseManager {
@@ -285,8 +287,8 @@ export class CourseManager {
         return this.courseProvider.getGroup(groupID);
     }
 
-    public async deleteGroup(groupID: number): Promise<boolean> {
-        return this.courseProvider.deleteGroup(groupID);
+    public async deleteGroup(groupID: number, courseID: number, withRepo: boolean): Promise<boolean> {
+        return this.courseProvider.deleteGroup(groupID, courseID, withRepo);
     }
 
     /**
@@ -322,6 +324,10 @@ export class CourseManager {
 
     public async approveSubmission(submissionID: number, courseID: number): Promise<boolean> {
         return this.courseProvider.approveSubmission(submissionID, courseID);
+    }
+
+    public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
+        return this.courseProvider.isEmptyRepo(courseID, userID, groupID);
     }
 
     /**

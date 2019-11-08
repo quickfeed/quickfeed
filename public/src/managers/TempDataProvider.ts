@@ -242,7 +242,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourseGroups;
     }
 
-    public async deleteGroup(groupId: number): Promise<boolean> {
+    public async deleteGroup(groupId: number, courseID: number, withRepo: boolean): Promise<boolean> {
         throw new Error("Method not implemented");
     }
 
@@ -264,6 +264,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
     public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<ISubmission[]> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async isEmptyRepo(cid: number, uid: number, gid: number): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 

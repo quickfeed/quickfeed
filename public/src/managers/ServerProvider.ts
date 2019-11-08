@@ -185,8 +185,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async deleteGroup(groupID: number): Promise<boolean> {
-        const result = await this.grpcHelper.deleteGroup(groupID);
+    public async deleteGroup(groupID: number, courseID: number, withRepo: boolean): Promise<boolean> {
+        const result = await this.grpcHelper.deleteGroup(groupID, courseID, withRepo);
         return result.status.getCode() === 0;
     }
 
@@ -336,6 +336,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             return false;
         }
         return true;
+    }
+
+    public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
+        const result = await this.grpcHelper.isEmptyRepo(courseID, userID, groupID);
+        return result.status.getCode() === 0;
     }
 
     private toISUbmission(sbm: Submission): ISubmission {

@@ -181,10 +181,40 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
     private async handleUpdateStatus(gid: number, status: Group.GroupStatus): Promise<void> {
         const result = status === Group.GroupStatus.DELETED ?
-            await this.props.courseMan.deleteGroup(gid) :
+            await this.deleteGroup(gid) :
             await this.props.courseMan.updateGroupStatus(gid, status);
         if (result) {
             this.props.navMan.refresh();
+        }
+    }
+
+    private async deleteGroup(gid: number) {
+        let withRepos = false;
+        const cid = this.props.course.getId();
+        const isEmpty = await this.props.courseMan.isEmptyRepo(cid, 0, gid);
+        let readyToDelete = isEmpty;
+        if (!isEmpty) {
+            if (confirm(
+                `Warning! The group repository is not empty!
+                Do you want to delete group repository?`,
+            )) {
+                readyToDelete = true;
+                withRepos = true;
+            } else {
+                // ask for deletion without repos
+                if (confirm()) {
+                    withRepos = false;
+                } else {
+                    readyToDelete = false;
+                }
+            }
+        }
+        if (readyToDelete) {
+            const ans = await this.props.courseMan.deleteGroup(gid, cid, withRepos);
+            if (ans) {
+                this.props.navMan.refresh();
+            }
+
         }
     }
 
@@ -210,7 +240,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 Do you want to delete group:
 ${group.getName()}?`,
                 )) {
-                    await this.props.courseMan.deleteGroup(group.getId());
+                    await this.deleteGroup(group.getId());
                     break;
                 }
         }

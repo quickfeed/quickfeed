@@ -192,12 +192,11 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateGroup, grp);
     }
 
-    public deleteGroup(groupid: number, courseID: number, withRepo?: boolean): Promise<IGrpcResponse<Void>> {
+    public deleteGroup(groupid: number, courseID: number, withRepo: boolean): Promise<IGrpcResponse<Void>> {
         const request = new DeleteGroupRequest();
         request.setGroupid(groupid);
-        if (withRepo) {
-            request.setWithrepo(withRepo);
-        }
+        request.setCourseid(courseID);
+        request.setWithrepo(withRepo);
         return this.grpcSend<Void>(this.agService.deleteGroup, request);
     }
 
