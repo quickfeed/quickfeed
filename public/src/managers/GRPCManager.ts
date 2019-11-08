@@ -5,6 +5,7 @@ import {
     AuthorizationResponse,
     Course,
     Courses,
+    DeleteGroupRequest,
     Enrollment,
     EnrollmentRequest,
     Enrollments,
@@ -17,6 +18,7 @@ import {
     RecordRequest,
     Repositories,
     Repository,
+    RepositoryRequest,
     Status,
     SubmissionRequest,
     Submissions,
@@ -24,8 +26,6 @@ import {
     User,
     Users,
     Void,
-    DeleteGroupRequest,
-    RepositoryRequest,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
@@ -257,7 +257,7 @@ export class GrpcManager {
     public getOrganization(orgName: string): Promise<IGrpcResponse<Organization>> {
         const request = new OrgRequest();
         request.setOrgname(orgName);
-        return this.grpcSend<Organization>(this.agService.getOrganization, request)
+        return this.grpcSend<Organization>(this.agService.getOrganization, request);
     }
 
     public getProviders(): Promise<IGrpcResponse<Providers>> {
@@ -270,7 +270,7 @@ export class GrpcManager {
         request.setUserid(userID);
         request.setGroupid(groupID);
         request.setCourseid(courseID);
-        return this.grpcSend<Void>(this.agService.isEmptyRepo, request)
+        return this.grpcSend<Void>(this.agService.isEmptyRepo, request);
     }
 
     // /* UTILITY */ //

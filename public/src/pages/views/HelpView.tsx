@@ -133,8 +133,6 @@ export class HelpView extends React.Component<{}, {}> {
                                 </p>
                             </li>
                         </ol>
-
-
                     </article>
                 </div>
             </Row>

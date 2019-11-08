@@ -2,10 +2,10 @@ import * as React from "react";
 import { Course, Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { bindFunc, RProp, slugify } from "../../helper";
+import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
-import { generateGroupRepoLink } from "./groupHelper"
+import { generateGroupRepoLink } from "./groupHelper";
 
 interface ICourseGroupProps {
     approvedGroups: Group[];
@@ -113,7 +113,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         return selector;
     }
 
-
     private renderDropdownMenu(group: Group): JSX.Element {
         const links = [];
         links.push({ name: "Approve", uri: "approve", extra: "primary" });
@@ -214,7 +213,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             if (ans) {
                 this.props.navMan.refresh();
             }
-
         }
     }
 
@@ -236,9 +234,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             case "delete":
                 if (confirm(
                     `Warning! This action is irreversible!
-
-Do you want to delete group:
-${group.getName()}?`,
+                    Do you want to delete group: ${group.getName()}?`,
                 )) {
                     await this.deleteGroup(group.getId());
                     break;
