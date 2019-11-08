@@ -37,12 +37,34 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 
 // DeleteGroup deletes a pending or rejected group for the given gid.
 func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.DeleteGroupRequest) error {
-	_, err := s.db.GetGroup(request.GetGroupID())
+	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
 		return err
 	}
 
 	// if withRepo is true, delete repo and team (needs scm)
+	if request.WithRepo {
+		// get course organization ID
+		course, err := s.db.GetCourse(request.GetCourseID())
+		if err != nil {
+			return err
+		}
+
+		// get group repositories
+		repos, err := s.db.GetRepositories(&pb.Repository{OrganizationID: course.GetOrganizationID(), GroupID: group.GetID(), RepoType: pb.Repository_GROUP})
+		if err != nil {
+			return err
+		}
+
+		// there should be only one repo for the given group and course
+		if len(repos) != 1 {
+			return fmt.Errorf("deleteGroup failed: group %s has %d repositories for the course, expected one", group.GetName(), len(repos))
+		}
+
+		if err = deleteGroupRepoAndTeam(ctx, sc, repos[0].GetID(), group.GetTeamID()); err != nil {
+			return err
+		}
+	}
 
 	return s.db.DeleteGroup(request.GetGroupID())
 }
@@ -198,5 +220,3 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 	}
 	return users, nil
 }
-
-
