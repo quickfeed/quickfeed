@@ -36,13 +36,13 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 }
 
 // DeleteGroup deletes a pending or rejected group for the given gid.
-func (s *AutograderService) deleteGroup(request *pb.DeleteGroupRequest) error {
+func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.DeleteGroupRequest) error {
 	_, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
 		return err
 	}
 
-	// TODO(vera): if withRepo is true, delete repo
+	// if withRepo is true, delete repo and team (needs scm)
 
 	return s.db.DeleteGroup(request.GetGroupID())
 }
@@ -199,12 +199,4 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 	return users, nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, group *pb.Group) error {
-	opt := &scm.CreateTeamOptions{
-		Organization: org,
-		TeamName:     group.Name,
-		TeamID:       group.TeamID,
-		Users:        group.UserNames(),
-	}
-	return sc.UpdateTeamMembers(ctx, opt)
-}
+
