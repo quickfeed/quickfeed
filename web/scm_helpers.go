@@ -26,7 +26,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
 	}
 
-	team, err := sc.CreateTeam(ctx, &scm.CreateTeamOptions{
+	team, err := sc.CreateTeam(ctx, &scm.TeamOptions{
 		Organization: org,
 		TeamName:     teamName,
 		Users:        userNames,

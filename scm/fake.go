@@ -130,19 +130,19 @@ func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error 
 }
 
 // CreateTeam implements the SCM interface.
-func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+func (s *FakeSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
 	return &Team{ID: 1, Name: "", URL: ""}, nil
 }
 
 // DeleteTeam implements the SCM interface.
-func (s *FakeSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error {
+func (s *FakeSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }
 
 // GetTeam implements the SCM interface
-func (s *FakeSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+func (s *FakeSCM) GetTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }
@@ -166,7 +166,7 @@ func (s *FakeSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptio
 }
 
 // UpdateTeamMembers implements the SCM interface.
-func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
+func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

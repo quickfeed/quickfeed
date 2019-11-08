@@ -169,19 +169,19 @@ func (s *GitlabSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) erro
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }
 
 // DeleteTeam implements the SCM interface.
-func (s *GitlabSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error {
+func (s *GitlabSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }
 
 // GetTeam implements the SCM interface
-func (s *GitlabSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+func (s *GitlabSCM) GetTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }
@@ -205,7 +205,7 @@ func (s *GitlabSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 }
 
 // UpdateTeamMembers implements the SCM interface
-func (s *GitlabSCM) UpdateTeamMembers(context.Context, *CreateTeamOptions) error {
+func (s *GitlabSCM) UpdateTeamMembers(context.Context, *TeamOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

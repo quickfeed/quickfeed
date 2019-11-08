@@ -36,11 +36,11 @@ type SCM interface {
 	// Create an organization level webhook
 	CreateOrgHook(context.Context, *OrgHookOptions) error
 	// Create team.
-	CreateTeam(context.Context, *CreateTeamOptions) (*Team, error)
+	CreateTeam(context.Context, *TeamOptions) (*Team, error)
 	// Delete team.
-	DeleteTeam(context.Context, *CreateTeamOptions) error
+	DeleteTeam(context.Context, *TeamOptions) error
 	// Get a single team by ID or name
-	GetTeam(context.Context, *CreateTeamOptions) (*Team, error)
+	GetTeam(context.Context, *TeamOptions) (*Team, error)
 	// Fetch all teams for organization
 	GetTeams(context.Context, *pb.Organization) ([]*Team, error)
 	// Add repo to team.
@@ -49,8 +49,8 @@ type SCM interface {
 	AddTeamMember(context.Context, *TeamMembershipOptions) error
 	// RemoveTeamMember removes team member
 	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
-	// UpdateTeamMembers adds or removes members of an existing team based on list of users in CreateTeamOptions
-	UpdateTeamMembers(context.Context, *CreateTeamOptions) error
+	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions
+	UpdateTeamMembers(context.Context, *TeamOptions) error
 	// GetUserName returns the currently logged in user's login name.
 	GetUserName(context.Context) (string, error)
 	// GetUserNameByID returns the login name of user with the given remoteID.
@@ -141,8 +141,8 @@ type OrgHookOptions struct {
 	Organization *pb.Organization
 }
 
-// CreateTeamOptions contains information about the team and the users of the team.
-type CreateTeamOptions struct {
+// TeamOptions contains information about the team and the users of the team.
+type TeamOptions struct {
 	Organization *pb.Organization
 	TeamName     string
 	TeamID       uint64

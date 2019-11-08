@@ -327,7 +327,7 @@ func (s *GithubSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) erro
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	if !opt.validWithOrg() {
 		return nil, ErrMissingFields{
 			Method:  "CreateTeam",
@@ -359,7 +359,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Te
 }
 
 // DeleteTeam implements the SCM interface.
-func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) error {
+func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
 			Method:  "DeleteTeam",
@@ -378,7 +378,7 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *CreateTeamOptions) erro
 }
 
 // GetTeam implements the SCM interface
-func (s *GithubSCM) GetTeam(ctx context.Context, opt *CreateTeamOptions) (scmTeam *Team, err error) {
+func (s *GithubSCM) GetTeam(ctx context.Context, opt *TeamOptions) (scmTeam *Team, err error) {
 	if !opt.valid() {
 		return nil, ErrMissingFields{
 			Method:  "GetTeam",
@@ -433,7 +433,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	team, err := s.GetTeam(ctx, &CreateTeamOptions{
+	team, err := s.GetTeam(ctx, &TeamOptions{
 		Organization: opt.Organization,
 		TeamName:     opt.TeamSlug,
 		TeamID:       uint64(opt.TeamID),
@@ -458,7 +458,7 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	team, err := s.GetTeam(ctx, &CreateTeamOptions{Organization: opt.Organization, TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
+	team, err := s.GetTeam(ctx, &TeamOptions{Organization: opt.Organization, TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
 	if err != nil {
 		return fmt.Errorf("RemoveTeamMember: failed to get GitHub team '%s': %w", opt.TeamSlug, err)
 	}
@@ -485,7 +485,7 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 }
 
 // UpdateTeamMembers implements the SCM interface
-func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *CreateTeamOptions) error {
+func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
 			Method:  "UpdateTeamMembers",

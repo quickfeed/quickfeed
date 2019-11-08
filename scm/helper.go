@@ -90,13 +90,13 @@ func (opt OrgHookOptions) valid() bool {
 		opt.URL != ""
 }
 
-func (opt CreateTeamOptions) validWithOrg() bool {
+func (opt TeamOptions) validWithOrg() bool {
 	return opt.Organization != nil &&
 		opt.Organization.IsValid() &&
 		opt.valid()
 }
 
-func (opt CreateTeamOptions) valid() bool {
+func (opt TeamOptions) valid() bool {
 	return opt.TeamName != "" || opt.TeamID > 0
 }
 
