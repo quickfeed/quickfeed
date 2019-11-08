@@ -449,7 +449,7 @@ func TestDeleteGroup(t *testing.T) {
 	}
 
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = ags.DeleteGroup(ctx, &pb.DeleteGroupRequest{GroupID: respGroup.ID})
+	_, err = ags.DeleteGroup(ctx, &pb.DeleteGroupRequest{GroupID: respGroup.ID, CourseID: testCourse.ID})
 	if err != nil {
 		t.Fatal(err)
 	}

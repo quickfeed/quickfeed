@@ -386,7 +386,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.DeleteGroupRequest) (*pb.Void, error) {
 
 	// TODO(vera): will neen an scm passed to the web method in case we want to delete the group repo too (in.WithRepo == true)
-	usr, err := s.getCurrentUser(ctx)
+	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
@@ -400,7 +400,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.DeleteGroupR
 		s.logger.Error("DeleteGroup failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can delete groups")
 	}
-	if err = s.deleteGroup(in); err != nil {
+	if err = s.deleteGroup(ctx, scm, in); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %w", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to delete group")
 	}
