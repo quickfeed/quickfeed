@@ -654,6 +654,9 @@ export class DeleteGroupRequest extends jspb.Message {
   getGroupid(): number;
   setGroupid(value: number): void;
 
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
   getWithrepo(): boolean;
   setWithrepo(value: boolean): void;
 
@@ -668,6 +671,7 @@ export class DeleteGroupRequest extends jspb.Message {
 export namespace DeleteGroupRequest {
   export type AsObject = {
     groupid: number,
+    courseid: number,
     withrepo: boolean,
   }
 }
