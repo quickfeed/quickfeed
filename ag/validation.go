@@ -105,6 +105,15 @@ func (req URLRequest) IsValid() bool {
 	return true
 }
 
+// IsValid checks that the request has positive course ID
+// and either user ID or group ID is set
+func (req RepositoryRequest) IsValid() bool {
+	uid, gid := req.GetUserID(), req.GetGroupID()
+	return req.GetCourseID() > 0 &&
+		(uid == 0 && gid > 0) ||
+		(uid > 0 && gid == 0)
+}
+
 // IsValid checks required fields of an action request.
 // It must have a positive course ID and
 // a positive user ID or group ID but not both.
@@ -124,6 +133,11 @@ func (req ApproveSubmissionRequest) IsValid() bool {
 func (req GroupRequest) IsValid() bool {
 	uid, gid := req.GetUserID(), req.GetGroupID()
 	return (uid > 0 || gid > 0) && req.GetCourseID() > 0
+}
+
+// IsValid checks that group ID and course ID are set
+func (req DeleteGroupRequest) IsValid() bool {
+	return req.GetGroupID() > 0 && req.GetCourseID() > 0
 }
 
 // IsValid checks that course ID is positive.
