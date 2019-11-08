@@ -47,6 +47,11 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	return repo, team, nil
 }
 
+func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repo *scm.RepositoryOptions, team *scm.TeamOptions) error {
+
+	return nil
+}
+
 // creates {username}-labs repository and provides pull/push access to it for the given student
 func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, path string, student string) (*scm.Repository, error) {
 	// we have to check that repository for given user has not already been created on github
@@ -113,4 +118,14 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 		return err
 	}
 	return nil
+}
+
+func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, group *pb.Group) error {
+	opt := &scm.TeamOptions{
+		Organization: org,
+		TeamName:     group.Name,
+		TeamID:       group.TeamID,
+		Users:        group.UserNames(),
+	}
+	return sc.UpdateTeamMembers(ctx, opt)
 }
