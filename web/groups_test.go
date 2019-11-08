@@ -414,6 +414,7 @@ func TestDeleteGroup(t *testing.T) {
 		Tag:            "Spring",
 		Provider:       "fake",
 		OrganizationID: 1,
+		ID:             1,
 	}
 	admin := createFakeUser(t, db, 1)
 	if err := db.CreateCourse(admin.ID, &testCourse); err != nil {

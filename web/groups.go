@@ -61,7 +61,7 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 			return fmt.Errorf("deleteGroup failed: group %s has %d repositories for the course, expected one", group.GetName(), len(repos))
 		}
 
-		if err = deleteGroupRepoAndTeam(ctx, sc, repos[0].GetID(), group.GetTeamID()); err != nil {
+		if err = deleteGroupRepoAndTeam(ctx, sc, repos[0].GetRepositoryID(), group.GetTeamID()); err != nil {
 			return err
 		}
 	}
