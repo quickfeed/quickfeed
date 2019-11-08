@@ -172,7 +172,8 @@ message GroupRequest {
 
 message DeleteGroupRequest {
     uint64 groupID = 1;
-    bool withRepo = 2;
+    uint64 courseID = 2;
+    bool withRepo = 3;
 }
 
 message Provider {

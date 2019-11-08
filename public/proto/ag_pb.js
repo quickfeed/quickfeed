@@ -5273,7 +5273,8 @@ proto.DeleteGroupRequest.prototype.toObject = function(opt_includeInstance) {
 proto.DeleteGroupRequest.toObject = function(includeInstance, msg) {
   var obj = {
     groupid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    withrepo: jspb.Message.getFieldWithDefault(msg, 2, false)
+    courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    withrepo: jspb.Message.getFieldWithDefault(msg, 3, false)
   };
 
   if (includeInstance) {
@@ -5315,6 +5316,10 @@ proto.DeleteGroupRequest.deserializeBinaryFromReader = function(msg, reader) {
       msg.setGroupid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setCourseid(value);
+      break;
+    case 3:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setWithrepo(value);
       break;
@@ -5354,10 +5359,17 @@ proto.DeleteGroupRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getCourseid();
+  if (f !== 0) {
+    writer.writeUint64(
+      2,
+      f
+    );
+  }
   f = message.getWithrepo();
   if (f) {
     writer.writeBool(
-      2,
+      3,
       f
     );
   }
@@ -5380,19 +5392,34 @@ proto.DeleteGroupRequest.prototype.setGroupid = function(value) {
 
 
 /**
- * optional bool withRepo = 2;
+ * optional uint64 courseID = 2;
+ * @return {number}
+ */
+proto.DeleteGroupRequest.prototype.getCourseid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/** @param {number} value */
+proto.DeleteGroupRequest.prototype.setCourseid = function(value) {
+  jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional bool withRepo = 3;
  * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
  * You should avoid comparisons like {@code val === true/false} in those cases.
  * @return {boolean}
  */
 proto.DeleteGroupRequest.prototype.getWithrepo = function() {
-  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 2, false));
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 3, false));
 };
 
 
 /** @param {boolean} value */
 proto.DeleteGroupRequest.prototype.setWithrepo = function(value) {
-  jspb.Message.setProto3BooleanField(this, 2, value);
+  jspb.Message.setProto3BooleanField(this, 3, value);
 };
 
 
