@@ -137,3 +137,16 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, grou
 	}
 	return sc.UpdateTeamMembers(ctx, opt)
 }
+
+func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) (bool, error) {
+	for _, r := range repos {
+		repo, err := sc.GetRepository(ctx, &scm.RepositoryOptions{ID: r.GetRepositoryID()})
+		if err != nil {
+			return false, err
+		}
+		if repo.Size > 0 {
+			return false, nil
+		}
+	}
+	return true, nil
+}
