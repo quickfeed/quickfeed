@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -38,8 +37,6 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 
 // DeleteGroup deletes a pending or rejected group for the given gid.
 func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.DeleteGroupRequest) error {
-	log.Printf("DeleteGroup got reuest: %+v", request)
-
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
 		return err
