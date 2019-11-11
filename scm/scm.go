@@ -100,6 +100,7 @@ type Repository struct {
 	SSHURL  string // SSH clone URL.
 	HTTPURL string // HTTP(S) clone URL.
 	OrgID   uint64
+	Size    uint64
 }
 
 // RepositoryOptions used to fetch a single repository by ID or name

@@ -624,5 +624,6 @@ func toRepository(repo *github.Repository) *Repository {
 		SSHURL:  repo.GetSSHURL(),
 		HTTPURL: repo.GetCloneURL(),
 		OrgID:   uint64(repo.Organization.GetID()),
+		Size:    uint64(repo.GetSize()),
 	}
 }
