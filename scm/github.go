@@ -3,6 +3,7 @@ package scm
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"go.uber.org/zap"
@@ -235,6 +236,29 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 	}
 	_, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, user, opt)
 	return err
+}
+
+// GetRepositoryCommits implements the SCM interface
+func (s *GithubSCM) GetRepositoryCommits(ctx context.Context, opt *RepositoryOptions) (int, error) {
+
+	repo, err := s.GetRepository(ctx, opt)
+	if err != nil {
+		return 0, err
+	}
+
+	// test to check how repo commits look like
+	commits, _, err := s.client.Repositories.ListCommits(ctx, repo.Owner, repo.Path, nil)
+	if err != nil {
+		return 0, err
+	}
+	log.Println("Got ", len(commits), " commits for repo ", repo.Path)
+	for i, com := range commits {
+		log.Println("Commit ", i+1, ": ", com)
+	}
+
+	log.Println("GetRepository got repository ", repo.Path, " of size ", repo.Size)
+
+	return len(commits), nil
 }
 
 // ListHooks implements the SCM interface.

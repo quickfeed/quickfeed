@@ -29,6 +29,8 @@ type SCM interface {
 	DeleteRepository(context.Context, *RepositoryOptions) error
 	// Add user as repository collaborator with provided permissions
 	UpdateRepoAccess(context.Context, *Repository, string, string) error
+	// Returns number of commits in the given repository
+	GetRepositoryCommits(context.Context, *RepositoryOptions) (int, error)
 	// List the webhooks associated with the provided repository.
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
 	// Creates a new webhook.
