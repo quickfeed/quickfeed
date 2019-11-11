@@ -255,20 +255,20 @@ func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint
 	return repos[0].HTMLURL, nil
 }
 
-func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) (bool, error) {
+func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
 
 	course, err := s.db.GetCourse(request.GetCourseID())
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	repos, err := s.db.GetRepositories(&pb.Repository{OrganizationID: course.GetOrganizationID(), UserID: request.GetUserID(), GroupID: request.GetGroupID()})
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if len(repos) < 1 {
-		return false, fmt.Errorf("no repositories found")
+		return fmt.Errorf("no repositories found")
 	}
 
 	return isEmpty(ctx, sc, repos)
