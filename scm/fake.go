@@ -108,10 +108,10 @@ func (s *FakeSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user, 
 	return nil
 }
 
-// GetRepositoryCommits implements the SCM interface
-func (s *FakeSCM) GetRepositoryCommits(ctx context.Context, opt *RepositoryOptions) (int, error) {
+// RepositoryIsEmpty implements the SCM interface
+func (s *FakeSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
 	// TODO no implementation provided yet
-	return 0, nil
+	return false
 }
 
 // ListHooks implements the SCM interface.
