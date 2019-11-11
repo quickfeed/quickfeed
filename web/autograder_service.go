@@ -567,14 +567,9 @@ func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRe
 
 	//TODO: add access control here
 
-	ans, err := s.isEmptyRepo(ctx, scm, in)
-	if err != nil {
+	if err := s.isEmptyRepo(ctx, scm, in); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %w", err)
-		return nil, status.Errorf(codes.NotFound, "group repository not found")
-	}
-
-	if !ans {
-		return nil, status.Errorf(codes.FailedPrecondition, "repository not empty")
+		return nil, status.Errorf(codes.FailedPrecondition, "group repository does not exist or not empty")
 	}
 
 	return &pb.Void{}, nil
