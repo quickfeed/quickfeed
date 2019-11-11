@@ -559,13 +559,16 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 // IsEmptyRepo ensures that group repository is empty and can be deleted
 // Access policy: Teacher of Course ID
 func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRequest) (*pb.Void, error) {
-	_, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
+	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: scm authentication error: %w", err)
 		return nil, err
 	}
 
-	//TODO: add access control here
+	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
+		s.logger.Error("IsEmptyRepo failed: user is not teacher")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can access repository info")
+	}
 
 	if err := s.isEmptyRepo(ctx, scm, in); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %w", err)
