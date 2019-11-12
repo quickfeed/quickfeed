@@ -31,7 +31,7 @@ type Database interface {
 	SetAdmin(uint64) error
 
 	CreateCourse(uint64, *pb.Course) error
-	GetCourse(uint64) (*pb.Course, error)
+	GetCourse(uint64, bool) (*pb.Course, error)
 	GetCourseByOrganizationID(did uint64) (*pb.Course, error)
 	GetCourses(...uint64) ([]*pb.Course, error)
 	GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
@@ -64,7 +64,7 @@ type Database interface {
 	GetSubmission(query *pb.Submission) (*pb.Submission, error)
 	// GetSubmissions returns a list of submission entries for the given course, matching the given query.
 	GetSubmissions(cid uint64, query *pb.Submission) ([]*pb.Submission, error)
-	GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error)
+	GetCourseSubmissions(cid uint64) ([]pb.Submission, error)
 
 	// CreateGroup creates a new group and assign users to newly created group.
 	CreateGroup(*pb.Group) error
