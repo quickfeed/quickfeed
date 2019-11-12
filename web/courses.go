@@ -3,6 +3,9 @@ package web
 import (
 	"context"
 	"fmt"
+	"log"
+	"sort"
+	"time"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -174,7 +177,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 
 // GetCourse returns a course object for the given course id.
 func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
-	return s.db.GetCourse(courseID)
+	return s.db.GetCourse(courseID, false)
 }
 
 // getSubmissions returns all the latests submissions for a user of the given course.
@@ -192,7 +195,61 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 }
 
 func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultLink, error) {
-	return s.db.GetCourseSubmissions(request.GetCourseID())
+
+	start := time.Now()
+
+	// get all individual lab submissions made by students with active enrollments in the course
+	allLabs, err := s.db.GetCourseSubmissions(request.GetCourseID())
+	if err != nil {
+		return nil, err
+	}
+
+	allCourseLabs := make([]*pb.LabResultLink, 0)
+
+	// make a local map to store database values to avoid querying the database multiple times
+	// format: [studentID][assignmentID]{latest submission}
+	labCache := make(map[uint64]map[uint64]pb.Submission)
+
+	// populate cache map with student labs, filtering the latest submissions for every assignment
+	for _, lab := range allLabs {
+		_, ok := labCache[lab.GetUserID()]
+		if !ok {
+			labCache[lab.GetUserID()] = make(map[uint64]pb.Submission)
+		}
+
+		labCache[lab.GetUserID()][lab.GetAssignmentID()] = lab
+	}
+
+	// fetch course record with all assignments and active enrollments
+	course, err := s.db.GetCourse(request.GetCourseID(), true)
+
+	// populate the final slice to return to the client
+	for _, usr := range course.Enrollments {
+		// collect all submission values for the user
+		userSubmissions := make([]*pb.Submission, 0)
+		for _, v := range labCache[usr.GetUserID()] {
+			var tmp pb.Submission
+			tmp = v
+			userSubmissions = append(userSubmissions, &tmp)
+		}
+
+		// sort latest submissions by lab ID
+		sort.Slice(userSubmissions, func(i, j int) bool {
+			return userSubmissions[i].GetAssignmentID() < userSubmissions[j].GetAssignmentID()
+		})
+
+		labResult := &pb.LabResultLink{
+			AuthorName:  usr.GetUser().GetName(),
+			Enrollment:  usr,
+			Submissions: userSubmissions,
+		}
+
+		allCourseLabs = append(allCourseLabs, labResult)
+
+	}
+
+	log.Println("New method: fetching all user submissions took: ", time.Since(start))
+	return allCourseLabs, nil
 }
 
 // approveSubmission approves the given submission.
@@ -203,7 +260,7 @@ func (s *AutograderService) approveSubmission(submissionID uint64) error {
 // updateCourse updates an existing course.
 func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, request *pb.Course) error {
 	// ensure the course exists
-	_, err := s.db.GetCourse(request.ID)
+	_, err := s.db.GetCourse(request.ID, false)
 	if err != nil {
 		return err
 	}
@@ -237,7 +294,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 
 // getRepositoryURL returns the repository information
 func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint64, repoType pb.Repository_Type) (string, error) {
-	course, err := s.db.GetCourse(courseID)
+	course, err := s.db.GetCourse(courseID, false)
 	if err != nil {
 		return "", err
 	}
