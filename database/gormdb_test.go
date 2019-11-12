@@ -790,7 +790,7 @@ func TestGormDBGetCourse(t *testing.T) {
 	}
 
 	// Get the created course.
-	createdCourse, err := db.GetCourse(course.ID)
+	createdCourse, err := db.GetCourse(course.ID, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -835,7 +835,7 @@ func TestGormDBGetCourseNoRecord(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.GetCourse(10); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetCourse(10, false); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 
@@ -875,7 +875,7 @@ func TestGormDBUpdateCourse(t *testing.T) {
 	}
 
 	// Get the updated course.
-	updatedCourse, err := db.GetCourse(course.ID)
+	updatedCourse, err := db.GetCourse(course.ID, false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -137,7 +137,7 @@ func TestNewCourse(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		course, err := db.GetCourse(respCourse.ID)
+		course, err := db.GetCourse(respCourse.ID, false)
 		if err != nil {
 			t.Fatal(err)
 		}
