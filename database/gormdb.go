@@ -637,6 +637,7 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserSta
 // If withInfo is true, preloads course assignments and active enrollments
 func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 	m := db.conn
+	var course pb.Course
 
 	if withInfo {
 
@@ -645,15 +646,15 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 			pb.Enrollment_STUDENT,
 			pb.Enrollment_TEACHER,
 		}
-		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Error; err != nil {
+		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").First(&course, cid).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		if err := m.First(&course, cid).Error; err != nil {
 			return nil, err
 		}
 	}
 
-	var course pb.Course
-	if err := m.First(&course, cid).Error; err != nil {
-		return nil, err
-	}
 	return &course, nil
 }
 
