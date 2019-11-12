@@ -93,7 +93,7 @@ func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 // TODO(meling) this function must be broken up and simplified
 func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
 	// course must exist in the database
-	course, err := s.db.GetCourse(request.CourseID)
+	course, err := s.db.GetCourse(request.CourseID, false)
 	if err != nil {
 		return err
 	}

@@ -21,7 +21,7 @@ func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, er
 
 // updateAssignments updates the assignments for the given course
 func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, courseID uint64) error {
-	course, err := s.db.GetCourse(courseID)
+	course, err := s.db.GetCourse(courseID, false)
 	if err != nil {
 		return err
 	}
