@@ -3,9 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
-	"time"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -196,8 +194,6 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 
 func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultLink, error) {
 
-	start := time.Now()
-
 	// get all individual lab submissions made by students with active enrollments in the course
 	allLabs, err := s.db.GetCourseSubmissions(request.GetCourseID())
 	if err != nil {
@@ -247,8 +243,6 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 		allCourseLabs = append(allCourseLabs, labResult)
 
 	}
-
-	log.Println("New method: fetching all user submissions took: ", time.Since(start))
 	return allCourseLabs, nil
 }
 

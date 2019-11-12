@@ -3,7 +3,6 @@ package database
 import (
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 
 	pb "github.com/autograde/aguis/ag"
@@ -400,10 +399,6 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]pb.Submission, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// debugging
-	log.Println("Got ", len(course.Assignments), " assignments")
-	log.Println("Got ", len(course.Enrollments), " enrollments")
 
 	// get IDs of all non-group labs for the course
 	courseAssignmentIDs := make([]uint64, 0)
