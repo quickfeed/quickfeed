@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"time"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/jinzhu/gorm"
@@ -391,26 +390,20 @@ func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 	return db.conn.Model(&pb.Submission{}).Update(submission).Error
 }
 
-// GetCourseSubmissions does the thing
-func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) {
-
-	start := time.Now()
-	// preload assignments and active enrollments for the course
-
-	userStates := []pb.Enrollment_UserStatus{
-		pb.Enrollment_STUDENT,
-		pb.Enrollment_TEACHER,
-	}
+// GetCourseSubmissions returns all individual lab submissions for the course
+func (db *GormDB) GetCourseSubmissions(cid uint64) ([]pb.Submission, error) {
 
 	m := db.conn
 
 	// fetch the course entry with all associated assignments and active enrollments
-	var course pb.Course
-	if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").First(&course, cid).Error; err != nil {
+	course, err := db.GetCourse(cid, true)
+	if err != nil {
 		return nil, err
 	}
 
-	allCourseLabs := make([]*pb.LabResultLink, 0)
+	// debugging
+	log.Println("Got ", len(course.Assignments), " assignments")
+	log.Println("Got ", len(course.Enrollments), " enrollments")
 
 	// get IDs of all non-group labs for the course
 	courseAssignmentIDs := make([]uint64, 0)
@@ -420,52 +413,12 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]*pb.LabResultLink, error) 
 		}
 	}
 
-	// make a local map to store database values to avoid querying the database multiple times
-	// format: [studentID][assignmentID]{latest submission}
-	labCache := make(map[uint64]map[uint64]pb.Submission)
-
 	var allLabs []pb.Submission
 	if err := m.Where("assignment_id IN (?)", courseAssignmentIDs).Find(&allLabs).Error; err != nil {
 		return nil, err
 	}
 
-	// populate cache map with student labs, filtering the latest submissions for every assignment
-	for _, lab := range allLabs {
-		_, ok := labCache[lab.GetUserID()]
-		if !ok {
-			labCache[lab.GetUserID()] = make(map[uint64]pb.Submission)
-		}
-
-		labCache[lab.GetUserID()][lab.GetAssignmentID()] = lab
-	}
-
-	// populate the final slice to return to the client
-	for _, usr := range course.Enrollments {
-		// collect all submission values for the user
-		userSubmissions := make([]*pb.Submission, 0)
-		for _, v := range labCache[usr.GetUserID()] {
-			var tmp pb.Submission
-			tmp = v
-			userSubmissions = append(userSubmissions, &tmp)
-		}
-
-		// sort latest submissions by lab ID
-		sort.Slice(userSubmissions, func(i, j int) bool {
-			return userSubmissions[i].GetAssignmentID() < userSubmissions[j].GetAssignmentID()
-		})
-
-		labResult := &pb.LabResultLink{
-			AuthorName:  usr.GetUser().GetName(),
-			Enrollment:  usr,
-			Submissions: userSubmissions,
-		}
-
-		allCourseLabs = append(allCourseLabs, labResult)
-
-	}
-
-	log.Println("New method: fetching all user submissions took: ", time.Since(start))
-	return allCourseLabs, nil
+	return allLabs, nil
 }
 
 // GetSubmission fetches a submission record
@@ -681,9 +634,24 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserSta
 }
 
 // GetCourse fetches course by ID.
-func (db *GormDB) GetCourse(cid uint64) (*pb.Course, error) {
+// If withInfo is true, preloads course assignments and active enrollments
+func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
+	m := db.conn
+
+	if withInfo {
+
+		// we only want submission from users enrolled in the course
+		userStates := []pb.Enrollment_UserStatus{
+			pb.Enrollment_STUDENT,
+			pb.Enrollment_TEACHER,
+		}
+		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Error; err != nil {
+			return nil, err
+		}
+	}
+
 	var course pb.Course
-	if err := db.conn.First(&course, cid).Error; err != nil {
+	if err := m.First(&course, cid).Error; err != nil {
 		return nil, err
 	}
 	return &course, nil
