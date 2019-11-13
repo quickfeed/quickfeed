@@ -224,7 +224,6 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         const accessLinkString = "https://github.com/organizations/" + orgName + "/settings/oauth_application_policy";
         const accessLink = <a href={accessLinkString}>here</a>;
         const result = await this.props.courseMan.getOrganization(orgName);
-        const orgs: Organization[] = [];
         if (result instanceof Status) {
             this.setState({
                 success: 2,
