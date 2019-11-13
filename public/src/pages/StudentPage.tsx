@@ -208,6 +208,7 @@ export class StudentPage extends ViewPage {
                 const repos = await this.courseMan.getRepositories(
                     courseID,
                     [Repository.Type.USER,
+                    Repository.Type.GROUP,
                     Repository.Type.COURSEINFO,
                     Repository.Type.ASSIGNMENTS],
                     );
@@ -215,6 +216,11 @@ export class StudentPage extends ViewPage {
                 allLinks.push({
                     name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
                 });
+                // if there is a group repository, push it too
+                allLinks.push({
+                    name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
+                });
+
                 allLinks.push({
                     name: "Course Info", uri: repos.get(Repository.Type.COURSEINFO), absolute: true,
                 });
