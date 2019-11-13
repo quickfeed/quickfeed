@@ -27,6 +27,7 @@ interface IGroupState {
     selectedStudents: IUserRelation[];
     curUser: IUserRelation | undefined;
     errorFlash: JSX.Element | null;
+    actionReady: boolean;
 }
 
 export class GroupForm extends React.Component<IGroupProps, IGroupState> {
@@ -41,6 +42,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
             selectedStudents: ss,
             curUser: currentUser,
             errorFlash: null,
+            actionReady: true,
         };
     }
 
@@ -122,7 +124,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                         <div className="col-sm-offset-5 col-sm-2">
                             <button
                                 className="btn btn-primary active"
-                                type="submit">{this.props.groupData ? "Update" : "Create"}
+                                type="submit">{this.generateButtonString()}
                             </button>
                         </div>
                     </div>
@@ -140,6 +142,9 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                 errorFlash: flashErrors,
             });
         } else {
+            this.setState({
+                actionReady: false,
+            });
             const userids = this.state.selectedStudents.map((u, i) => u.user.getId());
             const result = this.props.groupData ?
                 await this.updateGroup(this.state.name, userids, this.props.groupData.getId())
@@ -310,12 +315,10 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         return as;
     }
 
-    private updateStudentList() {
-        for (const std of this.state.selectedStudents) {
-            const index = this.state.students.indexOf(std);
-            if (index >= 0) {
-                this.state.students.splice(index, 1);
-            }
+    private generateButtonString(): string {
+        if (this.props.groupData) {
+            return this.state.actionReady ? "Update" : "Updating";
         }
+        return this.state.actionReady ? "Create" : "Creating";
     }
 }
