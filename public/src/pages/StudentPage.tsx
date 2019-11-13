@@ -224,7 +224,7 @@ export class StudentPage extends ViewPage {
 
                 allLinks.push({ name: "Settings" });
                 allLinks.push({
-                    name: "Members", uri: this.pagePath + "/courses/" + courseID + "/members",
+                    name: "New Group", uri: this.pagePath + "/courses/" + courseID + "/members",
                 });
                 coursesLinks.push({
                     item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + courseID },
