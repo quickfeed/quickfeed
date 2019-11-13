@@ -41,6 +41,7 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}/results", this.results);
         this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
+        this.navHelper.registerFunction("courses/{cid}/new_group", this.newGroup);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
         this.navHelper.registerFunction("courses/{cid}/info", this.courseInformation);
         this.navHelper.registerFunction("courses/{cid}/assignmentinfo", this.assignmentInformation);
@@ -218,12 +219,42 @@ export class TeacherPage extends ViewPage {
         });
     }
 
+    public async newGroup(info: INavInfo<{ cid: number }>): View {
+        console.log("New group method called for course " + info.params.cid)
+        const courseId = info.params.cid;
+        const course = await this.courseMan.getCourse(courseId);
+        const curUser = this.userMan.getCurrentUser();
+
+        if (course && curUser) {
+            // get full list of students and teachers
+            const students = await this.courseMan.getUsersForCourse(
+                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            // get list of users who are not in group
+            const freeStudents = await this.courseMan.getUsersForCourse(
+                course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            return <GroupForm
+                className="form-horizontal"
+                students={students}
+                freeStudents={freeStudents}
+                course={course}
+                curUser={curUser}
+                courseMan={this.courseMan}
+                userMan={this.userMan}
+                navMan={this.navMan}
+                pagePath={this.pagePath}
+            />;
+        } else {
+            console.log("New group link error: course: " + courseId + "and user: " + curUser)
+        }
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+    }
+
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
         const courseId = parseInt(info.params.cid, 10);
         const groupId = parseInt(info.params.gid, 10);
 
         const course = await this.courseMan.getCourse(courseId);
-        const curUser = await this.userMan.getCurrentUser();
+        const curUser = this.userMan.getCurrentUser();
         const group: Group | null = await this.courseMan.getGroup(groupId);
         if (course && curUser && group) {
             // get full list of students and teachers
@@ -291,6 +322,7 @@ export class TeacherPage extends ViewPage {
                 { name: "Group Results", uri: link.uri + "/groupresults" },
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
+                { name: "New Group", uri: link.uri + "/new_group"},
                 // {name: "Settings", uri: link.uri + "/settings" },
                 { name: "Repositories" },
                 { name: "Course Info", uri: link.uri + "/info" },
