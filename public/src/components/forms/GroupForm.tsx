@@ -175,14 +175,6 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
             }
         }
     }
-    private genCurUserMissingFromGroupWarn(): JSX.Element {
-        const flash: JSX.Element =
-            <div className="alert alert-warning">
-                <h4> Group created without you as a member.</h4>
-            </div>;
-
-        return flash;
-    }
 
     private async createGroup(name: string, users: number[]): Promise<Group | Status> {
         return this.props.courseMan.createGroup(name, users, this.props.course.getId());
