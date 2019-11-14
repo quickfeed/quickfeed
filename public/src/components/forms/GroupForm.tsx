@@ -33,7 +33,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     constructor(props: any) {
         super(props);
         const currentUser = this.props.students.find((v) => v.user.getId() === this.props.curUser.getId());
-        const as: IUserRelation[] = this.getAvailableStudents(currentUser);
+        const as: IUserRelation[] = this.getAvailableStudents();
         const ss: IUserRelation[] = this.getSelectedStudents(currentUser);
         this.state = {
             name: this.props.groupData ? this.props.groupData.getName() : "",
@@ -153,6 +153,13 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                     errorFlash: flashErrors,
                 });
             } else {
+                // remove students added to the new group from the list of available students
+                this.updateStudentList();
+                // clean the form fields on successful group creation
+                this.setState({
+                    name: "",
+                    selectedStudents: [],
+                });
                 if (this.props.groupData) {
                     if (this.props.groupData.getUsersList().filter((x) =>
                          x.getId() === this.props.curUser.getId()).length > 0) {
@@ -303,7 +310,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         return ss;
     }
 
-    private getAvailableStudents(curUser: IUserRelation | undefined): IUserRelation[] {
+    private getAvailableStudents(): IUserRelation[] {
         const as: IUserRelation[] = this.props.freeStudents.slice();
         if (this.props.groupData) {
             // remove group members from the list of available students
@@ -318,5 +325,14 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
             }
         }
         return as;
+    }
+
+    private updateStudentList() {
+        for (const std of this.state.selectedStudents) {
+            const index = this.state.students.indexOf(std);
+            if (index >= 0) {
+                this.state.students.splice(index, 1);
+            }
+        }
     }
 }
