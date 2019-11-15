@@ -84,17 +84,16 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private getResultHeader(): string[] {
-        let headers: string[] = ["Name", "Slipdays"];
+        let headers: string[] = ["Name"];
         headers = headers.concat(this.props.labs.filter((e) => !e.getIsgrouplab()).map((e) => e.getName()));
         return headers;
     }
 
     private getResultSelector(student: IAssignmentLink): Array<string | JSX.Element | ICellElement> {
-        const slipdayPlaceholder = "5";
         // enrollment object, user field on enrollment object, or name field on user object can be null
         const user = student.link.getUser();
         const displayName = user ? this.generateUserRepoLink(user.getName(), user.getLogin()) : "";
-        let selector: Array<string | JSX.Element | ICellElement> = [displayName, slipdayPlaceholder];
+        let selector: Array<string | JSX.Element | ICellElement> = [displayName];
         selector = selector.concat(student.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
                 let approvedCss: string = "";
