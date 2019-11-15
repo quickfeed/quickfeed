@@ -31,7 +31,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                         <tbody>
         <tr><td>Delivered</td><td>{this.getDeliveredTime()}</td></tr>
     <tr><td>Deadline</td><td>{deadline.toLocaleString()}</td></tr>
-                            <tr><td>Slipdays</td><td>5</td></tr>
+                            <tr><td>Slip days</td><td>5</td></tr>
         <tr><td>Execution time</td><td>{this.props.submission.executetionTime / 1000} s</td></tr>
                         </tbody>
                     </table>

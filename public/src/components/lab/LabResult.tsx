@@ -31,13 +31,13 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         let approveButton = <div></div>;
         let rebuildButton = <div></div>;
         if (this.props.showApprove) {
-            approveButton = <div className="lab-btn approve-btn"> <button type="button"
+            approveButton = <div className="btn lab-btn"> <button type="button"
                 id="approve"
                 className={this.setButtonColor("approve")}
                 onClick={this.props.isApproved ?
                     () => { console.log("Already approved"); } : () => this.approve()}>
                      {this.setButtonString("approve")} </button> </div>;
-            rebuildButton = <div className="lab-btn rebuild-btn">
+            rebuildButton = <div className="btn lab-btn">
             <button type="button" id="rebuild" className={this.setButtonColor("rebuild")}
                 onClick={
                     this.state.rebuilding ? () => {console.log("Rebuilding..."); }
@@ -61,7 +61,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
                     <Row>
                     {labHeading}
                     <ProgressBar progress={this.props.progress}></ProgressBar></Row>
-                    <Row>{approveButton}   {rebuildButton}</Row>
+                    <Row><div className="btn-group"> {approveButton} {rebuildButton}</div></Row>
             </div>
         );
     }

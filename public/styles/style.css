@@ -255,9 +255,9 @@
     float: none;
 }
 
-.lab-button {
+.lab-btn {
     display: inline-block;
-    flex: auto;
+    flex: 1;
 }
 
 .approve-btn {
@@ -265,7 +265,7 @@
 }
 
 .rebuild-btn {
-    float:right;
+    float: right;
 }
 
 .past-deadline {
