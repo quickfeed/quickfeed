@@ -24,25 +24,16 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                             <LabResult
                                 submission_id={latest.id}
                                 showApprove={this.props.showApprove}
-                                course_name={this.props.course.getName()}
                                 lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
                                 isApproved={latest.approved}
-                                authorName={this.props.labInfo.authorName}
-                                delivered={this.getDeliveredTime(latest.buildDate)}
+                                authorName={this.props.authorName}
                                 onApproveClick={this.props.onApproveClick}
                                 onRebuildClick={this.props.onRebuildClick}
                             />
                             <LastBuildInfo
-                                submission_id={latest.id}
-                                pass_tests={latest.passedTests}
-                                fail_tests={latest.failedTests}
-                                exec_time={latest.executetionTime}
-                                build_time={this.getDeliveredTime(latest.buildDate)}
-                                isApproved={latest.approved}
-                                onApproveClick={this.props.onApproveClick}
-                                onRebuildClick={this.props.onRebuildClick}
-                                showApprove={this.props.showApprove}
+                                submission={latest}
+                                assignment={this.props.labInfo.assignment}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}
@@ -71,7 +62,5 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         return "Nothing built yet!";
     }
 
-    private getDeliveredTime(date: Date): string {
-        return date ? date.toDateString() : "-";
-    }
+    
 }

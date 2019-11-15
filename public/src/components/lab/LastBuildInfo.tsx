@@ -1,17 +1,12 @@
 import * as React from "react";
-import { Row } from "../../components";
+import { Assignment } from "../../../proto/ag_pb";
+import { Row } from "../../components"
+import { ISubmission } from "../../models";
 
 interface ILastBuildInfo {
-    submission_id: number;
-    pass_tests: number;
-    fail_tests: number;
-    exec_time: number;
-    build_time: string;
-    isApproved: boolean;
-    showApprove: boolean;
-    onApproveClick: () => void;
-    onRebuildClick: (submissionID: number) => Promise<boolean>;
-}
+    submission: ISubmission;
+    assignment: Assignment;
+    }
 
 interface ILastBuildInfoState {
     rebuilding: boolean;
@@ -27,16 +22,38 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
     }
     public render() {
         return (
-            <Row>
-                <div className="col-lg-8">
-                    <h2>Latest build</h2>
-                    <p id="passes">Passed tests:  {this.props.pass_tests}</p>
-                    <p id="fails">Failed tests:  {this.props.fail_tests}</p>
-                    <p id="buildtime">Execution time:  {this.props.exec_time / 1000} s</p>
-                    <p id="timedate">Build date:  {this.props.build_time ? this.props.build_time.toString() : "-"}</p>
+            <div>
+                <Row>
+                <div className="col-lg-12">
+                    <table className="table">
+                        <thead><tr><th colSpan={2}>Lab Information </th></tr></thead>
+                        <tbody>
+        <tr><td>Delivered</td><td>{this.getDeliveredTime(this.props.submission.buildDate)}</td></tr>
+        <tr><td>Deadline</td><td>{this.props.assignment.getDeadline()}</td></tr>
+                            <tr><td>Slipdays</td><td>5</td></tr>
+        <tr><td>Execution time</td><td>{this.props.submission.executetionTime / 1000} s</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </Row>
+
+            <Row>
+                <div className="col-lg-12">
+                    <table className="table">
+                        <thead><tr><th>Tests: </th><th>Passed</th><th>Failed</th></tr></thead>
+                        <tbody>
+    <tr><td></td><td>{this.props.submission.passedTests}</td><td>{this.props.submission.failedTests}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </Row>
+
+            </div>
         );
+    }
+
+    private getDeliveredTime(date: Date): string {
+        return date ? date.toDateString() : "-";
     }
 
 }

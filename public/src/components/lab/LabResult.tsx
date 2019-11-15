@@ -5,11 +5,9 @@ interface ILabResult {
     submission_id: number;
     progress: number;
     lab: string;
-    course_name: string;
     authorName?: string;
     showApprove: boolean;
     isApproved: boolean;
-    delivered: string;
     onApproveClick: () => void;
     onRebuildClick: (submissionID: number) => Promise<boolean>;
 }
