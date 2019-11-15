@@ -29,7 +29,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                     <table className="table">
                         <thead><tr><th colSpan={2}>Lab Information </th></tr></thead>
                         <tbody>
-        <tr><td>Delivered</td><td>{this.props.submission.buildDate.toLocaleString()}</td></tr>
+        <tr><td>Delivered</td><td>{this.getDeliveredTime()}</td></tr>
     <tr><td>Deadline</td><td>{deadline.toLocaleString()}</td></tr>
                             <tr><td>Slipdays</td><td>5</td></tr>
         <tr><td>Execution time</td><td>{this.props.submission.executetionTime / 1000} s</td></tr>
@@ -53,8 +53,14 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
         );
     }
 
-    private getDeliveredTime(date: Date): string {
-        return date ? date.toDateString() : "-";
+    private getDeliveredTime(): JSX.Element {
+        const deadline = new Date(this.props.assignment.getDeadline());
+        const delivered = this.props.submission.buildDate;
+        let classString = "";
+        if (delivered >= deadline) {
+            classString = "past-deadline";
+        }
+        return <div className={classString}>{delivered.toLocaleString()}</div>;
     }
 
 }
