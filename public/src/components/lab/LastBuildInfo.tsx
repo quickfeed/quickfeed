@@ -21,6 +21,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
          };
     }
     public render() {
+        const deadline = new Date(this.props.assignment.getDeadline());
         return (
             <div>
                 <Row>
@@ -28,8 +29,8 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                     <table className="table">
                         <thead><tr><th colSpan={2}>Lab Information </th></tr></thead>
                         <tbody>
-        <tr><td>Delivered</td><td>{this.getDeliveredTime(this.props.submission.buildDate)}</td></tr>
-        <tr><td>Deadline</td><td>{this.props.assignment.getDeadline()}</td></tr>
+        <tr><td>Delivered</td><td>{this.props.submission.buildDate.toLocaleString()}</td></tr>
+    <tr><td>Deadline</td><td>{deadline.toLocaleString()}</td></tr>
                             <tr><td>Slipdays</td><td>5</td></tr>
         <tr><td>Execution time</td><td>{this.props.submission.executetionTime / 1000} s</td></tr>
                         </tbody>
