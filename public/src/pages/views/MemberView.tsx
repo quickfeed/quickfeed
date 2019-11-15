@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Repository } from "../../../proto/ag_pb";
+import { Course, Enrollment } from "../../../proto/ag_pb";
 import { Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
@@ -127,11 +127,17 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         switch (link.uri) {
             case "accept":
                 this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT).then((ans) => {
-                    console.log("List of accepted users updated: " + ans);
+                    if (ans) {
+                        userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
+                    }
                 });
                 break;
             case "reject":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED).then((ans) => {
+                    if (ans) {
+                        userRel.link.setStatus(Enrollment.UserStatus.REJECTED);
+                    }
+                });
                 break;
             case "teacher":
                 if (confirm(
@@ -139,11 +145,19 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     Do you want to continue assigning:
                     ${userRel.user.getName()} as a teacher?`,
                 )) {
-                    this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
+                    this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER).then((ans) => {
+                        if (ans) {
+                            userRel.link.setStatus(Enrollment.UserStatus.TEACHER);
+                        }
+                    });
                 }
                 break;
             case "remove":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
+                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING).then((ans) => {
+                    if (ans) {
+                        userRel.link.setStatus(Enrollment.UserStatus.PENDING);
+                    }
+                });
                 break;
         }
         this.refreshState();
@@ -219,7 +233,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     private async handleApproveClick(): Promise<boolean> {
         this.setState({approveAllClicked: true});
         const ans = await this.props.courseMan.approveAll(this.props.course.getId());
-        console.log("ApproveAll got answer: " + ans);
         this.props.navMan.refresh();
         return ans;
     }
