@@ -255,6 +255,19 @@
     float: none;
 }
 
+.lab-button {
+    display: inline-block;
+    flex: auto;
+}
+
+.approve-btn {
+    float: left;
+}
+
+.rebuild-btn {
+    float:right;
+}
+
 .addon-mini {
     min-width: 70px;
     text-align: left;
