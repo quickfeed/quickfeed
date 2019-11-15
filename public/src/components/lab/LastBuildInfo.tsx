@@ -7,7 +7,6 @@ interface ILastBuildInfo {
     fail_tests: number;
     exec_time: number;
     build_time: string;
-    build_id: number;
     isApproved: boolean;
     showApprove: boolean;
     onApproveClick: () => void;
@@ -27,15 +26,6 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
          };
     }
     public render() {
-        let approveButton = <p></p>;
-        if (this.props.showApprove) {
-            approveButton = <p> <button type="button"
-                id="approve"
-                className={this.setButtonColor("approve")}
-                onClick={this.props.isApproved ?
-                    () => { console.log("Already approved"); } : () => this.approve()}>
-                     {this.setButtonString("approve")} </button> </p>; }
-
         return (
             <Row>
                 <div className="col-lg-8">
@@ -44,67 +34,9 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                     <p id="fails">Failed tests:  {this.props.fail_tests}</p>
                     <p id="buildtime">Execution time:  {this.props.exec_time / 1000} s</p>
                     <p id="timedate">Build date:  {this.props.build_time ? this.props.build_time.toString() : "-"}</p>
-                    <p id="buildid">Build ID: {this.props.build_id}</p>
-                </div>
-                <div className="col-lg-4 hidden-print">
-                    <h2>Actions</h2>
-                    <Row>
-                        <div className="col-lg-12">
-                            <p>
-                                <button type="button" id="rebuild" className={this.setButtonColor("rebuild")}
-                                    onClick={
-                                        this.state.rebuilding ? () => {console.log("Rebuilding..."); }
-                                         : () => {this.rebuildSubmission(); }
-                                    }>{this.setButtonString("rebuild")}</button>
-                            </p>
-                            {approveButton}
-                        </div>
-                    </Row>
                 </div>
             </Row>
         );
     }
 
-    private async rebuildSubmission() {
-        this.setState({
-            rebuilding: true,
-        });
-        await this.props.onRebuildClick(this.props.submission_id).then(() => {
-            this.setState({
-                rebuilding: false,
-            });
-        });
-    }
-
-    private async approve() {
-        this.props.onApproveClick();
-    }
-
-    private setButtonColor(id: string): string {
-        switch (id) {
-            case "rebuild" : {
-                return this.state.rebuilding ? "btn btn-secondary" : "btn btn-primary";
-            }
-            case "approve" : {
-                return this.props.isApproved ? "btn btn-success" : "btn btn-primary";
-            }
-            default: {
-                return "";
-            }
-        }
-    }
-
-    private setButtonString(id: string): string {
-        switch (id) {
-            case "rebuild" : {
-                return this.state.rebuilding ? "Rebuilding" : "Rebuild";
-            }
-            case "approve" : {
-                return this.props.isApproved ? "Approved" : "Approve";
-            }
-            default : {
-                return "";
-            }
-        }
-    }
 }

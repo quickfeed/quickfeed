@@ -22,17 +22,16 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                     <div className="result-content" id="resultview">
                         <section id="result">
                             <LabResult
+                                submission_id={latest.id}
+                                showApprove={this.props.showApprove}
                                 course_name={this.props.course.getName()}
                                 lab={this.props.labInfo.assignment.getName()}
                                 progress={latest.score}
                                 isApproved={latest.approved}
                                 authorName={this.props.labInfo.authorName}
                                 delivered={this.getDeliveredTime(latest.buildDate)}
-                            />
-                            <LastBuild
-                                test_cases={latest.testCases}
-                                score={latest.score}
-                                weight={100}
+                                onApproveClick={this.props.onApproveClick}
+                                onRebuildClick={this.props.onRebuildClick}
                             />
                             <LastBuildInfo
                                 submission_id={latest.id}
@@ -40,11 +39,15 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 fail_tests={latest.failedTests}
                                 exec_time={latest.executetionTime}
                                 build_time={this.getDeliveredTime(latest.buildDate)}
-                                build_id={latest.buildId}
                                 isApproved={latest.approved}
                                 onApproveClick={this.props.onApproveClick}
                                 onRebuildClick={this.props.onRebuildClick}
                                 showApprove={this.props.showApprove}
+                            />
+                            <LastBuild
+                                test_cases={latest.testCases}
+                                score={latest.score}
+                                weight={100}
                             />
                             <Row>
                                 <div className="col-lg-12">
