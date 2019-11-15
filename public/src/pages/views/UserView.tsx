@@ -39,8 +39,9 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     }
 
     public componentWillReceiveProps(nextProps: Readonly<IUserViewerProps>, nextContext: any): void {
-        const state = {users: nextProps.users};
-        this.setState(state);
+        this.setState({
+            users: nextProps.users,
+        });
     }
 
     public render() {
