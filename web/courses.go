@@ -312,7 +312,7 @@ func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint
 
 func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
 
-	course, err := s.db.GetCourse(request.GetCourseID())
+	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
 		return err
 	}

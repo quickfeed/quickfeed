@@ -45,7 +45,7 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 	// if withRepo is true, delete repo and team (needs scm)
 	if request.WithRepo {
 		// get course organization ID
-		course, err := s.db.GetCourse(request.GetCourseID())
+		course, err := s.db.GetCourse(request.GetCourseID(), false)
 		if err != nil {
 			return err
 		}
