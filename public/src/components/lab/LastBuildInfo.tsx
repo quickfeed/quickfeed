@@ -33,22 +33,11 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
     <tr><td>Deadline</td><td>{deadline.toLocaleString()}</td></tr>
                             <tr><td>Slip days</td><td>5</td></tr>
         <tr><td>Execution time</td><td>{this.props.submission.executetionTime / 1000} s</td></tr>
+        <tr><td>Tests passed</td><td>{this.props.submission.passedTests} / {this.props.submission.testCases.length}</td></tr>
                         </tbody>
                     </table>
                 </div>
             </Row>
-
-            <Row>
-                <div className="col-lg-12">
-                    <table className="table">
-                        <thead><tr><th>Tests: </th><th>Passed</th><th>Failed</th></tr></thead>
-                        <tbody>
-    <tr><td></td><td>{this.props.submission.passedTests}</td><td>{this.props.submission.failedTests}</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </Row>
-
             </div>
         );
     }
