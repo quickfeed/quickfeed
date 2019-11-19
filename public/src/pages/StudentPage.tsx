@@ -106,7 +106,6 @@ export class StudentPage extends ViewPage {
             this.selectAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
                 return <StudentLab
-                    course={this.selectedUserCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
                     onRebuildClick={async (submissionID: number) => {
@@ -130,7 +129,6 @@ export class StudentPage extends ViewPage {
             await this.selectGroupAssignment(navInfo.params.labid);
             if (this.selectedAssignment) {
                 return <StudentLab
-                    course={this.selectedUserGroupCourse.course}
                     assignment={this.selectedAssignment}
                     showApprove={false}
                     onRebuildClick={async (submissionID: number) => {

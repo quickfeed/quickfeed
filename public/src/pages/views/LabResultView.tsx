@@ -1,10 +1,8 @@
 import * as React from "react";
-import { Course } from "../../../proto/ag_pb";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentSubmission } from "../../models";
 
 interface ILabInfoProps {
-    course: Course;
     labInfo: IStudentSubmission;
     showApprove: boolean;
     onApproveClick: () => void;
@@ -61,6 +59,4 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         }
         return "Nothing built yet!";
     }
-
-    
 }
