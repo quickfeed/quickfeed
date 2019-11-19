@@ -189,11 +189,11 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         this.props.navMan.refresh();
     }
 
-    private async deleteGroup(gid: number) {
+    private async deleteGroup(groupID: number) {
         let withRepos = true;
         let readyToDelete = true;
-        const cid = this.props.course.getId();
-        const isEmpty = await this.props.courseMan.isEmptyRepo(cid, 0, gid);
+        const courseID = this.props.course.getId();
+        const isEmpty = await this.props.courseMan.isEmptyRepo(courseID, 0, groupID);
         if (!isEmpty) {
             withRepos = false;
             if (confirm(
@@ -213,7 +213,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             }
         }
         if (readyToDelete) {
-            const ans = await this.props.courseMan.deleteGroup(gid, cid, withRepos);
+            const ans = await this.props.courseMan.deleteGroup(courseID, groupID, withRepos);
             if (ans) {
                 this.props.navMan.refresh();
             }

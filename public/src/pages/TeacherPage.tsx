@@ -369,7 +369,7 @@ export class TeacherPage extends ViewPage {
             `Warning! This action is irreversible!
             Do you want to approve this lab?`,
         )) {
-            const ans = await this.courseMan.approveSubmission(submissionID, courseID);
+            const ans = await this.courseMan.approveSubmission(courseID, submissionID);
             this.navMan.refresh();
             return ans;
         }

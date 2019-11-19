@@ -173,7 +173,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     }
 
     private async createGroup(name: string, users: number[]): Promise<Group | Status> {
-        return this.props.courseMan.createGroup(name, users, this.props.course.getId());
+        return this.props.courseMan.createGroup(this.props.course.getId(), name, users);
     }
 
     private async updateGroup(name: string, users: number[], gid: number): Promise<Status> {
