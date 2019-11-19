@@ -17,7 +17,6 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
 
     private options = {
         weekday: "short",
-        year: "numeric",
         month: "short",
         day: "numeric",
         hour: "numeric",
