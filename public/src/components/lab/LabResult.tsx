@@ -81,10 +81,6 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         this.props.onApproveClick();
     }
 
-    private setApprovedString(): string {
-        return this.props.isApproved ? "Approved" : "Not approved";
-    }
-
     private setButtonColor(id: string): string {
         switch (id) {
             case "rebuild" : {
@@ -113,4 +109,3 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         }
     }
 }
-

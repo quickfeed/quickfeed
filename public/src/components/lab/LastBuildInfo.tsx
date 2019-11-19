@@ -1,8 +1,7 @@
 import * as React from "react";
 import { Assignment } from "../../../proto/ag_pb";
-import { Row } from "../../components"
+import { Row } from "../../components";
 import { ISubmission } from "../../models";
-import { string } from "prop-types";
 
 interface ILastBuildInfo {
     submission: ISubmission;

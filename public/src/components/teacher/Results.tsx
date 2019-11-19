@@ -48,7 +48,6 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             && !this.state.assignment.assignment.getIsgrouplab()
         ) {
             studentLab = <StudentLab
-                course={this.props.course}
                 assignment={this.state.assignment}
                 showApprove={true}
                 onRebuildClick={this.props.onRebuildClick}
