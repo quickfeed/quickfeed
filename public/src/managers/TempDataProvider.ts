@@ -64,10 +64,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourseStudent;
     }
 
-    public async getAssignments(courseId: number): Promise<Assignment[]> {
+    public async getAssignments(courseID: number): Promise<Assignment[]> {
         const temp: Assignment[] = [];
         MapHelper.forEach(this.localAssignments, (a, i) => {
-            if (a.getCourseid() === courseId) {
+            if (a.getCourseid() === courseID) {
                 temp[i] = a;
             }
         });
@@ -115,7 +115,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async addUserToCourse(user: User, course: Course): Promise<boolean> {
+    public async addUserToCourse(course: Course, user: User): Promise<boolean> {
         const tempEnrollment: Enrollment = new Enrollment();
         tempEnrollment.setCourseid(course.getId());
         tempEnrollment.setUserid(user.getId());
@@ -144,10 +144,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return users;
     }
 
-    public async getUsersAsMap(ids: number[]): Promise<IMap<User>> {
+    public async getUsersAsMap(IDs: number[]): Promise<IMap<User>> {
         const returnUsers: IMap<User> = {};
         const allUsers = await this.getAllUser();
-        ids.forEach((ele) => {
+        IDs.forEach((ele) => {
             const temp = allUsers[ele];
             if (temp) {
                 returnUsers[ele] = temp;
@@ -175,15 +175,15 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async getCourse(id: number): Promise<Course | null> {
-        const course: Course | undefined = this.localCourses[id];
+    public async getCourse(ID: number): Promise<Course | null> {
+        const course: Course | undefined = this.localCourses[ID];
         if (course) {
             return course;
         }
         return null;
     }
 
-    public async updateCourse(courseId: number, courseData: Course): Promise<Status> {
+    public async updateCourse(course: Course): Promise<Status> {
         throw new Error("Method not implemented");
     }
 
@@ -197,9 +197,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getAllLabInfos(courseId: number): Promise<ISubmission[]> {
+    public async getAllLabInfos(courseID: number): Promise<ISubmission[]> {
         const temp: ISubmission[] = [];
-        const assignments = await this.getAssignments(courseId);
+        const assignments = await this.getAssignments(courseID);
         MapHelper.forEach(this.localLabInfo, (ele) => {
             if (assignments[ele.assignmentid]) {
                 temp[ele.id] = ele;
@@ -242,7 +242,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
         throw new Error("Method not implemented");
     }
-    public async getCourseGroups(courseId: number): Promise<Group[]> {
+    public async getCourseGroups(courseID: number): Promise<Group[]> {
         return this.localCourseGroups;
     }
 
@@ -258,24 +258,24 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async updateGroupStatus(groupId: number, status: Group.GroupStatus): Promise<boolean> {
+    public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean> {
         throw new Error("Method not implemented");
     }
-    public async getGroup(gid: number): Promise<Group | null> {
+    public async getGroup(groupID: number): Promise<Group | null> {
         throw new Error("Method not implemented");
     }
-    public async updateGroup(groupData: Group): Promise<Status> {
+    public async updateGroup(group: Group): Promise<Status> {
         throw new Error("Method not implemented");
     }
-    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<ISubmission[]> {
+    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]> {
         throw new Error("Method not implemented.");
     }
 
-    public async isEmptyRepo(cid: number, uid: number, gid: number): Promise<boolean> {
+    public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 
-    public async updateAssignments(courseid: number): Promise<any> {
+    public async updateAssignments(courseID: number): Promise<any> {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve({});
@@ -294,11 +294,11 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return Promise.resolve(true);
     }
 
-    public async getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
+    public async getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
         throw new Error("Method not implemented");
     }
 
-    public async refreshSubmission(id: number): Promise<boolean> {
+    public async refreshSubmission(ID: number): Promise<boolean> {
         throw new Error("Method not implemented");
     }
 

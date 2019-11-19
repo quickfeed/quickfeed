@@ -89,15 +89,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getEnrollmentsList();
     }
 
-    public async getAssignments(courseId: number): Promise<Assignment[]> {
-        const result = await this.grpcHelper.getAssignments(courseId);
+    public async getAssignments(courseID: number): Promise<Assignment[]> {
+        const result = await this.grpcHelper.getAssignments(courseID);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
         }
         return result.data.getAssignmentsList();
     }
 
-    public async addUserToCourse(user: User, course: Course): Promise<boolean> {
+    public async addUserToCourse(course: Course, user: User): Promise<boolean> {
         const result = await this.grpcHelper.createEnrollment(course.getId(), user.getId());
         return result.status.getCode() === 0;
     }
@@ -123,24 +123,24 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getIsauthorized();
     }
 
-    public async createNewCourse(courseData: Course): Promise<Course | Status> {
-        const result = await this.grpcHelper.createCourse(courseData);
+    public async createNewCourse(course: Course): Promise<Course | Status> {
+        const result = await this.grpcHelper.createCourse(course);
         if (result.status.getCode() !== 0 || !result.data) {
             return result.status;
         }
         return result.data;
     }
 
-    public async getCourse(id: number): Promise<Course | null> {
-        const result = await this.grpcHelper.getCourse(id);
+    public async getCourse(ID: number): Promise<Course | null> {
+        const result = await this.grpcHelper.getCourse(ID);
         if (result.status.getCode() !== 0 || !result.data) {
             return null;
         }
         return result.data;
     }
 
-    public async updateCourse(courseId: number, courseData: Course): Promise<Void | Status> {
-        const result = await this.grpcHelper.updateCourse(courseData);
+    public async updateCourse(course: Course): Promise<Void | Status> {
+        const result = await this.grpcHelper.updateCourse(course);
         if (result.status.getCode() !== 0 || !result.data) {
             return result.status;
         }
@@ -373,8 +373,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async refreshSubmission(id: number): Promise<boolean> {
-        const result = await this.grpcHelper.refreshSubmission(id);
+    public async refreshSubmission(ID: number): Promise<boolean> {
+        const result = await this.grpcHelper.refreshSubmission(ID);
         if (result.status.getCode() !== 0) {
             return false;
         }
