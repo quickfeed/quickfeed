@@ -150,7 +150,7 @@ export class StudentPage extends ViewPage {
         const course = await this.courseMan.getCourse(courseId);
         const curUser = this.userMan.getCurrentUser();
         if (course && curUser) {
-            const grp: Group | null = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.getId());
+            const grp: Group | null = await this.courseMan.getGroupByUserAndCourse(course.getId(), curUser.getId());
             if (grp) {
                 return <GroupInfo group={grp} course={course} />;
             } else {
@@ -277,7 +277,7 @@ export class StudentPage extends ViewPage {
             this.GroupUserCourses = [];
 
             for (const course of this.activeUserCourses) {
-                const group = await this.courseMan.getGroupByUserAndCourse(curUser.getId(), course.course.getId());
+                const group = await this.courseMan.getGroupByUserAndCourse(course.course.getId(), curUser.getId());
                 if (group != null) {
                     const groupCourse = await this.courseMan.getGroupCourse(group, course.course);
                     if (groupCourse) {

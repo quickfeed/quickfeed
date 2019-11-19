@@ -98,12 +98,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async addUserToCourse(user: User, course: Course): Promise<boolean> {
-        const result = await this.grpcHelper.createEnrollment(user.getId(), course.getId());
+        const result = await this.grpcHelper.createEnrollment(course.getId(), user.getId());
         return result.status.getCode() === 0;
     }
 
     public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
-        const result = await this.grpcHelper.updateEnrollment(link.getUserid(), link.getCourseid(), state);
+        const result = await this.grpcHelper.updateEnrollment(link.getCourseid(), link.getUserid(), state);
         return result.status.getCode() === 0;
     }
 
@@ -147,8 +147,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return new Void();
     }
 
-    public async createGroup(name: string, users: number[], courseID: number): Promise<Group | Status> {
-        const result = await this.grpcHelper.createGroup(name, users, courseID);
+    public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
+        const result = await this.grpcHelper.createGroup(courseID, name, users);
         if (result.status.getCode() !== 0 || !result.data) {
             return result.status;
         }
@@ -163,8 +163,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getGroupsList();
     }
 
-    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<Group | null> {
-        const result = await this.grpcHelper.getGroupByUserAndCourse(userID, courseID);
+    public async getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null> {
+        const result = await this.grpcHelper.getGroupByUserAndCourse(courseID, userID);
         if (result.status.getCode() !== 0 || !result.data) {
             return null;
         }
@@ -187,8 +187,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async deleteGroup(groupID: number, courseID: number, withRepo: boolean): Promise<boolean> {
-        const result = await this.grpcHelper.deleteGroup(groupID, courseID, withRepo);
+    public async deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean> {
+        const result = await this.grpcHelper.deleteGroup(courseID, groupID, withRepo);
         return result.status.getCode() === 0;
     }
 
@@ -365,8 +365,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return tsMap;
     }
 
-    public async approveSubmission(submissionID: number, courseID: number): Promise<boolean> {
-        const result = await this.grpcHelper.approveSubmission(submissionID, courseID);
+    public async approveSubmission(courseID: number, submissionID: number): Promise<boolean> {
+        const result = await this.grpcHelper.approveSubmission(courseID, submissionID);
         if (result.status.getCode() !== 0) {
             return false;
         }

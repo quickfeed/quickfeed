@@ -36,7 +36,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalCourseGroups();
     }
 
-    public async approveSubmission(submissionid: number, courseID: number): Promise<boolean> {
+    public async approveSubmission(courseID: number, submissionID: number): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 
@@ -239,18 +239,18 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         }
         return courses;
     }
-    public async createGroup(name: string, users: number[], courseId: number): Promise<Group | Status> {
+    public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
         throw new Error("Method not implemented");
     }
     public async getCourseGroups(courseId: number): Promise<Group[]> {
         return this.localCourseGroups;
     }
 
-    public async deleteGroup(groupId: number, courseID: number, withRepo: boolean): Promise<boolean> {
+    public async deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean> {
         throw new Error("Method not implemented");
     }
 
-    public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null> {
+    public async getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null> {
         throw new Error("Method not implemented");
     }
 

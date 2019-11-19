@@ -63,15 +63,15 @@ export class GrpcManager {
         return this.grpcSend<Users>(this.agService.getUsers, request);
     }
 
-    public updateUser(user: User, isadmin?: boolean): Promise<IGrpcResponse<User>> {
+    public updateUser(user: User, isAdmin?: boolean): Promise<IGrpcResponse<User>> {
         const requrest = new User();
         requrest.setId(user.getId());
         requrest.setAvatarurl(user.getAvatarurl());
         requrest.setEmail(user.getEmail());
         requrest.setName(user.getName());
         requrest.setStudentid(user.getStudentid());
-        if (isadmin) {
-            requrest.setIsadmin(isadmin);
+        if (isAdmin) {
+            requrest.setIsadmin(isAdmin);
         } else {
             requrest.setIsadmin(user.getIsadmin());
         }
@@ -93,15 +93,9 @@ export class GrpcManager {
         return this.grpcSend<Course>(this.agService.updateCourse, course);
     }
 
-    public updateAssignments(courseID: number): Promise<IGrpcResponse<Void>> {
+    public getCourse(ID: number): Promise<IGrpcResponse<Course>> {
         const request = new RecordRequest();
-        request.setId(courseID);
-        return this.grpcSend<Void>(this.agService.updateAssignments, request);
-    }
-
-    public getCourse(id: number): Promise<IGrpcResponse<Course>> {
-        const request = new RecordRequest();
-        request.setId(id);
+        request.setId(ID);
         return this.grpcSend<Course>(this.agService.getCourse, request);
     }
 
@@ -110,28 +104,34 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCourses, request);
     }
 
-    public getCoursesWithEnrollment(userid: number, state: any): Promise<IGrpcResponse<Courses>> {
+    public getCoursesWithEnrollment(userID: number, state: any): Promise<IGrpcResponse<Courses>> {
         const request = new RecordRequest();
-        request.setId(userid);
+        request.setId(userID);
         request.setStatusesList(state);
         return this.grpcSend<Courses>(this.agService.getCoursesWithEnrollment, request);
     }
 
     // /* ASSIGNMENTS */ //
 
-    public getAssignments(courseId: number): Promise<IGrpcResponse<Assignments>> {
+    public getAssignments(courseID: number): Promise<IGrpcResponse<Assignments>> {
         const request = new RecordRequest();
-        request.setId(courseId);
+        request.setId(courseID);
         return this.grpcSend<Assignments>(this.agService.getAssignments, request);
+    }
+
+    public updateAssignments(courseID: number): Promise<IGrpcResponse<Void>> {
+        const request = new RecordRequest();
+        request.setId(courseID);
+        return this.grpcSend<Void>(this.agService.updateAssignments, request);
     }
 
     // /* ENROLLMENTS */ //
 
-    public getEnrollmentsByCourse(courseid: number, noGroupMembers?: boolean, state?: any):
+    public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, state?: any):
         Promise<IGrpcResponse<Enrollments>> {
 
         const request = new EnrollmentRequest();
-        request.setCourseid(courseid);
+        request.setCourseid(courseID);
         if (noGroupMembers) {
             request.setFilteroutgroupmembers(noGroupMembers);
         }
@@ -141,17 +141,17 @@ export class GrpcManager {
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request);
     }
 
-    public createEnrollment(userid: number, courseid: number): Promise<IGrpcResponse<Void>> {
+    public createEnrollment(courseID: number, userID: number): Promise<IGrpcResponse<Void>> {
         const request = new Enrollment();
-        request.setUserid(userid);
-        request.setCourseid(courseid);
+        request.setUserid(userID);
+        request.setCourseid(courseID);
         return this.grpcSend<Void>(this.agService.createEnrollment, request);
     }
 
-    public updateEnrollment(userid: number, courseid: number, state: any): Promise<IGrpcResponse<Void>> {
+    public updateEnrollment(courseID: number, userID: number, state: any): Promise<IGrpcResponse<Void>> {
         const request = new Enrollment();
-        request.setUserid(userid);
-        request.setCourseid(courseid);
+        request.setUserid(userID);
+        request.setCourseid(courseID);
         request.setStatus(state);
         return this.grpcSend<Void>(this.agService.updateEnrollment, request);
     }
@@ -170,49 +170,49 @@ export class GrpcManager {
         return this.grpcSend<Group>(this.agService.getGroup, request);
     }
 
-    public getGroupByUserAndCourse(userID: number, courseID: number): Promise<IGrpcResponse<Group>> {
+    public getGroupByUserAndCourse(courseID: number, userID: number): Promise<IGrpcResponse<Group>> {
         const request = new GroupRequest();
         request.setUserid(userID);
         request.setCourseid(courseID);
         return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse, request);
     }
 
-    public getGroups(courseid: number): Promise<IGrpcResponse<Groups>> {
+    public getGroups(courseID: number): Promise<IGrpcResponse<Groups>> {
         const request = new RecordRequest();
-        request.setId(courseid);
+        request.setId(courseID);
         return this.grpcSend<Groups>(this.agService.getGroups, request);
     }
 
-    public updateGroupStatus(groupid: number, state: Group.GroupStatus): Promise<IGrpcResponse<Void>> {
+    public updateGroupStatus(groupID: number, state: Group.GroupStatus): Promise<IGrpcResponse<Void>> {
         const request = new Group();
-        request.setId(groupid);
+        request.setId(groupID);
         request.setStatus(state);
         return this.grpcSend<Void>(this.agService.updateGroup, request);
     }
 
-    public updateGroup(grp: Group): Promise<IGrpcResponse<Void>> {
-        return this.grpcSend<Void>(this.agService.updateGroup, grp);
+    public updateGroup(group: Group): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateGroup, group);
     }
 
-    public deleteGroup(groupid: number, courseID: number, withRepo: boolean): Promise<IGrpcResponse<Void>> {
+    public deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<IGrpcResponse<Void>> {
         const request = new DeleteGroupRequest();
-        request.setGroupid(groupid);
+        request.setGroupid(groupID);
         request.setCourseid(courseID);
         request.setWithrepo(withRepo);
         return this.grpcSend<Void>(this.agService.deleteGroup, request);
     }
 
-    public createGroup(name: string, users: number[], courseid: number): Promise<IGrpcResponse<Group>> {
+    public createGroup(courseID: number, name: string, users: number[]): Promise<IGrpcResponse<Group>> {
         const request = new Group();
         request.setName(name);
-        request.setCourseid(courseid);
-        const grpusers: User[] = [];
+        request.setCourseid(courseID);
+        const groupUsers: User[] = [];
         users.forEach((ele) => {
             const usr = new User();
             usr.setId(ele);
-            grpusers.push(usr);
+            groupUsers.push(usr);
         });
-        request.setUsersList(grpusers);
+        request.setUsersList(groupUsers);
         return this.grpcSend<Group>(this.agService.createGroup, request);
     }
 
@@ -238,13 +238,13 @@ export class GrpcManager {
         return this.grpcSend<LabResultLinks>(this.agService.getCourseLabSubmissions, request);
     }
 
-    public refreshSubmission(id: number): Promise<IGrpcResponse<Void>> {
+    public refreshSubmission(ID: number): Promise<IGrpcResponse<Void>> {
         const request = new RecordRequest();
-        request.setId(id);
+        request.setId(ID);
         return this.grpcSend<Void>(this.agService.refreshSubmission, request);
     }
 
-    public approveSubmission(submissionID: number, courseID: number): Promise<IGrpcResponse<Void>> {
+    public approveSubmission(courseID: number, submissionID: number): Promise<IGrpcResponse<Void>> {
         const request = new ApproveSubmissionRequest();
         request.setSubmissionid(submissionID);
         request.setCourseid(courseID);
@@ -253,9 +253,9 @@ export class GrpcManager {
 
     // /* REPOSITORY */ //
 
-    public getRepositories(cid: number, types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
+    public getRepositories(courseID: number, types: Repository.Type[]): Promise<IGrpcResponse<Repositories>> {
         const req = new URLRequest();
-        req.setCourseid(cid);
+        req.setCourseid(courseID);
         req.setRepotypesList(types);
         return this.grpcSend<Repositories>(this.agService.getRepositories, req);
     }
@@ -285,16 +285,15 @@ export class GrpcManager {
 
     private grpcSend<T>(method: any, request: any): Promise<IGrpcResponse<T>> {
         const grpcPromise = new Promise<IGrpcResponse<T>>((resolve) => {
-            let userId = "";
+            let userID = "";
             // currentUser reference is created on authorization with a provider and stores a User object.
             // This object can be used for user validation. This implementation sends user ID to simplify
             // and standardize different server checks.
-            // Alternative solution is to send the token, which requires a secure way of storing the token.
             const currentUser = this.userMan.getCurrentUser();
             if (currentUser != null) {
-                userId = currentUser.getId().toString();
+                userID = currentUser.getId().toString();
             }
-            method.call(this.agService, request, { "custom-header-1": "value1", "user": userId },
+            method.call(this.agService, request, { "custom-header-1": "value1", "user": userID },
                 (err: grpcWeb.Error, response: T | undefined) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {

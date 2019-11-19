@@ -25,10 +25,10 @@ export interface ICourseProvider {
 
     getCourseGroups(courseID: number): Promise<Group[]>;
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
-    createGroup(name: string, users: number[], courseId: number): Promise<Group | Status>;
+    createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status>;
     getGroup(groupID: number): Promise<Group | null>;
-    deleteGroup(groupID: number, courseID: number, withRepo: boolean): Promise<boolean>;
-    getGroupByUserAndCourse(userid: number, courseid: number): Promise<Group | null>;
+    deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean>;
+    getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null>;
     updateGroup(groupData: Group): Promise<Status>;
 
     getAllLabInfos(courseID: number, userId: number): Promise<ISubmission[]>;
@@ -38,7 +38,7 @@ export interface ICourseProvider {
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
-    approveSubmission(submissionID: number, courseID: number): Promise<boolean>;
+    approveSubmission(courseID: number, submissionID: number): Promise<boolean>;
     refreshSubmission(id: number): Promise<boolean>;
     getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
 
@@ -224,8 +224,8 @@ export class CourseManager {
         return userlinks;
     }
 
-    public async createGroup(name: string, users: number[], courseID: number): Promise<Group | Status> {
-        return this.courseProvider.createGroup(name, users, courseID);
+    public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
+        return this.courseProvider.createGroup(courseID, name, users);
     }
 
     public async updateGroup(groupData: Group): Promise<Status> {
@@ -282,8 +282,8 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<Group | null> {
-        return this.courseProvider.getGroupByUserAndCourse(userID, courseID);
+    public async getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null> {
+        return this.courseProvider.getGroupByUserAndCourse(courseID, userID);
     }
 
     public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean> {
@@ -294,8 +294,8 @@ export class CourseManager {
         return this.courseProvider.getGroup(groupID);
     }
 
-    public async deleteGroup(groupID: number, courseID: number, withRepo: boolean): Promise<boolean> {
-        return this.courseProvider.deleteGroup(groupID, courseID, withRepo);
+    public async deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean> {
+        return this.courseProvider.deleteGroup(courseID, groupID, withRepo);
     }
 
     /**
@@ -329,8 +329,8 @@ export class CourseManager {
         return this.courseProvider.refreshSubmission(id);
     }
 
-    public async approveSubmission(submissionID: number, courseID: number): Promise<boolean> {
-        return this.courseProvider.approveSubmission(submissionID, courseID);
+    public async approveSubmission(courseID: number, submissionID: number): Promise<boolean> {
+        return this.courseProvider.approveSubmission(courseID, submissionID);
     }
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
