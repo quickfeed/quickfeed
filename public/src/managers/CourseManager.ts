@@ -15,13 +15,13 @@ export interface ICourseProvider {
     getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]):
         Promise<Enrollment[]>;
 
-    addUserToCourse(user: User, course: Course): Promise<boolean>;
+    addUserToCourse(course: Course, user: User): Promise<boolean>;
     changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean>;
     approveAll(courseID: number): Promise<boolean>;
 
     createNewCourse(courseData: Course): Promise<Course | Status>;
-    getCourse(id: number): Promise<Course | null>;
-    updateCourse(courseID: number, courseData: Course): Promise<Void | Status>;
+    getCourse(ID: number): Promise<Course | null>;
+    updateCourse(course: Course): Promise<Void | Status>;
 
     getCourseGroups(courseID: number): Promise<Group[]>;
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
@@ -29,9 +29,9 @@ export interface ICourseProvider {
     getGroup(groupID: number): Promise<Group | null>;
     deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean>;
     getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null>;
-    updateGroup(groupData: Group): Promise<Status>;
+    updateGroup(group: Group): Promise<Status>;
 
-    getAllLabInfos(courseID: number, userId: number): Promise<ISubmission[]>;
+    getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]>;
     getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]>;
     getCourseLabs(courseID: number): Promise<IAssignmentLink[]>;
 
@@ -39,8 +39,8 @@ export interface ICourseProvider {
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
     approveSubmission(courseID: number, submissionID: number): Promise<boolean>;
-    refreshSubmission(id: number): Promise<boolean>;
-    getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
+    refreshSubmission(ID: number): Promise<boolean>;
+    getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
 
     isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
 }
@@ -58,8 +58,8 @@ export class CourseManager {
      * @param course The course the user should be added to
      * @returns True if succeeded and false otherwise
      */
-    public async addUserToCourse(user: User, course: Course): Promise<boolean> {
-        return this.courseProvider.addUserToCourse(user, course);
+    public async addUserToCourse(course: Course, user: User): Promise<boolean> {
+        return this.courseProvider.addUserToCourse(course, user);
     }
 
     /**
@@ -142,10 +142,10 @@ export class CourseManager {
 
     /**
      * Updates a course with new information
-     * @param courseData The new information for the course
+     * @param course The new information for the course
      */
-    public async updateCourse(courseID: number, courseData: Course): Promise<Void | Status> {
-        return this.courseProvider.updateCourse(courseID, courseData);
+    public async updateCourse(course: Course): Promise<Void | Status> {
+        return this.courseProvider.updateCourse(course);
     }
 
     /**
@@ -182,8 +182,8 @@ export class CourseManager {
      */
     public async getStudentCourses(student: User, state?: Enrollment.UserStatus[]): Promise<IAssignmentLink[]> {
         const links: IAssignmentLink[] = [];
-        const enrols = await this.courseProvider.getCoursesFor(student, state);
-        for (const enrol of enrols) {
+        const enrollments = await this.courseProvider.getCoursesFor(student, state);
+        for (const enrol of enrollments) {
             const crs = enrol.getCourse();
             if (crs) {
                 links.push({
@@ -321,12 +321,12 @@ export class CourseManager {
         return this.courseProvider.getProviders();
     }
 
-    public async getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
-        return this.courseProvider.getRepositories(cid, types);
+    public async getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
+        return this.courseProvider.getRepositories(courseID, types);
     }
 
-    public async refreshSubmission(id: number): Promise<boolean> {
-        return this.courseProvider.refreshSubmission(id);
+    public async refreshSubmission(ID: number): Promise<boolean> {
+        return this.courseProvider.refreshSubmission(ID);
     }
 
     public async approveSubmission(courseID: number, submissionID: number): Promise<boolean> {

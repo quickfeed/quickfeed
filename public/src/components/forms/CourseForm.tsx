@@ -186,16 +186,16 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     }
 
     private async updateCourse(courseId: number): Promise<Void | Status> {
-        const courseData = new Course();
-        courseData.setId(courseId);
-        courseData.setName(this.state.name);
-        courseData.setCode(this.state.code);
-        courseData.setTag(this.state.tag);
-        courseData.setYear(parseInt(this.state.year, 10));
-        courseData.setProvider(this.state.provider);
-        courseData.setOrganizationid(this.state.orgid);
+        const newCourse = new Course();
+        newCourse.setId(courseId);
+        newCourse.setName(this.state.name);
+        newCourse.setCode(this.state.code);
+        newCourse.setTag(this.state.tag);
+        newCourse.setYear(parseInt(this.state.year, 10));
+        newCourse.setProvider(this.state.provider);
+        newCourse.setOrganizationid(this.state.orgid);
 
-        return this.props.courseMan.updateCourse(courseId, courseData);
+        return this.props.courseMan.updateCourse(newCourse);
     }
 
     private async createNewCourse(): Promise<Course | Status> {

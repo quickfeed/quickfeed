@@ -133,14 +133,14 @@ export class UserManager {
         return this.userProvider.getUser();
     }
 
-    public async isTeacher(cid?: number): Promise<boolean> {
+    public async isTeacher(courseID?: number): Promise<boolean> {
         let valid = false;
         const user = await this.getUser();
 
         if (user) {
             user.getEnrollmentsList().forEach((ele) => {
-                if (cid) {
-                    if (cid === ele.getCourseid() && ele.getStatus() === Enrollment.UserStatus.TEACHER) {
+                if (courseID) {
+                    if (courseID === ele.getCourseid() && ele.getStatus() === Enrollment.UserStatus.TEACHER) {
                         valid = true;
                     }
 
