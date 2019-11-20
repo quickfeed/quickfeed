@@ -296,8 +296,18 @@ func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint
 		OrganizationID: course.GetOrganizationID(),
 		RepoType:       repoType,
 	}
-	if repoType == pb.Repository_USER {
+
+	switch repoType {
+	case pb.Repository_USER:
 		userRepoQuery.UserID = currentUser.GetID()
+	case pb.Repository_GROUP:
+		enrol, err := s.db.GetEnrollmentByCourseAndUser(courseID, currentUser.GetID())
+		if err != nil {
+			return "", err
+		}
+		if enrol.GetGroupID() > 0 {
+			userRepoQuery.GroupID = enrol.GroupID
+		}
 	}
 
 	repos, err := s.db.GetRepositories(userRepoQuery)
