@@ -318,7 +318,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	courses_request := &pb.RecordRequest{ID: user.ID}
+	courses_request := &pb.CoursesListRequest{UserID: user.ID}
 	courses, err := ags.GetCoursesWithEnrollment(context.Background(), courses_request)
 	if err != nil {
 		t.Fatal(err)
@@ -388,7 +388,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	stats := make([]pb.Enrollment_UserStatus, 0)
 	stats = append(stats, pb.Enrollment_REJECTED, pb.Enrollment_STUDENT)
-	course_req := &pb.RecordRequest{ID: user.ID, Statuses: stats}
+	course_req := &pb.CoursesListRequest{UserID: user.ID, States: stats}
 	courses, err := ags.GetCoursesWithEnrollment(context.Background(), course_req)
 	if err != nil {
 		t.Fatal(err)
@@ -415,7 +415,7 @@ func TestGetCourse(t *testing.T) {
 	_, scms := fakeProviderMap(t)
 	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
 
-	foundCourse, err := ags.GetCourse(context.Background(), &pb.RecordRequest{ID: course.ID})
+	foundCourse, err := ags.GetCourse(context.Background(), &pb.CourseRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
