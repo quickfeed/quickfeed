@@ -161,18 +161,14 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         const courseID = this.props.course.getId();
         // if approved group - check if repo is empty
         if (!readyToDelete) {
-            const isEmpty = await this.props.courseMan.isEmptyRepo(courseID, 0, group.getId());
+            readyToDelete = await this.props.courseMan.isEmptyRepo(courseID, 0, group.getId());
 
-            if (!isEmpty) {
-                if (confirm(
+            if (!readyToDelete) {
+                readyToDelete = confirm(
                     `Warning! Group repository is not empty!
                     Do you still want to delete group, github team
                     and group repository?`,
-                )) {
-                    readyToDelete = true;
-                }
-            } else {
-                readyToDelete = true;
+                );
             }
         }
 
