@@ -19,8 +19,8 @@ func (s *AutograderService) getCourses() (*pb.Courses, error) {
 }
 
 // getCoursesWithEnrollment returns all courses that match the provided enrollment status.
-func (s *AutograderService) getCoursesWithEnrollment(request *pb.RecordRequest) (*pb.Courses, error) {
-	courses, err := s.db.GetCoursesByUser(request.ID, request.Statuses...)
+func (s *AutograderService) getCoursesWithEnrollment(request *pb.CoursesListRequest) (*pb.Courses, error) {
+	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.States...)
 	if err != nil {
 		return nil, err
 	}

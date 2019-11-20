@@ -163,8 +163,8 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 
 // GetCourse returns course information for the given course.
 // Access policy: Any User.
-func (s *AutograderService) GetCourse(ctx context.Context, in *pb.RecordRequest) (*pb.Course, error) {
-	courseID := in.GetID()
+func (s *AutograderService) GetCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Course, error) {
+	courseID := in.GetCourseID()
 	course, err := s.getCourse(courseID)
 	if err != nil {
 		s.logger.Errorf("GetCourse failed: %w", err)
@@ -218,17 +218,17 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 
 // UpdateEnrollments changes status of all pending enrollments for the given course to approved
 // Access policy: Teacher of CourseID
-func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCM2(ctx, in.GetID())
+func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
+	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !s.isTeacher(usr.GetID(), in.GetID()) {
+	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
 		s.logger.Error("UpdateEnrollments failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
-	err = s.updateEnrollments(ctx, scm, in.GetID())
+	err = s.updateEnrollments(ctx, scm, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: %w", err)
 		err = status.Error(codes.InvalidArgument, "failed to update pending enrollments")
@@ -238,7 +238,7 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Record
 
 // GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.
 // Access policy: Any User.
-func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.RecordRequest) (*pb.Courses, error) {
+func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.CoursesListRequest) (*pb.Courses, error) {
 	courses, err := s.getCoursesWithEnrollment(in)
 	if err != nil {
 		s.logger.Errorf("GetCoursesWithEnrollment failed: %w", err)
@@ -270,7 +270,7 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 
 // GetGroup returns information about a group.
 // Access policy: Group members, Teacher of CourseID.
-func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) (*pb.Group, error) {
+func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroup failed: authentication error: %w", err)
@@ -290,13 +290,13 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.RecordRequest) 
 
 // GetGroups returns a list of groups created for the course id in the record request.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) GetGroups(ctx context.Context, in *pb.RecordRequest) (*pb.Groups, error) {
+func (s *AutograderService) GetGroups(ctx context.Context, in *pb.CourseRequest) (*pb.Groups, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroups failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	courseID := in.GetID()
+	courseID := in.GetCourseID()
 	if !s.isTeacher(usr.GetID(), courseID) {
 		s.logger.Error("GetGroups failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can access other groups")
@@ -393,7 +393,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.DeleteGroupR
 		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	grp, err := s.getGroup(&pb.RecordRequest{ID: in.GetGroupID()})
+	grp, err := s.getGroup(&pb.GroupRequest{GroupID: in.GetGroupID()})
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get group")
@@ -423,7 +423,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	}
 
 	// grp may be nil if there is no group ID in request; this is fine, since the grp.Contains() returns false in this case.
-	grp, _ := s.getGroup(&pb.RecordRequest{ID: in.GetGroupID()})
+	grp, _ := s.getGroup(&pb.GroupRequest{GroupID: in.GetGroupID()})
 
 	// ensure that current user is teacher, enrolled admin, or the current user is owner of the submission request
 	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
@@ -488,20 +488,20 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 }
 
 // RefreshSubmission rebuilds the latest student submission for the logged in user
-func (s *AutograderService) RefreshSubmission(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
+func (s *AutograderService) RefreshSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("ApproveSubmission failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	s.logger.Info("Submission rebuilding for user ", usr.GetLogin())
-	return &pb.Void{}, s.rebuildSubmission(ctx, in.GetID())
+	return &pb.Void{}, s.rebuildSubmission(ctx, in.GetSubmissionID())
 }
 
 // GetAssignments returns a list of all assignments for the given course.
 // Access policy: Any User.
-func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Assignments, error) {
-	courseID := in.GetID()
+func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Assignments, error) {
+	courseID := in.GetCourseID()
 	assignments, err := s.getAssignments(courseID)
 	if err != nil {
 		s.logger.Errorf("GetAssignments failed: %w", err)
@@ -512,8 +512,8 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.RecordReq
 
 // UpdateAssignments returns latest information about the course
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.RecordRequest) (*pb.Void, error) {
-	courseID := in.GetID()
+func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
+	courseID := in.GetCourseID()
 	usr, scm, err := s.getUserAndSCM2(ctx, courseID)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: scm authentication error: %w", err)

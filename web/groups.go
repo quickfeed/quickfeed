@@ -12,13 +12,13 @@ import (
 )
 
 // getGroup returns the group for the given group ID.
-func (s *AutograderService) getGroup(request *pb.RecordRequest) (*pb.Group, error) {
-	return s.db.GetGroup(request.ID)
+func (s *AutograderService) getGroup(request *pb.GroupRequest) (*pb.Group, error) {
+	return s.db.GetGroup(request.GetGroupID())
 }
 
 // getGroups returns all groups for the given course ID.
-func (s *AutograderService) getGroups(request *pb.RecordRequest) (*pb.Groups, error) {
-	groups, err := s.db.GetGroupsByCourse(request.ID)
+func (s *AutograderService) getGroups(request *pb.CourseRequest) (*pb.Groups, error) {
+	groups, err := s.db.GetGroupsByCourse(request.GetCourseID())
 	if err != nil {
 		return nil, err
 	}

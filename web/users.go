@@ -40,11 +40,6 @@ func GetSelf(db database.Database) echo.HandlerFunc {
 	}
 }
 
-// getUser returns information about the provided user id.
-func (s *AutograderService) getUser(request *pb.RecordRequest) (*pb.User, error) {
-	return s.db.GetUser(request.ID)
-}
-
 // getUsers returns all the users in the database.
 func (s *AutograderService) getUsers() (*pb.Users, error) {
 	users, err := s.db.GetUsers()
