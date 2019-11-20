@@ -35,7 +35,7 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 	return s.db.GetGroup(enrollment.GroupID)
 }
 
-// DeleteGroup deletes a pending or rejected group for the given gid.
+// DeleteGroup deletes group with the provided ID.
 func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.DeleteGroupRequest) error {
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {

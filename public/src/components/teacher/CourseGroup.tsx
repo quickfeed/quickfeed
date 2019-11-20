@@ -10,7 +10,6 @@ import { generateGroupRepoLink } from "./groupHelper";
 interface ICourseGroupProps {
     approvedGroups: Group[];
     pendingGroups: Group[];
-    rejectedGroups: Group[];
     course: Course;
     courseURL: string;
     navMan: NavigationManager;
@@ -21,7 +20,6 @@ interface ICourseGroupProps {
 interface ICourseGroupState {
     approvedGroups: Group[];
     pendingGroups: Group[];
-    rejectedGroups: Group[];
 }
 
 export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroupState> {
@@ -31,7 +29,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         this.state = {
             approvedGroups: this.props.approvedGroups,
             pendingGroups: this.props.pendingGroups,
-            rejectedGroups: this.props.rejectedGroups,
         };
     }
 
@@ -44,12 +41,8 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         if (this.props.pendingGroups.length > 0 || this.state.pendingGroups.length > 0) {
             pendingGroups = this.createPendingGroupView();
         }
-        let rejectedGroups;
-        if (this.props.rejectedGroups.length > 0 || this.state.rejectedGroups.length > 0) {
-            rejectedGroups = this.createRejectedGroupView();
-        }
         let noGroupsWell;
-        if (!approvedGroups && !pendingGroups && !rejectedGroups) {
+        if (!approvedGroups && !pendingGroups) {
             noGroupsWell = <p className="well">No groups to show!</p>;
         }
         return (
@@ -62,15 +55,13 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 {noGroupsWell}
                 {approvedGroups}
                 {pendingGroups}
-                {rejectedGroups}
             </div>
         );
     }
 
     public componentDidUpdate(prevProps: ICourseGroupProps) {
         if ((prevProps.approvedGroups.length !== this.props.approvedGroups.length)
-            || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)
-            || (prevProps.rejectedGroups.length !== this.props.rejectedGroups.length)) {
+            || (prevProps.pendingGroups.length !== this.props.pendingGroups.length)) {
             return this.refreshState();
         }
     }
@@ -120,7 +111,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             links.push({ name: "Approve", uri: "approve", extra: "primary" });
         }
         links.push({ name: "Edit", uri: "edit", extra: "primary" });
-        links.push({ name: "Reject", uri: "reject", extra: "danger" });
         links.push({ name: "Delete", uri: "delete", extra: "danger" });
         return <ul className="nav nav-pills">
             <LiDropDownMenu
@@ -129,29 +119,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 <span className="glyphicon glyphicon-option-vertical" />
             </LiDropDownMenu>
         </ul>;
-    }
-
-    private createRejectedGroupView(): JSX.Element {
-        const UpdateButton = bindFunc(this, this.updateButton);
-        return (
-            <div className="pending-groups">
-                <h3>Rejected Groups</h3>
-                <DynamicTable
-                    header={["Name", "Members", "Action"]}
-                    data={this.state.rejectedGroups}
-                    selector={
-                        (group: Group) => [
-                            group.getName(),
-                            this.getMembers(group.getUsersList()),
-                            <span>
-                                <UpdateButton type="danger" group={group} status={Group.GroupStatus.DELETED}>
-                                    Remove
-                                </UpdateButton>
-                            </span>,
-                        ]}
-                />
-            </div>
-        );
     }
 
     private updateButton(props: RProp<{
@@ -226,10 +193,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 group.setStatus(Group.GroupStatus.APPROVED);
                 await this.props.courseMan.updateGroup(group);
                 break;
-            case "reject":
-                group.setStatus(Group.GroupStatus.REJECTED);
-                await this.props.courseMan.updateGroup(group);
-                break;
             case "edit":
                 this.props.navMan
                     .navigateTo(this.props.pagePath + "/courses/"
@@ -252,7 +215,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         query = query.toLowerCase();
         const filteredApproved: Group[] = [];
         const filteredPending: Group[] = [];
-        const filteredRejected: Group[] = [];
 
         this.props.approvedGroups.forEach((grp) => {
             if (grp.getName().toLowerCase().indexOf(query) !== -1
@@ -275,25 +237,12 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         this.setState({
             pendingGroups: filteredPending,
         });
-
-        this.props.rejectedGroups.forEach((grp) => {
-            if (grp.getName().toLowerCase().indexOf(query) !== -1
-            ) {
-                filteredRejected.push(grp);
-            }
-        });
-
-        this.setState({
-            rejectedGroups: filteredRejected,
-        });
-
     }
 
     private refreshState() {
         this.setState({
             approvedGroups: this.props.approvedGroups,
             pendingGroups: this.props.pendingGroups,
-            rejectedGroups: this.props.rejectedGroups,
         });
         return this.forceUpdate();
     }
