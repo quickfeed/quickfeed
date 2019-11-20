@@ -140,11 +140,6 @@ func (req GroupRequest) IsValid() bool {
 	return (uid > 0 || gid > 0) && req.GetCourseID() > 0
 }
 
-// IsValid checks that group ID and course ID are set
-func (req DeleteGroupRequest) IsValid() bool {
-	return req.GetGroupID() > 0 && req.GetCourseID() > 0
-}
-
 // IsValid checks that course ID is positive.
 func (req EnrollmentRequest) IsValid() bool {
 	return req.GetCourseID() > 0
