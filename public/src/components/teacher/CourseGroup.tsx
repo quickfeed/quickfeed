@@ -157,24 +157,23 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private async deleteGroup(group: Group) {
-        let readyToDelete = false;
+        let readyToDelete = group.getStatus() === Group.GroupStatus.PENDING;
         const courseID = this.props.course.getId();
-        const isEmpty = await this.props.courseMan.isEmptyRepo(courseID, 0, group.getId());
-        if (!isEmpty) {
-            // if the group is pending, there is no repo, safe to delete
-            if (group.getStatus() === Group.GroupStatus.PENDING) {
-                readyToDelete = true;
-            // otherwise the group is alredy approved, ask for confimation
-            } else if (confirm(
-                `Warning! Group repository is not empty!
-                Do you still want to delete group, github team
-                and group repository?`,
-            )) {
+        // if approved group - check if repo is empty
+        if (!readyToDelete) {
+            const isEmpty = await this.props.courseMan.isEmptyRepo(courseID, 0, group.getId());
+
+            if (!isEmpty) {
+                if (confirm(
+                    `Warning! Group repository is not empty!
+                    Do you still want to delete group, github team
+                    and group repository?`,
+                )) {
+                    readyToDelete = true;
+                }
+            } else {
                 readyToDelete = true;
             }
-        } else {
-            // if the repo is empty, delete without asking
-            readyToDelete = true;
         }
 
         if (readyToDelete) {
