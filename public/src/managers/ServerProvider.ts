@@ -187,8 +187,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean> {
-        const result = await this.grpcHelper.deleteGroup(courseID, groupID, withRepo);
+    public async deleteGroup(courseID: number, groupID: number): Promise<boolean> {
+        const result = await this.grpcHelper.deleteGroup(courseID, groupID);
         return result.status.getCode() === 0;
     }
 

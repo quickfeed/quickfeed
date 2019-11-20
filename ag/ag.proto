@@ -187,12 +187,6 @@ message GroupRequest {
     uint64 courseID = 3;
 }
 
-message DeleteGroupRequest {
-    uint64 groupID = 1;
-    uint64 courseID = 2;
-    bool withRepo = 3;
-}
-
 message Provider {
     string provider = 1;
 }
@@ -274,7 +268,7 @@ service AutograderService {
     rpc GetGroups(CourseRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 
     rpc UpdateGroup(Group) returns (Void) {}
-    rpc DeleteGroup(DeleteGroupRequest) returns (Void) {}
+    rpc DeleteGroup(GroupRequest) returns (Void) {}
 
     // courses //
 

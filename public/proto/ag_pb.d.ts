@@ -712,32 +712,6 @@ export namespace GroupRequest {
   }
 }
 
-export class DeleteGroupRequest extends jspb.Message {
-  getGroupid(): number;
-  setGroupid(value: number): void;
-
-  getCourseid(): number;
-  setCourseid(value: number): void;
-
-  getWithrepo(): boolean;
-  setWithrepo(value: boolean): void;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): DeleteGroupRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: DeleteGroupRequest): DeleteGroupRequest.AsObject;
-  static serializeBinaryToWriter(message: DeleteGroupRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): DeleteGroupRequest;
-  static deserializeBinaryFromReader(message: DeleteGroupRequest, reader: jspb.BinaryReader): DeleteGroupRequest;
-}
-
-export namespace DeleteGroupRequest {
-  export type AsObject = {
-    groupid: number,
-    courseid: number,
-    withrepo: boolean,
-  }
-}
-
 export class Provider extends jspb.Message {
   getProvider(): string;
   setProvider(value: string): void;

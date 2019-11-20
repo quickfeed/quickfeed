@@ -7,7 +7,6 @@ import {
     CourseRequest,
     Courses,
     CoursesListRequest,
-    DeleteGroupRequest,
     Enrollment,
     EnrollmentRequest,
     Enrollments,
@@ -195,11 +194,10 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateGroup, group);
     }
 
-    public deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<IGrpcResponse<Void>> {
-        const request = new DeleteGroupRequest();
+    public deleteGroup(courseID: number, groupID: number): Promise<IGrpcResponse<Void>> {
+        const request = new GroupRequest();
         request.setGroupid(groupID);
         request.setCourseid(courseID);
-        request.setWithrepo(withRepo);
         return this.grpcSend<Void>(this.agService.deleteGroup, request);
     }
 

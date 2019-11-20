@@ -385,7 +385,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 
 // DeleteGroup removes group record from the database.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.DeleteGroupRequest) (*pb.Void, error) {
+func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
 
 	// TODO(vera): will neen an scm passed to the web method in case we want to delete the group repo too (in.WithRepo == true)
 	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())

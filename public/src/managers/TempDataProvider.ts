@@ -246,7 +246,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourseGroups;
     }
 
-    public async deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean> {
+    public async deleteGroup(courseID: number, groupID: number): Promise<boolean> {
         throw new Error("Method not implemented");
     }
 

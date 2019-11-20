@@ -18,7 +18,6 @@ import {
   CourseRequest,
   Courses,
   CoursesListRequest,
-  DeleteGroupRequest,
   Enrollment,
   EnrollmentRequest,
   Enrollments,
@@ -257,14 +256,14 @@ export class AutograderServiceClient {
 
   methodInfoDeleteGroup = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: DeleteGroupRequest) => {
+    (request: GroupRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   deleteGroup(
-    request: DeleteGroupRequest,
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {

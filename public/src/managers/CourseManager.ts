@@ -27,7 +27,7 @@ export interface ICourseProvider {
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
     createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status>;
     getGroup(groupID: number): Promise<Group | null>;
-    deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean>;
+    deleteGroup(courseID: number, groupID: number): Promise<boolean>;
     getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null>;
     updateGroup(group: Group): Promise<Status>;
 
@@ -294,8 +294,8 @@ export class CourseManager {
         return this.courseProvider.getGroup(groupID);
     }
 
-    public async deleteGroup(courseID: number, groupID: number, withRepo: boolean): Promise<boolean> {
-        return this.courseProvider.deleteGroup(courseID, groupID, withRepo);
+    public async deleteGroup(courseID: number, groupID: number): Promise<boolean> {
+        return this.courseProvider.deleteGroup(courseID, groupID);
     }
 
     /**
