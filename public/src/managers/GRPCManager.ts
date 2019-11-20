@@ -4,7 +4,9 @@ import {
     Assignments,
     AuthorizationResponse,
     Course,
+    CourseRequest,
     Courses,
+    CoursesListRequest,
     DeleteGroupRequest,
     Enrollment,
     EnrollmentRequest,
@@ -17,7 +19,6 @@ import {
     Organization,
     OrgRequest,
     Providers,
-    RecordRequest,
     Repositories,
     Repository,
     RepositoryRequest,
@@ -93,9 +94,9 @@ export class GrpcManager {
         return this.grpcSend<Course>(this.agService.updateCourse, course);
     }
 
-    public getCourse(ID: number): Promise<IGrpcResponse<Course>> {
-        const request = new RecordRequest();
-        request.setId(ID);
+    public getCourse(courseID: number): Promise<IGrpcResponse<Course>> {
+        const request = new CourseRequest();
+        request.setCourseid(courseID);
         return this.grpcSend<Course>(this.agService.getCourse, request);
     }
 
@@ -105,23 +106,23 @@ export class GrpcManager {
     }
 
     public getCoursesWithEnrollment(userID: number, state: any): Promise<IGrpcResponse<Courses>> {
-        const request = new RecordRequest();
-        request.setId(userID);
-        request.setStatusesList(state);
+        const request = new CoursesListRequest();
+        request.setUserid(userID);
+        request.setStatesList(state);
         return this.grpcSend<Courses>(this.agService.getCoursesWithEnrollment, request);
     }
 
     // /* ASSIGNMENTS */ //
 
     public getAssignments(courseID: number): Promise<IGrpcResponse<Assignments>> {
-        const request = new RecordRequest();
-        request.setId(courseID);
+        const request = new CourseRequest();
+        request.setCourseid(courseID);
         return this.grpcSend<Assignments>(this.agService.getAssignments, request);
     }
 
     public updateAssignments(courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new RecordRequest();
-        request.setId(courseID);
+        const request = new CourseRequest();
+        request.setCourseid(courseID);
         return this.grpcSend<Void>(this.agService.updateAssignments, request);
     }
 
@@ -157,16 +158,16 @@ export class GrpcManager {
     }
 
     public updateEnrollments(courseID: number): Promise<IGrpcResponse<Void>> {
-        const request = new RecordRequest();
-        request.setId(courseID);
+        const request = new CourseRequest();
+        request.setCourseid(courseID);
         return this.grpcSend<Void>(this.agService.updateEnrollments, request);
     }
 
     // /* GROUPS */ //
 
     public getGroup(groupID: number): Promise<IGrpcResponse<Group>> {
-        const request = new RecordRequest();
-        request.setId(groupID);
+        const request = new GroupRequest();
+        request.setGroupid(groupID);
         return this.grpcSend<Group>(this.agService.getGroup, request);
     }
 
@@ -178,8 +179,8 @@ export class GrpcManager {
     }
 
     public getGroups(courseID: number): Promise<IGrpcResponse<Groups>> {
-        const request = new RecordRequest();
-        request.setId(courseID);
+        const request = new CourseRequest();
+        request.setCourseid(courseID);
         return this.grpcSend<Groups>(this.agService.getGroups, request);
     }
 
@@ -238,9 +239,9 @@ export class GrpcManager {
         return this.grpcSend<LabResultLinks>(this.agService.getCourseLabSubmissions, request);
     }
 
-    public refreshSubmission(ID: number): Promise<IGrpcResponse<Void>> {
-        const request = new RecordRequest();
-        request.setId(ID);
+    public refreshSubmission(submissionID: number): Promise<IGrpcResponse<Void>> {
+        const request = new LabRequest();
+        request.setSubmissionid(submissionID);
         return this.grpcSend<Void>(this.agService.refreshSubmission, request);
     }
 

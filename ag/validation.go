@@ -82,11 +82,6 @@ func (req Enrollment) IsValid() bool {
 		req.GetUserID() > 0 && req.GetCourseID() > 0
 }
 
-// IsValid checks whether RecordRequest fields are valid
-func (req RecordRequest) IsValid() bool {
-	return req.GetID() > 0
-}
-
 // IsValid checks whether OrgRequest fields are valid
 func (req OrgRequest) IsValid() bool {
 	return req.GetOrgName() != ""

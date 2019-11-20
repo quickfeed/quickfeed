@@ -644,33 +644,45 @@ export namespace LabResultLinks {
   }
 }
 
-export class RecordRequest extends jspb.Message {
-  getId(): number;
-  setId(value: number): void;
-
-  getStatusesList(): Array<Enrollment.UserStatus>;
-  setStatusesList(value: Array<Enrollment.UserStatus>): void;
-  clearStatusesList(): void;
-  addStatuses(value: Enrollment.UserStatus, index?: number): void;
-
-  getGroupstatusesList(): Array<Group.GroupStatus>;
-  setGroupstatusesList(value: Array<Group.GroupStatus>): void;
-  clearGroupstatusesList(): void;
-  addGroupstatuses(value: Group.GroupStatus, index?: number): void;
+export class CourseRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): RecordRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: RecordRequest): RecordRequest.AsObject;
-  static serializeBinaryToWriter(message: RecordRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): RecordRequest;
-  static deserializeBinaryFromReader(message: RecordRequest, reader: jspb.BinaryReader): RecordRequest;
+  toObject(includeInstance?: boolean): CourseRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CourseRequest): CourseRequest.AsObject;
+  static serializeBinaryToWriter(message: CourseRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CourseRequest;
+  static deserializeBinaryFromReader(message: CourseRequest, reader: jspb.BinaryReader): CourseRequest;
 }
 
-export namespace RecordRequest {
+export namespace CourseRequest {
   export type AsObject = {
-    id: number,
-    statusesList: Array<Enrollment.UserStatus>,
-    groupstatusesList: Array<Group.GroupStatus>,
+    courseid: number,
+  }
+}
+
+export class CoursesListRequest extends jspb.Message {
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getStatesList(): Array<Enrollment.UserStatus>;
+  setStatesList(value: Array<Enrollment.UserStatus>): void;
+  clearStatesList(): void;
+  addStates(value: Enrollment.UserStatus, index?: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CoursesListRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CoursesListRequest): CoursesListRequest.AsObject;
+  static serializeBinaryToWriter(message: CoursesListRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CoursesListRequest;
+  static deserializeBinaryFromReader(message: CoursesListRequest, reader: jspb.BinaryReader): CoursesListRequest;
+}
+
+export namespace CoursesListRequest {
+  export type AsObject = {
+    userid: number,
+    statesList: Array<Enrollment.UserStatus>,
   }
 }
 
@@ -970,6 +982,9 @@ export class LabRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
+  getSubmissionid(): number;
+  setSubmissionid(value: number): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): LabRequest.AsObject;
   static toObject(includeInstance: boolean, msg: LabRequest): LabRequest.AsObject;
@@ -981,6 +996,7 @@ export class LabRequest extends jspb.Message {
 export namespace LabRequest {
   export type AsObject = {
     courseid: number,
+    submissionid: number,
   }
 }
 

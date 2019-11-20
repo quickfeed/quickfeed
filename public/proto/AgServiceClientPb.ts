@@ -15,7 +15,9 @@ import {
   Assignments,
   AuthorizationResponse,
   Course,
+  CourseRequest,
   Courses,
+  CoursesListRequest,
   DeleteGroupRequest,
   Enrollment,
   EnrollmentRequest,
@@ -28,7 +30,6 @@ import {
   OrgRequest,
   Organization,
   Providers,
-  RecordRequest,
   Repositories,
   RepositoryRequest,
   SubmissionRequest,
@@ -146,14 +147,14 @@ export class AutograderServiceClient {
 
   methodInfoGetGroup = new grpcWeb.AbstractClientBase.MethodInfo(
     Group,
-    (request: RecordRequest) => {
+    (request: GroupRequest) => {
       return request.serializeBinary();
     },
     Group.deserializeBinary
   );
 
   getGroup(
-    request: RecordRequest,
+    request: GroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Group) => void) {
@@ -190,14 +191,14 @@ export class AutograderServiceClient {
 
   methodInfoGetGroups = new grpcWeb.AbstractClientBase.MethodInfo(
     Groups,
-    (request: RecordRequest) => {
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
     Groups.deserializeBinary
   );
 
   getGroups(
-    request: RecordRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Groups) => void) {
@@ -278,14 +279,14 @@ export class AutograderServiceClient {
 
   methodInfoGetCourse = new grpcWeb.AbstractClientBase.MethodInfo(
     Course,
-    (request: RecordRequest) => {
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
     Course.deserializeBinary
   );
 
   getCourse(
-    request: RecordRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Course) => void) {
@@ -322,14 +323,14 @@ export class AutograderServiceClient {
 
   methodInfoGetCoursesWithEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
     Courses,
-    (request: RecordRequest) => {
+    (request: CoursesListRequest) => {
       return request.serializeBinary();
     },
     Courses.deserializeBinary
   );
 
   getCoursesWithEnrollment(
-    request: RecordRequest,
+    request: CoursesListRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Courses) => void) {
@@ -388,14 +389,14 @@ export class AutograderServiceClient {
 
   methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
     Assignments,
-    (request: RecordRequest) => {
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
     Assignments.deserializeBinary
   );
 
   getAssignments(
-    request: RecordRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Assignments) => void) {
@@ -410,14 +411,14 @@ export class AutograderServiceClient {
 
   methodInfoUpdateAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: RecordRequest) => {
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   updateAssignments(
-    request: RecordRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
@@ -498,14 +499,14 @@ export class AutograderServiceClient {
 
   methodInfoUpdateEnrollments = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: RecordRequest) => {
+    (request: CourseRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   updateEnrollments(
-    request: RecordRequest,
+    request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
@@ -564,14 +565,14 @@ export class AutograderServiceClient {
 
   methodInfoRefreshSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: RecordRequest) => {
+    (request: LabRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   refreshSubmission(
-    request: RecordRequest,
+    request: LabRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {

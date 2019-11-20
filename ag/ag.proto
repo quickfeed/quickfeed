@@ -172,10 +172,13 @@ message LabResultLinks {
 
 ////    REQUESTS AND RESPONSES      \\\\
 
-message RecordRequest {
-    uint64 ID = 1;
-    repeated Enrollment.UserStatus statuses = 2;
-    repeated Group.GroupStatus groupStatuses = 3;
+message CourseRequest {
+    uint64 courseID = 1;
+}
+
+message CoursesListRequest {
+    uint64 userID = 1;
+    repeated Enrollment.UserStatus states = 2;
 }
 
 message GroupRequest {
@@ -248,6 +251,7 @@ message Status {
 
 message LabRequest {
     uint64 courseID = 1;
+    uint64 submissionID = 2;
 }
 
 message Void {}
@@ -265,35 +269,35 @@ service AutograderService {
 
     // groups //
 
-    rpc GetGroup(RecordRequest) returns (Group) {}
+    rpc GetGroup(GroupRequest) returns (Group) {}
     rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {} 
-    rpc GetGroups(RecordRequest) returns (Groups) {} 
+    rpc GetGroups(CourseRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 
     rpc UpdateGroup(Group) returns (Void) {}
     rpc DeleteGroup(DeleteGroupRequest) returns (Void) {}
 
     // courses //
 
-    rpc GetCourse(RecordRequest) returns (Course) {} 
+    rpc GetCourse(CourseRequest) returns (Course) {} 
     rpc GetCourses(Void) returns (Courses) {} 
-    rpc GetCoursesWithEnrollment(RecordRequest) returns (Courses) {}
+    rpc GetCoursesWithEnrollment(CoursesListRequest) returns (Courses) {}
     rpc CreateCourse(Course) returns (Course) {}
     rpc UpdateCourse(Course) returns (Void) {}
  
     // assignments //
 
     // GetAssignments returns the assignments for the given course.
-    rpc GetAssignments(RecordRequest) returns (Assignments) {}
+    rpc GetAssignments(CourseRequest) returns (Assignments) {}
     // UpdateAssignments updates the assignments on the backend for the given course
     // by fetching assignment information from the course's test repository.
-    rpc UpdateAssignments(RecordRequest) returns (Void) {}
+    rpc UpdateAssignments(CourseRequest) returns (Void) {}
 
     // enrollments //
 
     rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {} 
     rpc UpdateEnrollment(Enrollment) returns (Void) {} 
-    rpc UpdateEnrollments(RecordRequest) returns (Void) {}
+    rpc UpdateEnrollments(CourseRequest) returns (Void) {}
 
     // submissions //
 
@@ -301,7 +305,7 @@ service AutograderService {
     // ApproveSubmission approves the given submission for a course.
     // Only teachers can invoke this.
     rpc ApproveSubmission(ApproveSubmissionRequest) returns (Void) {}
-    rpc RefreshSubmission(RecordRequest) returns (Void) {}
+    rpc RefreshSubmission(LabRequest) returns (Void) {}
     rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
    
     // misc //
