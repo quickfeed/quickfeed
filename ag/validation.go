@@ -82,6 +82,16 @@ func (req Enrollment) IsValid() bool {
 		req.GetUserID() > 0 && req.GetCourseID() > 0
 }
 
+// IsValid ensures that course ID is set
+func (req CourseRequest) IsValid() bool {
+	return req.GetCourseID() > 0
+}
+
+// IsValid ensures that user ID is set
+func (req CoursesListRequest) IsValid() bool {
+	return req.GetUserID() > 0
+}
+
 // IsValid checks whether OrgRequest fields are valid
 func (req OrgRequest) IsValid() bool {
 	return req.GetOrgName() != ""
@@ -148,9 +158,10 @@ func (req Provider) IsValid() bool {
 		provider == "fake"
 }
 
-// IsValid ensures that course ID is positive
+// IsValid ensures that either course ID or submission ID is set
 func (req LabRequest) IsValid() bool {
-	return req.GetCourseID() > 0
+	cid, sid := req.GetCourseID(), req.GetSubmissionID()
+	return cid > 0 || sid > 0
 }
 
 // IsValid checks that either ID or path field is set
