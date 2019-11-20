@@ -54,7 +54,7 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,19 +160,19 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}
 
 	// check that group member can access group
-	group, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that teacher can access group
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
+	_, err = ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that admin can access group
 	ctx = withUserContext(context.Background(), admin)
-	_, err = ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
+	_, err = ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -300,7 +300,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -492,7 +492,7 @@ func TestGetGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotGroup, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: respGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -654,7 +654,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Error(err)
 	}
 
-	dbGroup, err := ags.GetGroup(ctx, &pb.RecordRequest{ID: group.ID})
+	dbGroup, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -815,14 +815,14 @@ func TestGetGroups(t *testing.T) {
 	wantGroups := &pb.Groups{Groups: []*pb.Group{group1, group2}}
 
 	// check that request on non-existent course returns error
-	_, err = ags.GetGroups(ctx, &pb.RecordRequest{ID: 15})
+	_, err = ags.GetGroups(ctx, &pb.CourseRequest{CourseID: 15})
 	if err == nil {
 		t.Error("expected error; no groups should be returned")
 	}
 
 	// get groups from the database; admin is in ctx, which is also teacher
 	ctx = withUserContext(context.Background(), admin)
-	gotGroups, err := ags.GetGroups(ctx, &pb.RecordRequest{ID: course.ID})
+	gotGroups, err := ags.GetGroups(ctx, &pb.CourseRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
