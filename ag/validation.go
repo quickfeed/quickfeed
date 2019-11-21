@@ -134,6 +134,11 @@ func (req ApproveSubmissionRequest) IsValid() bool {
 	return req.GetCourseID() > 0 && req.GetSubmissionID() > 0
 }
 
+// IsValid ensures that group ID is provided
+func (req GetGroupRequest) IsValid() bool {
+	return req.GetGroupID() > 0
+}
+
 // IsValid ensures that course ID and group or user IDs are set
 func (req GroupRequest) IsValid() bool {
 	uid, gid := req.GetUserID(), req.GetGroupID()
