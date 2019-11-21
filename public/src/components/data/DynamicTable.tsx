@@ -27,7 +27,7 @@ export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>> {
         const tableFooter = footer ? <tfoot><tr>{this.renderCells(footer)}</tr></tfoot> : null;
 
         return (
-            <table className={this.props.onRowClick ? "table table-hover" : "table"}>
+            <table className={this.props.onRowClick ? "table table-hover table-striped" : "table table-striped"}>
                 <thead>
                     <tr>{this.renderCells(this.props.header, true)}</tr>
                 </thead>
