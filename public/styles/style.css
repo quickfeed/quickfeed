@@ -260,6 +260,15 @@
     float: none;
 }
 
+h3 .btn-group {
+    display: inline-block;
+}
+
+.member-btn {
+    float: right;
+    margin-right: 0;
+}
+
 .lab-btn {
     display: inline-block;
     flex: 1;

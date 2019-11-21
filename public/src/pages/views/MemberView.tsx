@@ -45,18 +45,17 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     onChange={(query) => this.handleSearch(query)}
                 />
             {this.renderPendingView(pendingActions)}
-            {this.props.pendingUsers.length > 0 ? this.approveButton() : null}
             {this.renderUserView()}
             {this.renderRejectedView()}
         </div>;
     }
 
-    public componentDidUpdate(prevProps: IUserViewerProps) {
-        if ((prevProps.acceptedUsers.length !== this.props.acceptedUsers.length)
-         || (prevProps.pendingUsers.length !== this.props.pendingUsers.length)
-          || (prevProps.rejectedUsers.length !== this.props.rejectedUsers.length)) {
-            return this.refreshState();
-       }
+    public componentWillReceiveProps(newProps: IUserViewerProps) {
+        this.setState({
+            acceptedUsers: newProps.acceptedUsers,
+            rejectedUsers: newProps.rejectedUsers,
+            pendingUsers: newProps.pendingUsers,
+        });
     }
 
     public renderRejectedView() {
@@ -98,12 +97,13 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     public renderPendingView(pendingActions: ILink[]) {
         if (this.props.pendingUsers.length > 0 || this.state.pendingUsers.length > 0) {
-            return this.renderUsers("Pending users", this.state.pendingUsers, pendingActions, ActionType.InRow);
+            const header = <div> Pending users {this.approveButton()}</div>;
+            return this.renderUsers(header, this.state.pendingUsers, pendingActions, ActionType.Menu);
         }
     }
 
     public renderUsers(
-        title: string,
+        title: string | JSX.Element,
         users: IUserRelation[],
         actions?: ILink[],
         linkType?: ActionType,
@@ -123,21 +123,25 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         </div>;
     }
 
-    public handleAction(userRel: IUserRelation, link: ILink) {
+    public async handleAction(userRel: IUserRelation, link: ILink) {
+        let result = false;
         switch (link.uri) {
             case "accept":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT).then((ans) => {
-                    if (ans) {
-                        userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
+                result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
+                if (result) {
+                    userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
+                    const i = this.state.pendingUsers.indexOf(userRel);
+                    if (i >= 0) {
+                        this.state.pendingUsers.splice(i, 1);
+                        this.state.acceptedUsers.push(userRel);
                     }
-                });
+                }
                 break;
             case "reject":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED).then((ans) => {
-                    if (ans) {
-                        userRel.link.setStatus(Enrollment.UserStatus.REJECTED);
-                    }
-                });
+                result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
+                if (result) {
+                    userRel.link.setStatus(Enrollment.UserStatus.REJECTED);
+                }
                 break;
             case "teacher":
                 if (confirm(
@@ -145,22 +149,16 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     Do you want to continue assigning:
                     ${userRel.user.getName()} as a teacher?`,
                 )) {
-                    this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER).then((ans) => {
-                        if (ans) {
-                            userRel.link.setStatus(Enrollment.UserStatus.TEACHER);
-                        }
-                    });
+                    this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
                 }
                 break;
             case "remove":
-                this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING).then((ans) => {
-                    if (ans) {
-                        userRel.link.setStatus(Enrollment.UserStatus.PENDING);
-                    }
-                });
+                result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
+                if (result) {
+                    userRel.link.setStatus(Enrollment.UserStatus.PENDING);
+                }
                 break;
         }
-        this.refreshState();
         this.props.navMan.refresh();
     }
 
@@ -217,9 +215,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     private approveButton() {
-        return <p> <button type="button"
+        return <button type="button"
                 id="approve"
-                className="btn btn-success"
+                className="btn btn-success member-btn"
                 // only activate the approve function if is not already approving
                 onClick={this.state.approveAllClicked ?
                     () => {} : async () => {
@@ -227,7 +225,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                             this.setState({approveAllClicked: false});
                         });
                     }
-                }> {this.approveButtonString()} </button> </p>;
+                }> {this.approveButtonString()} </button>;
     }
 
     private async handleApproveClick(): Promise<boolean> {
@@ -238,15 +236,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     private approveButtonString(): string {
-        return this.state.approveAllClicked ? "Approving..." : "Approve all pending";
-    }
-
-    private refreshState() {
-        this.setState({
-            pendingUsers: this.props.pendingUsers,
-            acceptedUsers: this.props.acceptedUsers,
-            rejectedUsers: this.props.rejectedUsers,
-        });
-        return this.forceUpdate();
+        return this.state.approveAllClicked ? "Approving..." : "Approve all ";
     }
 }
