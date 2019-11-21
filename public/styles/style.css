@@ -16,6 +16,10 @@
     cursor: pointer;
 }
 
+.nav-list {
+    padding-top: 15px;
+}
+
 .nav-sub>li>span,
 .nav-list>li>span {
     position: relative;
