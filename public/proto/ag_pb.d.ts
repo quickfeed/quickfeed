@@ -686,6 +686,24 @@ export namespace CoursesListRequest {
   }
 }
 
+export class GetGroupRequest extends jspb.Message {
+  getGroupid(): number;
+  setGroupid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetGroupRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetGroupRequest): GetGroupRequest.AsObject;
+  static serializeBinaryToWriter(message: GetGroupRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetGroupRequest;
+  static deserializeBinaryFromReader(message: GetGroupRequest, reader: jspb.BinaryReader): GetGroupRequest;
+}
+
+export namespace GetGroupRequest {
+  export type AsObject = {
+    groupid: number,
+  }
+}
+
 export class GroupRequest extends jspb.Message {
   getUserid(): number;
   setUserid(value: number): void;

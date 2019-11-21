@@ -21,6 +21,7 @@ import {
   Enrollment,
   EnrollmentRequest,
   Enrollments,
+  GetGroupRequest,
   Group,
   GroupRequest,
   Groups,
@@ -146,14 +147,14 @@ export class AutograderServiceClient {
 
   methodInfoGetGroup = new grpcWeb.AbstractClientBase.MethodInfo(
     Group,
-    (request: GroupRequest) => {
+    (request: GetGroupRequest) => {
       return request.serializeBinary();
     },
     Group.deserializeBinary
   );
 
   getGroup(
-    request: GroupRequest,
+    request: GetGroupRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Group) => void) {
