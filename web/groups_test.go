@@ -54,7 +54,7 @@ func TestNewGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,19 +160,19 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	}
 
 	// check that group member can access group
-	group, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that teacher can access group
 	ctx = withUserContext(context.Background(), teacher)
-	_, err = ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
+	_, err = ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
 	// check that admin can access group
 	ctx = withUserContext(context.Background(), admin)
-	_, err = ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
+	_, err = ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -300,7 +300,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	group, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
+	group, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -492,7 +492,7 @@ func TestGetGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotGroup, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: respGroup.ID})
+	gotGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: respGroup.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -654,7 +654,7 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		t.Error(err)
 	}
 
-	dbGroup, err := ags.GetGroup(ctx, &pb.GroupRequest{GroupID: group.ID})
+	dbGroup, err := ags.GetGroup(ctx, &pb.GetGroupRequest{GroupID: group.ID})
 	if err != nil {
 		t.Fatal(err)
 	}

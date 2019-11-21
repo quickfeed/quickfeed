@@ -181,6 +181,10 @@ message CoursesListRequest {
     repeated Enrollment.UserStatus states = 2;
 }
 
+message GetGroupRequest {
+    uint64 groupID = 1;
+}
+
 message GroupRequest {
     uint64 userID = 1;
     uint64 groupID = 2;
@@ -263,7 +267,7 @@ service AutograderService {
 
     // groups //
 
-    rpc GetGroup(GroupRequest) returns (Group) {}
+    rpc GetGroup(GetGroupRequest) returns (Group) {}
     rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {} 
     rpc GetGroups(CourseRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 

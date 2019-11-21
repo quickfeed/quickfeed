@@ -10,6 +10,7 @@ import {
     Enrollment,
     EnrollmentRequest,
     Enrollments,
+    GetGroupRequest,
     Group,
     GroupRequest,
     Groups,
@@ -165,7 +166,7 @@ export class GrpcManager {
     // /* GROUPS */ //
 
     public getGroup(groupID: number): Promise<IGrpcResponse<Group>> {
-        const request = new GroupRequest();
+        const request = new GetGroupRequest();
         request.setGroupid(groupID);
         return this.grpcSend<Group>(this.agService.getGroup, request);
     }

@@ -270,7 +270,7 @@ func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.E
 
 // GetGroup returns information about a group.
 // Access policy: Group members, Teacher of CourseID.
-func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Group, error) {
+func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GetGroupRequest) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroup failed: authentication error: %w", err)
@@ -393,7 +393,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest
 		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	grp, err := s.getGroup(&pb.GroupRequest{GroupID: in.GetGroupID()})
+	grp, err := s.getGroup(&pb.GetGroupRequest{GroupID: in.GetGroupID()})
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "failed to get group")
@@ -423,7 +423,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	}
 
 	// grp may be nil if there is no group ID in request; this is fine, since the grp.Contains() returns false in this case.
-	grp, _ := s.getGroup(&pb.GroupRequest{GroupID: in.GetGroupID()})
+	grp, _ := s.getGroup(&pb.GetGroupRequest{GroupID: in.GetGroupID()})
 
 	// ensure that current user is teacher, enrolled admin, or the current user is owner of the submission request
 	if !s.hasCourseAccess(usr.GetID(), in.GetCourseID(), func(e *pb.Enrollment) bool {
