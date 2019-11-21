@@ -81,11 +81,11 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 "Registered users",
                 this.state.acceptedUsers,
                 [],
-                ActionType.Menu,
+                ActionType.InRow,
                 (user: IUserRelation) => {
                     const links = [];
                     if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
-                        links.push({ name: "This is a teacher", extra: "primary" });
+                        links.push({ name: "Teacher", extra: "light" });
                     } else {
                         links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });
                         links.push({ name: "Reject", uri: "reject", extra: "danger" });
@@ -98,7 +98,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     public renderPendingView(pendingActions: ILink[]) {
         if (this.props.pendingUsers.length > 0 || this.state.pendingUsers.length > 0) {
             const header = <div> Pending users {this.approveButton()}</div>;
-            return this.renderUsers(header, this.state.pendingUsers, pendingActions, ActionType.Menu);
+            return this.renderUsers(header, this.state.pendingUsers, pendingActions, ActionType.InRow);
         }
     }
 
@@ -138,11 +138,17 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 }
                 break;
             case "reject":
-                result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
-                if (result) {
-                    userRel.link.setStatus(Enrollment.UserStatus.REJECTED);
-                }
-                break;
+                    if (confirm(
+                        `Warning! This action is irreversible!
+                        Do you want to reject the student?`,
+                    )) {
+                        result =
+                         await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
+                        if (result) {
+                            userRel.link.setStatus(Enrollment.UserStatus.REJECTED);
+                        }
+                    }
+                    break;
             case "teacher":
                 if (confirm(
                     `Warning! This action is irreversible!
