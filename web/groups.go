@@ -12,7 +12,7 @@ import (
 )
 
 // getGroup returns the group for the given group ID.
-func (s *AutograderService) getGroup(request *pb.GroupRequest) (*pb.Group, error) {
+func (s *AutograderService) getGroup(request *pb.GetGroupRequest) (*pb.Group, error) {
 	return s.db.GetGroup(request.GetGroupID())
 }
 
@@ -59,6 +59,7 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 		if err = deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID()); err != nil {
 			return err
 		}
+
 	}
 
 	return s.db.DeleteGroup(request.GetGroupID())
