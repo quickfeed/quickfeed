@@ -309,7 +309,6 @@ export class TeacherPage extends ViewPage {
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
                 { name: "New Group", uri: link.uri + "/new_group"},
-                // {name: "Settings", uri: link.uri + "/settings" },
                 { name: "Repositories" },
                 { name: "Course Info", uri: link.uri + "/info" },
                 { name: "Assignments", uri: link.uri + "/assignmentinfo" },
@@ -391,10 +390,7 @@ export class TeacherPage extends ViewPage {
                     }));
                 });
 
-                const settings: ILink[] = [];
-
                 this.navMan.checkLinkCollection(labLinks, this);
-                this.navMan.checkLinks(settings, this);
 
                 return [
                     <h4 key={0}>Courses</h4>,
@@ -402,8 +398,6 @@ export class TeacherPage extends ViewPage {
                         key={1}
                         links={labLinks} onClick={(link) => this.handleClick(link)}>
                     </CollapsableNavMenu>,
-                    <h4 key={2}>Settings</h4>,
-                    <NavMenu key={3} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
                 ];
             }
         }
