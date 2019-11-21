@@ -226,7 +226,6 @@ export class StudentPage extends ViewPage {
                     name: "Assignments", uri: repos.get(Repository.Type.ASSIGNMENTS), absolute: true,
                 });
 
-                allLinks.push({ name: "Settings" });
                 allLinks.push({
                     name: "New Group", uri: this.pagePath + "/courses/" + courseID + "/members",
                 });
@@ -236,19 +235,12 @@ export class StudentPage extends ViewPage {
                 });
             }
 
-            const settings = [
-                { name: "Join course", uri: this.pagePath + "/enroll" },
-            ];
-
             this.navMan.checkLinkCollection(coursesLinks, this);
-            this.navMan.checkLinks(settings, this);
 
             return [
                 <h4 key={0}>Courses</h4>,
                 <CollapsableNavMenu key={1} links={coursesLinks} onClick={(link) => this.handleClick(link)}>
                 </CollapsableNavMenu>,
-                <h4 key={2}>Settings</h4>,
-                <NavMenu key={3} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
             ];
         }
         return [];
