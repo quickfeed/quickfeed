@@ -6,13 +6,13 @@ interface IStudentLabProps {
     assignment: IStudentSubmission;
     showApprove: boolean;
     onApproveClick: () => void;
-    onRebuildClick: (submissionID: number) => Promise<boolean>;
+    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
 export class StudentLab extends React.Component<IStudentLabProps> {
     public render() {
         return <LabResultView
-            labInfo={this.props.assignment}
+            assignment={this.props.assignment}
             onApproveClick={this.props.onApproveClick}
             onRebuildClick={this.props.onRebuildClick}
             showApprove={this.props.showApprove}>

@@ -19,8 +19,8 @@ export interface ICourseProvider {
     changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean>;
     approveAll(courseID: number): Promise<boolean>;
 
-    createNewCourse(courseData: Course): Promise<Course | Status>;
-    getCourse(ID: number): Promise<Course | null>;
+    createNewCourse(course: Course): Promise<Course | Status>;
+    getCourse(courseID: number): Promise<Course | null>;
     updateCourse(course: Course): Promise<Void | Status>;
 
     getCourseGroups(courseID: number): Promise<Group[]>;
@@ -39,7 +39,7 @@ export interface ICourseProvider {
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
     approveSubmission(courseID: number, submissionID: number): Promise<boolean>;
-    refreshSubmission(ID: number): Promise<boolean>;
+    refreshSubmission(assignmentID: number, submissionID: number): Promise<boolean>;
     getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
 
     isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
@@ -66,8 +66,8 @@ export class CourseManager {
      * Get a course from and id
      * @param ID The id of the course
      */
-    public async getCourse(ID: number): Promise<Course | null> {
-        return this.courseProvider.getCourse(ID);
+    public async getCourse(courseID: number): Promise<Course | null> {
+        return this.courseProvider.getCourse(courseID);
     }
 
     /**
@@ -134,10 +134,10 @@ export class CourseManager {
 
     /**
      * Creates a new course in the backend
-     * @param courseData The course information to create a course from
+     * @param course The course information to create a course from
      */
-    public async createNewCourse(courseData: Course): Promise<Course | Status> {
-        return this.courseProvider.createNewCourse(courseData);
+    public async createNewCourse(course: Course): Promise<Course | Status> {
+        return this.courseProvider.createNewCourse(course);
     }
 
     /**
@@ -228,8 +228,8 @@ export class CourseManager {
         return this.courseProvider.createGroup(courseID, name, users);
     }
 
-    public async updateGroup(groupData: Group): Promise<Status> {
-        return this.courseProvider.updateGroup(groupData);
+    public async updateGroup(group: Group): Promise<Status> {
+        return this.courseProvider.updateGroup(group);
     }
 
     /**
@@ -325,8 +325,8 @@ export class CourseManager {
         return this.courseProvider.getRepositories(courseID, types);
     }
 
-    public async refreshSubmission(ID: number): Promise<boolean> {
-        return this.courseProvider.refreshSubmission(ID);
+    public async refreshSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+        return this.courseProvider.refreshSubmission(assignmentID, submissionID);
     }
 
     public async approveSubmission(courseID: number, submissionID: number): Promise<boolean> {
