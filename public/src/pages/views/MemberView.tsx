@@ -87,7 +87,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
                         links.push({ name: "Teacher", extra: "light" });
                     } else {
-                        links.push({ name: "Assign as Teacher", uri: "teacher", extra: "primary" });
+                        links.push({ name: "Promote", uri: "teacher", extra: "primary" });
                         links.push({ name: "Remove", uri: "reject", extra: "danger" });
                     }
                     return links;
