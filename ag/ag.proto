@@ -250,6 +250,7 @@ message Status {
 message LabRequest {
     uint64 courseID = 1;
     uint64 submissionID = 2;
+    uint64 assignmentID = 3;
 }
 
 message Void {}
