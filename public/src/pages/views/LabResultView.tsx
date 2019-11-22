@@ -3,35 +3,36 @@ import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentSubmission } from "../../models";
 
 interface ILabInfoProps {
-    labInfo: IStudentSubmission;
+    assignment: IStudentSubmission;
     showApprove: boolean;
     onApproveClick: () => void;
-    onRebuildClick: (submissionID: number) => Promise<boolean>;
+    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps> {
 
     public render() {
-        if (this.props.labInfo.latest) {
-            const latest = this.props.labInfo.latest;
+        if (this.props.assignment.latest) {
+            const latest = this.props.assignment.latest;
             const buildLog = latest.buildLog.split("\n").map((x) => <span>{x}<br /></span>);
             return (
                 <div className="col-md-9 col-sm-9 col-xs-12">
                     <div className="result-content" id="resultview">
                         <section id="result">
                             <LabResult
+                                assignment_id={this.props.assignment.assignment.getId()}
                                 submission_id={latest.id}
                                 showApprove={this.props.showApprove}
-                                lab={this.props.labInfo.assignment.getName()}
+                                lab={this.props.assignment.assignment.getName()}
                                 progress={latest.score}
                                 isApproved={latest.approved}
-                                authorName={this.props.labInfo.authorName}
+                                authorName={this.props.assignment.authorName}
                                 onApproveClick={this.props.onApproveClick}
                                 onRebuildClick={this.props.onRebuildClick}
                             />
                             <LastBuildInfo
                                 submission={latest}
-                                assignment={this.props.labInfo.assignment}
+                                assignment={this.props.assignment.assignment}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}
@@ -54,8 +55,8 @@ export class LabResultView extends React.Component<ILabInfoProps> {
     }
 
     private getSubmissionInfo(): string {
-        if (this.props.labInfo.latest) {
-            return this.props.labInfo.latest.approved ? "Approved" : "Not approved";
+        if (this.props.assignment.latest) {
+            return this.props.assignment.latest.approved ? "Approved" : "Not approved";
         }
         return "Nothing built yet!";
     }

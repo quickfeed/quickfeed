@@ -108,8 +108,8 @@ export class StudentPage extends ViewPage {
                 return <StudentLab
                     assignment={this.selectedAssignment}
                     showApprove={false}
-                    onRebuildClick={async (submissionID: number) => {
-                        const ans = await this.courseMan.refreshSubmission(submissionID);
+                    onRebuildClick={async (assignmentID: number, submissionID: number) => {
+                        const ans = await this.courseMan.refreshSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans;
                     }}
@@ -131,8 +131,8 @@ export class StudentPage extends ViewPage {
                 return <StudentLab
                     assignment={this.selectedAssignment}
                     showApprove={false}
-                    onRebuildClick={async (submissionID: number) => {
-                        const ans = await this.courseMan.refreshSubmission(submissionID);
+                    onRebuildClick={async (assignmentID: number, submissionID: number) => {
+                        const ans = await this.courseMan.refreshSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans;
                     }}

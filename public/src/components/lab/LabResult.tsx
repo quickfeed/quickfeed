@@ -2,6 +2,7 @@ import * as React from "react";
 import { ProgressBar, Row } from "../../components";
 
 interface ILabResult {
+    assignment_id: number;
     submission_id: number;
     progress: number;
     lab: string;
@@ -9,7 +10,7 @@ interface ILabResult {
     showApprove: boolean;
     isApproved: boolean;
     onApproveClick: () => void;
-    onRebuildClick: (submissionID: number) => Promise<boolean>;
+    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
 interface ILabResultState {
@@ -70,7 +71,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         this.setState({
             rebuilding: true,
         });
-        await this.props.onRebuildClick(this.props.submission_id).then(() => {
+        await this.props.onRebuildClick(this.props.assignment_id, this.props.submission_id).then(() => {
             this.setState({
                 rebuilding: false,
             });

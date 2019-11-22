@@ -373,8 +373,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async refreshSubmission(ID: number): Promise<boolean> {
-        const result = await this.grpcHelper.refreshSubmission(ID);
+    public async refreshSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+        const result = await this.grpcHelper.refreshSubmission(assignmentID, submissionID);
         if (result.status.getCode() !== 0) {
             return false;
         }

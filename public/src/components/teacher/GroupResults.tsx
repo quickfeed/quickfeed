@@ -10,7 +10,7 @@ interface IResultsProps {
     groups: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number) => Promise<boolean>;
-    onRebuildClick: (submissionID: number) => Promise<boolean>;
+    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
 interface IResultsState {
