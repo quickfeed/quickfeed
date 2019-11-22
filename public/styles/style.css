@@ -1,3 +1,7 @@
+body {
+    padding-top: 50px;
+}
+
 .hint {
     font-size: medium;
     color: gray;
@@ -15,10 +19,6 @@
 
 .clickable {
     cursor: pointer;
-}
-
-.nav-list {
-    padding-top: 15px;
 }
 
 .nav-sub>li>span,
