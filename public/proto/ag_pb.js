@@ -7648,7 +7648,8 @@ proto.LabRequest.prototype.toObject = function(opt_includeInstance) {
 proto.LabRequest.toObject = function(includeInstance, msg) {
   var obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0)
+    submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    assignmentid: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -7693,6 +7694,10 @@ proto.LabRequest.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {number} */ (reader.readUint64());
       msg.setSubmissionid(value);
       break;
+    case 3:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setAssignmentid(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -7736,6 +7741,13 @@ proto.LabRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getAssignmentid();
+  if (f !== 0) {
+    writer.writeUint64(
+      3,
+      f
+    );
+  }
 };
 
 
@@ -7766,6 +7778,21 @@ proto.LabRequest.prototype.getSubmissionid = function() {
 /** @param {number} value */
 proto.LabRequest.prototype.setSubmissionid = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional uint64 assignmentID = 3;
+ * @return {number}
+ */
+proto.LabRequest.prototype.getAssignmentid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/** @param {number} value */
+proto.LabRequest.prototype.setAssignmentid = function(value) {
+  jspb.Message.setProto3IntField(this, 3, value);
 };
 
 

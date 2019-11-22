@@ -977,6 +977,9 @@ export class LabRequest extends jspb.Message {
   getSubmissionid(): number;
   setSubmissionid(value: number): void;
 
+  getAssignmentid(): number;
+  setAssignmentid(value: number): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): LabRequest.AsObject;
   static toObject(includeInstance: boolean, msg: LabRequest): LabRequest.AsObject;
@@ -989,6 +992,7 @@ export namespace LabRequest {
   export type AsObject = {
     courseid: number,
     submissionid: number,
+    assignmentid: number,
   }
 }
 
