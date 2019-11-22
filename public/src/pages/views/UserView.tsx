@@ -90,7 +90,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         );
         const temp = this.renderActions(user);
         if (Array.isArray(temp) && temp.length > 0) {
-            selector.push(<div>{temp}</div>);
+            selector.push(<div className="btn-group action-btn">{temp}</div>);
         } else if (!Array.isArray(temp)) {
             selector.push(temp);
         }

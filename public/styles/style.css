@@ -269,6 +269,12 @@ h3 .btn-group {
     margin-right: 0;
 }
 
+.action-btn {
+    padding-left: 10;
+    margin-left: 10;
+    float: right;
+}
+
 .lab-btn {
     display: inline-block;
     flex: 1;
