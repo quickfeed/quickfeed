@@ -87,8 +87,8 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
                         links.push({ name: "Teacher", extra: "light" });
                     } else {
-                        links.push({ name: "Make Teacher", uri: "teacher", extra: "primary" });
-                        links.push({ name: "Reject", uri: "reject", extra: "danger" });
+                        links.push({ name: "Assign as Teacher", uri: "teacher", extra: "primary" });
+                        links.push({ name: "Remove", uri: "reject", extra: "danger" });
                     }
                     return links;
                 });
@@ -124,48 +124,63 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     public async handleAction(userRel: IUserRelation, link: ILink) {
-        let result = false;
         switch (link.uri) {
             case "accept":
-                result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
-                if (result) {
-                    userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
-                    const i = this.state.pendingUsers.indexOf(userRel);
-                    if (i >= 0) {
-                        this.state.pendingUsers.splice(i, 1);
-                        this.state.acceptedUsers.push(userRel);
-                    }
-                }
+                this.handleAccept(userRel);
                 break;
             case "reject":
-                    if (confirm(
-                        `Warning! This action is irreversible!
-                        Do you want to reject the student?`,
-                    )) {
-                        result =
-                         await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
-                        if (result) {
-                            userRel.link.setStatus(Enrollment.UserStatus.REJECTED);
-                        }
-                    }
-                    break;
+                this.handleReject(userRel);
+                break;
             case "teacher":
-                if (confirm(
-                    `Warning! This action is irreversible!
-                    Do you want to continue assigning:
-                    ${userRel.user.getName()} as a teacher?`,
-                )) {
-                    this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
-                }
+                this.handlePromote(userRel);
                 break;
             case "remove":
-                result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
-                if (result) {
-                    userRel.link.setStatus(Enrollment.UserStatus.PENDING);
-                }
+                this.handleRemove(userRel);
                 break;
         }
         this.props.navMan.refresh();
+    }
+
+    private async handleAccept(userRel: IUserRelation) {
+        const result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
+        if (result) {
+            userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
+            const i = this.state.pendingUsers.indexOf(userRel);
+            if (i >= 0) {
+                this.state.pendingUsers.splice(i, 1);
+                this.state.acceptedUsers.push(userRel);
+            }
+        }
+    }
+
+    private async handleReject(userRel: IUserRelation) {
+        if (confirm(
+            `Warning! This action is irreversible!
+            Do you want to reject the student?`,
+        )) {
+            const result =
+             await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
+            if (result) {
+                userRel.link.setStatus(Enrollment.UserStatus.REJECTED);
+            }
+        }
+    }
+
+    private async handlePromote(userRel: IUserRelation) {
+        if (confirm(
+            `Warning! This action is irreversible!
+            Do you want to continue assigning:
+            ${userRel.user.getName()} as a teacher?`,
+        )) {
+            this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
+        }
+    }
+
+    private async handleRemove(userRel: IUserRelation) {
+        const result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
+        if (result) {
+            userRel.link.setStatus(Enrollment.UserStatus.PENDING);
+        }
     }
 
     private handleSearch(query: string): void {
