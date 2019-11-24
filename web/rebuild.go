@@ -4,39 +4,37 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/autograde/aguis/ag"
 	pb "github.com/autograde/aguis/ag"
 )
 
+// rebuildSubmission rebuilds the given lab assignment and submission.
 func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.LabRequest) error {
-
 	lab, err := s.db.GetAssignment(&pb.Assignment{ID: request.GetAssignmentID()})
 	if err != nil {
 		return err
 	}
-
 	course, err := s.db.GetCourse(lab.GetCourseID(), false)
 	if err != nil {
 		return err
 	}
-
-	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetAssignmentID(), AssignmentID: request.GetAssignmentID()})
+	submission, err := s.db.GetSubmission(&pb.Submission{
+		ID:           request.GetSubmissionID(),
+		AssignmentID: request.GetAssignmentID(),
+	})
 	if err != nil {
 		return err
 	}
 
-	repos := make([]*pb.Repository, 0)
-	if lab.IsGroupLab {
-		repos, err = s.db.GetRepositories(&ag.Repository{
-			OrganizationID: course.GetOrganizationID(),
-			GroupID:        submission.GetGroupID(),
-			RepoType:       pb.Repository_GROUP})
-	} else {
-		repos, err = s.db.GetRepositories(&ag.Repository{
-			OrganizationID: course.GetOrganizationID(),
-			UserID:         submission.GetUserID(),
-			RepoType:       pb.Repository_USER})
+	repoQuery := &pb.Repository{
+		OrganizationID: course.GetOrganizationID(),
+		UserID:         submission.GetUserID(), // defaults to 0 if not set
+		RepoType:       pb.Repository_USER,
 	}
+	if lab.IsGroupLab {
+		repoQuery.GroupID = submission.GetGroupID()
+		repoQuery.RepoType = pb.Repository_GROUP
+	}
+	repos, err := s.db.GetRepositories(repoQuery)
 	if err != nil {
 		return err
 	}
@@ -48,13 +46,12 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.L
 	// it is fixed for new records, but can be relevant for older database records
 	// that's why we allow len(repos) be > 1 and just use the first found record
 	if len(repos) < 1 {
-		return fmt.Errorf("Failed to get user repository for the submission")
+		return fmt.Errorf("failed to get user repository for the submission")
 	}
 	repo := repos[0]
 
 	s.logger.Info("Rebuilding user submission: repo url is: ", repo.GetHTMLURL())
 
 	runTests(s.logger, s.db, s.runner, repo, repo.GetHTMLURL(), submission.GetCommitHash(), "ci/scripts", lab.GetID())
-
 	return nil
 }
