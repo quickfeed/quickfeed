@@ -192,15 +192,12 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
+// getAllLabs returns all individual lab submissions by students enrolled in the specified course.
 func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultLink, error) {
-
-	// get all individual lab submissions made by students with active enrollments in the course
 	allLabs, err := s.db.GetCourseSubmissions(request.GetCourseID())
 	if err != nil {
 		return nil, err
 	}
-
-	allCourseLabs := make([]*pb.LabResultLink, 0)
 
 	// make a local map to store database values to avoid querying the database multiple times
 	// format: [studentID][assignmentID]{latest submission}
@@ -212,20 +209,22 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 		if !ok {
 			labCache[lab.GetUserID()] = make(map[uint64]pb.Submission)
 		}
-
 		labCache[lab.GetUserID()][lab.GetAssignmentID()] = lab
 	}
 
 	// fetch course record with all assignments and active enrollments
 	course, err := s.db.GetCourse(request.GetCourseID(), true)
+	if err != nil {
+		return nil, err
+	}
 
 	// populate the final slice to return to the client
+	allCourseLabs := make([]*pb.LabResultLink, 0)
 	for _, usr := range course.Enrollments {
 		// collect all submission values for the user
 		userSubmissions := make([]*pb.Submission, 0)
 		for _, v := range labCache[usr.GetUserID()] {
-			var tmp pb.Submission
-			tmp = v
+			tmp := v
 			userSubmissions = append(userSubmissions, &tmp)
 		}
 
@@ -239,9 +238,7 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 			Enrollment:  usr,
 			Submissions: userSubmissions,
 		}
-
 		allCourseLabs = append(allCourseLabs, labResult)
-
 	}
 	return allCourseLabs, nil
 }
