@@ -133,7 +133,7 @@ export class TeacherPage extends ViewPage {
                 labs={labs}
                 students={labResults}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
-                    const ans = await this.courseMan.refreshSubmission(assignmentID, submissionID);
+                    const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
                     return ans;
                 }}
@@ -166,7 +166,7 @@ export class TeacherPage extends ViewPage {
                 labs={labs}
                 groups={linkedGroups}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
-                    const ans = await this.courseMan.refreshSubmission(assignmentID, submissionID);
+                    const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
                     return ans;
                 }}

@@ -563,7 +563,7 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoRefreshSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
     (request: LabRequest) => {
       return request.serializeBinary();
@@ -571,17 +571,17 @@ export class AutograderServiceClient {
     Void.deserializeBinary
   );
 
-  refreshSubmission(
+  rebuildSubmission(
     request: LabRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/RefreshSubmission',
+        '/AutograderService/RebuildSubmission',
       request,
       metadata || {},
-      this.methodInfoRefreshSubmission,
+      this.methodInfoRebuildSubmission,
       callback);
   }
 

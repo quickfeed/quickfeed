@@ -304,7 +304,7 @@ service AutograderService {
     // ApproveSubmission approves the given submission for a course.
     // Only teachers can invoke this.
     rpc ApproveSubmission(ApproveSubmissionRequest) returns (Void) {}
-    rpc RefreshSubmission(LabRequest) returns (Void) {}
+    rpc RebuildSubmission(LabRequest) returns (Void) {}
     rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
    
     // misc //
