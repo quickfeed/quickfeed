@@ -74,7 +74,15 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 						logger.Error("Could not find assignment ", lab, ": ", zap.Error(err))
 					}
 
-					runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID())
+					// pass along user or group name for container tag
+					tagName := ""
+					if assignment.IsGroupLab {
+						tagName = p.Repository.Name
+					} else {
+						tagName = p.Sender.Login
+					}
+
+					runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID(), tagName)
 				}
 
 			default:
@@ -129,7 +137,7 @@ func refreshAssignmentsFromTestsRepo(logger *zap.SugaredLogger, db database.Data
 
 // runTests runs the ci from a RemoteIdentity
 func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, repo *pb.Repository,
-	getURL string, commitHash string, scriptPath string, assignmentID uint64) {
+	getURL string, commitHash string, scriptPath string, assignmentID uint64, author string) {
 
 	course, err := db.GetCourseByOrganizationID(repo.OrganizationID)
 	if err != nil {
@@ -175,7 +183,7 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 	logger.Debug("Code Repository", zap.String("url", getURL))
 	logger.Debug("Test Repository", zap.String("url", getURLTest))
 
-	randomSecret := randomSecret()
+	secret := randomSecret()
 	info := ci.AssignmentInfo{
 		CreatorAccessToken: courseCreator.RemoteIdentities[0].AccessToken,
 		AssignmentName:     selectedAssignment.Name,
@@ -184,7 +192,7 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(getURL, ".git"), "https://"),
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       randomSecret,
+		RandomSecret:       secret,
 	}
 
 	job, err := ci.ParseScriptTemplate(scriptPath, info)
@@ -193,23 +201,17 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		return
 	}
 
-	// get user by the user ID of the repo, then add user's github username as a container name
-	usr, err := db.GetUser(repo.GetUserID())
-	if err != nil {
-		logger.Error("Could not found the user: ", zap.Error(err))
-		return
-	}
-
+	authorName := author + "-" + randomSecret()[0:9]
 	start := time.Now()
-	logger.Debug("Job started successfully")
-	out, err := runner.Run(context.Background(), job, usr.GetLogin())
+	logger.Debug("Job started successfully for " + author)
+	out, err := runner.Run(context.Background(), job, authorName)
 	if err != nil {
 		logger.Error("Docker execution failed", zap.Error(err))
 		return
 	}
 	execTime := time.Since(start)
 
-	result, err := ci.ExtractResult(logger, out, randomSecret, execTime)
+	result, err := ci.ExtractResult(logger, out, secret, execTime)
 	if err != nil {
 		logger.Error("Failed to extract results from log", zap.Error(err))
 		return
