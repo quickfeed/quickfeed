@@ -715,6 +715,18 @@ func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error
 	return repos, nil
 }
 
+// DeleteRepository deletes repository by ID
+func (db *GormDB) DeleteRepository(rid uint64) error {
+	repo := &pb.Repository{ID: rid}
+	if err := db.conn.Find((repo)).Error; err != nil {
+		return err
+	}
+	if err := db.conn.Delete(repo).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 // Close closes the gorm database.
 func (db *GormDB) Close() error {
 	return db.conn.Close()

@@ -85,4 +85,6 @@ type Database interface {
 	GetRepository(uint64) (*pb.Repository, error)
 	// GetRepositories returns repositories that match the given query.
 	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
+	// DeleteRepository deletes repository by the given ID
+	DeleteRepository(uint64) error
 }

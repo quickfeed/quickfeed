@@ -57,6 +57,13 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 	// when deleting an approved group, remove github repository and team as well
 	for _, repo := range repos {
 
+		if err = s.db.DeleteRepository(repo.GetID()); err != nil {
+			// even if database record not found, still attempt to remove related github repo and team
+			if err != gorm.ErrRecordNotFound {
+				return err
+			}
+		}
+
 		if err = deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID()); err != nil {
 			return err
 		}
