@@ -53,11 +53,4 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         }
         return <h1>No submissions yet</h1>;
     }
-
-    private getSubmissionInfo(): string {
-        if (this.props.assignment.latest) {
-            return this.props.assignment.latest.approved ? "Approved" : "Not approved";
-        }
-        return "Nothing built yet!";
-    }
 }
