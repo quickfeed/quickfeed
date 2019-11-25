@@ -487,8 +487,8 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 	return &pb.Void{}, nil
 }
 
-// RefreshSubmission rebuilds the latest student submission for the logged in user
-func (s *AutograderService) RefreshSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Void, error) {
+// RebuildSubmission rebuilds the latest student submission for the logged in user
+func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Void, error) {
 	if err := s.rebuildSubmission(ctx, in); err != nil {
 		return nil, err
 	}
