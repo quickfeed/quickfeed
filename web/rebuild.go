@@ -52,6 +52,17 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.L
 
 	s.logger.Info("Rebuilding user submission: repo url is: ", repo.GetHTMLURL())
 
-	runTests(s.logger, s.db, s.runner, repo, repo.GetHTMLURL(), submission.GetCommitHash(), "ci/scripts", lab.GetID())
+	nameTag := s.makeContainerTag(submission)
+
+	runTests(s.logger, s.db, s.runner, repo, repo.GetHTMLURL(), submission.GetCommitHash(), "ci/scripts", lab.GetID(), nameTag)
 	return nil
+}
+
+func (s *AutograderService) makeContainerTag(submission *pb.Submission) string {
+	if submission.GetGroupID() > 0 {
+		group, _ := s.db.GetGroup(submission.GetGroupID())
+		return group.GetName()
+	}
+	user, _ := s.db.GetUser(submission.GetUserID())
+	return user.GetLogin()
 }
