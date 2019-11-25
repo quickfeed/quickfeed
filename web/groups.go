@@ -56,6 +56,7 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 
 	// when deleting an approved group, remove github repository and team as well
 	for _, repo := range repos {
+
 		if err = deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID()); err != nil {
 			return err
 		}
@@ -99,7 +100,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		return err
 	}
 
-	if request.Status == pb.Group_REJECTED || request.Status == pb.Group_DELETED {
+	if request.Status == pb.Group_REJECTED {
 		// if the group is rejected or deleted, it is enough to update its entry in the database.
 		if err := s.db.UpdateGroupStatus(request); err != nil {
 			return err

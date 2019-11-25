@@ -158,7 +158,6 @@ export namespace Group {
     PENDING = 0,
     REJECTED = 1,
     APPROVED = 2,
-    DELETED = 3,
   }
 }
 
