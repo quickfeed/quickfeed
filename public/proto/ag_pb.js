@@ -1766,8 +1766,7 @@ proto.Group.serializeBinaryToWriter = function(message, writer) {
 proto.Group.GroupStatus = {
   PENDING: 0,
   REJECTED: 1,
-  APPROVED: 2,
-  DELETED: 3
+  APPROVED: 2
 };
 
 /**

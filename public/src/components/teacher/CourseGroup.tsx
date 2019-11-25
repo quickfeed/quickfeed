@@ -149,10 +149,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private async handleUpdateStatus(group: Group, status: Group.GroupStatus): Promise<void> {
-        // delete or update group depending on the chosen status, then refresh the page
-        status === Group.GroupStatus.DELETED ?
-            await this.deleteGroup(group) :
-            await this.props.courseMan.updateGroupStatus(group.getId(), status);
+        await this.props.courseMan.updateGroupStatus(group.getId(), status);
         this.props.navMan.refresh();
     }
 

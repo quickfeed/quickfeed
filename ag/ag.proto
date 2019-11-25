@@ -32,9 +32,8 @@ message RemoteIdentity {
 message Group {
     enum GroupStatus {
         PENDING = 0;
-        REJECTED = 1;
+        REJECTED = 1; // deprecated, do not use
         APPROVED = 2;
-        DELETED = 3;
     }
     uint64 ID = 1;
     string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
@@ -106,7 +105,7 @@ message Enrollment {
     enum UserStatus {
         NONE = 0;
         PENDING = 1;
-        REJECTED = 2;
+        REJECTED = 2; // deprecated, do not use
         STUDENT = 3;
         TEACHER = 4;
     }
@@ -158,8 +157,7 @@ message Submissions {
     repeated Submission submissions = 1;
 }
 
-message LabResultLink {
-    
+message LabResultLink {    
     string authorName = 1;
     Enrollment enrollment = 2;
     repeated Submission submissions = 3;
@@ -253,14 +251,15 @@ message LabRequest {
     uint64 assignmentID = 3;
 }
 
+// messages of type Void used when we want a boolean answer from the server
+// GRPC status code 0 indicates that the requested action was a success
+// any other status will include a message explaining what went wrong
 message Void {}
 
 service AutograderService {
 
     // users //
 
-    // GetUser will return current user with active course enrollments
-    // to use in separating teacher and admin roles
     rpc GetUser(Void) returns (User) {}
     rpc GetUsers(Void) returns (Users) {}
     rpc UpdateUser(User) returns (User) {}
@@ -285,10 +284,7 @@ service AutograderService {
  
     // assignments //
 
-    // GetAssignments returns the assignments for the given course.
     rpc GetAssignments(CourseRequest) returns (Assignments) {}
-    // UpdateAssignments updates the assignments on the backend for the given course
-    // by fetching assignment information from the course's test repository.
     rpc UpdateAssignments(CourseRequest) returns (Void) {}
 
     // enrollments //
@@ -301,8 +297,6 @@ service AutograderService {
     // submissions //
 
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
-    // ApproveSubmission approves the given submission for a course.
-    // Only teachers can invoke this.
     rpc ApproveSubmission(ApproveSubmissionRequest) returns (Void) {}
     rpc RebuildSubmission(LabRequest) returns (Void) {}
     rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
@@ -310,12 +304,7 @@ service AutograderService {
     // misc //
     
     rpc GetProviders(Void) returns (Providers) {}
-    // GetOrganuzation will be used in updated CreateCourse UI to get a course organization by name
     rpc GetOrganization(OrgRequest) returns (Organization) {}
-   
-    // use to batch all repository URL requests into one gRPC call
     rpc GetRepositories(URLRequest) returns (Repositories) {}
-
-    // returns status code 0 (grpc OK code) if the requested repository is empty
     rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
 }

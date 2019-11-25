@@ -37,7 +37,8 @@ func NewAutograderService(logger *zap.Logger, db *database.GormDB, scms *auth.Sc
 	}
 }
 
-// GetUser returns a current user with preloaded enrollments
+// GetUser will return current user with active course enrollments
+// to use in separating teacher and admin roles
 // Access policy: everyone
 func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User, error) {
 	usr, err := s.getCurrentUser(ctx)
@@ -507,7 +508,8 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.CourseReq
 	return assignments, nil
 }
 
-// UpdateAssignments returns latest information about the course
+// UpdateAssignments updates the assignments record in the database
+// by fetching assignment information from the course's test repository.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
 	courseID := in.GetCourseID()
@@ -539,7 +541,7 @@ func (s *AutograderService) GetProviders(ctx context.Context, in *pb.Void) (*pb.
 	return providers, nil
 }
 
-// GetOrganization fetches an organizatino by name.
+// GetOrganization fetches a github organization by name.
 // Access policy: Admin
 func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgRequest) (*pb.Organization, error) {
 	usr, scm, err := s.getUserAndSCM(ctx, "github")
