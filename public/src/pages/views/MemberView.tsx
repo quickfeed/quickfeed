@@ -125,34 +125,48 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.state.pendingUsers.splice(i, 1);
                 this.state.acceptedUsers.push(userRel);
             }
+            this.props.navMan.refresh();
         }
     }
 
-    // TODO: must also ensure that the repo is empty
     private async handleReject(userRel: IUserRelation) {
         if (confirm(
             `Warning! This action is irreversible!
             Do you want to reject the student?`,
         )) {
-            const result =
+            let readyToDelete =
+             await this.props.courseMan.isEmptyRepo(this.props.course.getId(), userRel.user.getId(), 0);
+            if (!readyToDelete) {
+                readyToDelete = confirm(
+                    `Warning! User repository is not empty.
+                    Do you still want to reject the user?`
+                    );
+            }
+
+            if (readyToDelete) {
+                const result =
              await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.NONE);
-            if (result) {
-                switch (userRel.link.getStatus()) {
-                    case Enrollment.UserStatus.PENDING:
-                        let i = this.state.pendingUsers.indexOf(userRel);
-                        if (i >= 0) {
-                        this.state.pendingUsers.splice(i, 1);
-                        }
-                        break;
-                    case Enrollment.UserStatus.STUDENT:
-                        i = this.state.acceptedUsers.indexOf(userRel);
-                        if (i >= 0) {
-                        this.state.acceptedUsers.splice(i, 1);
-                        }
-                        break;
+                if (result) {
+                    switch (userRel.link.getStatus()) {
+                        case Enrollment.UserStatus.PENDING:
+                            const i = this.state.pendingUsers.indexOf(userRel);
+                            if (i >= 0) {
+                            this.state.pendingUsers.splice(i, 1);
+                            }
+                            break;
+                        case Enrollment.UserStatus.STUDENT:
+                            const j = this.state.acceptedUsers.indexOf(userRel);
+                            if (j >= 0) {
+                            this.state.acceptedUsers.splice(j, 1);
+                            }
+                            break;
+                        default:
+                            console.log("Got wrong user status " + userRel.link.getStatus + " when rejecting");
+                    }
+                    this.props.navMan.refresh();
                 }
             }
-        }
+       }
     }
 
     private async handlePromote(userRel: IUserRelation) {
@@ -169,7 +183,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         query = query.toLowerCase();
         const filteredAccepted: IUserRelation[] = [];
         const filteredPending: IUserRelation[] = [];
-        const filteredRejected: IUserRelation[] = [];
 
         // we filter out every student group separately to ensure that student status is easily visible to teacher
         // filter accepted students
