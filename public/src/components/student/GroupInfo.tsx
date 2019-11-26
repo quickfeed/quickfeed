@@ -31,8 +31,6 @@ export class GroupInfo extends React.Component<IGroupPro> {
                 return "Approved";
             case Group.GroupStatus.PENDING:
                 return "Pending";
-            case Group.GroupStatus.REJECTED:
-                return "Rejected";
             default:
                 return "N/A";
         }
