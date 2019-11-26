@@ -521,7 +521,10 @@ func (db *GormDB) EnrollStudent(uid, cid uint64) error {
 
 // RejectEnrollment removes the user enrollment from the database
 func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
-	enrol := &pb.Enrollment{UserID: uid, CourseID: cid}
+	enrol, err := db.GetEnrollmentByCourseAndUser(cid, uid)
+	if err != nil {
+		return err
+	}
 	return db.conn.Delete(enrol).Error
 }
 
@@ -544,9 +547,7 @@ func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_U
 func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
 	if len(statuses) == 0 {
 		statuses = []pb.Enrollment_UserStatus{
-			pb.Enrollment_NONE,
 			pb.Enrollment_PENDING,
-			pb.Enrollment_REJECTED,
 			pb.Enrollment_STUDENT,
 			pb.Enrollment_TEACHER,
 		}
@@ -718,14 +719,11 @@ func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error
 
 // DeleteRepository deletes repository by ID
 func (db *GormDB) DeleteRepository(rid uint64) error {
-	repo := &pb.Repository{ID: rid}
-	if err := db.conn.Find((repo)).Error; err != nil {
+	repo, err := db.GetRepository(rid)
+	if err != nil {
 		return err
 	}
-	if err := db.conn.Delete(repo).Error; err != nil {
-		return err
-	}
-	return nil
+	return db.conn.Delete(repo).Error
 }
 
 // Close closes the gorm database.

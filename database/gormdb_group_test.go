@@ -118,7 +118,7 @@ var createGroupTests = []struct {
 				Users:    users,
 			}
 		},
-		enrollments: []uint{uint(pb.Enrollment_REJECTED), uint(pb.Enrollment_REJECTED)},
+		enrollments: []uint{uint(pb.Enrollment_NONE), uint(pb.Enrollment_NONE)},
 		err:         database.ErrUpdateGroup,
 	},
 	{
@@ -182,7 +182,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				}
 				err := errors.New("enrollment status not implemented")
 				switch test.enrollments[i] {
-				case uint(pb.Enrollment_REJECTED):
+				case uint(pb.Enrollment_NONE):
 					err = db.RejectEnrollment(user.GetID(), course.ID)
 				case uint(pb.Enrollment_STUDENT):
 					err = db.EnrollStudent(user.GetID(), course.ID)
