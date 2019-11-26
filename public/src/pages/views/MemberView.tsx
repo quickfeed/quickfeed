@@ -128,6 +128,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         }
     }
 
+    // TODO: must also ensure that the repo is empty
     private async handleReject(userRel: IUserRelation) {
         if (confirm(
             `Warning! This action is irreversible!

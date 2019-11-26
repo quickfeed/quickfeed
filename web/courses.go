@@ -45,11 +45,37 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 	}
 
 	switch request.Status {
-	case pb.Enrollment_REJECTED:
-		return s.db.RejectEnrollment(request.UserID, request.CourseID)
+	case pb.Enrollment_NONE:
 
-	case pb.Enrollment_PENDING:
-		return s.db.SetPendingEnrollment(request.UserID, request.CourseID)
+		student, err := s.db.GetUser(request.GetUserID())
+		if err != nil {
+			return err
+		}
+
+		course, err := s.db.GetCourse(request.GetCourseID(), false)
+		if err != nil {
+			return err
+		}
+
+		repos, err := s.db.GetRepositories(&pb.Repository{UserID: request.GetUserID(), OrganizationID: course.GetOrganizationID(), RepoType: pb.Repository_USER})
+		if err != nil {
+			return err
+		}
+
+		for _, repo := range repos {
+			// first remove github repo
+			if err := rejectUserFromCourse(ctx, sc, student.GetLogin(), repo.GetRepositoryID()); err != nil {
+				return err
+			}
+			// then - database repo record
+			if err := s.db.DeleteRepository(repo.GetID()); err != nil {
+				return err
+			}
+		}
+
+		//TODO: remove user from groups? (if groupID > 0)
+
+		return s.db.RejectEnrollment(request.UserID, request.CourseID)
 
 	case pb.Enrollment_STUDENT:
 		course, student := enrollment.GetCourse(), enrollment.GetUser()
@@ -136,7 +162,7 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 
 	switch state {
 	case pb.Enrollment_STUDENT:
-		// get repos for organization
+		// get all repositories for organization
 		repos, err := sc.GetRepositories(ctx, &pb.Organization{ID: org.GetID(), Path: org.GetPath()})
 		if err != nil {
 			return nil, err
