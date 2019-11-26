@@ -63,12 +63,11 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 		}
 
 		for _, repo := range repos {
-			// first remove github repo
-			if err := rejectUserFromCourse(ctx, sc, student.GetLogin(), repo.GetRepositoryID()); err != nil {
-				return err
-			}
-			// then - database repo record
-			if err := s.db.DeleteRepository(repo.GetID()); err != nil {
+			// we do not care about errors here, even if the github repo does not exists,
+			// still go on with deleting database entries
+			rejectUserFromCourse(ctx, sc, student.GetLogin(), repo.GetRepositoryID())
+
+			if err := s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
 				return err
 			}
 		}
