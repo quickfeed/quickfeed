@@ -10,7 +10,6 @@ interface IUserViewerProps {
     courseMan: CourseManager;
     acceptedUsers: IUserRelation[];
     pendingUsers: IUserRelation[];
-    rejectedUsers: IUserRelation[];
     course: Course;
     courseURL: string;
 }
@@ -18,7 +17,6 @@ interface IUserViewerProps {
 interface IUserViewerState {
     acceptedUsers: IUserRelation[];
     pendingUsers: IUserRelation[];
-    rejectedUsers: IUserRelation[];
     approveAllClicked: boolean;
 }
 
@@ -29,7 +27,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         this.state = {
             acceptedUsers: this.props.acceptedUsers,
             pendingUsers: this.props.pendingUsers,
-            rejectedUsers: this.props.rejectedUsers,
             approveAllClicked: false,
         };
     }
@@ -46,33 +43,14 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 />
             {this.renderPendingView(pendingActions)}
             {this.renderUserView()}
-            {this.renderRejectedView()}
         </div>;
     }
 
     public componentWillReceiveProps(newProps: IUserViewerProps) {
         this.setState({
             acceptedUsers: newProps.acceptedUsers,
-            rejectedUsers: newProps.rejectedUsers,
             pendingUsers: newProps.pendingUsers,
         });
-    }
-
-    public renderRejectedView() {
-        if (this.state.rejectedUsers.length > 0 || this.props.rejectedUsers.length > 0) {
-            return this.renderUsers(
-                "Rejected users",
-                this.state.rejectedUsers,
-                [],
-                ActionType.Menu,
-                (user: IUserRelation) => {
-                    const links = [];
-                    if (user.link.getStatus() === Enrollment.UserStatus.REJECTED) {
-                        links.push({ name: "Set pending", uri: "remove", extra: "primary" });
-                    }
-                    return links;
-                });
-        }
     }
 
     public renderUserView() {
@@ -88,7 +66,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                         links.push({ name: "Teacher", extra: "light" });
                     } else {
                         links.push({ name: "Promote", uri: "teacher", extra: "primary" });
-                        links.push({ name: "Remove", uri: "reject", extra: "danger" });
+                        links.push({ name: "Reject", uri: "reject", extra: "danger" });
                     }
                     return links;
                 });
@@ -134,9 +112,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             case "teacher":
                 this.handlePromote(userRel);
                 break;
-            case "remove":
-                this.handleRemove(userRel);
-                break;
         }
         this.props.navMan.refresh();
     }
@@ -159,9 +134,22 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             Do you want to reject the student?`,
         )) {
             const result =
-             await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.REJECTED);
+             await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.NONE);
             if (result) {
-                userRel.link.setStatus(Enrollment.UserStatus.REJECTED);
+                switch (userRel.link.getStatus()) {
+                    case Enrollment.UserStatus.PENDING:
+                        let i = this.state.pendingUsers.indexOf(userRel);
+                        if (i >= 0) {
+                        this.state.pendingUsers.splice(i, 1);
+                        }
+                        break;
+                    case Enrollment.UserStatus.STUDENT:
+                        i = this.state.acceptedUsers.indexOf(userRel);
+                        if (i >= 0) {
+                        this.state.acceptedUsers.splice(i, 1);
+                        }
+                        break;
+                }
             }
         }
     }
@@ -173,13 +161,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             ${userRel.user.getName()} as a teacher?`,
         )) {
             this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
-        }
-    }
-
-    private async handleRemove(userRel: IUserRelation) {
-        const result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.PENDING);
-        if (result) {
-            userRel.link.setStatus(Enrollment.UserStatus.PENDING);
         }
     }
 
@@ -211,18 +192,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         this.setState({
             pendingUsers: filteredPending,
         });
-
-        // filter rejected students
-        this.props.rejectedUsers.forEach((user) => {
-            if (this.found(query, user)) {
-                filteredRejected.push(user);
-            }
-        });
-
-        this.setState({
-            rejectedUsers: filteredRejected,
-        });
-
     }
 
     private found(query: string, user: IUserRelation): boolean {
