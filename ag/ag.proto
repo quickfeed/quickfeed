@@ -83,7 +83,7 @@ message Repository {
     }
     uint64 ID = 1;
     uint64 organizationID = 2;
-    uint64 repositoryID = 3;
+    uint64 repositoryID = 3; // ID of a github repository
     uint64 userID = 4;
     uint64 groupID = 5;
     string HTMLURL = 6;

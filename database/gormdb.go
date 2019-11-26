@@ -519,9 +519,10 @@ func (db *GormDB) EnrollStudent(uid, cid uint64) error {
 	return db.setEnrollment(uid, cid, pb.Enrollment_STUDENT)
 }
 
-// RejectEnrollment rejects user enrollment.
+// RejectEnrollment removes the user enrollment from the database
 func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, pb.Enrollment_REJECTED)
+	enrol := &pb.Enrollment{UserID: uid, CourseID: cid}
+	return db.conn.Delete(enrol).Error
 }
 
 // EnrollTeacher enrolls user as course teacher.

@@ -138,6 +138,13 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, grou
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
+func rejectUserFromCourse(ctx context.Context, sc scm.SCM, login string, repositoryID uint64) error {
+
+	// TODO: should we also revoke organization membership?
+
+	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID})
+}
+
 func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) error {
 	for _, r := range repos {
 		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetRepositoryID()}) {
