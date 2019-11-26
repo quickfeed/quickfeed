@@ -61,6 +61,8 @@ type SCM interface {
 	CreateCloneURL(*CreateClonePathOptions) string
 	// Promotes or demotes organization member, based on Role field in OrgMembership
 	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
+	// RevokeOrgMembership removes user from the organization
+	RevokeOrgMembership(context.Context, *OrgMembershipOptions) error
 	// Lists all authorizations for authenticated user
 	GetUserScopes(context.Context) *Authorization
 }

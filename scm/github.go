@@ -610,6 +610,23 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipO
 	return nil
 }
 
+// RevokeOrgMembership implements the SCM interface
+func (s *GithubSCM) RevokeOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+	if !opt.valid() {
+		return ErrMissingFields{
+			Method:  "RevokeOrgMembership",
+			Message: fmt.Sprintf("%+v", opt),
+		}
+	}
+
+	// remove user from the organization and all teams
+	_, err := s.client.Organizations.RemoveMember(ctx, opt.Organization.GetPath(), opt.Username)
+	if err != nil {
+		return fmt.Errorf("RevokeOrgMembership: failed to remove %s from teams: %w", opt.Username, err)
+	}
+	return nil
+}
+
 // GetUserScopes implements the SCM interface
 func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// Authorizations.List method will always return nill, response struct and error,
