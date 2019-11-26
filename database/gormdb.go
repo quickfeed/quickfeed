@@ -697,7 +697,7 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	return db.conn.Create(repo).Error
 }
 
-// GetRepository fetches repository by ID.
+// GetRepository fetches repository by github ID.
 func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
 	// This uses the repository ID from the provider to search with,
 	// and not the id of the entry in the database
