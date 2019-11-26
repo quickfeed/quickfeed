@@ -402,8 +402,8 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(rejectedEnrollments) != 1 && rejectedEnrollments[0].Status == pb.Enrollment_REJECTED {
-		t.Fatalf("have %v want 1 rejected enrollment", rejectedEnrollments)
+	if len(rejectedEnrollments) > 0 {
+		t.Fatalf("have %v want 0 rejected enrollment, REJECTED status has been deprecated", len(rejectedEnrollments))
 	}
 }
 
@@ -510,7 +510,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 
 	wantCourses := []*pb.Course{
 		{ID: c1.ID, OrganizationID: 1, Enrolled: pb.Enrollment_PENDING},
-		{ID: c2.ID, OrganizationID: 2, Enrolled: pb.Enrollment_REJECTED},
+		{ID: c2.ID, OrganizationID: 2, Enrolled: pb.Enrollment_NONE},
 		{ID: c3.ID, OrganizationID: 3, Enrolled: pb.Enrollment_STUDENT},
 		{ID: c4.ID, OrganizationID: 4, Enrolled: pb.Enrollment_NONE},
 	}
