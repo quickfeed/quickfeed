@@ -138,11 +138,24 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, grou
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
-func rejectUserFromCourse(ctx context.Context, sc scm.SCM, login string, repositoryID uint64) error {
+func rejectUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *pb.Repository) error {
 
-	// TODO: should we also revoke organization membership?
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
+		ID: repo.GetOrganizationID(),
+	})
+	if err != nil {
+		return err
+	}
+	opt := &scm.OrgMembershipOptions{
+		Organization: org,
+		Username:     login,
+	}
 
-	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID})
+	if err := sc.RevokeOrgMembership(ctx, opt); err != nil {
+		return err
+	}
+
+	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()})
 }
 
 func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) error {
