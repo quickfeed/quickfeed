@@ -114,7 +114,6 @@ export class CourseManager {
     }
 
     /**
-     * 
      * Approve all pending enrollments for a course
      */
     public async approveAll(courseID: number): Promise<boolean> {
