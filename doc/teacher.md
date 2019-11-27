@@ -116,6 +116,7 @@ isgrouplab: false
 ```
 
 The `autoapprove` indicates whether or not Autograder will automatically approve the assignment when sufficient number of tests pass.
+If `autoapprove` is set to `true`, every student submission that scores 80% or higher will become approved.
 
 ## Student labs
 
