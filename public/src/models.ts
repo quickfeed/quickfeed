@@ -11,34 +11,23 @@ export interface IUser {
 
 // Browser only objects START
 
+// Contains a course, a student/group enrollment and a list
+// of all assignments and the last submission for each assignment
 export interface IAssignmentLink {
-    /**
-     * The current course
-     */
     course: Course;
-    /**
-     * The relation between the group and the course.
-     */
     link: Enrollment;
-    /**
-     * A list of all assignments and the last submission for each
-     */
     assignments: IStudentSubmission[];
 }
 
-/**
- * An interface which contains an assignment, a latest submission,
- * and a name of the submitter (user or group)
- */
+// Contains an assignment, a latest submission,
+// and a name of the submitter (user or group)
 export interface IStudentSubmission {
     assignment: Assignment;
     latest?: ISubmission;
     authorName: string;
 }
 
-/**
- * An interface which contains a user and the relation to a single course.
- */
+// Contains a user and the relation to a single course.
 export interface IUserRelation {
     user: User;
     link: Enrollment;
@@ -46,9 +35,7 @@ export interface IUserRelation {
 
 // Browser only objects END
 
-/**
- * Lab submission results
- */
+// Lab submission results
 export interface IBuildInfo {
     buildid: number;
     builddate: Date;
@@ -56,9 +43,7 @@ export interface IBuildInfo {
     execTime: number;
 }
 
-/**
- * A description of a single test case object
- */
+// A single test case object
 export interface ITestCases {
     TestName: string;
     Score: number;
@@ -66,9 +51,7 @@ export interface ITestCases {
     Weight: number;
 }
 
-/**
- * A description of a single user submission
- */
+// A student/group submission
 export interface ISubmission {
     id: number;
     userid: number;
