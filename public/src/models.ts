@@ -13,25 +13,22 @@ export interface IUser {
 
 export interface IAssignmentLink {
     /**
-     * The course to the group
+     * The current course
      */
     course: Course;
     /**
      * The relation between the group and the course.
-     * Is null if there is none
      */
     link: Enrollment;
     /**
-     * A list of all assignments and the last submission if there
-     * is a relation between the group and the course which is
-     * student or teacher
+     * A list of all assignments and the last submission for each
      */
     assignments: IStudentSubmission[];
 }
 
 /**
- * An interface which contains an assignment and the latest submission
- * for a spessific user.
+ * An interface which contains an assignment, a latest submission,
+ * and a name of the submitter (user or group)
  */
 export interface IStudentSubmission {
     assignment: Assignment;
@@ -40,8 +37,7 @@ export interface IStudentSubmission {
 }
 
 /**
- * An interface which contains a user and the relation to a signe course.
- * Usually returned when a course is given.
+ * An interface which contains a user and the relation to a single course.
  */
 export interface IUserRelation {
     user: User;
@@ -50,6 +46,9 @@ export interface IUserRelation {
 
 // Browser only objects END
 
+/**
+ * Lab submission results
+ */
 export interface IBuildInfo {
     buildid: number;
     builddate: Date;
@@ -75,16 +74,13 @@ export interface ISubmission {
     userid: number;
     groupid: number;
     assignmentid: number;
-
     passedTests: number;
     failedTests: number;
     score: number;
-
     buildId: number;
     buildDate: Date;
     executetionTime: number;
     buildLog: string;
     testCases: ITestCases[];
-
     approved: boolean;
 }

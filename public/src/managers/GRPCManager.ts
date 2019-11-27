@@ -105,7 +105,7 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCourses, request);
     }
 
-    public getCoursesWithEnrollment(userID: number, state: any): Promise<IGrpcResponse<Courses>> {
+    public getCoursesWithEnrollment(userID: number, state: Enrollment.UserStatus[]): Promise<IGrpcResponse<Courses>> {
         const request = new CoursesListRequest();
         request.setUserid(userID);
         request.setStatesList(state);
@@ -149,11 +149,7 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.createEnrollment, request);
     }
 
-    public updateEnrollment(courseID: number, userID: number, state: any): Promise<IGrpcResponse<Void>> {
-        const request = new Enrollment();
-        request.setUserid(userID);
-        request.setCourseid(courseID);
-        request.setStatus(state);
+    public updateEnrollment(request: Enrollment): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>(this.agService.updateEnrollment, request);
     }
 

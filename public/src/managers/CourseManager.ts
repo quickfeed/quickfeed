@@ -11,7 +11,7 @@ import { ILogger } from "./LogManager";
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
     getAssignments(courseID: number): Promise<Assignment[]>;
-    getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
+    getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Enrollment[]>;
     getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]):
         Promise<Enrollment[]>;
 
@@ -52,33 +52,23 @@ export class CourseManager {
         this.courseProvider = courseProvider;
     }
 
-    /**
-     * Adds a user to a course
-     * @param user The user to be added to a course
-     * @param course The course the user should be added to
-     * @returns True if succeeded and false otherwise
-     */
     public async addUserToCourse(course: Course, user: User): Promise<boolean> {
         return this.courseProvider.addUserToCourse(course, user);
     }
 
-    /**
-     * Get a course from and id
-     * @param ID The id of the course
-     */
     public async getCourse(courseID: number): Promise<Course | null> {
         return this.courseProvider.getCourse(courseID);
     }
 
     /**
-     * Get all the courses available at the server
+     * Get all available courses
      */
     public async getCourses(): Promise<Course[]> {
         return this.courseProvider.getCourses();
     }
 
     public async getCoursesWithState(user: User): Promise<IAssignmentLink[]> {
-        const userCourses = await this.courseProvider.getCoursesFor(user);
+        const userCourses = await this.courseProvider.getCoursesFor(user, []);
         const newMap: IAssignmentLink[] = [];
         userCourses.forEach((ele) => {
             const crs = ele.getCourse();
@@ -94,11 +84,9 @@ export class CourseManager {
     }
 
     /**
-     * Get all courses related to a user
-     * @param user The user to get courses to
-     * @param state Optional. The state the relations should be in, all if not present
+     * Get all courses where user is enrolled into
      */
-    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<Course[]> {
+    public async getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Course[]> {
         const courses: Course[] = [];
         const enrolList = await this.courseProvider.getCoursesFor(user, state);
         enrolList.forEach((ele) => {
@@ -111,30 +99,30 @@ export class CourseManager {
     }
 
     /**
-     * Get all assignments in a single course
-     * @param courseID The course id or ICourse to retrive assignments from
+     * Get all assignments for a single course
      */
     public async getAssignments(courseID: number): Promise<Assignment[]> {
         return this.courseProvider.getAssignments(courseID);
     }
 
     /**
-     * Change the userstate for a relation between a course and a user
-     * @param link The link to change state of
-     * @param state The new state of the relation
+     * Update status of a course enrollment
      */
     public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
         const ans = await this.courseProvider.changeUserState(link, state);
         return ans;
     }
 
+    /**
+     * 
+     * Approve all pending enrollments for a course
+     */
     public async approveAll(courseID: number): Promise<boolean> {
         return this.courseProvider.approveAll(courseID);
     }
 
     /**
      * Creates a new course in the backend
-     * @param course The course information to create a course from
      */
     public async createNewCourse(course: Course): Promise<Course | Status> {
         return this.courseProvider.createNewCourse(course);
@@ -142,35 +130,15 @@ export class CourseManager {
 
     /**
      * Updates a course with new information
-     * @param course The new information for the course
      */
     public async updateCourse(course: Course): Promise<Void | Status> {
         return this.courseProvider.updateCourse(course);
     }
 
     /**
-     * Load an IAssignmentLink object for a single user and a single course
-     * @param student The student the information should be retrived from
-     * @param course The course the data should be loaded for
+     * Retrives all course enrollments with the latest
+     * lab submissions for all individual course assignments
      */
-    public async getStudentCourseForTeacher(student: IUserRelation, course: Course, assignments: Assignment[]):
-        Promise<IAssignmentLink | null> {
-        const enrol = new Enrollment();
-        enrol.setUserid(student.user.getId());
-        enrol.setUser(student.user);
-        enrol.setCourseid(course.getId());
-        enrol.setCourse(course);
-        enrol.setStatus(student.link.getStatus());
-
-        const userCourse: IAssignmentLink = {
-            link: enrol,
-            assignments: [],
-            course,
-        };
-        await this.fillLinks(student.user, userCourse, assignments);
-        return userCourse;
-    }
-
     public async getCourseLabs(courseID: number): Promise<IAssignmentLink[]> {
         return this.courseProvider.getCourseLabs(courseID);
     }
@@ -178,9 +146,8 @@ export class CourseManager {
     /**
      * Retrives all course relations, and courses related to a
      * a single student
-     * @param student The student to load the information for
      */
-    public async getStudentCourses(student: User, state?: Enrollment.UserStatus[]): Promise<IAssignmentLink[]> {
+    public async getStudentCourses(student: User, state: Enrollment.UserStatus[]): Promise<IAssignmentLink[]> {
         const links: IAssignmentLink[] = [];
         const enrollments = await this.courseProvider.getCoursesFor(student, state);
         for (const enrol of enrollments) {
@@ -201,8 +168,6 @@ export class CourseManager {
 
     /**
      * Retrives all users related to a single course
-     * @param course The course to retrive userinformation to
-     * @param state Optional. The state of the user to course relation
      */
     public async getUsersForCourse(
         course: Course,
@@ -233,8 +198,7 @@ export class CourseManager {
     }
 
     /**
-     * getCourseGroup returns all the groups under a course
-     * @param courseID course id of a course
+     * getCourseGroup returns all course groups
      */
     public async getCourseGroups(courseID: number): Promise<Group[]> {
         return this.courseProvider.getCourseGroups(courseID);
@@ -242,8 +206,6 @@ export class CourseManager {
 
     /**
      * Load an IAssignmentLink object for a single group and a single course
-     * @param group The group the information should be retrived from
-     * @param course The course the data should be loaded for
      */
     public async getGroupCourse(group: Group, course: Course): Promise<IAssignmentLink | null> {
         // Fetching group enrollment status
@@ -303,19 +265,20 @@ export class CourseManager {
      * for the given course. The assignment data is collected from the
      * assignment.yml files found in the course's tests repository; there
      * should be one assignment.yml file per lab assignment.
-     * @param courseID course whose assignment to update
      */
     public async updateAssignments(courseID: number): Promise<boolean> {
         return this.courseProvider.updateAssignments(courseID);
     }
 
+    /**
+     * Get a github organization by name
+     */
     public async getOrganization(orgName: string): Promise<Organization | Status> {
         return this.courseProvider.getOrganization(orgName);
     }
 
     /**
-     * Get all available directories or organisations for a single provider
-     * @param provider The provider to load information from, for instance github og gitlab
+     * Get all enabled providers
      */
     public async getProviders(): Promise<string[]> {
         return this.courseProvider.getProviders();
@@ -337,7 +300,16 @@ export class CourseManager {
         return this.courseProvider.isEmptyRepo(courseID, userID, groupID);
     }
 
-    public async fillLabLinks(course: Course, labLinks: IAssignmentLink[], assignments?: Assignment[]): Promise<IAssignmentLink[]> {
+    /**
+     * Generates a list with last submission build info
+     * for every course assignment for all course students
+     */
+    public async fillLabLinks(
+        course: Course,
+        labLinks: IAssignmentLink[],
+        assignments?: Assignment[],
+        ): Promise<IAssignmentLink[]> {
+
         if (!assignments) {
             assignments = await this.getAssignments(course.getId());
         }
@@ -374,8 +346,6 @@ export class CourseManager {
 
     /**
      * Add IStudentSubmissions to an IAssignmentLink
-     * @param student The student
-     * @param studentCourse The student course
      */
     private async fillLinks(student: User, studentCourse: IAssignmentLink, assignments?: Assignment[]): Promise<void> {
         if (!studentCourse.link) {
@@ -396,9 +366,7 @@ export class CourseManager {
     }
 
     /**
-     * Add IStudentSubmissions to an IAssignmentLink
-     * @param group The group
-     * @param groupCourse The group course
+     * Add group submissions to an IAssignmentLink
      */
     private async fillLinksGroup(group: Group, groupCourse: IAssignmentLink, assignments?: Assignment[]):
         Promise<void> {
