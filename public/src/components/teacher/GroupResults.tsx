@@ -9,7 +9,7 @@ interface IResultsProps {
     courseURL: string;
     groups: IAssignmentLink[];
     labs: Assignment[];
-    onApproveClick: (submissionID: number) => Promise<boolean>;
+    onApproveClick: (submissionID: number, approved: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
@@ -52,9 +52,12 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 assignment={this.state.assignment}
                 showApprove={true}
                 onRebuildClick={this.props.onRebuildClick}
-                onApproveClick={() => {
+                onApproveClick={(approve: boolean) => {
                     if (this.state.assignment && this.state.assignment.latest) {
-                        this.props.onApproveClick(this.state.assignment.latest.id);
+                        const ans = this.props.onApproveClick(this.state.assignment.latest.id, approve);
+                        if (ans) {
+                            this.state.assignment.latest.approved = approve;
+                        }
                     }
                 }}
             />;

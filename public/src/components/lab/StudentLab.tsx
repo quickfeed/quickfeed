@@ -5,7 +5,7 @@ import { LabResultView } from "../../pages/views/LabResultView";
 interface IStudentLabProps {
     assignment: IStudentSubmission;
     showApprove: boolean;
-    onApproveClick: () => void;
+    onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 

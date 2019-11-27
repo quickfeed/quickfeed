@@ -10,7 +10,7 @@ interface IResultsProp {
     courseURL: string;
     students: IAssignmentLink[];
     labs: Assignment[];
-    onApproveClick: (submissionID: number) => Promise<boolean>;
+    onApproveClick: (submissionID: number, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
@@ -51,10 +51,14 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 assignment={this.state.assignment}
                 showApprove={true}
                 onRebuildClick={this.props.onRebuildClick}
-                onApproveClick={ async () => {
+                onApproveClick={ async (approve: boolean) => {
                     if (this.state.assignment && this.state.assignment.latest) {
-                        this.state.assignment.latest.approved
-                         = await this.props.onApproveClick(this.state.assignment.latest.id);
+                        console.log("Approving: " + approve);
+                        const ans = await this.props.onApproveClick(this.state.assignment.latest.id, approve);
+                        if (ans) {
+                            this.state.assignment.latest.approved = approve;
+                            console.log("Changed status: " + this.state.assignment.latest.approved);
+                        }
                     }
                 }}
             />;
