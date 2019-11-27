@@ -378,20 +378,16 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	return db.conn.Create(submission).Error
 }
 
-// UpdateSubmission updates submission approved status
+// UpdateSubmission updates submission with the given approved status.
 func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
-	//TODO(meling) consider to make this into a transaction
-	var submission pb.Submission
-	if err := db.conn.First(&submission, sid).Error; err != nil {
-		return err
-	}
-	// submission.Approved = approved
-	return db.conn.Model(&submission).Update("approved", approved).Error
+	return db.conn.
+		Model(&pb.Submission{}).
+		Where(&pb.Submission{ID: sid}).
+		Update("approved", approved).Error
 }
 
 // GetCourseSubmissions returns all individual lab submissions for the course
 func (db *GormDB) GetCourseSubmissions(cid uint64) ([]pb.Submission, error) {
-
 	m := db.conn
 
 	// fetch the course entry with all associated assignments and active enrollments
