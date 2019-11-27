@@ -468,9 +468,9 @@ func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.
 	return &pb.LabResultLinks{Labs: labs}, nil
 }
 
-// ApproveSubmission approves the given submission.
+// UpdateSubmission is called to approve the given submission or to undo approval.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.ApproveSubmissionRequest) (*pb.Void, error) {
+func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateSubmissionRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("ApproveSubmission failed: authentication error: %w", err)
@@ -480,7 +480,7 @@ func (s *AutograderService) ApproveSubmission(ctx context.Context, in *pb.Approv
 		s.logger.Error("ApproveSubmision failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can approve submissions")
 	}
-	err = s.approveSubmission(in.GetSubmissionID())
+	err = s.updateSubmission(in.GetSubmissionID(), in.GetApprove())
 	if err != nil {
 		s.logger.Errorf("ApproveSubmission failed: %w", err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to approve submission")

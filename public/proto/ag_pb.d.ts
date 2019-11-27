@@ -819,25 +819,29 @@ export namespace SubmissionRequest {
   }
 }
 
-export class ApproveSubmissionRequest extends jspb.Message {
+export class UpdateSubmissionRequest extends jspb.Message {
   getSubmissionid(): number;
   setSubmissionid(value: number): void;
 
   getCourseid(): number;
   setCourseid(value: number): void;
 
+  getApprove(): boolean;
+  setApprove(value: boolean): void;
+
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): ApproveSubmissionRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: ApproveSubmissionRequest): ApproveSubmissionRequest.AsObject;
-  static serializeBinaryToWriter(message: ApproveSubmissionRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): ApproveSubmissionRequest;
-  static deserializeBinaryFromReader(message: ApproveSubmissionRequest, reader: jspb.BinaryReader): ApproveSubmissionRequest;
+  toObject(includeInstance?: boolean): UpdateSubmissionRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: UpdateSubmissionRequest): UpdateSubmissionRequest.AsObject;
+  static serializeBinaryToWriter(message: UpdateSubmissionRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpdateSubmissionRequest;
+  static deserializeBinaryFromReader(message: UpdateSubmissionRequest, reader: jspb.BinaryReader): UpdateSubmissionRequest;
 }
 
-export namespace ApproveSubmissionRequest {
+export namespace UpdateSubmissionRequest {
   export type AsObject = {
     submissionid: number,
     courseid: number,
+    approve: boolean,
   }
 }
 

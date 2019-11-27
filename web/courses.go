@@ -265,9 +265,9 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 	return allCourseLabs, nil
 }
 
-// approveSubmission approves the given submission.
-func (s *AutograderService) approveSubmission(submissionID uint64) error {
-	return s.db.UpdateSubmission(submissionID, true)
+// updateSubmission approves the given submission or undoes a previous approval.
+func (s *AutograderService) updateSubmission(submissionID uint64, approve bool) error {
+	return s.db.UpdateSubmission(submissionID, approve)
 }
 
 // updateCourse updates an existing course.
