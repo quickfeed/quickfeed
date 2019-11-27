@@ -236,3 +236,81 @@ func TestSubmissionsAccess(t *testing.T) {
 		t.Error("Expected error: only owner and teachers can get submissions")
 	}
 }
+
+func TestApproveSubmission(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	admin := createFakeUser(t, db, 1)
+
+	course := allCourses[0]
+	err := db.CreateCourse(admin.ID, course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	student := createFakeUser(t, db, 2)
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(student.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	lab := &pb.Assignment{
+		CourseID: course.ID,
+		Name:     "test lab",
+		Language: "go",
+		Order:    1,
+	}
+	if err = db.CreateAssignment(lab); err != nil {
+		t.Fatal(err)
+	}
+
+	wantSubmission := &pb.Submission{
+		AssignmentID: lab.ID,
+		UserID:       student.ID,
+		Score:        17,
+	}
+	if err = db.CreateSubmission(wantSubmission); err != nil {
+		t.Fatal(err)
+	}
+
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := withUserContext(context.Background(), admin)
+
+	fakeProvider.CreateOrganization(context.Background(),
+		&scm.CreateOrgOptions{Path: "path", Name: "name"},
+	)
+
+	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
+		SubmissionID: wantSubmission.ID,
+		CourseID:     course.ID,
+		Approve:      true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	updatedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	wantSubmission.Approved = true
+
+	if !reflect.DeepEqual(wantSubmission.Approved, updatedSubmission.Approved) {
+		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.Approved, updatedSubmission.Approved)
+	}
+
+	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
+		SubmissionID: wantSubmission.ID,
+		CourseID:     course.ID,
+		Approve:      false,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	updatedSubmission, err = db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
+	wantSubmission.Approved = false
+
+	if !reflect.DeepEqual(wantSubmission.Approved, updatedSubmission.Approved) {
+		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.Approved, updatedSubmission.Approved)
+	}
+}
