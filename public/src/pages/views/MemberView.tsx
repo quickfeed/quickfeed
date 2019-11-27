@@ -145,19 +145,19 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
             if (readyToDelete) {
                 const result =
-             await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.NONE);
+            await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.NONE);
                 if (result) {
                     switch (userRel.link.getStatus()) {
                         case Enrollment.UserStatus.PENDING:
                             const i = this.state.pendingUsers.indexOf(userRel);
                             if (i >= 0) {
-                            this.state.pendingUsers.splice(i, 1);
+                                this.state.pendingUsers.splice(i, 1);
                             }
                             break;
                         case Enrollment.UserStatus.STUDENT:
                             const j = this.state.acceptedUsers.indexOf(userRel);
                             if (j >= 0) {
-                            this.state.acceptedUsers.splice(j, 1);
+                                this.state.acceptedUsers.splice(j, 1);
                             }
                             break;
                         default:
