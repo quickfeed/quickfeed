@@ -385,8 +385,8 @@ func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 	if err := db.conn.First(&submission, sid).Error; err != nil {
 		return err
 	}
-	submission.Approved = approved
-	return db.conn.Model(&pb.Submission{}).Update(submission).Error
+	// submission.Approved = approved
+	return db.conn.Model(&submission).Update("approved", approved).Error
 }
 
 // GetCourseSubmissions returns all individual lab submissions for the course
