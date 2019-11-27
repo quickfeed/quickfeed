@@ -32,18 +32,21 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         let approveButton = <div></div>;
         let rebuildButton = <div></div>;
         if (this.props.showApprove) {
-            approveButton = <div className="btn lab-btn approve-btn"> <button type="button"
+            approveButton = <div className="btn lab-btn approve-btn">
+                <button type="button"
                 id="approve"
                 className={this.setButtonColor("approve")}
                 title={this.setTooltip()}
                 onClick={() => this.approve()}>
-                     {this.setButtonString("approve")} </button> </div>;
+                     {this.setButtonString("approve")}
+                </button></div>;
             rebuildButton = <div className="btn lab-btn rebuild-btn">
             <button type="button" id="rebuild" className={this.setButtonColor("rebuild")}
                 onClick={
                     this.state.rebuilding ? () => {console.log("Rebuilding..."); }
                      : () => {this.rebuildSubmission(); }
-                }>{this.setButtonString("rebuild")}</button>
+                }>{this.setButtonString("rebuild")}
+                </button>
         </div>;
         }
 
