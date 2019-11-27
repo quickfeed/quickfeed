@@ -139,7 +139,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             if (!readyToDelete) {
                 readyToDelete = confirm(
                     `Warning! User repository is not empty.
-                    Do you still want to reject the user?`
+                    Do you still want to reject the user?`,
                     );
             }
 
