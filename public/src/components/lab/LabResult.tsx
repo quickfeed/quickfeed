@@ -9,7 +9,7 @@ interface ILabResult {
     authorName?: string;
     showApprove: boolean;
     isApproved: boolean;
-    onApproveClick: () => void;
+    onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
@@ -35,8 +35,8 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
             approveButton = <div className="btn lab-btn approve-btn"> <button type="button"
                 id="approve"
                 className={this.setButtonColor("approve")}
-                onClick={this.props.isApproved ?
-                    () => { console.log("Already approved"); } : () => this.approve()}>
+                title={this.setTooltip()}
+                onClick={() => this.approve()}>
                      {this.setButtonString("approve")} </button> </div>;
             rebuildButton = <div className="btn lab-btn rebuild-btn">
             <button type="button" id="rebuild" className={this.setButtonColor("rebuild")}
@@ -79,7 +79,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
     }
 
     private async approve() {
-        this.props.onApproveClick();
+        this.props.onApproveClick(!this.props.isApproved);
     }
 
     private setButtonColor(id: string): string {
@@ -108,5 +108,9 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
                 return "";
             }
         }
+    }
+
+    private setTooltip(): string {
+        return this.props.isApproved ? "Undo approval" : "Approve";
     }
 }

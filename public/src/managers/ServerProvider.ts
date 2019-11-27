@@ -366,8 +366,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return tsMap;
     }
 
-    public async approveSubmission(courseID: number, submissionID: number): Promise<boolean> {
-        const result = await this.grpcHelper.approveSubmission(courseID, submissionID);
+    public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
+        const result = await this.grpcHelper.updateSubmission(courseID, submissionID, approve);
         if (result.status.getCode() !== 0) {
             return false;
         }

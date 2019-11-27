@@ -1,6 +1,5 @@
 import * as grpcWeb from "grpc-web";
 import {
-    ApproveSubmissionRequest,
     Assignments,
     AuthorizationResponse,
     Course,
@@ -25,6 +24,7 @@ import {
     Status,
     SubmissionRequest,
     Submissions,
+    UpdateSubmissionRequest,
     URLRequest,
     User,
     Users,
@@ -241,11 +241,12 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.rebuildSubmission, request);
     }
 
-    public approveSubmission(courseID: number, submissionID: number): Promise<IGrpcResponse<Void>> {
-        const request = new ApproveSubmissionRequest();
+    public updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<IGrpcResponse<Void>> {
+        const request = new UpdateSubmissionRequest();
         request.setSubmissionid(submissionID);
         request.setCourseid(courseID);
-        return this.grpcSend<Void>(this.agService.approveSubmission, request);
+        request.setApprove(approve);
+        return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 
     // /* REPOSITORY */ //

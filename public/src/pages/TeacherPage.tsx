@@ -72,7 +72,6 @@ export class TeacherPage extends ViewPage {
             if (info.params.page) {
                 return <h3>You are now on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
             }
-            // return <h1>Teacher Course {info.params.course}</h1>;
             let button;
             switch (this.refreshState) {
                 case 0:
@@ -137,8 +136,8 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                    onApproveClick={async (submissionID: number): Promise<boolean> => {
-                    return this.approveFunc(submissionID, course.getId());
+                    onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
+                    return this.approveFunc(submissionID, course.getId(), approve);
                 }}
             >
             </Results>;
@@ -170,8 +169,8 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onApproveClick={async (submissionID: number): Promise<boolean> => {
-                    return this.approveFunc(submissionID, course.getId());
+                onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
+                    return this.approveFunc(submissionID, course.getId(), approve);
                 }}
             >
             </GroupResults>;
@@ -352,12 +351,11 @@ export class TeacherPage extends ViewPage {
         return url ? this.repositoryLink(url, "Solutions") : this.repositoryLink("", "Solutions");
     }
 
-    public async approveFunc(submissionID: number, courseID: number): Promise<boolean> {
+    public async approveFunc(submissionID: number, courseID: number, approve: boolean): Promise<boolean> {
         if (confirm(
-            `Warning! This action is irreversible!
-            Do you want to approve this lab?`,
+            `Do you want to ${this.setConfirmString(approve)} this lab?`,
         )) {
-            const ans = await this.courseMan.approveSubmission(courseID, submissionID);
+            const ans = await this.courseMan.updateSubmission(courseID, submissionID, approve);
             this.navMan.refresh();
             return ans;
         }
@@ -433,6 +431,10 @@ export class TeacherPage extends ViewPage {
             return fn(course);
         }
         return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+    }
+
+    private setConfirmString(approve: boolean): string {
+        return approve ? "approve" : "undo approval for";
     }
 
 }

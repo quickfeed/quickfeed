@@ -5,7 +5,7 @@ import { IStudentSubmission } from "../../models";
 interface ILabInfoProps {
     assignment: IStudentSubmission;
     showApprove: boolean;
-    onApproveClick: () => void;
+    onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
