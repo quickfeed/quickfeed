@@ -211,9 +211,10 @@ message SubmissionRequest {
     uint64 courseID = 3;
 }
 
-message ApproveSubmissionRequest {
+message UpdateSubmissionRequest {
     uint64 submissionID = 1;
     uint64 courseID = 2;
+    bool approve = 3;
 }
 
 message Providers {
@@ -297,7 +298,7 @@ service AutograderService {
     // submissions //
 
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
-    rpc ApproveSubmission(ApproveSubmissionRequest) returns (Void) {}
+    rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc RebuildSubmission(LabRequest) returns (Void) {}
     rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
    

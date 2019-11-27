@@ -11,7 +11,6 @@ import * as grpcWeb from 'grpc-web';
 
 
 import {
-  ApproveSubmissionRequest,
   Assignments,
   AuthorizationResponse,
   Course,
@@ -35,6 +34,7 @@ import {
   SubmissionRequest,
   Submissions,
   URLRequest,
+  UpdateSubmissionRequest,
   User,
   Users,
   Void} from './ag_pb';
@@ -541,25 +541,25 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoApproveSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: ApproveSubmissionRequest) => {
+    (request: UpdateSubmissionRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
-  approveSubmission(
-    request: ApproveSubmissionRequest,
+  updateSubmission(
+    request: UpdateSubmissionRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/ApproveSubmission',
+        '/AutograderService/UpdateSubmission',
       request,
       metadata || {},
-      this.methodInfoApproveSubmission,
+      this.methodInfoUpdateSubmission,
       callback);
   }
 

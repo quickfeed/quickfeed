@@ -130,7 +130,7 @@ func (req SubmissionRequest) IsValid() bool {
 }
 
 // IsValid ensures that both submission and course IDs are set
-func (req ApproveSubmissionRequest) IsValid() bool {
+func (req UpdateSubmissionRequest) IsValid() bool {
 	return req.GetCourseID() > 0 && req.GetSubmissionID() > 0
 }
 
