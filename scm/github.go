@@ -610,8 +610,8 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipO
 	return nil
 }
 
-// RevokeOrgMembership implements the SCM interface
-func (s *GithubSCM) RevokeOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+// RemoveMember implements the SCM interface
+func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
 			Method:  "RevokeOrgMembership",

@@ -250,8 +250,8 @@ func (s *GitlabSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipO
 	return nil
 }
 
-// RevokeOrgMembership implements the SCM interface
-func (s *GitlabSCM) RevokeOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+// RemoveMember implements the SCM interface
+func (s *GitlabSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

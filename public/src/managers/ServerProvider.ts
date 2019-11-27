@@ -400,9 +400,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         let buildInfo: IBuildInfo;
         let scoreObj: ITestCases[];
 
-        // IMPORTANT: field names in the backend CI structure, frontend model structure, and here, when
-        // parsing, must match
-        // if experiencing an uncaught error in the browser which results in blank page
+        // IMPORTANT: Field names of the Score struct found in the kit/score/score.go,
+        // the ITestCases struct found in the public/src/models.ts,
+        // and names in the string passed to JSON.parse() metod must match.
+        // If experiencing an uncaught error in the browser which results in blank page
         // when addressing lab information for a student/group, it is likely to originate from here
         try {
             buildInfo = JSON.parse(buildInfoAsString);

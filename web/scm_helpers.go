@@ -138,7 +138,7 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, grou
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
-func rejectUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *pb.Repository) error {
+func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *pb.Repository) error {
 
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
 		ID: repo.GetOrganizationID(),
@@ -151,7 +151,7 @@ func rejectUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *p
 		Username:     login,
 	}
 
-	if err := sc.RevokeOrgMembership(ctx, opt); err != nil {
+	if err := sc.RemoveMember(ctx, opt); err != nil {
 		return err
 	}
 

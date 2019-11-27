@@ -203,8 +203,8 @@ func (s *FakeSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOpt
 	return nil
 }
 
-// RevokeOrgMembership implements the SCM interface
-func (s *FakeSCM) RevokeOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+// RemoveMember implements the SCM interface
+func (s *FakeSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

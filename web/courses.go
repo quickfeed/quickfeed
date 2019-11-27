@@ -46,7 +46,6 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 
 	switch request.Status {
 	case pb.Enrollment_NONE:
-
 		student, err := s.db.GetUser(request.GetUserID())
 		if err != nil {
 			return err
@@ -65,7 +64,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 		for _, repo := range repos {
 			// we do not care about errors here, even if the github repo does not exists,
 			// log the error and go on with deleting database entries
-			if err := rejectUserFromCourse(ctx, sc, student.GetLogin(), repo); err != nil {
+			if err := removeUserFromCourse(ctx, sc, student.GetLogin(), repo); err != nil {
 				fmt.Println("updateEnrollment: rejectUserFromCourse failed: ", err)
 			}
 
@@ -73,9 +72,6 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 				return err
 			}
 		}
-
-		//TODO: remove user from groups? (if groupID > 0)
-
 		return s.db.RejectEnrollment(request.UserID, request.CourseID)
 
 	case pb.Enrollment_STUDENT:
