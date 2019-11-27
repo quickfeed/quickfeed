@@ -58,8 +58,6 @@ export class UserManager {
     /**
      * Trys to login to the service with username and password
      * This is only used for testing
-     * @param username The username to try login with
-     * @param password The password to try login with
      */
     public async tryLogin(username: string, password: string): Promise<User | null> {
         const result = await this.userProvider.tryLogin(username, password);
@@ -73,8 +71,6 @@ export class UserManager {
     /**
      * Try to login with a remote service, like github and gitlab.
      * Normaly this function redirects before it returns.
-     * @param provider Provider service to login with. Currently supports github and gitlab
-     * @returns Returns the user if succsess or null if failed.
      */
     public async tryRemoteLogin(provider: string): Promise<User | null> {
         const result = await this.userProvider.tryRemoteLogin(provider);
@@ -104,27 +100,14 @@ export class UserManager {
         return this.userProvider.isAuthorizedTeacher();
     }
 
-    /**
-     * Returns all users available at the backend
-     * This function is mostly for testing and will change in the future
-     * @returns All users at the backend
-     */
     public async getAllUser(): Promise<User[]> {
         return this.userProvider.getAllUser();
     }
 
-    /**
-     * A way to promote a user to an administrator
-     * @param user The user to premote to admin
-     */
     public async changeAdminRole(user: User): Promise<boolean> {
         return this.userProvider.changeAdminRole(user);
     }
 
-    /**
-     * Updates a user
-     * @param user The user to update with the new information
-     */
     public updateUser(user: User): Promise<boolean> {
         return this.userProvider.updateUser(user);
     }
@@ -153,7 +136,7 @@ export class UserManager {
     }
 
     /**
-     * Communicates with the backend to see if there is a logged inn user
+     * Communicates with the backend to see if there is a logged in user
      */
     public async checkUserLoggedIn(): Promise<boolean> {
         const usr = await this.userProvider.getLoggedInUser();

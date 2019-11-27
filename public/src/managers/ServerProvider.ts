@@ -60,7 +60,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getCoursesList();
     }
 
-    public async getCoursesFor(user: User, state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+    public async getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Enrollment[]> {
         const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
@@ -103,7 +103,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
-        const result = await this.grpcHelper.updateEnrollment(link.getCourseid(), link.getUserid(), state);
+        link.setStatus(state);
+        const result = await this.grpcHelper.updateEnrollment(link);
         return result.status.getCode() === 0;
     }
 
@@ -171,8 +172,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async updateGroupStatus(groupID: number, st: Group.GroupStatus): Promise<boolean> {
-        const result = await this.grpcHelper.updateGroupStatus(groupID, st);
+    public async updateGroupStatus(groupID: number, states: Group.GroupStatus): Promise<boolean> {
+        const result = await this.grpcHelper.updateGroupStatus(groupID, states);
         if (result.status.getCode() !== 0) {
             return false;
         }
@@ -350,8 +351,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status.getCode() === 0;
     }
 
-    public async getRepositories(cid: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
-        const result = await this.grpcHelper.getRepositories(cid, types);
+    public async getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
+        const result = await this.grpcHelper.getRepositories(courseID, types);
         const tsMap = new Map<Repository.Type, string>();
         if (result.status.getCode() !== 0 || !result.data) {
             return tsMap;
@@ -399,6 +400,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         let buildInfo: IBuildInfo;
         let scoreObj: ITestCases[];
 
+        // IMPORTANT: field names in the backend CI structure, frontend model structure, and here, when
+        // parsing, must match
+        // if experiencing an uncaught error in the browser which results in blank page
+        // when addressing lab information for a student/group, it is likely to originate from here
         try {
             buildInfo = JSON.parse(buildInfoAsString);
         } catch (e) {

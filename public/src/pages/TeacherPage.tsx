@@ -407,7 +407,7 @@ export class TeacherPage extends ViewPage {
     private async getCourses(): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return this.courseMan.getCoursesFor(curUsr);
+            return this.courseMan.getCoursesFor(curUsr, []);
         }
         return [];
     }
