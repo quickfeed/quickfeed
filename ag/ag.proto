@@ -134,7 +134,8 @@ message Assignment {
     bool autoApprove = 6;
     uint32 order = 7;
     bool isGroupLab = 8;
-    Submission submission = 9;    
+    Submission submission = 9; 
+    uint32 scoreLimit = 10;  // defines minimal score limit for auto approval
 }
 
 message Assignments {

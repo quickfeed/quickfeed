@@ -234,8 +234,13 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		approve = lastSubmission.GetApproved()
 	}
 
-	// also approved if autoapprove is on and total score is above 80%
-	if selectedAssignment.AutoApprove && result.TotalScore() >= 80 {
+	// if auto approve is on, use lower limit from yaml. If not set, use default value
+	lowerLimit := uint8(selectedAssignment.GetScoreLimit())
+	if lowerLimit < 1 {
+		lowerLimit = autoApproveScoreLimit
+	}
+
+	if selectedAssignment.AutoApprove && result.TotalScore() >= lowerLimit {
 		approve = true
 	}
 

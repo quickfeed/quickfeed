@@ -481,6 +481,9 @@ export class Assignment extends jspb.Message {
   hasSubmission(): boolean;
   clearSubmission(): void;
 
+  getScorelimit(): number;
+  setScorelimit(value: number): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
   static toObject(includeInstance: boolean, msg: Assignment): Assignment.AsObject;
@@ -500,6 +503,7 @@ export namespace Assignment {
     order: number,
     isgrouplab: boolean,
     submission?: Submission.AsObject,
+    scorelimit: number,
   }
 }
 
