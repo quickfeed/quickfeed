@@ -131,12 +131,22 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	repo, _, err := s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
-		Name:    &opt.Path,
-		Private: &opt.Private,
-	})
+
+	// first make sure that repo does not already exist for this user or group
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create GitHub repository (%s): %w", opt.Path, err)
+		// in most cases the repo will not exist and "not found" error will be returned
+		s.logger.Debugf("CreateRepository got expected error when checking for %s repository: %s", opt.Path, err)
+	}
+
+	if repo == nil {
+		repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
+			Name:    &opt.Path,
+			Private: &opt.Private,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create GitHub repository (%s): %w", opt.Path, err)
+		}
 	}
 
 	return toRepository(repo), nil
@@ -565,6 +575,7 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
+
 	_, err := s.client.Teams.AddTeamRepo(ctx, int64(opt.TeamID), opt.Owner, opt.Repo,
 		&github.TeamAddTeamRepoOptions{
 			Permission: opt.Permission, // make sure users can pull and push
