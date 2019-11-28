@@ -116,7 +116,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private generateUserRepoLink(name: string, username: string): JSX.Element {
-        return <a href={this.props.courseURL + username + "-labs"}>{ name }</a>;
+        return <a href={this.props.courseURL + username + "-labs"} target="_blank">{ name }</a>;
     }
 
     private handleOnclick(item: IStudentSubmission): void {
