@@ -43,10 +43,6 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
         this.navHelper.registerFunction("courses/{cid}/new_group", this.newGroup);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
-        this.navHelper.registerFunction("courses/{cid}/info", this.courseInformation);
-        this.navHelper.registerFunction("courses/{cid}/assignmentinfo", this.assignmentInformation);
-        this.navHelper.registerFunction("courses/{cid}/testinfo", this.testInformation);
-        this.navHelper.registerFunction("courses/{cid}/solutioninfo", this.solutionInformation);
     }
 
     public checkAuthentication(): boolean {
@@ -205,7 +201,6 @@ export class TeacherPage extends ViewPage {
     }
 
     public async newGroup(info: INavInfo<{ cid: number }>): View {
-        console.log("New group method called for course " + info.params.cid)
         const courseId = info.params.cid;
         const course = await this.courseMan.getCourse(courseId);
         const curUser = this.userMan.getCurrentUser();
@@ -228,8 +223,6 @@ export class TeacherPage extends ViewPage {
                 navMan={this.navMan}
                 pagePath={this.pagePath}
             />;
-        } else {
-            console.log("New group link error: course: " + courseId + "and user: " + curUser)
         }
         return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
@@ -303,52 +296,12 @@ export class TeacherPage extends ViewPage {
                 { name: "Members", uri: link.uri + "/members" },
                 { name: "New Group", uri: link.uri + "/new_group"},
                 { name: "Repositories" },
-                { name: "Course Info", uri: link.uri + "/info" },
-                { name: "Assignments", uri: link.uri + "/assignmentinfo" },
-                { name: "Tests", uri: link.uri + "/testinfo" },
-                { name: "Solutions", uri: link.uri + "/solutioninfo" },
+                { name: "Course Info", uri: this.repositories.get(Repository.Type.COURSEINFO), absolute: true },
+                { name: "Assignments", uri: this.repositories.get(Repository.Type.ASSIGNMENTS), absolute: true },
+                { name: "Tests", uri: this.repositories.get(Repository.Type.TESTS), absolute: true },
+                { name: "Solutions", uri: this.repositories.get(Repository.Type.SOLUTIONS), absolute: true },
             ],
         };
-    }
-
-    public async repositoryLink(url: string, msg: string): View {
-        if (url === "") {
-            return <div>404 not found</div>;
-        }
-        // open new window for the repository link
-        const popup = window.open(url, "_blank");
-        if (!popup) {
-            // fallback if the pop window was blocked by the browser
-            // TODO(meling) format this more nicely with larger font
-            return <div>(popup window was blocked by the browser)
-                {msg} repository is found <a href={url}> here </a> </div>;
-        }
-        this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        // TODO(meling) it is unclear if we can get here, and if so, is the error msg below is accurate?
-        // if navigateTo failed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
-    }
-
-    public async courseInformation(): View {
-        const url = this.repositories.get(Repository.Type.COURSEINFO);
-        return url ? this.repositoryLink(url, "Course information") : this.repositoryLink("", "Course information");
-    }
-
-    public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const url = this.repositories.get(Repository.Type.ASSIGNMENTS);
-        return url ? this.repositoryLink(url, "Assignments") : this.repositoryLink("", "Assignments");
-    }
-
-    public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
-        // TODO(meling) BUG using Safari with popups enabled on ag3; need more analysis:
-        // If you allow popups for this tests repo link, it creates new popups infinitely.
-        const url = this.repositories.get(Repository.Type.TESTS);
-        return url ? this.repositoryLink(url, "Tests") : this.repositoryLink("", "Tests");
-    }
-
-    public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const url = this.repositories.get(Repository.Type.SOLUTIONS);
-        return url ? this.repositoryLink(url, "Solutions") : this.repositoryLink("", "Solutions");
     }
 
     public async approveFunc(submissionID: number, courseID: number, approve: boolean): Promise<boolean> {
