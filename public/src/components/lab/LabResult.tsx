@@ -14,7 +14,6 @@ interface ILabResult {
 }
 
 interface ILabResultState {
-    approved: boolean;
     rebuilding: boolean;
 }
 
@@ -23,7 +22,6 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
     constructor(props: ILabResult) {
         super(props);
         this.state = {
-            approved: this.props.isApproved,
             rebuilding: false,
         };
     }

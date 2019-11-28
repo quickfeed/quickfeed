@@ -56,7 +56,7 @@ func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.
 		Scores: scores,
 		BuildInfo: &BuildInfo{
 			BuildID:   atomic.AddInt64(globalBuildID, 1),
-			BuildDate: time.Now().Format("2006-01-02"),
+			BuildDate: time.Now().Format("2006-01-02T15:04:05"),
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  int64(execTime),
 		},
