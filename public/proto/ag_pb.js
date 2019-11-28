@@ -3952,7 +3952,8 @@ proto.Assignment.toObject = function(includeInstance, msg) {
     autoapprove: jspb.Message.getFieldWithDefault(msg, 6, false),
     order: jspb.Message.getFieldWithDefault(msg, 7, 0),
     isgrouplab: jspb.Message.getFieldWithDefault(msg, 8, false),
-    submission: (f = msg.getSubmission()) && proto.Submission.toObject(includeInstance, f)
+    submission: (f = msg.getSubmission()) && proto.Submission.toObject(includeInstance, f),
+    scorelimit: jspb.Message.getFieldWithDefault(msg, 10, 0)
   };
 
   if (includeInstance) {
@@ -4025,6 +4026,10 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.Submission;
       reader.readMessage(value,proto.Submission.deserializeBinaryFromReader);
       msg.setSubmission(value);
+      break;
+    case 10:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setScorelimit(value);
       break;
     default:
       reader.skipField();
@@ -4117,6 +4122,13 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       9,
       f,
       proto.Submission.serializeBinaryToWriter
+    );
+  }
+  f = message.getScorelimit();
+  if (f !== 0) {
+    writer.writeUint32(
+      10,
+      f
     );
   }
 };
@@ -4276,6 +4288,21 @@ proto.Assignment.prototype.clearSubmission = function() {
  */
 proto.Assignment.prototype.hasSubmission = function() {
   return jspb.Message.getField(this, 9) != null;
+};
+
+
+/**
+ * optional uint32 scoreLimit = 10;
+ * @return {number}
+ */
+proto.Assignment.prototype.getScorelimit = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+};
+
+
+/** @param {number} value */
+proto.Assignment.prototype.setScorelimit = function(value) {
+  jspb.Message.setProto3IntField(this, 10, value);
 };
 
 

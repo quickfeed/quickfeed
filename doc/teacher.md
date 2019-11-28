@@ -112,11 +112,13 @@ name: "lab1"
 language: "go"
 deadline: "2019-09-23 12:00:00"
 autoapprove: false
+scorelimit: 80
 isgrouplab: false
 ```
 
 The `autoapprove` indicates whether or not Autograder will automatically approve the assignment when sufficient number of tests pass.
-If `autoapprove` is set to `true`, every student submission that scores 80% or higher will become approved.
+The `scorelimit` field defines minimal score for a student submission to be reached before the lab will be auto approved.
+If `scorelimit` is not set, every student submission that scores 80% or higher will be approved automatically.
 
 ## Student labs
 

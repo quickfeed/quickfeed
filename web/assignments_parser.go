@@ -15,6 +15,8 @@ import (
 const (
 	target     = "assignment.yml"
 	targetYaml = "assignment.yaml"
+	// default minimal score to be reached before assignment can be autoapproved
+	autoApproveScoreLimit = 80
 )
 
 // assignmentData holds information about a single assignment.
@@ -27,6 +29,7 @@ type assignmentData struct {
 	Language     string `yaml:"language"`
 	Deadline     string `yaml:"deadline"`
 	AutoApprove  bool   `yaml:"autoapprove"`
+	ScoreLimit   uint   `yaml:"scorelimit"`
 	IsGroupLab   bool   `yaml:"isgrouplab"`
 }
 
@@ -54,6 +57,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					log.Println("parseAssignment: error while unmarshalling: ", err.Error())
 					return err
 				}
+
 				// ID from the parsed yaml is used to set Order, not assignment ID,
 				// or it will cause a database constraint violation (IDs must be unique)
 				assignment := &pb.Assignment{
@@ -63,6 +67,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					Name:        newAssignment.Name,
 					Order:       uint32(newAssignment.AssignmentID),
 					AutoApprove: newAssignment.AutoApprove,
+					ScoreLimit:  uint32(newAssignment.ScoreLimit),
 					IsGroupLab:  newAssignment.IsGroupLab,
 				}
 				assignments = append(assignments, assignment)
