@@ -105,24 +105,6 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		return err
 	}
 
-	if request.Status == pb.Group_REJECTED {
-		// if the group is rejected or deleted, it is enough to update its entry in the database.
-		if err := s.db.UpdateGroupStatus(request); err != nil {
-			return err
-		}
-		// if we delete a previously accepted group, reset the group's members enrollment status,
-		// so that they can later join other groups.
-		for _, member := range request.Users {
-			if err = s.db.UpdateGroupEnrollment(member.ID, course.ID); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	// the group is being updated or approved;
-	// will create group repository and team and set group status to approved
-
 	// get users of group, check consistency of group request
 	users, err := s.getGroupUsers(request)
 	if err != nil {
