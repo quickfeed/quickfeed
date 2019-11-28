@@ -739,9 +739,8 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// reject the group
-	createdGroup.Status = pb.Group_REJECTED
-	if _, err = ags.UpdateGroup(ctx, createdGroup); err != nil {
+	// delete the group
+	if _, err = ags.DeleteGroup(ctx, &pb.GroupRequest{CourseID: course.ID, GroupID: createdGroup.ID}); err != nil {
 		t.Fatal(err)
 	}
 
