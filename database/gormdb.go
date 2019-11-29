@@ -358,7 +358,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	// Check that group exists.
+	// Check that user/group with given ID exists.
 	var group uint64
 	if err := m.Count(&group).Error; err != nil {
 		return err
@@ -375,7 +375,16 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	if assignment+group != 2 {
 		return gorm.ErrRecordNotFound
 	}
-	return db.conn.Create(submission).Error
+
+	// If a submission for the given assignment and student/group already exists, update it.
+	// Otherwise create a new submission record
+	query := &pb.Submission{
+		AssignmentID: submission.GetAssignmentID(),
+		UserID:       submission.GetUserID(),
+		GroupID:      submission.GetGroupID(),
+	}
+
+	return db.conn.Where(query).Assign(submission).FirstOrCreate(submission, query).Error
 }
 
 // UpdateSubmission updates submission with the given approved status.
@@ -387,7 +396,7 @@ func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 }
 
 // GetCourseSubmissions returns all individual lab submissions for the course
-func (db *GormDB) GetCourseSubmissions(cid uint64) ([]pb.Submission, error) {
+func (db *GormDB) GetCourseSubmissions(cid uint64, groupLabs bool) ([]pb.Submission, error) {
 	m := db.conn
 
 	// fetch the course entry with all associated assignments and active enrollments
@@ -396,10 +405,10 @@ func (db *GormDB) GetCourseSubmissions(cid uint64) ([]pb.Submission, error) {
 		return nil, err
 	}
 
-	// get IDs of all non-group labs for the course
+	// get IDs of all individual or group labs labs for the course
 	courseAssignmentIDs := make([]uint64, 0)
 	for _, a := range course.Assignments {
-		if !a.IsGroupLab {
+		if a.IsGroupLab == groupLabs {
 			courseAssignmentIDs = append(courseAssignmentIDs, a.GetID())
 		}
 	}
@@ -628,7 +637,7 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserSta
 }
 
 // GetCourse fetches course by ID.
-// If withInfo is true, preloads course assignments and active enrollments
+// If withInfo is true, preloads course assignments, active enrollments and groups
 func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 	m := db.conn
 	var course pb.Course
@@ -640,7 +649,10 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 			pb.Enrollment_STUDENT,
 			pb.Enrollment_TEACHER,
 		}
-		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").First(&course, cid).Error; err != nil {
+
+		// and only group submissions from approved groups
+		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: cid}
+		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Groups", modelGroup).First(&course, cid).Error; err != nil {
 			return nil, err
 		}
 	} else {
@@ -648,7 +660,6 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 			return nil, err
 		}
 	}
-
 	return &course, nil
 }
 

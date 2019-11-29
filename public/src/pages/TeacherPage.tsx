@@ -120,7 +120,7 @@ export class TeacherPage extends ViewPage {
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
-            const results = await this.courseMan.getCourseLabs(course.getId());
+            const results = await this.courseMan.getCourseLabs(course.getId(), false);
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
             return <Results
                 course={course}
@@ -142,10 +142,12 @@ export class TeacherPage extends ViewPage {
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const linkedGroups: IAssignmentLink[] = [];
-            const groupCourses = await this.courseMan.getCourseGroups(course.getId());
+            // const linkedGroups: IAssignmentLink[] = [];
+            const results = await this.courseMan.getCourseLabs(course.getId(), true);
+            // const groupCourses = await this.courseMan.getCourseGroups(course.getId());
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
-
+            const labResults = await this.courseMan.fillLabLinks(course, results, labs);
+            /*
             for (const grpCourse of groupCourses) {
                 const grpLink = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
                 if (grpCourse && grpLink) {
@@ -153,13 +155,13 @@ export class TeacherPage extends ViewPage {
                     grpLink.link.setGroupid(grpCourse.getId());
                     linkedGroups.push(grpLink);
                 }
-            }
+            }*/
 
             return <GroupResults
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
                 labs={labs}
-                groups={linkedGroups}
+                groups={labResults}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();

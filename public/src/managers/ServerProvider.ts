@@ -225,8 +225,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getCourseLabs(courseID: number): Promise<IAssignmentLink[]> {
-        const result = await this.grpcHelper.getCourseLabSubmissions(courseID);
+    public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IAssignmentLink[]> {
+        const result = await this.grpcHelper.getCourseLabSubmissions(courseID, groupLabs);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
         }

@@ -7704,7 +7704,8 @@ proto.LabRequest.toObject = function(includeInstance, msg) {
   var obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    assignmentid: jspb.Message.getFieldWithDefault(msg, 3, 0)
+    assignmentid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    grouplabs: jspb.Message.getFieldWithDefault(msg, 4, false)
   };
 
   if (includeInstance) {
@@ -7752,6 +7753,10 @@ proto.LabRequest.deserializeBinaryFromReader = function(msg, reader) {
     case 3:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setAssignmentid(value);
+      break;
+    case 4:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setGrouplabs(value);
       break;
     default:
       reader.skipField();
@@ -7803,6 +7808,13 @@ proto.LabRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getGrouplabs();
+  if (f) {
+    writer.writeBool(
+      4,
+      f
+    );
+  }
 };
 
 
@@ -7848,6 +7860,23 @@ proto.LabRequest.prototype.getAssignmentid = function() {
 /** @param {number} value */
 proto.LabRequest.prototype.setAssignmentid = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional bool groupLabs = 4;
+ * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
+ * You should avoid comparisons like {@code val === true/false} in those cases.
+ * @return {boolean}
+ */
+proto.LabRequest.prototype.getGrouplabs = function() {
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 4, false));
+};
+
+
+/** @param {boolean} value */
+proto.LabRequest.prototype.setGrouplabs = function(value) {
+  jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 

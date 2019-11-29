@@ -208,7 +208,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
-    public async getCourseLabs(courseID: number): Promise<IAssignmentLink[]> {
+    public async getCourseLabs(courseID: number, groupLab: boolean): Promise<IAssignmentLink[]> {
         return [];
     }
 
