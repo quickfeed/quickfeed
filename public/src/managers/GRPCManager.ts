@@ -228,9 +228,10 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
-    public getCourseLabSubmissions(courseID: number): Promise<IGrpcResponse<LabResultLinks>> {
+    public getCourseLabSubmissions(courseID: number, groupLabs: boolean): Promise<IGrpcResponse<LabResultLinks>> {
         const request = new LabRequest();
         request.setCourseid(courseID);
+        request.setGrouplabs(groupLabs);
         return this.grpcSend<LabResultLinks>(this.agService.getCourseLabSubmissions, request);
     }
 

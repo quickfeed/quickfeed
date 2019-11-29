@@ -33,7 +33,7 @@ export interface ICourseProvider {
 
     getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]>;
     getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getCourseLabs(courseID: number): Promise<IAssignmentLink[]>;
+    getCourseLabs(courseID: number, groupLabs: boolean): Promise<IAssignmentLink[]>;
 
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
@@ -138,8 +138,8 @@ export class CourseManager {
      * Retrives all course enrollments with the latest
      * lab submissions for all individual course assignments
      */
-    public async getCourseLabs(courseID: number): Promise<IAssignmentLink[]> {
-        return this.courseProvider.getCourseLabs(courseID);
+    public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IAssignmentLink[]> {
+        return this.courseProvider.getCourseLabs(courseID, groupLabs);
     }
 
     /**
