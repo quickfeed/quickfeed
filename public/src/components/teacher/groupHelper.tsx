@@ -80,6 +80,6 @@ export function slugify(str: string): string {
     return str;
 }
 
-export function generateGroupRepoLink(groupname: string, courseURL: string): JSX.Element {
-    return <a href={courseURL + slugify(groupname)} target="_blank">{ groupname }</a>;
+export function generateGroupRepoLink(groupName: string, courseURL: string): JSX.Element {
+    return <a href={courseURL + slugify(groupName)} target="_blank">{ groupName }</a>;
 }
