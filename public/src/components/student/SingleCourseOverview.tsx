@@ -1,4 +1,5 @@
 import * as React from "react";
+import { formatDate } from "../../helper";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
@@ -36,7 +37,7 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
                     <div className="col-md-3 col-lg-2">
                         Deadline:
                         <span style={{ display: "inline-block", verticalAlign: "top", paddingLeft: "10px" }}>
-                            {submission.assignment.getDeadline()}
+                            {formatDate(submission.assignment.getDeadline())}
                         </span>
                     </div>
                 </div>;
@@ -68,7 +69,8 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
             </div >
         );
     }
-    private buildInfo(studentLabs: IStudentSubmission[], groupLabs: IStudentSubmission[]): IStudentSubmission[] | null {
+    private buildInfo(studentLabs: IStudentSubmission[], groupLabs: IStudentSubmission[]):
+     IStudentSubmission[] | null {
         const labAndGrouplabs: IStudentSubmission[] = [];
         if (studentLabs.length !== groupLabs.length) {
             return null;

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable } from "../../components";
+import { formatDate } from "../../helper";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { IStudentSubmission } from "../../models";
 
@@ -30,7 +31,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                                 return [
                                     item.assignment.getName(),
                                     score,
-                                    this.getLabDeadline(item.assignment.getDeadline()),
+                                    formatDate(item.assignment.getDeadline()),
                                 ];
                             }}
                             onRowClick={(lab: IStudentSubmission) => {
@@ -53,13 +54,5 @@ export class CoursePanel extends React.Component<IPanelProps> {
     private handleCourseClick() {
         const uri: string = "app/student/courses/" + this.props.course.getId();
         this.props.navMan.navigateTo(uri);
-    }
-
-    private getLabDeadline(date: string): string {
-        const newDeadline = new Date(date);
-        if (newDeadline) {
-            return newDeadline.toLocaleString();
-        }
-        return date;
     }
 }
