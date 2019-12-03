@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -471,6 +472,10 @@ func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.
 // UpdateSubmission is called to approve the given submission or to undo approval.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateSubmissionRequest) (*pb.Void, error) {
+	if !s.isValidSubmission(in.SubmissionID) {
+		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
+		return nil, status.Errorf(codes.PermissionDenied, "submitter has no course access")
+	}
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("ApproveSubmission failed: authentication error: %w", err)
@@ -490,6 +495,11 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 
 // RebuildSubmission rebuilds the submission with the given ID
 func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Void, error) {
+	fmt.Println("Rebuilding for request: ", in)
+	if !s.isValidSubmission(in.GetSubmissionID()) {
+		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
+		return nil, status.Errorf(codes.PermissionDenied, "submitter has no course access")
+	}
 	if err := s.rebuildSubmission(ctx, in); err != nil {
 		return nil, err
 	}
