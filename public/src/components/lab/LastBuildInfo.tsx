@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Assignment } from "../../../proto/ag_pb";
 import { Row } from "../../components";
+import { formatDate } from "../../helper";
 import { ISubmission } from "../../models";
 
 interface ILastBuildInfo {
@@ -13,15 +14,6 @@ interface ILastBuildInfoState {
 }
 
 export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInfoState> {
-
-    private options = {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: false,
-    }
     constructor(props: ILastBuildInfo) {
         super(props);
         this.state = {
@@ -29,9 +21,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
          };
     }
 
-
     public render() {
-        const deadline = new Date(this.props.assignment.getDeadline());
         return (
             <div>
                 <Row>
@@ -40,8 +30,9 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                         <thead><tr><th colSpan={2}>Lab Information </th></tr></thead>
                         <tbody>
         <tr><td>Delivered</td><td>{this.getDeliveredTime()}</td></tr>
-    <tr><td>Deadline</td><td>{deadline.toLocaleString("no-NO", this.options)}</td></tr>
-                            <tr><td>Tests passed</td><td>{this.props.submission.passedTests} / {this.props.submission.testCases.length}</td></tr>
+    <tr><td>Deadline</td><td>{formatDate(this.props.assignment.getDeadline())}</td></tr>
+                            <tr><td>Tests passed</td>
+                            <td>{this.props.submission.passedTests} / {this.props.submission.testCases.length}</td></tr>
         <tr><td>Execution time</td><td>{this.props.submission.executetionTime / 1000} s</td></tr>
         <tr><td>Slip days</td><td>5</td></tr>
                         </tbody>
@@ -60,7 +51,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
             classString = "past-deadline";
         }
 
-        return <div className={classString}>{delivered.toLocaleString("no-NO", this.options)}</div>;
+        return <div className={classString}>{formatDate(delivered)}</div>;
     }
 
 }

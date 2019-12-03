@@ -26,19 +26,15 @@ export function copy<T extends {}>(val: T): T {
     return newEle;
 }
 
-export function slugify(str: string): string {
-
-    str = str.replace(/^\s+|\s+$/g, "").toLowerCase();
-
-    // Remove accents, swap ñ for n, etc
-    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
-    const to   = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
-    for (let i = 0 ; i < from.length ; i++) {
-        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
-    }
-
-    // Remove invalid chars, replace whitespace by dashes, collapse dashes
-    str = str.replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
-
-    return str;
+export function formatDate(str: string | Date): string {
+    const dateOptions = {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false,
+    };
+    const date = str instanceof Date ? str : new Date(str);
+    return date.toLocaleString("no-NO", dateOptions);
 }

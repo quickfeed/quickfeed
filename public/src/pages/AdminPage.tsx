@@ -10,6 +10,7 @@ import { CourseView } from "./views/CourseView";
 import { ActionType, UserView } from "./views/UserView";
 
 import { Assignment, Enrollment } from "../../proto/ag_pb";
+import { formatDate } from "../helper"
 import { IUserRelation } from "../models";
 
 export class AdminPage extends ViewPage {
@@ -108,7 +109,7 @@ export class AdminPage extends ViewPage {
                         lab.getId().toString(),
                         lab.getName(),
                         lab.getIsgrouplab() ? "Group lab" : "Individual",
-                        lab.getDeadline(),
+                        formatDate(lab.getDeadline()),
                     ]}>
                 </DynamicTable>
             </div>);
