@@ -898,6 +898,11 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
+	// TODO: when we create a new submission for the same course lab and user, it will update the old one,
+	// instead of creating an extra record
+	// no way to make it trigger NextUnapproved, but nice to check
+	// that it is still approved after update
+
 	teacher := createFakeUser(t, db, 10)
 	// create a course and an assignment
 	var course pb.Course
@@ -1110,7 +1115,9 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Create some submissions
+	// Create some submissions. We need IDs set here to be able
+	// to compare local submission structs with database
+	// structs
 	submission1 := pb.Submission{
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
@@ -1119,6 +1126,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission2 := pb.Submission{
+		ID:           1,
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
 	}
@@ -1126,6 +1134,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission3 := pb.Submission{
+		ID:           2,
 		UserID:       user.ID,
 		AssignmentID: assignment2.ID,
 	}
@@ -1141,7 +1150,12 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}
 	want := []*pb.Submission{&submission2, &submission3}
 	if !reflect.DeepEqual(submissions, want) {
+		fmt.Println("Submissions in the database:")
 		for _, s := range submissions {
+			fmt.Printf("%+v\n", s)
+		}
+		fmt.Println("Expected submissions:")
+		for _, s := range want {
 			fmt.Printf("%+v\n", s)
 		}
 		t.Errorf("have %#v want %#v", submissions, want)
@@ -1336,6 +1350,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission2 := pb.Submission{
+		ID:           1,
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
 	}
@@ -1343,6 +1358,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission3 := pb.Submission{
+		ID:           2,
 		GroupID:      group.ID,
 		AssignmentID: assignment2.ID,
 	}
@@ -1350,6 +1366,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	submission4 := pb.Submission{
+		ID:           3,
 		UserID:       users[0].ID,
 		AssignmentID: assignment3.ID,
 	}
