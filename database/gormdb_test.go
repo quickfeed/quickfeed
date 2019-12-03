@@ -900,8 +900,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 
 	// TODO: when we create a new submission for the same course lab and user, it will update the old one,
 	// instead of creating an extra record
-	// no way to make it trigger NextUnapproved, but nice to check
-	// that it is still approved after update
+	// check that it is still approved after using create method
 
 	teacher := createFakeUser(t, db, 10)
 	// create a course and an assignment
