@@ -92,6 +92,7 @@ func TestGetNextAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 	// send another submission for assignment1
+	// will update the previous one, ID will stay the same
 	submission2 := pb.Submission{AssignmentID: assignment1.ID, UserID: user.ID}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
@@ -108,7 +109,6 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	// we haven't approved any of the submissions yet; expect same result as above
-
 	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
 	if err != nil {
 		t.Fatal(err)
@@ -117,64 +117,46 @@ func TestGetNextAssignment(t *testing.T) {
 		t.Errorf("expected unapproved assignment to be %v, got %v", assignment1.ID, nxtUnapproved.ID)
 	}
 
-	// approve submission1
-	if err := db.UpdateSubmission(submission1.ID, true); err != nil {
+	// approve submission for assignment1
+	if err := db.UpdateSubmission(1, true); err != nil {
 		t.Fatal(err)
 	}
 
-	// we have approved the first submission of the first assignment, but since
-	// we two submissions for assignment1, this won't change the next to approve.
-	// TODO(meling) Is this the desired semantics for this??
-	// That is, it seems more reasonable to have a function ApproveAssignment(assignment, user)
-	// that finds the latest submission for the user and marks it approved.
-	// That is, maybe the UpdateSubmissionById shouldn't be exported.
 	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// we approved assignment 1, so the next unapproved should be assignment 2? no idea why it
 	if nxtUnapproved.ID != assignment2.ID {
 		t.Errorf("expected unapproved assignment to be %v, got %v", assignment2.ID, nxtUnapproved.ID)
 	}
 
-	// approve submission2
-	if err := db.UpdateSubmission(submission2.ID, true); err != nil {
+	// approve submission for assignment2
+	if err := db.UpdateSubmission(2, true); err != nil {
 		t.Fatal(err)
 	}
 
-	// now the first assignment is approved, moving on to the second
+	// now the first two labs are approved,
+	// the third one is unapproved and a group lab
+	// if we only provide user ID, next unapproved must be assignment4 (group lab will be ignored)
 	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if nxtUnapproved.ID != assignment2.ID {
-		t.Errorf("expected unapproved assignment to be %v, got %v", assignment2.ID, nxtUnapproved.ID)
+	if nxtUnapproved.ID != assignment4.ID {
+		t.Errorf("expected unapproved assignment to be %v, got %v", assignment4.ID, nxtUnapproved.ID)
 	}
 
-	// approve submission3
-	if err := db.UpdateSubmission(submission3.ID, true); err != nil {
+	// for the group next unapproved should be assignment3 - the group lab
+	nxtUnapproved, err = db.GetNextAssignment(course.ID, 0, group.ID)
+	if err != nil {
 		t.Fatal(err)
 	}
+	if nxtUnapproved.ID != assignment3.ID {
+		t.Errorf("expected unapproved assignment to be %v, got %v", assignment3.ID, nxtUnapproved.ID)
+	}
 
-	// now the second assignment is approved, moving on to the third
-	// this fails because the next assignment to approve is a group lab,
-	// and we don't provide a group id.
-	_, err = db.GetNextAssignment(course.ID, user.ID, 0)
-	//TODO(meling) GetNextAssignment semantics has changed; needs to be updated when we understand better what is needed
-	// if err == nil {
-	// 	t.Fatal("expected error 'record not found'")
-	// }
-
-	// moving on to the third assignment, using the group Id this time.
-	// fails because user id must be provided.
-	_, err = db.GetNextAssignment(course.ID, 0, group.ID)
-	//TODO(meling) GetNextAssignment semantics has changed; needs to be updated when we understand better what is needed
-	// if err == nil {
-	// 	t.Fatal("expected error 'user id must be provided'")
-	// }
-
-	// moving on to the third assignment, using both user id and group id this time.
+	// must also return assignment3 if both user and group IDs are provided
 	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -183,37 +165,32 @@ func TestGetNextAssignment(t *testing.T) {
 		t.Errorf("expected unapproved assignment to be %v, got %v", assignment3.ID, nxtUnapproved.ID)
 	}
 
-	// approve submission4 for assignment3 (the group lab)
-	if err := db.UpdateSubmission(submission4.ID, true); err != nil {
+	// approve submission for assignment3 (the group lab)
+	if err := db.UpdateSubmission(3, true); err != nil {
 		t.Fatal(err)
 	}
 
-	// approving the 4th submission (for assignment3, which is a group lab),
-	// should fail because we only provIde user Id, and no group.ID.
-	_, err = db.GetNextAssignment(course.ID, user.ID, 0)
-	//TODO(meling) GetNextAssignment semantics has changed; needs to be updated when we understand better what is needed
-	// if err == nil {
-	// 	t.Fatal("expected error 'user id must be provided'")
-	// }
-
-	// here it should pass since we also provide the group id.
-	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
+	// now next unapproved must be assignment4 for user, and all approved for group
+	nxtUnapprovedForUser, err := db.GetNextAssignment(course.ID, user.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if nxtUnapproved.ID != assignment4.ID {
+	if nxtUnapprovedForUser.ID != assignment4.ID {
 		t.Errorf("expected unapproved assignment to be %v, got %v", assignment4.ID, nxtUnapproved.ID)
 	}
+	nxtUnapprovedForGroup, err := db.GetNextAssignment(course.ID, 0, group.ID)
+	if nxtUnapprovedForGroup != nil || err == nil {
+		t.Fatal("expected error 'all assignments approved'")
+	}
+	// then create and approve submission for assignment4
+	submission5 := &pb.Submission{AssignmentID: 4, UserID: user.ID}
+	if err := db.CreateSubmission(submission5); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.UpdateSubmission(4, true); err != nil {
+		t.Fatal(err)
+	}
 
-	// send new submission for assignment4
-	submission5 := pb.Submission{AssignmentID: assignment4.ID, UserID: user.ID}
-	if err := db.CreateSubmission(&submission5); err != nil {
-		t.Fatal(err)
-	}
-	// approve submission5
-	if err := db.UpdateSubmission(submission5.ID, true); err != nil {
-		t.Fatal(err)
-	}
 	// all assignments have been approved
 	nxtUnapproved, err = db.GetNextAssignment(course.ID, user.ID, group.ID)
 	if nxtUnapproved != nil || err == nil {

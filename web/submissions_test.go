@@ -295,8 +295,8 @@ func TestApproveSubmission(t *testing.T) {
 	updatedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
 	wantSubmission.Approved = true
 
-	if !reflect.DeepEqual(wantSubmission.Approved, updatedSubmission.Approved) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.Approved, updatedSubmission.Approved)
+	if !reflect.DeepEqual(wantSubmission.GetApproved(), updatedSubmission.GetApproved()) {
+		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetApproved(), updatedSubmission.GetApproved())
 	}
 
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
@@ -310,7 +310,7 @@ func TestApproveSubmission(t *testing.T) {
 	updatedSubmission, err = db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
 	wantSubmission.Approved = false
 
-	if !reflect.DeepEqual(wantSubmission.Approved, updatedSubmission.Approved) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.Approved, updatedSubmission.Approved)
+	if !reflect.DeepEqual(wantSubmission.GetApproved(), updatedSubmission.GetApproved()) {
+		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetApproved(), updatedSubmission.GetApproved())
 	}
 }
