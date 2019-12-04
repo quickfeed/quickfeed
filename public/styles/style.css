@@ -251,6 +251,10 @@ body {
     color: #087d2a; 
 }
 
+.btn-outline-primary {
+    margin-right: 20px;
+}
+
 .add-btn {
     position: relative;
     float: right;
