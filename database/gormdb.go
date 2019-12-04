@@ -693,8 +693,8 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 	return db.conn.Create(repo).Error
 }
 
-// GetRepository fetches repository by github ID.
-func (db *GormDB) GetRepository(rid uint64) (*pb.Repository, error) {
+// GetRepositoryByRemoteID fetches repository by github ID.
+func (db *GormDB) GetRepositoryByRemoteID(rid uint64) (*pb.Repository, error) {
 	// This uses the repository ID from the provider to search with,
 	// and not the id of the entry in the database
 	var repo pb.Repository
@@ -713,9 +713,9 @@ func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error
 	return repos, nil
 }
 
-// DeleteRepository deletes repository by ID
-func (db *GormDB) DeleteRepository(rid uint64) error {
-	repo, err := db.GetRepository(rid)
+// DeleteRepositoryByRemoteID deletes repository by github ID
+func (db *GormDB) DeleteRepositoryByRemoteID(rid uint64) error {
+	repo, err := db.GetRepositoryByRemoteID(rid)
 	if err != nil {
 		return err
 	}

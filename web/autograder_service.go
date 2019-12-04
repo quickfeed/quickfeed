@@ -199,7 +199,7 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
+	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollment failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
@@ -220,7 +220,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 // UpdateEnrollments changes status of all pending enrollments for the given course to approved
 // Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
+	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
@@ -362,7 +362,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 // UpdateGroup updates group information.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
+	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
@@ -389,7 +389,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
 
 	// TODO(vera): will neen an scm passed to the web method in case we want to delete the group repo too (in.WithRepo == true)
-	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
+	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
@@ -513,7 +513,7 @@ func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.CourseReq
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
 	courseID := in.GetCourseID()
-	usr, scm, err := s.getUserAndSCM2(ctx, courseID)
+	usr, scm, err := s.getUserAndSCMForCourse(ctx, courseID)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: scm authentication error: %w", err)
 		return nil, err
@@ -586,7 +586,7 @@ func (s *AutograderService) GetRepositories(ctx context.Context, in *pb.URLReque
 // IsEmptyRepo ensures that group repository is empty and can be deleted
 // Access policy: Teacher of Course ID
 func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRequest) (*pb.Void, error) {
-	usr, scm, err := s.getUserAndSCM2(ctx, in.GetCourseID())
+	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: scm authentication error: %w", err)
 		return nil, err
