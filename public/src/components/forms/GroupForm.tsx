@@ -55,9 +55,10 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         for (const student of this.state.students) {
             selectableStudents.push(
                 <li key={student.user.getId()} className="list-group-item">
-                    {student.user.getName()}
+                    <label>{student.user.getName()}</label>
                     <button type="button"
-                        className="btn btn-outline-success" onClick={() => this.handleAddToGroupOnClick(student)}>
+                        className="btn btn-outline-success add-btn"
+                         onClick={() => this.handleAddToGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-plus-sign" />
                     </button>
                 </li>);
@@ -67,11 +68,11 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         for (const student of this.state.selectedStudents) {
             selectedStudents.push(
                 <li key={student.user.getId()} className="list-group-item">
-                    {student.user.getName()}
                     <button className="btn btn-outline-primary"
                         onClick={() => this.handleRemoveFromGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-minus-sign" />
                     </button>
+                    <label>{student.user.getName()}</label>
                 </li>);
         }
 
@@ -103,10 +104,10 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                             <fieldset>
                                 <legend>Available Students
                                 </legend>
-                                {studentSearchBar} <br />
                                 <ul className="student-group list-group">
                                     {selectableStudents}
                                 </ul>
+                                {studentSearchBar}
 
                             </fieldset>
                         </div>
@@ -229,7 +230,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     private handleSearch(query: string): void {
         query = query.toLowerCase();
         const filteredData: IUserRelation[] = [];
-        this.props.students.forEach((student) => {
+        this.props.freeStudents.forEach((student) => {
             if ((student.user.getName().toLowerCase().indexOf(query) !== -1
                 || student.user.getEmail().indexOf(query) !== -1
                 || student.user.getLogin().indexOf(query)) !== -1
