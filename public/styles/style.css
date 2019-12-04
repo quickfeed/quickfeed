@@ -251,6 +251,11 @@ body {
     color: #087d2a; 
 }
 
+.add-btn {
+    position: relative;
+    float: right;
+}
+
 .orgform {
     float: right;
 }
@@ -265,10 +270,6 @@ body {
     display: inline-block;
     margin: auto;
     float: none;
-}
-
-h3 .btn-group {
-    display: inline-block;
 }
 
 .member-btn {
