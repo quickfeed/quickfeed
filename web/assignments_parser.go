@@ -13,10 +13,9 @@ import (
 )
 
 const (
-	target     = "assignment.yml"
-	targetYaml = "assignment.yaml"
-	// default minimal score to be reached before assignment can be autoapproved
-	autoApproveScoreLimit = 80
+	target                       = "assignment.yml"
+	targetYaml                   = "assignment.yaml"
+	defaultAutoApproveScoreLimit = 80
 )
 
 // assignmentData holds information about a single assignment.
