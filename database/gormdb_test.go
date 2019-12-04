@@ -1164,7 +1164,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 func TestGormDBGetEmptyRepo(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
-	if _, err := db.GetRepository(10); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetRepositoryByRemoteID(10); err != gorm.ErrRecordNotFound {
 		t.Fatal(err)
 	}
 }
@@ -1198,7 +1198,7 @@ func TestGormDBGetSingleRepoWithUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := db.GetRepository(repo.RepositoryID); err != nil {
+	if _, err := db.GetRepositoryByRemoteID(repo.RepositoryID); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -1230,7 +1230,7 @@ func TestGormDBGetCourseRepoType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gotRepo, err := db.GetRepository(repo.RepositoryID)
+	gotRepo, err := db.GetRepositoryByRemoteID(repo.RepositoryID)
 	if err != nil {
 		t.Fatal(err)
 	}

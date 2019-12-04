@@ -68,7 +68,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 				fmt.Println("updateEnrollment: rejectUserFromCourse failed: ", err)
 			}
 
-			if err := s.db.DeleteRepository(repo.GetRepositoryID()); err != nil {
+			if err := s.db.DeleteRepositoryByRemoteID(repo.GetRepositoryID()); err != nil {
 				return err
 			}
 		}

@@ -43,7 +43,7 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 			p := payload.(github.PushPayload)
 			logger.Debug("Push event", zap.Any("payload", p))
 
-			repo, err := db.GetRepository(uint64(p.Repository.ID))
+			repo, err := db.GetRepositoryByRemoteID(uint64(p.Repository.ID))
 			if err != nil {
 				logger.Error("Failed to get repository from database", zap.Error(err))
 				return
