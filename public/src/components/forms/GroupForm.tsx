@@ -54,7 +54,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         const selectableStudents: JSX.Element[] = [];
         for (const student of this.state.students) {
             selectableStudents.push(
-                <li key={student.user.getId()} className="list-group-item">
+                <li key={student.user.getId()} className="box-item">
                     <label>{student.user.getName()}</label>
                     <button type="button"
                         className="btn btn-outline-success add-btn"
@@ -67,8 +67,8 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         const selectedStudents: JSX.Element[] = [];
         for (const student of this.state.selectedStudents) {
             selectedStudents.push(
-                <li key={student.user.getId()} className="list-group-item">
-                    <button className="btn btn-outline-primary"
+                <li key={student.user.getId()} className="box-item">
+                    <button className="btn btn-outline-primary rm-btn"
                         onClick={() => this.handleRemoveFromGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-minus-sign" />
                     </button>
@@ -84,7 +84,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                     onSubmit={(e) => this.handleFormSubmit(e)}>
                     <div className="form-group row">
                     <div className="col-sm-12 alert alert-warning">
-                        Choose wisely! Name cannot be changed after the group has been created.</div>
+                    Warning: Note that group names cannot be changed once created.</div>
                     </div>
                     <div className="form-group row">
                         <label className="col-sm-1 col-form-label" htmlFor="tag">Name:</label>
