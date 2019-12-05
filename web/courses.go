@@ -65,7 +65,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 			// we do not care about errors here, even if the github repo does not exists,
 			// log the error and go on with deleting database entries
 			if err := removeUserFromCourse(ctx, sc, student.GetLogin(), repo); err != nil {
-				fmt.Println("updateEnrollment: rejectUserFromCourse failed: ", err)
+				s.logger.Debug("updateEnrollment: rejectUserFromCourse failed (expected behavior): ", err)
 			}
 
 			if err := s.db.DeleteRepositoryByRemoteID(repo.GetRepositoryID()); err != nil {

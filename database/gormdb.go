@@ -338,8 +338,6 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Ass
 
 // CreateSubmission creates a new submission record
 // or updates the last one for the given lab and student/group
-// TODO: Also check enrollment to see if the user is
-// enrolled in the course the assignment belongs to
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// Primary key must be greater than 0.
 	if submission.AssignmentID < 1 {
@@ -377,8 +375,6 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	// If a submission for the given assignment and student/group already exists, update it.
-	// Otherwise create a new submission record
 	query := &pb.Submission{
 		AssignmentID: submission.GetAssignmentID(),
 		UserID:       submission.GetUserID(),
@@ -386,21 +382,14 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	}
 
 	// We want the last record as there can be multiple submissions
-	// for the same submitter and lab in the legacy database.
+	// for the same student/group and lab in the database.
 	if err := db.conn.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
 
+	// If a submission for the given assignment and student/group already exists, update it.
+	// Otherwise create a new submission record
 	return db.conn.Where(query).Assign(submission).FirstOrCreate(query).Error
-	/*
-		if query.GetID() == 0 {
-			db.conn.Create(query)
-		}
-
-		// TODO(vera): make sure that Approved field updates correctly both ways (should be )
-		return db.conn.Model(query).Updates(submission).Error
-	*/
-
 }
 
 // UpdateSubmission updates submission with the given approved status.
