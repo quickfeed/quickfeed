@@ -255,9 +255,19 @@ body {
     margin-right: 20px;
 }
 
+.box-item {
+    display: flex;
+    flex-direction: row;
+    padding-top: 20;
+}
+
 .add-btn {
-    position: relative;
-    float: right;
+    margin-left: auto;
+    color: #087d2a;
+}
+
+.rm-btn {
+    color: #601203;
 }
 
 .orgform {
