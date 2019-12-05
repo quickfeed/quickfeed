@@ -116,7 +116,7 @@ scorelimit: 80
 isgrouplab: false
 ```
 
-`autoapprove` indicates whether or not Autograder will automatically approve the assignment when sufficient number of tests pass.
+`autoapprove` indicates whether or not Autograder will automatically approve the assignment when a sufficient score has been reached..
 `scorelimit` defines the minimal percentage score on a student submission for the corresponding lab to be auto approved.
 If `scorelimit` is not set, only submissions with 80% or higher will be approved automatically.
 
