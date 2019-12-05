@@ -232,9 +232,16 @@ body {
     background-image: none;
 }
 
+
 .approved-cell {
-    background-color: #dff0d8;
+    background-color:  #a4cfa4;
 }
+
+.passing {
+    color: #194e19;
+    font-weight: 200;
+}
+
 
 .glyphicon-remove {
     color: #601203;
@@ -289,7 +296,7 @@ h3 .btn-group {
 }
 
 .past-deadline {
-    color: red;
+    color: #601203;
     font-weight: 300;
 }
 

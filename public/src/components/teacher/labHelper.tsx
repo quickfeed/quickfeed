@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment } from "../../../proto/ag_pb";
-import { IAssignmentLink } from "../../models";
+import { IAssignmentLink, IStudentSubmission } from "../../models";
 
 export function sortByScore(students: IAssignmentLink[], labs: Assignment[], isGroupLab: boolean): IAssignmentLink[] {
     // if no assignments yet, disregard
@@ -82,4 +82,13 @@ export function slugify(str: string): string {
 
 export function generateGroupRepoLink(groupName: string, courseURL: string): JSX.Element {
     return <a href={courseURL + slugify(groupName)} target="_blank">{ groupName }</a>;
+}
+
+export function generateCellClass(lab: IStudentSubmission): string {
+    if (lab.latest && lab.latest.approved) {
+        return "approved-cell";
+    }
+    const passing = ((lab.assignment.getScorelimit() > 0)
+     && lab.latest && (lab.latest.score >= lab.assignment.getScorelimit()));
+    return passing ? "passing" : "";
 }
