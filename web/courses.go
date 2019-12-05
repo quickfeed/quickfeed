@@ -242,55 +242,12 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 		return nil, err
 	}
 
-	// populate the final slice to return to the client
-	allCourseLabs := make([]*pb.LabResultLink, 0)
+	var allCourseLabs []*pb.LabResultLink
 
 	if request.GetGroupLabs() {
-		for _, grp := range course.Groups {
-			groupSubmissions := make([]*pb.Submission, 0)
-			for _, v := range labCache[grp.GetID()] {
-				tmp := v
-				groupSubmissions = append(groupSubmissions, &tmp)
-			}
-
-			// sort latest submissions by lab ID
-			sort.Slice(groupSubmissions, func(i, j int) bool {
-				return groupSubmissions[i].GetAssignmentID() < groupSubmissions[j].GetAssignmentID()
-			})
-
-			labResult := &pb.LabResultLink{
-				AuthorName: grp.GetName(),
-				Enrollment: &pb.Enrollment{
-					CourseID: request.GetCourseID(),
-					GroupID:  grp.GetID(),
-					Group:    grp,
-				},
-				Submissions: groupSubmissions,
-			}
-			allCourseLabs = append(allCourseLabs, labResult)
-		}
-
+		allCourseLabs = makeLabResults(course, labCache, true)
 	} else {
-		for _, usr := range course.Enrollments {
-			// collect all submission values for the user
-			userSubmissions := make([]*pb.Submission, 0)
-			for _, v := range labCache[usr.GetUserID()] {
-				tmp := v
-				userSubmissions = append(userSubmissions, &tmp)
-			}
-
-			// sort latest submissions by lab ID
-			sort.Slice(userSubmissions, func(i, j int) bool {
-				return userSubmissions[i].GetAssignmentID() < userSubmissions[j].GetAssignmentID()
-			})
-
-			labResult := &pb.LabResultLink{
-				AuthorName:  usr.GetUser().GetName(),
-				Enrollment:  usr,
-				Submissions: userSubmissions,
-			}
-			allCourseLabs = append(allCourseLabs, labResult)
-		}
+		allCourseLabs = makeLabResults(course, labCache, false)
 	}
 	return allCourseLabs, nil
 }
@@ -386,4 +343,57 @@ func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request
 	}
 
 	return isEmpty(ctx, sc, repos)
+}
+
+func makeLabResults(course *pb.Course, labCache map[uint64]map[uint64]pb.Submission, groupLab bool) []*pb.LabResultLink {
+	allCourseLabs := make([]*pb.LabResultLink, 0)
+
+	if groupLab {
+		for _, grp := range course.Groups {
+			groupSubmissions := make([]*pb.Submission, 0)
+			for _, v := range labCache[grp.GetID()] {
+				tmp := v
+				groupSubmissions = append(groupSubmissions, &tmp)
+			}
+
+			// sort latest submissions by lab ID
+			sort.Slice(groupSubmissions, func(i, j int) bool {
+				return groupSubmissions[i].GetAssignmentID() < groupSubmissions[j].GetAssignmentID()
+			})
+
+			labResult := &pb.LabResultLink{
+				AuthorName: grp.GetName(),
+				Enrollment: &pb.Enrollment{
+					CourseID: course.ID,
+					GroupID:  grp.GetID(),
+					Group:    grp,
+				},
+				Submissions: groupSubmissions,
+			}
+			allCourseLabs = append(allCourseLabs, labResult)
+		}
+	} else {
+		for _, usr := range course.Enrollments {
+			// collect all submission values for the user
+			userSubmissions := make([]*pb.Submission, 0)
+			for _, v := range labCache[usr.GetUserID()] {
+				tmp := v
+				userSubmissions = append(userSubmissions, &tmp)
+			}
+
+			// sort latest submissions by lab ID
+			sort.Slice(userSubmissions, func(i, j int) bool {
+				return userSubmissions[i].GetAssignmentID() < userSubmissions[j].GetAssignmentID()
+			})
+
+			labResult := &pb.LabResultLink{
+				AuthorName:  usr.GetUser().GetName(),
+				Enrollment:  usr,
+				Submissions: userSubmissions,
+			}
+			allCourseLabs = append(allCourseLabs, labResult)
+		}
+	}
+
+	return allCourseLabs
 }
