@@ -37,6 +37,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                             <LastBuild
                                 test_cases={latest.testCases}
                                 score={latest.score}
+                                scoreLimit={this.props.assignment.assignment.getScorelimit()}
                                 weight={100}
                             />
                             <Row>
