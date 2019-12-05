@@ -82,26 +82,20 @@ func (s *AutograderService) isEnrolled(userID, courseID uint64) bool {
 // if submitting group belongs to the given course
 func (s *AutograderService) isValidSubmissionRequest(submission *pb.SubmissionRequest) bool {
 	if !submission.IsValid() {
-		fmt.Println("isValidSubmissionRequest failed: submission request not valid: ", submission)
 		return false
 	}
 	// ensure that group belongs to course
 	if submission.GetGroupID() > 0 {
 		group, err := s.db.GetGroup(submission.GetGroupID())
 		if err != nil || group.GetCourseID() != submission.GetCourseID() {
-			fmt.Println("isValidSubmissionRequest failed: could not get group ")
 			return false
 		}
 		return true
 	}
-	// ensure that user is enrolled in the course
-	if !s.hasCourseAccess(submission.GetUserID(), submission.GetCourseID(), func(e *pb.Enrollment) bool {
+	// ensure that student has active enrollment
+	return s.hasCourseAccess(submission.GetUserID(), submission.GetCourseID(), func(e *pb.Enrollment) bool {
 		return e.Status >= pb.Enrollment_STUDENT
-	}) {
-		fmt.Println("isValidSubmissionRequest failed: failed hasCourseAccess ")
-		return false
-	}
-	return true
+	})
 }
 
 // isValidSubmission returns true if submission belongs to active lab of the given course
@@ -109,12 +103,10 @@ func (s *AutograderService) isValidSubmissionRequest(submission *pb.SubmissionRe
 func (s *AutograderService) isValidSubmission(submissionID uint64) bool {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
-		fmt.Println("isValidSubmission failed: could not get submission")
 		return false
 	}
 	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: submission.GetAssignmentID()})
 	if err != nil {
-		fmt.Println("isValidSubmission failed: no assignment")
 		return false
 	}
 

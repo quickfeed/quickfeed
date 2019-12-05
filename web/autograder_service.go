@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -495,7 +494,6 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 
 // RebuildSubmission rebuilds the submission with the given ID
 func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Void, error) {
-	fmt.Println("Rebuilding for request: ", in)
 	if !s.isValidSubmission(in.GetSubmissionID()) {
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
 		return nil, status.Errorf(codes.PermissionDenied, "submitter has no course access")
