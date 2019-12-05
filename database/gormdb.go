@@ -375,6 +375,11 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 		return gorm.ErrRecordNotFound
 	}
 
+	// Make a new submission struct for the database query to check
+	// whether a submission record for the given lab and user/group
+	// already exists. We cannot reuse the incoming submission
+	// because the query would attempt to match all the test result
+	// fields as well.
 	query := &pb.Submission{
 		AssignmentID: submission.GetAssignmentID(),
 		UserID:       submission.GetUserID(),
