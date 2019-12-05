@@ -227,8 +227,11 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 
 	// populate cache map with student labs, filtering the latest submissions for every assignment
 	for _, lab := range allLabs {
-		// submission record has only one ID: user ID or group ID
-		labID := lab.GetUserID() + lab.GetGroupID()
+
+		labID := lab.GetUserID()
+		if request.GroupLabs {
+			labID = lab.GetGroupID()
+		}
 		_, ok := labCache[labID]
 		if !ok {
 			labCache[labID] = make(map[uint64]pb.Submission)
