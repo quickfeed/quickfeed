@@ -2,7 +2,8 @@ import * as React from "react";
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
-import { generateGroupRepoLink, sortByScore } from "./groupHelper";
+import { ICellElement } from "../data/DynamicTable";
+import { generateCellClass, generateGroupRepoLink, sortByScore } from "./labHelper";
 
 interface IResultsProps {
     course: Course;
@@ -19,10 +20,6 @@ interface IResultsState {
 }
 
 export class GroupResults extends React.Component<IResultsProps, IResultsState> {
-
-    private approvedStyle = {
-        color: "green",
-    };
 
     constructor(props: IResultsProps) {
         super(props);
@@ -86,28 +83,30 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
     }
 
     private getResultHeader(): string[] {
-        let headers: string[] = ["Name", "Slipdays"];
+        let headers: string[] = ["Name"];
         headers = headers.concat(this.props.labs.filter((e) => e.getIsgrouplab()).map((e) => e.getName()));
         return headers;
     }
 
-    private getGroupResultSelector(group: IAssignmentLink): Array<string | JSX.Element> {
-        const slipdayPlaceholder = "5";
+    private getGroupResultSelector(group: IAssignmentLink): Array<string | JSX.Element | ICellElement> {
         const grp = group.link.getGroup();
         const name = grp ? generateGroupRepoLink(grp.getName(), this.props.courseURL) : "";
-        let selector: Array<string | JSX.Element> = [name, slipdayPlaceholder];
-        selector = selector.concat(group.assignments.filter((e) => e.assignment.getIsgrouplab()).map((e) => {
-            let approvedCss;
-            if (e.latest && e.latest.approved) {
-                // replace this value with "approved-cell" to follow the same style as Results page
-                approvedCss = this.approvedStyle;
-            }
-            return <a className="lab-result-cell"
-                onClick={() => this.handleOnclick(e)}
-                style={approvedCss}
-                href="#">
-                {e.latest ? (e.latest.score + "%") : "N/A"}</a>;
-        }));
+        let selector: Array<string | JSX.Element | ICellElement> = [name];
+        selector = selector.concat(group.assignments.filter((e, i) => e.assignment.getIsgrouplab()).map(
+            (e, i) => {
+                let cellCss: string = "";
+                if (e.latest) {
+                    cellCss = generateCellClass(e);
+                }
+                const iCell: ICellElement = {
+                    value: <a className={cellCss + " lab-cell-link"}
+                        onClick={() => this.handleOnclick(e)}
+                        href="#">
+                        {e.latest ? (e.latest.score + "%") : "N/A"}</a>,
+                    className: cellCss,
+                };
+                return iCell;
+            }));
         return selector;
     }
 

@@ -5,7 +5,7 @@ import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
-import { generateGroupRepoLink } from "./groupHelper";
+import { generateGroupRepoLink } from "./labHelper";
 
 interface ICourseGroupProps {
     approvedGroups: Group[];

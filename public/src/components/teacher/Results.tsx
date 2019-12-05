@@ -3,7 +3,7 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
-import { sortByScore } from "./groupHelper";
+import { generateCellClass, sortByScore } from "./labHelper";
 
 interface IResultsProp {
     course: Course;
@@ -93,22 +93,21 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private getResultSelector(student: IAssignmentLink): Array<string | JSX.Element | ICellElement> {
-        // enrollment object, user field on enrollment object, or name field on user object can be null
         const user = student.link.getUser();
         const displayName = user ? this.generateUserRepoLink(user.getName(), user.getLogin()) : "";
         let selector: Array<string | JSX.Element | ICellElement> = [displayName];
         selector = selector.concat(student.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
-                let approvedCss: string = "";
-                if (e.latest && e.latest.approved) {
-                    approvedCss = "approved-cell";
+                let cellCss: string = "";
+                if (e.latest) {
+                    cellCss = generateCellClass(e);
                 }
                 const iCell: ICellElement = {
-                    value: <a className="lab-result-cell"
+                    value: <a className={cellCss + " lab-cell-link"}
                         onClick={() => this.handleOnclick(e)}
                         href="#">
                         {e.latest ? (e.latest.score + "%") : "N/A"}</a>,
-                    className: approvedCss,
+                    className: cellCss,
                 };
                 return iCell;
             }));
