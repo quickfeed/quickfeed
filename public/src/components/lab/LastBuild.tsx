@@ -1,11 +1,13 @@
 import * as React from "react";
 import { DynamicTable, Row } from "../../components";
 import { ITestCases } from "../../models";
+import { ICellElement } from "../data/DynamicTable";
 
 interface ILastBuild {
     test_cases: ITestCases[];
     score: number;
     weight: number;
+    scoreLimit: number;
 }
 
 export class LastBuild extends React.Component<ILastBuild> {
@@ -21,11 +23,23 @@ export class LastBuild extends React.Component<ILastBuild> {
                          (item.Score ? item.Score.toString() : "0")
                           + "/" + (item.MaxScore ? item.MaxScore.toString() : "0") + " pts",
                           item.Weight ? item.Weight.toString() : "0" + " pts"]}
-                        footer={["Total score", this.props.score.toString() + "%",
-                         this.props.weight ? this.props.weight.toString() : "-" + "%"]}
+                        footer={this.makeDynamicFooter()}
                     />
                 </div>
             </Row>
         );
+    }
+
+    private makeDynamicFooter(): ICellElement[] {
+        return [
+            {value: "Total score"},
+            this.makeScoreCell(this.props.score, this.props.scoreLimit),
+            {value: this.props.weight ? this.props.weight.toString() + "%" : "-"},
+        ];
+    }
+
+    private makeScoreCell(score: number, scoreLimit: number): ICellElement {
+        const cellClass = ((scoreLimit > 0) && (score >= scoreLimit)) ? "passing" : "test";
+        return {value: score.toString() + "%", className: cellClass};
     }
 }

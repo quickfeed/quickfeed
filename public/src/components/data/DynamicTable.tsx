@@ -2,7 +2,7 @@ import * as React from "react";
 
 interface IDynamicTableProps<T> {
     header: string[];
-    footer?: string[];
+    footer?: string[] | ICellElement[];
     data: T[];
     selector: (item: T) => Array<string | JSX.Element | ICellElement>;
     onRowClick?: (link: T) => void;
