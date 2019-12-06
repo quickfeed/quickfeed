@@ -7,6 +7,9 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
+	scms "github.com/autograde/aguis/scm"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -192,4 +195,14 @@ func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) error {
 // a course enrollment or group
 func contextCanceled(ctx context.Context) bool {
 	return ctx.Err() == context.Canceled
+}
+
+// Returns true and formatted error if error type is SCM error
+// designed to be shown to user
+func parseSCMError(err error) (bool, error) {
+	errStruct, ok := err.(scms.ErrFailedSCM)
+	if ok {
+		return ok, status.Errorf(codes.FailedPrecondition, errStruct.Message)
+	}
+	return ok, nil
 }

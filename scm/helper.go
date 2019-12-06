@@ -150,5 +150,5 @@ type ErrFailedSCM struct {
 }
 
 func (e ErrFailedSCM) Error() string {
-	return e.GitError.Error() + ": " + e.Message
+	return "github method " + e.Method + "failed: " + e.GitError.Error()
 }

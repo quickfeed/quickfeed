@@ -126,7 +126,7 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 	in.CourseCreatorID = usr.GetID()
 	course, err := s.createCourse(ctx, scm, in)
 	if err != nil {
-		s.logger.Error("CreateCourse failed: ", err)
+		s.logger.Error("CreateCourse failed: ", err.Error())
 		// errors informing about requested organization state will have code 9: FailedPrecondition
 		// error message will be displayed to the user
 		if contextCanceled(ctx) {
@@ -134,6 +134,9 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 		}
 		if err == ErrAlreadyExists || err == ErrFreePlan {
 			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
+		}
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create course")
 	}
@@ -158,6 +161,9 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 		s.logger.Errorf("UpdateCourse failed: %w", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update course")
 	}
@@ -217,6 +223,9 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
+		}
 		return nil, status.Error(codes.InvalidArgument, "failed to update enrollment")
 	}
 	return &pb.Void{}, nil
@@ -239,6 +248,9 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Course
 		s.logger.Errorf("UpdateEnrollments failed: %w", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
 		}
 		err = status.Error(codes.InvalidArgument, "failed to update pending enrollments")
 	}
@@ -357,12 +369,7 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	group, err := s.createGroup(in)
 	if err != nil {
 		s.logger.Errorf("CreateGroup failed: %w", err)
-		if _, ok := status.FromError(err); !ok {
-			// set err to generic error for the frontend
-			err = status.Error(codes.InvalidArgument, "failed to create group")
-		}
-		// this err may be a grpc status type to be returned to the client
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, "failed to create group")
 	}
 	return group, nil
 }
@@ -385,12 +392,10 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
-		if _, ok := status.FromError(err); !ok {
-			// set err to generic error for the frontend
-			err = status.Error(codes.InvalidArgument, "failed to update group")
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
 		}
-		// this err may be a grpc status type to be returned to the client
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, "failed to update group")
 	}
 	return &pb.Void{}, nil
 }
@@ -416,6 +421,9 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest
 		s.logger.Errorf("DeleteGroup failed: %w", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to delete group")
 	}
@@ -544,6 +552,9 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Course
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
+		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update course assignments")
 	}
 	return &pb.Void{}, nil
@@ -581,7 +592,9 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotMember || err == scms.ErrNotOwner {
 			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 		}
-
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
+		}
 		return nil, status.Errorf(codes.NotFound, "organization not found. Please make sure that 3rd-party access is enabled for your organization")
 	}
 	return org, nil
@@ -623,6 +636,9 @@ func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRe
 		s.logger.Errorf("IsEmptyRepo failed: %w", err)
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
+		if ok, parsedErr := parseSCMError(err); ok {
+			return nil, parsedErr
 		}
 		return nil, status.Errorf(codes.FailedPrecondition, "group repository does not exist or not empty")
 	}
