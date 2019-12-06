@@ -2,8 +2,6 @@ package web
 
 import (
 	"context"
-	"log"
-	"time"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -85,7 +83,6 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 		s.logger.Errorf("UpdateUser failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	// TODO(vera): this check feels a bit excessive: course creator user is always admin
 	if !(usr.IsAdmin || usr.IsOwner(in.GetID())) {
 		s.logger.Errorf("UpdateUser failed to update user %d: user is not admin or course creator", in.GetID())
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
@@ -102,7 +99,6 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 // Access policy: Any User.
 func (s *AutograderService) IsAuthorizedTeacher(ctx context.Context, in *pb.Void) (*pb.AuthorizationResponse, error) {
 	// Currently harcoded for github only
-	// any user can ask if they have teacher scopes.
 	_, scm, err := s.getUserAndSCM(ctx, "github")
 	if err != nil {
 		s.logger.Errorf("IsAuthorizedTeacher failed: scm authentication error: %w", err)
@@ -133,6 +129,9 @@ func (s *AutograderService) CreateCourse(ctx context.Context, in *pb.Course) (*p
 		s.logger.Error("CreateCourse failed: ", err)
 		// errors informing about requested organization state will have code 9: FailedPrecondition
 		// error message will be displayed to the user
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		if err == ErrAlreadyExists || err == ErrFreePlan {
 			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 		}
@@ -157,6 +156,9 @@ func (s *AutograderService) UpdateCourse(ctx context.Context, in *pb.Course) (*p
 
 	if err = s.updateCourse(ctx, scm, in); err != nil {
 		s.logger.Errorf("UpdateCourse failed: %w", err)
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update course")
 	}
 	return &pb.Void{}, nil
@@ -212,6 +214,9 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 	err = s.updateEnrollment(ctx, scm, in)
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollment failed: %w", err)
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		return nil, status.Error(codes.InvalidArgument, "failed to update enrollment")
 	}
 	return &pb.Void{}, nil
@@ -232,6 +237,9 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Course
 	err = s.updateEnrollments(ctx, scm, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollments failed: %w", err)
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		err = status.Error(codes.InvalidArgument, "failed to update pending enrollments")
 	}
 	return &pb.Void{}, err
@@ -374,6 +382,9 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 	err = s.updateGroup(ctx, scm, in)
 	if err != nil {
 		s.logger.Errorf("UpdateGroup failed: %w", err)
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		if _, ok := status.FromError(err); !ok {
 			// set err to generic error for the frontend
 			err = status.Error(codes.InvalidArgument, "failed to update group")
@@ -387,8 +398,6 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 // DeleteGroup removes group record from the database.
 // Access policy: Teacher of CourseID.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
-
-	// TODO(vera): will neen an scm passed to the web method in case we want to delete the group repo too (in.WithRepo == true)
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
 		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
@@ -405,6 +414,9 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest
 	}
 	if err = s.deleteGroup(ctx, scm, in); err != nil {
 		s.logger.Errorf("DeleteGroup failed: %w", err)
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to delete group")
 	}
 	return &pb.Void{}, nil
@@ -445,7 +457,6 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 // GetCourseLabSubmissions returns all the latest submissions for every individual course assignment for each course student
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
 func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
-	start := time.Now()
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %w", err)
@@ -462,9 +473,6 @@ func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.
 		s.logger.Errorf("GetCourseLabSubmissions failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no submissions found")
 	}
-
-	log.Println("GetCourseLabSubmissions got all submissions, took : ", time.Since(start))
-
 	return &pb.LabResultLinks{Labs: labs}, nil
 }
 
@@ -533,6 +541,9 @@ func (s *AutograderService) UpdateAssignments(ctx context.Context, in *pb.Course
 	err = s.updateAssignments(ctx, scm, courseID)
 	if err != nil {
 		s.logger.Errorf("UpdateAssignments failed: %w", err)
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update course assignments")
 	}
 	return &pb.Void{}, nil
@@ -564,6 +575,9 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 	org, err := s.getOrganization(ctx, scm, in.GetOrgName(), usr.GetLogin())
 	if err != nil {
 		s.logger.Errorf("GetOrganization failed: %w", err)
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotMember || err == scms.ErrNotOwner {
 			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 		}
@@ -607,6 +621,9 @@ func (s *AutograderService) IsEmptyRepo(ctx context.Context, in *pb.RepositoryRe
 
 	if err := s.isEmptyRepo(ctx, scm, in); err != nil {
 		s.logger.Errorf("IsEmptyRepo failed: %w", err)
+		if contextCanceled(ctx) {
+			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
+		}
 		return nil, status.Errorf(codes.FailedPrecondition, "group repository does not exist or not empty")
 	}
 

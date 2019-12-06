@@ -2,10 +2,28 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
+)
+
+var (
+	repoNames = fmt.Sprintf("(%s, %s, %s, %s)",
+		pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo, pb.SolutionsRepo)
+
+	// ErrAlreadyExists indicates that one or more Autograder repositories
+	// already exists for the directory (or GitHub organization).
+	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
+	// ErrFreePlan indicates that payment plan for given organization does not allow provate
+	// repositories and must be upgraded
+	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
+	// ErrContextCanceled indicates that method failed because of scm interaction that took longer than expected
+	// and not because of some application error
+	ErrContextCanceled = "context canceled because the github interaction took too long. Please try again later"
+	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
+	FreeOrgPlan = "free"
 )
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
@@ -158,6 +176,7 @@ func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *p
 	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()})
 }
 
+// isEmpty ensured that all of the provided repositories are empty
 func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) error {
 	for _, r := range repos {
 		if !sc.RepositoryIsEmpty(ctx, &scm.RepositoryOptions{ID: r.GetRepositoryID()}) {
@@ -165,4 +184,12 @@ func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) error {
 		}
 	}
 	return nil
+}
+
+// contextCanceled returns true if the context has been canceled.
+// It is a recurring cause of unexplainable method failures when
+// creating a course, approving, changing status of, or deleting
+// a course enrollment or group
+func contextCanceled(ctx context.Context) bool {
+	return ctx.Err() == context.Canceled
 }

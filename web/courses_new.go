@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/autograde/aguis/web/auth"
@@ -24,20 +23,6 @@ var RepoPaths = map[string]bool{
 	pb.TestsRepo:      private,
 	pb.SolutionsRepo:  private,
 }
-
-var (
-	repoNames = fmt.Sprintf("(%s, %s, %s, %s)",
-		pb.InfoRepo, pb.AssignmentRepo, pb.TestsRepo, pb.SolutionsRepo)
-
-	// ErrAlreadyExists indicates that one or more Autograder repositories
-	// already exists for the directory (or GitHub organization).
-	ErrAlreadyExists = errors.New("course repositories already exist for that organization: " + repoNames)
-	// ErrFreePlan indicates that payment plan for given organization does not allow provate
-	// repositories and must be upgraded
-	ErrFreePlan = errors.New("organization does not allow creation of private repositories")
-	// FreeOrgPlan indicates that organization's payment plan does not allow creation of private repositories
-	FreeOrgPlan = "free"
-)
 
 // createCourse creates a new course for the directory specified in the request
 // and creates the repositories for the course. Requires that the directory
