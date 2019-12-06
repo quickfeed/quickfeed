@@ -118,7 +118,7 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	// approve submission for assignment1
-	if err := db.UpdateSubmission(1, true); err != nil {
+	if err := db.UpdateSubmission(submission1.ID, true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -132,7 +132,7 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	// approve submission for assignment2
-	if err := db.UpdateSubmission(2, true); err != nil {
+	if err := db.UpdateSubmission(submission3.ID, true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -166,7 +166,7 @@ func TestGetNextAssignment(t *testing.T) {
 	}
 
 	// approve submission for assignment3 (the group lab)
-	if err := db.UpdateSubmission(3, true); err != nil {
+	if err := db.UpdateSubmission(submission4.ID, true); err != nil {
 		t.Fatal(err)
 	}
 
@@ -183,11 +183,11 @@ func TestGetNextAssignment(t *testing.T) {
 		t.Fatal("expected error 'all assignments approved'")
 	}
 	// then create and approve submission for assignment4
-	submission5 := &pb.Submission{AssignmentID: 4, UserID: user.ID}
+	submission5 := &pb.Submission{AssignmentID: assignment4.ID, UserID: user.ID}
 	if err := db.CreateSubmission(submission5); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateSubmission(4, true); err != nil {
+	if err := db.UpdateSubmission(submission5.ID, true); err != nil {
 		t.Fatal(err)
 	}
 
