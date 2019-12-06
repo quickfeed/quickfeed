@@ -140,3 +140,15 @@ type ErrMissingFields struct {
 func (e ErrMissingFields) Error() string {
 	return "github method " + e.Method + " got argument with some of required fields missing: " + e.Message
 }
+
+// ErrFailedSCM is returned to provide detailed information
+// to user about source of the error and possible solution
+type ErrFailedSCM struct {
+	Method   string
+	Message  string
+	GitError error
+}
+
+func (e ErrFailedSCM) Error() string {
+	return e.GitError.Error() + ": " + e.Message
+}
