@@ -336,7 +336,10 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Ass
 	return nxtToApprove, nil
 }
 
-// CreateSubmission creates a new submission record
+// CreateSubmission creates a new submission record or updates the most
+// recent submission, as defined by the provided submissionQuery.
+// The submissionQuery must always specify the assignment, and may specify the ID of
+// either an individual student or a group, but not both.
 // or updates the last one for the given lab and student/group
 func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// Primary key must be greater than 0.
