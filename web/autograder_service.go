@@ -205,7 +205,7 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 }
 
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
-// Access policy: Teacher of CourseID.
+// Access policy: Teacher of CourseID; only Creator of CourseID if demoting a teacher.
 func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
@@ -216,7 +216,12 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 		s.logger.Error("UpdateEnrollment failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
-
+	if s.isCourseCreator(in.CourseID, in.UserID) {
+		return nil, status.Errorf(codes.PermissionDenied, "course creator cannot be demoted")
+	}
+	if s.changingTeacherState(in) && !s.isCourseCreator(in.CourseID, usr.ID) {
+		return nil, status.Errorf(codes.PermissionDenied, "only course creator can change status of other teachers")
+	}
 	err = s.updateEnrollment(ctx, scm, in)
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollment failed: %w", err)

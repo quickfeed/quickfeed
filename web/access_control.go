@@ -132,6 +132,25 @@ func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 	})
 }
 
+// changingTeacherState returns true if the method will attempt change on a teaher enrollment
+func (s *AutograderService) changingTeacherState(enrol *pb.Enrollment) bool {
+	currEnrol, _ := s.db.GetEnrollmentByCourseAndUser(enrol.GetCourseID(), enrol.GetUserID())
+
+	if (currEnrol.GetStatus() == pb.Enrollment_TEACHER) && (enrol.GetStatus() != pb.Enrollment_TEACHER) {
+		return true
+	}
+	return false
+}
+
+// isCourseCreator returns true if the given user is course creator for the given course
+func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
+	course, _ := s.db.GetCourse(courseID, false)
+	if course.GetCourseCreatorID() == userID {
+		return true
+	}
+	return false
+}
+
 // getUserAndSCM returns the current user and scm for the given provider.
 // All errors are logged, but only a single error is returned to the client.
 // This is a helper method to facilitate consistent treatment of errors and logging.
