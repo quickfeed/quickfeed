@@ -424,3 +424,157 @@ func TestGetCourse(t *testing.T) {
 		t.Errorf("have course %+v want %+v", foundCourse, course)
 	}
 }
+
+func TestPromoteDemoteRejectTeacher(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	fakeGothProvider()
+
+	teacher := createFakeUser(t, db, 10)
+	student1 := createFakeUser(t, db, 11)
+	student2 := createFakeUser(t, db, 12)
+
+	course := *allCourses[0]
+	err := db.CreateCourse(teacher.ID, &course)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fakeProvider, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserID:   student1.ID,
+		CourseID: course.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserID:   student2.ID,
+		CourseID: course.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(student1.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.EnrollStudent(student2.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	// student1 attempts to promote studen2 to teacher, nust fail
+	ctx := withUserContext(context.Background(), student1)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   student2.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	}); err == nil {
+		t.Errorf("expected error: 'only teachers can update enrollment status'")
+	}
+
+	// teacher promotes students to teachers, must succeed
+	ctx = withUserContext(context.Background(), teacher)
+	fakeProvider.CreateOrganization(ctx, &scm.CreateOrgOptions{Path: "path", Name: "name"})
+
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   student1.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   student2.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// student1 attempts to demote student2, must fail
+	ctx = withUserContext(context.Background(), student1)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   student2.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err == nil {
+		t.Error("expected error: 'only course creator can change status of other teachers'")
+	}
+
+	// student2 attempts to demote course creator, must fail
+	ctx = withUserContext(context.Background(), student2)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   teacher.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err == nil {
+		t.Error("expected error: 'only course creator can change status of other teachers'")
+	}
+
+	// student2 attempts to reject course creator, must fail
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   teacher.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_NONE,
+	}); err == nil {
+		t.Error("expected error: 'only course creator can change status of other teachers'")
+	}
+
+	// teacher demotes student1, must succeed
+	ctx = withUserContext(context.Background(), teacher)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   student1.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// check that student1 is now enrolled as student
+	enrol, err := db.GetEnrollmentByCourseAndUser(course.ID, student1.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enrol.Status != pb.Enrollment_STUDENT {
+		t.Errorf("expected status %s, got %s", pb.Enrollment_STUDENT, enrol.Status)
+	}
+
+	// teacher rejects student2, must succeed
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   student2.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_NONE,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// ensure that student2 is no longer enrolled in the course
+	if _, err := db.GetEnrollmentByCourseAndUser(course.ID, student2.ID); err == nil {
+		t.Error("expected error 'record not found'")
+	}
+
+	// justice is served
+
+	// course creator attempts to demote himself, must fail as well
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   teacher.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err == nil {
+		t.Error("expected error 'course creator cannot be demoted'")
+	}
+
+	// same when rejecting
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   teacher.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_NONE,
+	}); err == nil {
+		t.Error("expected error 'course creator cannot be demoted'")
+	}
+}
