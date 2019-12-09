@@ -649,8 +649,8 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserSta
 	return courses, nil
 }
 
-// GetCourse fetches course by ID.
-// If withInfo is true, preloads course assignments, active enrollments and groups
+// GetCourse fetches course by ID. If withInfo is true, preloads course
+// assignments, active enrollments and groups
 func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 	m := db.conn
 	var course pb.Course

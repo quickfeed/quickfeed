@@ -127,7 +127,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, re
 
 		// make owner, remove from students, add to teachers
 		if _, err := updateReposAndTeams(ctx, sc, course, teacher.GetLogin(), request.GetStatus()); err != nil {
-			s.logger.Errorf("failed to update team membersip for teacher %s: %s", teacher.Login, err.Error())
+			s.logger.Errorf("failed to update team membership for teacher %s: %s", teacher.Login, err.Error())
 			return err
 		}
 		return s.db.EnrollTeacher(teacher.ID, course.ID)
