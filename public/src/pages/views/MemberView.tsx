@@ -35,14 +35,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         };
     }
     public render() {
-        const pendingActions = [
-            { name: "Accept", uri: "accept", extra: "primary" },
-            { name: "Reject", uri: "reject", extra: "danger" },
-        ];
-        this.setState({
-            pendingUsersView: this.renderPendingView(pendingActions),
-            acceptedUsersView: this.renderUserView(),
-        });
         return <div>
             <h1>{this.props.course.getName()}</h1>
             <Search className="input-group"
@@ -54,10 +46,10 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         </div>;
     }
 
-    public componentWillReceiveProps(newProps: IUserViewerProps) {
+    public componentWillMount() {
         this.setState({
-            acceptedUsers: newProps.acceptedUsers,
-            pendingUsers: newProps.pendingUsers,
+            pendingUsersView: this.renderPendingView(),
+            acceptedUsersView: this.renderUserView(),
         });
     }
 
@@ -75,7 +67,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         }
     }
 
-    public renderPendingView(pendingActions: ILink[]) {
+    public renderPendingView() {
         if (this.props.pendingUsers.length > 0 || this.state.pendingUsers.length > 0) {
             const header = <div> Pending users {this.approveButton()}</div>;
             return this.renderUsers(
@@ -120,6 +112,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 break;
             case "teacher":
                 this.handlePromote(userRel);
+                break;
+            case "demote":
+                this.handleDemote(userRel);
                 break;
         }
         this.props.navMan.refresh();
@@ -180,11 +175,20 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private async handlePromote(userRel: IUserRelation) {
         if (confirm(
-            `Warning! This action is irreversible!
-            Do you want to continue assigning:
+            `Warning! 
+            Do you want to assign
             ${userRel.user.getName()} as a teacher?`,
         )) {
             this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
+        }
+    }
+
+    private async handleDemote(userRel: IUserRelation) {
+        if (confirm(
+            `Warning! ${userRel.user.getName()} is a teacher.
+            Do you want to demote ${userRel.user.getName()} to student?`,
+        )) {
+            this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
         }
     }
 
@@ -245,7 +249,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         return <button type="button"
                 id="edit"
                 className="btn btn-success member-btn"
-                onClick={this.flipEditState}
+                onClick={() => this.flipEditState()}
     >{this.editButtonString()}</button>;
     }
 
@@ -263,7 +267,11 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     private flipEditState() {
         this.setState({
             editing: !this.state.editing,
-        });
+
+        }, () => this.setState({
+            pendingUsersView: this.renderPendingView(),
+            acceptedUsersView: this.renderUserView(),
+        }));
     }
 
     private editButtonString(): string {
@@ -300,7 +308,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 break;
             case Enrollment.UserStatus.TEACHER:
                 this.state.editing ? links.push({
-                    name: "Demote",
+                    name: "Demote ",
                     extra: "primary",
                     uri: "demote",
                 }, {
