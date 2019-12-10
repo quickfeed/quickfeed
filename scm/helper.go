@@ -47,9 +47,9 @@ const (
 
 var (
 	// ErrNotMember indicates that the requested organization exists, but the current user
-	// is not its member
+	// is not its member.
 	ErrNotMember = errors.New("user is not a member of the organization")
-	// ErrNotOwner indicates that user has no admin rights in the requested organization
+	// ErrNotOwner indicates that user has no admin rights in the requested organization.
 	ErrNotOwner = errors.New("user is not an owner of the organization")
 )
 
@@ -149,6 +149,8 @@ type ErrFailedSCM struct {
 	GitError error
 }
 
+// Error message includes name of the failed method and the original error message
+// from GitHub, to make it suitable for informative back-end logging
 func (e ErrFailedSCM) Error() string {
 	return "github method " + e.Method + "failed: " + e.GitError.Error()
 }
