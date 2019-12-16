@@ -137,10 +137,21 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	// first make sure that repo does not already exist for this user or group
 	repo, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
 	if err != nil {
-		return nil, ErrFailedSCM{
-			Method:   "CreateRepository",
-			Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
-			GitError: err,
+		// in most cases the repo will not exist and "not found" error will be returned
+		s.logger.Debugf("CreateRepository got expected error when checking for %s repository: %s", opt.Path, err)
+	}
+
+	if repo == nil {
+		repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
+			Name:    &opt.Path,
+			Private: &opt.Private,
+		})
+		if err != nil {
+			return nil, ErrFailedSCM{
+				Method:   "CreateRepository",
+				Message:  fmt.Sprintf("failed to create repository %s, make sure it does not already exist", opt.Path),
+				GitError: err,
+			}
 		}
 	}
 	return toRepository(repo), nil
@@ -249,12 +260,14 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 	opt := &github.RepositoryAddCollaboratorOptions{
 		Permission: permission,
 	}
-	_, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, user, opt)
-	return ErrFailedSCM{
-		GitError: err,
-		Method:   "UpdateRepoAccess",
-		Message:  fmt.Sprintf("failed to grant %s permission to user %s for repository %s", opt.Permission, user, repo.Path),
+	if _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, user, opt); err != nil {
+		return ErrFailedSCM{
+			GitError: err,
+			Method:   "UpdateRepoAccess",
+			Message:  fmt.Sprintf("failed to grant %s permission to user %s for repository %s", opt.Permission, user, repo.Path),
+		}
 	}
+	return nil
 }
 
 // RepositoryIsEmpty implements the SCM interface
