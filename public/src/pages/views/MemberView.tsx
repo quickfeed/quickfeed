@@ -18,6 +18,9 @@ interface IUserViewerState {
     acceptedUsers: IUserRelation[];
     pendingUsers: IUserRelation[];
     approveAllClicked: boolean;
+    editing: boolean;
+    pendingUsersView?: JSX.Element;
+    acceptedUsersView?: JSX.Element;
 }
 
 export class MemberView extends React.Component<IUserViewerProps, IUserViewerState> {
@@ -28,55 +31,53 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             acceptedUsers: this.props.acceptedUsers,
             pendingUsers: this.props.pendingUsers,
             approveAllClicked: false,
+            editing: false,
         };
     }
     public render() {
-        const pendingActions = [
-            { name: "Accept", uri: "accept", extra: "primary" },
-            { name: "Reject", uri: "reject", extra: "danger" },
-        ];
         return <div>
             <h1>{this.props.course.getName()}</h1>
             <Search className="input-group"
                     placeholder="Search for users"
                     onChange={(query) => this.handleSearch(query)}
                 />
-            {this.renderPendingView(pendingActions)}
-            {this.renderUserView()}
+            {this.state.pendingUsersView}
+            {this.state.acceptedUsersView}
         </div>;
     }
 
-    public componentWillReceiveProps(newProps: IUserViewerProps) {
+    public componentWillMount() {
         this.setState({
-            acceptedUsers: newProps.acceptedUsers,
-            pendingUsers: newProps.pendingUsers,
+            pendingUsersView: this.renderPendingView(),
+            acceptedUsersView: this.renderUserView(),
         });
     }
 
     public renderUserView() {
+        const header = <div> Registered users {this.editButton()}</div>;
         if (this.state.acceptedUsers.length > 0 || this.props.acceptedUsers.length > 0) {
             return this.renderUsers(
-                "Registered users",
+                header,
                 this.state.acceptedUsers,
                 [],
                 ActionType.InRow,
                 (user: IUserRelation) => {
-                    const links = [];
-                    if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
-                        links.push({ name: "Teacher", extra: "light" });
-                    } else {
-                        links.push({ name: "Promote", uri: "teacher", extra: "primary" });
-                        links.push({ name: "Reject", uri: "reject", extra: "danger" });
-                    }
-                    return links;
+                    return this.generateUserButtons(user.link);
                 });
         }
     }
 
-    public renderPendingView(pendingActions: ILink[]) {
+    public renderPendingView() {
         if (this.props.pendingUsers.length > 0 || this.state.pendingUsers.length > 0) {
             const header = <div> Pending users {this.approveButton()}</div>;
-            return this.renderUsers(header, this.state.pendingUsers, pendingActions, ActionType.InRow);
+            return this.renderUsers(
+                header,
+                this.state.pendingUsers,
+                [],
+                ActionType.InRow,
+                (user: IUserRelation) => {
+                    return this.generateUserButtons(user.link);
+                });
         }
     }
 
@@ -111,6 +112,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 break;
             case "teacher":
                 this.handlePromote(userRel);
+                break;
+            case "demote":
+                this.handleDemote(userRel);
                 break;
         }
         this.props.navMan.refresh();
@@ -171,11 +175,20 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private async handlePromote(userRel: IUserRelation) {
         if (confirm(
-            `Warning! This action is irreversible!
-            Do you want to continue assigning:
+            `Warning! 
+            Do you want to assign
             ${userRel.user.getName()} as a teacher?`,
         )) {
             this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
+        }
+    }
+
+    private async handleDemote(userRel: IUserRelation) {
+        if (confirm(
+            `Warning! ${userRel.user.getName()} is a teacher.
+            Do you want to demote ${userRel.user.getName()} to student?`,
+        )) {
+            this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
         }
     }
 
@@ -232,6 +245,14 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 }> {this.approveButtonString()} </button>;
     }
 
+    private editButton() {
+        return <button type="button"
+                id="edit"
+                className="btn btn-success member-btn"
+                onClick={() => this.flipEditState()}
+    >{this.editButtonString()}</button>;
+    }
+
     private async handleApproveClick(): Promise<boolean> {
         this.setState({approveAllClicked: true});
         const ans = await this.props.courseMan.approveAll(this.props.course.getId());
@@ -241,5 +262,67 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private approveButtonString(): string {
         return this.state.approveAllClicked ? "Approving..." : "Approve all ";
+    }
+
+    private flipEditState() {
+        this.setState({
+            editing: !this.state.editing,
+
+        }, () => this.setState({
+            pendingUsersView: this.renderPendingView(),
+            acceptedUsersView: this.renderUserView(),
+        }));
+    }
+
+    private editButtonString(): string {
+        return this.state.editing ? "Cancel" : "Edit";
+    }
+
+    private generateUserButtons(link: Enrollment): ILink[] {
+        const links = [];
+        switch (link.getStatus()) {
+            case Enrollment.UserStatus.PENDING:
+                links.push({
+                    name: "Accept",
+                    extra: "primary",
+                    uri: "accept",
+                }, {
+                    name: "Reject",
+                    extra: "danger",
+                    uri: "reject",
+                });
+                break;
+            case Enrollment.UserStatus.STUDENT:
+                this.state.editing ? links.push({
+                    name: "Promote",
+                    extra: "primary",
+                    uri: "teacher",
+                }, {
+                    name: "Reject",
+                    extra: "danger",
+                    uri: "reject",
+                }) : links.push({
+                    name: "Student",
+                    extra: "light",
+                });
+                break;
+            case Enrollment.UserStatus.TEACHER:
+                this.state.editing ? links.push({
+                    name: "Demote ",
+                    extra: "primary",
+                    uri: "demote",
+                }, {
+                    name: "Reject",
+                    extra: "danger",
+                    uri: "reject",
+                }) : links.push({
+                    name: "Teacher",
+                    extra: "light",
+                });
+                break;
+            default:
+                console.log("Got unexpected user status " + link.getStatus + " when generating links");
+        }
+        return links;
     }
 }
