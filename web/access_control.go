@@ -118,13 +118,6 @@ func (s *AutograderService) isValidSubmission(submissionID uint64) bool {
 	return s.isValidSubmissionRequest(request)
 }
 
-// isEnrolled returns true if the given user is enrolled as student for the given course.
-func (s *AutograderService) isStudent(userID, courseID uint64) bool {
-	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
-		return e.Status == pb.Enrollment_STUDENT
-	})
-}
-
 // isTeacher returns true if the given user is teacher for the given course.
 func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
@@ -132,23 +125,18 @@ func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 	})
 }
 
-// changingTeacherState returns true if the method will attempt change on a teaher enrollment
-func (s *AutograderService) changingTeacherState(enrol *pb.Enrollment) bool {
-	currEnrol, _ := s.db.GetEnrollmentByCourseAndUser(enrol.GetCourseID(), enrol.GetUserID())
-
-	if (currEnrol.GetStatus() == pb.Enrollment_TEACHER) && (enrol.GetStatus() != pb.Enrollment_TEACHER) {
-		return true
-	}
-	return false
+// isChangingTeacherState returns true if newEnroll represents
+// an attempt to change status on an existing enrollment to non-teacher.
+func (s *AutograderService) isChangingTeacherState(newEnroll *pb.Enrollment) bool {
+	return s.hasCourseAccess(newEnroll.GetUserID(), newEnroll.GetCourseID(), func(e *pb.Enrollment) bool {
+		return e.GetStatus() == pb.Enrollment_TEACHER && newEnroll.GetStatus() != pb.Enrollment_TEACHER
+	})
 }
 
 // isCourseCreator returns true if the given user is course creator for the given course
 func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
 	course, _ := s.db.GetCourse(courseID, false)
-	if course.GetCourseCreatorID() == userID {
-		return true
-	}
-	return false
+	return course.GetCourseCreatorID() == userID
 }
 
 // getUserAndSCM returns the current user and scm for the given provider.

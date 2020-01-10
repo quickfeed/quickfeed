@@ -217,10 +217,12 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
 	if s.isCourseCreator(in.CourseID, in.UserID) {
+		s.logger.Error("UpdateEnrollment failed: user is course creator, whose enrollment cannot be changed")
 		return nil, status.Errorf(codes.PermissionDenied, "course creator cannot be demoted")
 	}
-	if s.changingTeacherState(in) && !s.isCourseCreator(in.CourseID, usr.ID) {
-		return nil, status.Errorf(codes.PermissionDenied, "only course creator can change status of other teachers")
+	if s.isChangingTeacherState(in) && !s.isCourseCreator(in.CourseID, usr.ID) {
+		s.logger.Error("UpdateEnrollment failed: user is not course creator")
+		return nil, status.Errorf(codes.PermissionDenied, "only course creator can change enrollment status of other teachers")
 	}
 	err = s.updateEnrollment(ctx, scm, in)
 	if err != nil {
