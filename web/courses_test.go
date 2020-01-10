@@ -434,6 +434,7 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	teacher := createFakeUser(t, db, 10)
 	student1 := createFakeUser(t, db, 11)
 	student2 := createFakeUser(t, db, 12)
+	ta := createFakeUser(t, db, 13)
 
 	course := *allCourses[0]
 	err := db.CreateCourse(teacher.ID, &course)
@@ -456,6 +457,12 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+	if err := db.CreateEnrollment(&pb.Enrollment{
+		UserID:   ta.ID,
+		CourseID: course.ID,
+	}); err != nil {
+		t.Fatal(err)
+	}
 	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -465,8 +472,11 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	if err := db.EnrollStudent(student2.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
+	if err := db.EnrollStudent(ta.ID, course.ID); err != nil {
+		t.Fatal(err)
+	}
 
-	// student1 attempts to promote studen2 to teacher, nust fail
+	// student1 attempts to promote student2 to teacher, must fail
 	ctx := withUserContext(context.Background(), student1)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   student2.ID,
@@ -490,6 +500,15 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
 		UserID:   student2.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// promote the TA to teacher as well
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   ta.ID,
 		CourseID: course.ID,
 		Status:   pb.Enrollment_TEACHER,
 	}); err != nil {
@@ -576,5 +595,15 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 		Status:   pb.Enrollment_NONE,
 	}); err == nil {
 		t.Error("expected error 'course creator cannot be demoted'")
+	}
+
+	// ta attempts to demote course creator, must fail
+	ctx = withUserContext(context.Background(), ta)
+	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
+		UserID:   teacher.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err == nil {
+		t.Error("expected error 'ta cannot be demoted course creator'")
 	}
 }
