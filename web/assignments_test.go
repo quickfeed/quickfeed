@@ -34,24 +34,24 @@ func TestFetchAssignments(t *testing.T) {
 
 	ctx := context.Background()
 
-	courseDirID := uint64(gitHubTestOrgID)
-	if courseDirID == 0 {
+	courseOrgID := uint64(gitHubTestOrgID)
+	if courseOrgID == 0 {
 		// find course directory ID for 'autograder-test' or your organization
-		dirs, err := s.ListOrganizations(ctx)
+		orgs, err := s.ListOrganizations(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, dir := range dirs {
-			if dir.Path == gitHubTestOrg {
-				courseDirID = dir.ID
-				t.Logf("To speed up test; update const to 'gitHubTestOrgID = %v'", dir.ID)
+		for _, org := range orgs {
+			if org.Path == gitHubTestOrg {
+				courseOrgID = org.ID
+				t.Logf("To speed up test; update const to 'gitHubTestOrgID = %v'", org.ID)
 			}
 		}
 	}
 
 	course := &pb.Course{
 		Name:           "Autograder Test Course",
-		OrganizationID: courseDirID,
+		OrganizationID: courseOrgID,
 	}
 
 	assignments, err := fetchAssignments(ctx, s, course)

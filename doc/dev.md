@@ -182,6 +182,32 @@ Then run `sudo certbot---nginx -d <URL you wish to protect>`. When working with 
 
 ## Errors and logging
 
+Application errors can be classified into several groups and handled in different ways.
+
+1. Database errors
+Return generic "not found/failed" error message to user, log the original error.
+
+2. SCM errors
+Some of these can only be fixed by the user who is calling the method by interacting with UI elements (usually course teacher). 
+Example: if a github organization cannot be found, one of the possible issues causing this behavior is disabled third party access. As a result, the requested organization cannot be seen by the application. If a GitHub repo or team cannot be found, they could have been manually deleted from GitHub. Only the current user can remedy the situation, and it is most useful to inform them about the issue in detail and offer a solution.
+Another example: sometimes GitHub interactions take too long and the request context can be canceled by GitHub. This is not an application failure, and neither developer team, nor user can actively do anything to correct it. But it is still useful to inform the user that the action must be repeated at later time to succeed.
+Return a custom error with method name and original error for logging, and a custom message string to be displayed to user.
+
+3. Access control errors
+Return generic "access denied" error message to user.
+
+4. API errors (invalid requests)
+Return generic "malformed request" message to user.
+
+5. GitHub API errors (request struct has missing/malformed fields)
+Return a custom error with detailed information for logging and generic "action failed" message to user.
+
+
+
+[GRPC status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
+
+When the client is supposed to show error message to the user, error from the server will have status 9 (gRPC status "failed precondition")
+
 ### Backend
 
 Errors are being logged at `Autograder Service` level. All other methods called from there (including database and scm methods) will just wrap and return all error messages directly. Introduce logging on layers deeper than `Autograder Service` only if necessary. 
@@ -190,7 +216,7 @@ Errors returned to user interface must be few and informative, yet should not pr
 
 ### Frontend
 
-When receiving response from the server, response status code is checked on the frontend. Any message with code different from 0 (0 = OK status code for gRPC) will be logged to console. Relevant error messages will be displayed to user on course and group creation, and user and group enrollment updates.
+When receiving response from the server, response status code is checked on the frontend. Any message with code different from 0 (0 is gRPC status code `OK`) will be logged to console. Relevant error messages will be displayed to user on course and group creation, and user and group enrollment updates.
 
 [gRPC status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md)
 
