@@ -1,22 +1,27 @@
 package web_test
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
+	"context"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
+	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
+	"github.com/google/go-cmp/cmp"
 	"github.com/labstack/echo"
+	"go.uber.org/zap"
 )
 
 func TestGetSelf(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+
+	_ = createFakeUser(t, db, 1)
+
 	const (
 		selfURL   = "/user"
 		apiPrefix = "/api/v1"
@@ -27,97 +32,51 @@ func TestGetSelf(t *testing.T) {
 	e := echo.New()
 	c := e.NewContext(r, w)
 
-	user := &models.User{ID: 1}
+	user := &pb.User{ID: 1}
 	c.Set(auth.UserKey, user)
 
-	userHandler := web.GetSelf()
+	userHandler := web.GetSelf(db)
 	if err := userHandler(c); err != nil {
 		t.Error(err)
 	}
 
-	userURL := fmt.Sprintf("/users/%d", user.ID)
-	location := w.Header().Get("Location")
-	if location != apiPrefix+userURL {
-		t.Errorf("have Location '%v' want '%v'", location, apiPrefix+userURL)
-	}
-	assertCode(t, w.Code, http.StatusFound)
-}
-
-func TestGetUser(t *testing.T) {
-	const route = "/users/:uid"
-
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	// Create first user (the admin).
-	createFakeUser(t, db, 1)
-	user := createFakeUser(t, db, 2)
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodGet, route, web.GetUser(db))
-
-	requestURL := fmt.Sprintf("/users/%d", user.ID)
-	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	// Prepare context with user request.
-	router.Find(http.MethodGet, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-
-	var foundUser *models.User
-	if err := json.Unmarshal(w.Body.Bytes(), &foundUser); err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(foundUser, user) {
-		t.Errorf("have user %+v want %+v", foundUser, user)
+	if w.Code == http.StatusNotFound {
+		t.Fatal("not found")
 	}
 	assertCode(t, w.Code, http.StatusFound)
 }
 
 func TestGetUsers(t *testing.T) {
-	const route = "/users"
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	user1 := createFakeUser(t, db, 1)
-	user2 := createFakeUser(t, db, 2)
-
-	e := echo.New()
-	r := httptest.NewRequest(http.MethodGet, route, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-
-	h := web.GetUsers(db)
-	if err := h(c); err != nil {
-		t.Error(err)
+	_, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	unexpectedUsers, err := ags.GetUsers(context.Background(), &pb.Void{})
+	if err == nil && unexpectedUsers != nil && len(unexpectedUsers.GetUsers()) > 0 {
+		t.Fatalf("found unexpected users %+v", unexpectedUsers)
 	}
 
-	var foundUsers []*models.User
-	if err := json.Unmarshal(w.Body.Bytes(), &foundUsers); err != nil {
+	admin := createFakeUser(t, db, 1)
+	user2 := createFakeUser(t, db, 2)
+	ctx := withUserContext(context.Background(), user2)
+	_, err = ags.GetUsers(ctx, &pb.Void{})
+	if err == nil {
+		t.Fatal("expected 'rpc error: code = PermissionDenied desc = only admin can access other users'")
+	}
+	// now switch to use admin as the user; this should pass
+	ctx = withUserContext(context.Background(), admin)
+	foundUsers, err := ags.GetUsers(ctx, &pb.Void{})
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Remote identities should not be loaded.
-	user1.RemoteIdentities = nil
-	user2.RemoteIdentities = nil
-	// First user should be admin.
-	admin := true
-	user1.IsAdmin = &admin
-	wantUsers := []*models.User{user1, user2}
-	if !reflect.DeepEqual(foundUsers, wantUsers) {
-		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
-	}
+	wantUsers := make([]*pb.User, 0)
+	wantUsers = append(wantUsers, admin, user2)
 
-	assertCode(t, w.Code, http.StatusFound)
+	if !cmp.Equal(foundUsers.Users, wantUsers) {
+		t.Errorf("have users %+v want %+v", foundUsers.Users, wantUsers)
+	}
 }
 
 var allUsers = []struct {
@@ -137,12 +96,10 @@ var allUsers = []struct {
 }
 
 func TestGetEnrollmentsByCourse(t *testing.T) {
-	const route = "/courses/:cid/users"
-
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var users []*models.User
+	var users []*pb.User
 	for _, u := range allUsers {
 		user := createFakeUser(t, db, u.remoteID)
 		// remote identities should not be loaded.
@@ -157,6 +114,10 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
+	_, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := withUserContext(context.Background(), admin)
+
 	// users to enroll in course DAT520 Distributed Systems
 	// (excluding admin because admin is enrolled on creation)
 	wantUsers := users[0 : len(allUsers)-3]
@@ -165,7 +126,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 			// skip enrolling admin as student
 			continue
 		}
-		if err := db.CreateEnrollment(&models.Enrollment{
+		if err := db.CreateEnrollment(&pb.Enrollment{
 			UserID:   user.ID,
 			CourseID: allCourses[0].ID,
 		}); err != nil {
@@ -180,7 +141,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 	// (excluding admin because admin is enrolled on creation)
 	osUsers := users[3:7]
 	for _, user := range osUsers {
-		if err := db.CreateEnrollment(&models.Enrollment{
+		if err := db.CreateEnrollment(&pb.Enrollment{
 			UserID:   user.ID,
 			CourseID: allCourses[1].ID,
 		}); err != nil {
@@ -191,33 +152,19 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 	}
 
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// add the route to handler
-	router.Add(http.MethodGet, route, web.GetEnrollmentsByCourse(db))
-	requestURL := fmt.Sprintf("/courses/%d/users", allCourses[0].ID)
-	r := httptest.NewRequest(http.MethodGet, requestURL, nil)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	router.Find(http.MethodGet, requestURL, c)
-	// invoke the prepared handler
-	if err := c.Handler()(c); err != nil {
+	foundEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: allCourses[0].ID})
+	if err != nil {
 		t.Error(err)
 	}
 
-	var foundEnrollments []*models.Enrollment
-	if err := json.Unmarshal(w.Body.Bytes(), &foundEnrollments); err != nil {
-		t.Fatal(err)
-	}
-	var foundUsers []*models.User
-	for _, e := range foundEnrollments {
+	var foundUsers []*pb.User
+	for _, e := range foundEnrollments.Enrollments {
 		// remote identities should not be loaded.
 		e.User.RemoteIdentities = nil
 		foundUsers = append(foundUsers, e.User)
 	}
 
-	if !reflect.DeepEqual(foundUsers, wantUsers) {
+	if !cmp.Equal(foundUsers, wantUsers) {
 		for _, u := range foundUsers {
 			t.Logf("user %+v", u)
 		}
@@ -226,133 +173,233 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}
 		t.Errorf("have users %+v want %+v", foundUsers, wantUsers)
 	}
-
-	assertCode(t, w.Code, http.StatusOK)
 }
 
-func TestPatchUser(t *testing.T) {
-	const route = "/users/:uid"
-
+func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	adminUser := createFakeUser(t, db, 1)
-	user := createFakeUser(t, db, 2)
-
-	e := echo.New()
-	router := echo.NewRouter(e)
-
-	// Add the route to handler.
-	router.Add(http.MethodPatch, route, web.PatchUser(db))
-
-	// Send empty request, the user should not be modified.
-	emptyJSON, err := json.Marshal(&web.UpdateUserRequest{})
-	if err != nil {
-		t.Fatal(err)
+	var users []*pb.User
+	for _, u := range allUsers {
+		user := createFakeUser(t, db, u.remoteID)
+		users = append(users, user)
 	}
-	requestBody := bytes.NewReader(emptyJSON)
+	admin := users[0]
 
-	requestURL := fmt.Sprintf("/users/%d", user.ID)
-	r := httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w := httptest.NewRecorder()
-	c := e.NewContext(r, w)
-	// Prepare context with user request.
-	c.Set("user", adminUser)
-	router.Find(http.MethodPatch, requestURL, c)
+	_, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := withUserContext(context.Background(), admin)
 
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusNotModified)
-
-	tmp := true
-	// Send request with IsAdmin set to true, the user should become admin.
-	trueJSON, err := json.Marshal(&web.UpdateUserRequest{
-		IsAdmin: &tmp,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	requestBody.Reset(trueJSON)
-
-	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w = httptest.NewRecorder()
-	c.Reset(r, w)
-	// Prepare context with user request.
-	c.Set("user", adminUser)
-	router.Find(http.MethodPatch, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
-		t.Error(err)
-	}
-	assertCode(t, w.Code, http.StatusOK)
-
-	admin, err := db.GetUser(user.ID)
+	course := allCourses[1]
+	err := db.CreateCourse(admin.ID, course)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !admin.IAdmin() {
-		t.Error("expected user to have become admin")
+	var wantEnrollments []*pb.Enrollment
+	for i, user := range users {
+		if i == 0 {
+			// we want to skip enrolling admin, as he must have been enrolled when creating course
+			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			enr.User = nil
+			enr.Course = nil
+			wantEnrollments = append(wantEnrollments, enr)
+		} else if i%3 != 0 {
+			// enroll every third student as a group member
+			if err := db.CreateEnrollment(&pb.Enrollment{
+				UserID: user.ID, CourseID: course.ID, GroupID: 1}); err != nil {
+				t.Fatal(err)
+			}
+			if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			// enroll rest of the students and add them to the list to check against
+			if err := db.CreateEnrollment(&pb.Enrollment{
+				UserID: user.ID, CourseID: course.ID}); err != nil {
+				t.Fatal(err)
+			}
+			if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+				t.Fatal(err)
+			}
+			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			enr.User = nil
+			enr.Course = nil
+			wantEnrollments = append(wantEnrollments, enr)
+		}
 	}
 
-	// Send request with Name.
-	nameChangeJSON, err := json.Marshal(&web.UpdateUserRequest{
+	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID, FilterOutGroupMembers: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// set user references to nil as db methods populating the first list will not have them
+	for _, u := range gotEnrollments.Enrollments {
+		u.User = nil
+		u.Course = nil
+	}
+
+	if !cmp.Equal(gotEnrollments.Enrollments, wantEnrollments) {
+		for _, u := range gotEnrollments.Enrollments {
+			t.Logf("user %+v", u)
+		}
+		for _, u := range wantEnrollments {
+			t.Logf("want %+v", u)
+		}
+		t.Errorf("have users %+v want %+v", gotEnrollments, wantEnrollments)
+	}
+
+}
+
+func TestUpdateUser(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+	firstAdminUser := createFakeUser(t, db, 1)
+	nonAdminUser := createFakeUser(t, db, 11)
+
+	_, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+	ctx := withUserContext(context.Background(), firstAdminUser)
+
+	// we want to update nonAdminUser to become admin
+	nonAdminUser.IsAdmin = true
+	respUser, err := ags.UpdateUser(ctx, nonAdminUser)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// we expect the nonAdminUser to now be admin
+	admin, err := db.GetUser(nonAdminUser.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !admin.IsAdmin {
+		t.Error("expected nonAdminUser to have become admin")
+	}
+
+	nameChangeRequest := &pb.User{
+		ID:        respUser.ID,
+		IsAdmin:   respUser.IsAdmin,
 		Name:      "Scrooge McDuck",
 		StudentID: "99",
 		Email:     "test@test.com",
 		AvatarURL: "www.hello.com",
-	})
-	if err != nil {
-		t.Fatal(err)
 	}
-	requestBody.Reset(nameChangeJSON)
 
-	r = httptest.NewRequest(http.MethodPatch, requestURL, requestBody)
-	r.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	w = httptest.NewRecorder()
-	c.Reset(r, w)
-	// Prepare context with user request.
-	c.Set("user", adminUser)
-	router.Find(http.MethodPatch, requestURL, c)
-
-	// Invoke the prepared handler.
-	if err := c.Handler()(c); err != nil {
+	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	if err != nil {
 		t.Error(err)
 	}
-	assertCode(t, w.Code, http.StatusOK)
-
-	withName, err := db.GetUser(user.ID)
+	withName, err := db.GetUser(nonAdminUser.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantAdmin := true
-	wantUser := &models.User{
+	withName.Enrollments = nil
+	// withName.Enrollments = make([]*pb.Enrollment, 0)
+	wantUser := &pb.User{
 		ID:               withName.ID,
 		Name:             "Scrooge McDuck",
-		IsAdmin:          &wantAdmin,
+		IsAdmin:          true,
 		StudentID:        "99",
 		Email:            "test@test.com",
 		AvatarURL:        "www.hello.com",
-		RemoteIdentities: user.RemoteIdentities,
+		RemoteIdentities: nonAdminUser.RemoteIdentities,
 	}
-	if !reflect.DeepEqual(withName, wantUser) {
-		t.Errorf("have users %+v want %+v", withName, wantUser)
+
+	if !cmp.Equal(withName, wantUser) {
+		t.Errorf("have users\n%+v want\n%+v\n", withName, wantUser)
+	}
+}
+
+func TestUpdateUserFailures(t *testing.T) {
+	db, cleanup := setup(t)
+	defer cleanup()
+	//user := &pb.User{Name: "Test User", StudentID: "11", Email: "test@email", AvatarURL: "url.com"}
+	adminUser := createFakeUser(t, db, 1)
+	createFakeUser(t, db, 11)
+
+	_, scms := fakeProviderMap(t)
+	ags := web.NewAutograderService(zap.NewNop(), db, scms, web.BaseHookOptions{}, &ci.Local{})
+
+	u := createFakeUser(t, db, 3)
+	if u.IsAdmin {
+		t.Fatalf("expected user %v to be non-admin", u)
+	}
+	// context with user u (non-admin user); can only change its own name etc
+	ctx := withUserContext(context.Background(), u)
+
+	// trying to demote current adminUser by setting IsAdmin to false
+	nameChangeRequest := &pb.User{
+		ID:        adminUser.ID,
+		IsAdmin:   false,
+		Name:      "Scrooge McDuck",
+		StudentID: "99",
+		Email:     "test@test.com",
+		AvatarURL: "www.hello.com",
+	}
+	// current user u (non-admin) is in the ctx and tries to change adminUser
+	_, err := ags.UpdateUser(ctx, nameChangeRequest)
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	noChangeAdmin, err := db.GetUser(adminUser.ID)
+	noChangeAdmin.Enrollments = nil
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(noChangeAdmin, adminUser) {
+		t.Errorf("\nhave: %+v\nwant: %+v\n", noChangeAdmin, adminUser)
+	}
+
+	nameChangeRequest = &pb.User{
+		ID:        u.ID,
+		IsAdmin:   true,
+		Name:      "Scrooge McDuck",
+		StudentID: "99",
+		Email:     "test@test.com",
+		AvatarURL: "www.hello.com",
+	}
+	_, err = ags.UpdateUser(ctx, nameChangeRequest)
+	if err != nil {
+		t.Error(err)
+	}
+	withName, err := db.GetUser(u.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	withName.Enrollments = nil
+	wantUser := &pb.User{
+		ID:               withName.ID,
+		Name:             "Scrooge McDuck",
+		IsAdmin:          false, // we want that the current user u cannot promote himself to admin
+		StudentID:        "99",
+		Email:            "test@test.com",
+		AvatarURL:        "www.hello.com",
+		RemoteIdentities: u.RemoteIdentities,
+	}
+
+	if !cmp.Equal(withName, wantUser) {
+		t.Errorf("\nhave: %+v\nwant: %+v\n", withName, wantUser)
 	}
 }
 
 // createFakeUser is a test helper to create a user in the database
 // with the given remote id and the fake scm provider.
-func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *models.User {
-	var user models.User
+func createFakeUser(t *testing.T, db database.Database, remoteID uint64) *pb.User {
+	t.Helper()
+	var user pb.User
 	err := db.CreateUserFromRemoteIdentity(&user,
-		&models.RemoteIdentity{
-			Provider: "fake",
-			RemoteID: remoteID,
+		&pb.RemoteIdentity{
+			Provider:    "fake",
+			RemoteID:    remoteID,
+			AccessToken: "token",
 		})
 	if err != nil {
 		t.Fatal(err)

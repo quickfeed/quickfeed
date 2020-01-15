@@ -4,25 +4,32 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 
-	"github.com/autograde/aguis/models"
+	pb "github.com/autograde/aguis/ag"
 	"github.com/jinzhu/gorm"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
 	// ErrDuplicateIdentity is returned when trying to associate a remote identity
 	// with a user account and the identity is already in use.
-	ErrDuplicateIdentity = errors.New("remote identity register with another user")
+	ErrDuplicateIdentity = errors.New("remote identity registered with another user")
+	// ErrEmptyGroup is returned when trying to create a group without users.
+	ErrEmptyGroup = errors.New("cannot create group without users")
 	// ErrDuplicateGroup is returned when trying to create a group with the same
 	// name as a previously registered group.
-	ErrDuplicateGroup = errors.New("group name already registered")
+	ErrDuplicateGroup = status.Error(codes.InvalidArgument, "group with this name already registered")
+	// ErrUpdateGroup is returned when updating a group's enrollment fails.
+	ErrUpdateGroup = errors.New("failed to update group enrollment")
 	// ErrCourseExists is returned when trying to create an association in
-	// the database for a DirectoryID that already exists in the database.
+	// the database for a DirectoryId that already exists in the database.
 	ErrCourseExists = errors.New("course already exists on git provider")
 	// ErrInsufficientAccess is returned when trying to update database
 	// with insufficient access priviledges.
 	ErrInsufficientAccess = errors.New("user must be admin to perform this operation")
+	// ErrCreateRepo is returned when trying to create repository with wrong argument.
+	ErrCreateRepo = errors.New("failed to create repository; invalid arguments")
 )
 
 // GormDB implements the Database interface.
@@ -43,14 +50,14 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 	conn.LogMode(logger != nil)
 
 	if err := conn.AutoMigrate(
-		&models.User{},
-		&models.RemoteIdentity{},
-		&models.Course{},
-		&models.Enrollment{},
-		&models.Assignment{},
-		&models.Submission{},
-		&models.Group{},
-		&models.Repository{},
+		&pb.User{},
+		&pb.RemoteIdentity{},
+		&pb.Course{},
+		&pb.Enrollment{},
+		&pb.Assignment{},
+		&pb.Submission{},
+		&pb.Group{},
+		&pb.Repository{},
 	).Error; err != nil {
 		return nil, err
 	}
@@ -58,23 +65,32 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 	return &GormDB{conn}, nil
 }
 
-// GetUser implements the Database interface.
-func (db *GormDB) GetUser(uid uint64) (*models.User, error) {
-	var user models.User
+// GetUser fetches a user by ID with remote identities.
+func (db *GormDB) GetUser(uid uint64) (*pb.User, error) {
+	var user pb.User
 	if err := db.conn.Preload("RemoteIdentities").First(&user, uid).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-// GetUserByRemoteIdentity implements the Database interface.
-func (db *GormDB) GetUserByRemoteIdentity(remote *models.RemoteIdentity) (*models.User, error) {
+// GetUserWithEnrollments will return a user by ID with active enrollments
+func (db *GormDB) GetUserWithEnrollments(uid uint64) (*pb.User, error) {
+	var user pb.User
+	if err := db.conn.Preload("Enrollments").First(&user, uid).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// GetUserByRemoteIdentity fetches user by remote identity.
+func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, error) {
 	tx := db.conn.Begin()
 
 	// Get the remote identity.
-	var remoteIdentity models.RemoteIdentity
+	var remoteIdentity pb.RemoteIdentity
 	if err := tx.
-		Where(&models.RemoteIdentity{
+		Where(&pb.RemoteIdentity{
 			Provider: remote.Provider,
 			RemoteID: remote.RemoteID,
 		}).
@@ -84,25 +100,26 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *models.RemoteIdentity) (*model
 	}
 
 	// Get the user.
-	var user models.User
+	var user pb.User
 	if err := tx.Preload("RemoteIdentities").First(&user, remoteIdentity.UserID).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
+
 	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-// UpdateAccessToken implements the Database interface.
-func (db *GormDB) UpdateAccessToken(remote *models.RemoteIdentity) error {
+// UpdateAccessToken refreshes the token info for the given remote identity.
+func (db *GormDB) UpdateAccessToken(remote *pb.RemoteIdentity) error {
 	tx := db.conn.Begin()
 
 	// Get the remote identity.
-	var remoteIdentity models.RemoteIdentity
+	var remoteIdentity pb.RemoteIdentity
 	if err := tx.
-		Where(&models.RemoteIdentity{
+		Where(&pb.RemoteIdentity{
 			Provider: remote.Provider,
 			RemoteID: remote.RemoteID,
 		}).
@@ -119,44 +136,43 @@ func (db *GormDB) UpdateAccessToken(remote *models.RemoteIdentity) error {
 	return tx.Commit().Error
 }
 
-// GetUsers implements the Database interface.
-func (db *GormDB) GetUsers(withRemoteIDs bool, uids ...uint64) ([]*models.User, error) {
+// GetUsers fetches all users by provided IDs.
+func (db *GormDB) GetUsers(uids ...uint64) ([]*pb.User, error) {
 	m := db.conn
 	if len(uids) > 0 {
 		m = m.Where(uids)
 	}
-	if withRemoteIDs {
-		m = m.Preload("RemoteIdentities")
-	}
+	m = m.Preload("RemoteIdentities")
 
-	var users []*models.User
+	var users []*pb.User
 	if err := m.Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
-// UpdateUser implements the Database interface
-func (db *GormDB) UpdateUser(user *models.User) error {
-	return db.conn.Model(&models.User{}).Updates(user).Error
+// UpdateUser updates user information.
+func (db *GormDB) UpdateUser(user *pb.User) error {
+	return db.conn.Model(&pb.User{}).Updates(user).Error
 }
 
-// SetAdmin implements the Database interface.
+// SetAdmin promotes user with given ID to admin.
 func (db *GormDB) SetAdmin(uid uint64) error {
-	var user models.User
+	var user pb.User
 	if err := db.conn.First(&user, uid).Error; err != nil {
 		return err
 	}
+	// TODO(vera): is there a reason we are doing it in two steps?
 	admin := true
-	user.IsAdmin = &admin
+	user.IsAdmin = admin
 	return db.conn.Save(&user).Error
 }
 
-// GetRemoteIdentity implements the Database interface.
-func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*models.RemoteIdentity, error) {
-	var remoteIdentity models.RemoteIdentity
-	if err := db.conn.Model(&models.RemoteIdentity{}).
-		Where(&models.RemoteIdentity{
+// GetRemoteIdentity fetches remote identity by provider and ID.
+func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*pb.RemoteIdentity, error) {
+	var remoteIdentity pb.RemoteIdentity
+	if err := db.conn.Model(&pb.RemoteIdentity{}).
+		Where(&pb.RemoteIdentity{
 			Provider: provider,
 			RemoteID: rid,
 		}).
@@ -166,9 +182,9 @@ func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*models.Remote
 	return &remoteIdentity, nil
 }
 
-// CreateUserFromRemoteIdentity implements the Database interface.
-func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity *models.RemoteIdentity) error {
-	user.RemoteIdentities = []*models.RemoteIdentity{remoteIdentity}
+// CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
+func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb.RemoteIdentity) error {
+	user.RemoteIdentities = []*pb.RemoteIdentity{remoteIdentity}
 	if err := db.conn.Create(&user).Error; err != nil {
 		return err
 	}
@@ -178,21 +194,21 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *models.User, remoteIdentity
 			return err
 		}
 		admin := true
-		user.IsAdmin = &admin
+		user.IsAdmin = admin
 	}
 	return nil
 }
 
-// AssociateUserWithRemoteIdentity implements the Database interface.
+// AssociateUserWithRemoteIdentity associates remote identity with the user with given ID.
 func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error {
 	var count uint64
 	if err := db.conn.
-		Model(&models.RemoteIdentity{}).
-		Where(&models.RemoteIdentity{
+		Model(&pb.RemoteIdentity{}).
+		Where(&pb.RemoteIdentity{
 			Provider: provider,
 			RemoteID: rid,
 		}).
-		Not(&models.RemoteIdentity{
+		Not(&pb.RemoteIdentity{
 			UserID: uid,
 		}).
 		Count(&count).Error; err != nil {
@@ -202,39 +218,38 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 		return ErrDuplicateIdentity
 	}
 
-	var remoteIdentity models.RemoteIdentity
+	var remoteIdentity pb.RemoteIdentity
 	return db.conn.
-		Where(models.RemoteIdentity{Provider: provider, RemoteID: rid, UserID: uid}).
-		Assign(models.RemoteIdentity{AccessToken: accessToken}).
+		Where(pb.RemoteIdentity{Provider: provider, RemoteID: rid, UserID: uid}).
+		Assign(pb.RemoteIdentity{AccessToken: accessToken}).
 		FirstOrCreate(&remoteIdentity).Error
 }
 
-// CreateCourse creates the given course and enrolls
-// the given user (uid) as teacher for the course.
-func (db *GormDB) CreateCourse(uid uint64, course *models.Course) error {
+// CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
+func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 	user, err := db.GetUser(uid)
 	if err != nil {
 		return err
 	}
-	if !user.IAdmin() {
+	if !user.IsAdmin {
 		return ErrInsufficientAccess
 	}
 
 	var courses uint64
-	// check if course already exists in database
-	if err := db.conn.Model(&models.Course{}).
-		Where(&models.Course{DirectoryID: course.DirectoryID}).
-		Count(&courses).Error; err != nil {
+	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
+		OrganizationID: course.OrganizationID,
+	}).Count(&courses).Error; err != nil {
 		return err
 	}
 	if courses > 0 {
 		return ErrCourseExists
 	}
+
 	//TODO(meling) these db updates should be done as a transaction
 	if err := db.conn.Create(course).Error; err != nil {
 		return err
 	}
-	if err := db.CreateEnrollment(&models.Enrollment{UserID: uid, CourseID: course.ID}); err != nil {
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: uid, CourseID: course.ID}); err != nil {
 		return err
 	}
 	if err := db.EnrollTeacher(uid, course.ID); err != nil {
@@ -243,33 +258,41 @@ func (db *GormDB) CreateCourse(uid uint64, course *models.Course) error {
 	return nil
 }
 
-// GetCourses implements the Database interface.
-// If one or more course ids are provided, the corresponding courses
-// are returned. Otherwise, all courses are returned.
-func (db *GormDB) GetCourses(cids ...uint64) ([]*models.Course, error) {
+// GetCourses returns a list of courses. If one or more course ids are provided,
+// the corresponding courses are returned. Otherwise, all courses are returned.
+func (db *GormDB) GetCourses(cids ...uint64) ([]*pb.Course, error) {
 	m := db.conn
 	if len(cids) > 0 {
 		m = m.Where(cids)
 	}
-	var courses []*models.Course
+	var courses []*pb.Course
 	if err := m.Find(&courses).Error; err != nil {
 		return nil, err
 	}
 	return courses, nil
 }
 
-// GetAssignmentsByCourse implements the Database interface
-func (db *GormDB) GetAssignmentsByCourse(cid uint64) ([]*models.Assignment, error) {
-	var course models.Course
+// GetAssignmentsByCourse fetches all assignments for a course with given ID
+func (db *GormDB) GetAssignmentsByCourse(cid uint64) ([]*pb.Assignment, error) {
+	var course pb.Course
 	if err := db.conn.Preload("Assignments").First(&course, cid).Error; err != nil {
 		return nil, err
 	}
 	return course.Assignments, nil
 }
 
+// GetAssignment returns assignment with given ID
+func (db *GormDB) GetAssignment(query *pb.Assignment) (*pb.Assignment, error) {
+	var assignment pb.Assignment
+	if err := db.conn.Where(query).First(&assignment).Error; err != nil {
+		return nil, err
+	}
+	return &assignment, nil
+}
+
 // GetNextAssignment returns the next assignment to be approved for
 // the given course, user, or group if the next assignment is a group lab.
-func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*models.Assignment, error) {
+func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*pb.Assignment, error) {
 	assignments, err := db.GetAssignmentsByCourse(cid)
 	if err != nil {
 		return nil, err
@@ -283,16 +306,18 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*models
 	approved := 0
 	nxtToApprove := assignments[0]
 	for _, v := range assignments {
-		var sub *models.Submission
+		var sub *pb.Submission
 		switch {
 		case v.IsGroupLab && gid > 0:
-			sub, err = db.GetSubmissionForGroup(v.ID, gid)
+			query := &pb.Submission{AssignmentID: v.GetID(), GroupID: gid}
+			sub, err = db.GetSubmission(query)
 		case !v.IsGroupLab && uid > 0:
-			sub, err = db.GetSubmissionForUser(v.ID, uid)
+			query := &pb.Submission{AssignmentID: v.GetID(), UserID: uid}
+			sub, err = db.GetSubmission(query)
 		default:
 			// This is when uid or gid is set to 0, but there is a group or user lab
 			// TODO: Fix so uid always is included and gid is optional
-			sub = &models.Submission{Approved: true}
+			sub = &pb.Submission{Approved: true}
 			// return nil, gorm.ErrRecordNotFound
 		}
 		if err != nil && err != gorm.ErrRecordNotFound {
@@ -311,10 +336,12 @@ func (db *GormDB) GetNextAssignment(cid uint64, uid uint64, gid uint64) (*models
 	return nxtToApprove, nil
 }
 
-// CreateSubmission implements the Database interface
-// TODO: Also check enrollment to see if the user is
-// enrolled in the course the assignment belongs to
-func (db *GormDB) CreateSubmission(submission *models.Submission) error {
+// CreateSubmission creates a new submission record or updates the most
+// recent submission, as defined by the provided submissionQuery.
+// The submissionQuery must always specify the assignment, and may specify the ID of
+// either an individual student or a group, but not both.
+// or updates the last one for the given lab and student/group
+func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	// Primary key must be greater than 0.
 	if submission.AssignmentID < 1 {
 		return gorm.ErrRecordNotFound
@@ -326,14 +353,14 @@ func (db *GormDB) CreateSubmission(submission *models.Submission) error {
 	case submission.UserID > 0 && submission.GroupID > 0:
 		return gorm.ErrRecordNotFound
 	case submission.UserID > 0:
-		m = db.conn.First(&models.User{ID: submission.UserID})
+		m = db.conn.First(&pb.User{ID: submission.UserID})
 	case submission.GroupID > 0:
-		m = db.conn.First(&models.Group{ID: submission.GroupID})
+		m = db.conn.First(&pb.Group{ID: submission.GroupID})
 	default:
 		return gorm.ErrRecordNotFound
 	}
 
-	// Check that group exists.
+	// Check that user/group with given ID exists.
 	var group uint64
 	if err := m.Count(&group).Error; err != nil {
 		return err
@@ -341,7 +368,7 @@ func (db *GormDB) CreateSubmission(submission *models.Submission) error {
 
 	// Checks that the assignment exists.
 	var assignment uint64
-	if err := db.conn.Model(&models.Assignment{}).Where(&models.Assignment{
+	if err := db.conn.Model(&pb.Assignment{}).Where(&pb.Assignment{
 		ID: submission.AssignmentID,
 	}).Count(&assignment).Error; err != nil {
 		return err
@@ -350,56 +377,86 @@ func (db *GormDB) CreateSubmission(submission *models.Submission) error {
 	if assignment+group != 2 {
 		return gorm.ErrRecordNotFound
 	}
-	return db.conn.Create(submission).Error
-}
 
-// GetSubmissionForUser implements the Database interface
-func (db *GormDB) GetSubmissionForUser(aid uint64, uid uint64) (*models.Submission, error) {
-	var submission models.Submission
-	if err := db.conn.Where(&models.Submission{AssignmentID: aid, UserID: uid}).Last(&submission).Error; err != nil {
-		return nil, err
+	// Make a new submission struct for the database query to check
+	// whether a submission record for the given lab and user/group
+	// already exists. We cannot reuse the incoming submission
+	// because the query would attempt to match all the test result
+	// fields as well.
+	query := &pb.Submission{
+		AssignmentID: submission.GetAssignmentID(),
+		UserID:       submission.GetUserID(),
+		GroupID:      submission.GetGroupID(),
 	}
-	return &submission, nil
-}
 
-// GetSubmissionForGroup implements the Database interface
-func (db *GormDB) GetSubmissionForGroup(aid uint64, gid uint64) (*models.Submission, error) {
-	var submission models.Submission
-	if err := db.conn.Where(&models.Submission{AssignmentID: aid, GroupID: gid}).Last(&submission).Error; err != nil {
-		return nil, err
-	}
-	return &submission, nil
-}
-
-// GetSubmissionsByID implements the Database interface
-func (db *GormDB) GetSubmissionsByID(sid uint64) (*models.Submission, error) {
-	var submission models.Submission
-	if err := db.conn.First(&submission, sid).Error; err != nil {
-		return nil, err
-	}
-	return &submission, nil
-}
-
-// UpdateSubmissionByID implements the Database interface
-func (db *GormDB) UpdateSubmissionByID(sid uint64, approved bool) error {
-	sub, err := db.GetSubmissionsByID(sid)
-	if err != nil {
+	// We want the last record as there can be multiple submissions
+	// for the same student/group and lab in the database.
+	if err := db.conn.Last(query, query).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
-	sub.Approved = approved
-	return db.conn.Model(&models.Submission{}).Update(sub).Error
+
+	// If a submission for the given assignment and student/group already exists, update it.
+	// Otherwise create a new submission record
+	return db.conn.Where(query).Assign(submission).FirstOrCreate(submission, query).Error
 }
 
-// GetSubmissions implements the Database interface
-func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, error) {
-	var course models.Course
-	if err := db.conn.Preload("Assignments").First(&course, cid).Error; err != nil {
+// UpdateSubmission updates submission with the given approved status.
+func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
+	return db.conn.
+		Model(&pb.Submission{}).
+		Where(&pb.Submission{ID: sid}).
+		Update("approved", approved).Error
+}
+
+// GetCourseSubmissions returns all individual lab submissions for the course
+func (db *GormDB) GetCourseSubmissions(cid uint64, groupLabs bool) ([]pb.Submission, error) {
+	m := db.conn
+
+	// fetch the course entry with all associated assignments and active enrollments
+	course, err := db.GetCourse(cid, true)
+	if err != nil {
 		return nil, err
 	}
 
-	var latestSubs []*models.Submission
+	// get IDs of all individual or group labs labs for the course
+	courseAssignmentIDs := make([]uint64, 0)
 	for _, a := range course.Assignments {
-		temp, err := db.GetSubmissionForUser(a.ID, uid)
+		if a.IsGroupLab == groupLabs {
+			courseAssignmentIDs = append(courseAssignmentIDs, a.GetID())
+		}
+	}
+
+	var allLabs []pb.Submission
+	if err := m.Where("assignment_id IN (?)", courseAssignmentIDs).Find(&allLabs).Error; err != nil {
+		return nil, err
+	}
+
+	return allLabs, nil
+}
+
+// GetSubmission fetches a submission record
+func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
+	var submission pb.Submission
+	if err := db.conn.Where(query).Last(&submission).Error; err != nil {
+		return nil, err
+	}
+	return &submission, nil
+}
+
+// GetSubmissions returns all submissions for the active assignment for the given course
+func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error) {
+	var course pb.Course
+	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
+		return nil, err
+	}
+
+	// note that, this creates a query with possibly both user and group;
+	// it will only limit the number of submissions returned if both are supplied.
+	q := &pb.Submission{UserID: query.GetUserID(), GroupID: query.GetGroupID()}
+	var latestSubs []*pb.Submission
+	for _, a := range course.Assignments {
+		q.AssignmentID = a.GetID()
+		temp, err := db.GetSubmission(q)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				continue
@@ -411,36 +468,15 @@ func (db *GormDB) GetSubmissions(cid uint64, uid uint64) ([]*models.Submission, 
 	return latestSubs, nil
 }
 
-// GetGroupSubmissions implements the Database interface
-func (db *GormDB) GetGroupSubmissions(cid uint64, gid uint64) ([]*models.Submission, error) {
-	var course models.Course
-	if err := db.conn.Preload("Assignments").First(&course, cid).Error; err != nil {
-		return nil, err
-	}
-
-	var latestSubs []*models.Submission
-	for _, a := range course.Assignments {
-		temp, err := db.GetSubmissionForGroup(a.ID, gid)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				continue
-			}
-			return nil, err
-		}
-		latestSubs = append(latestSubs, temp)
-	}
-	return latestSubs, nil
-}
-
-// CreateAssignment implements the Database interface
-func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
+// CreateAssignment creates new assignment record
+func (db *GormDB) CreateAssignment(assignment *pb.Assignment) error {
 	// Course id and assignment order must be given.
 	if assignment.CourseID < 1 || assignment.Order < 1 {
 		return gorm.ErrRecordNotFound
 	}
 
 	var course uint64
-	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
+	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
 		ID: assignment.CourseID,
 	}).Count(&course).Error; err != nil {
 		return err
@@ -450,21 +486,23 @@ func (db *GormDB) CreateAssignment(assignment *models.Assignment) error {
 	}
 
 	return db.conn.
-		Where(models.Assignment{
+		Where(pb.Assignment{
 			CourseID: assignment.CourseID,
 			Order:    assignment.Order,
 		}).
-		Assign(models.Assignment{
+		Assign(pb.Assignment{
 			Name:        assignment.Name,
 			Language:    assignment.Language,
 			Deadline:    assignment.Deadline,
 			AutoApprove: assignment.AutoApprove,
+			ScoreLimit:  assignment.ScoreLimit,
+			IsGroupLab:  assignment.IsGroupLab,
 		}).FirstOrCreate(assignment).Error
 }
 
-// UpdateAssignments implements the Database interface.
-func (db *GormDB) UpdateAssignments(assignments []*models.Assignment) error {
-	//TODO Updating the database may need locking??
+// UpdateAssignments updates assignment information.
+func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
+	//TODO(meling) Updating the database may need locking?? Or maybe rewrite as a single query or txn.
 	for _, v := range assignments {
 		// this will create or update an existing assignment
 		if err := db.CreateAssignment(v); err != nil {
@@ -474,16 +512,15 @@ func (db *GormDB) UpdateAssignments(assignments []*models.Assignment) error {
 	return nil
 }
 
-// CreateEnrollment implements the Database interface.
-// This method will overwrite the status field with models.Pending.
-func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
+// CreateEnrollment creates a new pending enrollment.
+func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 	var user, course uint64
-	if err := db.conn.Model(&models.User{}).Where(&models.User{
+	if err := db.conn.Model(&pb.User{}).Where(&pb.User{
 		ID: enrollment.UserID,
 	}).Count(&user).Error; err != nil {
 		return err
 	}
-	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
+	if err := db.conn.Model(&pb.Course{}).Where(&pb.Course{
 		ID: enrollment.CourseID,
 	}).Count(&course).Error; err != nil {
 		return err
@@ -492,55 +529,64 @@ func (db *GormDB) CreateEnrollment(enrollment *models.Enrollment) error {
 		return gorm.ErrRecordNotFound
 	}
 
-	enrollment.Status = models.Pending
+	enrollment.Status = pb.Enrollment_PENDING
 	return db.conn.Create(&enrollment).Error
 }
 
-// EnrollStudent implements the Database interface.
+// EnrollStudent enrolls user as course student.
 func (db *GormDB) EnrollStudent(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, models.Student)
+	return db.setEnrollment(uid, cid, pb.Enrollment_STUDENT)
 }
 
-// RejectEnrollment implements the Database interface.
+// RejectEnrollment removes the user enrollment from the database
 func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, models.Rejected)
-}
-
-// EnrollTeacher implements the Database interface.
-func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, models.Teacher)
-}
-
-// SetPendingEnrollment implements the Database interface.
-func (db *GormDB) SetPendingEnrollment(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, models.Pending)
-}
-
-// GetEnrollmentsByCourse implements the Database interface.
-func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...uint) ([]*models.Enrollment, error) {
-	return db.getEnrollments(&models.Course{ID: cid}, statuses...)
-}
-
-func (db *GormDB) getEnrollments(model interface{}, statuses ...uint) ([]*models.Enrollment, error) {
-	if len(statuses) == 0 {
-		statuses = []uint{models.Pending, models.Rejected, models.Student, models.Teacher}
+	enrol, err := db.GetEnrollmentByCourseAndUser(cid, uid)
+	if err != nil {
+		return err
 	}
-	var enrollments []*models.Enrollment
-	if err := db.conn.Model(model).
+	return db.conn.Delete(enrol).Error
+}
+
+// EnrollTeacher enrolls user as course teacher.
+func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
+	return db.setEnrollment(uid, cid, pb.Enrollment_TEACHER)
+}
+
+// SetPendingEnrollment sets enrollment status to pending.
+func (db *GormDB) SetPendingEnrollment(uid, cid uint64) error {
+	return db.setEnrollment(uid, cid, pb.Enrollment_PENDING)
+}
+
+// GetEnrollmentsByCourse fetches all course enrollments with given statuses.
+func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
+	return db.getEnrollments(&pb.Course{ID: cid}, statuses...)
+}
+
+// getEnrollments is generic helper function that return enrollments for either course and user.
+func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
+	if len(statuses) == 0 {
+		statuses = []pb.Enrollment_UserStatus{
+			pb.Enrollment_PENDING,
+			pb.Enrollment_STUDENT,
+			pb.Enrollment_TEACHER,
+		}
+	}
+	var enrollments []*pb.Enrollment
+	if err := db.conn.Preload("User").Preload("Course").Model(model).
 		Where("status in (?)", statuses).
 		Association("Enrollments").
 		Find(&enrollments).Error; err != nil {
 		return nil, err
 	}
-
 	return enrollments, nil
 }
 
-// GetEnrollmentByCourseAndUser return a record of Enrollment
-func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.Enrollment, error) {
-	var enrollment models.Enrollment
-	if err := db.conn.
-		Where(&models.Enrollment{
+// GetEnrollmentByCourseAndUser return a record of Enrollment.
+func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enrollment, error) {
+	var enrollment pb.Enrollment
+	m := db.conn.Preload("Course").Preload("User")
+	if err := m.
+		Where(&pb.Enrollment{
 			CourseID: cid,
 			UserID:   uid,
 		}).
@@ -550,33 +596,34 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*models.
 	return &enrollment, nil
 }
 
-func (db *GormDB) setEnrollment(uid, cid uint64, status uint) error {
-	if status > models.Teacher {
-		panic("invalid status")
-	}
-	var enrollment models.Enrollment
-	if err := db.conn.
-		Model(&models.Enrollment{}).
-		Where(&models.Enrollment{CourseID: cid, UserID: uid}).First(&enrollment).Error; err != nil {
-		return err
-	}
-	enrollment.Status = status
-	// Update wont allow value 0 (models.Pending), so need to use save.
-	return db.conn.Save(&enrollment).Error
+// UpdateGroupEnrollment sets GroupID of a student enrollment to 0.
+func (db *GormDB) UpdateGroupEnrollment(uid, cid uint64) error {
+	return db.conn.
+		Model(&pb.Enrollment{}).
+		Where(&pb.Enrollment{CourseID: cid, UserID: uid}).
+		Update("group_id", uint64(0)).Error
+}
+
+// setEnrollment updates enrollment status
+func (db *GormDB) setEnrollment(uid, cid uint64, status pb.Enrollment_UserStatus) error {
+	return db.conn.
+		Model(&pb.Enrollment{}).
+		Where(&pb.Enrollment{CourseID: cid, UserID: uid}).
+		Update(&pb.Enrollment{Status: status}).Error
 }
 
 // GetCoursesByUser returns all courses (with enrollment status)
 // for the given user id.
 // If enrollment statuses is provided, the set of courses returned
 // is filtered according to these enrollment statuses.
-func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...uint) ([]*models.Course, error) {
-	enrollments, err := db.getEnrollments(&models.User{ID: uid}, statuses...)
+func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error) {
+	enrollments, err := db.getEnrollments(&pb.User{ID: uid}, statuses...)
 	if err != nil {
 		return nil, err
 	}
 
 	var courseIDs []uint64
-	m := make(map[uint64]*models.Enrollment)
+	m := make(map[uint64]*pb.Enrollment)
 	for _, enrollment := range enrollments {
 		m[enrollment.CourseID] = enrollment
 		courseIDs = append(courseIDs, enrollment.CourseID)
@@ -586,7 +633,7 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...uint) ([]*models.Cour
 		courseIDs = nil
 	} else if len(courseIDs) == 0 {
 		// No need to query database since user have no enrolled courses.
-		return []*models.Course{}, nil
+		return []*pb.Course{}, nil
 	}
 	courses, err := db.GetCourses(courseIDs...)
 	if err != nil {
@@ -594,293 +641,110 @@ func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...uint) ([]*models.Cour
 	}
 
 	for _, course := range courses {
-		course.Enrolled = models.None
+		course.Enrolled = pb.Enrollment_NONE
 		if enrollment, ok := m[course.ID]; ok {
-			course.Enrolled = int(enrollment.Status)
+			course.Enrolled = enrollment.Status
 		}
 	}
 	return courses, nil
 }
 
-// GetCourse implements the Database interface
-func (db *GormDB) GetCourse(cid uint64) (*models.Course, error) {
-	var course models.Course
-	if err := db.conn.First(&course, cid).Error; err != nil {
-		return nil, err
-	}
-	return &course, nil
-}
+// GetCourse fetches course by ID. If withInfo is true, preloads course
+// assignments, active enrollments and groups
+func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
+	m := db.conn
+	var course pb.Course
 
-// GetCourseByDirectoryID implements the Database interface
-func (db *GormDB) GetCourseByDirectoryID(did uint64) (*models.Course, error) {
-	var course models.Course
-	if err := db.conn.First(&course, &models.Course{DirectoryID: did}).Error; err != nil {
-		return nil, err
-	}
-	return &course, nil
-}
+	if withInfo {
 
-// UpdateCourse implements the Database interface
-func (db *GormDB) UpdateCourse(course *models.Course) error {
-	return db.conn.Model(&models.Course{}).Updates(course).Error
-}
-
-// CreateGroup creates a new group and assign users to newly created group
-func (db *GormDB) CreateGroup(group *models.Group) error {
-	if group.CourseID == 0 {
-		return gorm.ErrRecordNotFound
-	}
-
-	tx := db.conn.Begin()
-	var course uint64
-	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
-		ID: group.CourseID,
-	}).Count(&course).Error; err != nil {
-		return err
-	}
-	if course != 1 {
-		return gorm.ErrRecordNotFound
-	}
-
-	if err := tx.Model(&models.Group{}).Create(group).Error; err != nil {
-		tx.Rollback()
-		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
-			return ErrDuplicateGroup
+		// we only want submission from users enrolled in the course
+		userStates := []pb.Enrollment_UserStatus{
+			pb.Enrollment_STUDENT,
+			pb.Enrollment_TEACHER,
 		}
-		return err
-	}
-	var userids []uint64
-	for _, u := range group.Users {
-		userids = append(userids, u.ID)
-	}
-	query := tx.Model(&models.Enrollment{}).
-		Where(&models.Enrollment{
-			CourseID: group.CourseID,
-		}).
-		Where("user_id IN (?) AND status IN (?)", userids, []uint{models.Student, models.Teacher}).
-		Updates(&models.Enrollment{
-			GroupID: group.ID,
-		})
 
-	if query.Error != nil {
-		tx.Rollback()
-		return query.Error
-	}
-
-	if query.RowsAffected != int64(len(userids)) {
-		tx.Rollback()
-		return gorm.ErrRecordNotFound
-	}
-
-	tx.Commit()
-	return nil
-}
-
-// GetGroup implements the Database interface
-func (db *GormDB) GetGroup(withRemoteIDs bool, gid uint64) (*models.Group, error) {
-	var group models.Group
-	if err := db.conn.Preload("Enrollments").First(&group, gid).Error; err != nil {
-		return nil, err
-	}
-	var userIDs []uint64
-	for _, enrollment := range group.Enrollments {
-		userIDs = append(userIDs, enrollment.UserID)
-	}
-	if len(userIDs) > 0 {
-		users, err := db.GetUsers(withRemoteIDs, userIDs...)
-		if err != nil {
+		// and only group submissions from approved groups
+		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: cid}
+		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Groups", modelGroup).First(&course, cid).Error; err != nil {
 			return nil, err
 		}
-		group.Users = users
+	} else {
+		if err := m.First(&course, cid).Error; err != nil {
+			return nil, err
+		}
 	}
-	return &group, nil
+	return &course, nil
 }
 
-// UpdateGroupStatus updates status field of a group
-func (db *GormDB) UpdateGroupStatus(group *models.Group) error {
-	return db.conn.Model(group).Update("status", group.Status).Error
-}
-
-// GetGroupsByCourse returns a list of groups
-func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*models.Group, error) {
-	//TODO(meling) add test for this method
-	//TODO(meling) can this also Preload("Users") to avoid the GetUsers below.
-	var groups []*models.Group
-	if err := db.conn.
-		Preload("Enrollments").
-		Where(&models.Group{
-			CourseID: cid,
-		}).
-		Find(&groups).Error; err != nil {
+// GetCourseByOrganizationID fetches course by organization ID.
+func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
+	var course pb.Course
+	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
-
-	for _, group := range groups {
-		var userIDs []uint64
-		for _, enrollment := range group.Enrollments {
-			userIDs = append(userIDs, enrollment.UserID)
-		}
-		if len(userIDs) > 0 {
-			users, err := db.GetUsers(false, userIDs...)
-			if err != nil {
-				return nil, err
-			}
-			group.Users = users
-		}
-	}
-	return groups, nil
+	return &course, nil
 }
 
-// DeleteGroup delete a group
-func (db *GormDB) DeleteGroup(gid uint64) error {
-	group, err := db.GetGroup(false, gid)
-	if err != nil {
-		return err
-	}
-
-	tx := db.conn.Begin()
-	if err := tx.Delete(group).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, gid).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
+// UpdateCourse updates course information.
+func (db *GormDB) UpdateCourse(course *pb.Course) error {
+	return db.conn.Model(&pb.Course{}).Updates(course).Error
 }
 
-// CreateRepository implements the Database interface
-func (db *GormDB) CreateRepository(repo *models.Repository) error {
-	if repo.DirectoryID == 0 || repo.RepositoryID == 0 {
-		return fmt.Errorf("both DirectoryID and RepositoryID must be provided for repository")
+// CreateRepository creates a new repository record.
+func (db *GormDB) CreateRepository(repo *pb.Repository) error {
+	if repo.OrganizationID == 0 || repo.RepositoryID == 0 {
+		// both organization and repository must be non-zero
+		return ErrCreateRepo
 	}
 
 	switch {
 	case repo.UserID > 0:
-		// check that user exists creating repo in database
-		err := db.conn.First(&models.User{}, repo.UserID).Error
+		// check that user exists before creating repo in database
+		err := db.conn.First(&pb.User{}, repo.UserID).Error
 		if err != nil {
 			return err
 		}
 	case repo.GroupID > 0:
-		// check that group exists creating repo in database
-		err := db.conn.First(&models.Group{}, repo.GroupID).Error
+		// check that group exists before creating repo in database
+		err := db.conn.First(&pb.Group{}, repo.GroupID).Error
 		if err != nil {
 			return err
 		}
-	case !repo.Type.IsCourseRepo():
-		// if both user and group are unset, the repository belongs to the course
-		return fmt.Errorf("either UserID, GroupID or a course repository Type must be provided")
+	case !repo.RepoType.IsCourseRepo():
+		// both user and group unset, then repository type must be an autograder repo type
+		return ErrCreateRepo
 	}
 
 	return db.conn.Create(repo).Error
 }
 
-// GetRepository imlements the Database interface
-func (db *GormDB) GetRepository(rid uint64) (*models.Repository, error) {
-	// This uses the repositoryid from the provider to search with, and not
-	// the id of the entry in the database
-	var repo models.Repository
-
-	if err := db.conn.First(&repo, &models.Repository{RepositoryID: rid}).Error; err != nil {
+// GetRepositoryByRemoteID fetches repository by github ID.
+func (db *GormDB) GetRepositoryByRemoteID(rid uint64) (*pb.Repository, error) {
+	// This uses the repository ID from the provider to search with,
+	// and not the id of the entry in the database
+	var repo pb.Repository
+	if err := db.conn.First(&repo, &pb.Repository{RepositoryID: rid}).Error; err != nil {
 		return nil, err
 	}
-
 	return &repo, nil
 }
 
-// GetRepositoryByCourseUserType implements the database interface
-func (db *GormDB) GetRepositoryByCourseUserType(cid uint64, uid uint64, repoType models.RepoType) (*models.Repository, error) {
-	course, err := db.GetCourse(cid)
-	if err != nil {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	var repo models.Repository
-	if err := db.conn.First(&repo, &models.Repository{DirectoryID: course.DirectoryID, UserID: uid, Type: repoType}).Error; err != nil {
-		return nil, err
-	}
-
-	return &repo, nil
-}
-
-// GetRepositoriesByDirectory implements the database interface
-func (db *GormDB) GetRepositoriesByDirectory(did uint64) ([]*models.Repository, error) {
-
-	var repos []*models.Repository
-	if err := db.conn.Find(&repos, &models.Repository{DirectoryID: did}).Error; err != nil {
+// GetRepositories fetches all repositories satisfying the given repository fields
+func (db *GormDB) GetRepositories(query *pb.Repository) ([]*pb.Repository, error) {
+	var repos []*pb.Repository
+	if err := db.conn.Find(&repos, query).Error; err != nil {
 		return nil, err
 	}
 	return repos, nil
 }
 
-// UpdateGroup updates a group
-func (db *GormDB) UpdateGroup(group *models.Group) error {
-	if group.CourseID == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	tx := db.conn.Begin()
-	var course uint64
-	if err := db.conn.Model(&models.Course{}).Where(&models.Course{
-		ID: group.CourseID,
-	}).Count(&course).Error; err != nil {
-		return err
-	}
-	if course != 1 {
-		return gorm.ErrRecordNotFound
-	}
-	if err := tx.Model(&models.Group{}).Updates(group).Error; err != nil {
-		tx.Rollback()
-		if strings.HasPrefix(err.Error(), "UNIQUE constraint failed") {
-			return ErrDuplicateGroup
-		}
-		return err
-	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, group.ID).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	var userids []uint64
-	for _, u := range group.Users {
-		userids = append(userids, u.ID)
-	}
-	query := tx.Model(&models.Enrollment{}).
-		Where(&models.Enrollment{
-			CourseID: group.CourseID,
-		}).
-		Where("user_id IN (?) AND status IN (?)", userids, []uint{models.Student, models.Teacher}).
-		Updates(&models.Enrollment{
-			GroupID: group.ID,
-		})
-
-	if query.Error != nil {
-		tx.Rollback()
-		return query.Error
-	}
-
-	if query.RowsAffected != int64(len(userids)) {
-		tx.Rollback()
-		return gorm.ErrRecordNotFound
-	}
-
-	tx.Commit()
-	return nil
-}
-
-// GetRepositoriesByCourseAndType implements the database interface
-func (db *GormDB) GetRepositoriesByCourseAndType(cid uint64, repoType models.RepoType) ([]*models.Repository, error) {
-	course, err := db.GetCourse(cid)
+// DeleteRepositoryByRemoteID deletes repository by github ID
+func (db *GormDB) DeleteRepositoryByRemoteID(rid uint64) error {
+	repo, err := db.GetRepositoryByRemoteID(rid)
 	if err != nil {
-		return nil, gorm.ErrRecordNotFound
+		return err
 	}
-
-	var repos []*models.Repository
-	if err := db.conn.Find(&repos, &models.Repository{DirectoryID: course.DirectoryID, Type: repoType}).Error; err != nil {
-		return nil, err
-	}
-	return repos, nil
+	return db.conn.Delete(repo).Error
 }
 
 // Close closes the gorm database.

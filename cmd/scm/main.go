@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/autograde/aguis/scm"
+
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"go.uber.org/zap"
 )
 
 // To use this tool, there are two options:
@@ -27,18 +28,18 @@ import (
 //     environment variable.
 //
 // Example usage if you have an organization on github called autograder-test:
-// % scm --provider github get repository --all --namespace autograder-test
+// % scm --provider github get repo -all -namespace autograder-test
 // OR
-// % scm get repository --all --namespace autograder-test
+// % scm get repo -all -namespace autograder-test
 //
-// Another example usage to delete all repos in organzation on github
-// % scm delete repository --all --namespace autograder-test
+// Another example usage to delete all repos in organization on github
+// % scm delete repo -all -namespace autograder-test
 //
 // Here is an example usage for creating a team with two members
-// % scm create team --namespace autograder-test --team teachers --users s111,meling
+// % scm create team -namespace autograder-test -team teachers -users s111,meling
 //
 // Here is how to fetch the login name of a specific user id:
-// % scm get user --id 810999
+// % scm get user -id 810999
 // OR to fetch the login name of the currently logged in user:
 // % scm get user
 
@@ -77,7 +78,7 @@ func main() {
 			Usage: "Delete commands.",
 			Subcommands: cli.Commands{
 				{
-					Name:  "repository",
+					Name:  "repo",
 					Usage: "Delete repositories.",
 					Flags: []cli.Flag{
 						cli.StringFlag{
@@ -95,6 +96,25 @@ func main() {
 					},
 					Action: deleteRepositories(&client),
 				},
+				{
+					Name:  "team",
+					Usage: "Delete teams.",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "name",
+							Usage: "Team name.",
+						},
+						cli.StringFlag{
+							Name:  "namespace",
+							Usage: "Organization the team belongs to.",
+						},
+						cli.BoolFlag{
+							Name:  "all",
+							Usage: "Delete all teams in namespace.",
+						},
+					},
+					Action: deleteTeams(&client),
+				},
 			},
 		},
 		{
@@ -102,7 +122,7 @@ func main() {
 			Usage: "Get commands.",
 			Subcommands: cli.Commands{
 				{
-					Name:  "repository",
+					Name:  "repo",
 					Usage: "Get repository information.",
 					Flags: []cli.Flag{
 						cli.StringFlag{
@@ -131,6 +151,25 @@ func main() {
 						},
 					},
 					Action: getUser(&client),
+				},
+				{
+					Name:  "hooks",
+					Usage: "Get repository hooks",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "repo",
+							Usage: "Repository ID",
+						},
+						cli.StringFlag{
+							Name:  "owner",
+							Usage: "Repository owner name",
+						},
+						cli.StringFlag{
+							Name:  "org",
+							Usage: "Name of organization",
+						},
+					},
+					Action: getHooks(&client),
 				},
 			},
 		},
@@ -195,18 +234,17 @@ func main() {
 
 func before(client *scm.SCM) cli.BeforeFunc {
 	return func(c *cli.Context) (err error) {
-		l := logrus.New()
-		l.Out = ioutil.Discard
-
 		provider := c.String("provider")
 		accessToken := os.Getenv(c.String("token"))
 		if accessToken != "" {
-			*client, err = scm.NewSCMClient(provider, accessToken)
+			*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
 			return
 		}
 
 		// access token not provided in env variable; check if database holds access token
-		db, err := database.NewGormDB("sqlite3", c.String("database"), database.Logger{Logger: l})
+		db, err := database.NewGormDB("sqlite3", c.String("database"),
+			database.NewGormLogger(database.BuildLogger()),
+		)
 		if err != nil {
 			return err
 		}
@@ -227,7 +265,7 @@ func before(client *scm.SCM) cli.BeforeFunc {
 		if accessToken == "" {
 			return fmt.Errorf("access token not found in database for provider %s", provider)
 		}
-		*client, err = scm.NewSCMClient(provider, accessToken)
+		*client, err = scm.NewSCMClient(zap.NewNop().Sugar(), provider, accessToken)
 		return
 	}
 }
@@ -242,6 +280,9 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 		if !c.IsSet("namespace") {
 			return cli.NewExitError("namespace must be provided", 3)
 		}
+		if c.IsSet("name") && !c.IsSet("namespace") {
+			return cli.NewExitError("name and namespace must be provided", 3)
+		}
 		if c.Bool("all") {
 			msg := fmt.Sprintf("Are you sure you want to delete all repositories in %s?", c.String("namespace"))
 			if ok, err := confirm(msg); !ok || err != nil {
@@ -249,14 +290,14 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 				return err
 			}
 
-			repos, err := (*client).GetRepositories(ctx, &scm.Directory{Path: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, &pb.Organization{Path: c.String("namespace")})
 			if err != nil {
 				return err
 			}
 
 			for _, repo := range repos {
 				var errs []error
-				if err := (*client).DeleteRepository(ctx, repo.ID); err != nil {
+				if err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.ID}); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted repository", repo.WebURL)
@@ -267,8 +308,41 @@ func deleteRepositories(client *scm.SCM) cli.ActionFunc {
 			}
 			return nil
 		}
-
+		err := (*client).DeleteRepository(ctx, &scm.RepositoryOptions{Path: c.String("name"), Owner: c.String("namespace")})
+		if err != nil {
+			return err
+		}
+		fmt.Println("Deleted repository ", c.String("name"), " on organization ", c.String("namespace"))
 		return cli.NewExitError("not implemented", 9)
+	}
+}
+
+func getHooks(client *scm.SCM) cli.ActionFunc {
+	ctx := context.Background()
+	return func(c *cli.Context) error {
+		var hooks []*scm.Hook
+		// if organization name is set, list all hook asociated with that organization
+		if c.IsSet("org") {
+			gitHooks, err := (*client).ListHooks(ctx, nil, c.String("org"))
+			if err != nil {
+				return err
+			}
+			hooks = gitHooks
+		}
+
+		// if repo and owner provided, list hooks for that repo
+		if c.IsSet("owner") && c.IsSet("repo") {
+			gitHooks, err := (*client).ListHooks(ctx, &scm.Repository{Owner: c.String("owner"), Path: c.String("repo")}, "")
+			if err != nil {
+				return err
+			}
+			hooks = gitHooks
+		}
+		for _, hook := range hooks {
+			log.Printf("Hook: %s, hook events: %s", hook.URL, hook.Events)
+		}
+
+		return nil
 	}
 }
 
@@ -282,8 +356,11 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 		if !c.IsSet("namespace") {
 			return cli.NewExitError("namespace must be provided", 3)
 		}
+		if c.IsSet("name") && !c.IsSet("namespace") {
+			return cli.NewExitError("name and namespace must be provided", 3)
+		}
 		if c.Bool("all") {
-			repos, err := (*client).GetRepositories(ctx, &scm.Directory{Path: c.String("namespace")})
+			repos, err := (*client).GetRepositories(ctx, &pb.Organization{Path: c.String("namespace")})
 			if err != nil {
 				return err
 			}
@@ -294,8 +371,12 @@ func getRepositories(client *scm.SCM) cli.ActionFunc {
 			fmt.Println(s)
 			return nil
 		}
-
-		return cli.NewExitError("not implemented", 9)
+		repo, err := (*client).GetRepository(ctx, &scm.RepositoryOptions{Path: c.String("name"), Owner: c.String("namespace")})
+		if err != nil {
+			return err
+		}
+		fmt.Println("Found repository ", repo.WebURL)
+		return nil
 	}
 }
 
@@ -355,13 +436,59 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 		if len(users) < 1 {
 			return cli.NewExitError("team user names must be provided (comma separated)", 3)
 		}
-		opt := &scm.CreateTeamOptions{
-			Directory: &scm.Directory{Path: c.String("namespace")},
-			TeamName:  c.String("team"),
-			Users:     users,
+		opt := &scm.TeamOptions{
+			Organization: &pb.Organization{Path: c.String("namespace")},
+			TeamName:     c.String("team"),
+			Users:        users,
 		}
 		_, err := (*client).CreateTeam(ctx, opt)
 		return err
+	}
+}
+
+func deleteTeams(client *scm.SCM) cli.ActionFunc {
+	ctx := context.Background()
+
+	return func(c *cli.Context) error {
+		if !c.IsSet("name") && !c.Bool("all") {
+			return cli.NewExitError("name must be provided", 3)
+		}
+		if !c.IsSet("namespace") {
+			return cli.NewExitError("namespace must be provided", 3)
+		}
+		if c.Bool("all") {
+			msg := fmt.Sprintf("Are you sure you want to delete all teams in %s?", c.String("namespace"))
+			if ok, err := confirm(msg); !ok || err != nil {
+				fmt.Println("Canceled")
+				return err
+			}
+
+			teams, err := (*client).GetTeams(ctx, &pb.Organization{Path: c.String("namespace")})
+			if err != nil {
+				return err
+			}
+
+			for _, team := range teams {
+				var errs []error
+				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamID: team.ID}); err != nil {
+					errs = append(errs, err)
+				} else {
+					fmt.Println("Deleted team", team.Name)
+				}
+				if len(errs) > 0 {
+					return cli.NewMultiError(errs...)
+				}
+			}
+			return nil
+		}
+		// delete team by name
+		teamName := c.String("name")
+		msg := fmt.Sprintf("Are you sure you want to delete team %s in %s?", teamName, c.String("namespace"))
+		if ok, err := confirm(msg); !ok || err != nil {
+			fmt.Println("Canceled")
+			return err
+		}
+		return (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: teamName})
 	}
 }
 

@@ -1,26 +1,17 @@
 import * as React from "react";
 
-import { BootstrapButton, CourseGroup, DynamicTable, GroupForm, NavMenu, Results } from "../components";
+import { BootstrapButton, CourseGroup, GroupForm, NavMenu, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { View, ViewPage } from "./ViewPage";
-import { UserView } from "./views/UserView";
 
 import { INavInfo } from "../NavigationHelper";
 
+import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import {
-    CourseGroupStatus,
-    CourseUserState,
-    IAssignment,
-    ICourse,
-    ICourseGroup,
-    ICourseUserLink,
-    IGroupCourseWithGroup,
-    IUser,
-    IUserCourseWithUser,
+    IAssignmentLink,
     IUserRelation,
-    RepositoryType,
 } from "../models";
 
 import { GroupResults } from "../components/teacher/GroupResults";
@@ -31,10 +22,9 @@ export class TeacherPage extends ViewPage {
     private navMan: NavigationManager;
     private userMan: UserManager;
     private courseMan: CourseManager;
-    private courses: ICourse[] = [];
+    private courses: Course[] = [];
+    private repositories: Map<Repository.Type, string>;
 
-    private pages: { [name: string]: JSX.Element } = {};
-    private curUser: IUser | null;
     private refreshState = 0;
 
     constructor(userMan: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
@@ -51,34 +41,33 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}/results", this.results);
         this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
+        this.navHelper.registerFunction("courses/{cid}/new_group", this.newGroup);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
-        this.navHelper.registerFunction("courses/{cid}/info", this.courseInformation);
-        this.navHelper.registerFunction("courses/{cid}/assignmentinfo", this.assignmentInformation);
-        this.navHelper.registerFunction("courses/{cid}/testinfo", this.testInformation);
-        this.navHelper.registerFunction("courses/{cid}/solutioninfo", this.solutionInformation);
-
     }
 
     public checkAuthentication(): boolean {
-        this.curUser = this.userMan.getCurrentUser();
-        if (this.curUser && this.userMan.isTeacher(this.curUser)) {
+        const curUser = this.userMan.getCurrentUser();
+        if (curUser && (curUser.getIsadmin() || this.userMan.isTeacher())) {
+            this.userMan.isAuthorizedTeacher().then((answer) => {
+                if (!answer) {
+                    window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
+                }
+            });
             return true;
         }
-        this.curUser = null;
         return false;
     }
 
     public async init(): Promise<void> {
         this.courses = await this.getCourses();
-        this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].id.toString() : "");
+        this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].getId().toString() : "");
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             if (info.params.page) {
-                return <h3>You are know on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
+                return <h3>You are now on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
             }
-            // return <h1>Teacher Course {info.params.course}</h1>;
             let button;
             switch (this.refreshState) {
                 case 0:
@@ -86,21 +75,21 @@ export class TeacherPage extends ViewPage {
                         classType="primary"
                         onClick={(e) => {
                             this.refreshState = 1;
-                            this.courseMan.refreshCoursesFor(course.id)
-                                .then((value) => {
+                            this.courseMan.updateAssignments(course.getId())
+                                .then(() => {
                                     this.refreshState = 2;
                                     this.navMan.refresh();
                                 });
                             this.navMan.refresh();
                         }}>
-                        Refresh course info
+                        Update Course Assignments
                     </BootstrapButton>;
                     break;
                 case 1:
                     button = <BootstrapButton
                         classType="default"
                         disabled={true}>
-                        Refreshing Course information
+                        Updating Course Assignments
                     </BootstrapButton>;
                     break;
                 case 2:
@@ -109,47 +98,42 @@ export class TeacherPage extends ViewPage {
                         disabled={false}
                         onClick={(e) => {
                             this.refreshState = 1;
-                            this.courseMan.refreshCoursesFor(course.id)
-                                .then((value) => {
+                            this.courseMan.updateAssignments(course.getId())
+                                .then(() => {
                                     this.refreshState = 2;
                                     this.navMan.refresh();
                                 });
                             this.navMan.refresh();
                         }}>
-                        Info refreshed
+                        Course Assignments Updated
                     </BootstrapButton>;
                     break;
             }
             return <div>
-                <h1>Overview for {course.name}</h1>
+                <h1>Overview for {course.getName()}</h1>
                 {button}
             </div>;
         });
     }
 
+    // TODO(meling) consolidate these two result functions?
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
-
-            const students = await this.courseMan.getUsersForCourse(course, this.userMan,
-                [
-                    CourseUserState.student,
-                    CourseUserState.teacher,
-                ]);
-            const linkedStudents: IUserCourseWithUser[] = [];
-            for (const student of students) {
-                const userCourses = await this.courseMan.getStudentCourseForTeacher(student, course, labs);
-                if (userCourses) {
-                    linkedStudents.push({ course: userCourses, user: student.user });
-                }
-            }
+            const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
+            const results = await this.courseMan.getCourseLabs(course.getId(), false);
+            const labResults = await this.courseMan.fillLabLinks(course, results, labs);
             return <Results
                 course={course}
+                courseURL={await this.getCourseURL(course.getId())}
                 labs={labs}
-                students={linkedStudents}
-                onApproveClick={async (submissionID: number) => {
-                    await this.courseMan.approveSubmission(submissionID);
-                    // this.navMan.refresh();
+                students={labResults}
+                onRebuildClick={async (assignmentID: number, submissionID: number) => {
+                    const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
+                    this.navMan.refresh();
+                    return ans;
+                }}
+                    onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
+                    return this.approveFunc(submissionID, course.getId(), approve);
                 }}
             >
             </Results>;
@@ -158,28 +142,33 @@ export class TeacherPage extends ViewPage {
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const linkedGroups: IGroupCourseWithGroup[] = [];
-            const groupCourses = await this.courseMan.getCourseGroups(course.id);
-            const labs: IAssignment[] = await this.courseMan.getAssignments(course.id);
-
+            // const linkedGroups: IAssignmentLink[] = [];
+            const results = await this.courseMan.getCourseLabs(course.getId(), true);
+            // const groupCourses = await this.courseMan.getCourseGroups(course.getId());
+            const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
+            const labResults = await this.courseMan.fillLabLinks(course, results, labs);
+            /*
             for (const grpCourse of groupCourses) {
-                const grp = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
-                if (grpCourse && grp) {
-                    linkedGroups.push({
-                        course: grp,
-                        group: grpCourse,
-
-                    });
+                const grpLink = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
+                if (grpCourse && grpLink) {
+                    grpLink.link.setGroup(grpCourse);
+                    grpLink.link.setGroupid(grpCourse.getId());
+                    linkedGroups.push(grpLink);
                 }
-            }
+            }*/
 
             return <GroupResults
                 course={course}
+                courseURL={await this.getCourseURL(course.getId())}
                 labs={labs}
-                groups={linkedGroups}
-                onApproveClick={async (submissionID: number) => {
-                    await this.courseMan.approveSubmission(submissionID);
+                groups={labResults}
+                onRebuildClick={async (assignmentID: number, submissionID: number) => {
+                    const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
+                    return ans;
+                }}
+                onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
+                    return this.approveFunc(submissionID, course.getId(), approve);
                 }}
             >
             </GroupResults>;
@@ -188,28 +177,24 @@ export class TeacherPage extends ViewPage {
 
     public async groups(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const groups = await this.courseMan.getCourseGroups(course.id);
-            const approvedGroups: ICourseGroup[] = [];
-            const pendingGroups: ICourseGroup[] = [];
-            const rejectedGroups: ICourseGroup[] = [];
+            const groups = await this.courseMan.getCourseGroups(course.getId());
+            const approvedGroups: Group[] = [];
+            const pendingGroups: Group[] = [];
             for (const grp of groups) {
-                switch (grp.status) {
-                    case CourseGroupStatus.approved:
+                switch (grp.getStatus()) {
+                    case Group.GroupStatus.APPROVED:
                         approvedGroups.push(grp);
                         break;
-                    case CourseGroupStatus.pending:
+                    case Group.GroupStatus.PENDING:
                         pendingGroups.push(grp);
-                        break;
-                    case CourseGroupStatus.rejected:
-                        rejectedGroups.push(grp);
                         break;
                 }
             }
             return <CourseGroup
                 approvedGroups={approvedGroups}
                 pendingGroups={pendingGroups}
-                rejectedGroups={rejectedGroups}
                 course={course}
+                courseURL={await this.getCourseURL(course.getId())}
                 navMan={this.navMan}
                 courseMan={this.courseMan}
                 pagePath={this.pagePath}
@@ -217,57 +202,86 @@ export class TeacherPage extends ViewPage {
         });
     }
 
-    public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
-        const courseId = parseInt(info.params.cid, 10);
-        const groupId = parseInt(info.params.gid, 10);
+    public async newGroup(info: INavInfo<{ cid: number }>): View {
+        const courseId = info.params.cid;
         const course = await this.courseMan.getCourse(courseId);
         const curUser = this.userMan.getCurrentUser();
-        const group: ICourseGroup | null = await this.courseMan.getGroup(groupId);
-        if (course && curUser && group) {
-            const students = await this.courseMan
-                .getUsersForCourse(course, this.userMan, [CourseUserState.student, CourseUserState.teacher]);
+
+        if (course && curUser) {
+            // get full list of students and teachers
+            const students = await this.courseMan.getUsersForCourse(
+                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            // get list of users who are not in group
+            const freeStudents = await this.courseMan.getUsersForCourse(
+                course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
+                freeStudents={freeStudents}
                 course={course}
                 curUser={curUser}
                 courseMan={this.courseMan}
+                userMan={this.userMan}
+                navMan={this.navMan}
+                pagePath={this.pagePath}
+            />;
+        }
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+    }
+
+    public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
+        const courseId = parseInt(info.params.cid, 10);
+        const groupId = parseInt(info.params.gid, 10);
+
+        const course = await this.courseMan.getCourse(courseId);
+        const curUser = this.userMan.getCurrentUser();
+        const group: Group | null = await this.courseMan.getGroup(groupId);
+        if (course && curUser && group) {
+            // get full list of students and teachers
+            const students = await this.courseMan.getUsersForCourse(
+                course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            // get list of users who are not in group
+            const freeStudents = await this.courseMan.getUsersForCourse(
+                course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            return <GroupForm
+                className="form-horizontal"
+                students={students}
+                freeStudents={freeStudents}
+                course={course}
+                curUser={curUser}
+                courseMan={this.courseMan}
+                userMan={this.userMan}
                 navMan={this.navMan}
                 pagePath={this.pagePath}
                 groupData={group}
             />;
         }
-        return <div>404 Page not found</div>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const all = await this.courseMan.getUsersForCourse(course, this.userMan);
+            const all = await this.courseMan.getUsersForCourse(course);
             const acceptedUsers: IUserRelation[] = [];
             const pendingUsers: IUserRelation[] = [];
-            const rejectedUsers: IUserRelation[] = [];
-            // Sorts all the users to the correct tables, and ignores the rejected once
             // TODO: Maybe move this to the Members view
-            all.forEach((user, id) => {
-                switch (user.link.state) {
-                    case CourseUserState.teacher:
-                    case CourseUserState.student:
+            all.forEach((user) => {
+                switch (user.link.getStatus()) {
+                    case Enrollment.UserStatus.TEACHER:
+                    case Enrollment.UserStatus.STUDENT:
                         acceptedUsers.push(user);
                         break;
-                    case CourseUserState.pending:
+                    case Enrollment.UserStatus.PENDING:
                         pendingUsers.push(user);
-                        break;
-                    case CourseUserState.rejected:
-                        rejectedUsers.push(user);
                         break;
                 }
             });
             return <MemberView
-                acceptedUsers={acceptedUsers}
                 course={course}
+                courseURL={await this.getCourseURL(course.getId())}
                 navMan={this.navMan}
                 pendingUsers={pendingUsers}
-                rejectedUsers={rejectedUsers}
+                acceptedUsers={acceptedUsers}
                 courseMan={this.courseMan}
             >
             </MemberView>;
@@ -282,121 +296,48 @@ export class TeacherPage extends ViewPage {
                 { name: "Group Results", uri: link.uri + "/groupresults" },
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
-                // {name: "Settings", uri: link.uri + "/settings" },
+                { name: "New Group", uri: link.uri + "/new_group"},
                 { name: "Repositories" },
-                { name: "Course Info", uri: link.uri + "/info" },
-                { name: "Assignments", uri: link.uri + "/assignmentinfo" },
-                { name: "Tests", uri: link.uri + "/testinfo" },
-                { name: "Solutions", uri: link.uri + "/solutioninfo" },
+                { name: "Course Info", uri: this.repositories.get(Repository.Type.COURSEINFO), absolute: true },
+                { name: "Assignments", uri: this.repositories.get(Repository.Type.ASSIGNMENTS), absolute: true },
+                { name: "Tests", uri: this.repositories.get(Repository.Type.TESTS), absolute: true },
+                { name: "Solutions", uri: this.repositories.get(Repository.Type.SOLUTIONS), absolute: true },
             ],
         };
     }
-    public async courseInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const courseId = parseInt(navInfo.params.cid, 10);
-        const informationURL = await this.courseMan.getCourseInformationURL(courseId);
-        if (informationURL === "") {
-            return <div> 404 not found</div>;
+
+    public async approveFunc(submissionID: number, courseID: number, approve: boolean): Promise<boolean> {
+        if (confirm(
+            `Do you want to ${this.setConfirmString(approve)} this lab?`,
+        )) {
+            const ans = await this.courseMan.updateSubmission(courseID, submissionID, approve);
+            this.navMan.refresh();
+            return ans;
         }
-
-        // Open new window for course information.
-        const popup = window.open(informationURL, "_blank");
-
-        if (!popup) {
-            return <div> Course information found <a href={informationURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
-    }
-
-    public async assignmentInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const courseId = parseInt(navInfo.params.cid, 10);
-        const assignmentURL = await this.courseMan.getRepositoryURL(courseId,
-            RepositoryType.AssignmentsRepo);
-        if (assignmentURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(assignmentURL, "_blank");
-
-        if (!popup) {
-            return <div> Assignments found <a href={assignmentURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
-    }
-
-    public async testInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const courseId = parseInt(navInfo.params.cid, 10);
-        const testInformationURL = await this.courseMan.getRepositoryURL(courseId, RepositoryType.TestsRepo);
-        if (testInformationURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(testInformationURL, "_blank");
-
-        if (!popup) {
-            return <div> Test repository found <a href={testInformationURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
-    }
-
-    public async solutionInformation(navInfo: INavInfo<{ cid: string }>): View {
-        const courseId = parseInt(navInfo.params.cid, 10);
-        const solutionURL = await this.courseMan.getRepositoryURL(courseId,
-            RepositoryType.SolutionsRepo);
-        if (solutionURL === "") {
-            return <div> 404 not found</div>;
-        }
-
-        // Open new window for course information.
-        const popup = window.open(solutionURL, "_blank");
-
-        if (!popup) {
-            return <div> solution repository found <a href={solutionURL}> here </a> </div>;
-        } else {
-            this.navMan.navigateTo(this.pagePath + "/" + this.currentPage);
-        }
-
-        // If for some reason navigateTo did not succeed, show this error message.
-        return <div> Popup blocker prevented the page to load. </div>;
+        return false;
     }
 
     public async renderMenu(menu: number): Promise<JSX.Element[]> {
         const curUser = this.userMan.getCurrentUser();
+        const confirmedTeacher = await this.userMan.isTeacher();
         if (curUser) {
             if (menu === 0) {
-                const states = [CourseUserState.teacher];
-                if (this.userMan.isAdmin(curUser)) {
-                    states.push(CourseUserState.pending);
-                    states.push(CourseUserState.student);
+                const states = [Enrollment.UserStatus.TEACHER];
+                if (curUser.getIsadmin() || confirmedTeacher) {
+                    states.push(Enrollment.UserStatus.PENDING);
+                    states.push(Enrollment.UserStatus.STUDENT);
                 }
                 const courses = await this.courseMan.getCoursesFor(curUser, states);
-                // const courses = await this.courseMan.getActiveCoursesFor(curUser);
 
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
-                        name: e.code,
-                        uri: this.pagePath + "/courses/" + e.id,
+                        name: e.getCode(),
+                        uri: this.pagePath + "/courses/" + e.getId(),
                     }));
                 });
 
-                const settings: ILink[] = [];
-
                 this.navMan.checkLinkCollection(labLinks, this);
-                this.navMan.checkLinks(settings, this);
 
                 return [
                     <h4 key={0}>Courses</h4>,
@@ -404,8 +345,6 @@ export class TeacherPage extends ViewPage {
                         key={1}
                         links={labLinks} onClick={(link) => this.handleClick(link)}>
                     </CollapsableNavMenu>,
-                    <h4 key={2}>Settings</h4>,
-                    <NavMenu key={3} links={settings} onClick={(link) => this.handleClick(link)}></NavMenu>,
                 ];
             }
         }
@@ -418,21 +357,39 @@ export class TeacherPage extends ViewPage {
         }
     }
 
-    private async getCourses(): Promise<ICourse[]> {
+    private async getCourses(): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return await this.courseMan.getCoursesFor(curUsr);
+            return this.courseMan.getCoursesFor(curUsr, []);
         }
         return [];
     }
 
-    private async courseFunc(courseParam: string, fn: (course: ICourse) => View): View {
+    private async getCourseURL(courseID: number): Promise<string> {
+        const repoMap = await this.courseMan.getRepositories(
+            courseID,
+            [Repository.Type.COURSEINFO],
+            );
+        const fullRepoName = repoMap.get(Repository.Type.COURSEINFO);
+        return fullRepoName ? fullRepoName.split("course-info")[0] : "";
+    }
+
+    private async courseFunc(courseParam: string, fn: (course: Course) => View): View {
         const courseId = parseInt(courseParam, 10);
         const course = await this.courseMan.getCourse(courseId);
         if (course) {
+            this.repositories = await this.courseMan.getRepositories(courseId,
+                [Repository.Type.COURSEINFO,
+                Repository.Type.ASSIGNMENTS,
+                Repository.Type.TESTS,
+                Repository.Type.SOLUTIONS]);
             return fn(course);
         }
-        return <div>404 Page not found</div>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+    }
+
+    private setConfirmString(approve: boolean): string {
+        return approve ? "approve" : "undo approval for";
     }
 
 }

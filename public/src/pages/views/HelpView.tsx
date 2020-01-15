@@ -11,6 +11,7 @@ export class HelpView extends React.Component<{}, {}> {
                         <a href="#autograder" className="list-group-item">Autograder</a>
                         <a href="#reg" className="list-group-item">Registration</a>
                         <a href="#signup" className="list-group-item">Sign up for a course</a>
+                        <a href="#groups" className="list-group-item">Creating a group</a>
 
                     </div>
                 </div>
@@ -18,24 +19,24 @@ export class HelpView extends React.Component<{}, {}> {
                     <article>
                         <h1 id="autograder">Autograder</h1>
                         <p>
-                            Autograder is a new tool for students and teaching staff for
+                            Autograder is a tool for students and teaching staff for
                             submitting and validating lab assignments and is developed at
                             the University of Stavanger. All lab submissions from students
                             are handled using Git, a source code management system, and
                             GitHub, a web-based hosting service for Git source repositories.
                         </p>
                         <p>
-                            Students push their updated lab submissions to GitHub. Every
-                            lab submission is then processed by a custom continuous
+                            Students push their lab solutions to GitHub. Every
+                             submission is then processed by a custom continuous
                             integration tool. This tool will run several test cases on the
-                            submitted code. Autograder generates feedback that let the
-                            students verify if their submission implements the required
+                            submitted code. Autograder generates feedback that lets the
+                            students verify that their submission implements the required
                             functionality. This feedback is available through a web interface.
                             The feedback from the Autograder system can be used by students
                             to improve their submissions.
                         </p>
                         <p>
-                            Below is a step-by-step explanation of how to register and sign up
+                            Below is a step-by-step explanation on how to register and sign up
                             for the lab project in Autograder.
                         </p>
 
@@ -56,11 +57,20 @@ export class HelpView extends React.Component<{}, {}> {
                             </li>
                             <li>
                                 <p>
-                                    Approve that our Autograder application may have permission
-                                    to access to the requested parts of your account. It is
-                                    possible to make a separate GitHub account for system if
-                                    you do not want Autograder to access your personal one with
-                                    the requested permissions.</p>
+                                    Approve that the Autograder application may access the
+                                    requested parts of your account. It is possible to make a
+                                     separate GitHub account for Autograder if you do not
+                                      want the application to access your personal one with
+                                    the requested permissions.
+                                    </p>
+                            </li>
+                            <li>
+                                <p>
+                                    Fill in your information and register as a new user.
+                                     Please provide your real name in the "Name" field.
+                                     This name will be used to approve your submissions
+                                     to course assignments during the lab hours.
+                                </p>
                             </li>
                         </ol>
 
@@ -73,38 +83,57 @@ export class HelpView extends React.Component<{}, {}> {
                             </li>
                             <li>
                                 <p>
-                                    In the course menu click on “New Course”. Available courses will be listed.
+                                    In the course menu choose “Join Course”. Available courses will be listed.
                                 </p>
                             </li>
                             <li>
-                                <p>Find the course you are signing up for and click sign up.</p>
+                                <p>Find the course you are signing up for and click "Enroll".</p>
                             </li>
                             <li>
                                 <p>
-                                    Read through and accept the terms. You will then be invited
-                                    to the course organization on GitHub.
+                                 Wait for the teaching staff to accept your enrollment request.
                                 </p>
                             </li>
                             <li>
                                 <p>
-                                    An invitation will be sent to your email address registered with
-                                    GitHub account. Accept the invitation using the received email.
+                                    After your enrollment request has been accepted,
+                                     you will receive three GitHub invitations. Invitations will be sent
+                                     to the email associated with the GitHub account you've signed up
+                                      for the course with.
                                 </p>
                             </li>
                             <li>
-                                <p>Wait for the teaching staff to verify your Autograder-registration.</p>
-                            </li>
-                            <li>
                                 <p>
-                                    You will get your own repository in the organization "uis-dat520" on
-                                    GitHub after your registration is verified. You will also have access
+                                    You will get your own repository in the course's GitHub organization.
+                                     You will also have access
                                     to the feedback pages for this course on Autograder.
                                 </p>
                             </li>
 
                         </ol>
-                    </article>
 
+                        <h1 id="groups">Create a new group</h1>
+
+                        <ol>
+
+                            <li>
+                                <p>
+                                    Choose "Members" tab in the course menu on the left.
+                                    Select yourself and other members of your group
+                                    from the list of course members. Enter your group's
+                                    desired name and click "Create".
+                                </p>
+                            </li>
+                            <li>
+                                <p>
+                                The group is created after it has been approved
+                                    by the teaching staff. After that the group name
+                                    cannot be changed. Please contact teaching staff if
+                                    you wish to add or remove group members.
+                                </p>
+                            </li>
+                        </ol>
+                    </article>
                 </div>
             </Row>
         );

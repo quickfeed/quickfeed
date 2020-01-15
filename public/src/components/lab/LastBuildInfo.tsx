@@ -1,59 +1,57 @@
 import * as React from "react";
+import { Assignment } from "../../../proto/ag_pb";
 import { Row } from "../../components";
+import { formatDate } from "../../helper";
+import { ISubmission } from "../../models";
 
 interface ILastBuildInfo {
-    pass_tests: number;
-    fail_tests: number;
-    exec_time: number;
-    build_time: Date;
-    build_id: number;
-    showApprove: boolean;
-    onApproveClick: () => void;
-    onRebuildClick: () => void;
+    submission: ISubmission;
+    assignment: Assignment;
+    }
+
+interface ILastBuildInfoState {
+    rebuilding: boolean;
 }
-class LastBuildInfo extends React.Component<ILastBuildInfo, any> {
+
+export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInfoState> {
+    constructor(props: ILastBuildInfo) {
+        super(props);
+        this.state = {
+            rebuilding: false,
+         };
+    }
 
     public render() {
-        let approveButton: JSX.Element;
-        if (this.props.showApprove) {
-            approveButton = <p> <button type="button"
-                id="approve"
-                className="btn btn-primary"
-                onClick={() => this.handleClick(this.props.onApproveClick)}> Approve </button> </p>;
-        } else {
-            approveButton = <p></p>;
-        }
+        const alltests = this.props.submission.testCases ? this.props.submission.testCases.length : 0;
         return (
-            <Row>
-                <div className="col-lg-8">
-                    <h2>Latest build</h2>
-                    <p id="passes">Number of passed tests:  {this.props.pass_tests}</p>
-                    <p id="fails">Number of failed tests:  {this.props.fail_tests}</p>
-                    <p id="buildtime">Execution time:  {this.props.exec_time / 1000} s</p>
-                    <p id="timedate">Build date:  {this.props.build_time.toString()}</p>
-                    <p id="buildid">Build ID: {this.props.build_id}</p>
-                </div>
-                <div className="col-lg-4 hidden-print">
-                    <h2>Actions</h2>
-                    <Row>
-                        <div className="col-lg-12">
-                            <p>
-                                <button type="button" id="rebuild" className="btn btn-primary"
-                                    onClick={() => this.handleClick(this.props.onRebuildClick)}>Rebuild
-                                </button>
-                            </p>
-                            {approveButton}
-                        </div>
-                    </Row>
+            <div>
+                <Row>
+                <div className="col-lg-12">
+                    <table className="table">
+                        <thead><tr><th colSpan={2}>Lab Information </th></tr></thead>
+                        <tbody>
+        <tr><td>Delivered</td><td>{this.getDeliveredTime()}</td></tr>
+    <tr><td>Deadline</td><td>{formatDate(this.props.assignment.getDeadline())}</td></tr>
+                            <tr><td>Tests passed</td><td>{this.props.submission.passedTests} / {alltests}</td></tr>
+        <tr><td>Execution time</td><td>{this.props.submission.executetionTime / 1000} s</td></tr>
+        <tr><td>Slip days</td><td>5</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </Row>
+            </div>
         );
     }
 
-    private handleClick(func: () => void) {
-        // TODO: implement rebuild functionality
-        func();
-        console.log("Rebuilding...");
+    private getDeliveredTime(): JSX.Element {
+        const deadline = new Date(this.props.assignment.getDeadline());
+        const delivered = this.props.submission.buildDate;
+        let classString = "";
+        if (delivered >= deadline) {
+            classString = "past-deadline";
+        }
+
+        return <div className={classString}>{formatDate(delivered)}</div>;
     }
+
 }
-export { LastBuildInfo };

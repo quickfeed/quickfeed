@@ -3,9 +3,11 @@ package ci
 import (
 	"encoding/json"
 	"strings"
+	"sync/atomic"
 	"time"
 
-	"github.com/autograde/kit/score"
+	"github.com/autograde/aguis/kit/score"
+	"go.uber.org/zap"
 )
 
 // Result holds scores and build information for one test execution
@@ -23,16 +25,21 @@ type BuildInfo struct {
 	ExecTime  int64  `json:"execTime"`
 }
 
+var globalBuildID = new(int64)
+
 // ExtractResult returns a result struct for the given log.
-func ExtractResult(out, secret string, execTime time.Duration) (*Result, error) {
+func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.Duration) (*Result, error) {
 	var filteredLog []string
-	var scores []*score.Score
+	scores := make([]*score.Score, 0)
 	for _, line := range strings.Split(out, "\n") {
 		// check if line has expected JSON score string
 		if score.HasPrefix(line) {
 			sc, err := score.Parse(line, secret)
 			if err != nil {
-				//TODO(meling) we should probably log parse errors?
+				logger.Error("ci.ExtractResults",
+					zap.Error(err),
+					zap.String("line", line),
+				)
 				continue
 			}
 			scores = append(scores, sc)
@@ -41,12 +48,15 @@ func ExtractResult(out, secret string, execTime time.Duration) (*Result, error) 
 			filteredLog = append(filteredLog, line)
 		}
 	}
-
+	logger.Debug("ci.ExtractResults",
+		zap.Any("scores", scores),
+		zap.Any("filteredLog", filteredLog),
+	)
 	return &Result{
 		Scores: scores,
 		BuildInfo: &BuildInfo{
-			BuildID:   1, //TODO(meling) this should be changed
-			BuildDate: time.Now().Format("2006-01-02"),
+			BuildID:   atomic.AddInt64(globalBuildID, 1),
+			BuildDate: time.Now().Format("2006-01-02T15:04:05"),
 			BuildLog:  strings.Join(filteredLog, "\n"),
 			ExecTime:  int64(execTime),
 		},

@@ -11,7 +11,7 @@ import { StudentPage } from "./pages/StudentPage";
 import { TeacherPage } from "./pages/TeacherPage";
 import { ViewPage } from "./pages/ViewPage";
 
-import { IUser } from "./models";
+import { User } from "../proto/ag_pb";
 import { AdminPage } from "./pages/AdminPage";
 
 import { NavBarLogin } from "./components/navigation/NavBarLogin";
@@ -24,17 +24,16 @@ import { HttpHelper } from "./HttpHelper";
 import { ILogEntry, LogManager } from "./managers/LogManager";
 
 import { PageInfo } from "./components/information/PageInfo";
-
-import { UserProfile } from "./components/forms/UserProfile";
 import { UserPage } from "./pages/UserPage";
 
 import { AddMenu } from "./components/navigation/AddMenu";
+import { GrpcManager } from "./managers/GRPCManager";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
     currentContent: JSX.Element;
     topLinks: ILink[];
-    curUser: IUser | null;
+    curUser: User | null;
     curMessage?: ILogEntry;
 }
 
@@ -64,7 +63,6 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         });
 
         const curUser = this.userMan.getCurrentUser();
-
         this.state = {
             activePage: undefined,
             topLinks: [],
@@ -112,14 +110,15 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         this.setState({ activePage: e.page, currentContent: newContent });
     }
 
-    public async generateTopLinksFor(user: IUser | null): Promise<ILink[]> {
+    public async generateTopLinksFor(user: User | null): Promise<ILink[]> {
         if (user) {
             const basis: ILink[] = [];
-            if (this.userMan.isAdmin(user)) {
+            const confirmedTeacher = await this.userMan.isTeacher();
+            if (user.getIsadmin() || confirmedTeacher) {
                 basis.push({ name: "Teacher", uri: "app/teacher/", active: false });
             }
             basis.push({ name: "Courses", uri: "app/student/", active: false });
-            if (this.userMan.isAdmin(user) && localStorage.getItem("admin")) {
+            if (user.getIsadmin() && localStorage.getItem("admin")) {
                 basis.push({ name: "Admin", uri: "app/admin", active: false });
             }
             return basis;
@@ -150,15 +149,15 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         if (this.state.activePage) {
             return this.state.currentContent;
         } else {
-            return <h1>404 not found</h1>;
+            return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
         }
     }
 
     private async refreshActivePage(): Promise<JSX.Element> {
         if (this.state.activePage) {
-            return await this.renderTemplate(this.state.activePage, this.state.activePage.template);
+            return this.renderTemplate(this.state.activePage, this.state.activePage.template);
         }
-        return <div>404 Error</div>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     private handleClick(link: ILink) {
@@ -186,7 +185,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             this.currentBodyContent = await page.renderContent(subPage);
             return this.currentBodyContent;
         }
-        return <h1>404 Page not found</h1>;
+        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
     private checkLinks(links: ILink[]): void {
@@ -214,11 +213,11 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         const dropDownMenuLinks: ILink[] = [
             { name: "Join Course", uri: "app/student/enroll" },
         ];
-        if (this.state.curUser && this.state.curUser.isadmin) {
+        if (this.state.curUser && this.state.curUser.getIsadmin()) {
             dropDownMenuLinks.push({ name: "New Course", uri: "app/admin/courses/new" });
         }
         const userLinks: ILink[] = [
-            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.name : "") },
+            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.getName() : "") },
             { name: "#separator" },
             { name: "Your profile", uri: "/app/user" },
             { name: "Help", uri: "/app/help" },
@@ -226,7 +225,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             { name: "Sign out", uri: "app/login/logout" },
         ];
         const adminLinks: ILink[] = [
-            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.name : "") },
+            { name: "Signed in as: " + (this.state.curUser ? this.state.curUser.getName() : "") },
             { name: "#separator" },
             { name: "Your profile", uri: "/app/user" },
             { name: "Help", uri: "/app/help" },
@@ -259,11 +258,9 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                 );
                 break;
         }
-        let currentLinks: ILink[] = [];
-        if (this.state.curUser && this.state.curUser.isadmin) {
+        let currentLinks = userLinks;
+        if (this.state.curUser && this.state.curUser.getIsadmin()) {
             currentLinks = adminLinks;
-        } else {
-            currentLinks = userLinks;
         }
         return (
             <div>
@@ -284,9 +281,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
                     <AddMenu
                         user={this.state.curUser}
                         links={dropDownMenuLinks}
-                        onClick={(link) => this.handleClick(link)}
-                    >
-
+                        onClick={(link) => this.handleClick(link)}>
                     </AddMenu>
                 </NavBar>
                 <PageInfo entry={this.state.curMessage} onclose={async () => {
@@ -302,7 +297,8 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
 }
 
 /**
- * @description The main entry point for the application. No other code should be executet outside this function
+ * @description The main entry point for the application.
+ * No other code should be executed outside this function.
  */
 async function main(): Promise<void> {
     const DEBUG_BROWSER = "DEBUG_BROWSER";
@@ -324,10 +320,15 @@ async function main(): Promise<void> {
     const navMan: NavigationManager = new NavigationManager(history, logMan.createLogger("NavigationManager"));
 
     if (curRunning === DEBUG_SERVER) {
+
         const httpHelper = new HttpHelper("/api/v1");
-        const serverData = new ServerProvider(httpHelper, logMan.createLogger("ServerProvider"));
+
+        const grpcHelper = new GrpcManager();
+
+        const serverData = new ServerProvider(httpHelper, grpcHelper, logMan.createLogger("ServerProvider"));
 
         userMan = new UserManager(serverData, logMan.createLogger("UserManager"));
+        grpcHelper.setUserMan(userMan);
         courseMan = new CourseManager(serverData, logMan.createLogger("CourseManager"));
     } else {
         userMan = new UserManager(tempData, logMan.createLogger("UserManager"));

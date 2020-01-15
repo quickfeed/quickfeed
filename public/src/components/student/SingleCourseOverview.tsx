@@ -1,15 +1,16 @@
 import * as React from "react";
-import { IGroupCourse, IStudentSubmission, IUserCourse } from "../../models";
+import { formatDate } from "../../helper";
+import { IAssignmentLink, IStudentSubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
-    courseAndLabs: IUserCourse;
-    groupAndLabs?: IGroupCourse;
+    courseAndLabs: IAssignmentLink;
+    groupAndLabs?: IAssignmentLink;
     onLabClick: (courseId: number, labId: number) => void;
     onGroupLabClick: (courseId: number, labId: number) => void;
 }
 
-class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
+export class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
     public render() {
         let groupLabs: IStudentSubmission[] = [];
         if (this.props.groupAndLabs !== undefined) {
@@ -36,8 +37,7 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
                     <div className="col-md-3 col-lg-2">
                         Deadline:
                         <span style={{ display: "inline-block", verticalAlign: "top", paddingLeft: "10px" }}>
-                            {submission.assignment.deadline.toDateString()} <br />
-                            {submission.assignment.deadline.toLocaleTimeString("en-GB")}
+                            {formatDate(submission.assignment.getDeadline())}
                         </span>
                     </div>
                 </div>;
@@ -46,19 +46,21 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
                 <li key={k} className="list-group-item clickable"
                     // Testing if the onClick handler should be for studentlab or grouplab.
                     onClick={() => {
-                        if (!submission.assignment.isgrouplab) {
-                            return this.props.onLabClick(submission.assignment.courseid, submission.assignment.id);
+                        const courseId = submission.assignment.getCourseid();
+                        const assignmentId = submission.assignment.getId();
+                        if (!submission.assignment.getIsgrouplab()) {
+                            return this.props.onLabClick(courseId, assignmentId);
                         } else {
-                            return this.props.onGroupLabClick(submission.assignment.courseid, submission.assignment.id);
+                            return this.props.onGroupLabClick(courseId, assignmentId);
                         }
                     }}>
-                    <strong>{submission.assignment.name}</strong>
+                    <strong>{submission.assignment.getName()}</strong>
                     {submissionInfo}
                 </li >);
         });
         return (
             <div>
-                <h1>{this.props.courseAndLabs.course.name}</h1>
+                <h1>{this.props.courseAndLabs.course.getName()}</h1>
                 <div>
                     <ul className="list-group">
                         {labs}
@@ -67,13 +69,14 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
             </div >
         );
     }
-    private buildInfo(studentLabs: IStudentSubmission[], groupLabs: IStudentSubmission[]): IStudentSubmission[] | null {
+    private buildInfo(studentLabs: IStudentSubmission[], groupLabs: IStudentSubmission[]):
+     IStudentSubmission[] | null {
         const labAndGrouplabs: IStudentSubmission[] = [];
         if (studentLabs.length !== groupLabs.length) {
             return null;
         }
         for (let labCounter = 0; labCounter < studentLabs.length; labCounter++) {
-            if (!studentLabs[labCounter].assignment.isgrouplab) {
+            if (!studentLabs[labCounter].assignment.getIsgrouplab()) {
                 labAndGrouplabs.push(studentLabs[labCounter]);
             } else {
                 labAndGrouplabs.push(groupLabs[labCounter]);
@@ -83,4 +86,3 @@ class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, a
         return labAndGrouplabs;
     }
 }
-export { SingleCourseOverview };

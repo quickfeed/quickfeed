@@ -1,0 +1,313 @@
+syntax = "proto3";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// USERS AND USERGROUPS //
+
+message User {
+    uint64 ID = 1;
+    bool isAdmin = 2;
+    string name = 3;
+    string studentID = 4;
+    string email = 5;
+    string avatarURL = 6;
+    string login = 7;
+
+    repeated RemoteIdentity remoteIdentities = 8;
+    repeated Enrollment enrollments = 9;
+}
+
+message Users {
+    repeated User users = 1;
+}
+
+message RemoteIdentity {
+    uint64 ID = 1;
+    string provider = 2 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
+    uint64 remoteID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:uid_provider_remote_id\""]; 
+    string accessToken = 4;
+    uint64 userID = 5;
+}
+
+message Group {
+    enum GroupStatus {
+        PENDING = 0;
+        REJECTED = 1; // deprecated, do not use
+        APPROVED = 2;
+    }
+    uint64 ID = 1;
+    string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
+    uint64 courseID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""]; 
+    uint64 teamID = 4;
+    GroupStatus status = 5;
+
+    repeated User users = 6;
+    repeated Enrollment enrollments = 7;
+}
+
+message Groups {
+    repeated Group groups = 1;
+}
+
+//   COURSES   //
+
+message Course {
+    uint64 ID = 1;
+    uint64 courseCreatorID = 2;
+    string name = 3;
+    string code = 4;
+    uint32 year = 5;
+    string tag = 6;
+    string provider = 7;
+    uint64 organizationID = 8;
+    Enrollment.UserStatus enrolled = 9 [(gogoproto.moretags) = "sql:\"-\""];
+
+    repeated Enrollment enrollments = 10;
+    repeated Assignment assignments = 12;
+    repeated Group groups = 13;
+}
+
+message Courses {
+    repeated Course courses = 1;
+}
+
+message Repository {
+    enum Type {
+        NONE = 0;
+        COURSEINFO = 1;
+        ASSIGNMENTS = 2;
+        TESTS = 3;
+        SOLUTIONS = 4;
+        USER = 5;
+        GROUP = 6;
+    }
+    uint64 ID = 1;
+    uint64 organizationID = 2;
+    uint64 repositoryID = 3; // ID of a github repository
+    uint64 userID = 4;
+    uint64 groupID = 5;
+    string HTMLURL = 6;
+    Type repoType = 7;
+}
+
+message Organization {
+    uint64 ID = 1;
+    string path = 2;
+    string avatar = 3;
+    string paymentPlan = 4;
+}
+
+message Organizations {
+    repeated Organization organizations = 1;
+}
+
+message Enrollment {
+    enum UserStatus {
+        NONE = 0;
+        PENDING = 1;
+        REJECTED = 2; // deprecated, do not use
+        STUDENT = 3;
+        TEACHER = 4;
+    }
+    uint64 ID = 1;
+    uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""];
+    uint64 userID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""]; 
+    uint64 groupID = 4;
+    User user = 5;
+    Course course = 6;
+    Group group = 7;
+    UserStatus status = 8;
+}
+
+message Enrollments {
+    repeated Enrollment enrollments = 1;
+}
+
+//   LABS    //
+
+message Assignment {
+    uint64 ID = 1;
+    uint64 courseID = 2;
+    string name = 3;
+    string language = 4;
+    string deadline = 5; 
+    bool autoApprove = 6;
+    uint32 order = 7;
+    bool isGroupLab = 8;
+    Submission submission = 9; 
+    uint32 scoreLimit = 10;  // defines minimal score limit for auto approval
+}
+
+message Assignments {
+    repeated Assignment assignments = 1;
+}
+
+message Submission {
+    uint64 ID = 1;
+    uint64 assignmentID = 2;
+    uint64 userID = 3;
+    uint64 groupID = 4;
+    uint32 score = 5;
+    string scoreObjects = 6;
+    string buildInfo = 7;
+    string commitHash = 8;
+    bool approved = 9;
+}
+
+message Submissions {
+    repeated Submission submissions = 1;
+}
+
+message LabResultLink {    
+    string authorName = 1;
+    Enrollment enrollment = 2;
+    repeated Submission submissions = 3;
+}
+
+message LabResultLinks {
+    repeated LabResultLink labs = 1;
+}
+
+
+////    REQUESTS AND RESPONSES      \\\\
+
+message CourseRequest {
+    uint64 courseID = 1;
+}
+
+message CoursesListRequest {
+    uint64 userID = 1;
+    repeated Enrollment.UserStatus states = 2;
+}
+
+message GetGroupRequest {
+    uint64 groupID = 1;
+}
+
+message GroupRequest {
+    uint64 userID = 1;
+    uint64 groupID = 2;
+    uint64 courseID = 3;
+}
+
+message Provider {
+    string provider = 1;
+}
+
+message OrgRequest {
+    string orgName = 1;
+}
+
+// depending on situation frontend will have all enrolled users or only those that are not members of any group
+// set filterOutGroupMembers go get list of students not belonging to any group for given course
+message EnrollmentRequest {
+    uint64 courseID = 1;
+    bool filterOutGroupMembers = 2;
+    repeated Enrollment.UserStatus states = 3;
+}
+
+message SubmissionRequest {
+    uint64 userID = 1;
+    uint64 groupID = 2;
+    uint64 courseID = 3;
+}
+
+message UpdateSubmissionRequest {
+    uint64 submissionID = 1;
+    uint64 courseID = 2;
+    bool approve = 3;
+}
+
+message Providers {
+    repeated string providers = 1;
+}
+
+message URLRequest {
+    uint64 courseID = 1;
+    repeated Repository.Type repoTypes = 2;
+}
+
+// used to check whether student/group submission repo is empty
+message RepositoryRequest {
+    uint64 userID = 1;
+    uint64 groupID = 2;
+    uint64 courseID = 3;
+}
+
+message Repositories {
+    map<string, string> URLs = 1;
+}
+
+message AuthorizationResponse {
+    bool IsAuthorized = 1;
+}
+
+message Status {
+    uint64 Code = 1;
+    string Error = 2;
+}
+
+message LabRequest {
+    uint64 courseID = 1;
+    uint64 submissionID = 2;
+    uint64 assignmentID = 3;
+    bool groupLabs = 4;
+}
+
+// messages of type Void used when we want a boolean answer from the server
+// GRPC status code 0 indicates that the requested action was a success
+// any other status will include a message explaining what went wrong
+message Void {}
+
+service AutograderService {
+
+    // users //
+
+    rpc GetUser(Void) returns (User) {}
+    rpc GetUsers(Void) returns (Users) {}
+    rpc UpdateUser(User) returns (User) {}
+    rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}  
+
+    // groups //
+
+    rpc GetGroup(GetGroupRequest) returns (Group) {}
+    rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {} 
+    rpc GetGroups(CourseRequest) returns (Groups) {} 
+    rpc CreateGroup(Group) returns (Group) {} 
+    rpc UpdateGroup(Group) returns (Void) {}
+    rpc DeleteGroup(GroupRequest) returns (Void) {}
+
+    // courses //
+
+    rpc GetCourse(CourseRequest) returns (Course) {} 
+    rpc GetCourses(Void) returns (Courses) {} 
+    rpc GetCoursesWithEnrollment(CoursesListRequest) returns (Courses) {}
+    rpc CreateCourse(Course) returns (Course) {}
+    rpc UpdateCourse(Course) returns (Void) {}
+ 
+    // assignments //
+
+    rpc GetAssignments(CourseRequest) returns (Assignments) {}
+    rpc UpdateAssignments(CourseRequest) returns (Void) {}
+
+    // enrollments //
+
+    rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
+    rpc CreateEnrollment(Enrollment) returns (Void) {} 
+    rpc UpdateEnrollment(Enrollment) returns (Void) {} 
+    rpc UpdateEnrollments(CourseRequest) returns (Void) {}
+
+    // submissions //
+
+    rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
+    rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
+    rpc RebuildSubmission(LabRequest) returns (Void) {}
+    rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
+   
+    // misc //
+    
+    rpc GetProviders(Void) returns (Providers) {}
+    rpc GetOrganization(OrgRequest) returns (Organization) {}
+    rpc GetRepositories(URLRequest) returns (Repositories) {}
+    rpc IsEmptyRepo(RepositoryRequest) returns (Void) {}
+}

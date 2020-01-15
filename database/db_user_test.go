@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/autograde/aguis/models"
+	pb "github.com/autograde/aguis/ag"
 )
 
 func TestGormDBUpdateAccessToken(t *testing.T) {
@@ -19,10 +19,10 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	)
 	admin := true
 	var (
-		wantUser = &models.User{
+		wantUser = &pb.User{
 			ID:      uID,
-			IsAdmin: &admin, // first user is always admin
-			RemoteIdentities: []*models.RemoteIdentity{{
+			IsAdmin: admin, // first user is always admin
+			RemoteIdentities: []*pb.RemoteIdentity{{
 				ID:          rID,
 				Provider:    provider,
 				RemoteID:    remoteID,
@@ -30,7 +30,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 				UserID:      uID,
 			}},
 		}
-		updateAccessToken = &models.RemoteIdentity{
+		updateAccessToken = &pb.RemoteIdentity{
 			Provider:    provider,
 			RemoteID:    remoteID,
 			AccessToken: accessToken,
@@ -40,10 +40,10 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
+	var user pb.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
-		&models.RemoteIdentity{
+		&pb.RemoteIdentity{
 			Provider: provider,
 			RemoteID: remoteID,
 		},
@@ -58,7 +58,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	updatedUser.Enrollments = nil
 	if !reflect.DeepEqual(updatedUser, wantUser) {
 		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
 	}
@@ -73,7 +73,7 @@ func TestGormDBUpdateAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	updatedUser.Enrollments = nil
 	if !reflect.DeepEqual(updatedUser, wantUser) {
 		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
 	}

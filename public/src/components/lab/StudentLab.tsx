@@ -1,26 +1,21 @@
 import * as React from "react";
-import { IAssignment, ICourse, IStudentSubmission, ISubmission, ITestCases, IUser } from "../../models";
+import { IStudentSubmission } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
 
-interface IStudentLabProbs {
-    course: ICourse;
+interface IStudentLabProps {
     assignment: IStudentSubmission;
-    student?: IUser;
     showApprove: boolean;
-    onApproveClick: () => void;
-    onRebuildClick: () => void;
+    onApproveClick: (approve: boolean) => void;
+    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
-class StudentLab extends React.Component<IStudentLabProbs, {}> {
+export class StudentLab extends React.Component<IStudentLabProps> {
     public render() {
         return <LabResultView
-            course={this.props.course}
-            labInfo={this.props.assignment}
+            assignment={this.props.assignment}
             onApproveClick={this.props.onApproveClick}
             onRebuildClick={this.props.onRebuildClick}
             showApprove={this.props.showApprove}>
         </LabResultView>;
     }
 }
-
-export { StudentLab, IStudentLabProbs };

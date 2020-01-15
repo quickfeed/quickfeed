@@ -17,7 +17,9 @@ if [ -f "test/{{ .AssignmentName }}/setup.sh" ]; then
     cd /root/
 fi
 
+
 # Secret is dumpted to a file and must be read by the scoring module
+
 cat <<EOF > /root/test/secret.txt
 {{ .RandomSecret }}
 EOF

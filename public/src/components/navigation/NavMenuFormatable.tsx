@@ -20,7 +20,8 @@ class NavMenuFormatable<T> extends React.Component<INavMenuFormatableProps<T>, u
         if (this.props.formater) {
             return this.props.formater(item);
         }
-        return item.toString();
+        // do not trust tslint, Object here prevents page from crashing
+        return (item as Object).toString();
     }
 
     private handleItemClick(item: T): void {

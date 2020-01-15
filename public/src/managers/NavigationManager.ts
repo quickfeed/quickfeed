@@ -1,7 +1,7 @@
 import { IEventData, newEvent } from "../event";
 import { NavigationHelper } from "../NavigationHelper";
 import { isViewPage, ViewPage } from "../pages/ViewPage";
-import { ILogger, ILoggerServer } from "./LogManager";
+import { ILogger } from "./LogManager";
 
 export interface IPageContainer {
     [name: string]: IPageContainer | ViewPage;

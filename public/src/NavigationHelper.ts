@@ -1,12 +1,6 @@
 
 import { IEventData, newEvent } from "./event";
 
-export interface ITypeMap {
-    string: string;
-    boolean: boolean;
-    number: number;
-}
-
 export function trimChars(str: string, char: string): string {
     if (str.length === 0) {
         return "";
@@ -178,14 +172,14 @@ export class NavigationHelper {
         return navObj.func.call(this.thisObject, navInfo);
     }
 
-    private parseValue<K extends keyof ITypeMap>(value: string, type: K): ITypeMap[K] | undefined {
+    private parseValue(value: string, type: string): string | number | boolean | undefined {
         switch (type) {
             case "string":
                 return value;
             case "number":
                 const num = parseFloat(value);
                 if (isNaN(num)) {
-                    return undefined;
+                   return undefined;
                 }
                 return num;
             case "boolean":
@@ -196,6 +190,7 @@ export class NavigationHelper {
                 }
                 return undefined;
         }
+        return undefined;
     }
 
     private createParamsObj(matchPath: string[], realPath: string[]): any | undefined {
@@ -215,7 +210,7 @@ export class NavigationHelper {
                             return undefined;
                         }
                     } else {
-                        console.error("Type not supportet in navigation path: ", param.type, matchPath, realPath);
+                        console.error("Type not supported in navigation path: ", param.type, matchPath, realPath);
                     }
                 } else {
                     returnObj[param.name] = realPath[i];

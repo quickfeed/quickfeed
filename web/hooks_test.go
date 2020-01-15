@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"testing"
 
+	"go.uber.org/zap"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
-	"github.com/autograde/aguis/models"
 	"github.com/autograde/aguis/web"
 	"gopkg.in/go-playground/webhooks.v3/github"
 )
@@ -17,7 +18,7 @@ type mockRunner struct {
 	runs []*ci.Job
 }
 
-func (m *mockRunner) Run(_ context.Context, job *ci.Job) (string, error) {
+func (m *mockRunner) Run(_ context.Context, job *ci.Job, user string) (string, error) {
 	m.runs = append(m.runs, job)
 	return "", nil
 }
@@ -30,10 +31,10 @@ func TestGithubHook(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	var user models.User
+	var user pb.User
 	if err := db.CreateUserFromRemoteIdentity(
 		&user,
-		&models.RemoteIdentity{
+		&pb.RemoteIdentity{
 			Provider:    "github",
 			RemoteID:    0,
 			AccessToken: "",
@@ -43,7 +44,7 @@ func TestGithubHook(t *testing.T) {
 	}
 
 	runner := &mockRunner{}
-	hook := web.GithubHook(nullLogger(), db, runner, "buildscripts")
+	hook := web.GithubHook(zap.NewNop().Sugar(), db, runner, "buildscripts")
 
 	var h http.Header = make(map[string][]string)
 	h.Set("X-Github-Event", string(github.PushEvent))

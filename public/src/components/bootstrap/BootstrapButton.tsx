@@ -5,11 +5,12 @@ interface IButtonProps {
     className?: string;
     type?: string;
     disabled?: boolean;
+    tooltip?: string;
     onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 export type BootstrapClass = "default" | "primary" | "success" | "info" | "warning" | "danger" | "link";
-class BootstrapButton extends React.Component<IButtonProps, {}> {
+export class BootstrapButton extends React.Component<IButtonProps> {
     public render() {
         const type: BootstrapClass = this.props.classType ? this.props.classType : "default";
         let className = "btn btn-" + type;
@@ -18,15 +19,22 @@ class BootstrapButton extends React.Component<IButtonProps, {}> {
             className += " " + this.props.className;
         }
 
-        return (
-            <button className={className}
-                type={this.props.type ? this.props.type : ""}
-                onClick={(e) => this.handleOnclick(e)}
-                disabled={this.props.disabled}
-            >
-                {this.props.children}
-            </button>
-        );
+        if (this.props.tooltip) {
+            return (<button className={className}
+            onClick={(e) => this.handleOnclick(e)}
+            data-toggle={"tooltip"}
+            data-html={"true"}
+            title={this.props.tooltip}
+            disabled={this.props.disabled}>
+            {this.props.children}
+            </button>);
+        }
+        return (<button className={className}
+        onClick={(e) => this.handleOnclick(e)}
+        disabled={this.props.disabled}>
+        {this.props.children}
+        </button>);
+
     }
 
     private handleOnclick(e: React.MouseEvent<HTMLButtonElement>): void {
@@ -35,4 +43,3 @@ class BootstrapButton extends React.Component<IButtonProps, {}> {
         }
     }
 }
-export { BootstrapButton };

@@ -63,7 +63,7 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
                 ele.classList.remove("collapsing");
                 ele.classList.add("collapse");
                 ele.classList.add("in");
-                ele.style.height = null;
+                ele.style.height = "";
             }, 350);
         };
     }
@@ -74,11 +74,11 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
         ele.classList.remove("collapse");
         ele.classList.remove("in");
         return () => {
-            ele.style.height = null;
+            ele.style.height = "";
             setTimeout(() => {
                 ele.classList.remove("collapsing");
                 ele.classList.add("collapse");
-                ele.style.height = null;
+                ele.style.height = "";
             }, 350);
         };
     }
@@ -105,7 +105,6 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
                         href={"/" + link.uri}>{link.name}</a>
                 </li>;
             }
-            
         } else {
             return <li key={index} className={isActive}>
                 <span className="header">{link.name}</span>

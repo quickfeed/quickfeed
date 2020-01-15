@@ -3,57 +3,75 @@ package scm
 import (
 	"context"
 	"errors"
+
+	pb "github.com/autograde/aguis/ag"
+	"go.uber.org/zap"
 )
 
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
-	// Lists directories which can be used as a course directory.
-	ListDirectories(context.Context) ([]*Directory, error)
-	// Creates a new directory.
-	CreateDirectory(context.Context, *CreateDirectoryOptions) (*Directory, error)
-	// Gets a directory.
-	GetDirectory(context.Context, uint64) (*Directory, error)
-	// CreateRepoAndTeam invokes the SCM to create a repository and team for the
-	// specified namespace (typically the course name), the path of the repository
-	// (typically the name of the student with a '-labs' suffix or the group name).
-	// The team name is usually the student name or group name, whereas the git
-	// user names are the members of the team. For single student repositories,
-	// the git user names are typically just the one student.
-	CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error)
+	// Lists organizations (for logged in user) which can be used as a course directory.
+	ListOrganizations(context.Context) ([]*pb.Organization, error)
+	// Creates a new organization.
+	CreateOrganization(context.Context, *CreateOrgOptions) (*pb.Organization, error)
+	// Updates an organization
+	UpdateOrganization(context.Context, *CreateOrgOptions) error
+	// Gets an organization.
+	GetOrganization(context.Context, *GetOrgOptions) (*pb.Organization, error)
 	// Create a new repository.
 	CreateRepository(context.Context, *CreateRepositoryOptions) (*Repository, error)
-	// Get repositories within directory.
-	GetRepositories(context.Context, *Directory) ([]*Repository, error)
-	// Update repository settings
-	UpdateRepository(context.Context, *Repository) error
+	// Get repository by ID or name
+	GetRepository(context.Context, *RepositoryOptions) (*Repository, error)
+	// Get repositories within organization.
+	GetRepositories(context.Context, *pb.Organization) ([]*Repository, error)
 	// Delete repository.
-	DeleteRepository(context.Context, uint64) error
+	DeleteRepository(context.Context, *RepositoryOptions) error
+	// Add user as repository collaborator with provided permissions
+	UpdateRepoAccess(context.Context, *Repository, string, string) error
+	// Returns true if there are no commits in the given repository
+	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// List the webhooks associated with the provided repository.
-	ListHooks(context.Context, *Repository) ([]*Hook, error)
+	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
+	// Create an organization level webhook
+	CreateOrgHook(context.Context, *OrgHookOptions) error
 	// Create team.
-	CreateTeam(context.Context, *CreateTeamOptions) (*Team, error)
+	CreateTeam(context.Context, *TeamOptions) (*Team, error)
+	// Delete team.
+	DeleteTeam(context.Context, *TeamOptions) error
+	// Get a single team by ID or name
+	GetTeam(context.Context, *TeamOptions) (*Team, error)
+	// Fetch all teams for organization
+	GetTeams(context.Context, *pb.Organization) ([]*Team, error)
 	// Add repo to team.
 	AddTeamRepo(context.Context, *AddTeamRepoOptions) error
-	// AddTeamMember as a member to a team.
-	// AddTeamMember(context.Context, *AddMemberOptions) error
+	// AddTeamMember adds a member to a team.
+	AddTeamMember(context.Context, *TeamMembershipOptions) error
+	// RemoveTeamMember removes team member
+	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
+	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions
+	UpdateTeamMembers(context.Context, *TeamOptions) error
 	// GetUserName returns the currently logged in user's login name.
 	GetUserName(context.Context) (string, error)
 	// GetUserNameByID returns the login name of user with the given remoteID.
 	GetUserNameByID(context.Context, uint64) (string, error)
 	// Returns a provider specific clone path.
 	CreateCloneURL(*CreateClonePathOptions) string
-	// Fetch current payment plan
-	GetPaymentPlan(context.Context, uint64) (*PaymentPlan, error)
+	// Promotes or demotes organization member, based on Role field in OrgMembership
+	UpdateOrgMembership(context.Context, *OrgMembershipOptions) error
+	// RevokeOrgMembership removes user from the organization
+	RemoveMember(context.Context, *OrgMembershipOptions) error
+	// Lists all authorizations for authenticated user
+	GetUserScopes(context.Context) *Authorization
 }
 
 // NewSCMClient returns a new provider client implementing the SCM interface.
-func NewSCMClient(provider, token string) (SCM, error) {
+func NewSCMClient(logger *zap.SugaredLogger, provider, token string) (SCM, error) {
 	switch provider {
 	case "github":
-		return NewGithubSCMClient(token), nil
+		return NewGithubSCMClient(logger, token), nil
 	case "gitlab":
 		return NewGitlabSCMClient(token), nil
 	case "fake":
@@ -62,90 +80,109 @@ func NewSCMClient(provider, token string) (SCM, error) {
 	return nil, errors.New("invalid provider: " + provider)
 }
 
-// Directory represents an entity which is capable of managing source code
-// repositories as well as user access to those repositories.
-type Directory struct {
-	ID     uint64 `json:"id"`
-	Path   string `json:"path"`
-	Avatar string `json:"avatar,omitempty"`
+// CreateOrgOptions contains information on how an organization should be
+// created.
+type CreateOrgOptions struct {
+	Path              string
+	Name              string
+	DefaultPermission string
 }
 
-// CreateDirectoryOptions contains information on how a directory should be
-// created.
-type CreateDirectoryOptions struct {
-	Path string
-	Name string
+// GetOrgOptions contains information on the organization to fetch
+type GetOrgOptions struct {
+	ID       uint64
+	Name     string
+	Username string
 }
 
 // Repository represents a git remote repository.
 type Repository struct {
-	ID   uint64
-	Path string
+	ID      uint64
+	Path    string
+	Owner   string // Only used by GitHub.
+	WebURL  string // Repository website.
+	SSHURL  string // SSH clone URL.
+	HTTPURL string // HTTP(S) clone URL.
+	OrgID   uint64
+	Size    uint64
+}
 
-	// Only used by GitHub.
+// RepositoryOptions used to fetch a single repository by ID or name
+// either ID or both Path and Owner info must be provided
+type RepositoryOptions struct {
+	ID    uint64
+	Path  string
 	Owner string
-
-	// Repository website.
-	WebURL string
-	// SSH clone URL.
-	SSHURL string
-	// HTTP(S) clone URL.
-	HTTPURL string
-
-	DirectoryID uint64
 }
 
 // Hook contains information about a webhook for a repository.
 type Hook struct {
-	ID   uint64
-	Name string
-	URL  string
+	ID     uint64
+	Name   string
+	URL    string
+	Events []string
 }
 
-// CreateRepositoryOptions contains information on how a repository should be
-// created.
+// CreateRepositoryOptions contains information on how a repository should be created.
 type CreateRepositoryOptions struct {
-	Path      string
-	Directory *Directory
-	Private   bool
+	Organization *pb.Organization
+	Path         string
+	Private      bool
+	Owner        string // we can create user repositories. Default owner is github organization
+	Permission   string // default permission level for the repo. Can be "read", "write", "admin", "none"
 }
 
 // CreateHookOptions contains information on how to create a webhook.
 type CreateHookOptions struct {
-	URL    string
-	Secret string
-
+	URL        string
+	Secret     string
 	Repository *Repository
 }
 
-// CreateTeamOptions contains information about the team and the users of the team.
-type CreateTeamOptions struct {
-	Directory *Directory
-	TeamName  string
-	Users     []string
+// OrgHookOptions contains information about an organization level hook
+type OrgHookOptions struct {
+	URL          string
+	Secret       string
+	Organization *pb.Organization
 }
 
-// ErrNotSupported is returned when the source code management solution used
-// does not provide a sufficient API for the method called.
-type ErrNotSupported struct {
-	SCM    string
-	Method string
+// TeamOptions contains information about the team and the users of the team.
+type TeamOptions struct {
+	Organization *pb.Organization
+	TeamName     string
+	TeamID       uint64
+	Users        []string
+}
+
+// TeamMembershipOptions contain information on organization team and associated user
+type TeamMembershipOptions struct {
+	Organization *pb.Organization
+	TeamID       int64
+	TeamSlug     string // slugified team name
+	Username     string // GitHub username
+	Role         string // member or maintainer. Maintainer can add, remove and promote team members
+}
+
+// OrgMembershipOptions represent user's membership in organization
+type OrgMembershipOptions struct {
+	Organization *pb.Organization
+	Username     string // GitHub username
+	Role         string // role can be "admin" (organization owner) or "member"
 }
 
 // CreateClonePathOptions holds elements used when constructing a clone URL string.
 type CreateClonePathOptions struct {
-	UserToken  string
-	Directory  string
-	Repository string
+	UserToken    string
+	Organization string
+	Repository   string
 }
 
 // AddTeamRepoOptions contains information about the repos to be added to a team.
 type AddTeamRepoOptions struct {
-	TeamID uint64
-	Repo   string
-
-	// Only used by GitHub.
-	Owner string
+	TeamID     uint64
+	Repo       string
+	Owner      string // Name of the team to associate repo with. Only used by GitHub.
+	Permission string // permission level for team members. Can be "push", "pull", "admin"
 }
 
 // Team represents a git Team
@@ -155,12 +192,7 @@ type Team struct {
 	URL  string
 }
 
-// PaymentPlan represents the payment plan to use.
-type PaymentPlan struct {
-	Name         string
-	PrivateRepos uint64
-}
-
-func (e ErrNotSupported) Error() string {
-	return "method" + e.Method + " not supported by " + e.SCM + " SCM"
+// Authorization stores information about user scopes
+type Authorization struct {
+	Scopes []string
 }

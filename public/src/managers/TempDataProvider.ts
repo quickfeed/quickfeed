@@ -1,26 +1,14 @@
-import * as Models from "../models";
-import {
-    CourseGroupStatus,
-    CourseUserState,
-    IAssignment,
-    ICourse,
-    ICourseGroup,
-    ICourseUserLink,
-    ICourseWithEnrollStatus,
-    IError,
-    INewGroup,
-    IOrganization, IStatusCode,
-    ISubmission,
-    IUser,
-} from "../models";
-import { ICourseProvider } from "./CourseManager";
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User } from "../../proto/ag_pb";
+import { IAssignmentLink, ISubmission } from "../models";
 
-import { IMap, MapHelper, mapify } from "../map";
+import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
 
-import { ICourseEnrollment, IUserEnrollment } from "../managers";
+import { isNull } from "util";
+import { IMap, MapHelper, mapify } from "../map";
 
-interface IDummyUser extends IUser {
+interface IGrpcDummyUser {
+    user: User;
     password: string;
 }
 
@@ -30,14 +18,14 @@ interface IDummyUser extends IUser {
  */
 export class TempDataProvider implements IUserProvider, ICourseProvider {
 
-    private localUsers: IMap<IDummyUser>;
-    private localAssignments: IMap<IAssignment>;
-    private localCourses: IMap<ICourse>;
-    private localCourseStudent: ICourseUserLink[];
+    private localUsers: IMap<IGrpcDummyUser>;
+    private localAssignments: IMap<Assignment>;
+    private localCourses: IMap<Course>;
+    private localCourseStudent: Enrollment[];
     private localLabInfo: IMap<ISubmission>;
-    private localCourseGroups: ICourseGroup[];
+    private localCourseGroups: Group[];
 
-    private currentLoggedIn: IUser | null = null;
+    private currentLoggedIn: User | null = null;
 
     constructor() {
         this.addLocalAssignments();
@@ -48,74 +36,95 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalCourseGroups();
     }
 
-    public async approveSubmission(submissionid: number): Promise<void> {
+    public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 
-    public async getDirectories(provider: string): Promise<IOrganization[]> {
-        throw new Error("Not implemented");
+    public async getAllUser(): Promise<User[]> {
+        const users: User[] = [];
+        const dummyUsers = MapHelper.toArray(this.localUsers);
+        dummyUsers.forEach((ele) => {
+            users.push(ele.user);
+        });
+        return users;
     }
 
-    public async getAllUser(): Promise<IUser[]> {
-        return MapHelper.toArray(this.localUsers);
+    public async getUser(): Promise<User> {
+        if (this.currentLoggedIn) {
+            return this.currentLoggedIn;
+        }
+        return new User();
     }
-
-    public async getCourses(): Promise<ICourse[]> {
+    public async getCourses(): Promise<Course[]> {
         // return this.localCourses;
         return MapHelper.toArray(this.localCourses);
     }
 
-    public async getCoursesStudent(): Promise<ICourseUserLink[]> {
+    public async getCoursesStudent(): Promise<Enrollment[]> {
         return this.localCourseStudent;
     }
 
-    public async getAssignments(courseId: number): Promise<IMap<IAssignment>> {
-        const temp: IMap<IAssignment> = [];
+    public async getAssignments(courseID: number): Promise<Assignment[]> {
+        const temp: Assignment[] = [];
         MapHelper.forEach(this.localAssignments, (a, i) => {
-            if (a.courseid === courseId) {
+            if (a.getCourseid() === courseID) {
                 temp[i] = a;
             }
         });
         return temp;
     }
 
-    public async tryLogin(username: string, password: string): Promise<IUser | null> {
+    public async tryLogin(username: string, password: string): Promise<User | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === username.toLocaleLowerCase());
+            u.user.getEmail().toLocaleLowerCase() === username.toLocaleLowerCase());
         if (user && user.password === password) {
-            this.currentLoggedIn = user;
-            return user;
+            this.currentLoggedIn = user.user;
+            return user.user;
         }
         return null;
     }
 
-    public async tryRemoteLogin(provider: string): Promise<IUser | null> {
+    public async tryRemoteLogin(provider: string): Promise<User | null> {
         let lookup = "test@testersen.no";
         if (provider === "gitlab") {
             lookup = "bob@bobsen.no";
         }
         const user = MapHelper.find(this.localUsers, (u) =>
-            u.email.toLocaleLowerCase() === lookup);
+            u.user.getEmail().toLocaleLowerCase() === lookup);
 
-        return new Promise<IUser | null>((resolve, reject) => {
+        return new Promise<User | null>((resolve, reject) => {
             // Simulate async callback
             setTimeout(() => {
-                this.currentLoggedIn = user;
-                resolve(user);
+                if (isNull(user)) {
+                    this.currentLoggedIn = user;
+                    resolve(user);
+                } else {
+                    this.currentLoggedIn = user.user;
+                    resolve(user.user);
+                }
+
             }, 500);
         });
     }
 
-    public async logout(user: IUser): Promise<boolean> {
+    public async isAuthorizedTeacher(): Promise<boolean> {
         return true;
     }
 
-    public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
-        this.localCourseStudent.push({
-            courseId: course.id,
-            userid: user.id,
-            state: Models.CourseUserState.pending,
-        });
+    public async logout(user: User): Promise<boolean> {
+        return true;
+    }
+
+    public async addUserToCourse(course: Course, user: User): Promise<boolean> {
+        const tempEnrollment: Enrollment = new Enrollment();
+        tempEnrollment.setCourseid(course.getId());
+        tempEnrollment.setUserid(user.getId());
+        tempEnrollment.setStatus(Enrollment.UserStatus.PENDING);
+        this.localCourseStudent.push(tempEnrollment);
+        return true;
+    }
+
+    public async approveAll(courseID: number): Promise<boolean> {
         return true;
     }
 
@@ -124,20 +133,21 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
      * @param course The course userlinks should be retrived from
      * @param state Optinal. The state of the relation, all if not present
      */
-    public async getUserLinksForCourse(course: ICourse, state?: CourseUserState[]): Promise<ICourseUserLink[]> {
-        const users: ICourseUserLink[] = [];
+    public async getUserLinksForCourse(course: Course, state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+        const users: Enrollment[] = [];
         for (const c of await this.getCoursesStudent()) {
-            if (course.id === c.courseId && (state === undefined || c.state === CourseUserState.student)) {
+            if (course.getId() === c.getCourseid()
+             && (state === undefined || c.getStatus() === Enrollment.UserStatus.STUDENT)) {
                 users.push(c);
             }
         }
         return users;
     }
 
-    public async getUsersAsMap(ids: number[]): Promise<IMap<IUser>> {
-        const returnUsers: IMap<IUser> = {};
+    public async getUsersAsMap(IDs: number[]): Promise<IMap<User>> {
+        const returnUsers: IMap<User> = {};
         const allUsers = await this.getAllUser();
-        ids.forEach((ele) => {
+        IDs.forEach((ele) => {
             const temp = allUsers[ele];
             if (temp) {
                 returnUsers[ele] = temp;
@@ -146,50 +156,50 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Models.ICourse, state?: CourseUserState[])
-        : Promise<IUserEnrollment[]> {
-        const courseStds: ICourseUserLink[] =
+    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, state?: Enrollment.UserStatus[])
+        : Promise<Enrollment[]> {
+        const courseStds: Enrollment[] =
             await this.getUserLinksForCourse(course, state);
-        const users = await this.getUsersAsMap(courseStds.map((e) => e.userid));
-        return courseStds.map<IUserEnrollment>((link) => {
-            const user = users[link.userid];
+        const users = await this.getUsersAsMap(courseStds.map((e) => e.getUserid()));
+        return courseStds.map<Enrollment>((link) => {
+            const user = users[link.getUserid()];
             if (!user) {
                 // TODO: See if we should have an error here or not
                 throw new Error("Link exist witout a user object");
             }
-            return { courseid: link.courseId, userid: link.userid, user, status: link.state };
+            return link;
         });
     }
 
-    public async createNewCourse(course: any): Promise<ICourse | IError> {
+    public async createNewCourse(course: any): Promise<Course | Status> {
         throw new Error("Method not implemented");
     }
 
-    public async getCourse(id: number): Promise<ICourse | null> {
-        const course: ICourse | undefined = this.localCourses[id];
+    public async getCourse(ID: number): Promise<Course | null> {
+        const course: Course | undefined = this.localCourses[ID];
         if (course) {
             return course;
         }
         return null;
     }
 
-    public async updateCourse(courseId: number, courseData: ICourse): Promise<IStatusCode | IError> {
+    public async updateCourse(course: Course): Promise<Status> {
         throw new Error("Method not implemented");
     }
 
-    public async changeUserState(link: ICourseUserLink, state: Models.CourseUserState): Promise<boolean> {
-        link.state = state;
+    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
+        link.setStatus(state);
         return true;
     }
 
-    public async changeAdminRole(user: IUser): Promise<boolean> {
-        user.isadmin = !user.isadmin;
+    public async changeAdminRole(user: User): Promise<boolean> {
+        user.setIsadmin(!user.getIsadmin());
         return true;
     }
 
-    public async getAllLabInfos(courseId: number): Promise<IMap<ISubmission>> {
-        const temp: IMap<ISubmission> = {};
-        const assignments = await this.getAssignments(courseId);
+    public async getAllLabInfos(courseID: number): Promise<ISubmission[]> {
+        const temp: ISubmission[] = [];
+        const assignments = await this.getAssignments(courseID);
         MapHelper.forEach(this.localLabInfo, (ele) => {
             if (assignments[ele.assignmentid]) {
                 temp[ele.id] = ele;
@@ -198,61 +208,74 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
+    public async getCourseLabs(courseID: number, groupLab: boolean): Promise<IAssignmentLink[]> {
+        return [];
+    }
+
     public async getProviders(): Promise<string[]> {
         return ["github"];
     }
 
-    public async getLoggedInUser(): Promise<IUser | null> {
+    public async getLoggedInUser(): Promise<User | null> {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]> {
-        const cLinks: ICourseUserLink[] = [];
+    public async getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+        const cLinks: Enrollment[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
-            if (user.id === c.userid && (state === undefined || c.state === CourseUserState.student)) {
+            if (user.getId() === c.getUserid()
+             && (state === undefined || c.getStatus() === Enrollment.UserStatus.STUDENT)) {
                 cLinks.push(c);
             }
         }
-        const courses: ICourseEnrollment[] = [];
+        const courses: Enrollment[] = [];
         const tempCourses = await this.getCourses();
         for (const link of cLinks) {
-            const c = tempCourses[link.courseId];
+            const c = tempCourses[link.getCourseid()];
             if (c) {
-                courses.push({ course: c, courseid: link.courseId, userid: link.userid, status: link.state });
+                courses.push(link);
             }
         }
         return courses;
     }
-    public async createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError> {
+    public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
         throw new Error("Method not implemented");
     }
-    public async getCourseGroups(courseId: number): Promise<ICourseGroup[]> {
+    public async getCourseGroups(courseID: number): Promise<Group[]> {
         return this.localCourseGroups;
     }
 
-    public async deleteGroup(groupId: number): Promise<boolean> {
+    public async deleteGroup(courseID: number, groupID: number): Promise<boolean> {
         throw new Error("Method not implemented");
     }
 
-    public async getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null> {
+    public async getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null> {
         throw new Error("Method not implemented");
     }
 
-    public async updateGroupStatus(groupId: number, status: CourseGroupStatus): Promise<boolean> {
+    public async getOrganization(orgName: string): Promise<Organization | Status > {
         throw new Error("Method not implemented");
     }
-    public async getGroup(gid: number): Promise<ICourseGroup | null> {
+
+    public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean> {
         throw new Error("Method not implemented");
     }
-    public async updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError> {
+    public async getGroup(groupID: number): Promise<Group | null> {
         throw new Error("Method not implemented");
     }
-    public async getAllGroupLabInfos(courseId: number, groupID: number): Promise<IMap<Models.ISubmission>> {
+    public async updateGroup(group: Group): Promise<Status> {
+        throw new Error("Method not implemented");
+    }
+    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]> {
         throw new Error("Method not implemented.");
     }
 
-    public async refreshCoursesFor(courseid: number): Promise<any> {
+    public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async updateAssignments(courseID: number): Promise<any> {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve({});
@@ -260,223 +283,221 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    public async updateUser(user: IUser): Promise<boolean> {
-
-        const tempUser = this.localUsers[user.id];
+    public async updateUser(user: User): Promise<boolean> {
+        const tempUser = this.localUsers[user.getId()];
         if (tempUser) {
-            tempUser.name = user.name;
-            tempUser.email = user.email;
-            tempUser.studentid = user.studentid;
-            tempUser.isadmin = user.isadmin;
+            tempUser.user.setName(user.getName());
+            tempUser.user.setEmail(user.getEmail());
+            tempUser.user.setStudentid(user.getStudentid());
+            tempUser.user.setIsadmin(user.getIsadmin());
         }
-
         return Promise.resolve(true);
     }
 
-    public async getCourseInformationURL(cid: number): Promise<string> {
-        throw new Error("Method not implemented.");
+    public async getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
+        throw new Error("Method not implemented");
     }
 
-    public async getRepositoryURL(cid: number, type: number): Promise<string> {
-        throw new Error("Method not implemented.");
+    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+        throw new Error("Method not implemented");
     }
 
     private addLocalUsers() {
-        this.localUsers = mapify([
-            {
-                id: 999,
-                name: "Test Testersen",
-                email: "test@testersen.no",
-                studentid: "9999",
-                password: "1234",
-                isadmin: true,
-            },
-            {
-                id: 1000,
-                name: "Admin Admin",
-                email: "admin@admin",
-                studentid: "1000",
-                password: "1234",
-                isadmin: true,
-            },
-            {
-                id: 1,
-                name: "Per Pettersen",
-                email: "per@pettersen.no",
-                studentid: "1234",
-                password: "1234",
-                isadmin: false,
-            },
-            {
-                id: 2,
-                name: "Bob Bobsen",
-                email: "bob@bobsen.no",
-                studentid: "1234",
-                password: "1234",
-                isadmin: false,
-            },
-            {
-                id: 3,
-                name: "Petter Pan",
-                email: "petter@pan.no",
-                studentid: "1234",
-                password: "1234",
-                isadmin: false,
-            },
-        ] as IDummyUser[], (ele) => ele.id);
+        const dummyUsers: IGrpcDummyUser[] = [];
+        const tempUser: User = new User();
+        tempUser.setId(999);
+        tempUser.setName("Test Testersen");
+        tempUser.setEmail("test@testersen.no");
+        tempUser.setStudentid("9999");
+        tempUser.setIsadmin(true);
+        const tempDummy: IGrpcDummyUser = { user: tempUser, password: "1234" };
+        dummyUsers.push(tempDummy);
+
+        tempUser.setId(1000);
+        tempUser.setName("Admin Admin");
+        tempUser.setEmail("admin@admin");
+        tempUser.setStudentid("1000");
+        tempUser.setIsadmin(true);
+        const tempDummy1: IGrpcDummyUser = { user: tempUser, password: "1234" };
+        dummyUsers.push(tempDummy1);
+
+        tempUser.setId(1);
+        tempUser.setName("Per Pettersen");
+        tempUser.setEmail("per@pettersen.no");
+        tempUser.setStudentid("1234");
+        tempUser.setIsadmin(true);
+        const tempDummy2: IGrpcDummyUser = { user: tempUser, password: "1234" };
+        dummyUsers.push(tempDummy2);
+
+        tempUser.setId(2);
+        tempUser.setName("Bob Bobsen");
+        tempUser.setEmail("bob@bobsen.no");
+        tempUser.setStudentid("1234");
+        tempUser.setIsadmin(true);
+        const tempDummy3: IGrpcDummyUser = { user: tempUser, password: "1234" };
+        dummyUsers.push(tempDummy3);
+
+        tempUser.setId(3);
+        tempUser.setName("Petter Pan");
+        tempUser.setEmail("petter@pan.no");
+        tempUser.setStudentid("1234");
+        tempUser.setIsadmin(true);
+        const tempDummy4: IGrpcDummyUser = { user: tempUser, password: "1234" };
+        dummyUsers.push(tempDummy4);
+        this.localUsers = mapify(dummyUsers, (ele) => ele.user.getId());
     }
 
     private addLocalAssignments() {
-        this.localAssignments = mapify([
-            {
-                id: 0,
-                courseid: 0,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 1,
-                courseid: 0,
-                name: "Lab 2",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 2,
-                courseid: 0,
-                name: "Lab 3",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 3,
-                courseid: 0,
-                name: "Lab 4",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 4,
-                courseid: 1,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 5,
-                courseid: 1,
-                name: "Lab 2",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 6,
-                courseid: 1,
-                name: "Lab 3",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 7,
-                courseid: 2,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 8,
-                courseid: 2,
-                name: "Lab 2",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 9,
-                courseid: 3,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-            {
-                id: 10,
-                courseid: 4,
-                name: "Lab 1",
-                // start new Date(2017, 5, 1),
-                deadline: new Date(2017, 5, 25),
-                // end new Date(2017, 5, 30),
-            },
-        ] as IAssignment[], (ele) => ele.id);
+        const ts = new Date(2017, 5, 25);
+        const a0 = new Assignment();
+        const a1 = new Assignment();
+        const a2 = new Assignment();
+        const a3 = new Assignment();
+        const a4 = new Assignment();
+        const a5 = new Assignment();
+        const a6 = new Assignment();
+        const a7 = new Assignment();
+        const a8 = new Assignment();
+        const a9 = new Assignment();
+        const a10 = new Assignment();
+
+        a0.setId(0);
+        a0.setCourseid(0);
+        a0.setName("Lab 1");
+        a0.setLanguage("Go");
+        a0.setDeadline(ts.toDateString());
+
+        a1.setId(1);
+        a1.setCourseid(0);
+        a1.setName("Lab 2");
+        a1.setLanguage("Go");
+        a1.setDeadline(ts.toDateString());
+
+        a2.setId(2);
+        a2.setCourseid(0);
+        a2.setName("Lab 3");
+        a2.setLanguage("Go");
+        a2.setDeadline(ts.toDateString());
+
+        a3.setId(3);
+        a3.setCourseid(0);
+        a3.setName("Lab 4");
+        a3.setLanguage("Go");
+        a3.setDeadline(ts.toDateString());
+
+        a4.setId(4);
+        a4.setCourseid(1);
+        a4.setName("Lab 1");
+        a4.setLanguage("Go");
+        a4.setDeadline(ts.toDateString());
+
+        a5.setId(5);
+        a5.setCourseid(1);
+        a5.setName("Lab 2");
+        a5.setLanguage("Go");
+        a5.setDeadline(ts.toDateString());
+
+        a6.setId(6);
+        a6.setCourseid(1);
+        a6.setName("Lab 3");
+        a6.setLanguage("Go");
+        a6.setDeadline(ts.toDateString());
+
+        a7.setId(7);
+        a7.setCourseid(2);
+        a7.setName("Lab 1");
+        a7.setLanguage("TypeScript");
+        a7.setDeadline(ts.toDateString());
+
+        a8.setId(8);
+        a8.setCourseid(2);
+        a8.setName("Lab 2");
+        a8.setLanguage("Go");
+        a8.setDeadline(ts.toDateString());
+
+        a9.setId(9);
+        a9.setCourseid(3);
+        a9.setName("Lab 1");
+        a9.setLanguage("Go");
+        a9.setDeadline(ts.toDateString());
+
+        a10.setId(10);
+        a10.setCourseid(4);
+        a10.setName("Lab 1");
+        a10.setLanguage("TypeScript");
+        a10.setDeadline(ts.toDateString());
+
+        const tempAssignments: Assignment[] = [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10];
+        this.localAssignments = mapify(tempAssignments, (ele) => ele.getId());
     }
 
     private addLocalCourses() {
-        this.localCourses = mapify([
-            {
-                id: 0,
-                name: "Object Oriented Programming",
-                code: "DAT100",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650610,
+        const course0 = new Course();
+        const course1 = new Course();
+        const course2 = new Course();
+        const course3 = new Course();
+        const course4 = new Course();
 
-            },
-            {
-                id: 1,
-                name: "Algorithms and Datastructures",
-                code: "DAT200",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650611,
-            },
-            {
-                id: 2,
-                name: "Databases",
-                code: "DAT220",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650612,
-            },
-            {
-                id: 3,
-                name: "Communication Technology",
-                code: "DAT230",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650613,
-            },
-            {
-                id: 4,
-                name: "Operating Systems",
-                code: "DAT320",
-                tag: "Spring",
-                year: 2017,
-                provider: "github",
-                directoryid: 23650614,
-            },
-        ] as ICourse[], (ele) => ele.id);
+        course0.setId(0);
+        course0.setName("Object Oriented Programming");
+        course0.setCode("DAT100");
+        course0.setTag("Spring");
+        course0.setYear(2017);
+        course0.setProvider("github");
+        course0.setOrganizationid(23650610);
+
+        course1.setId(1);
+        course1.setName("Algorithms and Datastructures");
+        course1.setCode("DAT200");
+        course1.setTag("Spring");
+        course1.setYear(2017);
+        course1.setProvider("github");
+        course1.setOrganizationid(23650611);
+
+        course2.setId(2);
+        course2.setName("Databases");
+        course2.setCode("DAT220");
+        course2.setTag("Spring");
+        course2.setYear(2017);
+        course2.setProvider("github");
+        course2.setOrganizationid(23650612);
+
+        course3.setId(3);
+        course3.setName("Communication Technology");
+        course3.setCode("DAT230");
+        course3.setTag("Spring");
+        course3.setYear(2017);
+        course3.setProvider("github");
+        course3.setOrganizationid(23650613);
+
+        course4.setId(4);
+        course4.setName("Operating Systems");
+        course4.setCode("DAT320");
+        course4.setTag("Spring");
+        course4.setYear(2017);
+        course4.setProvider("github");
+        course4.setOrganizationid(23650614);
+
+        const tempCourses: Course[] = [course0, course1, course2, course3, course4];
+        this.localCourses = mapify(tempCourses, (ele) => ele.getId());
     }
 
     private addLocalCourseStudent() {
-        this.localCourseStudent = [
-            { courseId: 0, userid: 999, state: 2 },
-            { courseId: 1, userid: 999, state: 2 },
-            { courseId: 0, userid: 1, state: 0 },
-            { courseId: 0, userid: 2, state: 0 },
-        ] as ICourseUserLink[];
+        const localEnrols: Enrollment[] = [];
+        const tempEnrol: Enrollment = new Enrollment();
+        tempEnrol.setCourseid(0);
+        tempEnrol.setUserid(999);
+        tempEnrol.setStatus(2);
+        localEnrols.push(tempEnrol);
+        tempEnrol.setCourseid(1);
+        localEnrols.push(tempEnrol);
+        tempEnrol.setCourseid(0);
+        tempEnrol.setUserid(1);
+        tempEnrol.setStatus(0);
+        localEnrols.push(tempEnrol);
+        tempEnrol.setUserid(2);
+        localEnrols.push(tempEnrol);
+        this.localCourseStudent = localEnrols;
     }
 
     private addLocalLabInfo() {
@@ -495,9 +516,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
             {
@@ -514,9 +535,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
             {
@@ -533,9 +554,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
             {
@@ -552,9 +573,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
             {
@@ -571,9 +592,9 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
                 failedTests: 2,
                 passedTests: 6,
                 testCases: [
-                    { name: "Test 1", score: 2, points: 2, weight: 20 },
-                    { name: "Test 2", score: 1, points: 3, weight: 40 },
-                    { name: "Test 3", score: 3, points: 3, weight: 40 },
+                    { TestName: "Test 1", Score: 2, MaxScore: 2, Weight: 20 },
+                    { TestName: "Test 2", Score: 1, MaxScore: 3, Weight: 40 },
+                    { TestName: "Test 3", Score: 3, MaxScore: 3, Weight: 40 },
                 ],
             },
         ] as ISubmission[], (ele: ISubmission) => {
@@ -581,69 +602,54 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         });
     }
 
-    private getLocalDirectories(): IOrganization[] {
-        return (
-            [
-                {
-                    id: 23650610,
-                    path: "dat520-2017",
-                    avatar: "https://avatars2.githubusercontent.com/u/23650610?v=3",
-                },
-            ]
-        );
+    private getLocalOrgs(): Organization[] {
+        const localOrgs: Organization[] = [];
+        const localOrg = new Organization();
+        localOrg.setId(23650610);
+        localOrg.setPath("dat520-2017");
+        localOrg.setAvatar("https://avatars2.githubusercontent.com/u/23650610?v=3");
+        localOrgs.push(localOrg);
+        return localOrgs;
     }
 
     private addLocalCourseGroups(): void {
-        this.localCourseGroups = [
-            {
-                id: 1,
-                name: "Group1",
-                status: CourseGroupStatus.approved,
-                courseid: 1,
-                users: [
-                    {
-                        id: 1,
-                        email: "test@example.com",
-                        name: "Student 1",
-                        isadmin: false,
-                        studentid: "12345",
-                        avatarurl: "",
-                    },
-                    {
-                        id: 2,
-                        email: "test2@example.com",
-                        name: "Student 2",
-                        isadmin: false,
-                        studentid: "12346",
-                        avatarurl: "",
-                    },
-                ],
-            },
-            {
-                id: 2,
-                name: "Group2",
-                status: CourseGroupStatus.pending,
-                courseid: 1,
-                users: [
-                    {
-                        id: 3,
-                        email: "tes3t@example.com",
-                        name: "Student 3",
-                        isadmin: false,
-                        studentid: "12347",
-                        avatarurl: "",
-                    },
-                    {
-                        id: 4,
-                        email: "test4@example.com",
-                        name: "Student 4",
-                        isadmin: false,
-                        studentid: "12348",
-                        avatarurl: "",
-                    },
-                ],
-            },
-        ];
-    }
+        const user1 = new User();
+        user1.setId(1);
+        user1.setEmail("test@example.com");
+        user1.setName("Student 1");
+        user1.setStudentid("12345");
 
+        const user2 = new User();
+        user2.setId(2);
+        user2.setEmail("test2@example.com");
+        user2.setName("Student 2");
+        user2.setStudentid("12346");
+
+        const group1 = new Group();
+        group1.setId(1);
+        group1.setName("Group 1");
+        group1.setStatus(Group.GroupStatus.APPROVED);
+        group1.setCourseid(1);
+        group1.setUsersList([user1, user2]);
+
+        const user3 = new User();
+        user3.setId(3);
+        user3.setEmail("test3@example.com");
+        user3.setName("Student 3");
+        user3.setStudentid("12347");
+
+        const user4 = new User();
+        user4.setId(4);
+        user4.setEmail("test4@example.com");
+        user4.setName("Student 4");
+        user4.setStudentid("12348");
+
+        const group2 = new Group();
+        group2.setId(2);
+        group2.setName("Group 2");
+        group2.setStatus(Group.GroupStatus.PENDING);
+        group2.setCourseid(1);
+        group2.setUsersList([user3, user4]);
+        this.localCourseGroups = [group1, group2];
+    }
 }

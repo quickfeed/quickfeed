@@ -1,94 +1,48 @@
-import { IMap, MapHelper } from "../map";
 import {
-    CourseGroupStatus,
-    CourseUserState,
-    IAssignment,
-    ICourse,
-    ICourseGroup,
-    ICourseLinkAssignment,
-    ICourseUserLink,
-    ICourseWithEnrollStatus,
-    IError,
-    IGroupCourse,
-    INewCourse,
-    INewGroup, IOrganization,
-    isCourse,
-    IStatusCode,
+    IAssignmentLink,
     IStudentSubmission,
     ISubmission,
-    IUser,
-    IUserCourse,
     IUserRelation,
-
 } from "../models";
 
-import { UserManager } from "../managers";
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void } from "../../proto/ag_pb";
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
-    getCourses(): Promise<ICourse[]>;
-    getAssignments(courseID: number): Promise<IMap<IAssignment>>;
-    // getCoursesStudent(): Promise<ICourseUserLink[]>;
-    getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourseEnrollment[]>;
-    getUsersForCourse(course: ICourse, state?: CourseUserState[]): Promise<IUserEnrollment[]>;
+    getCourses(): Promise<Course[]>;
+    getAssignments(courseID: number): Promise<Assignment[]>;
+    getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Enrollment[]>;
+    getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]):
+        Promise<Enrollment[]>;
 
-    addUserToCourse(user: IUser, course: ICourse): Promise<boolean>;
-    changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean>;
+    addUserToCourse(course: Course, user: User): Promise<boolean>;
+    changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean>;
+    approveAll(courseID: number): Promise<boolean>;
 
-    createNewCourse(courseData: INewCourse): Promise<ICourse | IError>;
-    getCourse(id: number): Promise<ICourse | null>;
-    updateCourse(courseID: number, courseData: ICourse): Promise<IStatusCode | IError>;
+    createNewCourse(course: Course): Promise<Course | Status>;
+    getCourse(courseID: number): Promise<Course | null>;
+    updateCourse(course: Course): Promise<Void | Status>;
 
-    getCourseGroups(courseID: number): Promise<ICourseGroup[]>;
-    updateGroupStatus(groupID: number, status: CourseGroupStatus): Promise<boolean>;
-    createGroup(groupData: INewGroup, courseId: number): Promise<ICourseGroup | IError>;
-    getGroup(groupID: number): Promise<ICourseGroup | null>;
-    deleteGroup(groupID: number): Promise<boolean>;
-    getGroupByUserAndCourse(userid: number, courseid: number): Promise<ICourseGroup | null>;
-    updateGroup(groupData: INewGroup, groupId: number, courseId: number): Promise<IStatusCode | IError>;
-    // deleteCourse(id: number): Promise<boolean>;
+    getCourseGroups(courseID: number): Promise<Group[]>;
+    updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
+    createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status>;
+    getGroup(groupID: number): Promise<Group | null>;
+    deleteGroup(courseID: number, groupID: number): Promise<boolean>;
+    getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null>;
+    updateGroup(group: Group): Promise<Status>;
 
-    getAllLabInfos(courseID: number, userId: number): Promise<IMap<ISubmission>>;
-    getAllGroupLabInfos(courseID: number, groupID: number): Promise<IMap<ISubmission>>;
-    getDirectories(provider: string): Promise<IOrganization[]>;
+    getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]>;
+    getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]>;
+    getCourseLabs(courseID: number, groupLabs: boolean): Promise<IAssignmentLink[]>;
+
+    getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
-    refreshCoursesFor(courseID: number): Promise<any>;
-    approveSubmission(submissionID: number): Promise<void>;
+    updateAssignments(courseID: number): Promise<boolean>;
+    updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean>;
+    rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean>;
+    getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
 
-    getCourseInformationURL(cid: number): Promise<string>;
-    getRepositoryURL(cid: number, type: number): Promise<string>;
-}
-
-export function isUserEnrollment(enroll: IEnrollment): enroll is ICourseEnrollment {
-    if ((enroll as any).course) {
-        return true;
-    }
-    return false;
-}
-
-export function isCourseEnrollment(enroll: IEnrollment): enroll is IUserEnrollment {
-    if ((enroll as any).user) {
-        return true;
-    }
-    return false;
-}
-
-export interface ICourseEnrollment extends IEnrollment {
-    course: ICourse;
-}
-
-export interface IUserEnrollment extends IEnrollment {
-    user: IUser;
-    status: CourseUserState;
-}
-
-export interface IEnrollment {
-    userid: number;
-    courseid: number;
-    status?: CourseUserState;
-
-    course?: ICourse;
-    user?: IUser;
+    isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
 }
 
 export class CourseManager {
@@ -98,197 +52,113 @@ export class CourseManager {
         this.courseProvider = courseProvider;
     }
 
-    /**
-     * Adds a user to a course
-     * @param user The user to be added to a course
-     * @param course The course the user should be added to
-     * @returns True if succeeded and false otherwise
-     */
-    public async addUserToCourse(user: IUser, course: ICourse): Promise<boolean> {
-        return this.courseProvider.addUserToCourse(user, course);
+    public async addUserToCourse(course: Course, user: User): Promise<boolean> {
+        return this.courseProvider.addUserToCourse(course, user);
+    }
+
+    public async getCourse(courseID: number): Promise<Course | null> {
+        return this.courseProvider.getCourse(courseID);
     }
 
     /**
-     * Get a course from and id
-     * @param ID The id of the course
+     * Get all available courses
      */
-    public async getCourse(ID: number): Promise<ICourse | null> {
-        // const a = (await this.courseProvider.getCourses())[id];
-        // if (a) {
-        //     return a;
-        // }
-        // return null;
-        return await this.courseProvider.getCourse(ID);
+    public async getCourses(): Promise<Course[]> {
+        return this.courseProvider.getCourses();
     }
 
-    /**
-     * Get all the courses available at the server
-     */
-    public async getCourses(): Promise<ICourse[]> {
-        // return MapHelper.toArray(await this.courseProvider.getCourses());
-        return await this.courseProvider.getCourses();
-    }
-
-    public async getCoursesWithState(user: IUser): Promise<IUserCourse[]> {
-        const userCourses = await this.courseProvider.getCoursesFor(user);
-        const newMap = userCourses.map<IUserCourse>((ele) => {
-            return {
-                assignments: [],
-                course: ele.course,
-                link: ele.status !== undefined ?
-                    { courseId: ele.courseid, userid: ele.userid, state: ele.status } : undefined,
-            };
+    public async getCoursesWithState(user: User): Promise<IAssignmentLink[]> {
+        const userCourses = await this.courseProvider.getCoursesFor(user, []);
+        const newMap: IAssignmentLink[] = [];
+        userCourses.forEach((ele) => {
+            const crs = ele.getCourse();
+            if (crs) {
+                newMap.push({
+                    assignments: [],
+                    course: crs,
+                    link: ele,
+                });
+            }
         });
         return newMap;
     }
 
     /**
-     * returns all the courses
-     * if user is enrolled to a course, enrolled field will have a non-negative value
-     * else enrolled field will have -1
-     * @param user
-     * @returns {Promise<ICourseWithEnrollStatus[]>}
+     * Get all courses where user is enrolled into
      */
-    /*public async getCoursesWithEnrollStatus(user: IUser): Promise<ICourseWithEnrollStatus[]> {
-        const userCourses = await this.courseProvider.getCoursesWithEnrollStatus(user);
-        return userCourses;
-    }*/
-
-    /**
-     * Get all courses related to a user
-     * @param user The user to get courses to
-     * @param state Optional. The state the relations should be in, all if not present
-     */
-    public async getCoursesFor(user: IUser, state?: CourseUserState[]): Promise<ICourse[]> {
-        return (await this.courseProvider.getCoursesFor(user, state)).map((ele) => ele.course);
+    public async getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Course[]> {
+        const courses: Course[] = [];
+        const enrolList = await this.courseProvider.getCoursesFor(user, state);
+        enrolList.forEach((ele) => {
+            const crs = ele.getCourse();
+            if (crs) {
+                courses.push(crs);
+            }
+        });
+        return courses;
     }
 
     /**
-     * Retrives one assignment from a single course
-     * @param course The course the assignment is in
-     * @param assignmentID The id to the assignment
+     * Get all assignments for a single course
      */
-    public async getAssignment(course: ICourse, assignmentID: number): Promise<IAssignment | null> {
-        const assignments = await this.courseProvider.getAssignments(course.id);
-        const assign = assignments[assignmentID];
-        if (assign) {
-            return assign;
-        }
-        return null;
+    public async getAssignments(courseID: number): Promise<Assignment[]> {
+        return this.courseProvider.getAssignments(courseID);
     }
 
     /**
-     * Get all assignments in a single course
-     * @param courseID The course id or ICourse to retrive assignments from
+     * Update status of a course enrollment
      */
-    public async getAssignments(courseID: number | ICourse): Promise<IAssignment[]> {
-        if (isCourse(courseID)) {
-            courseID = courseID.id;
-        }
-        return MapHelper.toArray(await this.courseProvider.getAssignments(courseID));
+    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
+        const ans = await this.courseProvider.changeUserState(link, state);
+        return ans;
     }
 
     /**
-     * Change the userstate for a relation between a course and a user
-     * @param link The link to change state of
-     * @param state The new state of the relation
+     * Approve all pending enrollments for a course
      */
-    public async changeUserState(link: ICourseUserLink, state: CourseUserState): Promise<boolean> {
-        return this.courseProvider.changeUserState(link, state);
+    public async approveAll(courseID: number): Promise<boolean> {
+        return this.courseProvider.approveAll(courseID);
     }
 
     /**
      * Creates a new course in the backend
-     * @param courseData The course information to create a course from
      */
-    public async createNewCourse(courseData: INewCourse): Promise<ICourse | IError> {
-        return this.courseProvider.createNewCourse(courseData);
+    public async createNewCourse(course: Course): Promise<Course | Status> {
+        return this.courseProvider.createNewCourse(course);
     }
 
     /**
      * Updates a course with new information
-     * @param courseData The new information for the course
      */
-    public async updateCourse(courseID: number, courseData: ICourse): Promise<IStatusCode | IError> {
-        return await this.courseProvider.updateCourse(courseID, courseData);
+    public async updateCourse(course: Course): Promise<Void | Status> {
+        return this.courseProvider.updateCourse(course);
     }
 
     /**
-     * Load an IUserCourse object for a single user and a single course
-     * @param student The student the information should be retrived from
-     * @param course The course the data should be loaded for
+     * Retrives all course enrollments with the latest
+     * lab submissions for all individual course assignments
      */
-    public async getStudentCourse(student: IUser, course: ICourse): Promise<IUserCourse | null> {
-        const courses = await this.courseProvider.getCoursesFor(student);
-        for (const crs of courses) {
-            if (crs.courseid === course.id) {
-                const userCourse: IUserCourse = {
-                    link: crs.status !== undefined ?
-                        { userid: student.id, courseId: course.id, state: crs.status } : undefined,
-                    assignments: [],
-                    course,
-                };
-                await this.fillLinks(student, userCourse);
-                return userCourse;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Load an IUserCourse object for a single user and a single course
-     * @param student The student the information should be retrived from
-     * @param course The course the data should be loaded for
-     */
-    public async getStudentCourseForTeacher(student: IUserRelation, course: ICourse, assignments: IAssignment[]): Promise<IUserCourse | null> {
-        const userCourse: IUserCourse = {
-            link: { userid: student.user.id, courseId: course.id, state: student.link.state },
-            assignments: [],
-            course,
-        };
-        await this.fillLinks(student.user, userCourse, assignments);
-        return userCourse;
-    }
-
-    /**
-     * Loads a single IStudentSubmission for a student and an assignment.
-     * This will contains information about an assignment and the lates
-     * sumbission information related to that assignment.
-     * @param student The student the information should be retrived from
-     * @param assignment The assignment the data should be loaded for
-     */
-    public async getUserSubmittions(student: IUser, assignment: IAssignment): Promise<IStudentSubmission> {
-        const labsInfo = MapHelper.find(await this.courseProvider.getAllLabInfos(assignment.courseid, student.id),
-            (ele) => ele.userid === student.id && ele.assignmentid === assignment.id);
-        if (labsInfo) {
-            return {
-                assignment,
-                latest: labsInfo,
-            };
-        }
-        return {
-            assignment,
-            latest: undefined,
-        };
+    public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IAssignmentLink[]> {
+        return this.courseProvider.getCourseLabs(courseID, groupLabs);
     }
 
     /**
      * Retrives all course relations, and courses related to a
      * a single student
-     * @param student The student to load the information for
      */
-    public async getStudentCourses(student: IUser, state?: CourseUserState[]): Promise<ICourseLinkAssignment[]> {
-        const links: IUserCourse[] = [];
-        const userCourses = await this.courseProvider.getCoursesFor(student, state);
-        for (const course of userCourses) {
-            links.push({
-                assignments: [],
-                course: course.course,
-                link: course.status !== undefined ?
-                    { courseId: course.courseid, userid: student.id, state: course.status } : undefined,
-            });
+    public async getStudentCourses(student: User, state: Enrollment.UserStatus[]): Promise<IAssignmentLink[]> {
+        const links: IAssignmentLink[] = [];
+        const enrollments = await this.courseProvider.getCoursesFor(student, state);
+        for (const enrol of enrollments) {
+            const crs = enrol.getCourse();
+            if (crs) {
+                links.push({
+                    assignments: [],
+                    course: crs,
+                    link: enrol,
+                });
+            }
         }
-
         for (const link of links) {
             await this.fillLinks(student, link);
         }
@@ -297,49 +167,54 @@ export class CourseManager {
 
     /**
      * Retrives all users related to a single course
-     * @param course The course to retrive userinformation to
-     * @param userMan Usermanager to be able to get user information
-     * @param state Optional. The state of the user to course relation
      */
     public async getUsersForCourse(
-        course: ICourse,
-        userMan: UserManager,
-        state?: CourseUserState[]): Promise<IUserRelation[]> {
+        course: Course,
+        noGroupMemebers?: boolean,
+        state?: Enrollment.UserStatus[]): Promise<IUserRelation[]> {
+        const userlinks: IUserRelation[] = [];
+        const enrolls = await this.courseProvider.getUsersForCourse(course, noGroupMemebers, state);
+        enrolls.forEach((ele) => {
+            const usr = ele.getUser();
+            if (usr) {
+                ele.setCourseid(course.getId());
+                userlinks.push({
+                    link: ele,
+                    user: usr,
+                });
+            }
 
-        return (await this.courseProvider.getUsersForCourse(course, state)).map<IUserRelation>((user) => {
-            return {
-                link: { courseId: course.id, userid: user.userid, state: user.status },
-                user: user.user,
-            };
         });
+        return userlinks;
     }
 
-    public async createGroup(groupData: INewGroup, courseID: number): Promise<ICourseGroup | IError> {
-        return await this.courseProvider.createGroup(groupData, courseID);
+    public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
+        return this.courseProvider.createGroup(courseID, name, users);
     }
 
-    public async updateGroup(groupData: INewGroup, groupID: number, courseID: number): Promise<IStatusCode | IError> {
-        return await this.courseProvider.updateGroup(groupData, groupID, courseID);
-    }
-
-    /**
-     * getCourseGroup returns all the groups under a course
-     * @param courseID course id of a course
-     */
-    public async getCourseGroups(courseID: number): Promise<ICourseGroup[]> {
-        return await this.courseProvider.getCourseGroups(courseID);
+    public async updateGroup(group: Group): Promise<Status> {
+        return this.courseProvider.updateGroup(group);
     }
 
     /**
-     * Load an IGroupCourse object for a single group and a single course
-     * @param group The group the information should be retrived from
-     * @param course The course the data should be loaded for
+     * getCourseGroup returns all course groups
      */
-    public async getGroupCourse(group: ICourseGroup, course: ICourse): Promise<IGroupCourse | null> {
+    public async getCourseGroups(courseID: number): Promise<Group[]> {
+        return this.courseProvider.getCourseGroups(courseID);
+    }
+
+    /**
+     * Load an IAssignmentLink object for a single group and a single course
+     */
+    public async getGroupCourse(group: Group, course: Course): Promise<IAssignmentLink | null> {
         // Fetching group enrollment status
-        if (group.courseid === course.id) {
-            const groupCourse: IGroupCourse = {
-                link: { groupid: group.id, courseId: course.id, state: group.status },
+        if (group.getCourseid() === course.getId()) {
+            const enrol = new Enrollment();
+            enrol.setGroupid(group.getId());
+            enrol.setCourseid(course.getId());
+            enrol.setGroup(group);
+            const groupCourse: IAssignmentLink = {
+                link: enrol,
                 assignments: [],
                 course,
             };
@@ -349,11 +224,16 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupCourseForTeacher(group: ICourseGroup, course: ICourse, assignments: IAssignment[]): Promise<IGroupCourse | null> {
-        // Fetching group enrollment status        
-        if (group.courseid === course.id) {
-            const groupCourse: IGroupCourse = {
-                link: { groupid: group.id, courseId: course.id, state: group.status },
+    public async getGroupCourseForTeacher(group: Group, course: Course, assignments: Assignment[]):
+        Promise<IAssignmentLink | null> {
+        // Fetching group enrollment status
+        if (group.getCourseid() === course.getId()) {
+            const enrol = new Enrollment();
+            enrol.setGroupid(group.getId());
+            enrol.setCourseid(course.getId());
+            enrol.setGroup(group);
+            const groupCourse: IAssignmentLink = {
+                link: enrol,
                 assignments: [],
                 course,
             };
@@ -363,92 +243,145 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupByUserAndCourse(userID: number, courseID: number): Promise<ICourseGroup | null> {
-        return await this.courseProvider.getGroupByUserAndCourse(userID, courseID);
+    public async getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null> {
+        return this.courseProvider.getGroupByUserAndCourse(courseID, userID);
     }
 
-    public async updateGroupStatus(groupID: number, status: CourseGroupStatus): Promise<boolean> {
-        return await this.courseProvider.updateGroupStatus(groupID, status);
+    public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean> {
+        return this.courseProvider.updateGroupStatus(groupID, status);
     }
 
-    public async getGroup(groupID: number): Promise<ICourseGroup | null> {
-        return await this.courseProvider.getGroup(groupID);
+    public async getGroup(groupID: number): Promise<Group | null> {
+        return this.courseProvider.getGroup(groupID);
     }
 
-    public async deleteGroup(groupID: number): Promise<boolean> {
-        return await this.courseProvider.deleteGroup(groupID);
-    }
-
-    public async refreshCoursesFor(courseID: number): Promise<any> {
-        return await this.courseProvider.refreshCoursesFor(courseID);
+    public async deleteGroup(courseID: number, groupID: number): Promise<boolean> {
+        return this.courseProvider.deleteGroup(courseID, groupID);
     }
 
     /**
-     * Get all available directories or organisations for a single provider
-     * @param provider The provider to load information from, for instance github og gitlab
+     * updateAssignments updates the assignments on the backend database
+     * for the given course. The assignment data is collected from the
+     * assignment.yml files found in the course's tests repository; there
+     * should be one assignment.yml file per lab assignment.
      */
-    public async getDirectories(provider: string): Promise<IOrganization[]> {
-        return await this.courseProvider.getDirectories(provider);
+    public async updateAssignments(courseID: number): Promise<boolean> {
+        return this.courseProvider.updateAssignments(courseID);
     }
 
+    /**
+     * Get a github organization by name
+     */
+    public async getOrganization(orgName: string): Promise<Organization | Status> {
+        return this.courseProvider.getOrganization(orgName);
+    }
+
+    /**
+     * Get all enabled providers
+     */
     public async getProviders(): Promise<string[]> {
-        return await this.courseProvider.getProviders();
+        return this.courseProvider.getProviders();
     }
 
-    public async getCourseInformationURL(cid: number): Promise<string> {
-        return await this.courseProvider.getCourseInformationURL(cid);
+    public async getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
+        return this.courseProvider.getRepositories(courseID, types);
     }
 
-    public async getRepositoryURL(cid: number, type: number): Promise<string> {
-        return this.courseProvider.getRepositoryURL(cid, type);
+    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+        return this.courseProvider.rebuildSubmission(assignmentID, submissionID);
     }
 
-    public async approveSubmission(submissionID: number): Promise<void> {
-        return await this.courseProvider.approveSubmission(submissionID);
+    public async updateSubmission(courseID: number, submissionID: number, approved: boolean): Promise<boolean> {
+        return this.courseProvider.updateSubmission(courseID, submissionID, approved);
+    }
+
+    public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
+        return this.courseProvider.isEmptyRepo(courseID, userID, groupID);
     }
 
     /**
-     * Add IStudentSubmissions to an IUserCourse
-     * @param student The student
-     * @param studentCourse The student course
+     * Generates a list with last submission build info
+     * for every course assignment for all course students
      */
-    private async fillLinks(student: IUser, studentCourse: IUserCourse, assignments?: IAssignment[]): Promise<void> {
+    public async fillLabLinks(
+        course: Course,
+        labLinks: IAssignmentLink[],
+        assignments?: Assignment[],
+        ): Promise<IAssignmentLink[]> {
+
+        if (!assignments) {
+            assignments = await this.getAssignments(course.getId());
+        }
+        for (const studentLabs of labLinks) {
+            studentLabs.course = course;
+
+            let studentName = "";
+            if (studentLabs.assignments.length > 0) {
+                studentName = studentLabs.assignments[0].authorName;
+            }
+
+            for (const lab of studentLabs.assignments) {
+                const suggestedAssignment = assignments.find((asm) => lab.assignment.getId() === asm.getId());
+                if (suggestedAssignment) {
+                    lab.assignment = suggestedAssignment;
+                }
+            }
+
+            // fill up cells for all assignments, even with no submissions,
+            // to display properly in the table with lab results
+            for (const asm of assignments) {
+                const exists = studentLabs.assignments.find((ele) => asm.getId() === ele.assignment.getId());
+                if (!exists) {
+                    const voidSubmission: IStudentSubmission = {
+                        assignment: asm,
+                        authorName: studentName,
+                    };
+                    studentLabs.assignments.push(voidSubmission);
+                }
+            }
+        }
+        return labLinks;
+    }
+
+    /**
+     * Add IStudentSubmissions to an IAssignmentLink
+     */
+    private async fillLinks(student: User, studentCourse: IAssignmentLink, assignments?: Assignment[]): Promise<void> {
         if (!studentCourse.link) {
             return;
         }
         if (!assignments) {
-            assignments = await this.getAssignments(studentCourse.course.id);
+            assignments = await this.getAssignments(studentCourse.course.getId());
         }
         if (assignments.length > 0) {
-            const submissions = MapHelper.toArray(
-                await this.courseProvider.getAllLabInfos(studentCourse.course.id, student.id));
+            const submissions =
+                await this.courseProvider.getAllLabInfos(studentCourse.course.getId(), student.getId());
 
             for (const a of assignments) {
-                const submission = submissions.find((sub) => sub.assignmentid === a.id);
-                studentCourse.assignments.push({ assignment: a, latest: submission });
+                const submission = submissions.find((sub) => sub.assignmentid === a.getId());
+                studentCourse.assignments.push({ assignment: a, latest: submission, authorName: student.getName() });
             }
         }
     }
 
     /**
-     * Add IStudentSubmissions to an IUserCourse
-     * @param group The group
-     * @param groupCourse The group course
+     * Add group submissions to an IAssignmentLink
      */
-    private async fillLinksGroup(group: ICourseGroup, groupCourse: IGroupCourse, assignments?: IAssignment[]): Promise<void> {
+    private async fillLinksGroup(group: Group, groupCourse: IAssignmentLink, assignments?: Assignment[]):
+        Promise<void> {
         if (!groupCourse.link) {
             return;
         }
-        if (!assignments){
-            assignments = await this.getAssignments(groupCourse.course.id);
+        if (!assignments) {
+            assignments = await this.getAssignments(groupCourse.course.getId());
         }
         if (assignments.length > 0) {
-            const submissions = MapHelper.toArray(
-                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.id, group.id));
+            const submissions =
+                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.getId(), group.getId());
 
             for (const a of assignments) {
-                const submission = submissions.find((sub) => sub.assignmentid === a.id);
-                groupCourse.assignments.push({ assignment: a, latest: submission });
+                const submission = submissions.find((sub) => sub.assignmentid === a.getId());
+                groupCourse.assignments.push({ assignment: a, latest: submission, authorName: group.getName() });
             }
         }
     }

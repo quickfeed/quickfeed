@@ -11,5 +11,5 @@ type Job struct {
 // Runner contains methods for running user provided code in isolation.
 type Runner interface {
 	// Run should synchronously execute the described job and return the output.
-	Run(context.Context, *Job) (string, error)
+	Run(context.Context, *Job, string) (string, error)
 }

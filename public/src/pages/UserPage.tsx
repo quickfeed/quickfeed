@@ -2,14 +2,14 @@ import * as React from "react";
 
 import { View, ViewPage } from "./ViewPage";
 
+import { User } from "../../proto/ag_pb";
 import { UserProfile } from "../components/forms/UserProfile";
 import { NavigationManager, UserManager } from "../managers";
-import { IUser } from "../models";
 
 export class UserPage extends ViewPage {
     private userMan: UserManager;
     private navMan: NavigationManager;
-    private curUser: IUser;
+    private curUser: User;
 
     constructor(navMan: NavigationManager, userMan: UserManager) {
         super();
@@ -18,15 +18,25 @@ export class UserPage extends ViewPage {
         this.navMan = navMan;
         this.navHelper.defaultPage = "profile";
         this.navHelper.registerFunction("profile", this.profile);
-        this.curUser = this.userMan.getCurrentUser() || {
-            name: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
-        };
+        const noUser: User = new User();
+        noUser.setName("");
+        noUser.setEmail("");
+        noUser.setAvatarurl("");
+        noUser.setIsadmin(false);
+        noUser.setId(0);
+        noUser.setStudentid("");
+        this.curUser = this.userMan.getCurrentUser() || noUser;
     }
 
     public async updateUser() {
-        this.curUser = this.userMan.getCurrentUser() || {
-            name: "", email: "", avatarurl: "", isadmin: false, studentid: "", id: 0,
-        };
+        const noUser: User = new User();
+        noUser.setName("");
+        noUser.setEmail("");
+        noUser.setAvatarurl("");
+        noUser.setIsadmin(false);
+        noUser.setId(0);
+        noUser.setStudentid("");
+        this.curUser = this.userMan.getCurrentUser() || noUser;
         this.navMan.refresh();
     }
 
@@ -39,7 +49,7 @@ export class UserPage extends ViewPage {
         if (index === 1) {
             return [<div id="0" className="jumbotron">
                 <div className="centerblock container">
-                    <h1>Hi, {this.curUser.name}</h1>
+                    <h1>Hi, {this.curUser.getName()}</h1>
                 </div>
             </div>];
         }

@@ -1,23 +1,25 @@
 import * as React from "react";
 
+import { Course, Enrollment, Group, Status, User } from "../../../proto/ag_pb";
+import { Search } from "../../components";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
+import { UserManager } from "../../managers/UserManager";
 import {
-    CourseUserState, ICourse, ICourseGroup, IError,
-    INewGroup, isError, IStatusCode, IUser, IUserRelation,
+    IUserRelation,
 } from "../../models";
 
-import { Search } from "../../components";
-
-interface IGroupProp {
+interface IGroupProps {
     className: string;
     students: IUserRelation[];
-    curUser: IUser;
+    freeStudents: IUserRelation[];
+    curUser: User;
     courseMan: CourseManager;
+    userMan: UserManager;
     navMan: NavigationManager;
     pagePath: string;
-    course: ICourse;
-    groupData?: ICourseGroup;
+    course: Course;
+    groupData?: Group;
 }
 interface IGroupState {
     name: string;
@@ -25,20 +27,22 @@ interface IGroupState {
     selectedStudents: IUserRelation[];
     curUser: IUserRelation | undefined;
     errorFlash: JSX.Element | null;
+    actionReady: boolean;
 }
 
-class GroupForm extends React.Component<IGroupProp, IGroupState> {
+export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     constructor(props: any) {
         super(props);
-        const currentUser = this.props.students.find((v) => v.user.id === this.props.curUser.id);
-        const as: IUserRelation[] = this.getAvailableStudents(currentUser);
+        const currentUser = this.props.students.find((v) => v.user.getId() === this.props.curUser.getId());
+        const as: IUserRelation[] = this.getAvailableStudents();
         const ss: IUserRelation[] = this.getSelectedStudents(currentUser);
         this.state = {
-            name: this.props.groupData ? this.props.groupData.name : "",
+            name: this.props.groupData ? this.props.groupData.getName() : "",
             students: as,
             selectedStudents: ss,
             curUser: currentUser,
             errorFlash: null,
+            actionReady: true,
         };
     }
 
@@ -50,10 +54,11 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         const selectableStudents: JSX.Element[] = [];
         for (const student of this.state.students) {
             selectableStudents.push(
-                <li key={student.user.id} className="list-group-item">
-                    {student.user.name}
+                <li key={student.user.getId()} className="box-item">
+                    <label>{student.user.getName()}</label>
                     <button type="button"
-                        className="btn btn-outline-success" onClick={() => this.handleAddToGroupOnClick(student)}>
+                        className="btn btn-outline-success add-btn"
+                         onClick={() => this.handleAddToGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-plus-sign" />
                     </button>
                 </li>);
@@ -62,12 +67,12 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
         const selectedStudents: JSX.Element[] = [];
         for (const student of this.state.selectedStudents) {
             selectedStudents.push(
-                <li key={student.user.id} className="list-group-item">
-                    {student.user.name}
-                    <button className="btn btn-outline-primary"
+                <li key={student.user.getId()} className="box-item">
+                    <button className="btn btn-outline-primary rm-btn"
                         onClick={() => this.handleRemoveFromGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-minus-sign" />
                     </button>
+                    <label>{student.user.getName()}</label>
                 </li>);
         }
 
@@ -77,6 +82,10 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 {this.state.errorFlash}
                 <form className={this.props.className}
                     onSubmit={(e) => this.handleFormSubmit(e)}>
+                    <div className="form-group row">
+                    <div className="col-sm-12 alert alert-warning">
+                    Warning: Note that group names cannot be changed once created.</div>
+                    </div>
                     <div className="form-group row">
                         <label className="col-sm-1 col-form-label" htmlFor="tag">Name:</label>
                         <div className="col-sm-11">
@@ -94,13 +103,11 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                         <div className="col-sm-6">
                             <fieldset>
                                 <legend>Available Students
-                                    {/* <small className="hint">
-                                    select {this.props.capacity} students for your group</small> */}
                                 </legend>
-                                {studentSearchBar} <br />
                                 <ul className="student-group list-group">
                                     {selectableStudents}
                                 </ul>
+                                {studentSearchBar}
 
                             </fieldset>
                         </div>
@@ -118,7 +125,7 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                         <div className="col-sm-offset-5 col-sm-2">
                             <button
                                 className="btn btn-primary active"
-                                type="submit">{this.props.groupData ? "Update" : "Create"}
+                                type="submit">{this.generateButtonString()}
                             </button>
                         </div>
                     </div>
@@ -136,67 +143,53 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                 errorFlash: flashErrors,
             });
         } else {
-            const formData: INewGroup = {
-                name: this.state.name,
-                userids: this.state.selectedStudents.map((u, i) => u.user.id),
-            };
-
+            this.setState({
+                actionReady: false,
+            });
+            const userids = this.state.selectedStudents.map((u, i) => u.user.getId());
             const result = this.props.groupData ?
-                await this.updateGroup(formData, this.props.groupData.id) : await this.createGroup(formData);
-            if (isError(result) && result.data) {
-                const errMsg = result.data.message;
-                let serverErrors: string[] = [];
-                if (errMsg instanceof Array) {
-                    serverErrors = errMsg;
-                } else {
-                    serverErrors.push(errMsg);
-                }
+                await this.updateGroup(this.state.name, userids, this.props.groupData.getId())
+                 : await this.createGroup(this.state.name, userids);
+            if ((result instanceof Status) && (result.getCode() > 0)) {
+                const errMsg = result.getError();
+                const serverErrors: string[] = [];
+                serverErrors.push(errMsg);
                 const flashErrors = this.getFlashErrors(serverErrors);
                 this.setState({
                     errorFlash: flashErrors,
                 });
             } else {
-                if (this.props.groupData) {
-                    if (this.props.groupData.users.filter((x) => x.id === this.props.curUser.id).length > 0) {
-                        const redirectTo: string = this.props.groupData ?
-                            this.props.pagePath + "/courses/" + this.props.course.id + "/groups"
-                            : this.props.pagePath + "/courses/" + this.props.course.id + "/members";
+                    const isTeacher = await this.props.userMan.isTeacher(this.props.course.getId());
+                    // if current user is a course teacher, redirect to the groups list
+                    // TODO(vera): this is a temporary solution, there must be another way to 
+                    // inform about group creation without redirecting the user from the page
+                    const redirectTo: string = isTeacher ?
+                        "/app/teacher/courses/" + this.props.course.getId() + "/groups"
+                        : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
 
-                        this.props.navMan.navigateTo(redirectTo);
-                    } else {
-                        // There is group data, but cur user is not part of that group
-                        const flash = this.genCurUserMissingFromGroupWarn();
-                        this.setState({
-                            errorFlash: flash,
-                        });
-                    }
-                } else { // Teacher created group, so no group data.
-                    const flash = this.genCurUserMissingFromGroupWarn();
-
-                    this.setState({
-                        errorFlash: flash,
-                    });
-                    this.props.navMan.refresh();
-                }
+                    this.props.navMan.navigateTo(redirectTo);
 
             }
         }
     }
-    private genCurUserMissingFromGroupWarn(): JSX.Element {
-        const flash: JSX.Element =
-            <div className="alert alert-warning">
-                <h4> Group created without you as a member.</h4>
-            </div>;
 
-        return flash;
+    private async createGroup(name: string, users: number[]): Promise<Group | Status> {
+        return this.props.courseMan.createGroup(this.props.course.getId(), name, users);
     }
 
-    private async createGroup(formData: INewGroup): Promise<ICourseGroup | IError> {
-        return await this.props.courseMan.createGroup(formData, this.props.course.id);
-    }
-
-    private async updateGroup(formData: INewGroup, gid: number): Promise<IStatusCode | IError> {
-        return await this.props.courseMan.updateGroup(formData, gid, this.props.course.id);
+    private async updateGroup(name: string, users: number[], gid: number): Promise<Status> {
+        const groupData = new Group();
+        groupData.setId(gid);
+        groupData.setName(name);
+        groupData.setCourseid(this.props.course.getId());
+        const groupUsers: User[] = [];
+        users.forEach((ele) => {
+            const usr = new User();
+            usr.setId(ele);
+            groupUsers.push(usr);
+        });
+        groupData.setUsersList(groupUsers);
+        return this.props.courseMan.updateGroup(groupData);
     }
 
     private handleInputChange(e: React.FormEvent<any>) {
@@ -237,9 +230,10 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     private handleSearch(query: string): void {
         query = query.toLowerCase();
         const filteredData: IUserRelation[] = [];
-        this.props.students.forEach((student) => {
-            if ((student.user.name.toLowerCase().indexOf(query) !== -1
-                || student.user.email.toString().indexOf(query) !== -1)
+        this.props.freeStudents.forEach((student) => {
+            if ((student.user.getName().toLowerCase().indexOf(query) !== -1
+                || student.user.getEmail().indexOf(query) !== -1
+                || student.user.getLogin().indexOf(query)) !== -1
                 && this.state.selectedStudents.indexOf(student) === -1
             ) {
                 filteredData.push(student);
@@ -254,17 +248,17 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     private groupValidate(): string[] {
         const errors: string[] = [];
         if (this.state.name === "") {
-            errors.push("Group Name cannot be blank");
+            errors.push("Group name cannot be blank");
         }
         if (this.state.selectedStudents.length === 0) {
             errors.push("Group mush have members.");
         }
         if (this.state.curUser
-            && (this.state.curUser.link.state === CourseUserState.student
-                || this.state.curUser.link.state === CourseUserState.teacher)
+            && (this.state.curUser.link.getStatus() === Enrollment.UserStatus.STUDENT
+                || this.state.curUser.link.getStatus() === Enrollment.UserStatus.TEACHER)
             && !this.isCurrentStudentSelected(this.state.curUser)) {
 
-            if (this.state.curUser.link.state !== CourseUserState.teacher) {
+            if (this.state.curUser.link.getStatus() !== Enrollment.UserStatus.TEACHER) {
                 errors.push("You must be a member of the group");
             }
         }
@@ -294,24 +288,23 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
     private getSelectedStudents(curUser: IUserRelation | undefined): IUserRelation[] {
         const ss: IUserRelation[] = [];
         if (this.props.groupData) {
-            for (const user of this.props.groupData.users) {
-                const guser = this.props.students.find((v) => v.user.id === user.id);
+            // add group members to the list of selected students
+            for (const user of this.props.groupData.getUsersList()) {
+                const guser = this.props.students.find((v) => v.user.getId() === user.getId());
                 if (guser) {
                     ss.push(guser);
                 }
             }
-
-        } else if (curUser) {
-            ss.push(curUser);
         }
         return ss;
     }
 
-    private getAvailableStudents(curUser: IUserRelation | undefined): IUserRelation[] {
-        const as: IUserRelation[] = this.props.students.slice();
+    private getAvailableStudents(): IUserRelation[] {
+        const as: IUserRelation[] = this.props.freeStudents.slice();
         if (this.props.groupData) {
-            for (const user of this.props.groupData.users) {
-                const guser = as.find((v) => v.user.id === user.id);
+            // remove group members from the list of available students
+            for (const user of this.props.groupData.getUsersList()) {
+                const guser = as.find((v) => v.user.getId() === user.getId());
                 if (guser) {
                     const index = as.indexOf(guser);
                     if (index >= 0) {
@@ -319,14 +312,14 @@ class GroupForm extends React.Component<IGroupProp, IGroupState> {
                     }
                 }
             }
-
-        } else if (curUser) {
-            const index = as.indexOf(curUser);
-            if (index >= 0) {
-                as.splice(index, 1);
-            }
         }
         return as;
     }
+
+    private generateButtonString(): string {
+        if (this.props.groupData) {
+            return this.state.actionReady ? "Update" : "Updating";
+        }
+        return this.state.actionReady ? "Create" : "Creating";
+    }
 }
-export { GroupForm };

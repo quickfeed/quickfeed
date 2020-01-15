@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { ILink } from "../../managers/NavigationManager";
 import { NavigationHelper } from "../../NavigationHelper";
@@ -13,7 +12,7 @@ interface INavDropdownState {
     isOpen: boolean;
 }
 
-class NavDropdown extends React.Component<INavDropdownProps, INavDropdownState> {
+export class NavDropdown extends React.Component<INavDropdownProps, INavDropdownState> {
     constructor(props: INavDropdownProps) {
         super(props);
         this.state = {
@@ -75,5 +74,3 @@ class NavDropdown extends React.Component<INavDropdownProps, INavDropdownState> 
         return this.props.items[curIndex].name;
     }
 }
-
-export { NavDropdown, INavDropdownProps };

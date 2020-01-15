@@ -1,11 +1,7 @@
 import * as React from "react";
 
 import { ILink } from "../../managers/NavigationManager";
-import { IUser } from "../../models";
 import { NavHeaderBar } from "./NavHeaderBar";
-
-import { NavigationHelper } from "../../NavigationHelper";
-import { NavMenu } from "./NavMenu";
 
 interface INavBarProps {
     id: string;
@@ -15,7 +11,15 @@ interface INavBarProps {
     onClick?: (lin: ILink) => void;
 }
 
+interface INavBarState {
+    collapsed: boolean;
+}
+
 class NavBar extends React.Component<INavBarProps, {}> {
+
+    public state: INavBarState = {
+        collapsed: true,
+    };
 
     public render() {
         return <nav className={this.renderNavBarClass()}>
@@ -23,14 +27,27 @@ class NavBar extends React.Component<INavBarProps, {}> {
                 <NavHeaderBar
                     id={this.props.id}
                     brandName={this.props.brandName}
-                    brandClick={() => this.handleClick({ name: "Home", uri: "/" })}>
+                    isCollapsed={this.state.collapsed}
+                    brandClick={() => this.handleClick({ name: "Home", uri: "/" })}
+                    toggleNavbar={this.toggleNavbar}>
                 </NavHeaderBar>
 
-                <div className="collapse navbar-collapse" id={this.props.id}>
+                <div
+                    className={`collapse navbar-collapse ${this.state.collapsed ? "" : "show"}`}
+                    id={this.props.id}
+                >
                     {this.props.children}
                 </div>
             </div>
         </nav>;
+    }
+
+    private toggleNavbar = () => {
+        this.setState((state: INavBarState) => {
+            return {
+                collapsed: !state.collapsed,
+            };
+        });
     }
 
     private handleClick(link: ILink) {
@@ -48,7 +65,7 @@ class NavBar extends React.Component<INavBarProps, {}> {
     }
 
     private renderNavBarClass() {
-        let name = "navbar navbar-absolute-top spacefix";
+        let name = "navbar navbar-fixed-top spacefix";
         if (this.props.isInverse) {
             name += " navbar-inverse spacefix";
         } else {

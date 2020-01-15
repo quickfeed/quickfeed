@@ -4,102 +4,89 @@ import (
 	"context"
 	"errors"
 	"strconv"
+
+	pb "github.com/autograde/aguis/ag"
 )
 
 // FakeSCM implements the SCM interface.
 type FakeSCM struct {
-	Repositories map[uint64]*Repository
-	Directories  map[uint64]*Directory
-	Hooks        map[uint64]int
+	Repositories  map[uint64]*Repository
+	Organizations map[uint64]*pb.Organization
+	Hooks         map[uint64]int
 }
 
 // NewFakeSCMClient returns a new Fake client implementing the SCM interface.
 func NewFakeSCMClient() *FakeSCM {
 	return &FakeSCM{
-		Repositories: make(map[uint64]*Repository),
-		Directories:  make(map[uint64]*Directory),
-		Hooks:        make(map[uint64]int),
+		Repositories:  make(map[uint64]*Repository),
+		Organizations: make(map[uint64]*pb.Organization),
+		Hooks:         make(map[uint64]int),
 	}
 }
 
-// ListDirectories implements the SCM interface.
-func (s *FakeSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
-	var dirs []*Directory
-	for _, dir := range s.Directories {
-		dirs = append(dirs, dir)
+// ListOrganizations implements the SCM interface.
+func (s *FakeSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
+	var orgs []*pb.Organization
+	for _, org := range s.Organizations {
+		orgs = append(orgs, org)
 	}
 
-	return dirs, nil
+	return orgs, nil
 }
 
-// CreateDirectory implements the SCM interface.
-func (s *FakeSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*Directory, error) {
-	id := len(s.Directories) + 1
-	dir := &Directory{
+// CreateOrganization implements the SCM interface.
+func (s *FakeSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
+	id := len(s.Organizations) + 1
+	org := &pb.Organization{
 		ID:     uint64(id),
 		Path:   opt.Path,
 		Avatar: "https://avatars3.githubusercontent.com/u/1000" + strconv.Itoa(id) + "?v=3",
 	}
-	s.Directories[dir.ID] = dir
-	return dir, nil
+	s.Organizations[org.ID] = org
+	return org, nil
 }
 
-// GetDirectory implements the SCM interface.
-func (s *FakeSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, error) {
-	dir, ok := s.Directories[id]
+// UpdateOrganization implements the SCM interface.
+func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// GetOrganization implements the SCM interface.
+func (s *FakeSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
+	org, ok := s.Organizations[opt.ID]
 	if !ok {
 		return nil, errors.New("directory not found")
 	}
-	return dir, nil
-}
-
-// CreateRepoAndTeam implements the SCM interface.
-func (s *FakeSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error) {
-	repo, err := s.CreateRepository(ctx, opt)
-	if err != nil {
-		return nil, err
-	}
-
-	team, err := s.CreateTeam(ctx, &CreateTeamOptions{
-		Directory: opt.Directory,
-		TeamName:  teamName,
-		Users:     gitUserNames,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.AddTeamRepo(ctx, &AddTeamRepoOptions{
-		TeamID: team.ID,
-		Owner:  repo.Owner,
-		Repo:   repo.Path,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return repo, nil
+	return org, nil
 }
 
 // CreateRepository implements the SCM interface.
 func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
 	id := len(s.Repositories) + 1
 	repo := &Repository{
-		ID:          uint64(id),
-		Path:        opt.Path,
-		WebURL:      "https://example.com/" + opt.Directory.Path + "/" + opt.Path,
-		SSHURL:      "git@example.com:" + opt.Directory.Path + "/" + opt.Path,
-		HTTPURL:     "https://example.com/" + opt.Directory.Path + "/" + opt.Path + ".git",
-		DirectoryID: opt.Directory.ID,
+		ID:      uint64(id),
+		Path:    opt.Path,
+		WebURL:  "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
+		SSHURL:  "git@example.com:" + opt.Organization.Path + "/" + opt.Path,
+		HTTPURL: "https://example.com/" + opt.Organization.Path + "/" + opt.Path + ".git",
+		OrgID:   opt.Organization.ID,
 	}
 	s.Repositories[repo.ID] = repo
 	return repo, nil
 }
 
+// GetRepository implements the SCM interface.
+func (s *FakeSCM) GetRepository(cts context.Context, opt *RepositoryOptions) (*Repository, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // GetRepositories implements the SCM interface.
-func (s *FakeSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+func (s *FakeSCM) GetRepositories(ctx context.Context, org *pb.Organization) ([]*Repository, error) {
 	var repos []*Repository
 	for _, repo := range s.Repositories {
-		if repo.DirectoryID == directory.ID {
+		if repo.OrgID == org.ID {
 			repos = append(repos, repo)
 		}
 	}
@@ -107,16 +94,28 @@ func (s *FakeSCM) GetRepositories(ctx context.Context, directory *Directory) ([]
 }
 
 // DeleteRepository implements the SCM interface.
-func (s *FakeSCM) DeleteRepository(ctx context.Context, id uint64) error {
-	if _, ok := s.Repositories[id]; !ok {
+func (s *FakeSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) error {
+	if _, ok := s.Repositories[opt.ID]; !ok {
 		return errors.New("repository not found")
 	}
-	delete(s.Repositories, id)
+	delete(s.Repositories, opt.ID)
 	return nil
 }
 
+// UpdateRepoAccess implements the SCM interface.
+func (s *FakeSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user, permission string) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// RepositoryIsEmpty implements the SCM interface
+func (s *FakeSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
+	// TODO no implementation provided yet
+	return false
+}
+
 // ListHooks implements the SCM interface.
-func (s *FakeSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
+func (s *FakeSCM) ListHooks(ctx context.Context, repo *Repository, org string) ([]*Hook, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }
@@ -130,10 +129,52 @@ func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error 
 	return nil
 }
 
+// CreateOrgHook implements the scm interface
+func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // CreateTeam implements the SCM interface.
-func (s *FakeSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+func (s *FakeSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
 	return &Team{ID: 1, Name: "", URL: ""}, nil
+}
+
+// DeleteTeam implements the SCM interface.
+func (s *FakeSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// GetTeam implements the SCM interface
+func (s *FakeSCM) GetTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
+// GetTeams implements the SCM interface
+func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
+// AddTeamMember implements the scm interface
+func (s *FakeSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// RemoveTeamMember implements the scm interface
+func (s *FakeSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// UpdateTeamMembers implements the SCM interface.
+func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) error {
+	// TODO no implementation provided yet
+	return nil
 }
 
 // CreateCloneURL implements the SCM interface.
@@ -156,15 +197,20 @@ func (s *FakeSCM) GetUserNameByID(ctx context.Context, remoteID uint64) (string,
 	return "", nil
 }
 
-// GetPaymentPlan implements the SCM interface.
-func (s *FakeSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
-	return &PaymentPlan{
-		Name:         "Donald Duck",
-		PrivateRepos: 5,
-	}, nil
+// UpdateOrgMembership implements the SCM interface
+func (s *FakeSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+	// TODO no implementation provided yet
+	return nil
 }
 
-// UpdateRepository implements the SCM interface.
-func (s *FakeSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
+// RemoveMember implements the SCM interface
+func (s *FakeSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// GetUserScopes implements the SCM interface
+func (s *FakeSCM) GetUserScopes(ctx context.Context) *Authorization {
+	// TODO no implementation provided yet
 	return nil
 }

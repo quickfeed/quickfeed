@@ -35,6 +35,6 @@ export abstract class ViewPage {
         if (pageContent) {
             return pageContent;
         }
-        return <div>404 Not found</div>;
+        return <div className="info"><p>Choose a course or create a new one.</p></div>;
     }
 }

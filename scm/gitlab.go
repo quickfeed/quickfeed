@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	pb "github.com/autograde/aguis/ag"
 	gitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -19,16 +20,16 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 	}
 }
 
-// ListDirectories implements the SCM interface.
-func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
+// ListOrganizations implements the SCM interface.
+func (s *GitlabSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
 	groups, _, err := s.client.Groups.ListGroups(nil, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
-	var directories []*Directory
+	var directories []*pb.Organization
 	for _, group := range groups {
-		directories = append(directories, &Directory{
+		directories = append(directories, &pb.Organization{
 			ID:     uint64(group.ID),
 			Path:   group.Path,
 			Avatar: group.AvatarURL,
@@ -37,8 +38,8 @@ func (s *GitlabSCM) ListDirectories(ctx context.Context) ([]*Directory, error) {
 	return directories, nil
 }
 
-// CreateDirectory implements the SCM interface.
-func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOptions) (*Directory, error) {
+// CreateOrganization implements the SCM interface.
+func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
 		Name:            &opt.Name,
 		Path:            &opt.Path,
@@ -48,36 +49,36 @@ func (s *GitlabSCM) CreateDirectory(ctx context.Context, opt *CreateDirectoryOpt
 		return nil, err
 	}
 
-	return &Directory{
+	return &pb.Organization{
 		ID:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
 }
 
-// GetDirectory implements the SCM interface.
-func (s *GitlabSCM) GetDirectory(ctx context.Context, id uint64) (*Directory, error) {
-	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
+// UpdateOrganization implements the SCM interface.
+func (s *GitlabSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// GetOrganization implements the SCM interface.
+func (s *GitlabSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
+	group, _, err := s.client.Groups.GetGroup(strconv.FormatUint(opt.ID, 10), gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
-	return &Directory{
+	return &pb.Organization{
 		ID:     uint64(group.ID),
 		Path:   group.Path,
 		Avatar: group.AvatarURL,
 	}, nil
 }
 
-// CreateRepoAndTeam implements the SCM interface.
-func (s *GitlabSCM) CreateRepoAndTeam(ctx context.Context, opt *CreateRepositoryOptions, teamName string, gitUserNames []string) (*Repository, error) {
-	// TODO no implementation provided yet
-	return nil, nil
-}
-
 // CreateRepository implements the SCM interface.
 func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	directoryID := int(opt.Directory.ID)
+	directoryID := int(opt.Organization.ID)
 	repo, _, err := s.client.Projects.CreateProject(
 		&gitlab.CreateProjectOptions{
 			Path:        &opt.Path,
@@ -90,17 +91,23 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	return &Repository{
-		ID:          uint64(repo.ID),
-		Path:        repo.Path,
-		WebURL:      repo.WebURL,
-		SSHURL:      repo.SSHURLToRepo,
-		HTTPURL:     repo.HTTPURLToRepo,
-		DirectoryID: opt.Directory.ID,
+		ID:      uint64(repo.ID),
+		Path:    repo.Path,
+		WebURL:  repo.WebURL,
+		SSHURL:  repo.SSHURLToRepo,
+		HTTPURL: repo.HTTPURLToRepo,
+		OrgID:   opt.Organization.ID,
 	}, nil
 }
 
+// GetRepository implements the SCM interface.
+func (s *GitlabSCM) GetRepository(cts context.Context, opt *RepositoryOptions) (*Repository, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
 // GetRepositories implements the SCM interface.
-func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) ([]*Repository, error) {
+func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *pb.Organization) ([]*Repository, error) {
 	var gid interface{}
 	if directory.Path != "" {
 		gid = directory.Path
@@ -116,12 +123,12 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) (
 	var repositories []*Repository
 	for _, repo := range repos {
 		repositories = append(repositories, &Repository{
-			ID:          uint64(repo.ID),
-			Path:        repo.Path,
-			WebURL:      repo.WebURL,
-			SSHURL:      repo.SSHURLToRepo,
-			HTTPURL:     repo.HTTPURLToRepo,
-			DirectoryID: directory.ID,
+			ID:      uint64(repo.ID),
+			Path:    repo.Path,
+			WebURL:  repo.WebURL,
+			SSHURL:  repo.SSHURLToRepo,
+			HTTPURL: repo.HTTPURLToRepo,
+			OrgID:   directory.ID,
 		})
 	}
 
@@ -129,13 +136,25 @@ func (s *GitlabSCM) GetRepositories(ctx context.Context, directory *Directory) (
 }
 
 // DeleteRepository implements the SCM interface.
-func (s *GitlabSCM) DeleteRepository(ctx context.Context, id uint64) (err error) {
-	_, err = s.client.Projects.DeleteProject(strconv.FormatUint(id, 10), gitlab.WithContext(ctx))
+func (s *GitlabSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions) (err error) {
+	_, err = s.client.Projects.DeleteProject(strconv.FormatUint(opt.ID, 10), gitlab.WithContext(ctx))
 	return
 }
 
+// UpdateRepoAccess implements the SCM interface.
+func (s *GitlabSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user, permission string) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// RepositoryIsEmpty implements the SCM interface
+func (s *GitlabSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOptions) bool {
+	// TODO no implementation provided yet
+	return false
+}
+
 // ListHooks implements the SCM interface.
-func (s *GitlabSCM) ListHooks(ctx context.Context, repo *Repository) ([]*Hook, error) {
+func (s *GitlabSCM) ListHooks(ctx context.Context, repo *Repository, org string) ([]*Hook, error) {
 	// TODO no implementation provided yet
 	return nil, nil
 }
@@ -149,10 +168,52 @@ func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 	return
 }
 
+// CreateOrgHook implements the scm interface
+func (s *GitlabSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
 // CreateTeam implements the SCM interface.
-func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *CreateTeamOptions) (*Team, error) {
+func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
 	return nil, nil
+}
+
+// DeleteTeam implements the SCM interface.
+func (s *GitlabSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// GetTeam implements the SCM interface
+func (s *GitlabSCM) GetTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
+// GetTeams implements the SCM interface
+func (s *GitlabSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
+	// TODO no implementation provided yet
+	return nil, nil
+}
+
+// AddTeamMember implements the scm interface
+func (s *GitlabSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// RemoveTeamMember implements the scm interface
+func (s *GitlabSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// UpdateTeamMembers implements the SCM interface
+func (s *GitlabSCM) UpdateTeamMembers(context.Context, *TeamOptions) error {
+	// TODO no implementation provided yet
+	return nil
 }
 
 // AddTeamRepo implements the SCM interface.
@@ -176,19 +237,27 @@ func (s *GitlabSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 	return ""
 }
 
-// GetPaymentPlan implements the SCM interface.
-func (s *GitlabSCM) GetPaymentPlan(ctx context.Context, orgID uint64) (*PaymentPlan, error) {
-	return nil, nil
-}
-
-// UpdateRepository implements the SCM interface.
-func (s *GitlabSCM) UpdateRepository(ctx context.Context, repo *Repository) error {
-	return nil
-}
-
 func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 	if private {
 		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)
 	}
 	return gitlab.VisibilityLevel(gitlab.PublicVisibility)
+}
+
+// UpdateOrgMembership implements the SCM interface
+func (s *GitlabSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// RemoveMember implements the SCM interface
+func (s *GitlabSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
+	// TODO no implementation provided yet
+	return nil
+}
+
+// GetUserScopes implements the SCM interface
+func (s *GitlabSCM) GetUserScopes(ctx context.Context) *Authorization {
+	// TODO no implementation provided yet
+	return nil
 }

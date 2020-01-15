@@ -1,10 +1,7 @@
 import * as React from "react";
-import { UserManager } from "../../managers";
-import { IUser } from "../../models";
-
-import { bindFunc, copy, RProp } from "../../helper";
-
+import { User } from "../../../proto/ag_pb";
 import { BootstrapButton } from "../../components";
+import { UserManager } from "../../managers";
 
 interface IUserProfileProps {
     userMan: UserManager;
@@ -12,11 +9,9 @@ interface IUserProfileProps {
 }
 
 interface IUserProfileState {
-    curUser?: IUser;
+    curUser?: User;
     editMode: boolean;
 }
-
-type RWrap<T> = (props: T) => JSX.Element;
 
 export class UserProfile extends React.Component<IUserProfileProps, IUserProfileState> {
     constructor(props: IUserProfileProps, context: any) {
@@ -47,11 +42,12 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         </div >;
     }
 
-    public renderUserInfoBox(curUser: IUser): JSX.Element {
+    public renderUserInfoBox(curUser: User): JSX.Element {
         let message: JSX.Element | undefined;
         if (!this.props.userMan.isValidUser(curUser)) {
             message = <div style={{ color: "red" }}>
-                To sign up, please complete the form below.
+                <p>To sign up, please complete the form below.</p> 
+                <p>Please provide your real name, it is used to approve your lab submissions.</p>
                 </div>;
         }
 
@@ -106,15 +102,35 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
     }
 
     public renderValue(field: string, obj: any) {
+        // grpc class has no public fields, to use a right getter check what value is rendering
+        let renderString = "";
+        switch (field) {
+            case "name": {
+                renderString = (obj as User).getName();
+                break;
+            }
+            case "email": {
+                renderString = (obj as User).getEmail();
+                break;
+            }
+            case "studentid": {
+                renderString = (obj as User).getStudentid();
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
         if (this.state.editMode) {
             return <input
                 className="form-control"
                 name={field}
                 type="text"
-                value={obj[field]}
+                value={renderString}
                 onChange={(e) => this.handleChange(e)} />;
         } else {
-            return <span>{obj[field]}</span>;
+            return <span>{renderString}</span>;
         }
     }
 
@@ -122,8 +138,33 @@ export class UserProfile extends React.Component<IUserProfileProps, IUserProfile
         const name = event.target.name;
         const curUser = this.state.curUser;
         if (curUser) {
-            const newUser: IUser = copy(curUser);
-            (newUser as any)[name] = event.target.value;
+            const newUser: User = new User();
+            newUser.setId(curUser.getId());
+            newUser.setName(curUser.getName());
+            newUser.setStudentid(curUser.getStudentid());
+            newUser.setEmail(curUser.getEmail());
+            newUser.setAvatarurl(curUser.getAvatarurl());
+            newUser.setIsadmin(curUser.getIsadmin());
+            newUser.setRemoteidentitiesList(curUser.getRemoteidentitiesList());
+            newUser.setEnrollmentsList(curUser.getEnrollmentsList());
+            switch (name) {
+                case "name": {
+                    newUser.setName(event.target.value);
+                    break;
+                }
+                case "email": {
+                    newUser.setEmail(event.target.value);
+                    break;
+                }
+                case "studentid": {
+                    newUser.setStudentid(event.target.value);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+
             this.setState({
                 curUser: newUser,
             });

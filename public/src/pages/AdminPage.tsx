@@ -9,7 +9,9 @@ import { View, ViewPage } from "./ViewPage";
 import { CourseView } from "./views/CourseView";
 import { ActionType, UserView } from "./views/UserView";
 
-import { IAssignment, IUserRelation } from "../models";
+import { Assignment, Enrollment } from "../../proto/ag_pb";
+import { formatDate } from "../helper"
+import { IUserRelation } from "../models";
 
 export class AdminPage extends ViewPage {
     private navMan: NavigationManager;
@@ -34,13 +36,13 @@ export class AdminPage extends ViewPage {
 
     public async users(info: INavInfo<{}>): View {
         const allUsers = (await this.userMan.getAllUser()).map((user) => {
+            const enrol = new Enrollment();
+            enrol.setUserid(user.getId());
+            enrol.setCourseid(0);
+            enrol.setStatus(0);
             return {
                 user,
-                link: {
-                    userid: user.id,
-                    courseId: 0,
-                    state: 0,
-                },
+                link: enrol,
             };
         });
 
@@ -48,8 +50,9 @@ export class AdminPage extends ViewPage {
             <h1>All Users</h1>
             <UserView
                 users={allUsers}
+                isCourseList={false}
                 optionalActions={(user: IUserRelation) => {
-                    if (this.userMan.isAdmin(user.user)) {
+                    if (user.user.getIsadmin()) {
                         return [{ uri: "demote", name: "Demote", extra: "danger" }];
                     }
                     return [{ uri: "promote", name: "Promote", extra: "primary" }];
@@ -96,18 +99,17 @@ export class AdminPage extends ViewPage {
         const tables: JSX.Element[] = [];
         for (let i = 0; i < allCourses.length; i++) {
             const e = allCourses[i];
-            const labs = await this.courseMan.getAssignments(e);
+            const labs = await this.courseMan.getAssignments(e.getId());
             tables.push(<div key={i}>
-                <h3>Labs for {e.name} ({e.code})</h3>
+                <h3>Labs for {e.getName()} ({e.getCode()})</h3>
                 <DynamicTable
-                    header={["ID", "Name", /*"Start",*/ "Deadline"/*, "End"*/]}
+                    header={["ID", "Name", "Lab Type", "Deadline"]}
                     data={labs}
-                    selector={(lab: IAssignment) => [
-                        lab.id.toString(),
-                        lab.name,
-                        // lab.start.toDateString(),
-                        lab.deadline.toDateString(),
-                        // lab.end.toDateString(),
+                    selector={(lab: Assignment) => [
+                        lab.getId().toString(),
+                        lab.getName(),
+                        lab.getIsgrouplab() ? "Group lab" : "Individual",
+                        formatDate(lab.getDeadline()),
                     ]}>
                 </DynamicTable>
             </div>);
@@ -139,10 +141,10 @@ export class AdminPage extends ViewPage {
             const providers = await this.courseMan.getProviders();
             return (
                 <CourseForm className="form-horizontal"
-                    providers={providers}
                     courseMan={this.courseMan}
                     navMan={this.navMan}
                     pagePath={this.pagePath}
+                    providers={providers}
                     courseData={course}
                 />
             );
@@ -151,6 +153,11 @@ export class AdminPage extends ViewPage {
     }
 
     public async renderMenu(index: number): Promise<JSX.Element[]> {
+        // if user has no teacher scopes, redirect to authorization page
+        const authorized = await this.userMan.isAuthorizedTeacher();
+        if (!authorized) {
+            window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
+        }
         if (index === 0) {
             const links: ILink[] = [
                 { name: "Users", uri: this.pagePath + "/users" },

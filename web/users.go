@@ -1,145 +1,80 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
-	"github.com/autograde/aguis/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
 )
 
-// UpdateUserRequest updates a user object in the database.
-type UpdateUserRequest struct {
+// JSONuser is a model to improve marshalling of user structure for authentication
+type JSONuser struct {
+	ID        uint64 `json:"id"`
+	IsAdmin   *bool  `json:"isadmin"`
 	Name      string `json:"name"`
 	StudentID string `json:"studentid"`
 	Email     string `json:"email"`
 	AvatarURL string `json:"avatarurl"`
-	IsAdmin   *bool  `json:"isadmin"`
 }
 
 // GetSelf redirects to GetUser with the current user's id.
-func GetSelf() echo.HandlerFunc {
+func GetSelf(db database.Database) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// If type assertions fails, the recover middleware will catch the panic and log a stack trace.
-		user := c.Get("user").(*models.User)
-		return c.Redirect(http.StatusFound, fmt.Sprintf("/api/v1/users/%d", user.ID))
-	}
-}
+		usr := c.Get("user").(*pb.User)
 
-// GetUser returns information about the provided user id.
-func GetUser(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		id, err := parseUint(c.Param("uid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
+		// defer closing the http request body
+		defer c.Request().Body.Close()
 
-		user, err := db.GetUser(id)
+		user, err := db.GetUser(usr.ID)
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return c.NoContent(http.StatusNotFound)
 			}
 			return err
 		}
-		return c.JSONPretty(http.StatusFound, user, "\t")
+		jsonUser := JSONuser{ID: user.ID, IsAdmin: &user.IsAdmin, Name: user.Name, StudentID: user.StudentID, Email: user.Email, AvatarURL: user.AvatarURL}
+		return c.JSONPretty(http.StatusFound, jsonUser, "\t")
 	}
 }
 
-// GetUsers returns all the users in the database.
-func GetUsers(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		// we don't want remote identities of users returned to the frontend
-		users, err := db.GetUsers(false)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return c.NoContent(http.StatusNotFound)
-			}
-			return err
-		}
-		return c.JSONPretty(http.StatusFound, users, "\t")
+// getUsers returns all the users in the database.
+func (s *AutograderService) getUsers() (*pb.Users, error) {
+	users, err := s.db.GetUsers()
+	if err != nil {
+		return nil, err
 	}
+	return &pb.Users{Users: users}, nil
 }
 
-// PatchUser updates a user's information, including promoting to administrator.
-// Only existing administrators can promote another user.
-func PatchUser(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		id, err := parseUint(c.Param("uid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-		var uur UpdateUserRequest
-		if err := c.Bind(&uur); err != nil {
-			return err
-		}
-
-		status := http.StatusNotModified
-
-		// get user to update
-		updateUser, err := db.GetUser(id)
-		if err != nil {
-			return err
-		}
-
-		if uur.Name != "" {
-			updateUser.Name = uur.Name
-			status = http.StatusOK
-		}
-		if uur.StudentID != "" {
-			updateUser.StudentID = uur.StudentID
-			status = http.StatusOK
-		}
-		if uur.Email != "" {
-			updateUser.Email = uur.Email
-			status = http.StatusOK
-		}
-		if uur.AvatarURL != "" {
-			updateUser.AvatarURL = uur.AvatarURL
-			status = http.StatusOK
-		}
-		// get current user
-		currentUser := c.Get("user").(*models.User)
-		// promote other user to admin, only if current user has admin privileges
-		if currentUser.IAdmin() && uur.IsAdmin != nil {
-			updateUser.IsAdmin = uur.IsAdmin
-			status = http.StatusOK
-		}
-
-		if err := db.UpdateUser(updateUser); err != nil {
-			return err
-		}
-		return c.NoContent(status)
+// updateUser promotes the given user to administrator and/or
+// make other changes to the user database entry for the given user.
+// The isAdmin flag must be true to promote the given user to admin.
+func (s *AutograderService) updateUser(isAdmin bool, request *pb.User) (*pb.User, error) {
+	updateUser, err := s.db.GetUser(request.ID)
+	if err != nil {
+		return nil, err
 	}
-}
 
-// GetGroupByUserAndCourse returns a single group of a user for a course
-func GetGroupByUserAndCourse(db database.Database) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		uid, err := parseUint(c.Param("uid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-		cid, err := parseUint(c.Param("cid"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "invalid payload")
-		}
-		enrollment, err := db.GetEnrollmentByCourseAndUser(cid, uid)
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return c.NoContent(http.StatusNotFound)
-			}
-			return err
-		}
-		if enrollment.GroupID > 0 {
-			// no need for remote identities
-			group, err := db.GetGroup(false, enrollment.GroupID)
-			if err != nil {
-				return c.NoContent(http.StatusNotFound)
-			}
-			return c.JSONPretty(http.StatusFound, group, "\t")
-		}
-		return c.NoContent(http.StatusNotFound)
+	if request.Name != "" {
+		updateUser.Name = request.Name
 	}
+	if request.StudentID != "" {
+		updateUser.StudentID = request.StudentID
+	}
+	if request.Email != "" {
+		updateUser.Email = request.Email
+	}
+	if request.AvatarURL != "" {
+		updateUser.AvatarURL = request.AvatarURL
+	}
+	// current user must be admin to promote another user to admin
+	if isAdmin {
+		updateUser.IsAdmin = request.IsAdmin
+	}
+
+	err = s.db.UpdateUser(updateUser)
+	return updateUser, err
 }

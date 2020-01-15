@@ -25,3 +25,16 @@ export function copy<T extends {}>(val: T): T {
     }
     return newEle;
 }
+
+export function formatDate(str: string | Date): string {
+    const dateOptions = {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false,
+    };
+    const date = str instanceof Date ? str : new Date(str);
+    return date.toLocaleString("no-NO", dateOptions);
+}
