@@ -72,6 +72,7 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 					assignment, err := db.GetAssignment(&pb.Assignment{Name: lab})
 					if err != nil {
 						logger.Error("Could not find assignment ", lab, ": ", zap.Error(err))
+						return
 					}
 
 					// pass along user or group name for container tag
