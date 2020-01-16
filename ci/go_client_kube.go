@@ -15,9 +15,15 @@ func main() {
 	// creates the clientset
 	clientset, _ := kubernetes.NewForConfig(config)
 	// access the API to list pods
-	pods, _ := clientset.CoreV1().Pods("").List(v1.ListOptions{})
-	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
-	serv, _ := clientset.CoreV1().Nodes().List(v1.ListOptions{})
-	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+	serv, err := clientset.CoreV1().Nodes().List(v1.ListOptions{})
+	if err !=nil {
+		fmt.Println("Could'nt find any nodes!")
+	}
+	fmt.Printf("There are %d nodes in the cluster\n", len(pods.Items))
 
+	pods, _ := clientset.CoreV1().Pods("").List(v1.ListOptions{})
+	if err !=nil {
+		fmt.Println("Could'nt find any pods!")
+	}
+	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 }
