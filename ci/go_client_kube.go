@@ -1,4 +1,5 @@
 package ci
+package main
 
 import (
 	"fmt"
