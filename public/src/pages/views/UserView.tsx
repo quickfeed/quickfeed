@@ -68,7 +68,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     private getTableHeading(): string[] {
         const heading: string[] = ["Name", "Email", "Student ID"];
         if (this.props.userMan || this.props.actions) {
-            heading.push("Options");
+            heading.push("Role");
         }
         return heading;
     }

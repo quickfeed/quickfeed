@@ -118,18 +118,25 @@ func (s *AutograderService) isValidSubmission(submissionID uint64) bool {
 	return s.isValidSubmissionRequest(request)
 }
 
-// isEnrolled returns true if the given user is enrolled as student for the given course.
-func (s *AutograderService) isStudent(userID, courseID uint64) bool {
-	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
-		return e.Status == pb.Enrollment_STUDENT
-	})
-}
-
 // isTeacher returns true if the given user is teacher for the given course.
 func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 	return s.hasCourseAccess(userID, courseID, func(e *pb.Enrollment) bool {
 		return e.Status == pb.Enrollment_TEACHER
 	})
+}
+
+// isChangingTeacherState returns true if newEnroll represents
+// an attempt to change status on an existing enrollment to non-teacher.
+func (s *AutograderService) isChangingTeacherState(newEnroll *pb.Enrollment) bool {
+	return s.hasCourseAccess(newEnroll.GetUserID(), newEnroll.GetCourseID(), func(e *pb.Enrollment) bool {
+		return e.GetStatus() == pb.Enrollment_TEACHER && newEnroll.GetStatus() != pb.Enrollment_TEACHER
+	})
+}
+
+// isCourseCreator returns true if the given user is course creator for the given course
+func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
+	course, _ := s.db.GetCourse(courseID, false)
+	return course.GetCourseCreatorID() == userID
 }
 
 // getUserAndSCM returns the current user and scm for the given provider.

@@ -16,4 +16,7 @@ meling.sh
 cyclone.sh
 docs
 ag.logs
+ag.log*
+startag.sh
+backup
 
