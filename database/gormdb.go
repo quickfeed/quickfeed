@@ -408,7 +408,8 @@ func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 		Update("approved", approved).Error
 }
 
-// GetCourseSubmissions returns all individual lab submissions for the course
+// GetCourseSubmissions returns all individual lab submissions or group submissions for the course
+// depending on the provided groupLabs boolean.
 func (db *GormDB) GetCourseSubmissions(cid uint64, groupLabs bool) ([]pb.Submission, error) {
 	m := db.conn
 
@@ -418,10 +419,12 @@ func (db *GormDB) GetCourseSubmissions(cid uint64, groupLabs bool) ([]pb.Submiss
 		return nil, err
 	}
 
-	// get IDs of all individual or group labs labs for the course
+	// get IDs of all individual labs or group labs for the course
 	courseAssignmentIDs := make([]uint64, 0)
 	for _, a := range course.Assignments {
 		if a.IsGroupLab == groupLabs {
+			// collect either group labs or non-group labs
+			// but not both in the same collection.
 			courseAssignmentIDs = append(courseAssignmentIDs, a.GetID())
 		}
 	}
