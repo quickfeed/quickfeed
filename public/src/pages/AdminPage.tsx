@@ -72,7 +72,8 @@ export class AdminPage extends ViewPage {
 
     public async handleAdminRoleClick(user: IUserRelation): Promise<boolean> {
         if (this.userMan && this.navMan) {
-            const res = await this.userMan.changeAdminRole(user.user);
+            // promote non-admin user to admin, demote otherwise
+            const res = await this.userMan.changeAdminRole(user.user, !user.user.getIsadmin());
             this.navMan.refresh();
             return res;
         }

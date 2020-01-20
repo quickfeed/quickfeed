@@ -65,18 +65,18 @@ export class GrpcManager {
     }
 
     public updateUser(user: User, isAdmin?: boolean): Promise<IGrpcResponse<User>> {
-        const requrest = new User();
-        requrest.setId(user.getId());
-        requrest.setAvatarurl(user.getAvatarurl());
-        requrest.setEmail(user.getEmail());
-        requrest.setName(user.getName());
-        requrest.setStudentid(user.getStudentid());
+        const request = new User();
+        request.setId(user.getId());
+        request.setAvatarurl(user.getAvatarurl());
+        request.setEmail(user.getEmail());
+        request.setName(user.getName());
+        request.setStudentid(user.getStudentid());
         if (isAdmin) {
-            requrest.setIsadmin(isAdmin);
+            request.setIsadmin(isAdmin);
         } else {
-            requrest.setIsadmin(user.getIsadmin());
+            request.setIsadmin(user.getIsadmin());
         }
-        return this.grpcSend(this.agService.updateUser, requrest);
+        return this.grpcSend(this.agService.updateUser, request);
     }
 
     public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
