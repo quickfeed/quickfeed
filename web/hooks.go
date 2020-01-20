@@ -48,7 +48,13 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 				logger.Error("Failed to get repository from database", zap.Error(err))
 				return
 			}
-			logger.Debug("Found repository, moving on", zap.Any("repo", repo))
+			logger.Debugf("Push for repository %v", repo)
+			course, err := db.GetCourseByOrganizationID(repo.OrganizationID)
+			if err != nil {
+				logger.Error("Failed to get course from database", zap.Error(err))
+				return
+			}
+			logger.Debugf("For course(%d)=%v", course.GetID(), course.GetName())
 
 			switch {
 			case repo.IsTestsRepo():
@@ -69,20 +75,17 @@ func GithubHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runne
 
 				// run tests for every lab updated by student
 				for _, lab := range labNames {
-					assignment, err := db.GetAssignment(&pb.Assignment{Name: lab})
+					// get assignment based on course id and lab name
+					assignment, err := db.GetAssignment(&pb.Assignment{Name: lab, CourseID: course.GetID()})
 					if err != nil {
-						logger.Error("Could not find assignment ", lab, ": ", zap.Error(err))
+						logger.Errorf("could not find assignment %s: %v", lab, err)
 						return
 					}
-
-					// pass along user or group name for container tag
-					tagName := ""
+					// determine container tag based on user name or group name (if group lab)
+					tagName := p.Sender.Login
 					if assignment.IsGroupLab {
 						tagName = p.Repository.Name
-					} else {
-						tagName = p.Sender.Login
 					}
-
 					runTests(logger, db, runner, repo, p.Repository.CloneURL, p.HeadCommit.ID, scriptPath, assignment.GetID(), tagName)
 				}
 
@@ -127,6 +130,7 @@ func refreshAssignmentsFromTestsRepo(logger *zap.SugaredLogger, db database.Data
 	assignments, err := fetchAssignments(context.Background(), s, course)
 	if err != nil {
 		logger.Error("Failed to fetch assignments from 'tests' repository", zap.Error(err))
+		//TODO(meling) should this return?
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
@@ -149,27 +153,31 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 	courseCreator, err := db.GetUser(course.CourseCreatorID)
 	if err != nil || len(courseCreator.RemoteIdentities) < 1 {
 		logger.Error("Failed to fetch course creator", zap.Error(err))
+		//TODO(meling) should this return?
 	}
 
 	var selectedAssignment *pb.Assignment
 
 	// if assignment ID is defined, fetch the assignment by ID
 	if assignmentID > 0 {
+		logger.Debugf("Fetching assignment %d", assignmentID)
 		selectedAssignment, err = db.GetAssignment(&pb.Assignment{ID: assignmentID})
 		if err != nil {
 			logger.Error("Failed to fetch assignment by ID: ", zap.Error(err))
 			return
 		}
-		// otherwise use the last unapproved assignment for the given student/group
+		logger.Debugf("Found assignment %v", selectedAssignment)
 	} else {
+		//TODO(meling) this else-clause can probably be removed, since assignmentID should always be non-zero; doublecheck
+		// otherwise use the last unapproved assignment for the given student/group
+		logger.Debugf("Next assignment for course %d, user %d, group %d", course.ID, repo.UserID, repo.GroupID)
 		selectedAssignment, err = db.GetNextAssignment(course.ID, repo.UserID, repo.GroupID)
 		if err != nil {
 			logger.Error("Failed to find a next unapproved assignment", zap.Error(err))
 			return
 		}
+		logger.Debugf("Found next assignment %v", selectedAssignment)
 	}
-
-	logger.Debug("Found assignment", zap.String("assignment", selectedAssignment.String()))
 
 	testsRepoQuery := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
@@ -220,9 +228,11 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 	buildInfo, scores, err := result.Marshal()
 	if err != nil {
 		logger.Error("Failed to marshal build info and scores", zap.Error(err))
+		//TODO(meling) should this return?
 	}
 
 	// check the approved status for the last submission
+	logger.Debugf("Fetching submission for assignment %d", selectedAssignment.GetID())
 	lastSubmission, err := db.GetSubmission(&pb.Submission{AssignmentID: selectedAssignment.GetID(), UserID: repo.GetUserID(), GroupID: repo.GetGroupID()})
 	if err != nil && err != gorm.ErrRecordNotFound {
 		logger.Error("Failed to get submission info from the database", zap.Error(err))
@@ -233,6 +243,7 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 	// approve if the previous submission has already been approved
 	if lastSubmission != nil {
 		approve = lastSubmission.GetApproved()
+		logger.Debugf("Found last submission for assignment %d: %v", selectedAssignment.GetID(), lastSubmission)
 	}
 
 	// for auto approve, use default score limit unless defined in yaml file
@@ -259,6 +270,7 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 		logger.Error("Failed to add submission to database", zap.Error(err))
 		return
 	}
+	logger.Debugf("Created submission for assignment %d in database", selectedAssignment.GetID())
 }
 
 func randomSecret() string {
