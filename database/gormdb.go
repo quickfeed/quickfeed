@@ -397,7 +397,9 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 
 	// If a submission for the given assignment and student/group already exists, update it.
 	// Otherwise create a new submission record
-	return db.conn.Where(query).Assign(submission).FirstOrCreate(submission, query).Error
+	var labSubmission pb.Submission
+	return db.conn.Where(query).Assign(submission).FirstOrCreate(&labSubmission).Error
+
 }
 
 // UpdateSubmission updates submission with the given approved status.
