@@ -300,7 +300,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeAdminRole(user: User, promote: boolean): Promise<boolean> {
-        const result = await this.grpcHelper.updateUser(user, promote);
+        user.setIsadmin(promote);
+        const result = await this.grpcHelper.updateUser(user);
         // we are not interested in user data returned in this case, only checking that there were no errors
         return result.status.getCode() === 0;
     }
