@@ -401,7 +401,6 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 	err := db.conn.Where(query).Assign(submission).FirstOrCreate(&labSubmission).Error
 	submission.ID = labSubmission.GetID()
 	return err
-
 }
 
 // UpdateSubmission updates submission with the given approved status.
