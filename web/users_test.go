@@ -269,7 +269,7 @@ func TestUpdateUser(t *testing.T) {
 
 	// we want to update nonAdminUser to become admin
 	nonAdminUser.IsAdmin = true
-	respUser, err := ags.UpdateUser(ctx, nonAdminUser)
+	err := db.UpdateUser(nonAdminUser)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -284,8 +284,8 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	nameChangeRequest := &pb.User{
-		ID:        respUser.ID,
-		IsAdmin:   respUser.IsAdmin,
+		ID:        nonAdminUser.ID,
+		IsAdmin:   nonAdminUser.IsAdmin,
 		Name:      "Scrooge McDuck",
 		StudentID: "99",
 		Email:     "test@test.com",

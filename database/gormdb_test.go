@@ -152,6 +152,7 @@ func TestGormDBUpdateUser(t *testing.T) {
 			StudentID: "22",
 			Email:     "scrooge@mc.duck",
 			AvatarURL: "https://github.com",
+			IsAdmin:   true, // have to set IsAdmin or will be switched back to false
 		}
 	)
 
@@ -175,6 +176,21 @@ func TestGormDBUpdateUser(t *testing.T) {
 	}
 
 	updatedUser, err := db.GetUser(user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	updatedUser.Enrollments = nil
+	if !reflect.DeepEqual(updatedUser, wantUser) {
+		t.Errorf("have user %+v want %+v", updatedUser, wantUser)
+	}
+
+	// check that admin role can be revoked
+	updates.IsAdmin = false
+	wantUser.IsAdmin = false
+	if err := db.UpdateUser(updates); err != nil {
+		t.Fatal(err)
+	}
+	updatedUser, err = db.GetUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
