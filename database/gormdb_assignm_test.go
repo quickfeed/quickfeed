@@ -8,7 +8,6 @@ import (
 
 func TestGetNextAssignment(t *testing.T) {
 
-	t.Skip("To be updated")
 	db, cleanup := setup(t)
 	defer cleanup()
 
@@ -93,6 +92,7 @@ func TestGetNextAssignment(t *testing.T) {
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
 	}
+
 	// send another submission for assignment1
 	// will update the previous one, ID will stay the same
 	submission2 := pb.Submission{AssignmentID: assignment1.ID, UserID: user.ID}
