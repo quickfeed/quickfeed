@@ -70,8 +70,9 @@ func (s *AutograderService) updateUser(isAdmin bool, request *pb.User) (*pb.User
 	if request.AvatarURL != "" {
 		updateUser.AvatarURL = request.AvatarURL
 	}
-	// current user must be admin to promote another user to admin
-	if isAdmin {
+	// current user must be admin to change admin status of another user
+	// admin status of super admin (user with ID 1) cannot be changed
+	if isAdmin && request.ID > 1 {
 		updateUser.IsAdmin = request.IsAdmin
 	}
 

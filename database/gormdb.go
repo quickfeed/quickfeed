@@ -153,7 +153,13 @@ func (db *GormDB) GetUsers(uids ...uint64) ([]*pb.User, error) {
 
 // UpdateUser updates user information.
 func (db *GormDB) UpdateUser(user *pb.User) error {
+	// Updates will never update IsAdmin to false because of gorm restrictions
+	// we need to update IsAdmin field explicitly
+	if err := db.conn.Model(&pb.User{}).Where(&pb.User{ID: user.ID}).Update("is_admin", user.IsAdmin).Error; err != nil {
+		return err
+	}
 	return db.conn.Model(&pb.User{}).Updates(user).Error
+
 }
 
 // SetAdmin promotes user with given ID to admin.
