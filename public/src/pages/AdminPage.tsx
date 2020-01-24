@@ -45,7 +45,7 @@ export class AdminPage extends ViewPage {
                 link: enrol,
             };
         });
-
+        allUsers.sort((a,b) => (a.user.getIsadmin() < b.user.getIsadmin()) ? 1 : -1);
         return <div>
             <h1>All Users</h1>
             <UserView
