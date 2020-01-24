@@ -9,10 +9,7 @@ import { INavInfo } from "../NavigationHelper";
 
 import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import {
-    IAssignmentLink,
-    IUserRelation,
-} from "../models";
+import { IUserRelation } from "../models";
 
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
@@ -276,6 +273,9 @@ export class TeacherPage extends ViewPage {
                         break;
                 }
             });
+            // sorting accepted user so that teachers show first
+            acceptedUsers.sort((x,y) => (x.link.getStatus() < y.link.getStatus())? 1 : -1);
+
             return <MemberView
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
