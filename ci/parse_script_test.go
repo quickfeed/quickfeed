@@ -18,7 +18,7 @@ func TestParseScript(t *testing.T) {
 	randomString := fmt.Sprintf("%x", sha1.Sum(randomness))
 	getURL := "https://github.com/dat320-2019/meling-stud-labs.git"
 	testURL := "https://github.com/dat320-2019/tests.git"
-	info := AssignmentInfo{
+	info := &AssignmentInfo{
 		AssignmentName:     "lab2",
 		Language:           "go",
 		CreatorAccessToken: "secret",

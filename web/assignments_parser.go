@@ -34,6 +34,12 @@ type assignmentData struct {
 
 // ParseAssignments recursively walks the given directory and parses
 // any 'assignment.yml' files found and returns an array of assignments.
+// TODO(meling) Thinking: One complication with this approach is that we depend on the YAML's 'name' field
+//   being the same as the assignment name in the folder structure in the assignments repository.
+//   This is perhaps fine, but could be problematic if someone uses a name like "Lab assignment 1"
+//   and the folder is named only "lab1". We should make this more robust; can we add a field to the
+//   pb.Assignment type to hold the directory name, which should not be parsed from YAML, but computed
+//   in assignment_parser.go, based on parent directory of the YAML. Issue is that we may need to add it to the DB.
 func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 	// check if directory exist
 	if _, err := os.Stat(dir); os.IsNotExist(err) {

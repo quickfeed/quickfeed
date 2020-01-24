@@ -114,7 +114,6 @@ func enableProviders(l *zap.SugaredLogger, baseURL string, fake bool) map[string
 
 func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]bool, scriptPath string) {
 	if enabled["github"] {
-		//TODO(meling) pass ags instead of individual params:
 		ghHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.bh.Secret)
 		e.POST("/hook/github/events", func(c echo.Context) error {
 			ghHook.Handle(c.Response(), c.Request())

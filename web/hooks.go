@@ -193,7 +193,7 @@ func runTests(logger *zap.SugaredLogger, db database.Database, runner ci.Runner,
 	logger.Debug("Test Repository", zap.String("url", getURLTest))
 
 	secret := randomSecret()
-	info := ci.AssignmentInfo{
+	info := &ci.AssignmentInfo{
 		CreatorAccessToken: courseCreator.RemoteIdentities[0].AccessToken,
 		AssignmentName:     selectedAssignment.Name,
 		Language:           selectedAssignment.Language,

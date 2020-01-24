@@ -24,7 +24,7 @@ type AssignmentInfo struct {
 // ParseScriptTemplate returns a job describing the docker image to use and
 // the commands of the job. The job is extracted from a script template file
 // provided as input along with assignment metadata for the template.
-func ParseScriptTemplate(scriptPath string, info AssignmentInfo) (*Job, error) {
+func ParseScriptTemplate(scriptPath string, info *AssignmentInfo) (*Job, error) {
 	tmplFile := filepath.Join(scriptPath, info.Language+".tmpl")
 	t, err := template.ParseFiles(tmplFile)
 	if err != nil {
