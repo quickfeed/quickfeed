@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/google/go-github/v26/github"
+	"github.com/google/go-github/v29/github"
 	"github.com/gosimple/slug"
 	"golang.org/x/oauth2"
 )
@@ -260,7 +260,7 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 	opt := &github.RepositoryAddCollaboratorOptions{
 		Permission: permission,
 	}
-	if _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, user, opt); err != nil {
+	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, user, opt); err != nil {
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "UpdateRepoAccess",
