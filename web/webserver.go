@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/autograde/aguis/web/auth"
-	"github.com/autograde/aguis/web/hooks"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
@@ -19,6 +18,10 @@ import (
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
 	"go.uber.org/zap"
+
+	webhooks "gopkg.in/go-playground/webhooks.v3"
+	whgithub "gopkg.in/go-playground/webhooks.v3/github"
+	whgitlab "gopkg.in/go-playground/webhooks.v3/gitlab"
 )
 
 // timeouts for http server
@@ -113,22 +116,35 @@ func enableProviders(l *zap.SugaredLogger, baseURL string, fake bool) map[string
 }
 
 func registerWebhooks(ags *AutograderService, e *echo.Echo, enabled map[string]bool, scriptPath string) {
+	webhooks.DefaultLog = WebhookLogger{SugaredLogger: ags.logger}
+
+	ghHook := whgithub.New(&whgithub.Config{Secret: ags.bh.Secret})
 	if enabled["github"] {
-		//TODO(meling) pass ags instead of individual params:
-		ghHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.bh.Secret)
-		e.POST("/hook/github/events", func(c echo.Context) error {
-			ghHook.Handle(c.Response(), c.Request())
-			return nil
-		})
+		ghHook.RegisterEvents(GithubHook(ags.logger, ags.db, ags.runner, scriptPath), whgithub.PushEvent)
 	}
+	glHook := whgitlab.New(&whgitlab.Config{Secret: ags.bh.Secret})
 	if enabled["gitlab"] {
-		//TODO(meling) fix gitlab
-		glHook := hooks.NewGitHubWebHook(ags.logger, ags.db, ags.runner, ags.bh.Secret)
-		e.POST("/hook/gitlab/events", func(c echo.Context) error {
-			glHook.Handle(c.Response(), c.Request())
-			return nil
-		})
+		glHook.RegisterEvents(GitlabHook(ags.logger), whgitlab.PushEvents)
 	}
+
+	e.POST("/hook/:provider/events", func(c echo.Context) error {
+		var hook webhooks.Webhook
+		provider := c.Param("provider")
+		if !enabled[provider] {
+			return echo.ErrNotFound
+		}
+
+		switch provider {
+		case "github":
+			hook = ghHook
+		case "gitlab":
+			hook = glHook
+		default:
+			panic("registered provider is missing corresponding webhook")
+		}
+		webhooks.Handler(hook).ServeHTTP(c.Response(), c.Request())
+		return nil
+	})
 }
 
 func registerAuth(ags *AutograderService, e *echo.Echo) {
@@ -181,7 +197,6 @@ func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {
 		return
 	}
 	l.Fatal("failed to start server", zap.Error(srvErr))
-	// TODO(meling) pretty sure the following lines are unreachable; check
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
