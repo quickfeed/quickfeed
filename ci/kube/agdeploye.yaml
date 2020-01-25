@@ -1,0 +1,23 @@
+#	apiVersion: apps/v1beta1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agcicd
+  labels:
+    app: agcicd
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: agcicd
+  template:
+    metadata:
+      labels:
+        app: agcicd
+    spec:
+      containers:
+      - image: "hanifff/test:hello"
+        imagePullPolicy: Always
+        name: agcicd
+        ports:
+        - containerPort: 8080
