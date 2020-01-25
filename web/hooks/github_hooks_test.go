@@ -27,6 +27,8 @@ const (
 // See steps to follow [here](https://groob.io/tutorial/go-github-webhook/).
 
 func TestGitHubWebHook(t *testing.T) {
+	t.Skip("Disabled; see comment in code")
+
 	//TODO(meling) these lines are not necessary unless we use the scm.ListHook() and CreateHook() commands
 	// accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
 	// if len(accessToken) < 1 {

@@ -15,8 +15,7 @@ import (
 )
 
 const (
-	scriptPath                   = "ci/scripts"
-	defaultAutoApproveScoreLimit = 80
+	scriptPath = "ci/scripts"
 )
 
 type RunData struct {
@@ -117,19 +116,9 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		logger.Errorf("Failed to get submission data from database: %w", err)
 		return
 	}
+	// keep approved status if already approved
 	approved := newest.GetApproved()
-	if approved {
-		logger.Debugf("Assignment %d already approved in %v", rData.Assignment.GetID(), newest)
-	}
-
-	// for auto approve, use default score limit unless defined in yaml file
-	//TODO(meling) this logic should be done in assignment_parser.go
-	minimumScore := uint8(rData.Assignment.GetScoreLimit())
-	if minimumScore < 1 {
-		minimumScore = defaultAutoApproveScoreLimit
-	}
-
-	if rData.Assignment.AutoApprove && result.TotalScore() >= minimumScore {
+	if rData.Assignment.AutoApprove && result.TotalScore() >= rData.Assignment.GetScoreLimit() {
 		approved = true
 	}
 
@@ -137,7 +126,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		AssignmentID: rData.Assignment.ID,
 		BuildInfo:    buildInfo,
 		CommitHash:   rData.CommitID,
-		Score:        uint32(result.TotalScore()),
+		Score:        result.TotalScore(),
 		ScoreObjects: scores,
 		UserID:       rData.Repo.UserID,
 		GroupID:      rData.Repo.GroupID,

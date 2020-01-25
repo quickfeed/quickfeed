@@ -69,6 +69,7 @@ func TestParse(t *testing.T) {
 		Deadline:    "27-08-2017 12:00",
 		AutoApprove: false,
 		Order:       1,
+		ScoreLimit:  80,
 	}
 
 	wantAssignment2 := &pb.Assignment{
@@ -77,6 +78,7 @@ func TestParse(t *testing.T) {
 		Deadline:    "27-08-2018 12:00",
 		AutoApprove: false,
 		Order:       2,
+		ScoreLimit:  80,
 	}
 
 	assignments, err := parseAssignments(testsDir, 0)

@@ -78,6 +78,6 @@ func (r Result) Marshal() (buildInfo string, scores string, err error) {
 }
 
 // TotalScore returns the total score for this execution result.
-func (r Result) TotalScore() uint8 {
+func (r Result) TotalScore() uint32 {
 	return score.Total(r.Scores)
 }

@@ -1,8 +1,8 @@
 package web
 
 import (
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,16 +51,18 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 		if !info.IsDir() {
 			filename := filepath.Base(path)
 			if filename == target || filename == targetYaml {
-				var newAssignment assignmentData
 				source, err := ioutil.ReadFile(path)
 				if err != nil {
-					log.Println("parseAssignment: failed to read file")
-					return err
+					return fmt.Errorf("could not to read %q file: %w", filename, err)
 				}
+				var newAssignment assignmentData
 				err = yaml.Unmarshal(source, &newAssignment)
 				if err != nil {
-					log.Println("parseAssignment: error while unmarshalling: ", err.Error())
-					return err
+					return fmt.Errorf("error unmarshalling assignment: %w", err)
+				}
+				// if no auto approve score limit is defined; use the default
+				if newAssignment.ScoreLimit < 1 {
+					newAssignment.ScoreLimit = defaultAutoApproveScoreLimit
 				}
 
 				// ID from the parsed yaml is used to set Order, not assignment ID,
