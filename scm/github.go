@@ -289,38 +289,29 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 }
 
 // ListHooks implements the SCM interface.
-func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) ([]*Hook, error) {
-	var gitHooks []*github.Hook
-	var hooks []*Hook
+func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) (hooks []*Hook, err error) {
+	var githubHooks []*github.Hook
 
-	if repo == nil || !repo.valid() {
-		return nil, ErrMissingFields{
-			Method:  "ListHooks",
-			Message: fmt.Sprintf("%+v", org),
-		}
-	}
-
-	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
-	if err != nil {
-		return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks: %w", err)
-	}
-	gitHooks = githubHooks
-
-	// if org name provided, get all hooks existing on that organization
-	if org != "" {
+	switch {
+	case repo == nil && org != "":
+		// if org name is provided, get organization level hooks
 		orgName := slug.Make(org)
-		githubHooks, _, err := s.client.Organizations.ListHooks(ctx, orgName, nil)
+		githubHooks, _, err = s.client.Organizations.ListHooks(ctx, orgName, nil)
 		if err != nil {
-			return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks for organization %s: %w", orgName, err)
+			return nil, fmt.Errorf("ListHooks: failed to get hooks for organization %q: %w", orgName, err)
 		}
-		gitHooks = githubHooks
+
+	case org == "" && repo != nil && repo.valid():
+		githubHooks, _, err = s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
+		if err != nil {
+			return nil, fmt.Errorf("ListHooks: failed to get hooks for repository %q: %w", repo, err)
+		}
+
+	default:
+		return nil, fmt.Errorf("ListHooks: called with missing or incompatible arguments: %q %q", repo, org)
 	}
-	if len(gitHooks) < 1 {
-		s.logger.Debugf("ListHooks: invalid payload. Repo: %v, org: %s", repo, org)
-		return nil, fmt.Errorf("ListHooks: found no hooks")
-	}
-	for _, hook := range gitHooks {
-		s.logger.Infof("Found hook with events: %s", hook.Events)
+
+	for _, hook := range githubHooks {
 		hooks = append(hooks, &Hook{
 			ID:     uint64(hook.GetID()),
 			URL:    hook.GetURL(),
