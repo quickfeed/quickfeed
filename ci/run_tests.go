@@ -83,7 +83,7 @@ func createAssignmentInfo(db database.Database, course *pb.Course, assignment *p
 	if err != nil || len(testRepos) < 1 {
 		return nil, fmt.Errorf("failed to find a test repository for %s: %w", course.GetName(), err)
 	}
-	getURLTest := testRepos[0].HTMLURL
+	getURLTest := testRepos[0].GetHTMLURL()
 
 	return &AssignmentInfo{
 		AssignmentName:     assignment.GetName(),

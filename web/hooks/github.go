@@ -105,7 +105,6 @@ func jsonString(event interface{}) string {
 // extractAssignments extracts information from the push payload from github
 // and determines the assignments that have been changed in this commit by
 // querying the database based on the lab name.
-// TODO(meling) consider to call runTests() in parallel?
 // TODO(meling) implement test cases for this function.
 func (wh githubWebHook) extractAssignments(payload *github.PushEvent, course *pb.Course) []*pb.Assignment {
 	modifiedAssignments := make(map[string]bool)
