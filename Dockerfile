@@ -6,7 +6,7 @@ FROM golang:latest as builder
 LABEL maintainer="Hanif <mohamad.h@hotmail.no>"
 
 # Set the Current Working Directory inside the container
-WORKDIR /aguis/ci/kube/kubecontroller
+WORKDIR /aguis/kubecontroller
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -29,7 +29,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder /aguis/ci/kube/kubecontroller .
+COPY --from=builder /aguis/kubecontroller .
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
