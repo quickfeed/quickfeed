@@ -35,4 +35,4 @@ COPY --from=builder /aguis/ci/kube/kubecontroller .
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["/aguis/ci/kube/kubecontroller"]
+CMD ["./kubecontroller"]
