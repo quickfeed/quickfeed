@@ -6,7 +6,7 @@ FROM golang:latest as builder
 LABEL maintainer="Hanif <mohamad.h@hotmail.no>"
 
 # Set the Current Working Directory inside the container
-WORKDIR /aguis
+WORKDIR /AG/aguis
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
