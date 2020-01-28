@@ -135,4 +135,3 @@ local:
 remote:
 	@echo "Changing grpc client location to remote domain"
 	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
-	@cd ./public; webpack
