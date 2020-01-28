@@ -178,7 +178,19 @@ server {
 
 Obtaining SSL certificates is free and easy with [Letsencrypt](https://letsencrypt.org/). 
 First you must install any Letsencrypt client, for example [Certbot](https://certbot.eff.org/about/).
-Then run `sudo certbot---nginx -d <URL you wish to protect>`. When working with Autograder, this should be the same URL you provide to GitHub OAuth2 application as callback URL.
+Then run `sudo certbot-auto --nginx -d <URL you wish to protect>`. When working with Autograder, this should be the same URL you provide to GitHub OAuth2 application as callback URL.
+
+### Adding a new nginx endpoint
+
+1. Add a new server entry.
+2. Check that the new configuration is correct by running `nginx -t`.
+3. Restart nginx: `service nginx restart`.
+4. A new endpoint will require an ssl certificate. 
+  - `certbot certificates` command will list all the active certificates
+  - to add the new endpoint to an existing certificate, run the following command:
+  `certbot-auto --nginx --cert-name <name of the existing certificate> -d <new endpoint url>`.
+  This will also add all the necessary ssl-related lines to the nginx configuration file.
+  
 
 ## Errors and logging
 
@@ -202,6 +214,8 @@ Return generic "malformed request" message to user.
 5. GitHub API errors (request struct has missing/malformed fields)
 Return a custom error with detailed information for logging and generic "action failed" message to user.
 
+6. GitHub Cancelled Context errors
+A sporadic error happening on the GitHub side, known to disappear on its own. The only solution is to wait and repeat the action later. Check for this type of errors and inform the user.
 
 
 [GRPC status codes](https://github.com/grpc/grpc/blob/master/doc/statuscodes.md) are used to allow the client to check whether the error message should be displayed for user, or just logged for developers.
