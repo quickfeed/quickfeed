@@ -6,10 +6,10 @@ FROM golang:latest as builder
 LABEL maintainer="Hanif <mohamad.h@hotmail.no>"
 
 # Set the Current Working Directory inside the container
-WORKDIR /AG/aguis
+WORKDIR /aguis/ci/kube/kubecontroller
 
 # Copy go mod and sum files
-COPY go.mod go.sum ./
+COPY go.mod go.sum /aguis/
 
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
@@ -35,4 +35,4 @@ COPY --from=builder /aguis/ci/kube/kubecontroller .
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["./kubecontroller"]
+CMD ["/aguis/ci/kube/kubecontroller"]
