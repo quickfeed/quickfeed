@@ -12,6 +12,7 @@ import (
 	"github.com/autograde/aguis/database"
 	scms "github.com/autograde/aguis/scm"
 	"github.com/autograde/aguis/web/auth"
+	"github.com/jinzhu/gorm"
 )
 
 // AutograderService holds references to the database and
@@ -347,7 +348,9 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 	}
 	group, err := s.getGroupByUserAndCourse(in)
 	if err != nil {
-		s.logger.Errorf("GetGroupByUserAndCourse failed: %w", err)
+		if err != gorm.ErrRecordNotFound {
+			s.logger.Errorf("GetGroupByUserAndCourse failed: %w", err)
+		}
 		return nil, status.Errorf(codes.NotFound, "failed to get group for given user and course")
 	}
 	if !(group.Contains(usr) || s.isTeacher(usr.GetID(), group.GetCourseID())) {
