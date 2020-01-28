@@ -98,7 +98,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*p
 	if err != nil || gitOrg == nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetOrganization",
-			Message:  fmt.Sprintf("failed to get github organization, make sure it allows third party access"),
+			Message:  fmt.Sprintf("could not find github organization. Make sure it allows third party access."), // this message is logged, never sent to user
 			GitError: err,
 		}
 	}

@@ -233,7 +233,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                 this.setState({userMessage: <span>{result.getError()}</span>});
             } else {
                 this.setState({
-                    userMessage: <span>not found, make sure to allow application access {accessLink}</span>,
+                    userMessage: <span>not found, enable third party access {accessLink}</span>,
                 });
             }
 
