@@ -16,7 +16,7 @@ spec:
         app: agcicd
     spec:
       containers:
-      - image: "hanifff/test:cicd"
+      - image: "hanifff/test:ex"
         imagePullPolicy: Always
         name: agcicd
         ports:
