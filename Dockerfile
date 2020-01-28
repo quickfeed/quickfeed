@@ -6,7 +6,7 @@ FROM golang:latest as builder
 LABEL maintainer="Hanif <mohamad.h@hotmail.no>"
 
 # Set the Current Working Directory inside the container
-WORKDIR /golang/main
+WORKDIR /aguis/aguis
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -18,7 +18,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o aguis .
 
 
 ######## Start a new stage from scratch #######
@@ -29,10 +29,10 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder golang/main .
+COPY --from=builder /aguis/aguis .
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["./main"]
+CMD ["./aguis"]
