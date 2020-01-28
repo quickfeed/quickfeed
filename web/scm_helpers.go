@@ -202,7 +202,7 @@ func contextCanceled(ctx context.Context) bool {
 func parseSCMError(err error) (bool, error) {
 	errStruct, ok := err.(scms.ErrFailedSCM)
 	if ok {
-		return ok, status.Errorf(codes.FailedPrecondition, errStruct.Message)
+		return ok, status.Errorf(codes.NotFound, errStruct.Message)
 	}
 	return ok, nil
 }
