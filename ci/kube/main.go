@@ -83,7 +83,7 @@ func main() {
 					Containers: []apiv1.Container{
 						{
 							Name:  "web",
-							Image: "hanifff/test:ex",
+							Image: "hanifff/test:ex", //nginx:1.12 ?
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "http",
@@ -130,8 +130,8 @@ func main() {
 			panic(fmt.Errorf("Failed to get latest version of Deployment: %v", getErr))
 		}
 
-		result.Spec.Replicas = int32Ptr(1)                           // reduce replica count
-		result.Spec.Template.Spec.Containers[0].Image = "hanifff/test:ex" // change nginx version
+		result.Spec.Replicas = int32Ptr(1)                                // reduce replica count
+		result.Spec.Template.Spec.Containers[0].Image = "hanifff/test:ex" // change nginx version  nginx:1.13
 		_, updateErr := deploymentsClient.Update(result)
 		return updateErr
 	})
@@ -150,17 +150,17 @@ func main() {
 	for _, d := range list.Items {
 		fmt.Printf(" * %s (%d replicas)\n", d.Name, *d.Spec.Replicas)
 	}
-/*
-	// Delete Deployment
-	prompt()
-	fmt.Println("Deleting deployment...")
-	deletePolicy := metav1.DeletePropagationForeground
-	if err := deploymentsClient.Delete("demo-deployment", &metav1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	}); err != nil {
-		panic(err)
-	}
-	fmt.Println("Deleted deployment.")*/
+	/*
+		// Delete Deployment
+		prompt()
+		fmt.Println("Deleting deployment...")
+		deletePolicy := metav1.DeletePropagationForeground
+		if err := deploymentsClient.Delete("demo-deployment", &metav1.DeleteOptions{
+			PropagationPolicy: &deletePolicy,
+		}); err != nil {
+			panic(err)
+		}
+		fmt.Println("Deleted deployment.")*/
 }
 
 func prompt() {
