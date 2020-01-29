@@ -153,25 +153,11 @@ func (db *GormDB) GetUsers(uids ...uint64) ([]*pb.User, error) {
 
 // UpdateUser updates user information.
 func (db *GormDB) UpdateUser(user *pb.User) error {
-	// Updates will never update IsAdmin to false because of gorm restrictions
-	// we need to update IsAdmin field explicitly
-	if err := db.conn.Model(&pb.User{}).Where(&pb.User{ID: user.ID}).Update("is_admin", user.IsAdmin).Error; err != nil {
+	if err := db.conn.First(&pb.User{ID: user.GetID()}).Error; err != nil {
 		return err
 	}
-	return db.conn.Model(&pb.User{}).Updates(user).Error
-
-}
-
-// SetAdmin promotes user with given ID to admin.
-func (db *GormDB) SetAdmin(uid uint64) error {
-	var user pb.User
-	if err := db.conn.First(&user, uid).Error; err != nil {
-		return err
-	}
-	// TODO(vera): is there a reason we are doing it in two steps?
-	admin := true
-	user.IsAdmin = admin
 	return db.conn.Save(&user).Error
+
 }
 
 // GetRemoteIdentity fetches remote identity by provider and ID.
@@ -196,7 +182,7 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb
 	}
 	// The first user defaults to admin user.
 	if user.ID == 1 {
-		if err := db.SetAdmin(1); err != nil {
+		if err := db.UpdateUser(&pb.User{ID: user.ID, IsAdmin: true}); err != nil {
 			return err
 		}
 		admin := true

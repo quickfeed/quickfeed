@@ -696,7 +696,7 @@ func TestGormDBSetAdminNoRecord(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if err := db.SetAdmin(id); err != gorm.ErrRecordNotFound {
+	if err := db.UpdateUser(&pb.User{ID: id, IsAdmin: true}); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 }
@@ -734,7 +734,7 @@ func TestGormDBSetAdmin(t *testing.T) {
 		t.Error("user should not yet be an administrator")
 	}
 
-	if err := db.SetAdmin(user.ID); err != nil {
+	if err := db.UpdateUser(&pb.User{ID: user.ID, IsAdmin: true}); err != nil {
 		t.Error(err)
 	}
 

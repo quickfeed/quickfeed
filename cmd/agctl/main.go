@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/urfave/cli"
@@ -54,7 +55,7 @@ func main() {
 						if !c.IsSet("id") {
 							return cli.NewExitError("not implemented", 9)
 						}
-						return db.SetAdmin(c.Uint64("id"))
+						return db.UpdateUser(&pb.User{ID: c.Uint64("id"), IsAdmin: true})
 					},
 				},
 			},
