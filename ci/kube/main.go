@@ -184,26 +184,30 @@ func int32Ptr(i int32) *int32 { return &i }
 package main
 
 import (
-	"flag"
+	//"flag"
 	"fmt"
+	"time"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
-	"path/filepath"
+	"k8s.io/client-go/rest"
+	//"k8s.io/client-go/tools/clientcmd"
+	//"k8s.io/client-go/util/homedir"
+	//"path/filepath"
 )
 
 func main() {
 
-	var kubeconfig *string
+	/*var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/$HOME/.kube/config")
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "$HOME/.kube/config")
+		kubeconfig = flag.String("kubeconfig", "", "/$HOME/.kube/config")
 	}
-	flag.Parse()
+	flag.Parse()*/
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	//config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	//config, err := clientcmd.BuildConfigFromFlags("","/$HOME/.kube/config")
+	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err)
 	}
@@ -211,7 +215,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// access the API to list pods
-	pods, _ := clientset.CoreV1().Pods("").List(v1.ListOptions{})
-	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+	for{
+		// access the API to list pods
+		pods,err := clientset.CoreV1().Pods("").List(v1.ListOptions{})
+		if err != nil {
+			panic(err.Error())
+		}
+		fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+
+		time.Sleep(10 * time.Second)
+	}
 }
