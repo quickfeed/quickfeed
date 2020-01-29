@@ -13,7 +13,10 @@ import (
 )
 
 // ErrGroupNameDuplicate indicates that another group with the same name already exists on this course
-var ErrGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group with this name already exists. Please choose another name")
+var (
+	ErrGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group with this name already exists. Please choose another name")
+	ErrUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
+)
 
 // getGroup returns the group for the given group ID.
 func (s *AutograderService) getGroup(request *pb.GetGroupRequest) (*pb.Group, error) {
@@ -35,8 +38,11 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	// let the database return err if enrollment has no group
-	return s.db.GetGroup(enrollment.GroupID)
+	grp, err := s.db.GetGroup(enrollment.GroupID)
+	if err != nil && err == gorm.ErrRecordNotFound {
+		err = ErrUserNotInGroup
+	}
+	return grp, err
 }
 
 // DeleteGroup deletes group with the provided ID.
