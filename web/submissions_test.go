@@ -21,7 +21,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	admin := createFakeUser(t, db, 1)
 
 	teacher := createFakeUser(t, db, 2)
-	db.SetAdmin(teacher.ID)
+	db.UpdateUser(&pb.User{ID: teacher.ID, IsAdmin: true})
 	var course pb.Course
 	course.Provider = "fake"
 	// only created 1 directory, if we had created two directories ID would be 2

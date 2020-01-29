@@ -26,10 +26,6 @@ type Database interface {
 	// UpdateUser updates the user's details, excluding remote identities.
 	UpdateUser(*pb.User) error
 
-	// SetAdmin makes an existing user an administrator. The admin role is allowed to
-	// create courses, so it makes sense that teachers are made admins.
-	SetAdmin(uint64) error
-
 	CreateCourse(uint64, *pb.Course) error
 	GetCourse(uint64, bool) (*pb.Course, error)
 	GetCourseByOrganizationID(did uint64) (*pb.Course, error)
