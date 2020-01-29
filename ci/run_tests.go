@@ -66,14 +66,14 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 // createAssignmentInfo creates a struct with data to be supplied to
 // the template script files.
 func createAssignmentInfo(db database.Database, course *pb.Course, assignment *pb.Assignment, cloneURL string) (*AssignmentInfo, error) {
-	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get course creator: %w", err)
-	}
-	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get access token for course creator: %w", err)
-	}
+	// courseCreator, err := db.GetUser(course.GetCourseCreatorID())
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to get course creator: %w", err)
+	// }
+	// accessToken, err := course.GetAccessToken(courseCreator)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	repoQuery := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
@@ -88,7 +88,7 @@ func createAssignmentInfo(db database.Database, course *pb.Course, assignment *p
 	return &AssignmentInfo{
 		AssignmentName:     assignment.GetName(),
 		Language:           assignment.GetLanguage(),
-		CreatorAccessToken: accessToken,
+		CreatorAccessToken: course.GetAccessToken(),
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),

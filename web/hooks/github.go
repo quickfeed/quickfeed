@@ -75,7 +75,7 @@ func (wh githubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		assignments.UpdateFromTestsRepo(wh.logger, wh.db, repo, uint64(payload.GetSender().GetID()))
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, repo, course, uint64(payload.GetSender().GetID()))
 
 	case repo.IsStudentRepo():
 		wh.logger.Debugf("Processing push event for %s", payload.GetRepo().GetName())
