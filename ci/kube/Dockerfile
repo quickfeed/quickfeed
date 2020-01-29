@@ -1,4 +1,4 @@
-# Start from the latest golang base image
+#!/bin/sh
 FROM golang:latest as builder
 
 # Add Maintainer Info
