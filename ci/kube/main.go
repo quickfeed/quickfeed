@@ -47,7 +47,7 @@ func main() {
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		kubeconfig = flag.String("kubeconfig", "", "$HOME/.kube/config")
 	}
 	flag.Parse()
 
@@ -83,7 +83,7 @@ func main() {
 					Containers: []apiv1.Container{
 						{
 							Name:  "web",
-							Image: "hanifff/test:ex",
+							Image: "hanifff/test:contr",
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "http",
@@ -131,7 +131,7 @@ func main() {
 		}
 
 		result.Spec.Replicas = int32Ptr(1)                           // reduce replica count
-		result.Spec.Template.Spec.Containers[0].Image = "hanifff/test:ex" // change nginx version
+		result.Spec.Template.Spec.Containers[0].Image = "hanifff/test:contr" // change nginx version
 		_, updateErr := deploymentsClient.Update(result)
 		return updateErr
 	})
