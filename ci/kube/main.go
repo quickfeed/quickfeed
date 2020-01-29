@@ -129,7 +129,7 @@ func main() {
 		if getErr != nil {
 			panic(fmt.Errorf("Failed to get latest version of Deployment: %v", getErr))
 		}
-		result.Spec.Replicas = int32Ptr(1)                           // reduce replica count
+		result.Spec.Replicas = int32Ptr(1)                                   // reduce replica count
 		result.Spec.Template.Spec.Containers[0].Image = "hanifff/test:contr" // change nginx version
 		_, updateErr := deploymentsClient.Update(result)
 		return updateErr
