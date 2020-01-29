@@ -39,6 +39,7 @@ require (
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/webhooks.v3 v3.2.0
 	gopkg.in/yaml.v2 v2.2.4
+	k8s.io/api v0.17.1
 	k8s.io/apimachinery v0.17.1
 	k8s.io/client-go v0.17.1
 	k8s.io/utils v0.0.0-20200109141947-94aeca20bf09 // indirect
