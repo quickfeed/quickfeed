@@ -1,11 +1,10 @@
-#!/bin/sh
 FROM golang:latest as builder
 
 # Add Maintainer Info
 LABEL maintainer="Hanif <mohamad.h@hotmail.no>"
 
 # Set the Current Working Directory inside the container
-WORKDIR /kube
+WORKDIR /kube/app
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -17,7 +16,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o kube .
+RUN env CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -o app
 
 ######## Start a new stage from scratch #######
 FROM alpine:latest
@@ -27,10 +26,10 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder /kube .
+COPY --from=builder kube/app .
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["./kube"]
+CMD ["./app"]

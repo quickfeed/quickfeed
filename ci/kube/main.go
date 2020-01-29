@@ -33,7 +33,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	//
 	// Uncomment to load all auth plugins
-	// _ "k8s.io/client-go/plugin/pkg/client/auth"
+	//  "k8s.io/client-go/plugin/pkg/client/auth"
 	//
 	// Or uncomment to load specific auth plugins
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/azure"
@@ -83,12 +83,12 @@ func main() {
 					Containers: []apiv1.Container{
 						{
 							Name:  "web",
-							Image: "hanifff/test:contr",
+							Image: "hanifff/test:contLast0",
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "http",
 									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: 80,
+									ContainerPort: 8080,
 								},
 							},
 						},
@@ -130,7 +130,7 @@ func main() {
 			panic(fmt.Errorf("Failed to get latest version of Deployment: %v", getErr))
 		}
 		result.Spec.Replicas = int32Ptr(1)                                   // reduce replica count
-		result.Spec.Template.Spec.Containers[0].Image = "hanifff/test:contr" // change nginx version
+		result.Spec.Template.Spec.Containers[0].Image = "hanifff/test:contLast0" // change nginx version
 		_, updateErr := deploymentsClient.Update(result)
 		return updateErr
 	})
