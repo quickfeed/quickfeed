@@ -15,7 +15,8 @@ limitations under the License.
 */
 
 // Note: the example only works with the code within the same release/branch.
-package main
+
+/*package main
 
 import (
 	"bufio"
@@ -26,6 +27,8 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -64,7 +67,7 @@ func main() {
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "demo-deployment",
+			Name: "kube-dep",
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(2),
@@ -129,7 +132,7 @@ func main() {
 		if getErr != nil {
 			panic(fmt.Errorf("Failed to get latest version of Deployment: %v", getErr))
 		}
-		result.Spec.Replicas = int32Ptr(1)                                   // reduce replica count
+		result.Spec.Replicas = int32Ptr(1)                                       // reduce replica count
 		result.Spec.Template.Spec.Containers[0].Image = "hanifff/test:contLast0" // change nginx version
 		_, updateErr := deploymentsClient.Update(result)
 		return updateErr
@@ -159,7 +162,7 @@ func main() {
 		}); err != nil {
 			panic(err)
 		}
-		fmt.Println("Deleted deployment.")*/
+		fmt.Println("Deleted deployment.")
 }
 
 func prompt() {
@@ -175,3 +178,40 @@ func prompt() {
 }
 
 func int32Ptr(i int32) *int32 { return &i }
+
+
+*/
+package main
+
+import (
+	"flag"
+	"fmt"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+	"path/filepath"
+)
+
+func main() {
+
+	var kubeconfig *string
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "$HOME/.kube/config")
+	}
+	flag.Parse()
+
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		panic(err)
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err)
+	}
+	// access the API to list pods
+	pods, _ := clientset.CoreV1().Pods("").List(v1.ListOptions{})
+	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+}
