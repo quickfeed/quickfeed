@@ -66,15 +66,6 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 // createAssignmentInfo creates a struct with data to be supplied to
 // the template script files.
 func createAssignmentInfo(db database.Database, course *pb.Course, assignment *pb.Assignment, cloneURL string) (*AssignmentInfo, error) {
-	// courseCreator, err := db.GetUser(course.GetCourseCreatorID())
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get course creator: %w", err)
-	// }
-	// accessToken, err := course.GetAccessToken(courseCreator)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	repoQuery := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
 		RepoType:       pb.Repository_TESTS,

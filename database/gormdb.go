@@ -691,6 +691,12 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 // updateAccessTokenCache caches the access token for the course
 // to allow easy access elsewhere.
 func (db *GormDB) updateAccessTokenCache(course *pb.Course) {
+	existingToken := course.GetAccessToken()
+	if existingToken != "" {
+		// no need to cache again
+		return
+	}
+	// only need to query db if not in cache
 	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
 	if err != nil {
 		// failed to get course creator; ignore
