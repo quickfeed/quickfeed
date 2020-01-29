@@ -674,9 +674,7 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 			return nil, err
 		}
 	}
-	if err := db.updateAccessTokenCache(&course); err != nil {
-		return nil, err
-	}
+	db.updateAccessTokenCache(&course)
 	return &course, nil
 }
 
@@ -686,26 +684,25 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
-	if err := db.updateAccessTokenCache(&course); err != nil {
-		return nil, err
-	}
+	db.updateAccessTokenCache(&course)
 	return &course, nil
 }
 
 // updateAccessTokenCache caches the access token for the course
 // to allow easy access elsewhere.
-func (db *GormDB) updateAccessTokenCache(course *pb.Course) error {
+func (db *GormDB) updateAccessTokenCache(course *pb.Course) {
 	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
 	if err != nil {
-		return fmt.Errorf("failed to get course creator: %w", err)
+		// failed to get course creator; ignore
+		return
 	}
 	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
 	if err != nil {
-		return fmt.Errorf("failed to get access token for course creator: %w", err)
+		// failed to get access token for course creator; ignore
+		return
 	}
 	// update the access token cache
 	pb.SetAccessToken(course.GetID(), accessToken)
-	return nil
 }
 
 // UpdateCourse updates course information.
