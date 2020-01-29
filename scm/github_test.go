@@ -62,6 +62,7 @@ func TestListHooks(t *testing.T) {
 }
 
 func TestCreateHook(t *testing.T) {
+	t.Skip("Disabled for now; need to add new method DeleteHook() before enabling again")
 	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
 	if len(accessToken) < 1 {
 		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")

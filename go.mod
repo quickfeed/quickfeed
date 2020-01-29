@@ -38,7 +38,5 @@ require (
 	golang.org/x/sys v0.0.0-20191002091554-b397fe3ad8ed // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/grpc v1.21.1
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/webhooks.v3 v3.2.0
 	gopkg.in/yaml.v2 v2.2.2
 )

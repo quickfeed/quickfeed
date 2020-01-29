@@ -1,4 +1,4 @@
-package web
+package assignments
 
 import (
 	"context"

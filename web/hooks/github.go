@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/assignments"
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
 	"github.com/google/go-github/v29/github"
@@ -51,6 +52,10 @@ func (wh githubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wh githubWebHook) handlePush(payload *github.PushEvent) {
+	if payload.GetRef() != "refs/heads/master" {
+		wh.logger.Debugf("Ignoring push event for non-master branch: %s", payload.GetRef())
+	}
+
 	repo, err := wh.db.GetRepositoryByRemoteID(uint64(payload.GetRepo().GetID()))
 	if err != nil {
 		wh.logger.Errorf("Failed to get repository from database: %w", err)
@@ -69,8 +74,7 @@ func (wh githubWebHook) handlePush(payload *github.PushEvent) {
 	case repo.IsTestsRepo():
 		// the push event is for the 'tests' repo, which means that we
 		// should update the course data (assignments) in the database
-		// payload.GetSender().GetID()
-		// refreshAssignmentsFromTestsRepo(logger, db, repo, uint64(p.Sender.ID))
+		assignments.UpdateFromTestsRepo(wh.logger, wh.db, repo, uint64(payload.GetSender().GetID()))
 
 	case repo.IsStudentRepo():
 		wh.logger.Debugf("Processing push event for %s", payload.GetRepo().GetName())
