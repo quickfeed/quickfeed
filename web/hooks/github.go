@@ -54,6 +54,7 @@ func (wh githubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 func (wh githubWebHook) handlePush(payload *github.PushEvent) {
 	if payload.GetRef() != "refs/heads/master" {
 		wh.logger.Debugf("Ignoring push event for non-master branch: %s", payload.GetRef())
+		return
 	}
 
 	repo, err := wh.db.GetRepositoryByRemoteID(uint64(payload.GetRepo().GetID()))
