@@ -6,10 +6,14 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
+	"github.com/gosimple/slug"
 	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// ErrGroupNameDuplicate indicates that another group with the same name already exists on this course
+var ErrGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group with this name already exists. Please choose another name")
 
 // getGroup returns the group for the given group ID.
 func (s *AutograderService) getGroup(request *pb.GetGroupRequest) (*pb.Group, error) {
@@ -76,6 +80,16 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
 func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
+	// check that there are no other groups with the same name
+	// or a name that will result in the same github name
+	groups, _ := s.db.GetGroupsByCourse(request.GetCourseID())
+	for _, group := range groups {
+		if slug.Make(request.GetName()) == slug.Make(group.GetName()) {
+			s.logger.Errorf("failed to create group %s, another group % already exists, both names will result in %s on GitHub", request.Name, group.Name, slug.Make(request.Name))
+			return nil, ErrGroupNameDuplicate
+		}
+	}
+
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(request); err != nil {
 		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %s", request.GetName(), err)
