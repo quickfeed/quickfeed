@@ -477,11 +477,11 @@ func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.
 		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-
 	if !(s.isTeacher(usr.GetID(), in.GetCourseID()) || usr.IsAdmin && s.isEnrolled(usr.GetID(), in.GetCourseID())) {
 		s.logger.Errorf("GetCourseLabSubmissions failed: user %s is not teacher or submission author", usr.GetLogin())
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can get all lab submissions")
 	}
+	s.logger.Debugf("GetCourseLabSubmissions: %v", in)
 
 	labs, err := s.getAllLabs(in)
 	if err != nil {
