@@ -13,24 +13,14 @@ import (
 	"go.uber.org/zap"
 )
 
-// UpdateFromTestsRepo updates the database record for the course assignments
-func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, course *pb.Course, senderID uint64) {
-	logger.Debug("Refreshing course informaton in database")
-	provider := "github"
-
-	remoteIdentity, err := db.GetRemoteIdentity(provider, senderID)
-	if err != nil {
-		logger.Errorf("Failed to get sender's remote identity: %w", err)
-		return
-	}
-	logger.Debug("Found sender's remote identity", zap.String("remote identity", remoteIdentity.String()))
-
-	s, err := scm.NewSCMClient(logger, provider, remoteIdentity.AccessToken)
+// UpdateFromTestsRepo updates the database record for the course assignments.
+func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, course *pb.Course) {
+	logger.Debugf("Updating %s from '%s' repository", course.GetCode(), pb.TestsRepo)
+	s, err := scm.NewSCMClient(logger, course.GetProvider(), course.GetAccessToken())
 	if err != nil {
 		logger.Errorf("Failed to create SCM Client: %w", err)
 		return
 	}
-
 	assignments, err := FetchAssignments(context.Background(), s, course)
 	if err != nil {
 		logger.Errorf("Failed to fetch assignments from 'tests' repository: %w", err)
