@@ -375,6 +375,9 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	}
 	group, err := s.createGroup(in)
 	if err != nil {
+		if err == ErrGroupNameDuplicate {
+			return nil, err
+		}
 		s.logger.Errorf("CreateGroup failed: %w", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to create group")
 	}
