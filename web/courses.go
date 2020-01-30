@@ -221,13 +221,14 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 		return nil, err
 	}
 
+	//TODO(meling): Not sure this cache is effective, since the map is created on every call! Consider options!
+
 	// make a local map to store database values to avoid querying the database multiple times
 	// format: [studentID][assignmentID]{latest submission}
 	labCache := make(map[uint64]map[uint64]pb.Submission)
 
 	// populate cache map with student labs, filtering the latest submissions for every assignment
 	for _, lab := range allLabs {
-
 		labID := lab.GetUserID()
 		if request.GroupLabs {
 			labID = lab.GetGroupID()
@@ -330,21 +331,17 @@ func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint
 }
 
 func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
-
 	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
 		return err
 	}
-
 	repos, err := s.db.GetRepositories(&pb.Repository{OrganizationID: course.GetOrganizationID(), UserID: request.GetUserID(), GroupID: request.GetGroupID()})
 	if err != nil {
 		return err
 	}
-
 	if len(repos) < 1 {
 		return fmt.Errorf("no repositories found")
 	}
-
 	return isEmpty(ctx, sc, repos)
 }
 
