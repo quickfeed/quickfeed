@@ -28,7 +28,7 @@ func TestParseScript(t *testing.T) {
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(testURL, ".git"), "https://"),
 		RandomSecret:       randomString,
 	}
-	j, err := ParseScriptTemplate("scripts", info)
+	j, err := parseScriptTemplate("scripts", info)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,13 +39,13 @@ func TestParseScript(t *testing.T) {
 	}
 
 	info.Language = "python361"
-	_, err = ParseScriptTemplate("scripts", info)
+	_, err = parseScriptTemplate("scripts", info)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	info.Language = "java8"
-	_, err = ParseScriptTemplate("scripts", info)
+	_, err = parseScriptTemplate("scripts", info)
 	if err != nil {
 		t.Fatal(err)
 	}
