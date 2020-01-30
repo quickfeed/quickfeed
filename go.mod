@@ -5,7 +5,6 @@ go 1.12
 require (
 	github.com/Microsoft/go-winio v0.4.4 // indirect
 	github.com/autograde/kit v0.0.0-20190817180210-34457ff57972
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
 	github.com/docker/docker v0.0.0-20170803041405-316b4ba9c289
 	github.com/docker/go-connections v0.3.0 // indirect
@@ -34,14 +33,14 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20191001170739-f9e2070545dc // indirect
-	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191002091554-b397fe3ad8ed // indirect
 	google.golang.org/grpc v1.21.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/webhooks.v3 v3.2.0
 	gopkg.in/yaml.v2 v2.2.4
-	k8s.io/api v0.17.1 // indirect
+	k8s.io/api v0.17.1
 	k8s.io/apimachinery v0.17.1
-	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/client-go v0.17.1
 	k8s.io/utils v0.0.0-20200109141947-94aeca20bf09 // indirect
 )
