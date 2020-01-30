@@ -9,9 +9,9 @@ func (u User) IsOwner(userID uint64) bool {
 
 // GetRemoteIDFor returns the user's remote identity for the given provider.
 // If no remote identity for the given provider is found, then nil is returned.
-func (user User) GetRemoteIDFor(provider string) *RemoteIdentity {
+func (u User) GetRemoteIDFor(provider string) *RemoteIdentity {
 	var remoteID *RemoteIdentity
-	for _, v := range user.RemoteIdentities {
+	for _, v := range u.RemoteIdentities {
 		if v.Provider == provider {
 			remoteID = v
 			break
