@@ -144,7 +144,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		return fmt.Errorf("updateGroup: organization not found: %w", err)
 	}
 
-	if len(repos) == 0 && group.GetTeamID() < 1 {
+	if len(repos) == 0 {
 		// found no repos for the group; create group repo and team
 		if request.GetName() != "" {
 			group.Name = request.Name
@@ -158,10 +158,11 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		groupRepo := &pb.Repository{
 			OrganizationID: course.OrganizationID,
 			RepositoryID:   repo.ID,
-			GroupID:        request.ID,
+			GroupID:        group.ID,
 			HTMLURL:        repo.WebURL,
 			RepoType:       pb.Repository_GROUP,
 		}
+		s.logger.Debugf("Creating group repo in the database with query: %+v", groupRepo)
 		if err := s.db.CreateRepository(groupRepo); err != nil {
 			return err
 		}
