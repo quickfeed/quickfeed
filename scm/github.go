@@ -320,7 +320,7 @@ func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string)
 		return nil, fmt.Errorf("ListHooks: found no hooks")
 	}
 	for _, hook := range gitHooks {
-		s.logger.Infof("Found hook with events: %s", hook.Events)
+		s.logger.Debugf("Found hook with events: %s", hook.Events)
 		hooks = append(hooks, &Hook{
 			ID:     uint64(hook.GetID()),
 			URL:    hook.GetURL(),
@@ -393,7 +393,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 	// first check whether the team with this name already exists on this organization
 	team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, slug.Make(opt.TeamName))
 	if err != nil {
-		s.logger.Infof("Team %s not found as expected: %s", opt.TeamName, err)
+		s.logger.Debugf("Team %s not found as expected: %s", opt.TeamName, err)
 	}
 
 	if team == nil {
@@ -409,7 +409,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 				}
 			}
 			// continue if it is one of standard teacher/student teams. Such teams can be safely reused
-			s.logger.Infof("Team %s already exists on organization %s", opt.TeamName, opt.Organization.Path)
+			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization.Path)
 		}
 	}
 

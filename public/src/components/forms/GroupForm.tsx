@@ -251,15 +251,18 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
             errors.push("Group mush have members.");
         }
 
-        if (this.state.curUser
-            && (this.state.curUser.link.getStatus() === Enrollment.UserStatus.STUDENT
-                || this.state.curUser.link.getStatus() === Enrollment.UserStatus.TEACHER)
-            && !this.isCurrentStudentSelected(this.state.curUser)) {
-                if (this.state.curUser.link.getStatus() !== Enrollment.UserStatus.TEACHER) {
-                    errors.push("You must be a member of the group");
-                }
-        }
+        if (!this.userValidate(this.state.curUser)) {
+            errors.push("You must be a member of the group");
+        }        
         return errors;
+    }
+
+    private userValidate(curUser: IUserRelation | undefined): boolean {
+        if (curUser && curUser.link.getStatus() === Enrollment.UserStatus.TEACHER) {
+            return true
+        } else {
+            return curUser ? curUser.link.getStatus() === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser) : false
+        }
     }
 
     private getFlashErrors(errors: string[]): JSX.Element {
@@ -278,13 +281,13 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     }
 
     private isCurrentStudentSelected(student: IUserRelation): boolean {
-        let ans = false;
+        let foundSelected = false;
         this.state.selectedStudents.forEach((user) => {
             if (user.user.getId() === student.user.getId()) {
-                ans = true;
+                foundSelected = true;
             }
         })
-        return ans;
+        return foundSelected;
     }
 
     private getSelectedStudents(curUser: IUserRelation | undefined): IUserRelation[] {
