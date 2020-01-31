@@ -182,11 +182,10 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb
 	}
 	// The first user defaults to admin user.
 	if user.ID == 1 {
-		if err := db.UpdateUser(&pb.User{ID: user.ID, IsAdmin: true}); err != nil {
+		user.IsAdmin = true
+		if err := db.UpdateUser(user); err != nil {
 			return err
 		}
-		admin := true
-		user.IsAdmin = admin
 	}
 	return nil
 }
