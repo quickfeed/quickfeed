@@ -46,6 +46,9 @@ export class AdminPage extends ViewPage {
             };
         });
 
+        // sorting registered user so that admins show first
+        allUsers.sort((x,y) => (x.user.getIsadmin() < y.user.getIsadmin()? 1 : -1));
+
         return <div>
             <h1>All Users</h1>
             <UserView
