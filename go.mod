@@ -22,7 +22,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v0.0.0-20170803061611-b42edd791fad
 	github.com/labstack/echo-contrib v0.0.0-20170707172923-c43bc4a1577d
-	github.com/labstack/gommon v0.2.9 // indirect
+	github.com/labstack/gommon v0.2.9
 	github.com/markbates/goth v0.0.0-20170721181425-c55b917ee947
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/opencontainers/go-digest v1.0.0-rc0 // indirect

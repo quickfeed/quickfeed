@@ -135,13 +135,11 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// first make sure that repo does not already exist for this user or group
-	s.logger.Debugf("GitHub, checking for repo with owner: %s and path: %s", opt.Owner, opt.Path)
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Path, opt.Path)
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Path, slug.Make(opt.Path))
 	if err != nil {
 		// in most cases the repo will not exist and "not found" error will be returned
 		s.logger.Debugf("CreateRepository got expected error when checking for %s repository: %s", opt.Path, err)
 	}
-	s.logger.Debugf("GitHub got group repo: %+v", repo)
 
 	if repo == nil {
 		repo, _, err = s.client.Repositories.Create(ctx, opt.Organization.Path, &github.Repository{
@@ -393,7 +391,6 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 	}
 
 	// first check whether the team with this name already exists on this organization
-	s.logger.Debugf("GitHub: checking for existing team with name %s, slug %s, and org %s", opt.TeamName, slug.Make(opt.TeamName), opt.Organization.Path)
 	team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, slug.Make(opt.TeamName))
 	if err != nil {
 		s.logger.Infof("Team %s not found as expected: %s", opt.TeamName, err)
