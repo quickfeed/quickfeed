@@ -357,7 +357,7 @@ func (s *AutograderService) GetGroupByUserAndCourse(ctx context.Context, in *pb.
 	return group, nil
 }
 
-// CreateGroup creates a new group.
+// CreateGroup creates a new group in the database.
 // Access policy: Any User enrolled in course and specified as member of the group or a course teacher.
 func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.Group, error) {
 	usr, err := s.getCurrentUser(ctx)
@@ -375,6 +375,9 @@ func (s *AutograderService) CreateGroup(ctx context.Context, in *pb.Group) (*pb.
 	}
 	group, err := s.createGroup(in)
 	if err != nil {
+		if err == ErrGroupNameDuplicate {
+			return nil, err
+		}
 		s.logger.Errorf("CreateGroup failed: %w", err)
 		return nil, status.Error(codes.InvalidArgument, "failed to create group")
 	}

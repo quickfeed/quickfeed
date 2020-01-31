@@ -5,9 +5,7 @@ import { Search } from "../../components";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { UserManager } from "../../managers/UserManager";
-import {
-    IUserRelation,
-} from "../../models";
+import { IUserRelation } from "../../models";
 
 interface IGroupProps {
     className: string;
@@ -168,7 +166,6 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                         : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
 
                     this.props.navMan.navigateTo(redirectTo);
-
             }
         }
     }
@@ -210,7 +207,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
             const newStudentArr = this.state.students.slice();
             newStudentArr.splice(index, 1);
             this.setState({
-                students: newStudentArr, // this.state.students.filter((_, i) => i !== index),
+                students: newStudentArr,
                 selectedStudents: newSelectedArr,
             });
         }
@@ -253,16 +250,19 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         if (this.state.selectedStudents.length === 0) {
             errors.push("Group mush have members.");
         }
-        if (this.state.curUser
-            && (this.state.curUser.link.getStatus() === Enrollment.UserStatus.STUDENT
-                || this.state.curUser.link.getStatus() === Enrollment.UserStatus.TEACHER)
-            && !this.isCurrentStudentSelected(this.state.curUser)) {
 
-            if (this.state.curUser.link.getStatus() !== Enrollment.UserStatus.TEACHER) {
-                errors.push("You must be a member of the group");
-            }
-        }
+        if (!this.userValidate(this.state.curUser)) {
+            errors.push("You must be a member of the group");
+        }        
         return errors;
+    }
+
+    private userValidate(curUser: IUserRelation | undefined): boolean {
+        if (curUser && curUser.link.getStatus() === Enrollment.UserStatus.TEACHER) {
+            return true
+        } else {
+            return curUser ? curUser.link.getStatus() === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser) : false
+        }
     }
 
     private getFlashErrors(errors: string[]): JSX.Element {
@@ -281,8 +281,13 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     }
 
     private isCurrentStudentSelected(student: IUserRelation): boolean {
-        const index = this.state.selectedStudents.indexOf(student);
-        return index >= 0;
+        let foundSelected = false;
+        this.state.selectedStudents.forEach((user) => {
+            if (user.user.getId() === student.user.getId()) {
+                foundSelected = true;
+            }
+        })
+        return foundSelected;
     }
 
     private getSelectedStudents(curUser: IUserRelation | undefined): IUserRelation[] {
