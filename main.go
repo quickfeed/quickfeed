@@ -92,12 +92,7 @@ func main() {
 		Secret:  os.Getenv("WEBHOOK_SECRET"),
 	}
 
-	docker := ci.Docker{
-		Endpoint: envString("DOCKER_HOST", "http://localhost:4243"),
-		Version:  envString("DOCKER_VERSION", "1.30"),
-	}
-
-	agService := web.NewAutograderService(logger, db, scms, bh, &docker)
+	agService := web.NewAutograderService(logger, db, scms, bh, &ci.Docker{})
 	go web.New(agService, *public, *httpAddr, *scriptPath, *fake)
 
 	lis, err := net.Listen("tcp", *grpcAddr)

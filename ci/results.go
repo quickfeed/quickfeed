@@ -58,7 +58,7 @@ func ExtractResult(logger *zap.SugaredLogger, out, secret string, execTime time.
 			BuildID:   atomic.AddInt64(globalBuildID, 1),
 			BuildDate: time.Now().Format("2006-01-02T15:04:05"),
 			BuildLog:  strings.Join(filteredLog, "\n"),
-			ExecTime:  int64(execTime),
+			ExecTime:  execTime.Milliseconds(),
 		},
 	}, nil
 }
@@ -78,6 +78,6 @@ func (r Result) Marshal() (buildInfo string, scores string, err error) {
 }
 
 // TotalScore returns the total score for this execution result.
-func (r Result) TotalScore() uint8 {
+func (r Result) TotalScore() uint32 {
 	return score.Total(r.Scores)
 }

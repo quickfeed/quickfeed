@@ -659,13 +659,11 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 	var course pb.Course
 
 	if withInfo {
-
 		// we only want submission from users enrolled in the course
 		userStates := []pb.Enrollment_UserStatus{
 			pb.Enrollment_STUDENT,
 			pb.Enrollment_TEACHER,
 		}
-
 		// and only group submissions from approved groups
 		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: cid}
 		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Groups", modelGroup).First(&course, cid).Error; err != nil {
@@ -676,6 +674,7 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 			return nil, err
 		}
 	}
+	db.updateAccessTokenCache(&course)
 	return &course, nil
 }
 
@@ -685,7 +684,31 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
+	db.updateAccessTokenCache(&course)
 	return &course, nil
+}
+
+// updateAccessTokenCache caches the access token for the course
+// to allow easy access elsewhere.
+func (db *GormDB) updateAccessTokenCache(course *pb.Course) {
+	existingToken := course.GetAccessToken()
+	if existingToken != "" {
+		// no need to cache again
+		return
+	}
+	// only need to query db if not in cache
+	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
+	if err != nil {
+		// failed to get course creator; ignore
+		return
+	}
+	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
+	if err != nil {
+		// failed to get access token for course creator; ignore
+		return
+	}
+	// update the access token cache
+	pb.SetAccessToken(course.GetID(), accessToken)
 }
 
 // UpdateCourse updates course information.
