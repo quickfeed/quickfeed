@@ -470,7 +470,8 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	return submissions, nil
 }
 
-// GetCourseLabSubmissions returns all the latest submissions for every individual course assignment for each course student
+// GetCourseLabSubmissions returns all the latest submissions
+// for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
 func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
 	usr, err := s.getCurrentUser(ctx)
