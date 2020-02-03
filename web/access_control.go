@@ -125,14 +125,6 @@ func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 	})
 }
 
-// isChangingTeacherState returns true if newEnroll represents
-// an attempt to change status on an existing enrollment to non-teacher.
-func (s *AutograderService) isChangingTeacherState(newEnroll *pb.Enrollment) bool {
-	return s.hasCourseAccess(newEnroll.GetUserID(), newEnroll.GetCourseID(), func(e *pb.Enrollment) bool {
-		return e.GetStatus() == pb.Enrollment_TEACHER && newEnroll.GetStatus() != pb.Enrollment_TEACHER
-	})
-}
-
 // isCourseCreator returns true if the given user is course creator for the given course
 func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
 	course, _ := s.db.GetCourse(courseID, false)
