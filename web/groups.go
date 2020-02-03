@@ -151,7 +151,6 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	}
 
 	if len(repos) == 0 {
-		// found no repos for the group; create group repo and team
 		if request.GetName() != "" {
 			group.Name = request.Name
 		}
@@ -173,7 +172,9 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 			return err
 		}
 		group.TeamID = team.ID
-	} else {
+	}
+
+	if group.TeamID > 0 {
 		// github team already exists, update its members
 		// use the group's existing team ID obtained from the database above.
 		if err := updateGroupTeam(ctx, sc, org, group); err != nil {
