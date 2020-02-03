@@ -173,9 +173,9 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	//appsv1 "k8s.io/api/apps/v1"
-	//apiv1 "k8s.io/api/core/v1"
-	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	//"k8s.io/client-go/tools/clientcmd"
 	//"k8s.io/client-go/util/homedir"
@@ -193,7 +193,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
- /* 	deploymentsClient := clientset.AppsV1().Deployments("agcicd")
+  	deploymentsClient := clientset.AppsV1().Deployments("agcicd")
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -230,17 +230,17 @@ func main() {
 				},
 			},
 		},
-	} */
+	} 
 
 
-/* 	// Update the Deployment
+ 	// Update the Deployment
 	fmt.Println("Updating deployment...")
 	result, err := deploymentsClient.Update(deployment)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("Updated deployment %q.\n", result.GetObjectMeta().GetName())
-  */
+
 
 	for{
 		// access the API to list pods
