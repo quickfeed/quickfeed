@@ -99,6 +99,8 @@ var AutograderServiceClient = /** @class */ (function () {
         }, ag_pb_1.Void.deserializeBinary);
         if (!options)
             options = {};
+        if (!credentials)
+            credentials = {};
         options['format'] = 'binary';
         this.client_ = new grpcWeb.GrpcWebClientBase(options);
         this.hostname_ = hostname;
