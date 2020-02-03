@@ -142,47 +142,33 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		return err
 	}
 
-	group.Status = pb.Group_APPROVED
-	group.Users = users
-
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
-	if err != nil {
-		return fmt.Errorf("updateGroup: organization not found: %w", err)
-	}
-
 	if len(repos) == 0 {
+		// only update name if new group
 		if request.GetName() != "" {
 			group.Name = request.Name
 		}
-
-		repo, team, err := createRepoAndTeam(ctx, sc, org, group.Name, group.Name, group.UserNames())
+		repo, team, err := createRepoAndTeam(ctx, sc, course.GetOrganizationID(), group.Name, request.UserNames())
 		if err != nil {
 			return err
 		}
-		// create database entry for group repository
-		groupRepo := &pb.Repository{
-			OrganizationID: course.OrganizationID,
-			RepositoryID:   repo.ID,
-			GroupID:        group.ID,
-			HTMLURL:        repo.WebURL,
-			RepoType:       pb.Repository_GROUP,
-		}
-		s.logger.Debugf("Creating group repo in the database with query: %+v", groupRepo)
-		if err := s.db.CreateRepository(groupRepo); err != nil {
+		repo.GroupID = group.GetID()
+		s.logger.Debugf("Creating group repo in the database: %+v", repo)
+		if err := s.db.CreateRepository(repo); err != nil {
 			return err
 		}
 		group.TeamID = team.ID
 	}
 
-	if group.TeamID > 0 {
-		// github team already exists, update its members
-		// use the group's existing team ID obtained from the database above.
-		if err := updateGroupTeam(ctx, sc, org, group); err != nil {
+	// if there are changes in group members, update GitHub team
+	if group.ContainsAll(request) {
+		if err := updateGroupTeam(ctx, sc, group); err != nil {
 			return err
 		}
 	}
 
-	// approve the updated group
+	// approve and update the group in the database
+	group.Status = pb.Group_APPROVED
+	group.Users = users
 	return s.db.UpdateGroup(group)
 }
 

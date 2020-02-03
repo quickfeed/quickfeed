@@ -30,17 +30,21 @@ var (
 )
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
-// specified namespace (typically the course name), the path of the repository
-// (typically the name of the student with a '-labs' suffix or the group name).
-// The team name is the student name or group name, whereas the user names are
-// the members of the team. For single student repositories, the user names are
-// typically just the one student's user name.
+// specified namespace (typically the course name), and teamName (name of the group).
+// Repository path and name of the GitHub team will coincide with the group name (teamName).
+// UserNames slice contains GitHub names of all group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, path, teamName string, userNames []string) (*scm.Repository, *scm.Team, error) {
+func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, teamName string, userNames []string) (*pb.Repository, *scm.Team, error) {
+
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: orgID})
+	if err != nil {
+		return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
+	}
+
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
-		Path:         path,
+		Path:         teamName,
 		Private:      true,
 	})
 	if err != nil {
@@ -65,7 +69,15 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
 	}
-	return repo, team, nil
+
+	groupRepo := &pb.Repository{
+		OrganizationID: orgID,
+		RepositoryID:   repo.ID,
+		HTMLURL:        repo.WebURL,
+		RepoType:       pb.Repository_GROUP,
+	}
+
+	return groupRepo, team, nil
 }
 
 // deletes group repository and team
@@ -149,12 +161,11 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	return nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, group *pb.Group) error {
+func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group) error {
 	opt := &scm.TeamOptions{
-		Organization: org,
-		TeamName:     group.Name,
-		TeamID:       group.TeamID,
-		Users:        group.UserNames(),
+		TeamName: group.Name,
+		TeamID:   group.TeamID,
+		Users:    group.UserNames(),
 	}
 	return sc.UpdateTeamMembers(ctx, opt)
 }
