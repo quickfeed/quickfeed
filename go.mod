@@ -10,7 +10,7 @@ require (
 	github.com/docker/go-connections v0.3.0 // indirect
 	github.com/docker/go-units v0.3.1 // indirect
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
-	github.com/gogo/protobuf v1.3.0
+	github.com/gogo/protobuf v1.3.1
 	github.com/google/go-cmp v0.3.0
 	github.com/google/go-github/v29 v29.0.2
 	github.com/gorilla/securecookie v0.0.0-20160422134519-667fe4e3466a // indirect
