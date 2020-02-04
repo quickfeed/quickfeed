@@ -38,10 +38,14 @@ func (s *AutograderService) createEnrollment(request *pb.Enrollment) error {
 }
 
 // updateEnrollment accepts or rejects a user to enroll in a course.
-func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, request *pb.Enrollment) error {
+func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *pb.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
 		return err
+	}
+	// log changes to teacher status
+	if enrollment.Status == pb.Enrollment_TEACHER || request.Status == pb.Enrollment_TEACHER {
+		s.logger.Debugf("User %s attempts changing enrollment status of user %d from %s to %s", curUser, enrollment.UserID, enrollment.Status, request.Status)
 	}
 
 	switch request.Status {
@@ -143,7 +147,7 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 	}
 	for _, enrol := range enrolls {
 		enrol.Status = pb.Enrollment_STUDENT
-		if err = s.updateEnrollment(ctx, sc, enrol); err != nil {
+		if err = s.updateEnrollment(ctx, sc, "", enrol); err != nil {
 			return err
 		}
 	}

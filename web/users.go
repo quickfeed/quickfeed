@@ -52,10 +52,15 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 // updateUser promotes the given user to administrator and/or
 // make other changes to the user database entry for the given user.
 // The isAdmin flag must be true to promote the given user to admin.
-func (s *AutograderService) updateUser(isAdmin bool, request *pb.User) (*pb.User, error) {
+func (s *AutograderService) updateUser(isAdmin bool, curUser string, request *pb.User) (*pb.User, error) {
 	updateUser, err := s.db.GetUser(request.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	// log every change to admin state
+	if updateUser.IsAdmin != request.IsAdmin {
+		s.logger.Debugf("User %s attempts to change admin status of user %s to %v", curUser, updateUser.Login, request.IsAdmin)
 	}
 
 	if request.Name != "" {

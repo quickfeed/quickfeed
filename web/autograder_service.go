@@ -87,7 +87,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 		s.logger.Errorf("UpdateUser failed to update user %d: user is not admin or course creator", in.GetID())
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
 	}
-	usr, err = s.updateUser(usr.IsAdmin, in)
+	usr, err = s.updateUser(usr.IsAdmin, usr.Login, in)
 	if err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %w", in.GetID(), err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
@@ -220,7 +220,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 		s.logger.Errorf("UpdateEnrollment failed: user %s has attempted to demote course creator", usr.GetName())
 		return nil, status.Errorf(codes.PermissionDenied, "course creator cannot be demoted")
 	}
-	err = s.updateEnrollment(ctx, scm, in)
+	err = s.updateEnrollment(ctx, scm, usr.Login, in)
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollment failed: %w", err)
 		if contextCanceled(ctx) {
