@@ -87,7 +87,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 		s.logger.Errorf("UpdateUser failed to update user %d: user is not admin or course creator", in.GetID())
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
 	}
-	usr, err = s.updateUser(usr.IsAdmin, usr.Login, in)
+	usr, err = s.updateUser(usr, in)
 	if err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %w", in.GetID(), err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
