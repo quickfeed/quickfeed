@@ -45,7 +45,7 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 	}
 	// log changes to teacher status
 	if enrollment.Status == pb.Enrollment_TEACHER || request.Status == pb.Enrollment_TEACHER {
-		s.logger.Debugf("User %s attempts changing enrollment status of user %d from %s to %s", curUser, enrollment.UserID, enrollment.Status, request.Status)
+		s.logger.Debugf("User %s attempting to change enrollment status of user %d from %s to %s", curUser, enrollment.UserID, enrollment.Status, request.Status)
 	}
 
 	switch request.Status {

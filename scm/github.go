@@ -726,9 +726,8 @@ func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions)
 
 // GetUserScopes implements the SCM interface
 func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
-	// Authorizations.List method will always return nill, response struct and error,
+	// Authorizations.List method will always return nil, response struct and error,
 	// we are only interested in response. Its header will contain all scopes for current user
-	// TODO(meling) @Vera: the above comment needs to be clarified a little more.
 	_, resp, _ := s.client.Authorizations.List(ctx, &github.ListOptions{})
 	if resp == nil {
 		s.logger.Errorf("GetUserScopes: got no scopes: no authorized user")
