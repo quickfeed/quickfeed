@@ -66,25 +66,3 @@ func Logger(log *zap.Logger) echo.MiddlewareFunc {
 		}
 	}
 }
-
-// WebhookLogger implements the gopkg.in/go-playground/webhooks.v3.Logger
-// interface using a zap.Logger.
-//TODO(meling) with webhooks.v5 it does not use a logger; so we should not need this?
-type WebhookLogger struct {
-	*zap.SugaredLogger
-}
-
-// Info prints basic information.
-func (l WebhookLogger) Info(msg string) {
-	l.SugaredLogger.Info(msg)
-}
-
-// Error prints error information.
-func (l WebhookLogger) Error(msg string) {
-	l.SugaredLogger.Error(msg)
-}
-
-// Debug prints information useful for debugging.
-func (l WebhookLogger) Debug(msg string) {
-	l.SugaredLogger.Debug(msg)
-}

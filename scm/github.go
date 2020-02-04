@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/google/go-github/v26/github"
+	"github.com/google/go-github/v29/github"
 	"github.com/gosimple/slug"
 	"golang.org/x/oauth2"
 )
@@ -98,7 +98,7 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*p
 	if err != nil || gitOrg == nil {
 		return nil, ErrFailedSCM{
 			Method:   "GetOrganization",
-			Message:  fmt.Sprintf("failed to get github organization, make sure it allows third party access"),
+			Message:  fmt.Sprintf("could not find github organization. Make sure it allows third party access."), // this message is logged, never sent to user
 			GitError: err,
 		}
 	}
@@ -135,7 +135,7 @@ func (s *GithubSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 	}
 
 	// first make sure that repo does not already exist for this user or group
-	repo, _, err := s.client.Repositories.Get(ctx, opt.Owner, opt.Path)
+	repo, _, err := s.client.Repositories.Get(ctx, opt.Organization.Path, slug.Make(opt.Path))
 	if err != nil {
 		// in most cases the repo will not exist and "not found" error will be returned
 		s.logger.Debugf("CreateRepository got expected error when checking for %s repository: %s", opt.Path, err)
@@ -260,7 +260,7 @@ func (s *GithubSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user
 	opt := &github.RepositoryAddCollaboratorOptions{
 		Permission: permission,
 	}
-	if _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, user, opt); err != nil {
+	if _, _, err := s.client.Repositories.AddCollaborator(ctx, repo.Owner, repo.Path, user, opt); err != nil {
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "UpdateRepoAccess",
@@ -289,38 +289,29 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 }
 
 // ListHooks implements the SCM interface.
-func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) ([]*Hook, error) {
-	var gitHooks []*github.Hook
-	var hooks []*Hook
+func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) (hooks []*Hook, err error) {
+	var githubHooks []*github.Hook
 
-	if repo == nil || !repo.valid() {
-		return nil, ErrMissingFields{
-			Method:  "ListHooks",
-			Message: fmt.Sprintf("%+v", org),
-		}
-	}
-
-	githubHooks, _, err := s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
-	if err != nil {
-		return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks: %w", err)
-	}
-	gitHooks = githubHooks
-
-	// if org name provided, get all hooks existing on that organization
-	if org != "" {
+	switch {
+	case repo == nil && org != "":
+		// if org name is provided, get organization level hooks
 		orgName := slug.Make(org)
-		githubHooks, _, err := s.client.Organizations.ListHooks(ctx, orgName, nil)
+		githubHooks, _, err = s.client.Organizations.ListHooks(ctx, orgName, nil)
 		if err != nil {
-			return nil, fmt.Errorf("ListHooks: failed to list GitHub hooks for organization %s: %w", orgName, err)
+			return nil, fmt.Errorf("ListHooks: failed to get hooks for organization %q: %w", orgName, err)
 		}
-		gitHooks = githubHooks
+
+	case org == "" && repo != nil && repo.valid():
+		githubHooks, _, err = s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
+		if err != nil {
+			return nil, fmt.Errorf("ListHooks: failed to get hooks for repository %q: %w", repo, err)
+		}
+
+	default:
+		return nil, fmt.Errorf("ListHooks: called with missing or incompatible arguments: %q %q", repo, org)
 	}
-	if len(gitHooks) < 1 {
-		s.logger.Debugf("ListHooks: invalid payload. Repo: %v, org: %s", repo, org)
-		return nil, fmt.Errorf("ListHooks: found no hooks")
-	}
-	for _, hook := range gitHooks {
-		s.logger.Infof("Found hook with events: %s", hook.Events)
+
+	for _, hook := range githubHooks {
 		hooks = append(hooks, &Hook{
 			ID:     uint64(hook.GetID()),
 			URL:    hook.GetURL(),
@@ -389,35 +380,44 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	t, _, err := s.client.Teams.CreateTeam(ctx, opt.Organization.Path, github.NewTeam{
-		Name: opt.TeamName,
-	})
+
+	// first check whether the team with this name already exists on this organization
+	team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization.Path, slug.Make(opt.TeamName))
 	if err != nil {
-		if opt.TeamName != TeachersTeam && opt.TeamName != StudentsTeam {
-			return nil, ErrFailedSCM{
-				Method:   "CreateTeam",
-				Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
-				GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
+		s.logger.Debugf("Team %s not found as expected: %s", opt.TeamName, err)
+	}
+
+	if team == nil {
+		team, _, err = s.client.Teams.CreateTeam(ctx, opt.Organization.Path, github.NewTeam{
+			Name: opt.TeamName,
+		})
+		if err != nil {
+			if opt.TeamName != TeachersTeam && opt.TeamName != StudentsTeam {
+				return nil, ErrFailedSCM{
+					Method:   "CreateTeam",
+					Message:  fmt.Sprintf("failed to create GitHub team %s, make sure it does not already exist", opt.TeamName),
+					GitError: fmt.Errorf("failed to create GitHub team %s: %w", opt.TeamName, err),
+				}
 			}
+			// continue if it is one of standard teacher/student teams. Such teams can be safely reused
+			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization.Path)
 		}
-		// continue if it is one of standard teacher/student teams. Such teams can be safely reused
-		s.logger.Infof("Team %s already exists on organization %s", opt.TeamName, opt.Organization.Path)
 	}
 
 	for _, user := range opt.Users {
-		_, _, err = s.client.Teams.AddTeamMembership(ctx, t.GetID(), user, nil)
+		_, _, err = s.client.Teams.AddTeamMembership(ctx, team.GetID(), user, nil)
 		if err != nil {
 			return nil, ErrFailedSCM{
 				Method:   "CreateTeam",
-				Message:  fmt.Sprintf("failed to add user '%s' to GitHub team '%s'", user, t.GetName()),
-				GitError: fmt.Errorf("failed to add '%s' to GitHub team '%s': %w", user, t.GetName(), err),
+				Message:  fmt.Sprintf("failed to add user '%s' to GitHub team '%s'", user, team.GetName()),
+				GitError: fmt.Errorf("failed to add '%s' to GitHub team '%s': %w", user, team.GetName(), err),
 			}
 		}
 	}
 	return &Team{
-		ID:   uint64(t.GetID()),
-		Name: t.GetName(),
-		URL:  t.GetURL(),
+		ID:   uint64(team.GetID()),
+		Name: team.GetName(),
+		URL:  team.GetURL(),
 	}, nil
 }
 

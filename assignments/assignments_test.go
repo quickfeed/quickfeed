@@ -1,4 +1,4 @@
-package web
+package assignments
 
 import (
 	"context"
@@ -54,7 +54,7 @@ func TestFetchAssignments(t *testing.T) {
 		OrganizationID: courseOrgID,
 	}
 
-	assignments, err := fetchAssignments(ctx, s, course)
+	assignments, err := FetchAssignments(ctx, s, course)
 	if err != nil {
 		t.Fatal(err)
 	}

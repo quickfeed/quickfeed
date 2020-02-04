@@ -1,10 +1,11 @@
 module github.com/autograde/aguis
 
-go 1.12
+go 1.13
 
 require (
 	github.com/Microsoft/go-winio v0.4.4 // indirect
 	github.com/autograde/kit v0.0.0-20190817180210-34457ff57972
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
 	github.com/docker/docker v0.0.0-20170803041405-316b4ba9c289
 	github.com/docker/go-connections v0.3.0 // indirect
@@ -12,8 +13,7 @@ require (
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/gogo/protobuf v1.3.0
 	github.com/google/go-cmp v0.3.0
-	github.com/google/go-github v17.0.0+incompatible
-	github.com/google/go-github/v26 v26.0.5
+	github.com/google/go-github/v29 v29.0.2
 	github.com/gorilla/securecookie v0.0.0-20160422134519-667fe4e3466a // indirect
 	github.com/gorilla/sessions v0.0.0-20160922145804-ca9ada445741
 	github.com/gosimple/slug v1.6.0
@@ -46,4 +46,5 @@ require (
 	k8s.io/apimachinery v0.17.1
 	k8s.io/client-go v0.17.1
 	k8s.io/utils v0.0.0-20200109141947-94aeca20bf09 // indirect
+	gopkg.in/yaml.v2 v2.2.2
 )

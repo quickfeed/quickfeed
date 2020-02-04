@@ -4,7 +4,7 @@ import "testing"
 
 var scores = []struct {
 	in  []*Score
-	out uint8
+	out uint32
 }{
 	{[]*Score{setScore(10, 10, 1), setScore(5, 5, 1), setScore(15, 15, 1)}, 100},
 	{[]*Score{setScore(5, 10, 1), setScore(5, 5, 1), setScore(20, 40, 1)}, 66},
