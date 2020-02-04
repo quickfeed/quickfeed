@@ -55,9 +55,9 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 
 	// create a push hook on organization level
 	hookOptions := &scm.OrgHookOptions{
-		URL:          auth.GetEventsURL(s.bh.BaseURL, request.Provider),
-		Secret:       s.bh.Secret,
-		Organization: org,
+		URL:     auth.GetEventsURL(s.bh.BaseURL, request.Provider),
+		Secret:  s.bh.Secret,
+		OrgPath: org.Path,
 	}
 
 	err = sc.CreateOrgHook(ctx, hookOptions)
@@ -97,16 +97,16 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 	}
 	// create teacher team with course creator
 	opt := &scm.TeamOptions{
-		Organization: org,
-		TeamName:     scm.TeachersTeam,
-		Users:        []string{courseCreator.GetLogin()},
+		OrgPath:  org.Path,
+		TeamName: scm.TeachersTeam,
+		Users:    []string{courseCreator.GetLogin()},
 	}
 	if _, err = sc.CreateTeam(ctx, opt); err != nil {
 		s.logger.Debugf("createCourse: failed to create teachers team: %s", err)
 		return nil, err
 	}
 	// create student team without any members
-	studOpt := &scm.TeamOptions{Organization: org, TeamName: scm.StudentsTeam}
+	studOpt := &scm.TeamOptions{OrgPath: org.Path, TeamName: scm.StudentsTeam}
 	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
 		s.logger.Debugf("createCourse: failed to create students team: %s", err)
 		return nil, err
