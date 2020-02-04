@@ -112,6 +112,12 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, err
 	}
 
+	// create student repo for course creator
+	// do not return if failed, just log
+	if _, err := createStudentRepo(ctx, sc, org, pb.StudentRepoName(courseCreator.GetLogin()), courseCreator.GetLogin()); err != nil {
+		s.logger.Debugf("createCourse: failed to create student repo for course creator: %s: %v", courseCreator.GetLogin(), err)
+	}
+
 	if err := s.db.CreateCourse(request.GetCourseCreatorID(), request); err != nil {
 		s.logger.Debugf("createCourse: failed to create database record for course %s: %s", request.Name, err)
 		return nil, err

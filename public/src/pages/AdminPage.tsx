@@ -46,6 +46,9 @@ export class AdminPage extends ViewPage {
             };
         });
 
+        // sorting registered user so that admins show first
+        allUsers.sort((x,y) => (x.user.getIsadmin() < y.user.getIsadmin()? 1 : -1));
+
         return <div>
             <h1>All Users</h1>
             <UserView
@@ -72,7 +75,8 @@ export class AdminPage extends ViewPage {
 
     public async handleAdminRoleClick(user: IUserRelation): Promise<boolean> {
         if (this.userMan && this.navMan) {
-            const res = await this.userMan.changeAdminRole(user.user);
+            // promote non-admin user to admin, demote otherwise
+            const res = await this.userMan.changeAdminRole(user.user, !user.user.getIsadmin());
             this.navMan.refresh();
             return res;
         }

@@ -194,6 +194,10 @@ func isEmpty(ctx context.Context, sc scm.SCM, repos []*pb.Repository) error {
 // creating a course, approving, changing status of, or deleting
 // a course enrollment or group
 func contextCanceled(ctx context.Context) bool {
+	// debugging context related errors
+	if ctx.Err() != nil {
+		fmt.Println("Context error: ", ctx.Err().Error())
+	}
 	return ctx.Err() == context.Canceled
 }
 
@@ -202,7 +206,7 @@ func contextCanceled(ctx context.Context) bool {
 func parseSCMError(err error) (bool, error) {
 	errStruct, ok := err.(scms.ErrFailedSCM)
 	if ok {
-		return ok, status.Errorf(codes.FailedPrecondition, errStruct.Message)
+		return ok, status.Errorf(codes.NotFound, errStruct.Message)
 	}
 	return ok, nil
 }

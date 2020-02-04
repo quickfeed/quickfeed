@@ -9,10 +9,7 @@ import { INavInfo } from "../NavigationHelper";
 
 import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import {
-    IAssignmentLink,
-    IUserRelation,
-} from "../models";
+import { IUserRelation } from "../models";
 
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
@@ -142,20 +139,9 @@ export class TeacherPage extends ViewPage {
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            // const linkedGroups: IAssignmentLink[] = [];
             const results = await this.courseMan.getCourseLabs(course.getId(), true);
-            // const groupCourses = await this.courseMan.getCourseGroups(course.getId());
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
-            /*
-            for (const grpCourse of groupCourses) {
-                const grpLink = await this.courseMan.getGroupCourseForTeacher(grpCourse, course, labs);
-                if (grpCourse && grpLink) {
-                    grpLink.link.setGroup(grpCourse);
-                    grpLink.link.setGroupid(grpCourse.getId());
-                    linkedGroups.push(grpLink);
-                }
-            }*/
 
             return <GroupResults
                 course={course}
@@ -276,6 +262,10 @@ export class TeacherPage extends ViewPage {
                         break;
                 }
             });
+
+            // sorting accepted user so that teachers show first
+            acceptedUsers.sort((x,y) => (x.link.getStatus() < y.link.getStatus())? 1 : -1);
+
             return <MemberView
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}

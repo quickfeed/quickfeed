@@ -5,60 +5,55 @@ import (
 	"fmt"
 
 	pb "github.com/autograde/aguis/ag"
+	"github.com/autograde/aguis/ci"
 )
 
-// rebuildSubmission rebuilds the given lab assignment and submission.
+// rebuildSubmission rebuilds the given assignment and submission.
 func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.LabRequest) error {
-	lab, err := s.db.GetAssignment(&pb.Assignment{ID: request.GetAssignmentID()})
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
 		return err
 	}
-	course, err := s.db.GetCourse(lab.GetCourseID(), false)
+	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: request.GetAssignmentID()})
 	if err != nil {
 		return err
 	}
-	submission, err := s.db.GetSubmission(&pb.Submission{
-		ID:           request.GetSubmissionID(),
-		AssignmentID: request.GetAssignmentID(),
-	})
+	course, err := s.db.GetCourse(assignment.GetCourseID(), false)
 	if err != nil {
 		return err
 	}
+	name := s.lookupName(submission)
 
 	repoQuery := &pb.Repository{
 		OrganizationID: course.GetOrganizationID(),
-		UserID:         submission.GetUserID(), // defaults to 0 if not set
+		UserID:         submission.GetUserID(),
 		RepoType:       pb.Repository_USER,
 	}
-	if lab.IsGroupLab {
+	if assignment.IsGroupLab {
 		repoQuery.GroupID = submission.GetGroupID()
 		repoQuery.RepoType = pb.Repository_GROUP
 	}
 	repos, err := s.db.GetRepositories(repoQuery)
-	if err != nil {
-		return err
-	}
-
-	// TODO(vera): debugging, to be removed
-	s.logger.Debugf("Starting rebuild for user %d or group %d, lab %+v", submission.GetUserID(), submission.GetGroupID(), lab)
-
-	// it is possible to have duplicate records for the same user repo because there were no database constraints
-	// it is fixed for new records, but can be relevant for older database records
-	// that's why we allow len(repos) be > 1 and just use the first found record
-	if len(repos) < 1 {
-		return fmt.Errorf("failed to get user repository for the submission")
+	if err != nil || len(repos) < 1 {
+		return fmt.Errorf("could not find repository for user/group: %s, course: %s: %w", name, course.GetCode(), err)
 	}
 	repo := repos[0]
 
-	s.logger.Info("Rebuilding user submission: repo url is: ", repo.GetHTMLURL())
-
-	nameTag := s.makeContainerTag(submission)
-
-	runTests(s.logger, s.db, s.runner, repo, repo.GetHTMLURL(), submission.GetCommitHash(), "ci/scripts", lab.GetID(), nameTag)
+	s.logger.Debugf("Rebuilding submission %d for user(%d)/group(%d): %s, assignment: %+v, repo: %s",
+		submission.GetID(), submission.GetUserID(), submission.GetGroupID(), name, assignment, repo.GetHTMLURL())
+	runData := &ci.RunData{
+		Course:     course,
+		Assignment: assignment,
+		Repo:       repo,
+		CloneURL:   repo.GetHTMLURL(),
+		CommitID:   submission.GetCommitHash(),
+		JobOwner:   name,
+	}
+	ci.RunTests(s.logger, s.db, s.runner, runData)
 	return nil
 }
 
-func (s *AutograderService) makeContainerTag(submission *pb.Submission) string {
+func (s *AutograderService) lookupName(submission *pb.Submission) string {
 	if submission.GetGroupID() > 0 {
 		group, _ := s.db.GetGroup(submission.GetGroupID())
 		return group.GetName()

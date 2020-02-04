@@ -52,7 +52,6 @@ export class HttpHelper {
                         console.log("Non JSON respons detected");
                     } else {
                         try {
-                            // console.log(request.responseText);
                             data = JSON.parse(request.responseText) as TReceive;
                         } catch (e) {
                             console.error("Could not parse response from server", e, request.responseText);

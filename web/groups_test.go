@@ -529,7 +529,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.SetAdmin(teacher.ID); err != nil {
+	if err := db.UpdateUser(&pb.User{ID: teacher.ID, IsAdmin: true}); err != nil {
 		t.Fatal(err)
 	}
 

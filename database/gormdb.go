@@ -153,19 +153,11 @@ func (db *GormDB) GetUsers(uids ...uint64) ([]*pb.User, error) {
 
 // UpdateUser updates user information.
 func (db *GormDB) UpdateUser(user *pb.User) error {
-	return db.conn.Model(&pb.User{}).Updates(user).Error
-}
-
-// SetAdmin promotes user with given ID to admin.
-func (db *GormDB) SetAdmin(uid uint64) error {
-	var user pb.User
-	if err := db.conn.First(&user, uid).Error; err != nil {
+	if err := db.conn.First(&pb.User{ID: user.GetID()}).Error; err != nil {
 		return err
 	}
-	// TODO(vera): is there a reason we are doing it in two steps?
-	admin := true
-	user.IsAdmin = admin
 	return db.conn.Save(&user).Error
+
 }
 
 // GetRemoteIdentity fetches remote identity by provider and ID.
@@ -190,11 +182,10 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb
 	}
 	// The first user defaults to admin user.
 	if user.ID == 1 {
-		if err := db.SetAdmin(1); err != nil {
+		user.IsAdmin = true
+		if err := db.UpdateUser(user); err != nil {
 			return err
 		}
-		admin := true
-		user.IsAdmin = admin
 	}
 	return nil
 }
@@ -397,7 +388,10 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 
 	// If a submission for the given assignment and student/group already exists, update it.
 	// Otherwise create a new submission record
-	return db.conn.Where(query).Assign(submission).FirstOrCreate(submission, query).Error
+	var labSubmission pb.Submission
+	err := db.conn.Where(query).Assign(submission).FirstOrCreate(&labSubmission).Error
+	submission.ID = labSubmission.GetID()
+	return err
 }
 
 // UpdateSubmission updates submission with the given approved status.
@@ -659,13 +653,11 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 	var course pb.Course
 
 	if withInfo {
-
 		// we only want submission from users enrolled in the course
 		userStates := []pb.Enrollment_UserStatus{
 			pb.Enrollment_STUDENT,
 			pb.Enrollment_TEACHER,
 		}
-
 		// and only group submissions from approved groups
 		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: cid}
 		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Groups", modelGroup).First(&course, cid).Error; err != nil {
@@ -676,6 +668,7 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 			return nil, err
 		}
 	}
+	db.updateAccessTokenCache(&course)
 	return &course, nil
 }
 
@@ -685,7 +678,31 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 	if err := db.conn.First(&course, &pb.Course{OrganizationID: did}).Error; err != nil {
 		return nil, err
 	}
+	db.updateAccessTokenCache(&course)
 	return &course, nil
+}
+
+// updateAccessTokenCache caches the access token for the course
+// to allow easy access elsewhere.
+func (db *GormDB) updateAccessTokenCache(course *pb.Course) {
+	existingToken := course.GetAccessToken()
+	if existingToken != "" {
+		// no need to cache again
+		return
+	}
+	// only need to query db if not in cache
+	courseCreator, err := db.GetUser(course.GetCourseCreatorID())
+	if err != nil {
+		// failed to get course creator; ignore
+		return
+	}
+	accessToken, err := courseCreator.GetAccessToken(course.GetProvider())
+	if err != nil {
+		// failed to get access token for course creator; ignore
+		return
+	}
+	// update the access token cache
+	pb.SetAccessToken(course.GetID(), accessToken)
 }
 
 // UpdateCourse updates course information.

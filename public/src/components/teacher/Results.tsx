@@ -53,11 +53,9 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 onRebuildClick={this.props.onRebuildClick}
                 onApproveClick={ async (approve: boolean) => {
                     if (this.state.assignment && this.state.assignment.latest) {
-                        console.log("Approving: " + approve);
                         const ans = await this.props.onApproveClick(this.state.assignment.latest.id, approve);
                         if (ans) {
                             this.state.assignment.latest.approved = approve;
-                            console.log("Changed status: " + this.state.assignment.latest.approved);
                         }
                     }
                 }}

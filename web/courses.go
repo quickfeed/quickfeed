@@ -163,9 +163,9 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		if err != nil {
 			return nil, err
 		}
-		// grant read access to Assignments and Course-info repositories
+		// grant read access to assignments and course-info repositories
 		for _, r := range repos {
-			if r.Path == "assignments" || r.Path == "course-info" {
+			if r.Path == pb.AssignmentRepo || r.Path == pb.InfoRepo {
 				if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: r.Owner, Path: r.Path}, login, scm.RepoPull); err != nil {
 					return nil, fmt.Errorf("updateReposAndTeams: failed to update repo access to repo %s for user %s: %w ", r.Path, login, err)
 				}

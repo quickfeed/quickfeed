@@ -6,9 +6,16 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
+	"github.com/gosimple/slug"
 	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+// ErrGroupNameDuplicate indicates that another group with the same name already exists on this course
+var (
+	ErrGroupNameDuplicate = status.Errorf(codes.AlreadyExists, "group with this name already exists. Please choose another name")
+	ErrUserNotInGroup     = status.Errorf(codes.NotFound, "user is not in group")
 )
 
 // getGroup returns the group for the given group ID.
@@ -31,8 +38,11 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	// let the database return err if enrollment has no group
-	return s.db.GetGroup(enrollment.GroupID)
+	grp, err := s.db.GetGroup(enrollment.GroupID)
+	if err != nil && err == gorm.ErrRecordNotFound {
+		err = ErrUserNotInGroup
+	}
+	return grp, err
 }
 
 // DeleteGroup deletes group with the provided ID.
@@ -76,6 +86,16 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 // a group, which will later be (optionally) edited and approved
 // by a teacher of the course using the updateGroup function below.
 func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
+	// check that there are no other groups with the same name
+	// or a name that will result in the same github name
+	groups, _ := s.db.GetGroupsByCourse(request.GetCourseID())
+	for _, group := range groups {
+		if slug.Make(request.GetName()) == slug.Make(group.GetName()) {
+			s.logger.Errorf("failed to create group %s, another group % already exists, both names will result in %s on GitHub", request.Name, group.Name, slug.Make(request.Name))
+			return nil, ErrGroupNameDuplicate
+		}
+	}
+
 	// get users of group, check consistency of group request
 	if _, err := s.getGroupUsers(request); err != nil {
 		s.logger.Errorf("CreateGroup: failed to retrieve users for group %s: %s", request.GetName(), err)
@@ -130,7 +150,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		return fmt.Errorf("updateGroup: organization not found: %w", err)
 	}
 
-	if len(repos) == 0 && group.GetTeamID() < 1 {
+	if len(repos) == 0 {
 		// found no repos for the group; create group repo and team
 		if request.GetName() != "" {
 			group.Name = request.Name
@@ -144,10 +164,11 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		groupRepo := &pb.Repository{
 			OrganizationID: course.OrganizationID,
 			RepositoryID:   repo.ID,
-			GroupID:        request.ID,
+			GroupID:        group.ID,
 			HTMLURL:        repo.WebURL,
 			RepoType:       pb.Repository_GROUP,
 		}
+		s.logger.Debugf("Creating group repo in the database with query: %+v", groupRepo)
 		if err := s.db.CreateRepository(groupRepo); err != nil {
 			return err
 		}
