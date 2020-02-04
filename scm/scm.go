@@ -141,33 +141,33 @@ type CreateHookOptions struct {
 
 // OrgHookOptions contains information about an organization level hook
 type OrgHookOptions struct {
-	URL          string
-	Secret       string
-	Organization *pb.Organization
+	URL     string
+	Secret  string
+	OrgPath string
 }
 
 // TeamOptions contains information about the team and the users of the team.
 type TeamOptions struct {
-	Organization *pb.Organization
-	TeamName     string
-	TeamID       uint64
-	Users        []string
+	OrgPath  string
+	TeamName string
+	TeamID   uint64
+	Users    []string
 }
 
 // TeamMembershipOptions contain information on organization team and associated user
 type TeamMembershipOptions struct {
-	Organization *pb.Organization
-	TeamID       int64
-	TeamSlug     string // slugified team name
-	Username     string // GitHub username
-	Role         string // member or maintainer. Maintainer can add, remove and promote team members
+	OrgPath  string
+	TeamID   int64
+	TeamSlug string // slugified team name
+	Username string // GitHub username
+	Role     string // member or maintainer. Maintainer can add, remove and promote team members
 }
 
 // OrgMembershipOptions represent user's membership in organization
 type OrgMembershipOptions struct {
-	Organization *pb.Organization
-	Username     string // GitHub username
-	Role         string // role can be "admin" (organization owner) or "member"
+	OrgPath  string
+	Username string // GitHub username
+	Role     string // role can be "admin" (organization owner) or "member"
 }
 
 // CreateClonePathOptions holds elements used when constructing a clone URL string.

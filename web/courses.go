@@ -182,9 +182,9 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 	case pb.Enrollment_TEACHER:
 		// if teacher, promote to owner, remove from students team, add to teachers team
 		orgUpdate := &scm.OrgMembershipOptions{
-			Organization: org,
-			Username:     login,
-			Role:         scm.OrgOwner,
+			OrgPath:  org.Path,
+			Username: login,
+			Role:     scm.OrgOwner,
 		}
 		// when promoting to teacher, promote to organization owner as well
 		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {

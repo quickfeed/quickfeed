@@ -437,9 +437,9 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 			return cli.NewExitError("team user names must be provided (comma separated)", 3)
 		}
 		opt := &scm.TeamOptions{
-			Organization: &pb.Organization{Path: c.String("namespace")},
-			TeamName:     c.String("team"),
-			Users:        users,
+			OrgPath:  c.String("namespace"),
+			TeamName: c.String("team"),
+			Users:    users,
 		}
 		_, err := (*client).CreateTeam(ctx, opt)
 		return err
