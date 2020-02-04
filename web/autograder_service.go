@@ -217,7 +217,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
 	if s.isCourseCreator(in.CourseID, in.UserID) {
-		s.logger.Errorf("UpdateEnrollment failed: user %s has attempted to demote course creator", usr.GetName())
+		s.logger.Errorf("UpdateEnrollment failed: user %s attempted to demote course creator", usr.GetName())
 		return nil, status.Errorf(codes.PermissionDenied, "course creator cannot be demoted")
 	}
 	err = s.updateEnrollment(ctx, scm, usr.Login, in)
