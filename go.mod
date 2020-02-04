@@ -12,6 +12,7 @@ require (
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/gogo/protobuf v1.3.0
 	github.com/google/go-cmp v0.3.0
+	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v26 v26.0.5
 	github.com/gorilla/securecookie v0.0.0-20160422134519-667fe4e3466a // indirect
 	github.com/gorilla/sessions v0.0.0-20160922145804-ca9ada445741
@@ -38,7 +39,8 @@ require (
 	golang.org/x/tools v0.0.0-20200131000851-b4207ef49307 // indirect
 	google.golang.org/grpc v1.21.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/webhooks.v3 v3.2.0
+	gopkg.in/go-playground/webhooks.v3 v3.13.0
+	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.17.1
 	k8s.io/apimachinery v0.17.1

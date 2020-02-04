@@ -93,6 +93,8 @@ github.com/google/btree v1.0.0/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/go-cmp v0.3.0 h1:crn/baboCvb5fXaQ0IJ1SGTsTVrWpDsCWC8EGETZijY=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
+github.com/google/go-github v17.0.0+incompatible h1:N0LgJ1j65A7kfXrZnUDaYCs/Sf4rEjNlfyDHW9dolSY=
+github.com/google/go-github v17.0.0+incompatible/go.mod h1:zLgOLi98H3fifZn+44m+umXrS52loVEgC2AApnigrVQ=
 github.com/google/go-github/v26 v26.0.5 h1:TUBAy+4ml3Gvo5DKJzWuWaaz4nTr6rSVPtLEjMnsygk=
 github.com/google/go-github/v26 v26.0.5/go.mod h1:v6/FmX9au22j4CtYxnMhJJkP+JfOQDXALk7hI+MPDNM=
 github.com/google/go-querystring v1.0.0 h1:Xkwi/a1rcvNg1PPYe5vI8GbeBY/jrVuDX5ASuANWTrk=
@@ -342,6 +344,10 @@ gopkg.in/go-playground/assert.v1 v1.2.1 h1:xoYuJVE7KT85PYWrN730RguIQO0ePzVRfFMXa
 gopkg.in/go-playground/assert.v1 v1.2.1/go.mod h1:9RXL0bg/zibRAgZUYszZSwO/z8Y/a8bDuhia5mkpMnE=
 gopkg.in/go-playground/webhooks.v3 v3.2.0 h1:H4nYG+tQgCbuEnwBtiQEdfpvGD+VRHRzIkEWBlKKHrk=
 gopkg.in/go-playground/webhooks.v3 v3.2.0/go.mod h1:Cj2HPFrp1CKClz7kcd+OleRIxPurczUBuONebSiKClw=
+gopkg.in/go-playground/webhooks.v3 v3.13.0 h1:DlXB5EbmE5U5TmTunB4noh8Zd2yoA+Ut8eL4B3a/Nxs=
+gopkg.in/go-playground/webhooks.v3 v3.13.0/go.mod h1:Cj2HPFrp1CKClz7kcd+OleRIxPurczUBuONebSiKClw=
+gopkg.in/go-playground/webhooks.v5 v5.13.0 h1:e9vtkQZK464+UdL3YjRox2yR8JSmh2094PUBMvdriFs=
+gopkg.in/go-playground/webhooks.v5 v5.13.0/go.mod h1:LZbya/qLVdbqDR1aKrGuWV6qbia2zCYSR5dpom2SInQ=
 gopkg.in/inf.v0 v0.9.1 h1:73M5CoZyi3ZLMOyDlQh031Cx6N9NDJ2Vvfl76EDAgDc=
 gopkg.in/inf.v0 v0.9.1/go.mod h1:cWUDdTG/fYaXco+Dcufb5Vnc6Gp2YChqWtbxRZE0mXw=
 gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWDmTeBkI65Dw0HsyUHuEVlX15mw=
