@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/Microsoft/go-winio v0.4.4 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/docker/distribution v0.0.0-20170726174610-edc3ab29cdff // indirect
 	github.com/docker/docker v0.0.0-20170803041405-316b4ba9c289
 	github.com/docker/go-connections v0.3.0 // indirect
@@ -13,15 +12,14 @@ require (
 	github.com/gogo/protobuf v1.3.0
 	github.com/google/go-cmp v0.3.0
 	github.com/google/go-github/v29 v29.0.2
-	github.com/gorilla/securecookie v0.0.0-20160422134519-667fe4e3466a // indirect
-	github.com/gorilla/sessions v0.0.0-20160922145804-ca9ada445741
+	github.com/gorilla/sessions v1.1.1
 	github.com/gosimple/slug v1.6.0
 	github.com/jinzhu/gorm v1.9.9
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo v0.0.0-20170803061611-b42edd791fad
 	github.com/labstack/echo-contrib v0.0.0-20170707172923-c43bc4a1577d
 	github.com/labstack/gommon v0.2.9 // indirect
-	github.com/markbates/goth v0.0.0-20170721181425-c55b917ee947
+	github.com/markbates/goth v1.61.1
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/opencontainers/go-digest v1.0.0-rc0 // indirect
 	github.com/opencontainers/image-spec v1.0.0 // indirect
@@ -40,3 +38,5 @@ require (
 	google.golang.org/grpc v1.21.1
 	gopkg.in/yaml.v2 v2.2.2
 )
+
+replace github.com/markbates/goth v1.61.1 => github.com/mrkschan/goth v1.61.1
