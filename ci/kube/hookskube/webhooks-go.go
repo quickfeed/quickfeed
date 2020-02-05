@@ -20,8 +20,6 @@ const (
 	// Personal Access Token created in github that allows us to make
 	// calls into github.
 	webhookSecretKey = "WEBHOOK_SECRET"
-	// this is what we tack onto each PR title if not there already
-	titleSuffix = "looks pretty legit"
 )
 
 // GithubHandler holds necessary objects for communicating with the Github.
@@ -38,7 +36,7 @@ func (handler *GithubHandler) HandlePushRequest(payload interface{}, header webh
 		switch event {
 		case github.PushEvent:
 			p := payload.(github.PushPayload)
-			log.Println("There is some push recieved!", p)
+			log.Println("There is some push recieved!", p.Repository.Name)
 			
 		default:
 			log.Println("default case sw")
