@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"net/http"
 
 	ghclient "github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/go-playground/webhooks.v3/github"
 	webhooks "gopkg.in/go-playground/webhooks.v3"
-
 )
 
 const (
@@ -31,37 +30,20 @@ type GithubHandler struct {
 	ctx    context.Context
 }
 
-// HandlePullRequest is invoked whenever a PullRequest is modified (created, updated, etc.)
-func (handler *GithubHandler) HandlePullRequest(payload interface{}, header webhooks.Header) {
-	log.Print("Handling Pull Request")
+// HandlePushRequest is invoked whenever a push is registred
+func (handler *GithubHandler) HandlePushRequest(payload interface{}, header webhooks.Header) {
+		h := http.Header(header)
+		event := github.Event(h.Get("X-GitHub-Event"))
 
-	pl := payload.(github.PullRequestPayload)
-
-	// Do whatever you want from here...
-	title := pl.PullRequest.Title
-	log.Printf("GOT PR with Title: %q", title)
-
-	// Check the title and if it contains 'looks pretty legit' leave it alone
-	if strings.Contains(title, titleSuffix) {
-		// already modified, leave it alone.
-		return
+		switch event {
+		case github.PushEvent:
+			p := payload.(github.PushPayload)
+			log.Println("There is some push recieved!", p)
+			
+		default:
+			log.Println("default case sw")
+		}
 	}
-
-	newTitle := fmt.Sprintf("%s (%s)", title, titleSuffix)
-	updatedPR := ghclient.PullRequest{
-		Title: &newTitle,
-	}
-	newPR, response, err := handler.client.PullRequests.Edit(handler.ctx, pl.Repository.Owner.Login, pl.Repository.Name, int(pl.Number), &updatedPR)
-	if err != nil {
-		log.Printf("Failed to update PR: %s\n%s", err, response)
-		return
-	}
-	if newPR.Title != nil {
-		log.Printf("New PR Title: %q", *newPR.Title)
-	} else {
-		log.Print("New PR title is nil")
-	}
-}
 
 func main() {
 	flag.Parse()
@@ -86,8 +68,8 @@ func main() {
 	}
 
 	hook := github.New(&github.Config{Secret: secretToken})
-	hook.RegisterEvents(h.HandlePullRequest, github.PullRequestEvent)
-
+	hook.RegisterEvents(h.HandlePushRequest,github.PushEvent)
+	
 	err := webhooks.Run(hook, ":8080", "/")
 	if err != nil {
 		fmt.Println("Failed to run the webhook")
