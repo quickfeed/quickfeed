@@ -4,5 +4,5 @@ metadata:
  name: config-domain
  namespace: knative-serving
 data:
- f147d515.ngrok.io: ""
+ 37524063.ngrok.io: ""
 
