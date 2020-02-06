@@ -1,12 +1,8 @@
-//Kuberntes interface
+//Impl. Kuberntes interface
 package kube
 
-
 import (
-
 	"fmt"
-
-
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -15,16 +11,13 @@ import (
 
 	"github.com/autograde/aguis/ci"
 
-
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-
 	//corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	v1 "k8s.io/api/core/v1"
-
 )
 
 // K8s is an implementation of the CI interface using K8s.
@@ -32,10 +25,8 @@ type K8s struct {
 	queue PriorityQueue
 }
 
-
-
 //RunToNodes runs the rescieved push from repository on the podes in our 3 nodes.
-func (k *K8s) RunToNodes(d ci.Docker){
+func (k *K8s) RunToNodes(d ci.Docker) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err)
@@ -44,10 +35,8 @@ func (k *K8s) RunToNodes(d ci.Docker){
 	if err != nil {
 		panic(err)
 	}
-	
-	//deploymentsClient := clientset.AppsV1().Deployments("agcicd")
 
-	
+	//deploymentsClient := clientset.AppsV1().Deployments("agcicd")
 
 	//when a new jobs come run in it in a new pod?
 	//when done delete the pod? result?
@@ -57,24 +46,19 @@ func (k *K8s) RunToNodes(d ci.Docker){
 			Namespace: v1.NamespaceDefault,
 		},
 	})
-	
+
 }
 
-
 //Result returns the result of recently push that are executed on the nodes
-func (k *K8s) Result() string{ 
-	result:= ""
+func (k *K8s) Result() string {
+	result := ""
 	return result
 }
 
 //CleanUp cleans up the pods that are done with running of the recently push
-func (k *K8s) CleanUp(){}
-
+func (k *K8s) CleanUp() {}
 
 func int32Ptr(i int32) *int32 { return &i }
-
-
-
 
 //UpdateDeployment updates the deployment if some changes accours
 func (k *K8s) UpdateDeployment(lastImage string) {
@@ -87,7 +71,7 @@ func (k *K8s) UpdateDeployment(lastImage string) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	deploymentsClient := clientset.AppsV1().Deployments("agcicd")
 
 	// Update Deployment
@@ -107,12 +91,12 @@ func (k *K8s) UpdateDeployment(lastImage string) {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Retrieve the latest version of Deployment before attempting update
 		// RetryOnConflict uses exponential backoff to avoid exhausting the apiserver
-				
+
 		result, getErr := deploymentsClient.Get("agcicd", metav1.GetOptions{})
 		if getErr != nil {
 			panic(fmt.Errorf("Failed to get latest version of Deployment: %v", getErr))
 		}
-		result.Spec.Replicas = int32Ptr(1)                                       // reduce replica count
+		result.Spec.Replicas = int32Ptr(1)                        // reduce replica count
 		result.Spec.Template.Spec.Containers[0].Image = lastImage // change image version
 		_, updateErr := deploymentsClient.Update(result)
 		return updateErr
@@ -123,9 +107,9 @@ func (k *K8s) UpdateDeployment(lastImage string) {
 
 }
 
-//Deploy deploys... 
+//Deploy deploys...
 //TODO what we are using this for?
-func (k *K8s) Deploy(lastImage string) *appsv1.Deployment{
+func (k *K8s) Deploy(lastImage string) *appsv1.Deployment {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "kube-dep",
