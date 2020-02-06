@@ -39,4 +39,4 @@ require (
 	gopkg.in/yaml.v2 v2.2.2
 )
 
-replace github.com/markbates/goth v1.61.1 => github.com/mrkschan/goth v1.61.1
+replace github.com/markbates/goth v1.61.1 => github.com/mrkschan/goth v1.61.2-0.20200205071932-cbc28e456b52

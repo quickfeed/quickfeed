@@ -116,8 +116,8 @@ github.com/mattn/go-sqlite3 v1.10.0 h1:jbhqpg7tQe4SupckyijYiy0mJJ/pRyHvXf7JdWK86
 github.com/mattn/go-sqlite3 v1.10.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/mrjones/oauth v0.0.0-20180629183705-f4e24b6d100c/go.mod h1:skjdDftzkFALcuGzYSklqYd8gvat6F1gZJ4YPVbkZpM=
-github.com/mrkschan/goth v1.61.1 h1:FUi41uwQhz75i+6sSq4DF3oNWQm2CWzJ9dw3lTUxLXY=
-github.com/mrkschan/goth v1.61.1/go.mod h1:qh2QfwZoWRucQ+DR5KVKC6dUGkNCToWh4vS45GIzFsY=
+github.com/mrkschan/goth v1.61.2-0.20200205071932-cbc28e456b52 h1:W9dor+kYsfty5XrrpmxFszPlB78TnIzv/+r46yO98sQ=
+github.com/mrkschan/goth v1.61.2-0.20200205071932-cbc28e456b52/go.mod h1:qh2QfwZoWRucQ+DR5KVKC6dUGkNCToWh4vS45GIzFsY=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
