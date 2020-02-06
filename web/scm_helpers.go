@@ -35,16 +35,14 @@ var (
 // UserNames slice contains GitHub names of all group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, teamName string, userNames []string) (*pb.Repository, *scm.Team, error) {
-
+func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.Group) (*pb.Repository, *scm.Team, error) {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: orgID})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
 	}
-
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
-		Path:         teamName,
+		Path:         group.GetName(),
 		Private:      true,
 	})
 	if err != nil {
@@ -53,13 +51,12 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, teamName s
 
 	team, err := sc.CreateTeam(ctx, &scm.TeamOptions{
 		OrgPath:  org.Path,
-		TeamName: teamName,
-		Users:    userNames,
+		TeamName: group.GetName(),
+		Users:    group.UserNames(),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create team: %w", err)
 	}
-
 	err = sc.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
 		TeamID:     team.ID,
 		Owner:      repo.Owner,
@@ -73,10 +70,10 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, teamName s
 	groupRepo := &pb.Repository{
 		OrganizationID: orgID,
 		RepositoryID:   repo.ID,
+		GroupID:        group.GetID(),
 		HTMLURL:        repo.WebURL,
 		RepoType:       pb.Repository_GROUP,
 	}
-
 	return groupRepo, team, nil
 }
 
