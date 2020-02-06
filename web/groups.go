@@ -130,7 +130,15 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return err
 	}
-	request.Users = users
+	newGroup := &pb.Group{
+		ID:          group.ID,
+		Name:        group.Name,
+		CourseID:    group.CourseID,
+		TeamID:      group.TeamID,
+		Status:      group.Status,
+		Users:       users,
+		Enrollments: group.Enrollments,
+	}
 
 	// check whether the group repo already exists
 	groupRepoQuery := &pb.Repository{
@@ -144,40 +152,38 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	}
 
 	if len(repos) == 0 {
-
-		if request.Name != "" && group.TeamID < 1 {
-			group.Name = request.Name
+		if request.Name != "" && newGroup.TeamID < 1 {
+			// update group name only if team not already created on SCM
+			newGroup.Name = request.Name
 		}
 
-		repo, team, err := createRepoAndTeam(ctx, sc, course.GetOrganizationID(), group.Name, request.UserNames())
+		repo, team, err := createRepoAndTeam(ctx, sc, course.GetOrganizationID(), newGroup)
 		if err != nil {
 			return err
 		}
-		repo.GroupID = group.GetID()
 		s.logger.Debugf("Creating group repo in the database: %+v", repo)
 		if err := s.db.CreateRepository(repo); err != nil {
 			return err
 		}
-		group.TeamID = team.ID
-		// if updating group with existing team, group name will not be changed
-		// to avoid a mismatch between database and github names
-		s.logger.Debugf("updateGroup: name of the new GitHub team: %s, requested group name: %s", team.Name, request.Name)
+		newGroup.TeamID = team.ID
+		// when updating a group for an existing team, name changes are not allowed.
+		// this to avoid a mismatch between database group name and SCM team name
+		s.logger.Debugf("updateGroup: SCM team name: %s, requested group name: %s", team.Name, request.Name)
 		if team.Name != request.Name {
-			group.Name = team.Name
+			newGroup.Name = team.Name
 		}
 	}
 
-	// if there are changes in group members, update GitHub team
-	if group.ContainsAll(request) {
-		if err := updateGroupTeam(ctx, sc, group); err != nil {
+	// if there are changes in group membership, update SCM team
+	if !group.ContainsAll(newGroup) {
+		if err := updateGroupTeam(ctx, sc, newGroup); err != nil {
 			return err
 		}
 	}
 
 	// approve and update the group in the database
-	group.Status = pb.Group_APPROVED
-	group.Users = users
-	return s.db.UpdateGroup(group)
+	newGroup.Status = pb.Group_APPROVED
+	return s.db.UpdateGroup(newGroup)
 }
 
 // getGroupUsers returns the users of the specified group request, and checks
