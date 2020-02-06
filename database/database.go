@@ -72,7 +72,7 @@ type Database interface {
 	UpdateGroupStatus(*pb.Group) error
 	// DeleteGroup deletes a group and its corresponding enrollments.
 	DeleteGroup(uint64) error
-	// GetGroup returns the group with the specified group id.
+	// GetGroup returns the group with the specified group ID.
 	GetGroup(uint64) (*pb.Group, error)
 	// GetGroupsByCourse returns the groups for the given course.
 	GetGroupsByCourse(cid uint64) ([]*pb.Group, error)
@@ -86,13 +86,17 @@ type Database interface {
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*pb.Assignment) error
 
-	// CreateSubmission creates a submission in the database.
+	// CreateSubmission creates a new submission record or updates the most
+	// recent submission, as defined by the provided submissionQuery.
+	// The submissionQuery must always specify the assignment, and may specify the ID of
+	// either an individual student or a group, but not both.
 	CreateSubmission(*pb.Submission) error
 	// GetSubmission returns a single submission matching the given query.
 	GetSubmission(query *pb.Submission) (*pb.Submission, error)
 	// GetSubmissions returns a list of submission entries for the given course, matching the given query.
 	GetSubmissions(cid uint64, query *pb.Submission) ([]*pb.Submission, error)
-	// GetCourseSubmissions returns a list of all
+	// GetCourseSubmissions returns a list of all the latest submissions
+	// for every active course assignment for the given course ID
 	GetCourseSubmissions(uint64, bool) ([]pb.Submission, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(submissionID uint64, approved bool) error
@@ -103,6 +107,6 @@ type Database interface {
 	GetRepositoryByRemoteID(uint64) (*pb.Repository, error)
 	// GetRepositories returns repositories that match the given query.
 	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
-	// DeleteRepository deletes repository by the given ID
+	// DeleteRepository deletes repository by the given provider's ID
 	DeleteRepositoryByRemoteID(uint64) error
 }
