@@ -305,7 +305,7 @@ func AccessControl(logger *zap.Logger, db database.Database, scms *Scms) echo.Mi
 			}
 			if !foundSCMProvider {
 				logger.Info("no SCM providers found for", zap.String("user", user.String()))
-				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+				return echo.NewHTTPError(http.StatusBadRequest, err)
 			}
 
 			// TODO: Add access control list.
