@@ -130,6 +130,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	if err != nil {
 		return err
 	}
+	request.Users = users
 
 	// check whether the group repo already exists
 	groupRepoQuery := &pb.Repository{
@@ -143,10 +144,11 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 	}
 
 	if len(repos) == 0 {
-		// only update name if new group
-		if request.GetName() != "" {
+
+		if request.Name != "" && group.TeamID < 1 {
 			group.Name = request.Name
 		}
+
 		repo, team, err := createRepoAndTeam(ctx, sc, course.GetOrganizationID(), group.Name, request.UserNames())
 		if err != nil {
 			return err
@@ -157,6 +159,12 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 			return err
 		}
 		group.TeamID = team.ID
+		// if updating group with existing team, group name will not be changed
+		// to avoid a mismatch between database and github names
+		s.logger.Debugf("updateGroup: name of the new GitHub team: %s, requested group name: %s", team.Name, request.Name)
+		if team.Name != request.Name {
+			group.Name = team.Name
+		}
 	}
 
 	// if there are changes in group members, update GitHub team
