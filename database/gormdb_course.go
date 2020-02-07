@@ -31,7 +31,7 @@ func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: uid, CourseID: course.ID}); err != nil {
 		return err
 	}
-	if err := db.EnrollTeacher(uid, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(uid, course.ID, pb.Enrollment_TEACHER); err != nil {
 		return err
 	}
 	return nil

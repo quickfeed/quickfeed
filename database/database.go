@@ -50,12 +50,8 @@ type Database interface {
 	CreateEnrollment(*pb.Enrollment) error
 	// RejectEnrollment removes the user enrollment from the database
 	RejectEnrollment(uid uint64, cid uint64) error
-	// EnrollStudent enrolls user as course student.
-	EnrollStudent(uid uint64, cid uint64) error
-	// EnrollTeacher enrolls user as course teacher.
-	EnrollTeacher(uid uint64, cid uint64) error
-	// SetPendingEnrollment sets enrollment status to pending.
-	SetPendingEnrollment(uid, cid uint64) error
+	// UpdateEnrollmentStatus changes status of the course enrollment for the given user and course.
+	UpdateEnrollmentStatus(uid, cid uint64, status pb.Enrollment_UserStatus) error
 	// UpdateGroupEnrollment is used to reset group ID when previously aproved group is
 	// being removed or a user is removed from the group
 	UpdateGroupEnrollment(uid, cid uint64) error

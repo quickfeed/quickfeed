@@ -34,7 +34,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(student1.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(student1.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -42,7 +42,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(student2.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(student2.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -169,7 +169,7 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: admin.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(admin.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(admin.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -252,7 +252,7 @@ func TestApproveSubmission(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(student.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(student.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 

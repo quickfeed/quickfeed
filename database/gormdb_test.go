@@ -82,7 +82,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(student.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(student.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -393,7 +393,7 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	}
 
 	// Accept enrollment.
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -515,7 +515,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, c2.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, c3.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, c3.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -940,7 +940,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1048,7 +1048,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1103,7 +1103,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, c1.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, c1.GetID(), pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1313,7 +1313,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
 		case pb.Enrollment_STUDENT:
-			err = db.EnrollStudent(users[i].ID, course.ID)
+			err = db.UpdateEnrollmentStatus(users[i].ID, course.ID, pb.Enrollment_STUDENT)
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -1522,7 +1522,7 @@ func TestDeleteGroup(t *testing.T) {
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
 		case pb.Enrollment_STUDENT:
-			err = db.EnrollStudent(users[i].ID, course.ID)
+			err = db.UpdateEnrollmentStatus(users[i].ID, course.ID, pb.Enrollment_STUDENT)
 		}
 		if err != nil {
 			t.Fatal(err)

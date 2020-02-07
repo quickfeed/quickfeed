@@ -185,7 +185,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 				case uint(pb.Enrollment_NONE):
 					err = db.RejectEnrollment(user.GetID(), course.ID)
 				case uint(pb.Enrollment_STUDENT):
-					err = db.EnrollStudent(user.GetID(), course.ID)
+					err = db.UpdateEnrollmentStatus(user.GetID(), course.ID, pb.Enrollment_STUDENT)
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -277,7 +277,7 @@ func TestGormDBCreateGroupTwice(t *testing.T) {
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
 		case pb.Enrollment_STUDENT:
-			err = db.EnrollStudent(users[i].ID, course.ID)
+			err = db.UpdateEnrollmentStatus(users[i].ID, course.ID, pb.Enrollment_STUDENT)
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -334,7 +334,7 @@ func TestGetGroupsByCourse(t *testing.T) {
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
 		case pb.Enrollment_STUDENT:
-			err = db.EnrollStudent(users[i].ID, course.ID)
+			err = db.UpdateEnrollmentStatus(users[i].ID, course.ID, pb.Enrollment_STUDENT)
 		}
 		if err != nil {
 			t.Fatal(err)

@@ -35,19 +35,10 @@ func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
 	return db.conn.Delete(enrol).Error
 }
 
-// EnrollStudent enrolls user as course student.
-func (db *GormDB) EnrollStudent(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, pb.Enrollment_STUDENT)
-}
+// UpdateEnrollmentStatus changes status of an enrollment of the given user ID in the given course ID.
+func (db *GormDB) UpdateEnrollmentStatus(uid, cid uint64, status pb.Enrollment_UserStatus) error {
+	return db.setEnrollment(uid, cid, status)
 
-// EnrollTeacher enrolls user as course teacher.
-func (db *GormDB) EnrollTeacher(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, pb.Enrollment_TEACHER)
-}
-
-// SetPendingEnrollment sets enrollment status to pending.
-func (db *GormDB) SetPendingEnrollment(uid, cid uint64) error {
-	return db.setEnrollment(uid, cid, pb.Enrollment_PENDING)
 }
 
 // UpdateGroupEnrollment sets GroupID of a student enrollment to 0.
