@@ -85,12 +85,12 @@ func (opt CreateHookOptions) valid() bool {
 }
 
 func (opt OrgHookOptions) valid() bool {
-	return opt.OrgPath != "" &&
+	return opt.Organization != "" &&
 		opt.URL != ""
 }
 
 func (opt TeamOptions) validWithOrg() bool {
-	return opt.OrgPath != "" &&
+	return opt.Organization != "" &&
 		opt.valid()
 }
 
@@ -99,12 +99,12 @@ func (opt TeamOptions) valid() bool {
 }
 
 func (opt TeamMembershipOptions) valid() bool {
-	return opt.OrgPath != "" &&
+	return opt.Organization != "" &&
 		(opt.TeamID > 0 || opt.TeamSlug != "")
 }
 
 func (opt OrgMembershipOptions) valid() bool {
-	return opt.OrgPath != "" &&
+	return opt.Organization != "" &&
 		opt.Username != ""
 }
 
