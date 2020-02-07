@@ -30,9 +30,8 @@ var (
 )
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
-// specified namespace (typically the course name), and teamName (name of the group).
-// Repository path and name of the GitHub team will coincide with the group name (teamName).
-// UserNames slice contains GitHub names of all group members.
+// specified course (represented with organization ID). The SCM team name
+// is also used as the group name and repository path. The provided user names represent the SCM group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
 func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.Group) (*pb.Repository, *scm.Team, error) {
