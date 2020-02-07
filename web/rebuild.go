@@ -9,18 +9,18 @@ import (
 )
 
 // rebuildSubmission rebuilds the given assignment and submission.
-func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.LabRequest) error {
+func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.LabRequest) (*pb.Submission, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	assignment, err := s.db.GetAssignment(&pb.Assignment{ID: request.GetAssignmentID()})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	course, err := s.db.GetCourse(assignment.GetCourseID(), false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	name := s.lookupName(submission)
 
@@ -35,7 +35,7 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.L
 	}
 	repos, err := s.db.GetRepositories(repoQuery)
 	if err != nil || len(repos) < 1 {
-		return fmt.Errorf("could not find repository for user/group: %s, course: %s: %w", name, course.GetCode(), err)
+		return nil, fmt.Errorf("could not find repository for user/group: %s, course: %s: %w", name, course.GetCode(), err)
 	}
 	repo := repos[0]
 
@@ -50,7 +50,7 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.L
 		JobOwner:   name,
 	}
 	ci.RunTests(s.logger, s.db, s.runner, runData)
-	return nil
+	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 }
 
 func (s *AutograderService) lookupName(submission *pb.Submission) string {

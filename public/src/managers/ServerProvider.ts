@@ -27,6 +27,7 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
+import { Results } from "../components/teacher/Results";
 
 interface IEndpoints {
     user: string;
@@ -375,12 +376,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
         const result = await this.grpcHelper.rebuildSubmission(assignmentID, submissionID);
-        if (result.status.getCode() !== 0) {
-            return false;
+        if (result.status.getCode() !== 0 || !result.data) {
+            return null;
         }
-        return true;
+        return this.toISubmission(result.data);
     }
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
