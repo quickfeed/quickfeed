@@ -314,7 +314,7 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, testCourses[2].ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, testCourses[2].ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -382,7 +382,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, testCourses[2].ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, testCourses[2].ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -463,16 +463,16 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(teacher.ID, course.ID, pb.Enrollment_TEACHER); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(student1.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(student1.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(student2.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(student2.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(ta.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(ta.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 

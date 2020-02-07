@@ -31,7 +31,7 @@ func TestNewGroup(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -79,7 +79,7 @@ func TestCreateGroupWithMissingFields(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -130,7 +130,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(teacher.ID, course.ID, pb.Enrollment_TEACHER); err != nil {
 		t.Fatal(err)
 	}
 
@@ -138,7 +138,7 @@ func TestNewGroupTeacherCreator(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -202,7 +202,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(teacher.ID, course.ID, pb.Enrollment_TEACHER); err != nil {
 		t.Fatal(err)
 	}
 
@@ -210,7 +210,7 @@ func TestNewGroupStudentCreateGroupWithTeacher(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -255,7 +255,7 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(teacher.ID, course.ID, pb.Enrollment_TEACHER); err != nil {
 		t.Fatal(err)
 	}
 
@@ -263,21 +263,21 @@ func TestStudentCreateNewGroupTeacherUpdateGroup(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user1.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user1.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user1.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 	user2 := createFakeUser(t, db, 4)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user2.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user2.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user2.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 	user3 := createFakeUser(t, db, 5)
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user3.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user3.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user3.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -426,7 +426,7 @@ func TestDeleteGroup(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, testCourse.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, testCourse.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 	// create teacher and enroll as teacher
@@ -434,7 +434,7 @@ func TestDeleteGroup(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollTeacher(teacher.ID, testCourse.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(teacher.ID, testCourse.ID, pb.Enrollment_TEACHER); err != nil {
 		t.Fatal(err)
 	}
 
@@ -478,7 +478,7 @@ func TestGetGroup(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: user.ID, CourseID: testCourse.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user.ID, testCourse.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user.ID, testCourse.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -526,7 +526,7 @@ func TestPatchGroupStatus(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: teacher.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollTeacher(teacher.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(teacher.ID, course.ID, pb.Enrollment_TEACHER); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.UpdateUser(&pb.User{ID: teacher.ID, IsAdmin: true}); err != nil {
@@ -552,14 +552,14 @@ func TestPatchGroupStatus(t *testing.T) {
 		UserID: user1.ID, CourseID: course.ID, GroupID: 1}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user1.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user1.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
 		UserID: user2.ID, CourseID: course.ID, GroupID: 1}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user2.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user2.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -628,14 +628,14 @@ func TestGetGroupByUserAndCourse(t *testing.T) {
 		UserID: user1.ID, CourseID: course.ID, GroupID: 1}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user1.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user1.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
 		UserID: user2.ID, CourseID: course.ID, GroupID: 1}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user2.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user2.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 
@@ -694,17 +694,17 @@ func TestDeleteApprovedGroup(t *testing.T) {
 		UserID: user1.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user1.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user1.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.CreateEnrollment(&pb.Enrollment{
 		UserID: user2.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollStudent(user2.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(user2.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.EnrollTeacher(admin.ID, course.ID); err != nil {
+	if err := db.UpdateEnrollmentStatus(admin.ID, course.ID, pb.Enrollment_TEACHER); err != nil {
 		t.Fatal(err)
 	}
 
@@ -795,7 +795,7 @@ func TestGetGroups(t *testing.T) {
 			UserID: user.ID, CourseID: course.ID}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+		if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 			t.Fatal(err)
 		}
 	}
