@@ -301,7 +301,7 @@ service AutograderService {
 
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
-    rpc RebuildSubmission(LabRequest) returns (Void) {}
+    rpc RebuildSubmission(LabRequest) returns (Submission) {}
     rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
    
     // misc //

@@ -298,7 +298,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
         throw new Error("Method not implemented");
     }
 

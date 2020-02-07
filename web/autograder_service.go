@@ -518,15 +518,16 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 }
 
 // RebuildSubmission rebuilds the submission with the given ID
-func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Void, error) {
+func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Submission, error) {
 	if !s.isValidSubmission(in.GetSubmissionID()) {
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
 		return nil, status.Errorf(codes.PermissionDenied, "submitter has no course access")
 	}
-	if err := s.rebuildSubmission(ctx, in); err != nil {
+	submission, err := s.rebuildSubmission(ctx, in)
+	if err != nil {
 		return nil, err
 	}
-	return &pb.Void{}, nil
+	return submission, nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.

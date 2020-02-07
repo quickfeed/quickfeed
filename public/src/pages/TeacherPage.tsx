@@ -126,6 +126,8 @@ export class TeacherPage extends ViewPage {
                 students={labResults}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
+                    // update refreshed submission in the labResults
+                    // make a separate method for this that could be used for group and non-group labs
                     this.navMan.refresh();
                     return ans;
                 }}
@@ -140,7 +142,7 @@ export class TeacherPage extends ViewPage {
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const results = await this.courseMan.getCourseLabs(course.getId(), true);
-            const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
+            const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
 
             return <GroupResults
