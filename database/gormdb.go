@@ -66,12 +66,12 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 ///  Remote Identities ///
 
 // GetRemoteIdentity fetches remote identity by provider and ID.
-func (db *GormDB) GetRemoteIdentity(provider string, rid uint64) (*pb.RemoteIdentity, error) {
+func (db *GormDB) GetRemoteIdentity(provider string, remoteID uint64) (*pb.RemoteIdentity, error) {
 	var remoteIdentity pb.RemoteIdentity
 	if err := db.conn.Model(&pb.RemoteIdentity{}).
 		Where(&pb.RemoteIdentity{
 			Provider: provider,
-			RemoteID: rid,
+			RemoteID: remoteID,
 		}).
 		First(&remoteIdentity).Error; err != nil {
 		return nil, err
@@ -96,13 +96,13 @@ func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb
 }
 
 // AssociateUserWithRemoteIdentity associates remote identity with the user with given ID.
-func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error {
+func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, remoteID uint64, accessToken string) error {
 	var count uint64
 	if err := db.conn.
 		Model(&pb.RemoteIdentity{}).
 		Where(&pb.RemoteIdentity{
 			Provider: provider,
-			RemoteID: rid,
+			RemoteID: remoteID,
 		}).
 		Not(&pb.RemoteIdentity{
 			UserID: uid,
@@ -116,7 +116,7 @@ func (db *GormDB) AssociateUserWithRemoteIdentity(uid uint64, provider string, r
 
 	var remoteIdentity pb.RemoteIdentity
 	return db.conn.
-		Where(pb.RemoteIdentity{Provider: provider, RemoteID: rid, UserID: uid}).
+		Where(pb.RemoteIdentity{Provider: provider, RemoteID: remoteID, UserID: uid}).
 		Assign(pb.RemoteIdentity{AccessToken: accessToken}).
 		FirstOrCreate(&remoteIdentity).Error
 }

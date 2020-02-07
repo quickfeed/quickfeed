@@ -5,9 +5,9 @@ import (
 )
 
 // GetUser fetches a user by ID with remote identities.
-func (db *GormDB) GetUser(uid uint64) (*pb.User, error) {
+func (db *GormDB) GetUser(userID uint64) (*pb.User, error) {
 	var user pb.User
-	if err := db.conn.Preload("RemoteIdentities").First(&user, uid).Error; err != nil {
+	if err := db.conn.Preload("RemoteIdentities").First(&user, userID).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -43,19 +43,19 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 }
 
 // GetUserWithEnrollments returns user with the given ID with all enrollments.
-func (db *GormDB) GetUserWithEnrollments(uid uint64) (*pb.User, error) {
+func (db *GormDB) GetUserWithEnrollments(userID uint64) (*pb.User, error) {
 	var user pb.User
-	if err := db.conn.Preload("Enrollments").First(&user, uid).Error; err != nil {
+	if err := db.conn.Preload("Enrollments").First(&user, userID).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
 // GetUsers fetches all users by provided IDs.
-func (db *GormDB) GetUsers(uids ...uint64) ([]*pb.User, error) {
+func (db *GormDB) GetUsers(userIDs ...uint64) ([]*pb.User, error) {
 	m := db.conn
-	if len(uids) > 0 {
-		m = m.Where(uids)
+	if len(userIDs) > 0 {
+		m = m.Where(userIDs)
 	}
 	m = m.Preload("RemoteIdentities")
 

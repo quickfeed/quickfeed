@@ -35,9 +35,9 @@ func (db *GormDB) CreateRepository(repo *pb.Repository) error {
 }
 
 // GetRepositoryByRemoteID fetches repository by provider's ID.
-func (db *GormDB) GetRepositoryByRemoteID(rid uint64) (*pb.Repository, error) {
+func (db *GormDB) GetRepositoryByRemoteID(remoteID uint64) (*pb.Repository, error) {
 	var repo pb.Repository
-	if err := db.conn.First(&repo, &pb.Repository{RepositoryID: rid}).Error; err != nil {
+	if err := db.conn.First(&repo, &pb.Repository{RepositoryID: remoteID}).Error; err != nil {
 		return nil, err
 	}
 	return &repo, nil

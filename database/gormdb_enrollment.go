@@ -27,8 +27,8 @@ func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 }
 
 // RejectEnrollment removes the user enrollment from the database.
-func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
-	enrol, err := db.GetEnrollmentByCourseAndUser(cid, uid)
+func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
+	enrol, err := db.GetEnrollmentByCourseAndUser(courseID, userID)
 	if err != nil {
 		return err
 	}
@@ -36,27 +36,27 @@ func (db *GormDB) RejectEnrollment(uid, cid uint64) error {
 }
 
 // UpdateEnrollmentStatus changes status of an enrollment of the given user ID in the given course ID.
-func (db *GormDB) UpdateEnrollmentStatus(uid, cid uint64, status pb.Enrollment_UserStatus) error {
-	return db.setEnrollment(uid, cid, status)
+func (db *GormDB) UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enrollment_UserStatus) error {
+	return db.setEnrollment(userID, courseID, status)
 
 }
 
 // UpdateGroupEnrollment sets GroupID of a student enrollment to 0.
-func (db *GormDB) UpdateGroupEnrollment(uid, cid uint64) error {
+func (db *GormDB) UpdateGroupEnrollment(userID, courseID uint64) error {
 	return db.conn.
 		Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: cid, UserID: uid}).
+		Where(&pb.Enrollment{CourseID: courseID, UserID: userID}).
 		Update("group_id", uint64(0)).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
-func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enrollment, error) {
+func (db *GormDB) GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error) {
 	var enrollment pb.Enrollment
 	m := db.conn.Preload("Course").Preload("User")
 	if err := m.
 		Where(&pb.Enrollment{
-			CourseID: cid,
-			UserID:   uid,
+			CourseID: courseID,
+			UserID:   userID,
 		}).
 		First(&enrollment).Error; err != nil {
 		return nil, err
@@ -65,8 +65,8 @@ func (db *GormDB) GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enro
 }
 
 // GetEnrollmentsByCourse fetches all course enrollments with given statuses.
-func (db *GormDB) GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
-	return db.getEnrollments(&pb.Course{ID: cid}, statuses...)
+func (db *GormDB) GetEnrollmentsByCourse(courseID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
+	return db.getEnrollments(&pb.Course{ID: courseID}, statuses...)
 }
 
 // getEnrollments is generic helper function that return enrollments for either course and user.
@@ -89,9 +89,9 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 }
 
 // setEnrollment updates enrollment status.
-func (db *GormDB) setEnrollment(uid, cid uint64, status pb.Enrollment_UserStatus) error {
+func (db *GormDB) setEnrollment(userID, courseID uint64, status pb.Enrollment_UserStatus) error {
 	return db.conn.
 		Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: cid, UserID: uid}).
+		Where(&pb.Enrollment{CourseID: courseID, UserID: userID}).
 		Update(&pb.Enrollment{Status: status}).Error
 }
