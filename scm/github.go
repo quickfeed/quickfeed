@@ -365,9 +365,9 @@ func (s *GithubSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) erro
 		},
 	}
 
-	_, _, err := s.client.Organizations.CreateHook(ctx, opt.OrgPath, hook)
+	_, _, err := s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
 	if err != nil {
-		return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.OrgPath, err)
+		return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.Organization, err)
 	}
 	return nil
 }
@@ -382,13 +382,13 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 	}
 
 	// first check whether the team with this name already exists on this organization
-	team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.OrgPath, slug.Make(opt.TeamName))
+	team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, slug.Make(opt.TeamName))
 	if err != nil {
 		s.logger.Debugf("Team %s not found as expected: %s", opt.TeamName, err)
 	}
 
 	if team == nil {
-		team, _, err = s.client.Teams.CreateTeam(ctx, opt.OrgPath, github.NewTeam{
+		team, _, err = s.client.Teams.CreateTeam(ctx, opt.Organization, github.NewTeam{
 			Name: opt.TeamName,
 		})
 		if err != nil {
@@ -400,7 +400,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 				}
 			}
 			// continue if it is one of standard teacher/student teams. Such teams can be safely reused
-			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.OrgPath)
+			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
 		}
 	}
 
@@ -433,7 +433,7 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 	if err != nil {
 		return ErrFailedSCM{
 			Method:   "DeleteTeam",
-			Message:  fmt.Sprintf("GitHub team '%s' not found in organization '%s'", opt.TeamName, opt.OrgPath),
+			Message:  fmt.Sprintf("GitHub team '%s' not found in organization '%s'", opt.TeamName, opt.Organization),
 			GitError: fmt.Errorf("failed to get GitHub team '%s': %w", opt.TeamName, err),
 		}
 	}
@@ -459,7 +459,7 @@ func (s *GithubSCM) GetTeam(ctx context.Context, opt *TeamOptions) (scmTeam *Tea
 	var team *github.Team
 	if opt.TeamID < 1 {
 		slug := slug.Make(opt.TeamName)
-		team, _, err = s.client.Teams.GetTeamBySlug(ctx, opt.OrgPath, slug)
+		team, _, err = s.client.Teams.GetTeamBySlug(ctx, opt.Organization, slug)
 		if err != nil {
 			return nil, fmt.Errorf("GetTeam: failed to get GitHub team by slug '%s': %w", slug, err)
 		}
@@ -505,9 +505,9 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 		}
 	}
 	team, err := s.GetTeam(ctx, &TeamOptions{
-		OrgPath:  opt.OrgPath,
-		TeamName: opt.TeamSlug,
-		TeamID:   uint64(opt.TeamID),
+		Organization: opt.Organization,
+		TeamName:     opt.TeamSlug,
+		TeamID:       uint64(opt.TeamID),
 	})
 	if err != nil {
 		return ErrFailedSCM{
@@ -537,7 +537,7 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	team, err := s.GetTeam(ctx, &TeamOptions{OrgPath: opt.OrgPath, TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
+	team, err := s.GetTeam(ctx, &TeamOptions{Organization: opt.Organization, TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
 	if err != nil {
 		return ErrFailedSCM{
 			GitError: err,
@@ -691,11 +691,11 @@ func (s *GithubSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipO
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, opt.OrgPath, &github.Membership{Role: &opt.Role})
+	newMembership, _, err := s.client.Organizations.EditOrgMembership(ctx, opt.Username, opt.Organization, &github.Membership{Role: &opt.Role})
 	if err != nil || newMembership.GetRole() != opt.Role {
 		// Note: the error here is potentially nil
 		return ErrFailedSCM{
-			GitError: fmt.Errorf("failed to update membership for user %s in organization %s: %w", opt.Username, opt.OrgPath, err),
+			GitError: fmt.Errorf("failed to update membership for user %s in organization %s: %w", opt.Username, opt.Organization, err),
 			Method:   "UpdateOrgMembership",
 			Message:  fmt.Sprintf("failed to update membership for user %s", opt.Username),
 		}
@@ -713,11 +713,11 @@ func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions)
 	}
 
 	// remove user from the organization and all teams
-	_, err := s.client.Organizations.RemoveMember(ctx, opt.OrgPath, opt.Username)
+	_, err := s.client.Organizations.RemoveMember(ctx, opt.Organization, opt.Username)
 	if err != nil {
 		return ErrFailedSCM{
 			Method:   "RemoveMember",
-			GitError: fmt.Errorf("failed to remove user %s from organization %s: %w", opt.Username, opt.OrgPath, err),
+			GitError: fmt.Errorf("failed to remove user %s from organization %s: %w", opt.Username, opt.Organization, err),
 			Message:  fmt.Sprintf("failed to remove user %s from the organization", opt.Username),
 		}
 	}

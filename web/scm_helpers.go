@@ -49,9 +49,9 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.
 	}
 
 	team, err := sc.CreateTeam(ctx, &scm.TeamOptions{
-		OrgPath:  org.Path,
-		TeamName: group.GetName(),
-		Users:    group.UserNames(),
+		Organization: org.Path,
+		TeamName:     group.GetName(),
+		Users:        group.UserNames(),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create team: %w", err)
@@ -123,10 +123,10 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 // add user to the organization's "students" team.
 func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	opt := &scm.TeamMembershipOptions{
-		OrgPath:  org.Path,
-		TeamSlug: scm.StudentsTeam,
-		Username: userName,
-		Role:     scm.TeamMember,
+		Organization: org.Path,
+		TeamSlug:     scm.StudentsTeam,
+		Username:     userName,
+		Role:         scm.TeamMember,
 	}
 	if err := sc.AddTeamMember(ctx, opt); err != nil {
 		return err
@@ -137,19 +137,19 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization
 // add user to the organization's "teachers" team, and remove user from "students" team.
 func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	studentsTeam := &scm.TeamMembershipOptions{
-		OrgPath:  org.Path,
-		Username: userName,
-		TeamSlug: scm.StudentsTeam,
+		Organization: org.Path,
+		Username:     userName,
+		TeamSlug:     scm.StudentsTeam,
 	}
 	if err := sc.RemoveTeamMember(ctx, studentsTeam); err != nil {
 		return err
 	}
 
 	teachersTeam := &scm.TeamMembershipOptions{
-		OrgPath:  org.Path,
-		Username: userName,
-		TeamSlug: scm.TeachersTeam,
-		Role:     scm.TeamMaintainer,
+		Organization: org.Path,
+		Username:     userName,
+		TeamSlug:     scm.TeachersTeam,
+		Role:         scm.TeamMaintainer,
 	}
 	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {
 		return err
@@ -175,8 +175,8 @@ func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *p
 		return err
 	}
 	opt := &scm.OrgMembershipOptions{
-		OrgPath:  org.Path,
-		Username: login,
+		Organization: org.Path,
+		Username:     login,
 	}
 
 	if err := sc.RemoveMember(ctx, opt); err != nil {
