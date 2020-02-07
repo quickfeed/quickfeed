@@ -107,11 +107,11 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 
 // GetCourseSubmissions returns all individual lab submissions or group submissions for the course ID
 // depending on the provided groupLabs boolean.
-func (db *GormDB) GetCourseSubmissions(cid uint64, groupLabs bool) ([]pb.Submission, error) {
+func (db *GormDB) GetCourseSubmissions(courseID uint64, groupLabs bool) ([]pb.Submission, error) {
 	m := db.conn
 
 	// fetch the course entry with all associated assignments and active enrollments
-	course, err := db.GetCourse(cid, true)
+	course, err := db.GetCourse(courseID, true)
 	if err != nil {
 		return nil, err
 	}

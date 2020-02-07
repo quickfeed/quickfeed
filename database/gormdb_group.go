@@ -113,8 +113,8 @@ func (db *GormDB) UpdateGroupStatus(group *pb.Group) error {
 }
 
 // DeleteGroup deletes a group and its corresponding enrollments.
-func (db *GormDB) DeleteGroup(gid uint64) error {
-	group, err := db.GetGroup(gid)
+func (db *GormDB) DeleteGroup(groupID uint64) error {
+	group, err := db.GetGroup(groupID)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 		tx.Rollback()
 		return err
 	}
-	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, gid).Error; err != nil {
+	if err := tx.Exec("UPDATE enrollments SET group_id= ? WHERE group_id= ?", 0, groupID).Error; err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -133,13 +133,13 @@ func (db *GormDB) DeleteGroup(gid uint64) error {
 }
 
 // GetGroup returns the group with the specified group id.
-func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
+func (db *GormDB) GetGroup(groupID uint64) (*pb.Group, error) {
 	var group pb.Group
-	if err := db.conn.Preload("Enrollments").First(&group, gid).Error; err != nil {
+	if err := db.conn.Preload("Enrollments").First(&group, groupID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
 		}
-		return nil, fmt.Errorf("error fetching group record for group with ID %d: %w", gid, err)
+		return nil, fmt.Errorf("error fetching group record for group with ID %d: %w", groupID, err)
 	}
 	var userIds []uint64
 	for _, enrollment := range group.Enrollments {
@@ -161,11 +161,11 @@ func (db *GormDB) GetGroup(gid uint64) (*pb.Group, error) {
 }
 
 // GetGroupsByCourse returns the groups for the given course.
-func (db *GormDB) GetGroupsByCourse(cid uint64) ([]*pb.Group, error) {
+func (db *GormDB) GetGroupsByCourse(courseID uint64) ([]*pb.Group, error) {
 	var groups []*pb.Group
 	if err := db.conn.
 		Preload("Enrollments").
-		Where(&pb.Group{CourseID: cid}).
+		Where(&pb.Group{CourseID: courseID}).
 		Find(&groups).Error; err != nil {
 		return nil, err
 	}

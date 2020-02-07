@@ -5,8 +5,8 @@ import (
 )
 
 // CreateCourse creates a new course if user with given ID is admin, enrolls user as course teacher.
-func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
-	user, err := db.GetUser(uid)
+func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
+	user, err := db.GetUser(userID)
 	if err != nil {
 		return err
 	}
@@ -28,10 +28,10 @@ func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 	if err := db.conn.Create(course).Error; err != nil {
 		return err
 	}
-	if err := db.CreateEnrollment(&pb.Enrollment{UserID: uid, CourseID: course.ID}); err != nil {
+	if err := db.CreateEnrollment(&pb.Enrollment{UserID: userID, CourseID: course.ID}); err != nil {
 		return err
 	}
-	if err := db.UpdateEnrollmentStatus(uid, course.ID, pb.Enrollment_TEACHER); err != nil {
+	if err := db.UpdateEnrollmentStatus(userID, course.ID, pb.Enrollment_TEACHER); err != nil {
 		return err
 	}
 	return nil
@@ -39,7 +39,7 @@ func (db *GormDB) CreateCourse(uid uint64, course *pb.Course) error {
 
 // GetCourse fetches course by ID. If withInfo is true, preloads course
 // assignments, active enrollments and groups.
-func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
+func (db *GormDB) GetCourse(courseID uint64, withInfo bool) (*pb.Course, error) {
 	m := db.conn
 	var course pb.Course
 
@@ -50,12 +50,12 @@ func (db *GormDB) GetCourse(cid uint64, withInfo bool) (*pb.Course, error) {
 			pb.Enrollment_TEACHER,
 		}
 		// and only group submissions from approved groups
-		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: cid}
-		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Groups", modelGroup).First(&course, cid).Error; err != nil {
+		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: courseID}
+		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Groups", modelGroup).First(&course, courseID).Error; err != nil {
 			return nil, err
 		}
 	} else {
-		if err := m.First(&course, cid).Error; err != nil {
+		if err := m.First(&course, courseID).Error; err != nil {
 			return nil, err
 		}
 	}
@@ -75,10 +75,10 @@ func (db *GormDB) GetCourseByOrganizationID(did uint64) (*pb.Course, error) {
 
 // GetCourses returns a list of courses. If one or more course ids are provided,
 // the corresponding courses are returned. Otherwise, all courses are returned.
-func (db *GormDB) GetCourses(cids ...uint64) ([]*pb.Course, error) {
+func (db *GormDB) GetCourses(courseIDs ...uint64) ([]*pb.Course, error) {
 	m := db.conn
-	if len(cids) > 0 {
-		m = m.Where(cids)
+	if len(courseIDs) > 0 {
+		m = m.Where(courseIDs)
 	}
 	var courses []*pb.Course
 	if err := m.Find(&courses).Error; err != nil {
@@ -91,8 +91,8 @@ func (db *GormDB) GetCourses(cids ...uint64) ([]*pb.Course, error) {
 // for the given user id.
 // If enrollment statuses is provided, the set of courses returned
 // is filtered according to these enrollment statuses.
-func (db *GormDB) GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error) {
-	enrollments, err := db.getEnrollments(&pb.User{ID: uid}, statuses...)
+func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error) {
+	enrollments, err := db.getEnrollments(&pb.User{ID: userID}, statuses...)
 	if err != nil {
 		return nil, err
 	}

@@ -7,11 +7,11 @@ import (
 // Database contains methods for manipulating the database.
 type Database interface {
 	// GetRemoteIdentity fetches remote identity by provider and ID.
-	GetRemoteIdentity(provider string, rid uint64) (*pb.RemoteIdentity, error)
+	GetRemoteIdentity(provider string, remoteID uint64) (*pb.RemoteIdentity, error)
 	// CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
 	CreateUserFromRemoteIdentity(*pb.User, *pb.RemoteIdentity) error
 	// AssociateUserWithRemoteIdentity associates user with the given remote identity.
-	AssociateUserWithRemoteIdentity(uid uint64, provider string, rid uint64, accessToken string) error
+	AssociateUserWithRemoteIdentity(userID uint64, provider string, remoteID uint64, accessToken string) error
 	// UpdateAccessToken updates the access token for the given remote identity.
 	// The supplied remote identity must contain Provider, RemoteID and AccessToken.
 	UpdateAccessToken(*pb.RemoteIdentity) error
@@ -34,7 +34,7 @@ type Database interface {
 	// assignments, active enrollments and groups.
 	GetCourse(uint64, bool) (*pb.Course, error)
 	// GetCourseByOrganizationID fetches course by organization ID.
-	GetCourseByOrganizationID(did uint64) (*pb.Course, error)
+	GetCourseByOrganizationID(organizationID uint64) (*pb.Course, error)
 	// GetCourses returns a list of courses. If one or more course IDs are provided,
 	// the corresponding courses are returned. Otherwise, all courses are returned.
 	GetCourses(...uint64) ([]*pb.Course, error)
@@ -42,23 +42,23 @@ type Database interface {
 	// for the given user id.
 	// If enrollment statuses is provided, the set of courses returned
 	// is filtered according to these enrollment statuses.
-	GetCoursesByUser(uid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
+	GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
 	// UpdateCourse updates course information.
 	UpdateCourse(*pb.Course) error
 
 	// CreateEnrollment creates a new pending enrollment.
 	CreateEnrollment(*pb.Enrollment) error
 	// RejectEnrollment removes the user enrollment from the database
-	RejectEnrollment(uid uint64, cid uint64) error
+	RejectEnrollment(userID, courseID uint64) error
 	// UpdateEnrollmentStatus changes status of the course enrollment for the given user and course.
-	UpdateEnrollmentStatus(uid, cid uint64, status pb.Enrollment_UserStatus) error
+	UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enrollment_UserStatus) error
 	// UpdateGroupEnrollment is used to reset group ID when previously aproved group is
 	// being removed or a user is removed from the group
-	UpdateGroupEnrollment(uid, cid uint64) error
+	UpdateGroupEnrollment(userID, courseID uint64) error
 	// GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
-	GetEnrollmentByCourseAndUser(cid uint64, uid uint64) (*pb.Enrollment, error)
+	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error)
 	// GetEnrollmentsByCourse fetches all course enrollments with given statuses.
-	GetEnrollmentsByCourse(cid uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
+	GetEnrollmentsByCourse(courseID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
 
 	// CreateGroup creates a new group and assign users to newly created group.
 	CreateGroup(*pb.Group) error
@@ -71,11 +71,11 @@ type Database interface {
 	// GetGroup returns the group with the specified group ID.
 	GetGroup(uint64) (*pb.Group, error)
 	// GetGroupsByCourse returns the groups for the given course.
-	GetGroupsByCourse(cid uint64) ([]*pb.Group, error)
+	GetGroupsByCourse(courseID uint64) ([]*pb.Group, error)
 
 	// CreateAssignment creates a new or updates an existing assignment.
 	CreateAssignment(*pb.Assignment) error
-	// GetAssignment returns assignment with the given ID.
+	// GetAssignment returns assignment mathing the given query.
 	GetAssignment(query *pb.Assignment) (*pb.Assignment, error)
 	// GetAssignmentsByCourse returns a list of all assignments for the given course ID.
 	GetAssignmentsByCourse(uint64) ([]*pb.Assignment, error)
@@ -90,7 +90,7 @@ type Database interface {
 	// GetSubmission returns a single submission matching the given query.
 	GetSubmission(query *pb.Submission) (*pb.Submission, error)
 	// GetSubmissions returns a list of submission entries for the given course, matching the given query.
-	GetSubmissions(cid uint64, query *pb.Submission) ([]*pb.Submission, error)
+	GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error)
 	// GetCourseSubmissions returns a list of all the latest submissions
 	// for every active course assignment for the given course ID
 	GetCourseSubmissions(uint64, bool) ([]pb.Submission, error)
