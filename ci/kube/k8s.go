@@ -1,4 +1,3 @@
-//Impl. Kuberntes interface
 package kube
 
 import (
@@ -15,9 +14,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	//corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	v1 "k8s.io/api/core/v1"
 )
 
 // K8s is an implementation of the CI interface using K8s.
@@ -25,8 +22,8 @@ type K8s struct {
 	queue PriorityQueue
 }
 
-//RunToNodes runs the rescieved push from repository on the podes in our 3 nodes.
-func (k *K8s) RunToNodes(d ci.Docker) {
+//CreateJob runs the rescieved push from repository on the podes in our 3 nodes.
+func (k *K8s) CreateJob(d ci.Docker) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err)
@@ -38,14 +35,34 @@ func (k *K8s) RunToNodes(d ci.Docker) {
 
 	//deploymentsClient := clientset.AppsV1().Deployments("agcicd")
 
-	//when a new jobs come run in it in a new pod?
-	//when done delete the pod? result?
-	pod, err := clientset.CoreV1().Pods("default").Create(&v1.Pod{
+	//create job for every push ?!
+	jobsClient := clientset.BatchV1().Jobs()
+	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "myPod",
-			Namespace: v1.NamespaceDefault,
+			Name:      "demo-job",
+			Namespace: "agcicd",
 		},
-	})
+		Spec: batchv1.JobSpec{
+			Template: apiv1.PodTemplateSpec{
+				Spec: apiv1.PodSpec{
+					Containers: []apiv1.Container{
+						{
+							Name:  "demo",
+							Image: "myimage",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	fmt.Println("Creating job... ")
+	result1, err1 := jobsClient.Create(job)
+	if err != nil {
+		fmt.Println(err1)
+		panic(err1)
+	}
+	fmt.Printf("Created job %q.\n", result1)
 
 }
 
@@ -108,29 +125,28 @@ func (k *K8s) UpdateDeployment(lastImage string) {
 }
 
 //Deploy deploys...
-//TODO what we are using this for?
 func (k *K8s) Deploy(lastImage string) *appsv1.Deployment {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "kube-dep",
+			Name: "agcicd",
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(2),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "demo",
+					"app": "agcicd",
 				},
 			},
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "demo",
+						"app": "agcicd",
 					},
 				},
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:  "web",
+							Name:  "agcicd",
 							Image: lastImage,
 							Ports: []apiv1.ContainerPort{
 								{
