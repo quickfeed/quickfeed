@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ex
+spec:
+  parallelism: 2 
+  template:
+    metadata:
+      name: ex
+    spec:
+      containers:
+      - name: c
+        image: ex
+      restartPolicy: OnFailure

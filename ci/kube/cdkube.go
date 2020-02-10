@@ -1,4 +1,5 @@
 package kube
+
 //TODO: update the deployment if some error or after some amount of time ..
 
 import (
@@ -7,11 +8,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
+
+	appsv1 "k8s.io/api/apps/v1" //check the pkg
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type CD struct {
 }
-
 
 func int32Ptr(i int32) *int32 { return &i }
 
