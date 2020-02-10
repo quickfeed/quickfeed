@@ -7,7 +7,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
-	scms "github.com/autograde/aguis/scm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -39,6 +38,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
 	}
+
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
 		Path:         group.GetName(),
@@ -56,6 +56,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create team: %w", err)
 	}
+
 	err = sc.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
 		TeamID:     team.ID,
 		Owner:      repo.Owner,
@@ -78,7 +79,6 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.
 
 // deletes group repository and team
 func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID uint64, teamID uint64) error {
-
 	if err := sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID}); err != nil {
 		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete repository: %w", err)
 	}
@@ -167,22 +167,20 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group) error {
 }
 
 func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *pb.Repository) error {
-
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
 		ID: repo.GetOrganizationID(),
 	})
 	if err != nil {
 		return err
 	}
+
 	opt := &scm.OrgMembershipOptions{
 		Organization: org.Path,
 		Username:     login,
 	}
-
 	if err := sc.RemoveMember(ctx, opt); err != nil {
 		return err
 	}
-
 	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()})
 }
 
@@ -211,7 +209,7 @@ func contextCanceled(ctx context.Context) bool {
 // Returns true and formatted error if error type is SCM error
 // designed to be shown to user
 func parseSCMError(err error) (bool, error) {
-	errStruct, ok := err.(scms.ErrFailedSCM)
+	errStruct, ok := err.(scm.ErrFailedSCM)
 	if ok {
 		return ok, status.Errorf(codes.NotFound, errStruct.Message)
 	}
