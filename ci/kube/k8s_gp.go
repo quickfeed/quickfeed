@@ -4,11 +4,8 @@ import (
 	"context"
 	"strings"
 
-	//corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-
-	"github.com/docker/docker/client"
-
 	"github.com/autograde/aguis/ci"
+	"github.com/docker/docker/client"
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -20,30 +17,28 @@ import (
 
 // K8sgp is an implementation of the CI interface using K8s.
 type K8sgp struct {
-	queue workqueue.Interface
+	queue          workqueue.Interface
+	containerImage string
 }
 
-//Put the job in a working queue
-func (k *K8sgp) AddJob(ctx context.Context, cijob *ci.Job) {
-
+//ExtractCmd extraxts the commands part of the container
+func (k *K8sgp) ExtractCmd(ctx context.Context, c *ci.Job) {
 	//create a docker client to pull the image ?!
 	dockCli, err := client.NewEnvClient()
 	if err != nil {
 		panic(err)
 	}
 	//pull the docker image
-	if err := pullImage(ctx, dockCli, cijob.Image); err != nil {
+	if err := pullImage(ctx, dockCli, c.Image); err != nil {
 		panic(err)
 	}
-	cijob.Commands = []string{"/bin/sh", "-c", strings.Join(cijob.Commands, "\n")}
+	inn := []string{"/bin/sh", "-c", strings.Join(c.Commands, "\n")}
 
-	inn := &ci.Job{Image: cijob.Image, Commands: cijob.Commands}
 	k.queue.Add(inn)
-
 }
 
 //Run runs..
-func (k *K8sgp) Run(d ci.Docker, dockJob *ci.Job, ctx context.Context) (string, error) {
+func (k *K8sgp) Run(ctx context.Context) (string, error) {
 	q := k.queue
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -55,10 +50,9 @@ func (k *K8sgp) Run(d ci.Docker, dockJob *ci.Job, ctx context.Context) (string, 
 		return "", err
 	}
 
-	if q.Len() != 0 {
-		getJob, _ := q.Get()
-		for {
-
+	if q.Len() > 0 {
+		cmd, _ := q.Get()
+		for /* j,_ := range q */ {
 			//create job for every push ?!
 			jobsClient := clientset.BatchV1().Jobs("agcicd")
 			kubeJob := &batchv1.Job{
@@ -74,16 +68,22 @@ func (k *K8sgp) Run(d ci.Docker, dockJob *ci.Job, ctx context.Context) (string, 
 						Spec: apiv1.PodSpec{
 							Containers: []apiv1.Container{
 								{
-									Name:  "webhook-job",
-									Image: dockJob.Image, //TODO
-									//Command: getJob. TODO
+									Name:    "webhook-job",
+									Image:   "baseimage", //TODO
+									Command: cmd.([]string),
 								},
 							},
-							RestartPolicy: apiv1.RestartPolicyOnFailure, //necessaray to set either onfailure or ?..
+							RestartPolicy: apiv1.RestartPolicyOnFailure, //necessaray to set either onfailure or never ?..
 						},
 					},
 				},
 			}
+			_, err := jobsClient.Create(kubeJob)
+			if err != nil {
+				return "", err
+			}
+			//TODO: return the result somehow to the correct object!
 		}
 	}
+	return "logs needed!", nil
 }

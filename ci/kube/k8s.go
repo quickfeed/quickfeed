@@ -2,7 +2,6 @@ package kube
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -13,8 +12,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	//corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -27,7 +24,7 @@ type K8s struct {
 }
 
 //CreateJob runs the rescieved push from repository on the podes in our 3 nodes.
-func (k *K8s) RunKubeJob(d ci.Docker, dockJob *ci.Job, ctx context.Context) (string, error) {
+func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job) (string, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return "", err
@@ -57,11 +54,11 @@ func (k *K8s) RunKubeJob(d ci.Docker, dockJob *ci.Job, ctx context.Context) (str
 			//Namespace: "agcicd",
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: int32Ptr(10),
-			Parallelism:  int32Ptr(3),
-			//ActiveDeadlineSeconds: 600
-			//OR:
+			BackoffLimit: int32Ptr(8),
+			Parallelism:  int32Ptr(2), //TODO
+			Completions:  int32Ptr(2), //TODO
 			//ttlSecondsAfterFinished: 100
+			//activeDeadlineSeconds: ?
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
@@ -76,14 +73,12 @@ func (k *K8s) RunKubeJob(d ci.Docker, dockJob *ci.Job, ctx context.Context) (str
 			},
 		},
 	}
-
-	fmt.Println("Creating job... ")
-	result1, err := jobsClient.Create(kubeJob)
+	result, err := jobsClient.Create(kubeJob)
 	if err != nil {
 		return "", err
 	}
-	fmt.Printf("Created job%q\n:", result1.Name) //check this for error
-	return "job created!(func returned)", nil
+
+	return "TODO:logs needed to be retunrned for the job:" + result.Name, nil
 }
 
 //Result returns the result of recently push that are executed on the nodes ?
