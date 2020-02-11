@@ -24,11 +24,10 @@ import (
 
 // K8s is an implementation of the CI interface using K8s.
 type K8s struct {
-	workQueue PriorityQueue
 }
 
 //CreateJob runs the rescieved push from repository on the podes in our 3 nodes.
-func (k *K8s) CreateJob(d ci.Docker, dockJob *ci.Job, ctx context.Context) (string, error) {
+func (k *K8s) RunKubeJob(d ci.Docker, dockJob *ci.Job, ctx context.Context) (string, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return "", err
@@ -58,7 +57,8 @@ func (k *K8s) CreateJob(d ci.Docker, dockJob *ci.Job, ctx context.Context) (stri
 			//Namespace: "agcicd",
 		},
 		Spec: batchv1.JobSpec{
-			//BackoffLimit: 30
+			BackoffLimit: int32Ptr(10),
+			Parallelism:  int32Ptr(3),
 			//ActiveDeadlineSeconds: 600
 			//OR:
 			//ttlSecondsAfterFinished: 100
