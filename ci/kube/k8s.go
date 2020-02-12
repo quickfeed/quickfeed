@@ -1,6 +1,7 @@
 package kube
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"io/ioutil"
@@ -21,70 +22,96 @@ import (
 
 // K8s is an implementation of the CI interface using K8s.
 type K8s struct {
+	Endpoint string
+	Version  string
 }
 
 //CreateJob runs the rescieved push from repository on the podes in our 3 nodes.
-func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job) (string, error) {
+//dockJob is the container that will be creted using the base client docker image and commands that will run.
+//id is a unique string for each job object
+func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (string, error) {
+	//only for inside the cluster configurations ..
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return "", err
 	}
 
+	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return "", err
 	}
 
-	//create a docker client to pull the image ?!
+	//Docker client
 	dockCli, err := client.NewEnvClient()
 	if err != nil {
 		return "", err
 	}
 
-	//pull the docker image
+	//Pull the docker image
 	if err := pullImage(ctx, dockCli, dockJob.Image); err != nil {
 		return "", err
 	}
 
-	//create job for every push ?!
+	//Define the configiration of the job object
 	jobsClient := clientset.BatchV1().Jobs("agcicd")
 	kubeJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "webhook-job",
-			//Namespace: "agcicd",
+			Name: "webhook-job" + id,
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: int32Ptr(8),
-			Parallelism:  int32Ptr(2), //TODO
-			Completions:  int32Ptr(2), //TODO
-			//ttlSecondsAfterFinished: 100
+			//Parallelism:  int32Ptr(1), //TODO starting with 1 pod, def
+			//Completions:  int32Ptr(1), //TODO  starting with 1 pod, def
+			//ttlSecondsAfterFinished: 30
 			//activeDeadlineSeconds: ?
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:    "webhook-job",
+							Name:    "webhook-job" + id,
 							Image:   dockJob.Image,
 							Command: []string{"/bin/sh", "-c", strings.Join(dockJob.Commands, "\n")},
 						},
 					},
-					RestartPolicy: apiv1.RestartPolicyOnFailure, //necessaray to set either onfailure or ?..
+					RestartPolicy: apiv1.RestartPolicyOnFailure,
 				},
 			},
 		},
 	}
-	result, err := jobsClient.Create(kubeJob)
+	_, err = jobsClient.Create(kubeJob)
 	if err != nil {
 		return "", err
 	}
 
-	return "TODO:logs needed to be retunrned for the job:" + result.Name, nil
+	logs := ""
+	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{FieldSelector: ("metadata.name=webhook-job" + id)})
+	for _, pod := range pods.Items {
+		logs += k.PodLogs(pod, clientset)
+	}
+
+	return logs, nil
 }
 
-//Result returns the result of recently push that are executed on the nodes ?
-func (k *K8s) Result() string {
-	result := ""
-	return result
+//PodLogs returns the result of recently push that are executed on the nodes ?
+func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset) string {
+	//delete ?
+	podLogOpts := apiv1.PodLogOptions{}
+
+	req := clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
+	podLogs, err := req.Stream()
+	if err != nil {
+		panic(err)
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		panic(err)
+	}
+	str := buf.String()
+	return str
 }
 
 func pullImage(ctx context.Context, dockCli *client.Client, image string) error {
