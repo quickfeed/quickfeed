@@ -57,21 +57,22 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 	jobsClient := clientset.BatchV1().Jobs("agcicd")
 	kubeJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "webhook-job" + id,
+			Name: "cijob" + id,
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: int32Ptr(8),
 			//Parallelism:  int32Ptr(1), //TODO starting with 1 pod, def
 			//Completions:  int32Ptr(1), //TODO  starting with 1 pod, def
 			//ttlSecondsAfterFinished: 30
-			//activeDeadlineSeconds: ?
+			//activeDeadlineSeconds:
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:    "webhook-job" + id,
-							Image:   dockJob.Image,
-							Command: []string{"/bin/sh", "-c", strings.Join(dockJob.Commands, "\n")},
+							Name:            "c-" + id,
+							Image:           dockJob.Image,
+							Command:         []string{"/bin/sh", "-c", strings.Join(dockJob.Commands, "\n")},
+							ImagePullPolicy: apiv1.PullIfNotPresent,
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyOnFailure,
@@ -85,7 +86,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 	}
 
 	logs := ""
-	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{FieldSelector: ("metadata.name=webhook-job" + id)})
+	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{FieldSelector: ("metadata.name=webhook-job" + id)}) // TODO: does it find correct pod on correct job?
 	for _, pod := range pods.Items {
 		logs += k.PodLogs(pod, clientset)
 	}
