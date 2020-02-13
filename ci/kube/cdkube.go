@@ -17,8 +17,6 @@ import (
 type CD struct {
 }
 
-func int32Ptr(i int32) *int32 { return &i }
-
 //UpdateDeployment updates the deployment if some changes accours
 func (cont *CD) UpdateDeployment(lastImage string) {
 
