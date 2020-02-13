@@ -3,6 +3,7 @@ package kube
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -26,10 +27,14 @@ type K8s struct {
 	Version  string
 }
 
+func int32Ptr(i int32) *int32 { return &i }
+
 //CreateJob runs the rescieved push from repository on the podes in our 3 nodes.
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (string, error) {
+	fmt.Println("testing correct func")
+
 	//only for inside the cluster configurations ..
 	config, err := rest.InClusterConfig()
 	if err != nil {
