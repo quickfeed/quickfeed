@@ -38,23 +38,27 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 	//only for inside the cluster configurations ..
 	config, err := rest.InClusterConfig()
 	if err != nil {
+		fmt.Println("false 1")
 		return "", err
 	}
 
 	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
+		fmt.Println("false 2")
 		return "", err
 	}
 
 	//Docker client
 	dockCli, err := client.NewEnvClient()
 	if err != nil {
+		fmt.Println("false 3")
 		return "", err
 	}
 
 	//Pull the docker image
 	if err := pullImage(ctx, dockCli, dockJob.Image); err != nil {
+		fmt.Println("false 4")
 		return "", err
 	}
 
@@ -87,6 +91,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 	}
 	_, err = jobsClient.Create(kubeJob)
 	if err != nil {
+		fmt.Println("false 5")
 		return "", err
 	}
 
