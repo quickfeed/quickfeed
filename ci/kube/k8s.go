@@ -1,149 +1,127 @@
-//Impl. Kuberntes interface
 package kube
 
 import (
-	"fmt"
+	"bytes"
+	"context"
+	"io"
+	"io/ioutil"
+	"strings"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"k8s.io/client-go/util/retry"
-
-	"github.com/autograde/aguis/ci"
-
-	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	//corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	v1 "k8s.io/api/core/v1"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+
+	"github.com/autograde/aguis/ci"
 )
 
 // K8s is an implementation of the CI interface using K8s.
 type K8s struct {
-	queue PriorityQueue
+	Endpoint string
+	Version  string
 }
 
-//RunToNodes runs the rescieved push from repository on the podes in our 3 nodes.
-func (k *K8s) RunToNodes(d ci.Docker) {
+//CreateJob runs the rescieved push from repository on the podes in our 3 nodes.
+//dockJob is the container that will be creted using the base client docker image and commands that will run.
+//id is a unique string for each job object
+func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (string, error) {
+	//only for inside the cluster configurations ..
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
+
+	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	//deploymentsClient := clientset.AppsV1().Deployments("agcicd")
-
-	//when a new jobs come run in it in a new pod?
-	//when done delete the pod? result?
-	pod, err := clientset.CoreV1().Pods("default").Create(&v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "myPod",
-			Namespace: v1.NamespaceDefault,
-		},
-	})
-
-}
-
-//Result returns the result of recently push that are executed on the nodes
-func (k *K8s) Result() string {
-	result := ""
-	return result
-}
-
-//CleanUp cleans up the pods that are done with running of the recently push
-func (k *K8s) CleanUp() {}
-
-func int32Ptr(i int32) *int32 { return &i }
-
-//UpdateDeployment updates the deployment if some changes accours
-func (k *K8s) UpdateDeployment(lastImage string) {
-
-	config, err := rest.InClusterConfig()
+	//Docker client
+	dockCli, err := client.NewEnvClient()
 	if err != nil {
-		panic(err)
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	deploymentsClient := clientset.AppsV1().Deployments("agcicd")
-
-	// Update Deployment
-	fmt.Println("Updating deployment...")
-	//    Two options to Update() this Deployment:
-	//
-	//    1. Modify the "deployment" variable and call: Update(deployment).
-	//       This works like the "kubectl replace" command and it overwrites/loses changes
-	//       made by other clients between you Create() and Update() the object.
-	//    2. Modify the "result" returned by Get() and retry Update(result) until
-	//       you no longer get a conflict error. This way, you can preserve changes made
-	//       by other clients between Create() and Update(). This is implemented below
-	//			 using the retry utility package included with client-go. (RECOMMENDED)
-	//
-	// More Info:
-	// https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		// Retrieve the latest version of Deployment before attempting update
-		// RetryOnConflict uses exponential backoff to avoid exhausting the apiserver
-
-		result, getErr := deploymentsClient.Get("agcicd", metav1.GetOptions{})
-		if getErr != nil {
-			panic(fmt.Errorf("Failed to get latest version of Deployment: %v", getErr))
-		}
-		result.Spec.Replicas = int32Ptr(1)                        // reduce replica count
-		result.Spec.Template.Spec.Containers[0].Image = lastImage // change image version
-		_, updateErr := deploymentsClient.Update(result)
-		return updateErr
-	})
-	if retryErr != nil {
-		panic(fmt.Errorf("Update failed: %v", retryErr))
+	//Pull the docker image
+	if err := pullImage(ctx, dockCli, dockJob.Image); err != nil {
+		return "", err
 	}
 
-}
-
-//Deploy deploys...
-//TODO what we are using this for?
-func (k *K8s) Deploy(lastImage string) *appsv1.Deployment {
-	deployment := &appsv1.Deployment{
+	//Define the configiration of the job object
+	jobsClient := clientset.BatchV1().Jobs("agcicd")
+	kubeJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "kube-dep",
+			Name: "cijob" + id,
 		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: int32Ptr(2),
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": "demo",
-				},
-			},
+		Spec: batchv1.JobSpec{
+			BackoffLimit: int32Ptr(8),
+			//Parallelism:  int32Ptr(1), //TODO starting with 1 pod, def
+			//Completions:  int32Ptr(1), //TODO  starting with 1 pod, def
+			//ttlSecondsAfterFinished: 30
+			//activeDeadlineSeconds:
 			Template: apiv1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app": "demo",
-					},
-				},
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:  "web",
-							Image: lastImage,
-							Ports: []apiv1.ContainerPort{
-								{
-									Name:          "http",
-									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: 8080,
-								},
-							},
+							Name:            "c-" + id,
+							Image:           dockJob.Image,
+							Command:         []string{"/bin/sh", "-c", strings.Join(dockJob.Commands, "\n")},
+							ImagePullPolicy: apiv1.PullIfNotPresent,
 						},
 					},
+					RestartPolicy: apiv1.RestartPolicyOnFailure,
 				},
 			},
 		},
 	}
-	return deployment
+	_, err = jobsClient.Create(kubeJob)
+	if err != nil {
+		return "", err
+	}
+
+	logs := ""
+	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{FieldSelector: ("metadata.name=webhook-job" + id)}) // TODO: does it find correct pod on correct job?
+	for _, pod := range pods.Items {
+		logs += k.PodLogs(pod, clientset)
+	}
+
+	return logs, nil
+}
+
+//PodLogs returns the result of recently push that are executed on the nodes ?
+func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset) string {
+	//delete ?
+	podLogOpts := apiv1.PodLogOptions{}
+
+	req := clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
+	podLogs, err := req.Stream()
+	if err != nil {
+		panic(err)
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		panic(err)
+	}
+	str := buf.String()
+	return str
+}
+
+func pullImage(ctx context.Context, dockCli *client.Client, image string) error {
+	progress, err := dockCli.ImagePull(ctx, image, types.ImagePullOptions{})
+	if err != nil {
+		return err
+	}
+	defer progress.Close()
+
+	_, err = io.Copy(ioutil.Discard, progress)
+	return err
 }

@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ex
+spec:
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 10
+  parallelism: 2
+  template:
+    metadata:
+      name: ex
+    spec:
+      containers:
+      - name: c
+        image: "golang"
+        command: ['sh', '-c', 'echo Job Pod is Running']
+        imagePullPolicy: IfNotPresent
+      restartPolicy: OnFailure
