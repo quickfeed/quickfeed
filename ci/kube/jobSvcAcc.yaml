@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: job-role
+  namespace: agcicd
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: agcicd
+  name: job-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["create", "delete", "update","get", "watch", "list"]
+- apiGroups: ["batch", "extensions"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: job-role-ag
+subjects:
+- kind: ServiceAccount
+  name: job-role
+  namespace: agcicd
+roleRef:
+  kind: ClusterRole
+  name: job-role
+  apiGroup: rbac.authorization.k8s.io

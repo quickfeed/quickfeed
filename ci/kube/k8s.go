@@ -3,9 +3,7 @@ package kube
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 
 	"k8s.io/client-go/kubernetes"
@@ -15,16 +13,12 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-
 	"github.com/autograde/aguis/ci"
 )
 
 // K8s is an implementation of the CI interface using K8s.
 type K8s struct {
 	Endpoint string
-	Version  string
 }
 
 func int32Ptr(i int32) *int32 { return &i }
@@ -33,8 +27,6 @@ func int32Ptr(i int32) *int32 { return &i }
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (string, error) {
-	fmt.Println("testing correct func")
-
 	//only for inside the cluster configurations ..
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -44,17 +36,6 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return "", err
-	}
-
-	//Docker client
-	dockCli, err := client.NewEnvClient()
-	if err != nil {
-		return "", err
-	}
-
-	//Pull the docker image
-	if err := pullImage(ctx, dockCli, dockJob.Image); err != nil {
 		return "", err
 	}
 
@@ -118,15 +99,4 @@ func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset) string {
 	}
 	str := buf.String()
 	return str
-}
-
-func pullImage(ctx context.Context, dockCli *client.Client, image string) error {
-	progress, err := dockCli.ImagePull(ctx, image, types.ImagePullOptions{})
-	if err != nil {
-		return err
-	}
-	defer progress.Close()
-
-	_, err = io.Copy(ioutil.Discard, progress)
-	return err
 }
