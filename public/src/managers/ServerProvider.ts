@@ -443,7 +443,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             score: sbm.getScore(),
             buildId: buildInfo.buildid,
             buildDate: bDate,
-            executetionTime: buildInfo.execTime,
+            executionTime: buildInfo.execTime,
             buildLog: buildInfo.buildlog,
             testCases: scoreObj,
             approved: sbm.getApproved(),
