@@ -76,15 +76,19 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 }
 
 func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
-	if err != nil {
-		return nil, err
+	if course.GetOrganizationPath() == "" {
+		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
+		if err != nil {
+			return nil, err
+		}
+		course.OrganizationPath = org.GetPath()
 	}
+	var err error
 
 	switch state {
 	case pb.Enrollment_STUDENT:
 		// get all repositories for organization
-		repos, err := sc.GetRepositories(ctx, &pb.Organization{ID: org.GetID(), Path: org.GetPath()})
+		repos, err := sc.GetRepositories(ctx, &pb.Organization{ID: course.GetOrganizationID(), Path: course.GetOrganizationPath()})
 		if err != nil {
 			return nil, err
 		}
@@ -98,24 +102,24 @@ func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, log
 		}
 
 		// add student to the organization's "students" team
-		if err = addUserToStudentsTeam(ctx, sc, org, login); err != nil {
+		if err = addUserToStudentsTeam(ctx, sc, course.GetOrganizationPath(), login); err != nil {
 			return nil, err
 		}
-
+		org := &pb.Organization{ID: course.GetOrganizationID(), Path: course.GetOrganizationPath()}
 		return createStudentRepo(ctx, sc, org, pb.StudentRepoName(login), login)
 
 	case pb.Enrollment_TEACHER:
 		// if teacher, promote to owner, remove from students team, add to teachers team
 		orgUpdate := &scm.OrgMembershipOptions{
-			Organization: org.Path,
+			Organization: course.GetOrganizationPath(),
 			Username:     login,
 			Role:         scm.OrgOwner,
 		}
 		// when promoting to teacher, promote to organization owner as well
-		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
+		if err := sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
 			return nil, fmt.Errorf("UpdateReposAndTeams: failed to update org membership for %s: %w", login, err)
 		}
-		err = promoteUserToTeachersTeam(ctx, sc, org, login)
+		err = promoteUserToTeachersTeam(ctx, sc, course.OrganizationPath, login)
 	}
 	return nil, err
 }
@@ -187,10 +191,11 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 		return err
 	}
 	// ensure the organization exists
-	_, err = sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
 	if err != nil {
 		return err
 	}
+	request.OrganizationPath = org.GetPath()
 	return s.db.UpdateCourse(request)
 }
 

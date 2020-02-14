@@ -93,7 +93,7 @@ func (s *AutograderService) createGroup(request *pb.Group) (*pb.Group, error) {
 // members from a group, before a repository is created on the SCM and
 // the member details are updated in the database.
 func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request *pb.Group) error {
-	group, repos, orgID, err := s.getCourseGroupRepos(&pb.GroupRequest{
+	group, repos, course, err := s.getCourseGroupRepos(&pb.GroupRequest{
 		CourseID: request.GetCourseID(),
 		GroupID:  request.GetID(),
 	})
@@ -122,7 +122,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 			// update group name only if team not already created on SCM
 			newGroup.Name = request.Name
 		}
-		repo, team, err := createRepoAndTeam(ctx, sc, orgID, newGroup)
+		repo, team, err := createRepoAndTeam(ctx, sc, course, newGroup)
 		if err != nil {
 			return err
 		}
@@ -207,25 +207,24 @@ func (s *AutograderService) isValidGroupName(courseID uint64, groupName string) 
 
 // getCourseGroupRepos returns the group, the group's repositories and the organization ID
 // for the given course and group specified in the GroupRequest.
-func (s *AutograderService) getCourseGroupRepos(request *pb.GroupRequest) (*pb.Group, []*pb.Repository, uint64, error) {
+func (s *AutograderService) getCourseGroupRepos(request *pb.GroupRequest) (*pb.Group, []*pb.Repository, *pb.Course, error) {
 	group, err := s.db.GetGroup(request.GetGroupID())
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, nil, err
 	}
 	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, nil, err
 	}
 
-	organizationID := course.GetOrganizationID()
 	groupRepoQuery := &pb.Repository{
-		OrganizationID: organizationID,
+		OrganizationID: course.OrganizationID,
 		GroupID:        group.GetID(),
 		RepoType:       pb.Repository_GROUP,
 	}
 	repos, err := s.db.GetRepositories(groupRepoQuery)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, nil, 0, err
+		return nil, nil, nil, err
 	}
-	return group, repos, organizationID, nil
+	return group, repos, course, nil
 }

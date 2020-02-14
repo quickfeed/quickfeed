@@ -224,6 +224,9 @@ export class Course extends jspb.Message {
   clearGroupsList(): void;
   addGroups(value?: Group, index?: number): Group;
 
+  getOrganizationpath(): string;
+  setOrganizationpath(value: string): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Course.AsObject;
   static toObject(includeInstance: boolean, msg: Course): Course.AsObject;
@@ -246,6 +249,7 @@ export namespace Course {
     enrollmentsList: Array<Enrollment.AsObject>,
     assignmentsList: Array<Assignment.AsObject>,
     groupsList: Array<Group.AsObject>,
+    organizationpath: string,
   }
 }
 
