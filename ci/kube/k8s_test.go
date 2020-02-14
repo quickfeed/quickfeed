@@ -18,10 +18,13 @@ func init() {
 	host = envString("DOCKER_HOST", "http://localhost:4243")
 	version = envString("DOCKER_VERSION", "1.39")
 
-	if os.Getenv("DOCKER_TESTS") != "" {
-		docker = true
-		fmt.Println("true")
+	 dt:= os.Getenv("DOCKER_TESTS")
+	if dt != "" {
+		 docker = true
+		fmt.Println(dt)
 	}
+
+	fmt.Println("dt "+ dt)
 
 	cli, err := client.NewClient(host, version, nil, nil)
 	if err != nil {
@@ -31,7 +34,7 @@ func init() {
 	}
 	if _, err := cli.Ping(context.Background()); err != nil {
 		docker = false
-		fmt.Println("false 2")
+		panic(err)
 	}
 }
 
