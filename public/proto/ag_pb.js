@@ -2203,7 +2203,8 @@ proto.Course.toObject = function(includeInstance, msg) {
     assignmentsList: jspb.Message.toObjectList(msg.getAssignmentsList(),
     proto.Assignment.toObject, includeInstance),
     groupsList: jspb.Message.toObjectList(msg.getGroupsList(),
-    proto.Group.toObject, includeInstance)
+    proto.Group.toObject, includeInstance),
+    organizationpath: jspb.Message.getFieldWithDefault(msg, 14, "")
   };
 
   if (includeInstance) {
@@ -2290,6 +2291,10 @@ proto.Course.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.Group;
       reader.readMessage(value,proto.Group.deserializeBinaryFromReader);
       msg.addGroups(value);
+      break;
+    case 14:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setOrganizationpath(value);
       break;
     default:
       reader.skipField();
@@ -2405,6 +2410,13 @@ proto.Course.serializeBinaryToWriter = function(message, writer) {
       13,
       f,
       proto.Group.serializeBinaryToWriter
+    );
+  }
+  f = message.getOrganizationpath();
+  if (f.length > 0) {
+    writer.writeString(
+      14,
+      f
     );
   }
 };
@@ -2683,6 +2695,24 @@ proto.Course.prototype.addGroups = function(opt_value, opt_index) {
  */
 proto.Course.prototype.clearGroupsList = function() {
   return this.setGroupsList([]);
+};
+
+
+/**
+ * optional string organizationPath = 14;
+ * @return {string}
+ */
+proto.Course.prototype.getOrganizationpath = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 14, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Course} returns this
+ */
+proto.Course.prototype.setOrganizationpath = function(value) {
+  return jspb.Message.setProto3StringField(this, 14, value);
 };
 
 

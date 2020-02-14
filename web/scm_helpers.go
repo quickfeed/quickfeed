@@ -33,12 +33,15 @@ var (
 // is also used as the group name and repository path. The provided user names represent the SCM group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.Group) (*pb.Repository, *scm.Team, error) {
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: orgID})
-	if err != nil {
-		return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
+func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *pb.Group) (*pb.Repository, *scm.Team, error) {
+	if course.GetOrganizationPath() == "" {
+		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.GetOrganizationID()})
+		if err != nil {
+			return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
+		}
+		course.OrganizationPath = org.GetPath()
 	}
-
+	org := &pb.Organization{ID: course.GetOrganizationID(), Path: course.GetOrganizationPath()}
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
 		Path:         group.GetName(),
@@ -68,7 +71,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.
 	}
 
 	groupRepo := &pb.Repository{
-		OrganizationID: orgID,
+		OrganizationID: course.GetOrganizationID(),
 		RepositoryID:   repo.ID,
 		GroupID:        group.GetID(),
 		HTMLURL:        repo.WebURL,
@@ -121,9 +124,9 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 }
 
 // add user to the organization's "students" team.
-func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
+func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, organizationPath string, userName string) error {
 	opt := &scm.TeamMembershipOptions{
-		Organization: org.Path,
+		Organization: organizationPath,
 		TeamSlug:     scm.StudentsTeam,
 		Username:     userName,
 		Role:         scm.TeamMember,
@@ -135,9 +138,9 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization
 }
 
 // add user to the organization's "teachers" team, and remove user from "students" team.
-func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
+func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, organizationPath string, userName string) error {
 	studentsTeam := &scm.TeamMembershipOptions{
-		Organization: org.Path,
+		Organization: organizationPath,
 		Username:     userName,
 		TeamSlug:     scm.StudentsTeam,
 	}
@@ -146,7 +149,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	}
 
 	teachersTeam := &scm.TeamMembershipOptions{
-		Organization: org.Path,
+		Organization: organizationPath,
 		Username:     userName,
 		TeamSlug:     scm.TeachersTeam,
 		Role:         scm.TeamMaintainer,

@@ -65,6 +65,9 @@ message Course {
     repeated Enrollment enrollments = 10;
     repeated Assignment assignments = 12;
     repeated Group groups = 13;
+    // or rename all Path fields to something else? See also scm structs.
+    // Name sounds best, but would be misleading
+    string organizationPath = 14;
 }
 
 message Courses {
