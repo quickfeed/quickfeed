@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"strings"
+	"fmt"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -30,12 +31,14 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 	//only for inside the cluster configurations ..
 	config, err := rest.InClusterConfig()
 	if err != nil {
+		fmt.Println(err)
 		return "", err
 	}
 
 	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
+		fmt.Println(err)
 		return "", err
 	}
 
