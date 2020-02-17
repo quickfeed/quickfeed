@@ -3,12 +3,15 @@ package kube
 import (
 	"bytes"
 	"context"
-	"io"
-	"strings"
+	"flag"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -28,13 +31,19 @@ func int32Ptr(i int32) *int32 { return &i }
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (string, error) {
-	//only for inside the cluster configurations ..
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		fmt.Println(err)
-		return "", err
+	var kubeconfig *string
+	if home := homeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
+	flag.Parse()
 
+	// use the current context in kubeconfig
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		panic(err.Error())
+	}
 	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -58,7 +67,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:            "c-" + id,
+							Name:            "cijob" + id,
 							Image:           dockJob.Image,
 							Command:         []string{"/bin/sh", "-c", strings.Join(dockJob.Commands, "\n")},
 							ImagePullPolicy: apiv1.PullIfNotPresent,
@@ -69,15 +78,19 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 			},
 		},
 	}
+
 	_, err = jobsClient.Create(kubeJob)
 	if err != nil {
 		return "", err
 	}
 
 	logs := ""
-	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{FieldSelector: ("metadata.name=webhook-job" + id)}) // TODO: does it find correct pod on correct job?
+	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{}) // TODO: does it find correct pod on correct job?
+	fmt.Println(len(pods.Items))
 	for _, pod := range pods.Items {
-		logs += k.PodLogs(pod, clientset)
+		fmt.Println(pod.Status)
+		//logs += k.PodLogs(pod, clientset)
+		fmt.Println("logs : " + logs)
 	}
 
 	return logs, nil
@@ -102,4 +115,11 @@ func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset) string {
 	}
 	str := buf.String()
 	return str
+}
+
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
+	}
+	return os.Getenv("USERPROFILE") // windows
 }

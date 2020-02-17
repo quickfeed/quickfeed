@@ -8,11 +8,10 @@ import (
 	"github.com/autograde/aguis/ci/kube"
 )
 
-//var docker bool
-//var host, version string
+//var KUBERNTES_HOSTNMAE + PORT nr string
 
 func init() {
-	//TODO kube clinet 
+	//TODO kube clinet
 }
 
 func newKubeCI() *kube.K8s {
