@@ -2,8 +2,11 @@ package kube_test
 
 import (
 	"context"
+	"fmt"
 	"strconv"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
@@ -42,7 +45,7 @@ func TestK8s(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "")
+	out, err := k.RunKubeJob(context.Background(), job, time.Now().Format("20060102-150405-99999999"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +55,7 @@ func TestK8s(t *testing.T) {
 	}
 }
 
-func TestParalellK8s(t *testing.T) {
+func TestParallelK8s(t *testing.T) {
 	numberOfPods := 10
 	tests := make([]test, numberOfPods)
 
@@ -61,21 +64,36 @@ func TestParalellK8s(t *testing.T) {
 		tests[i] = *t
 	}
 
-	for i := 0; i < numberOfPods; i++ {
-		tst := tests[i]
-		k := newKubeCI()
-		out, err := k.RunKubeJob(context.Background(),
-			&ci.Job{
-				Image:    "golang",
-				Commands: []string{tst.script},
-			},
-			"")
+	fmt.Println(tests)
 
-		if err != nil {
-			t.Fatal(err)
-		}
-		tst.out = out
+	var wg sync.WaitGroup
+	for i := 0; i < numberOfPods; i++ {
+		wg.Add(1)
+
+		go func(i int) {
+			tst := tests[i]
+			tm := time.Now().Format("20060102-150405-99999999")
+
+			fmt.Println(tm)
+
+			k := newKubeCI()
+
+			out, err := k.RunKubeJob(context.Background(),
+				&ci.Job{
+					Image:    "golang",
+					Commands: []string{tst.script},
+				},
+				tm)
+
+			if err != nil {
+				t.Fatal(err)
+			}
+			tst.out = out
+		}(i)
+		wg.Done()
 	}
+
+	wg.Wait()
 
 	for i := 0; i < numberOfPods; i++ {
 		tst := tests[i]
