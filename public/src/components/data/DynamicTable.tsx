@@ -6,7 +6,7 @@ interface IDynamicTableProps<T> {
     footer?: string[] | ICellElement[];
     data: T[];
     classType?: string;
-    selector: (item: T) => Array<string | JSX.Element | ICellElement>;
+    selector: (item: T) => (string | JSX.Element | ICellElement)[];
     onRowClick?: (link: T) => void;
 }
 
@@ -41,7 +41,7 @@ export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>> {
         );
     }
 
-    private renderCells(values: Array<string | JSX.Element | ICellElement>, th: boolean = false): JSX.Element[] {
+    private renderCells(values: (string | JSX.Element | ICellElement)[], th: boolean = false): JSX.Element[] {
         return values.map((v, i) => {
             if (th) {
                 if (isICellElement(v)) {

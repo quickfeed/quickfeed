@@ -34,10 +34,6 @@ export function combinePath(...parts: string[]): string {
     return newPath;
 }
 
-export function combineAbsPath(...parts: string[]): string {
-    return combinePath("", ...parts);
-}
-
 export interface INavPath {
     [path: string]: INavPath | INavObject;
 }

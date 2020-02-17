@@ -342,7 +342,7 @@ async function main(): Promise<void> {
     (window as any).debugData = { tempData, userMan, courseMan, navMan, logMan };
 
     navMan.setDefaultPath("app/home");
-    const all: Array<Promise<void>> = [];
+    const all: Promise<void>[] = [];
     all.push(navMan.registerPage("app/home", new HomePage()));
     all.push(navMan.registerPage("app/student", new StudentPage(userMan, navMan, courseMan)));
     all.push(navMan.registerPage("app/teacher", new TeacherPage(userMan, navMan, courseMan)));

@@ -19,8 +19,8 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     }
 
     public createEnrollmentRow(course: IAssignmentLink):
-        Array<string | JSX.Element> {
-        const base: Array<string | JSX.Element> = [course.course.getCode(), course.course.getName()];
+        (string | JSX.Element)[] {
+        const base: (string | JSX.Element)[] = [course.course.getCode(), course.course.getName()];
         if (course.link) {
             if (course.link.getStatus() === Enrollment.UserStatus.STUDENT
                  || course.link.getStatus() === Enrollment.UserStatus.TEACHER) {

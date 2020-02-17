@@ -5,7 +5,7 @@ import { CourseManager } from "../../managers/CourseManager";
 
 import { NavigationManager } from "../../managers/NavigationManager";
 
-import { Course, Organization, Status, User, Void } from "../../../proto/ag_pb";
+import { Course, Status, User, Void } from "../../../proto/ag_pb";
 
 interface ICourseFormProps {
     className?: string;

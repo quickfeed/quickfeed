@@ -101,10 +101,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IAssignmentLink): Array<string | JSX.Element | ICellElement> {
+    private getResultSelector(student: IAssignmentLink): (string | JSX.Element | ICellElement)[] {
         const user = student.link.getUser();
         const displayName = user ? this.generateUserRepoLink(user.getName(), user.getLogin()) : "";
-        let selector: Array<string | JSX.Element | ICellElement> = [displayName];
+        let selector: (string | JSX.Element | ICellElement)[] = [displayName];
         selector = selector.concat(student.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
                 let cellCss: string = "";

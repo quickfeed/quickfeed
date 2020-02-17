@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
-import { CoursesOverview, GroupForm, GroupInfo, NavMenu, SingleCourseOverview, StudentLab } from "../components";
+import { CoursesOverview, GroupForm, GroupInfo, SingleCourseOverview, StudentLab } from "../components";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
@@ -120,8 +120,6 @@ export class StudentPage extends ViewPage {
         return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
     }
 
-    // TODO - Instead of requesting to server for each time
-    // preload grouplab the same way as normal labs are loaded.
     public async courseWithGroupLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectGroupCourse(navInfo.params.courseid);
@@ -214,7 +212,7 @@ export class StudentPage extends ViewPage {
                 allLinks.push({
                     name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
                 });
-                // if there is a group repository, push it too
+
                 allLinks.push({
                     name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
                 });
