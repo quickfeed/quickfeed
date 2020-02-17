@@ -65,20 +65,6 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 
 ///  Remote Identities ///
 
-// GetRemoteIdentity fetches remote identity by provider and ID.
-func (db *GormDB) GetRemoteIdentity(provider string, remoteID uint64) (*pb.RemoteIdentity, error) {
-	var remoteIdentity pb.RemoteIdentity
-	if err := db.conn.Model(&pb.RemoteIdentity{}).
-		Where(&pb.RemoteIdentity{
-			Provider: provider,
-			RemoteID: remoteID,
-		}).
-		First(&remoteIdentity).Error; err != nil {
-		return nil, err
-	}
-	return &remoteIdentity, nil
-}
-
 // CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
 func (db *GormDB) CreateUserFromRemoteIdentity(user *pb.User, remoteIdentity *pb.RemoteIdentity) error {
 	user.RemoteIdentities = []*pb.RemoteIdentity{remoteIdentity}
