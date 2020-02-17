@@ -6,8 +6,6 @@ import (
 
 // Database contains methods for manipulating the database.
 type Database interface {
-	// GetRemoteIdentity fetches remote identity by provider and ID.
-	GetRemoteIdentity(provider string, remoteID uint64) (*pb.RemoteIdentity, error)
 	// CreateUserFromRemoteIdentity creates new user record from remote identity, sets user with ID 1 as admin.
 	CreateUserFromRemoteIdentity(*pb.User, *pb.RemoteIdentity) error
 	// AssociateUserWithRemoteIdentity associates user with the given remote identity.
