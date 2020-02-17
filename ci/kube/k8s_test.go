@@ -2,58 +2,35 @@ package kube_test
 
 import (
 	"context"
-	"fmt"
-	"os"
+	"strconv"
 	"testing"
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
-	"github.com/docker/docker/client"
 )
 
-var docker bool
-var host, version string
+//var KUBERNTES_HOSTNMAE + PORT nr string
 
 func init() {
-	host = envString("DOCKER_HOST", "http://localhost:4242")
-	version = envString("DOCKER_VERSION", "1.39")
-
-	docker = true
-	if os.Getenv("DOCKER_TESTS") != "" {
-		docker = true
-		fmt.Println("true")
-	}
-
-	cli, err := client.NewClient(host, version, nil, nil)
-	if err != nil {
-		docker = false
-		fmt.Println("false 1")
-	}
-
-	fmt.Println("host: " + host + "\tversion: " + version)
-
-	fmt.Println(cli)
-
-	if _, err := cli.Ping(context.Background()); err != nil {
-		docker = false
-		fmt.Println("false 2")
-		fmt.Println(err)
-	}
+	//TODO kube clinet
 }
 
 func newKubeCI() *kube.K8s {
-	return &kube.K8s{
-		Endpoint: host,
-		Version:  version,
-	}
+	return &kube.K8s{}
+}
+
+func newTest(script, wantOut string) *test {
+	t := &test{}
+	t.script = script
+	t.wantOut = wantOut
+	return t
+}
+
+type test struct {
+	script, wantOut, out string
 }
 
 func TestK8s(t *testing.T) {
-	if !docker {
-		t.SkipNow()
-		//t.Fatal(err)
-	}
-
 	const (
 		script  = `echo -n "hello world"`
 		wantOut = "hello world"
@@ -75,10 +52,36 @@ func TestK8s(t *testing.T) {
 	}
 }
 
-func envString(env, fallback string) string {
-	e := os.Getenv(env)
-	if e == "" {
-		return fallback
+func TestParalellK8s(t *testing.T) {
+	numberOfPods := 10
+	tests := make([]test, numberOfPods)
+
+	for i := 0; i < numberOfPods; i++ {
+		t := newTest(`echo -n "`+strconv.Itoa(i)+`"`, strconv.Itoa(i))
+		tests[i] = *t
 	}
-	return e
+
+	for i := 0; i < numberOfPods; i++ {
+		tst := tests[i]
+		k := newKubeCI()
+		out, err := k.RunKubeJob(context.Background(),
+			&ci.Job{
+				Image:    "golang",
+				Commands: []string{tst.script},
+			},
+			"")
+
+		if err != nil {
+			t.Fatal(err)
+		}
+		tst.out = out
+	}
+
+	for i := 0; i < numberOfPods; i++ {
+		tst := tests[i]
+		if tst.out != tst.wantOut {
+			t.Errorf("have %#v want %#v", tst.out, tst.wantOut)
+		}
+	}
+
 }
