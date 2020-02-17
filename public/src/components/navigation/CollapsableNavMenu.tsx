@@ -22,7 +22,7 @@ class CollapsableNavMenu extends React.Component<ICollapsableNavMenuProps, {}> {
     }
 
     private toggle(index: number) {
-        const animations: Array<(() => void)> = [];
+        const animations: (() => void)[] = [];
         this.topItems.forEach((temp, i) => {
             if (i === index) {
                 if (this.collapseIsOpen(temp)) {

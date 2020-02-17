@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { BootstrapButton, CourseGroup, GroupForm, NavMenu, Results } from "../components";
+import { BootstrapButton, CourseGroup, GroupForm, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { View, ViewPage } from "./ViewPage";
@@ -266,7 +266,7 @@ export class TeacherPage extends ViewPage {
             });
 
             // sorting accepted user so that teachers show first
-            acceptedUsers.sort((x,y) => (x.link.getStatus() < y.link.getStatus())? 1 : -1);
+            acceptedUsers.sort((x, y) => (x.link.getStatus() < y.link.getStatus()) ? 1 : -1);
 
             return <MemberView
                 course={course}

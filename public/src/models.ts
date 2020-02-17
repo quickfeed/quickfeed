@@ -11,7 +11,7 @@ export interface IUser {
 
 // Browser only objects START
 
-// Contains a course, a student/group enrollment and a list
+// Contains a course, a student/group enrollment, and a list
 // of all assignments and the last submission for each assignment
 export interface IAssignmentLink {
     course: Course;

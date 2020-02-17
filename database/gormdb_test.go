@@ -914,7 +914,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	// TODO: when we create a new submission for the same course lab and user, it will update the old one,
+	// when we create a new submission for the same course lab and user, it will update the old one,
 	// instead of creating an extra record
 	// check that it is still approved after using create method
 

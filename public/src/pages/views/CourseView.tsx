@@ -54,7 +54,6 @@ export class CourseView extends React.Component<ICourseViewProps, ICourseViewSta
                 filteredData.push(course);
             }
         });
-
         this.setState({
             courses: filteredData,
         });

@@ -167,8 +167,6 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 			return nil, status.Errorf(codes.NotFound, "user not enrolled in this course")
 		case err != nil:
 			return nil, err
-		// TODO(vera): it seems that the next check will also check that condition
-		// they can probably be merged into one
 		case enrollment.GroupID > 0 && request.ID == 0:
 			// new group check (request group ID should be 0)
 			return nil, status.Errorf(codes.InvalidArgument, "user already enrolled in another group")

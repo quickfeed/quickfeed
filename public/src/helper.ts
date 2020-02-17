@@ -15,17 +15,6 @@ export function bindFunc<T>(thisVar: any, func: (props: T) => JSX.Element): (pro
  */
 export type RProp<T> = { children?: JSX.Element | string } & T;
 
-/**
- * Performs a shallow copy on an object
- */
-export function copy<T extends {}>(val: T): T {
-    const newEle: any = {};
-    for (const a of Object.keys(val)) {
-        newEle[a] = (val as any)[a];
-    }
-    return newEle;
-}
-
 export function formatDate(str: string | Date): string {
     const dateOptions = {
         weekday: "short",
