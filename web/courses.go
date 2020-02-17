@@ -27,7 +27,7 @@ func (s *AutograderService) getCoursesWithEnrollment(request *pb.CoursesListRequ
 	return &pb.Courses{Courses: courses}, nil
 }
 
-// createEnrollment enrolls a user in a course.
+// createEnrollment creates a pending enrollment for the given user and course.
 func (s *AutograderService) createEnrollment(request *pb.Enrollment) error {
 	enrollment := pb.Enrollment{
 		UserID:   request.GetUserID(),
@@ -37,7 +37,7 @@ func (s *AutograderService) createEnrollment(request *pb.Enrollment) error {
 	return s.db.CreateEnrollment(&enrollment)
 }
 
-// updateEnrollment accepts or rejects a user to enroll in a course.
+// updateEnrollment changes the status of the given course enrollment.
 func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, curUser string, request *pb.Enrollment) error {
 	enrollment, err := s.db.GetEnrollmentByCourseAndUser(request.CourseID, request.UserID)
 	if err != nil {
@@ -58,7 +58,6 @@ func (s *AutograderService) updateEnrollment(ctx context.Context, sc scm.SCM, cu
 	case pb.Enrollment_TEACHER:
 		return s.enrollTeacher(ctx, sc, enrollment)
 	}
-
 	return fmt.Errorf("unknown enrollment")
 }
 
@@ -172,14 +171,7 @@ func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultL
 		return nil, err
 	}
 
-	var allCourseLabs []*pb.LabResultLink
-
-	if request.GetGroupLabs() {
-		allCourseLabs = makeLabResults(course, labCache, true)
-	} else {
-		allCourseLabs = makeLabResults(course, labCache, false)
-	}
-	return allCourseLabs, nil
+	return makeLabResults(course, labCache, request.GetGroupLabs()), nil
 }
 
 // updateSubmission approves the given submission or undoes a previous approval.
