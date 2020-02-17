@@ -2,57 +2,70 @@ package kube_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/autograde/aguis/ci"
+	"github.com/autograde/aguis/ci/kube"
+	"github.com/docker/docker/client"
 )
 
 var docker bool
+
 var host, version string
 
 func init() {
-	host = envString("DOCKER_HOST", "http://localhost:4243")
-	version = envString("DOCKER_VERSION", "1.30")
+	host = envString("DOCKER_HOST", "http://localhost:4242")
+	version = envString("DOCKER_VERSION", "1.39")
 
 	if os.Getenv("DOCKER_TESTS") != "" {
 		docker = true
+		fmt.Println("true")
 	}
 
 	cli, err := client.NewClient(host, version, nil, nil)
+
 	if err != nil {
 		docker = false
+		fmt.Println("false 1")
 	}
+
+	fmt.Println(cli)
+
 	if _, err := cli.Ping(context.Background()); err != nil {
 		docker = false
+		fmt.Println("false 2")
+		fmt.Println(err)
 	}
 }
 
-func newDockerCI() *ci.Docker {
-	return &ci.Docker{
+func newKubeCI() *kube.K8s {
+	return &kube.K8s{
 		Endpoint: host,
 		Version:  version,
 	}
 }
 
 func TestK8s(t *testing.T) {
+	fmt.Println("test")
 	if !docker {
 		t.SkipNow()
 	}
+	fmt.Println("testiii")
 
 	const (
 		script  = `echo -n "hello world"`
 		wantOut = "hello world"
 	)
 
-	docker := newDockerCI()
-	k := &k8s{};
-	out, err := k.RunKubeJob(context.Background(),
-	&ci.Job{
-		Image:    "golang:1.12.8",
+	job := &ci.Job{
+		Image:    "golang",
 		Commands: []string{script},
 	}
-	, "")
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "")
 
 	if err != nil {
 		t.Fatal(err)
