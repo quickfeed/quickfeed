@@ -23,6 +23,7 @@ require (
 	github.com/labstack/gommon v0.2.9 // indirect
 	github.com/markbates/goth v0.0.0-20170721181425-c55b917ee947
 	github.com/mattn/go-sqlite3 v1.10.0
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc0 // indirect
 	github.com/opencontainers/image-spec v1.0.0 // indirect
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
