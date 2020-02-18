@@ -313,7 +313,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 	s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
 	if len(repos) > 0 {
 		// repo already exist, update enrollment in database
-		return s.db.EnrollStudent(user.ID, course.ID)
+		return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
 	}
 
 	// create user repo, user team, and add user to students team
@@ -341,7 +341,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			return err
 		}
 	}
-	return s.db.EnrollStudent(user.ID, course.ID)
+	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
@@ -354,7 +354,7 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 		s.logger.Errorf("failed to update team membership for teacher %s: %s", user.Login, err.Error())
 		return err
 	}
-	return s.db.EnrollTeacher(user.ID, course.ID)
+	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_TEACHER)
 }
 
 func makeLabResults(course *pb.Course, labCache map[uint64]map[uint64]pb.Submission, groupLab bool) []*pb.LabResultLink {
