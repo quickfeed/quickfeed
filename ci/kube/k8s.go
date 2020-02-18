@@ -3,18 +3,18 @@ package kube
 import (
 	"bytes"
 	"context"
-	"flag"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
+	"log"
 	"strings"
+	"sync"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/autograde/aguis/ci"
@@ -25,35 +25,36 @@ type K8s struct {
 	Endpoint string
 }
 
-func int32Ptr(i int32) *int32 { return &i }
+var (
+	logs    string
+	m       sync.Mutex
+	waiting sync.Cond = *sync.NewCond(&m)
+	active  chan bool
+)
 
-//CreateJob runs the rescieved push from repository on the podes in our 3 nodes.
+func int32Ptr(i int32) *int32 { return &i }
+func int64Ptr(i int64) *int64 { return &i }
+
+//RunKubeJob runs the rescieved push from repository on the podes in our 3 nodes.
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
-func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (string, error) {
-	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
+func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeconfig *string) (string, error) {
+	active <- false
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
-		panic(err.Error())
+		return "", err
 	}
+
 	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 
 	//Define the configiration of the job object
 	jobsClient := clientset.BatchV1().Jobs("agcicd")
-	kubeJob := &batchv1.Job{
+	confJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "cijob" + id,
 		},
@@ -79,30 +80,50 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 		},
 	}
 
-	_, err = jobsClient.Create(kubeJob)
+	kj, err := jobsClient.Create(confJob)
 	if err != nil {
-		fmt.Println("false 5")
 		return "", err
 	}
 
-	logs := ""
-	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{}) // TODO: does it find correct pod on correct job?
+	m.Lock()
+	jobEvents(*kj, clientset, "agcicd", int32(1))
+	if <-active != true {
+		waiting.Wait()
+	}
+	m.Unlock()
+
+	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{
+		LabelSelector: "job-name=" + ("cijob" + id),
+	})
+
 	fmt.Println(len(pods.Items))
+
 	for _, pod := range pods.Items {
-		fmt.Println(pod.Status)
-		//logs += k.PodLogs(pod, clientset)
-		fmt.Println("logs : " + logs)
+		k.PodEvents(pod, clientset, "agcicd")
+		logs = k.PodLogs(pod, clientset, "agcicd")
 	}
 
 	return logs, nil
 }
 
-//PodLogs returns the result of recently push that are executed on the nodes ?
-func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset) string {
-	//delete ?
+//DeleteObject deleting ..
+/* func (k *K8s) DeleteObject(pod apiv1.Pod, clientset kubernetes.Clientset, namespace string, kubeJob string) {
+	err := clientset.CoreV1().Pods("agcicd").Delete(pod.Name, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(40)})
+	if err != nil {
+		panic(err)
+	}
+	err = clientset.BatchV1().Jobs(namespace).Delete(confJob, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(30)})
+	if err != nil {
+		panic(err)
+	}
+} */
+
+//PodLogs returns ...
+func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) string {
 	podLogOpts := apiv1.PodLogOptions{}
 
-	req := clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
+	req := clientset.CoreV1().Pods(namespace).GetLogs(pod.Name, &podLogOpts)
+	//TODO
 	podLogs, err := req.Stream()
 	if err != nil {
 		panic(err)
@@ -118,9 +139,58 @@ func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset) string {
 	return str
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
+//PodEvents is ...
+func (k *K8s) PodEvents(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) {
+	//name := pod.GetName()
+	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{})
+	if err != nil {
+		fmt.Println("nothing to watch")
+		log.Fatal(err.Error())
 	}
-	return os.Getenv("USERPROFILE") // windows
+	//go func() {
+	//fmt.Println("INSIDE Goroutine")
+	for event := range watch.ResultChan() {
+		fmt.Printf("Type: %v\n", event.Type)
+		p, ok := event.Object.(*v1.Pod)
+
+		if !ok {
+			log.Fatal("unexpected type")
+		}
+		if p.Status.Phase == apiv1.PodSucceeded {
+			fmt.Println("notify succ..")
+			break
+		}
+
+		if p.Status.Phase == apiv1.PodFailed {
+			fmt.Println("POD FAILED manual print") //TODO: What to do? delete and run the job again?
+			break
+		}
+	}
+	//}()
+}
+
+func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32) {
+	active = make(chan bool)
+	watch, err := clientset.BatchV1().Jobs(namespace).Watch(metav1.ListOptions{})
+	if err != nil {
+		fmt.Println("nothing to watch")
+		log.Fatal(err.Error())
+	}
+	go func() {
+		for event := range watch.ResultChan() {
+			fmt.Printf("Type: %v\n", event.Type)
+			j, ok := event.Object.(*batchv1.Job)
+			if !ok {
+				log.Fatal("unexpected type")
+			}
+			if j.Status.Active == nrOfPods {
+				active <- true
+				m.Lock()
+				waiting.Signal()
+				m.Unlock()
+				fmt.Println("job active")
+				break
+			}
+		}
+	}()
 }

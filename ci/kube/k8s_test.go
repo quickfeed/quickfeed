@@ -2,9 +2,10 @@ package kube_test
 
 import (
 	"context"
-	"fmt"
+	"flag"
+	"os"
+	"path/filepath"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -13,9 +14,10 @@ import (
 )
 
 //var KUBERNTES_HOSTNMAE + PORT nr string
+var home = homeDir()
+var kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 
-func init() {
-	//TODO kube clinet
+func init() { //TODO kube clinet
 }
 
 func newKubeCI() *kube.K8s {
@@ -45,7 +47,7 @@ func TestK8s(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, time.Now().Format("20060102-150405-99999999"))
+	out, err := k.RunKubeJob(context.Background(), job, time.Now().Format("20060102-150405-99999999"), kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,36 +66,32 @@ func TestParallelK8s(t *testing.T) {
 		tests[i] = *t
 	}
 
-	fmt.Println(tests)
-
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	for i := 0; i < numberOfPods; i++ {
-		wg.Add(1)
+		//wg.Add(1)
+		//go func(i int) {
+		tst := tests[i]
+		tm := "ci" + strconv.Itoa(i)
+		//fmt.Println("INSIDE Goroutine")
 
-		go func(i int) {
-			tst := tests[i]
-			tm := time.Now().Format("20060102-150405-99999999")
+		k := newKubeCI()
 
-			fmt.Println(tm)
+		out, err := k.RunKubeJob(context.Background(),
+			&ci.Job{
+				Image:    "golang",
+				Commands: []string{tst.script},
+			},
+			tm, kubeconfig)
 
-			k := newKubeCI()
-
-			out, err := k.RunKubeJob(context.Background(),
-				&ci.Job{
-					Image:    "golang",
-					Commands: []string{tst.script},
-				},
-				tm)
-
-			if err != nil {
-				t.Fatal(err)
-			}
-			tst.out = out
-		}(i)
-		wg.Done()
+		if err != nil {
+			t.Fatal(err)
+		}
+		tst.out = out
+		//}(i)
+		//wg.Done()
 	}
 
-	wg.Wait()
+	//wg.Wait()
 
 	for i := 0; i < numberOfPods; i++ {
 		tst := tests[i]
@@ -102,4 +100,11 @@ func TestParallelK8s(t *testing.T) {
 		}
 	}
 
+}
+
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
+	}
+	return os.Getenv("USERPROFILE") // windows
 }
