@@ -267,11 +267,14 @@ func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request
 func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
-	repos, err := s.db.GetRepositories(&pb.Repository{UserID: user.GetID(), OrganizationID: course.GetOrganizationID(), RepoType: pb.Repository_USER})
+	repos, err := s.db.GetRepositories(&pb.Repository{
+		UserID:         user.GetID(),
+		OrganizationID: course.GetOrganizationID(),
+		RepoType:       pb.Repository_USER,
+	})
 	if err != nil {
 		return err
 	}
-
 	for _, repo := range repos {
 		// we do not care about errors here, even if the github repo does not exists,
 		// log the error and go on with deleting database entries
