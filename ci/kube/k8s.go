@@ -87,6 +87,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string) (strin
 
 	_, err = jobsClient.Create(kubeJob)
 	if err != nil {
+		fmt.Println("false 5")
 		return "", err
 	}
 
