@@ -53,8 +53,8 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                     onChange={(query) => this.handleSearch(query)}
                 />
                 {noGroupsWell}
-                {approvedGroups}
                 {pendingGroups}
+                {approvedGroups}
             </div>
         );
     }
