@@ -3,6 +3,7 @@ package kube_test
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -68,11 +69,11 @@ func TestParallelK8s(t *testing.T) {
 
 	//var wg sync.WaitGroup
 	for i := 0; i < numberOfPods; i++ {
-		//wg.Add(1)
+		//wg.Add(i)
 		//go func(i int) {
 		tst := tests[i]
 		tm := "ci" + strconv.Itoa(i)
-		//fmt.Println("INSIDE Goroutine")
+		fmt.Println("INSIDE Goroutine")
 
 		k := newKubeCI()
 

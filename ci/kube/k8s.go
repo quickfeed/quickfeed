@@ -26,10 +26,12 @@ type K8s struct {
 }
 
 var (
-	logs    string
-	m       sync.Mutex
-	waiting sync.Cond = *sync.NewCond(&m)
-	active  chan bool
+	podLog  string
+	stat    bool
+	jobLock sync.Mutex
+	podLock sync.Mutex
+	waiting sync.Cond = *sync.NewCond(&jobLock)
+	condPod sync.Cond = *sync.NewCond(&podLock)
 )
 
 func int32Ptr(i int32) *int32 { return &i }
@@ -39,7 +41,6 @@ func int64Ptr(i int64) *int64 { return &i }
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeconfig *string) (string, error) {
-	active <- false
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
@@ -60,9 +61,9 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: int32Ptr(8),
-			//Parallelism:  int32Ptr(1), //TODO starting with 1 pod, def
-			//Completions:  int32Ptr(1), //TODO  starting with 1 pod, def
-			//ttlSecondsAfterFinished: 30
+			//Parallelism:  int32Ptr(3), //TODO starting with 1 pod, def
+			//Completions:             int32Ptr(10), //TODO  starting with 1 pod, def
+			TTLSecondsAfterFinished: int32Ptr(20),
 			//activeDeadlineSeconds:
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
@@ -80,51 +81,57 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		},
 	}
 
-	kj, err := jobsClient.Create(confJob)
+	_, err = jobsClient.Create(confJob)
 	if err != nil {
 		return "", err
 	}
+	//logs := ""
 
-	m.Lock()
-	jobEvents(*kj, clientset, "agcicd", int32(1))
-	if <-active != true {
+	jobLock.Lock()
+	if !jobEvents(*confJob, clientset, "agcicd", int32(1), confJob.Name) {
 		waiting.Wait()
 	}
-	m.Unlock()
+	jobLock.Unlock()
 
 	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{
-		LabelSelector: "job-name=" + ("cijob" + id),
+		LabelSelector: "job-name=" + confJob.Name,
 	})
+	if err != nil {
+		return "could not list the pods!", nil
+	}
 
 	fmt.Println(len(pods.Items))
 
-	for _, pod := range pods.Items {
-		k.PodEvents(pod, clientset, "agcicd")
-		logs = k.PodLogs(pod, clientset, "agcicd")
+	for range pods.Items {
+		podLock.Lock()
+		if !podEvents(clientset, "agcicd", confJob.Name) {
+			condPod.Wait()
+		}
+		//logs = podLog
+		podLock.Unlock()
 	}
-
-	return logs, nil
+	fmt.Println("logs :" + podLog)
+	return podLog, nil
 }
 
 //DeleteObject deleting ..
-func (k *K8s) DeleteObject(pod apiv1.Pod, clientset kubernetes.Clientset, namespace string, kubeJob string) error {
+/* func (k *K8s) DeleteObject(pod apiv1.Pod, clientset kubernetes.Clientset, namespace string, kubeJob string) error {
 	/* err := clientset.CoreV1().Pods("agcicd").Delete(pod.Name, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(40)})
 	if err != nil {
 		panic(err)
-	} */
+	}
 	err := clientset.BatchV1().Jobs(namespace).Delete(kubeJob, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(30)})
 	if err != nil {
 		return err
 	}
 	return nil
-}
+} */
 
 //PodLogs returns ...
-func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) string {
+func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) string {
 	podLogOpts := apiv1.PodLogOptions{}
 
 	req := clientset.CoreV1().Pods(namespace).GetLogs(pod.Name, &podLogOpts)
-	//TODO
 	podLogs, err := req.Stream()
 	if err != nil {
 		panic(err)
@@ -141,57 +148,68 @@ func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace 
 }
 
 //PodEvents is ...
-func (k *K8s) PodEvents(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) {
+func podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) bool {
 	//name := pod.GetName()
-	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{})
+	st := false
+	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
+		LabelSelector: "job-name=" + jobname,
+	})
 	if err != nil {
 		fmt.Println("nothing to watch")
-		log.Fatal(err.Error())
+		panic(err)
 	}
-	//go func() {
-	//fmt.Println("INSIDE Goroutine")
-	for event := range watch.ResultChan() {
-		fmt.Printf("Type: %v\n", event.Type)
-		p, ok := event.Object.(*v1.Pod)
+	go func(st bool) {
+		for event := range watch.ResultChan() {
+			fmt.Printf("Type: %v\n", event.Type)
+			pod, ok := event.Object.(*v1.Pod)
 
-		if !ok {
-			log.Fatal("unexpected type")
-		}
-		if p.Status.Phase == apiv1.PodSucceeded {
-			fmt.Println("notify succ..")
-			break
-		}
+			if !ok {
+				panic("unexpected type")
+			}
+			if pod.Status.Phase == "Succeeded" {
+				podLock.Lock()
+				podLog = podLogs(*pod, clientset, "agcicd")
+				st = true
+				condPod.Signal()
+				podLock.Unlock()
+			}
 
-		if p.Status.Phase == apiv1.PodFailed {
-			fmt.Println("POD FAILED manual print") //TODO: What to do? delete and run the job again?
-			break
+			if pod.Status.Phase == apiv1.PodFailed {
+				fmt.Println("POD FAILED manual print") //TODO: What to do? delete and run the job again?
+			}
 		}
-	}
-	//}()
+	}(st)
+	return st
 }
 
-func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32) {
-	active = make(chan bool)
-	watch, err := clientset.BatchV1().Jobs(namespace).Watch(metav1.ListOptions{})
+func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32, kubejobname string) bool {
+	st := false
+	watch, err := clientset.BatchV1().Jobs(namespace).Watch(metav1.ListOptions{
+		LabelSelector: "job-name=" + kubejobname,
+	})
 	if err != nil {
 		fmt.Println("nothing to watch")
 		log.Fatal(err.Error())
 	}
-	go func() {
+	go func(st bool) {
 		for event := range watch.ResultChan() {
 			fmt.Printf("Type: %v\n", event.Type)
 			j, ok := event.Object.(*batchv1.Job)
 			if !ok {
 				log.Fatal("unexpected type")
 			}
+
 			if j.Status.Active == nrOfPods {
-				active <- true
-				m.Lock()
+				jobLock.Lock()
+				st = true
 				waiting.Signal()
-				m.Unlock()
+				jobLock.Unlock()
+
+				//if j.Status.CompletionTime != nil {
+				//if j.Status.Conditions.Type == "Complete" {}
 				fmt.Println("job active")
-				break
 			}
 		}
-	}()
+	}(st)
+	return st
 }
