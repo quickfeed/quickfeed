@@ -35,10 +35,11 @@ var (
 func int32Ptr(i int32) *int32 { return &i }
 func int64Ptr(i int64) *int64 { return &i }
 
-//CreateJob runs the rescieved push from repository on the podes in our 3 nodes.
+//RunKubeJob runs the rescieved push from repository on the podes in our 3 nodes.
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeconfig *string) (string, error) {
+	active <- false
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
