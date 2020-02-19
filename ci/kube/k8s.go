@@ -106,16 +106,17 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 }
 
 //DeleteObject deleting ..
-/* func (k *K8s) DeleteObject(pod apiv1.Pod, clientset kubernetes.Clientset, namespace string, kubeJob string) {
-	err := clientset.CoreV1().Pods("agcicd").Delete(pod.Name, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(40)})
+func (k *K8s) DeleteObject(pod apiv1.Pod, clientset kubernetes.Clientset, namespace string, kubeJob string) error {
+	/* err := clientset.CoreV1().Pods("agcicd").Delete(pod.Name, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(40)})
 	if err != nil {
 		panic(err)
-	}
-	err = clientset.BatchV1().Jobs(namespace).Delete(confJob, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(30)})
+	} */
+	err := clientset.BatchV1().Jobs(namespace).Delete(kubeJob, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(30)})
 	if err != nil {
-		panic(err)
+		return err
 	}
-} */
+	return nil
+}
 
 //PodLogs returns ...
 func (k *K8s) PodLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) string {

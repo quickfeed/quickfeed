@@ -27,6 +27,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc0 // indirect
 	github.com/opencontainers/image-spec v1.0.0 // indirect
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
+	github.com/securego/gosec v0.0.0-20200203094520-d13bb6d2420c // indirect
 	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518 // indirect
 	github.com/tebeka/selenium v0.9.3
 	github.com/urfave/cli v1.19.1
@@ -34,13 +35,11 @@ require (
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/zap v1.10.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sys v0.0.0-20191002091554-b397fe3ad8ed // indirect
-	golang.org/x/tools v0.0.0-20200131000851-b4207ef49307 // indirect
 	google.golang.org/grpc v1.23.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/webhooks.v3 v3.13.0
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
-	gopkg.in/yaml.v2 v2.2.4
+	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.17.1
 	k8s.io/apimachinery v0.17.1
 	k8s.io/client-go v0.17.1
