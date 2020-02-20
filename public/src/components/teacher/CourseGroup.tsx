@@ -20,6 +20,7 @@ interface ICourseGroupState {
     approvedGroups: Group[];
     pendingGroups: Group[];
     editing: boolean;
+    errorMsg: JSX.Element | null;
 }
 
 export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroupState> {
@@ -30,6 +31,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             approvedGroups: this.props.approvedGroups,
             pendingGroups: this.props.pendingGroups,
             editing: false,
+            errorMsg: null,
         };
     }
 
@@ -53,6 +55,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                     placeholder="Search for groups"
                     onChange={(query) => this.handleSearch(query)}
                 />
+                {this.state.errorMsg}
                 {noGroupsWell}
                 {pendingGroups}
                 {approvedGroups}
@@ -156,7 +159,13 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private async handleUpdateStatus(group: Group, status: Group.GroupStatus): Promise<void> {
-        await this.props.courseMan.updateGroupStatus(group.getId(), status);
+        const ans = await this.props.courseMan.updateGroupStatus(group.getId(), status);
+        if (ans.getCode() !== 0) {
+        const err = <div>{ans.getError()}</div>;
+        this.setState({
+                errorMsg: err,
+            })
+        }
         this.props.navMan.refresh();
     }
 
@@ -178,8 +187,11 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
         if (readyToDelete) {
             const ans = await this.props.courseMan.deleteGroup(courseID, group.getId());
-            if (ans) {
-                this.props.navMan.refresh();
+            if (ans.getCode() !== 0) {
+                const err = <div>{ans.getError()}</div>;
+                this.setState({
+                    errorMsg: err,
+                })
             }
         }
     }
@@ -188,7 +200,13 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         switch (link.uri) {
             case "approve":
                 group.setStatus(Group.GroupStatus.APPROVED);
-                await this.props.courseMan.updateGroup(group);
+                const ans = await this.props.courseMan.updateGroup(group);
+                if (ans.getCode() !== 0) {
+                const err = <div>{ans.getError()}</div>;
+                this.setState({
+                    errorMsg: err,
+                })
+                }
                 break;
             case "edit":
                 this.props.navMan
