@@ -55,6 +55,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				if err != nil {
 					return fmt.Errorf("could not to read %q file: %w", filename, err)
 				}
+				labDirectoryName := filepath.Base(filepath.Dir(path))
 				var newAssignment assignmentData
 				err = yaml.Unmarshal(source, &newAssignment)
 				if err != nil {
@@ -71,7 +72,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					CourseID:    courseID,
 					Deadline:    newAssignment.Deadline,
 					Language:    strings.ToLower(newAssignment.Language),
-					Name:        newAssignment.Name,
+					Name:        labDirectoryName,
 					Order:       uint32(newAssignment.AssignmentID),
 					AutoApprove: newAssignment.AutoApprove,
 					ScoreLimit:  uint32(newAssignment.ScoreLimit),
