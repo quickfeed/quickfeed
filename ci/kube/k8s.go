@@ -80,19 +80,19 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		},
 	}
 
-	_, err = jobsClient.Create(confJob)
+	creteadJob, err := jobsClient.Create(confJob)
 	if err != nil {
 		return "", err
 	}
 
 	jobLock.Lock()
-	if !jobEvents(*confJob, clientset, "agcicd", int32(1), confJob.Name) {
+	if !jobEvents(*creteadJob, clientset, "agcicd", int32(1), creteadJob.Name) {
 		waiting.Wait()
 	}
 	jobLock.Unlock()
 
 	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{
-		LabelSelector: "job-name=" + confJob.Name,
+		LabelSelector: "job-name=" + creteadJob.Name,
 	})
 	if err != nil {
 		return "could not list the pods!", nil
@@ -100,7 +100,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 
 	for range pods.Items {
 		podLock.Lock()
-		if !podEvents(clientset, "agcicd", confJob.Name) {
+		if !podEvents(clientset, "agcicd", creteadJob.Name) {
 			condPod.Wait()
 		}
 		podLock.Unlock()
