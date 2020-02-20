@@ -16,7 +16,7 @@ export interface ICourseProvider {
         Promise<Enrollment[]>;
 
     addUserToCourse(course: Course, user: User): Promise<boolean>;
-    changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean>;
+    changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status>;
     approveAll(courseID: number): Promise<boolean>;
 
     createNewCourse(course: Course): Promise<Course | Status>;
@@ -24,10 +24,10 @@ export interface ICourseProvider {
     updateCourse(course: Course): Promise<Void | Status>;
 
     getCourseGroups(courseID: number): Promise<Group[]>;
-    updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean>;
+    updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<Status>;
     createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status>;
     getGroup(groupID: number): Promise<Group | null>;
-    deleteGroup(courseID: number, groupID: number): Promise<boolean>;
+    deleteGroup(courseID: number, groupID: number): Promise<Status>;
     getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null>;
     updateGroup(group: Group): Promise<Status>;
 
@@ -108,7 +108,7 @@ export class CourseManager {
     /**
      * Update status of a course enrollment
      */
-    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
+    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
         const ans = await this.courseProvider.changeUserState(link, state);
         return ans;
     }
@@ -247,7 +247,7 @@ export class CourseManager {
         return this.courseProvider.getGroupByUserAndCourse(courseID, userID);
     }
 
-    public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean> {
+    public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<Status> {
         return this.courseProvider.updateGroupStatus(groupID, status);
     }
 
@@ -255,7 +255,7 @@ export class CourseManager {
         return this.courseProvider.getGroup(groupID);
     }
 
-    public async deleteGroup(courseID: number, groupID: number): Promise<boolean> {
+    public async deleteGroup(courseID: number, groupID: number): Promise<Status> {
         return this.courseProvider.deleteGroup(courseID, groupID);
     }
 

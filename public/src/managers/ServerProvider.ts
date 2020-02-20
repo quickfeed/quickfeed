@@ -103,10 +103,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status.getCode() === 0;
     }
 
-    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
+    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
         link.setStatus(state);
         const result = await this.grpcHelper.updateEnrollment(link);
-        return result.status.getCode() === 0;
+        return result.status;
     }
 
     public async approveAll(courseID: number): Promise<boolean> {
@@ -173,12 +173,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async updateGroupStatus(groupID: number, states: Group.GroupStatus): Promise<boolean> {
+    public async updateGroupStatus(groupID: number, states: Group.GroupStatus): Promise<Status> {
         const result = await this.grpcHelper.updateGroupStatus(groupID, states);
-        if (result.status.getCode() !== 0) {
-            return false;
-        }
-        return true;
+        return result.status;
     }
 
     public async getGroup(groupID: number): Promise<Group | null> {
@@ -189,9 +186,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async deleteGroup(courseID: number, groupID: number): Promise<boolean> {
+    public async deleteGroup(courseID: number, groupID: number): Promise<Status> {
         const result = await this.grpcHelper.deleteGroup(courseID, groupID);
-        return result.status.getCode() === 0;
+        return result.status;
     }
 
     public async updateGroup(group: Group): Promise<Status> {

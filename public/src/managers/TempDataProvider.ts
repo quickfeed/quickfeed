@@ -187,9 +187,11 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<boolean> {
+    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
         link.setStatus(state);
-        return true;
+        const stat = new Status();
+        stat.setCode(0);
+        return stat;
     }
 
     public async changeAdminRole(user: User): Promise<boolean> {
@@ -246,7 +248,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.localCourseGroups;
     }
 
-    public async deleteGroup(courseID: number, groupID: number): Promise<boolean> {
+    public async deleteGroup(courseID: number, groupID: number): Promise<Status> {
         throw new Error("Method not implemented");
     }
 
@@ -258,7 +260,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<boolean> {
+    public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<Status> {
         throw new Error("Method not implemented");
     }
     public async getGroup(groupID: number): Promise<Group | null> {
