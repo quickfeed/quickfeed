@@ -107,7 +107,6 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		if !podEvents(clientset, "agcicd", confJob.Name) {
 			condPod.Wait()
 		}
-		//logs = podLog
 		podLock.Unlock()
 	}
 	fmt.Println("logs :" + podLog)
@@ -115,8 +114,8 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 }
 
 //DeleteObject deleting ..
-/* func (k *K8s) DeleteObject(pod apiv1.Pod, clientset kubernetes.Clientset, namespace string, kubeJob string) error {
-	/* err := clientset.CoreV1().Pods("agcicd").Delete(pod.Name, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(40)})
+/*func (k *K8s) DeleteObject(pod apiv1.Pod, clientset kubernetes.Clientset, namespace string, kubeJob string) error {
+	err := clientset.CoreV1().Pods("agcicd").Delete(pod.Name, &metav1.DeleteOptions{GracePeriodSeconds: int64Ptr(40)})
 	if err != nil {
 		panic(err)
 	}
