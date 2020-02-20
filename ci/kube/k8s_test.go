@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -67,13 +68,12 @@ func TestParallelK8s(t *testing.T) {
 		tests[i] = *t
 	}
 
-	//var wg sync.WaitGroup
+	var wg sync.WaitGroup
 	for i := 0; i < numberOfPods; i++ {
-		//wg.Add(i)
+		//wg.Add(1)
 		//go func(i int) {
 		tst := tests[i]
 		tm := "ci" + strconv.Itoa(i)
-		fmt.Println("INSIDE Goroutine")
 
 		k := newKubeCI()
 
@@ -85,14 +85,15 @@ func TestParallelK8s(t *testing.T) {
 			tm, kubeconfig)
 
 		if err != nil {
-			t.Fatal(err)
+			panic(err)
 		}
 		tst.out = out
+		fmt.Println(tst.out)
 		//}(i)
 		//wg.Done()
 	}
 
-	//wg.Wait()
+	wg.Wait()
 
 	for i := 0; i < numberOfPods; i++ {
 		tst := tests[i]
