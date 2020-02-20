@@ -17,6 +17,15 @@ body {
     cursor: pointer;
 }
 
+.table-grp {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table-grp>th {
+    width: 33%;
+}
+
 .clickable {
     cursor: pointer;
 }
@@ -294,7 +303,8 @@ body {
 .action-btn {
     padding-left: 10;
     margin-left: 10;
-    float: right;
+    margin-inline-end: 5%;
+    float: left;
 }
 
 .lab-btn {

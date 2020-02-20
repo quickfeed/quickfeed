@@ -175,7 +175,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private async handlePromote(userRel: IUserRelation) {
         if (confirm(
-            `Warning! 
+            `Warning!
             Do you want to assign
             ${userRel.user.getName()} as a teacher?`,
         )) {
@@ -286,10 +286,12 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     name: "Accept",
                     extra: "primary",
                     uri: "accept",
+                    description: "list-btn",
                 }, {
                     name: "Reject",
                     extra: "danger",
                     uri: "reject",
+                    description: "list-btn",
                 });
                 break;
             case Enrollment.UserStatus.STUDENT:
@@ -297,13 +299,16 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     name: "Promote",
                     extra: "primary",
                     uri: "teacher",
+                    description: "list-btn",
                 }, {
                     name: "Reject",
                     extra: "danger",
                     uri: "reject",
+                    description: "list-btn",
                 }) : links.push({
                     name: "Student",
                     extra: "light",
+                    description: "list-btn",
                 });
                 break;
             case Enrollment.UserStatus.TEACHER:
@@ -311,17 +316,20 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     name: "Demote ",
                     extra: "primary",
                     uri: "demote",
+                    description: "list-btn",
                 }, {
                     name: "Reject",
                     extra: "danger",
                     uri: "reject",
+                    description: "list-btn",
                 }) : links.push({
                     name: "Teacher",
                     extra: "light",
+                    description: "list-btn",
                 });
                 break;
             default:
-                console.log("Got unexpected user status " + link.getStatus + " when generating links");
+                console.log("Got unexpected user status " + link.getStatus() + " when generating links");
         }
         return links;
     }
