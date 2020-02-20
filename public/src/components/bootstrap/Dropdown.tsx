@@ -63,7 +63,7 @@ export class NavDropdown extends React.Component<INavDropdownProps, INavDropdown
         this.setState({ isOpen: newState });
     }
 
-    private renderActive(): string {
+    private renderActive(): string | JSX.Element {
         if (this.props.items.length === 0) {
             return "";
         }

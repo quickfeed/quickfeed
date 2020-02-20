@@ -1,9 +1,11 @@
 import * as React from "react";
+import { type } from "os";
 
 interface IDynamicTableProps<T> {
     header: string[];
     footer?: string[] | ICellElement[];
     data: T[];
+    classType?: string;
     selector: (item: T) => Array<string | JSX.Element | ICellElement>;
     onRowClick?: (link: T) => void;
 }
@@ -25,9 +27,9 @@ export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>> {
             return this.renderRow(v, i);
         });
         const tableFooter = footer ? <tfoot><tr>{this.renderCells(footer)}</tr></tfoot> : null;
-
+        const classString = this.props.onRowClick ? "table table-hover table-striped" : "table table-striped" + " " + this.props.classType;
         return (
-            <table className={this.props.onRowClick ? "table table-hover table-striped" : "table table-striped"}>
+            <table className={classString}>
                 <thead>
                     <tr>{this.renderCells(this.props.header, true)}</tr>
                 </thead>

@@ -50,6 +50,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             <DynamicTable
                 header={this.getTableHeading()}
                 data={this.state.users}
+                classType={"table-grp"}
                 selector={(item: IUserRelation) => this.renderRow(item)}
             />
         </div>;
@@ -136,15 +137,18 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     private renderActionRow(user: IUserRelation, tempActions: ILink[]) {
         return tempActions.map((v, i) => {
             let hoverText = "";
-            // the only option with no uri is promoting to teacher role
             if (v.uri === "teacher") {
                 hoverText = "Promote to teacher";
+            }
+            if (v.uri === "demote") {
+                hoverText = "Demote teacher";
             }
 
             return <BootstrapButton
                 key={i}
                 classType={v.extra ? v.extra as BootstrapClass : "default"}
                 tooltip={hoverText}
+                type={v.description}
                 onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, v); } }}
             >{v.name}
             </BootstrapButton>;

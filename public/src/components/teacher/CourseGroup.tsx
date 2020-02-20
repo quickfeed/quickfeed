@@ -6,6 +6,7 @@ import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
 import { generateGroupRepoLink } from "./labHelper";
+import { type } from 'os';
 
 interface ICourseGroupProps {
     approvedGroups: Group[];
@@ -20,6 +21,7 @@ interface ICourseGroupProps {
 interface ICourseGroupState {
     approvedGroups: Group[];
     pendingGroups: Group[];
+    editing: boolean;
 }
 
 export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroupState> {
@@ -29,6 +31,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         this.state = {
             approvedGroups: this.props.approvedGroups,
             pendingGroups: this.props.pendingGroups,
+            editing: false,
         };
     }
 
@@ -69,10 +72,11 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     private createApproveGroupView(): JSX.Element {
         return (
             <div className="approved-groups">
-                <h3>Approved Groups</h3>
+                <h3>Approved Groups</h3> {this.editButton()}
                 <DynamicTable
-                    header={["Name", "Members"]}
+                    header={["Name", "Members","Status"]}
                     data={this.state.approvedGroups}
+                    classType={"table-grp"}
                     selector={
                         (group: Group) => this.renderRow(group, true)
                     }
@@ -89,6 +93,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 <DynamicTable
                     header={["Name", "Members", "Actions"]}
                     data={this.state.pendingGroups}
+                    classType={"table-grp"}
                     selector={(group: Group) => this.renderRow(group, false)}
                 />
             </div>
@@ -99,26 +104,22 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         const selector: Array<string | JSX.Element> = [];
         const groupName = withLink ? generateGroupRepoLink(group.getName(), this.props.courseURL) : group.getName();
         selector.push(groupName, this.getMembers(group.getUsersList()));
-        const dropdownMenu = this.renderDropdownMenu(group);
-        selector.push(dropdownMenu);
+        const actionButtonLinks = this.generateGroupButtons(group);
+        const actionButtons = this.renderActionRow(group, actionButtonLinks);
+        selector.push(<div className="btn-group action-btn">{actionButtons}</div>);
         return selector;
     }
 
-    private renderDropdownMenu(group: Group): JSX.Element {
-        const links = [];
-        // only add approve link to not approved groups
-        if (group.getStatus() !== Group.GroupStatus.APPROVED) {
-            links.push({ name: "Approve", uri: "approve", extra: "primary" });
-        }
-        links.push({ name: "Edit", uri: "edit", extra: "primary" });
-        links.push({ name: "Delete", uri: "delete", extra: "danger" });
-        return <ul className="nav nav-pills">
-            <LiDropDownMenu
-                links={links}
-                onClick={(link) => this.handleActionOnClick(group, link)}>
-                <span className="glyphicon glyphicon-option-vertical" />
-            </LiDropDownMenu>
-        </ul>;
+    private renderActionRow(group: Group, tempActions: ILink[]) {
+        return tempActions.map((v, i) => {
+            return <BootstrapButton
+                key={i}
+                classType={v.extra ? v.extra as BootstrapClass : "default"}
+                type={v.description}
+                onClick={(link) => { this.handleActionOnClick(group, v)}}
+            >{v.name}
+            </BootstrapButton>;
+        });
     }
 
     private updateButton(props: RProp<{
@@ -131,6 +132,14 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             classType={props.type}>
             {props.children}
         </BootstrapButton>;
+    }
+
+    private editButton() {
+        return <button type="button"
+                id="edit"
+                className="btn btn-success member-btn"
+                onClick={() => this.flipEditState()}
+    >{this.editButtonString()}</button>;
     }
 
     private getMembers(users: User[]): JSX.Element {
@@ -227,6 +236,60 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         this.setState({
             pendingGroups: filteredPending,
         });
+    }
+
+    private generateGroupButtons(group: Group): ILink[] {
+        const links = [];
+        switch (group.getStatus()) {
+            case Group.GroupStatus.PENDING:
+                links.push({
+                    name: "Approve",
+                    extra: "primary",
+                    uri: "approve",
+                    description: "list-btn",
+                }, {
+                    name: "Edit",
+                    extra: "primary",
+                    uri: "edit",
+                }, {
+                    name: "Delete",
+                    extra: "danger",
+                    uri: "delete",
+                    description: "list-btn",
+                });
+                break;
+            case Group.GroupStatus.APPROVED:
+                this.state.editing ? links.push({
+                    name: "Edit",
+                    extra: "primary",
+                    uri: "edit",
+                    description: "list-btn",
+                }, {
+                    name: "Delete",
+                    extra: "danger",
+                    uri: "delete",
+                    description: "list-btn",
+                }) : links.push({
+                    name: "Approved",
+                    extra: "light",
+                    description: "list-btn",
+                });
+                break;
+            default:
+                console.log("Got unexpected group status " + group.getStatus() + " when generating links");
+        }
+        return links;
+    }
+
+    private flipEditState() {
+        this.setState({
+            editing: !this.state.editing,
+
+        }, () => this.refreshState());
+    }
+
+    private editButtonString(): string {
+        return this.state.editing ? "Cancel" : "Edit";
     }
 
     private refreshState() {
