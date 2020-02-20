@@ -1,12 +1,10 @@
 import * as React from "react";
 import { Course, Group, User } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable, Search } from "../../components";
-import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
 import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
 import { generateGroupRepoLink } from "./labHelper";
-import { type } from 'os';
 
 interface ICourseGroupProps {
     approvedGroups: Group[];

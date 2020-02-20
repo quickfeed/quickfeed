@@ -12,11 +12,8 @@ interface IButtonProps {
 export type BootstrapClass = "default" | "primary" | "success" | "info" | "warning" | "danger" | "link";
 export class BootstrapButton extends React.Component<IButtonProps> {
     public render() {
-        // set bootstrap class
-        const type: BootstrapClass = this.props.classType ? this.props.classType : "default";
-        // add custom class when provided
-        const fullType = this.props.type ? type + " " + this.props.type : type;
-        let className = "btn btn-" + fullType;
+        const classType = this.props.classType ? this.props.classType : "default" + this.props.type;
+        let className = "btn btn-" + classType;
 
         if (this.props.className) {
             className += " " + this.props.className;
