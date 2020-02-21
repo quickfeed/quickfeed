@@ -111,7 +111,6 @@ To allow the automated build and testing of student solutions, you have to provi
 The `tests` repository must contain one `assignment.yaml` file for each lab assignment, stored in the corresponding assignment's folder, e.g. for `lab1/assignment.yaml` we may have something like this:
 ```
 assignmentid: 1
-name: "lab1"
 language: "go"
 deadline: "2019-10-25T23:00:00"
 autoapprove: false
