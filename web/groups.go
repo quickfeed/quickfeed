@@ -107,6 +107,12 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 		return err
 	}
 
+	// allow changing the name of the group only if the group
+	// is not already approved and the new name is valid
+	if group.Name != request.Name && group.Status == pb.Group_PENDING && s.isValidGroupName(request.CourseID, request.Name) {
+		group.Name = request.Name
+	}
+
 	newGroup := &pb.Group{
 		ID:          group.ID,
 		Name:        group.Name,
@@ -191,11 +197,11 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 }
 
 // isValidGroupName ensures that SCM team and repository names for the given group
-// will not coincide with one of the existing groups
+// will not coincide with one of the existing approved groups
 func (s *AutograderService) isValidGroupName(courseID uint64, groupName string) bool {
 	courseGroups, _ := s.db.GetGroupsByCourse(courseID)
 	for _, group := range courseGroups {
-		if slug.Make(groupName) == slug.Make(group.GetName()) {
+		if slug.Make(groupName) == slug.Make(group.GetName()) && group.GetStatus() == pb.Group_APPROVED {
 			s.logger.Errorf("failed to create group %s, another group % already exists, both names will result in %s on GitHub", groupName, group.Name, slug.Make(groupName))
 			return false
 		}
