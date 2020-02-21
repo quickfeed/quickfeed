@@ -224,25 +224,6 @@ export class CourseManager {
         return null;
     }
 
-    public async getGroupCourseForTeacher(group: Group, course: Course, assignments: Assignment[]):
-        Promise<IAssignmentLink | null> {
-        // Fetching group enrollment status
-        if (group.getCourseid() === course.getId()) {
-            const enrol = new Enrollment();
-            enrol.setGroupid(group.getId());
-            enrol.setCourseid(course.getId());
-            enrol.setGroup(group);
-            const groupCourse: IAssignmentLink = {
-                link: enrol,
-                assignments: [],
-                course,
-            };
-            await this.fillLinksGroup(group, groupCourse, assignments);
-            return groupCourse;
-        }
-        return null;
-    }
-
     public async getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null> {
         return this.courseProvider.getGroupByUserAndCourse(courseID, userID);
     }
