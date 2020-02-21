@@ -24,7 +24,6 @@ const (
 // public to allow parsing.
 type assignmentData struct {
 	AssignmentID uint   `yaml:"assignmentid"`
-	Name         string `yaml:"name"`
 	Language     string `yaml:"language"`
 	Deadline     string `yaml:"deadline"`
 	AutoApprove  bool   `yaml:"autoapprove"`
@@ -66,7 +65,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					newAssignment.ScoreLimit = defaultAutoApproveScoreLimit
 				}
 
-				// ID from the parsed yaml is used to set Order, not assignment ID,
+				// ID field from the parsed yaml is used to set Order, not assignment ID,
 				// or it will cause a database constraint violation (IDs must be unique)
 				assignment := &pb.Assignment{
 					CourseID:    courseID,

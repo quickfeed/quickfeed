@@ -75,6 +75,8 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 	return nil
 }
 
+// updateReposAndTeams changes access to the course repositories and team memberships of the given user
+// depending on the given enrollment status.
 func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
 	if err != nil {
@@ -214,7 +216,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
-// getRepositoryURL returns the repository information
+// getRepositoryURL returns URL of a course repository of the given type.
 func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint64, repoType pb.Repository_Type) (string, error) {
 	course, err := s.db.GetCourse(courseID, false)
 	if err != nil {
@@ -248,6 +250,8 @@ func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint
 	return repos[0].HTMLURL, nil
 }
 
+// isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
+// returns an error otherwise.
 func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
 	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
@@ -263,7 +267,7 @@ func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request
 	return isEmpty(ctx, sc, repos)
 }
 
-// rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database
+// rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.
 func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
@@ -289,7 +293,7 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 	return s.db.RejectEnrollment(user.ID, course.ID)
 }
 
-// enrollStudent enrolls the given user as a student into the given course
+// enrollStudent enrolls the given user as a student into the given course.
 func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
