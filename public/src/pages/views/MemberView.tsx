@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment } from "../../../proto/ag_pb";
+import { Course, Enrollment, Status } from '../../../proto/ag_pb';
 import { Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
@@ -21,6 +21,7 @@ interface IUserViewerState {
     editing: boolean;
     pendingUsersView?: JSX.Element;
     acceptedUsersView?: JSX.Element;
+    errMsg: JSX.Element | null;
 }
 
 export class MemberView extends React.Component<IUserViewerProps, IUserViewerState> {
@@ -32,6 +33,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             pendingUsers: this.props.pendingUsers,
             approveAllClicked: false,
             editing: false,
+            errMsg: null,
         };
     }
     public render() {
@@ -41,6 +43,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     placeholder="Search for users"
                     onChange={(query) => this.handleSearch(query)}
                 />
+            {this.state.errMsg}
             {this.state.pendingUsersView}
             {this.state.acceptedUsersView}
         </div>;
@@ -122,7 +125,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private async handleAccept(userRel: IUserRelation) {
         const result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
-        if (result) {
+        if (result.getCode() === 0) {
             userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
             const i = this.state.pendingUsers.indexOf(userRel);
             if (i >= 0) {
@@ -130,6 +133,8 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.state.acceptedUsers.push(userRel);
             }
             this.props.navMan.refresh();
+        } else {
+            this.generateErrorMessage(result);
         }
     }
 
@@ -150,7 +155,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             if (readyToDelete) {
                 const result =
             await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.NONE);
-                if (result) {
+                if (result.getCode() === 0) {
                     switch (userRel.link.getStatus()) {
                         case Enrollment.UserStatus.PENDING:
                             const i = this.state.pendingUsers.indexOf(userRel);
@@ -168,6 +173,8 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                             console.log("Got wrong user status " + userRel.link.getStatus + " when rejecting");
                     }
                     this.props.navMan.refresh();
+                } else {
+                    this.generateErrorMessage(result);
                 }
             }
        }
@@ -178,7 +185,13 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             `Are you sure you want to promote
             ${userRel.user.getName()} to teacher status?`,
         )) {
-            this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
+            const ans = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
+            if (ans.getCode() === 0) {
+                userRel.link.setStatus(Enrollment.UserStatus.TEACHER);
+                this.props.navMan.refresh();
+            } else {
+                this.generateErrorMessage(ans);
+            }
         }
     }
 
@@ -187,7 +200,13 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             `Warning! ${userRel.user.getName()} is a teacher.
             Do you want to demote ${userRel.user.getName()} to student?`,
         )) {
-            this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
+            const ans = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
+            if (ans.getCode() === 0) {
+                userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
+                this.props.navMan.refresh();
+            } else {
+                this.generateErrorMessage(ans);
+            }
         }
     }
 
@@ -323,5 +342,12 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 console.log("Got unexpected user status " + link.getStatus() + " when generating links");
         }
         return links;
+    }
+
+    private generateErrorMessage(status: Status) {
+        const err = <div className="alert alert-danger">{status.getError()}</div>;
+        this.setState({
+                errMsg: err,
+            });
     }
 }
