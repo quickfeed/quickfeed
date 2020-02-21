@@ -120,19 +120,12 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.handleDemote(userRel);
                 break;
         }
-        this.props.navMan.refresh();
     }
 
     private async handleAccept(userRel: IUserRelation) {
         const result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
         if (result.getCode() === 0) {
             userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
-            const i = this.state.pendingUsers.indexOf(userRel);
-            if (i >= 0) {
-                this.state.pendingUsers.splice(i, 1);
-                this.state.acceptedUsers.push(userRel);
-            }
-            this.props.navMan.refresh();
         } else {
             this.generateErrorMessage(result);
         }
@@ -172,7 +165,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                         default:
                             console.log("Got wrong user status " + userRel.link.getStatus + " when rejecting");
                     }
-                    this.props.navMan.refresh();
                 } else {
                     this.generateErrorMessage(result);
                 }
@@ -188,7 +180,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             const ans = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
             if (ans.getCode() === 0) {
                 userRel.link.setStatus(Enrollment.UserStatus.TEACHER);
-                this.props.navMan.refresh();
             } else {
                 this.generateErrorMessage(ans);
             }
@@ -203,7 +194,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             const ans = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
             if (ans.getCode() === 0) {
                 userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
-                this.props.navMan.refresh();
             } else {
                 this.generateErrorMessage(ans);
             }
@@ -348,6 +338,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         const err = <div className="alert alert-danger">{status.getError()}</div>;
         this.setState({
                 errMsg: err,
-            });
+        });
     }
 }
