@@ -109,7 +109,12 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 
 	// allow changing the name of the group only if the group
 	// is not already approved and the new name is valid
-	if group.Name != request.Name && group.Status == pb.Group_PENDING && s.isValidGroupName(request.CourseID, request.Name) {
+	if group.Name != request.Name && group.Status == pb.Group_PENDING {
+		// if the new name coincides with one of the existing groups,
+		// fail and inform the user
+		if !s.isValidGroupName(request.CourseID, request.Name) {
+			return ErrGroupNameDuplicate
+		}
 		group.Name = request.Name
 	}
 
