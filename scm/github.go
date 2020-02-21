@@ -584,7 +584,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) err
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "UpdateTeamMember",
-			Message:  fmt.Sprintf("team with ID %d not found", opt.TeamID),
+			Message:  fmt.Sprintf("failed to update GitHub team members: team %s not found", opt.TeamName),
 		}
 	}
 
@@ -594,7 +594,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) err
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "UpdateTeamMember",
-			Message:  fmt.Sprintf("failed to get members for team %s", opt.TeamName),
+			Message:  fmt.Sprintf("failed to get members for team %s", groupTeam.GetName()),
 		}
 	}
 
@@ -605,7 +605,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) err
 			return ErrFailedSCM{
 				GitError: err,
 				Method:   "UpdateTeamMember",
-				Message:  fmt.Sprintf("failed to add user %s to team %s", member, opt.TeamName),
+				Message:  fmt.Sprintf("failed to add user %s to team %s", member, groupTeam.GetName()),
 			}
 		}
 
@@ -625,7 +625,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) err
 				return ErrFailedSCM{
 					GitError: err,
 					Method:   "UpdateTeamMember",
-					Message:  fmt.Sprintf("failed to remove user %s from team %s", teamMember.GetLogin(), opt.TeamName),
+					Message:  fmt.Sprintf("failed to remove user %s from team %s", teamMember.GetLogin(), groupTeam.GetName()),
 				}
 			}
 		}

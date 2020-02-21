@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -430,7 +431,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
+		if ok, parsedErr := parseSCMError(errors.Unwrap(err)); ok {
 			return nil, parsedErr
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to delete group")
