@@ -63,8 +63,10 @@ func TestParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// We expect assignment names to be set based on
+	// assignment folder names.
 	wantAssignment1 := &pb.Assignment{
-		Name:        "For loops",
+		Name:        "lab1",
 		Language:    "go",
 		Deadline:    "27-08-2017 12:00",
 		AutoApprove: false,
@@ -73,7 +75,7 @@ func TestParse(t *testing.T) {
 	}
 
 	wantAssignment2 := &pb.Assignment{
-		Name:        "Nested loops",
+		Name:        "lab2",
 		Language:    "java",
 		Deadline:    "27-08-2018 12:00",
 		AutoApprove: false,
