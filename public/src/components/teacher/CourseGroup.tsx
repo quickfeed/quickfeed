@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Group, User } from "../../../proto/ag_pb";
+import { Course, Group, User, Status } from '../../../proto/ag_pb';
 import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
@@ -161,12 +161,8 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     private async handleUpdateStatus(group: Group, status: Group.GroupStatus): Promise<void> {
         const ans = await this.props.courseMan.updateGroupStatus(group.getId(), status);
         if (ans.getCode() !== 0) {
-        const err = <div>{ans.getError()}</div>;
-        this.setState({
-                errorMsg: err,
-            })
+            this.generateErrorMessage(ans);
         }
-        this.props.navMan.refresh();
     }
 
     private async deleteGroup(group: Group) {
@@ -188,10 +184,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         if (readyToDelete) {
             const ans = await this.props.courseMan.deleteGroup(courseID, group.getId());
             if (ans.getCode() !== 0) {
-                const err = <div>{ans.getError()}</div>;
-                this.setState({
-                    errorMsg: err,
-                })
+                this.generateErrorMessage(ans);
             }
         }
     }
@@ -202,10 +195,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 group.setStatus(Group.GroupStatus.APPROVED);
                 const ans = await this.props.courseMan.updateGroup(group);
                 if (ans.getCode() !== 0) {
-                const err = <div>{ans.getError()}</div>;
-                this.setState({
-                    errorMsg: err,
-                })
+                this.generateErrorMessage(ans);
                 }
                 break;
             case "edit":
@@ -300,6 +290,13 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
     private editButtonString(): string {
         return this.state.editing ? "Cancel" : "Edit";
+    }
+
+    private generateErrorMessage(status: Status) {
+        const err = <div className="alert alert-danger">{status.getError()}</div>;
+        this.setState({
+                errorMsg: err,
+            });
     }
 
     private refreshState() {

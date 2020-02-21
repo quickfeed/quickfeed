@@ -253,7 +253,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
 
         if (!this.userValidate(this.state.curUser)) {
             errors.push("You must be a member of the group");
-        }        
+        }
         return errors;
     }
 
