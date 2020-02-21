@@ -13,6 +13,8 @@ import (
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 //var KUBERNTES_HOSTNMAE + PORT nr string
@@ -68,6 +70,8 @@ func TestParallelK8s(t *testing.T) {
 		tests[i] = *t
 	}
 
+	fmt.Println(tests)
+
 	var wg sync.WaitGroup
 	for i := 0; i < numberOfPods; i++ {
 		//wg.Add(1)
@@ -77,6 +81,7 @@ func TestParallelK8s(t *testing.T) {
 
 		k := newKubeCI()
 
+		fmt.Println(tst)
 		out, err := k.RunKubeJob(context.Background(),
 			&ci.Job{
 				Image:    "golang",
@@ -102,6 +107,32 @@ func TestParallelK8s(t *testing.T) {
 		}
 	}
 
+}
+
+func TestDelete(t *testing.T) {
+	cs = getClientSet();
+	fmt.Println(cs)
+}
+
+
+func TestGetPostInfo(t *testing.T) {
+	cs = getClientSet();
+}
+
+
+func clientset  getClientSet(){
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		t.Errorf(err.Error())
+		return nil
+	}
+	//K8s clinet
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		t.Errorf(err.Error())
+		return nil
+	}
+	return clientset
 }
 
 func homeDir() string {
