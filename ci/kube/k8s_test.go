@@ -13,6 +13,7 @@ import (
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
+	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -33,6 +34,10 @@ func newTest(script, wantOut string) *test {
 	t.script = script
 	t.wantOut = wantOut
 	return t
+}
+
+func newPod() *apiv1.Pod {
+	return &apiv1.Pod{}
 }
 
 type test struct {
@@ -93,7 +98,8 @@ func TestParallelK8s(t *testing.T) {
 			panic(err)
 		}
 		tst.out = out
-		fmt.Println(tst.out)
+		tests[i] = tst
+		fmt.Println(tst)
 		//}(i)
 		//wg.Done()
 	}
@@ -110,29 +116,41 @@ func TestParallelK8s(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	cs = getClientSet();
-	fmt.Println(cs)
+	namespace := time.Now().Format("20060102-150405") + "-delete"
+	cs, k := setupEnv(t, namespace)
+	k.DeleteObject(*cs, "agcicd")
 }
 
+func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s) {
+	const (
+		script  = `echo -n "hello world"`
+		wantOut = "hello world"
+	)
 
-func TestGetPostInfo(t *testing.T) {
-	cs = getClientSet();
-}
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
 
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, namespace, kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+		fmt.Println(out)
+	}
 
-func clientset  getClientSet(){
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
 		t.Errorf(err.Error())
-		return nil
+		return nil, nil
 	}
 	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		t.Errorf(err.Error())
-		return nil
+		return nil, nil
 	}
-	return clientset
+	return clientset, k
 }
 
 func homeDir() string {
