@@ -106,7 +106,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		}
 		podLock.Unlock()
 	}
-
+	fmt.Println("Return value: ", podLog)
 	return podLog, nil
 }
 

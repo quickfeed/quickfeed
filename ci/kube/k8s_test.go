@@ -79,29 +79,26 @@ func TestParallelK8s(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for i := 0; i < numberOfPods; i++ {
-		//wg.Add(1)
-		//go func(i int) {
-		tst := tests[i]
-		tm := "ci" + strconv.Itoa(i)
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			tm := "ci" + strconv.Itoa(i)
 
-		k := newKubeCI()
+			k := newKubeCI()
 
-		fmt.Println(tst)
-		out, err := k.RunKubeJob(context.Background(),
-			&ci.Job{
-				Image:    "golang",
-				Commands: []string{tst.script},
-			},
-			tm, kubeconfig)
+			fmt.Println(tests[i])
+			//err := newError()
+			s := tests[i].script
+			out, _ := k.RunKubeJob(context.Background(),
+				&ci.Job{
+					Image:    "golang",
+					Commands: []string{s},
+				},
+				tm, kubeconfig)
 
-		if err != nil {
-			panic(err)
-		}
-		tst.out = out
-		tests[i] = tst
-		fmt.Println(tst)
-		//}(i)
-		//wg.Done()
+			tests[i].out = out
+			fmt.Println("Input value: ", s)
+		}(i)
 	}
 
 	wg.Wait()
@@ -112,7 +109,6 @@ func TestParallelK8s(t *testing.T) {
 			t.Errorf("have %#v want %#v", tst.out, tst.wantOut)
 		}
 	}
-
 }
 
 func TestDelete(t *testing.T) {
@@ -151,6 +147,14 @@ func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s)
 		return nil, nil
 	}
 	return clientset, k
+}
+
+func TestK8s2(t *testing.T) {
+	k8s := newKubeCI()
+	fmt.Println(k8s)
+	namespace := time.Now().Format("20060102-150405") + "-double"
+	setupEnv(t, namespace)
+	fmt.Println(k8s)
 }
 
 func homeDir() string {
