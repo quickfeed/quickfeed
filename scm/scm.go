@@ -187,9 +187,9 @@ type AddTeamRepoOptions struct {
 
 // Team represents a git Team
 type Team struct {
-	ID   uint64
-	Name string
-	URL  string
+	ID           uint64
+	Name         string
+	Organization string
 }
 
 // Authorization stores information about user scopes

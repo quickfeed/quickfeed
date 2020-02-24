@@ -415,9 +415,9 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 		}
 	}
 	return &Team{
-		ID:   uint64(team.GetID()),
-		Name: team.GetName(),
-		URL:  team.GetURL(),
+		ID:           uint64(team.GetID()),
+		Name:         team.GetName(),
+		Organization: team.GetOrganization().GetLogin(),
 	}, nil
 }
 
@@ -470,9 +470,9 @@ func (s *GithubSCM) GetTeam(ctx context.Context, opt *TeamOptions) (scmTeam *Tea
 		}
 	}
 	return &Team{
-		ID:   uint64(team.GetID()),
-		Name: team.GetName(),
-		URL:  team.GetURL(),
+		ID:           uint64(team.GetID()),
+		Name:         team.GetName(),
+		Organization: team.Organization.GetLogin(),
 	}, nil
 }
 
@@ -490,7 +490,7 @@ func (s *GithubSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team
 	}
 	var teams []*Team
 	for _, gitTeam := range gitTeams {
-		newTeam := &Team{ID: uint64(gitTeam.GetID()), Name: gitTeam.GetName(), URL: gitTeam.GetURL()}
+		newTeam := &Team{ID: uint64(gitTeam.GetID()), Name: gitTeam.GetName(), Organization: gitTeam.Organization.GetLogin()}
 		teams = append(teams, newTeam)
 	}
 	return teams, nil

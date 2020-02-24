@@ -5,9 +5,9 @@ import "errors"
 const (
 	// Organization roles //
 
-	// OrgOwner is organization owner
+	// OrgOwner is organization's owner
 	OrgOwner = "admin"
-	// OrgMember is organization member
+	// OrgMember is organization's member
 	OrgMember = "member"
 
 	// Team roles //
