@@ -105,11 +105,12 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		}
 		podLock.Unlock()
 	}
+	fmt.Println("Return value: ", podLog)
 	return podLog, nil
 }
 
 //DeleteObject deleting ..
-func (k *K8s) DeleteObject(pod apiv1.Pod, clientset kubernetes.Clientset, namespace string) error {
+func (k *K8s) DeleteObject( /*pod apiv1.Pod,*/ clientset kubernetes.Clientset, namespace string) error {
 	jobs, err := clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return err

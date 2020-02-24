@@ -13,6 +13,7 @@ import (
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
+	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -33,6 +34,10 @@ func newTest(script, wantOut string) *test {
 	t.script = script
 	t.wantOut = wantOut
 	return t
+}
+
+func newPod() *apiv1.Pod {
+	return &apiv1.Pod{}
 }
 
 type test struct {
@@ -74,28 +79,26 @@ func TestParallelK8s(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for i := 0; i < numberOfPods; i++ {
-		//wg.Add(1)
-		//go func(i int) {
-		tst := tests[i]
-		tm := "ci" + strconv.Itoa(i)
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			tm := "ci" + strconv.Itoa(i)
 
-		k := newKubeCI()
+			k := newKubeCI()
 
-		fmt.Println(tst)
-		out, err := k.RunKubeJob(context.Background(),
-			&ci.Job{
-				Image:    "golang",
-				Commands: []string{tst.script},
-			},
-			tm, kubeconfig)
+			fmt.Println(tests[i])
+			//err := newError()
+			s := tests[i].script
+			out, _ := k.RunKubeJob(context.Background(),
+				&ci.Job{
+					Image:    "golang",
+					Commands: []string{s},
+				},
+				tm, kubeconfig)
 
-		if err != nil {
-			panic(err)
-		}
-		tst.out = out
-		fmt.Println(tst.out)
-		//}(i)
-		//wg.Done()
+			tests[i].out = out
+			fmt.Println("Input value: ", s)
+		}(i)
 	}
 
 	wg.Wait()
@@ -106,33 +109,52 @@ func TestParallelK8s(t *testing.T) {
 			t.Errorf("have %#v want %#v", tst.out, tst.wantOut)
 		}
 	}
-
 }
 
 func TestDelete(t *testing.T) {
-	cs = getClientSet();
-	fmt.Println(cs)
+	namespace := time.Now().Format("20060102-150405") + "-delete"
+	cs, k := setupEnv(t, namespace)
+	k.DeleteObject(*cs, "agcicd")
 }
 
+func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s) {
+	const (
+		script  = `echo -n "hello world"`
+		wantOut = "hello world"
+	)
 
-func TestGetPostInfo(t *testing.T) {
-	cs = getClientSet();
-}
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
 
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, namespace, kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+		fmt.Println(out)
+	}
 
-func clientset  getClientSet(){
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
 		t.Errorf(err.Error())
-		return nil
+		return nil, nil
 	}
 	//K8s clinet
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		t.Errorf(err.Error())
-		return nil
+		return nil, nil
 	}
-	return clientset
+	return clientset, k
+}
+
+func TestK8s2(t *testing.T) {
+	k8s := newKubeCI()
+	fmt.Println(k8s)
+	namespace := time.Now().Format("20060102-150405") + "-double"
+	setupEnv(t, namespace)
+	fmt.Println(k8s)
 }
 
 func homeDir() string {
