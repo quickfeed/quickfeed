@@ -141,9 +141,9 @@ func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error 
 func (s *FakeSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	id := len(s.Teams) + 1
 	newTeam := &Team{
-		ID:   uint64(id),
-		Name: opt.TeamName,
-		URL:  opt.Organization,
+		ID:           uint64(id),
+		Name:         opt.TeamName,
+		Organization: opt.Organization,
 	}
 	s.Teams[newTeam.ID] = newTeam
 	return newTeam, nil
@@ -171,7 +171,7 @@ func (s *FakeSCM) GetTeam(ctx context.Context, opt *TeamOptions) (*Team, error) 
 func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	var teams []*Team
 	for _, team := range s.Teams {
-		if team.URL == org.Path {
+		if team.Organization == org.Path {
 			teams = append(teams, team)
 		}
 	}
