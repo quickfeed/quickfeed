@@ -31,32 +31,6 @@ func NewGithubSCMClient(logger *zap.SugaredLogger, token string) *GithubSCM {
 	}
 }
 
-// ListOrganizations implements the SCM interface.
-func (s *GithubSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
-
-	memberships, _, err := s.client.Organizations.ListOrgMemberships(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("ListOrganizations: failed to get GitHub memberships: %w", err)
-	}
-
-	var orgs []*pb.Organization
-	for _, membership := range memberships {
-		// limit scm requests to organizations where the user is owner ("admin")
-		// owner membership role is required to create a course
-		if membership.GetRole() == OrgOwner {
-			opt := &GetOrgOptions{
-				ID: uint64(membership.Organization.GetID()),
-			}
-			userOrg, err := s.GetOrganization(ctx, opt)
-			if err != nil {
-				return nil, fmt.Errorf("ListOrganizations: failed to get GitHub organization %s: %w", membership.Organization.GetLogin(), err)
-			}
-			orgs = append(orgs, userOrg)
-		}
-	}
-	return orgs, nil
-}
-
 // CreateOrganization implements the SCM interface.
 func (s *GithubSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
 	return nil, ErrNotSupported{

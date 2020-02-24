@@ -20,24 +20,6 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 	}
 }
 
-// ListOrganizations implements the SCM interface.
-func (s *GitlabSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
-	groups, _, err := s.client.Groups.ListGroups(nil, gitlab.WithContext(ctx))
-	if err != nil {
-		return nil, err
-	}
-
-	var directories []*pb.Organization
-	for _, group := range groups {
-		directories = append(directories, &pb.Organization{
-			ID:     uint64(group.ID),
-			Path:   group.Path,
-			Avatar: group.AvatarURL,
-		})
-	}
-	return directories, nil
-}
-
 // CreateOrganization implements the SCM interface.
 func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
