@@ -55,9 +55,8 @@ func (s *FakeSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.
 
 // CreateRepository implements the SCM interface.
 func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	id := len(s.Repositories) + 1
 	repo := &Repository{
-		ID:      uint64(id),
+		ID:      uint64(len(s.Repositories) + 1),
 		Path:    opt.Path,
 		WebURL:  "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
 		SSHURL:  "git@example.com:" + opt.Organization.Path + "/" + opt.Path,
@@ -129,9 +128,8 @@ func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error 
 
 // CreateTeam implements the SCM interface.
 func (s *FakeSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	id := len(s.Teams) + 1
 	newTeam := &Team{
-		ID:           uint64(id),
+		ID:           uint64(len(s.Teams) + 1),
 		Name:         opt.TeamName,
 		Organization: opt.Organization,
 	}

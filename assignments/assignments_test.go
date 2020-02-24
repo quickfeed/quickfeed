@@ -36,7 +36,7 @@ func TestFetchAssignments(t *testing.T) {
 
 	courseOrgID := uint64(gitHubTestOrgID)
 	if courseOrgID == 0 {
-		t.Fatal("Organozation ID not provided.")
+		t.Fatal("Organization ID not provided.")
 	}
 
 	course := &pb.Course{
