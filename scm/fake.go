@@ -13,6 +13,7 @@ type FakeSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*pb.Organization
 	Hooks         map[uint64]int
+	Teams         map[uint64]*Team
 }
 
 // NewFakeSCMClient returns a new Fake client implementing the SCM interface.
@@ -21,6 +22,7 @@ func NewFakeSCMClient() *FakeSCM {
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*pb.Organization),
 		Hooks:         make(map[uint64]int),
+		Teams:         make(map[uint64]*Team),
 	}
 }
 
@@ -56,7 +58,7 @@ func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions)
 func (s *FakeSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
 	org, ok := s.Organizations[opt.ID]
 	if !ok {
-		return nil, errors.New("directory not found")
+		return nil, errors.New("organization not found")
 	}
 	return org, nil
 }
@@ -137,26 +139,43 @@ func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error 
 
 // CreateTeam implements the SCM interface.
 func (s *FakeSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	// TODO no implementation provided yet
-	return &Team{ID: 1, Name: opt.TeamName, URL: ""}, nil
+	id := len(s.Teams) + 1
+	newTeam := &Team{
+		ID:   uint64(id),
+		Name: opt.TeamName,
+		URL:  opt.Organization,
+	}
+	s.Teams[newTeam.ID] = newTeam
+	return newTeam, nil
 }
 
 // DeleteTeam implements the SCM interface.
 func (s *FakeSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
-	// TODO no implementation provided yet
+	if _, ok := s.Teams[opt.TeamID]; !ok {
+		return errors.New("repository not found")
+	}
+	delete(s.Repositories, opt.TeamID)
 	return nil
 }
 
 // GetTeam implements the SCM interface
 func (s *FakeSCM) GetTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	// TODO no implementation provided yet
-	return nil, nil
+	team, ok := s.Teams[opt.TeamID]
+	if !ok {
+		return nil, errors.New("team not found")
+	}
+	return team, nil
 }
 
 // GetTeams implements the SCM interface
 func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
-	// TODO no implementation provided yet
-	return nil, nil
+	var teams []*Team
+	for _, team := range s.Teams {
+		if team.URL == org.Path {
+			teams = append(teams, team)
+		}
+	}
+	return teams, nil
 }
 
 // AddTeamMember implements the scm interface
