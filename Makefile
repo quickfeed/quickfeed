@@ -109,6 +109,9 @@ purge: scm
 run:
 	@aguis -service.url $(endpoint) -http.addr :$(agport) -http.public ./public
 
+runlocal:
+	@aguis -service.url 127.0.0.1 -http.addr :9091 -http.public ./public
+
 # test nginx configuration syntax
 nginx-test:
 	@sudo nginx -t
