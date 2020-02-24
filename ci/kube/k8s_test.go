@@ -19,8 +19,11 @@ import (
 )
 
 //var KUBERNTES_HOSTNMAE + PORT nr string
-var home = homeDir()
-var kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+var (
+	home       = homeDir()
+	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	m          sync.Mutex
+)
 
 func init() { //TODO kube clinet
 }
@@ -44,10 +47,10 @@ type test struct {
 	script, wantOut, out string
 }
 
-func TestK8s(t *testing.T) {
+func TestK8sZero(t *testing.T) {
 	const (
-		script  = `echo -n "hello world"`
-		wantOut = "hello world"
+		script  = `echo -n "hello world 0"`
+		wantOut = "hello world 0"
 	)
 
 	job := &ci.Job{
@@ -66,7 +69,95 @@ func TestK8s(t *testing.T) {
 	}
 }
 
-func TestParallelK8s(t *testing.T) {
+func TestK8sOne(t *testing.T) {
+	const (
+		script  = `echo -n "hello world 1"`
+		wantOut = "hello world 1"
+	)
+
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "1", kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+
+func TestK8sTwo(t *testing.T) {
+	const (
+		script  = `echo -n "hello world 2"`
+		wantOut = "hello world 2"
+	)
+
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "2", kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+
+func TestK8sThree(t *testing.T) {
+	const (
+		script  = `echo -n "hello world 3"`
+		wantOut = "hello world 3"
+	)
+
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "3", kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+
+func TestK8sFour(t *testing.T) {
+	const (
+		script  = `echo -n "hello world 4"`
+		wantOut = "hello world 4"
+	)
+
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "4", kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+
+func TestSequentials(t *testing.T) {
 	numberOfPods := 10
 	tests := make([]test, numberOfPods)
 
@@ -74,20 +165,13 @@ func TestParallelK8s(t *testing.T) {
 		t := newTest(`echo -n "`+strconv.Itoa(i)+`"`, strconv.Itoa(i))
 		tests[i] = *t
 	}
-
-	fmt.Println(tests)
-
 	var wg sync.WaitGroup
 	for i := 0; i < numberOfPods; i++ {
 		wg.Add(1)
 		go func(i int) {
-			defer wg.Done()
 			tm := "ci" + strconv.Itoa(i)
-
 			k := newKubeCI()
-
-			fmt.Println(tests[i])
-			//err := newError()
+			m.Lock()
 			s := tests[i].script
 			out, _ := k.RunKubeJob(context.Background(),
 				&ci.Job{
@@ -95,14 +179,12 @@ func TestParallelK8s(t *testing.T) {
 					Commands: []string{s},
 				},
 				tm, kubeconfig)
-
 			tests[i].out = out
-			fmt.Println("Input value: ", s)
+			m.Unlock()
+			wg.Done()
 		}(i)
 	}
-
 	wg.Wait()
-
 	for i := 0; i < numberOfPods; i++ {
 		tst := tests[i]
 		if tst.out != tst.wantOut {
@@ -147,14 +229,6 @@ func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s)
 		return nil, nil
 	}
 	return clientset, k
-}
-
-func TestK8s2(t *testing.T) {
-	k8s := newKubeCI()
-	fmt.Println(k8s)
-	namespace := time.Now().Format("20060102-150405") + "-double"
-	setupEnv(t, namespace)
-	fmt.Println(k8s)
 }
 
 func homeDir() string {
