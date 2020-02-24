@@ -11,8 +11,6 @@ import (
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
-	// Lists organizations (for logged in user) which can be used as a course directory.
-	ListOrganizations(context.Context) ([]*pb.Organization, error)
 	// Creates a new organization.
 	CreateOrganization(context.Context, *CreateOrgOptions) (*pb.Organization, error)
 	// Updates an organization
@@ -90,8 +88,10 @@ type CreateOrgOptions struct {
 
 // GetOrgOptions contains information on the organization to fetch
 type GetOrgOptions struct {
-	ID       uint64
-	Name     string
+	ID   uint64
+	Name string
+	// Username field is used to filter organizations
+	// where the given user has a certain role.
 	Username string
 }
 
@@ -101,14 +101,14 @@ type Repository struct {
 	Path    string
 	Owner   string // Only used by GitHub.
 	WebURL  string // Repository website.
-	SSHURL  string // SSH clone URL.
+	SSHURL  string // SSH clone URL, used by GitLab.
 	HTTPURL string // HTTP(S) clone URL.
 	OrgID   uint64
 	Size    uint64
 }
 
-// RepositoryOptions used to fetch a single repository by ID or name
-// either ID or both Path and Owner info must be provided
+// RepositoryOptions is used to fetch a single repository by ID or name.
+// Either ID or both Path and Owner fields must be set.
 type RepositoryOptions struct {
 	ID    uint64
 	Path  string
@@ -128,8 +128,8 @@ type CreateRepositoryOptions struct {
 	Organization *pb.Organization
 	Path         string
 	Private      bool
-	Owner        string // we can create user repositories. Default owner is github organization
-	Permission   string // default permission level for the repo. Can be "read", "write", "admin", "none"
+	Owner        string // The owner of an organization's repo is always the organization itself.
+	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
 }
 
 // CreateHookOptions contains information on how to create a webhook.
@@ -158,16 +158,16 @@ type TeamOptions struct {
 type TeamMembershipOptions struct {
 	Organization string
 	TeamID       int64
-	TeamSlug     string // slugified team name
-	Username     string // GitHub username
-	Role         string // member or maintainer. Maintainer can add, remove and promote team members
+	TeamSlug     string // URL-friendly name of the team.
+	Username     string // GitHub username.
+	Role         string // "Member" or "maintainer". A maintainer can add, remove and promote team members.
 }
 
 // OrgMembershipOptions represent user's membership in organization
 type OrgMembershipOptions struct {
 	Organization string
-	Username     string // GitHub username
-	Role         string // role can be "admin" (organization owner) or "member"
+	Username     string // GitHub username.
+	Role         string // Role can be "admin" (organization owner) or "member".
 }
 
 // CreateClonePathOptions holds elements used when constructing a clone URL string.
@@ -182,7 +182,7 @@ type AddTeamRepoOptions struct {
 	TeamID     uint64
 	Repo       string
 	Owner      string // Name of the team to associate repo with. Only used by GitHub.
-	Permission string // permission level for team members. Can be "push", "pull", "admin"
+	Permission string // Permission level for team members. Can be "push", "pull", "admin".
 }
 
 // Team represents a git Team

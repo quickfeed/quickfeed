@@ -26,16 +26,6 @@ func NewFakeSCMClient() *FakeSCM {
 	}
 }
 
-// ListOrganizations implements the SCM interface.
-func (s *FakeSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
-	var orgs []*pb.Organization
-	for _, org := range s.Organizations {
-		orgs = append(orgs, org)
-	}
-
-	return orgs, nil
-}
-
 // CreateOrganization implements the SCM interface.
 func (s *FakeSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
 	id := len(s.Organizations) + 1
