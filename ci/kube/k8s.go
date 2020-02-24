@@ -25,10 +25,8 @@ type K8s struct {
 	Endpoint string
 }
 
-//dummy comment
 var (
 	podLog  string
-	stat    bool
 	jobLock sync.Mutex
 	podLock sync.Mutex
 	waiting sync.Cond = *sync.NewCond(&jobLock)
@@ -81,6 +79,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		},
 	}
 
+	//go func(podLog string) {}(podLog)
 	creteadJob, err := jobsClient.Create(confJob)
 	if err != nil {
 		return "", err
