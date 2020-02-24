@@ -59,7 +59,10 @@ func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOption
 // UpdateOrganization implements the SCM interface.
 func (s *GitlabSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "UpdateOrganization",
+	}
 }
 
 // GetOrganization implements the SCM interface.
@@ -103,7 +106,10 @@ func (s *GitlabSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryO
 // GetRepository implements the SCM interface.
 func (s *GitlabSCM) GetRepository(cts context.Context, opt *RepositoryOptions) (*Repository, error) {
 	// TODO no implementation provided yet
-	return nil, nil
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "GetRepository",
+	}
 }
 
 // GetRepositories implements the SCM interface.
@@ -144,7 +150,10 @@ func (s *GitlabSCM) DeleteRepository(ctx context.Context, opt *RepositoryOptions
 // UpdateRepoAccess implements the SCM interface.
 func (s *GitlabSCM) UpdateRepoAccess(ctx context.Context, repo *Repository, user, permission string) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "UpdateRepoAccess",
+	}
 }
 
 // RepositoryIsEmpty implements the SCM interface
@@ -156,7 +165,10 @@ func (s *GitlabSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 // ListHooks implements the SCM interface.
 func (s *GitlabSCM) ListHooks(ctx context.Context, repo *Repository, org string) ([]*Hook, error) {
 	// TODO no implementation provided yet
-	return nil, nil
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "ListHooks",
+	}
 }
 
 // CreateHook implements the SCM interface.
@@ -171,55 +183,82 @@ func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 // CreateOrgHook implements the scm interface
 func (s *GitlabSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "CreateOrgHook",
+	}
 }
 
 // CreateTeam implements the SCM interface.
 func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
-	return nil, nil
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "CreateTeam",
+	}
 }
 
 // DeleteTeam implements the SCM interface.
 func (s *GitlabSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "DeleteTeam",
+	}
 }
 
 // GetTeam implements the SCM interface
 func (s *GitlabSCM) GetTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
-	return nil, nil
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "GetTeam",
+	}
 }
 
 // GetTeams implements the SCM interface
 func (s *GitlabSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
 	// TODO no implementation provided yet
-	return nil, nil
+	return nil, ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "GetTeam",
+	}
 }
 
 // AddTeamMember implements the scm interface
 func (s *GitlabSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "AddTeamMember",
+	}
 }
 
 // RemoveTeamMember implements the scm interface
 func (s *GitlabSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "RemoveTeamMember",
+	}
 }
 
 // UpdateTeamMembers implements the SCM interface
 func (s *GitlabSCM) UpdateTeamMembers(context.Context, *TeamOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "UpdateTeamMembers",
+	}
 }
 
 // AddTeamRepo implements the SCM interface.
 func (s *GitlabSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "AddTeamRepo",
+	}
 }
 
 // GetUserName implements the SCM interface.
@@ -247,13 +286,19 @@ func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
 // UpdateOrgMembership implements the SCM interface
 func (s *GitlabSCM) UpdateOrgMembership(ctx context.Context, opt *OrgMembershipOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "UpdateOrgMembership",
+	}
 }
 
 // RemoveMember implements the SCM interface
 func (s *GitlabSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions) error {
 	// TODO no implementation provided yet
-	return nil
+	return ErrNotSupported{
+		SCM:    "gitlab",
+		Method: "RemoveMember",
+	}
 }
 
 // GetUserScopes implements the SCM interface
