@@ -69,7 +69,7 @@ type Database interface {
 	// GetGroup returns the group with the specified group ID.
 	GetGroup(uint64) (*pb.Group, error)
 	// GetGroupsByCourse returns the groups for the given course.
-	GetGroupsByCourse(courseID uint64) ([]*pb.Group, error)
+	GetGroupsByCourse(courseID uint64, statuses ...pb.Group_GroupStatus) ([]*pb.Group, error)
 
 	// CreateAssignment creates a new or updates an existing assignment.
 	CreateAssignment(*pb.Assignment) error

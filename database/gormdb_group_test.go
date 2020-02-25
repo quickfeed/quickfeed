@@ -350,6 +350,12 @@ func TestGetGroupsByCourse(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	group2.Status = pb.Group_APPROVED
+	if err := db.UpdateGroupStatus(group2); err != nil {
+		t.Fatal(err)
+	}
+
+	// must return both groups
 	groups, err := db.GetGroupsByCourse(course.GetID())
 	if err != nil {
 		t.Fatal(err)
@@ -359,5 +365,17 @@ func TestGetGroupsByCourse(t *testing.T) {
 	}
 	if !reflect.DeepEqual(groups[1].GetUsers(), group2.GetUsers()) {
 		t.Errorf("have %#v want %#v", groups[1].GetUsers(), group2.GetUsers())
+	}
+
+	pendingGroups, err := db.GetGroupsByCourse(course.ID, pb.Group_PENDING)
+	if err != nil {
+		t.Fatal(err)
+	}
+	approvedGroups, err := db.GetGroupsByCourse(course.ID, pb.Group_APPROVED)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pendingGroups) != 1 || len(approvedGroups) != 1 {
+		t.Errorf("Expected one pending and one approved group, got %d pending, %d approved", len(pendingGroups), len(approvedGroups))
 	}
 }
