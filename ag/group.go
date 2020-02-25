@@ -1,5 +1,7 @@
 package ag
 
+import "reflect"
+
 // UserNames returns the SCM user names of the group.
 func (g *Group) UserNames() []string {
 	var gitUserNames []string
@@ -17,4 +19,9 @@ func (g *Group) Contains(user *User) bool {
 		}
 	}
 	return false
+}
+
+// ContainsAll compares group members
+func (g *Group) ContainsAll(group *Group) bool {
+	return reflect.DeepEqual(g.Users, group.Users)
 }

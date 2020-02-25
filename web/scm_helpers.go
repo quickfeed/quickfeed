@@ -7,7 +7,6 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
-	scms "github.com/autograde/aguis/scm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -30,17 +29,19 @@ var (
 )
 
 // createRepoAndTeam invokes the SCM to create a repository and team for the
-// specified namespace (typically the course name), the path of the repository
-// (typically the name of the student with a '-labs' suffix or the group name).
-// The team name is the student name or group name, whereas the user names are
-// the members of the team. For single student repositories, the user names are
-// typically just the one student's user name.
+// specified course (represented with organization ID). The SCM team name
+// is also used as the group name and repository path. The provided user names represent the SCM group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, path, teamName string, userNames []string) (*scm.Repository, *scm.Team, error) {
+func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.Group) (*pb.Repository, *scm.Team, error) {
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: orgID})
+	if err != nil {
+		return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
+	}
+
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
-		Path:         path,
+		Path:         group.GetName(),
 		Private:      true,
 	})
 	if err != nil {
@@ -48,9 +49,9 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	}
 
 	team, err := sc.CreateTeam(ctx, &scm.TeamOptions{
-		Organization: org,
-		TeamName:     teamName,
-		Users:        userNames,
+		Organization: org.Path,
+		TeamName:     group.GetName(),
+		Users:        group.UserNames(),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create team: %w", err)
@@ -65,12 +66,19 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
 	}
-	return repo, team, nil
+
+	groupRepo := &pb.Repository{
+		OrganizationID: orgID,
+		RepositoryID:   repo.ID,
+		GroupID:        group.GetID(),
+		HTMLURL:        repo.WebURL,
+		RepoType:       pb.Repository_GROUP,
+	}
+	return groupRepo, team, nil
 }
 
 // deletes group repository and team
 func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID uint64, teamID uint64) error {
-
 	if err := sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID}); err != nil {
 		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete repository: %w", err)
 	}
@@ -115,7 +123,7 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 // add user to the organization's "students" team.
 func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	opt := &scm.TeamMembershipOptions{
-		Organization: org,
+		Organization: org.Path,
 		TeamSlug:     scm.StudentsTeam,
 		Username:     userName,
 		Role:         scm.TeamMember,
@@ -129,7 +137,7 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization
 // add user to the organization's "teachers" team, and remove user from "students" team.
 func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
 	studentsTeam := &scm.TeamMembershipOptions{
-		Organization: org,
+		Organization: org.Path,
 		Username:     userName,
 		TeamSlug:     scm.StudentsTeam,
 	}
@@ -138,7 +146,7 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	}
 
 	teachersTeam := &scm.TeamMembershipOptions{
-		Organization: org,
+		Organization: org.Path,
 		Username:     userName,
 		TeamSlug:     scm.TeachersTeam,
 		Role:         scm.TeamMaintainer,
@@ -149,33 +157,30 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	return nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, group *pb.Group) error {
+func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group) error {
 	opt := &scm.TeamOptions{
-		Organization: org,
-		TeamName:     group.Name,
-		TeamID:       group.TeamID,
-		Users:        group.UserNames(),
+		TeamName: group.Name,
+		TeamID:   group.TeamID,
+		Users:    group.UserNames(),
 	}
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
 func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *pb.Repository) error {
-
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
 		ID: repo.GetOrganizationID(),
 	})
 	if err != nil {
 		return err
 	}
+
 	opt := &scm.OrgMembershipOptions{
-		Organization: org,
+		Organization: org.Path,
 		Username:     login,
 	}
-
 	if err := sc.RemoveMember(ctx, opt); err != nil {
 		return err
 	}
-
 	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()})
 }
 
@@ -204,7 +209,7 @@ func contextCanceled(ctx context.Context) bool {
 // Returns true and formatted error if error type is SCM error
 // designed to be shown to user
 func parseSCMError(err error) (bool, error) {
-	errStruct, ok := err.(scms.ErrFailedSCM)
+	errStruct, ok := err.(scm.ErrFailedSCM)
 	if ok {
 		return ok, status.Errorf(codes.NotFound, errStruct.Message)
 	}

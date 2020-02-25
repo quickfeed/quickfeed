@@ -87,7 +87,7 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 		s.logger.Errorf("UpdateUser failed to update user %d: user is not admin or course creator", in.GetID())
 		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
 	}
-	usr, err = s.updateUser(usr.IsAdmin, in)
+	usr, err = s.updateUser(usr, in)
 	if err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %w", in.GetID(), err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
@@ -205,7 +205,7 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 }
 
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
-// Access policy: Teacher of CourseID; only Creator of CourseID if demoting a teacher.
+// Access policy: Teacher of CourseID.
 func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
@@ -217,14 +217,10 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update enrollment status")
 	}
 	if s.isCourseCreator(in.CourseID, in.UserID) {
-		s.logger.Error("UpdateEnrollment failed: user is course creator, whose enrollment cannot be changed")
+		s.logger.Errorf("UpdateEnrollment failed: user %s attempted to demote course creator", usr.GetName())
 		return nil, status.Errorf(codes.PermissionDenied, "course creator cannot be demoted")
 	}
-	if s.isChangingTeacherState(in) && !s.isCourseCreator(in.CourseID, usr.ID) {
-		s.logger.Error("UpdateEnrollment failed: user is not course creator")
-		return nil, status.Errorf(codes.PermissionDenied, "only course creator can change enrollment status of other teachers")
-	}
-	err = s.updateEnrollment(ctx, scm, in)
+	err = s.updateEnrollment(ctx, scm, usr.Login, in)
 	if err != nil {
 		s.logger.Errorf("UpdateEnrollment failed: %w", err)
 		if contextCanceled(ctx) {
@@ -474,7 +470,8 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	return submissions, nil
 }
 
-// GetCourseLabSubmissions returns all the latest submissions for every individual course assignment for each course student
+// GetCourseLabSubmissions returns all the latest submissions
+// for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
 func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
 	usr, err := s.getCurrentUser(ctx)
@@ -521,15 +518,16 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 }
 
 // RebuildSubmission rebuilds the submission with the given ID
-func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Void, error) {
+func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Submission, error) {
 	if !s.isValidSubmission(in.GetSubmissionID()) {
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
 		return nil, status.Errorf(codes.PermissionDenied, "submitter has no course access")
 	}
-	if err := s.rebuildSubmission(ctx, in); err != nil {
+	submission, err := s.rebuildSubmission(ctx, in)
+	if err != nil {
 		return nil, err
 	}
-	return &pb.Void{}, nil
+	return submission, nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.

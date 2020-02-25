@@ -31,6 +31,7 @@ import {
   Providers,
   Repositories,
   RepositoryRequest,
+  Submission,
   SubmissionRequest,
   Submissions,
   URLRequest,
@@ -46,9 +47,10 @@ export class AutograderServiceClient {
   options_: null | { [index: string]: string; };
 
   constructor (hostname: string,
-               credentials: null | { [index: string]: string; },
-               options: null | { [index: string]: string; }) {
+               credentials?: null | { [index: string]: string; },
+               options?: null | { [index: string]: string; }) {
     if (!options) options = {};
+    if (!credentials) credentials = {};
     options['format'] = 'binary';
 
     this.client_ = new grpcWeb.GrpcWebClientBase(options);
@@ -564,18 +566,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
-    Void,
+    Submission,
     (request: LabRequest) => {
       return request.serializeBinary();
     },
-    Void.deserializeBinary
+    Submission.deserializeBinary
   );
 
   rebuildSubmission(
     request: LabRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: Void) => void) {
+               response: Submission) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/RebuildSubmission',

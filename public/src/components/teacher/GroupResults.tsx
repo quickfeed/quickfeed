@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IAssignmentLink, IStudentSubmission } from "../../models";
+import { IAssignmentLink, IStudentSubmission, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, generateGroupRepoLink, sortByScore } from "./labHelper";
 
@@ -11,7 +11,7 @@ interface IResultsProps {
     groups: IAssignmentLink[];
     labs: Assignment[];
     onApproveClick: (submissionID: number, approved: boolean) => Promise<boolean>;
-    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
+    onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
@@ -48,7 +48,18 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             groupLab = <StudentLab
                 assignment={this.state.assignment}
                 showApprove={true}
-                onRebuildClick={this.props.onRebuildClick}
+                onRebuildClick={
+                    async () => {
+                        if (this.state.assignment && this.state.assignment.latest) {
+                            const ans = await this.props.onRebuildClick(this.state.assignment.assignment.getId(), this.state.assignment.latest.id);
+                            if (ans) {
+                                this.state.assignment.latest = ans;
+                                return true;
+                            }
+                        }                   
+                        return false;     
+                    }         
+                }
                 onApproveClick={(approve: boolean) => {
                     if (this.state.assignment && this.state.assignment.latest) {
                         const ans = this.props.onApproveClick(this.state.assignment.latest.id, approve);

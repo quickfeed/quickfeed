@@ -9,7 +9,7 @@ require (
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
 	github.com/docker/go-connections v0.3.0 // indirect
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
-	github.com/gogo/protobuf v1.3.0
+	github.com/gogo/protobuf v1.3.1
 	github.com/google/go-cmp v0.3.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v29 v29.0.2

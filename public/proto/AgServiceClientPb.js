@@ -79,9 +79,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
-        this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+        this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.Void.deserializeBinary);
+        }, ag_pb_1.Submission.deserializeBinary);
         this.methodInfoGetCourseLabSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.LabResultLinks, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.LabResultLinks.deserializeBinary);
@@ -99,6 +99,8 @@ var AutograderServiceClient = /** @class */ (function () {
         }, ag_pb_1.Void.deserializeBinary);
         if (!options)
             options = {};
+        if (!credentials)
+            credentials = {};
         options['format'] = 'binary';
         this.client_ = new grpcWeb.GrpcWebClientBase(options);
         this.hostname_ = hostname;
