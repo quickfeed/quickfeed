@@ -10,12 +10,12 @@ import (
 	"sync"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
@@ -62,7 +62,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: int32Ptr(8),
-			//Parallelism:  int32Ptr(3), //TODO starting with 1 pod, def
+			//Parallelism:  int32Ptr(4), //TODO starting with 1 pod, def
 			//Completions:             int32Ptr(10), //TODO  starting with 1 pod, def
 			TTLSecondsAfterFinished: int32Ptr(20),
 			//ActiveDeadlineSeconds:   int64Ptr(1000), // terminate after 1000 sec ?
@@ -74,6 +74,16 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 							Image:           dockJob.Image,
 							Command:         []string{"/bin/sh", "-c", strings.Join(dockJob.Commands, "\n")},
 							ImagePullPolicy: apiv1.PullIfNotPresent,
+							Resources: apiv1.ResourceRequirements{
+								Limits: apiv1.ResourceList{
+									"cpu":    resource.MustParse("100m"),
+									"memory": resource.MustParse("100Mi"),
+								},
+								Requests: apiv1.ResourceList{
+									"cpu":    resource.MustParse("100m"),
+									"memory": resource.MustParse("100Mi"),
+								},
+							},
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyOnFailure,
@@ -108,12 +118,9 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 			condPod.Wait()
 		}
 		podLock.Unlock()
-
 		// go podEvents(clientset, "agcicd", creteadJob.Name, log)
 		//<-log
 	}
-	resourceUsage(config)
-
 	return podLog, nil
 }
 
@@ -224,11 +231,16 @@ func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace strin
 	return st
 }
 
-func resourceUsage(config *rest.Config, pod apiv1.Pod) {
+func resourceUsage() {
+	var kubeconfig, master string //empty, assuming inClusterConfig
+	config, err := clientcmd.BuildConfigFromFlags(master, kubeconfig)
+	if err != nil {
+		panic(err)
+	}
 
 	cli, err := metrics.NewForConfig(config)
 
-	podMetrics, err := cli.MetricsV1beta1().PodMetricses("agcicd").List(metav1.ListOptions{})
+	podMetrics, err := cli.MetricsV1beta1().PodMetricses(metav1.NamespaceAll).List(metav1.ListOptions{})
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
