@@ -31,10 +31,9 @@ type SCM interface {
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
 	// List the webhooks associated with the provided repository or organization.
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
-	// Creates a new webhook.
+	// Creates a new webhook for organization if the name of organization
+	// is provided. Otherwise creates a hook for the given repo.
 	CreateHook(context.Context, *CreateHookOptions) error
-	// Create an organization level webhook
-	CreateOrgHook(context.Context, *OrgHookOptions) error
 	// Create team.
 	CreateTeam(context.Context, *TeamOptions) (*Team, error)
 	// Delete team.
@@ -133,17 +132,14 @@ type CreateRepositoryOptions struct {
 }
 
 // CreateHookOptions contains information on how to create a webhook.
+// If Organization string is provided, will create a new hook on
+// the organization's level. This hook will be triggered on push to any
+// of the organization's repositories.
 type CreateHookOptions struct {
-	URL        string
-	Secret     string
-	Repository *Repository
-}
-
-// OrgHookOptions contains information about an organization level hook
-type OrgHookOptions struct {
 	URL          string
 	Secret       string
 	Organization string
+	Repository   *Repository
 }
 
 // TeamOptions contains information about the team and the users of the team.
@@ -181,7 +177,7 @@ type CreateClonePathOptions struct {
 type AddTeamRepoOptions struct {
 	TeamID     uint64
 	Repo       string
-	Owner      string // Name of the team to associate repo with. Only used by GitHub.
+	Owner      string // Name of the organization. Only used by GitHub.
 	Permission string // Permission level for team members. Can be "push", "pull", "admin".
 }
 

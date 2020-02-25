@@ -304,33 +304,7 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	_, _, err := s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path,
-		&github.Hook{
-			Config: map[string]interface{}{
-				"url":          opt.URL,
-				"secret":       opt.Secret,
-				"content_type": "json",
-				"insecure_ssl": "0",
-			},
-		})
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "CreateHook",
-			Message:  fmt.Sprintf("failed to create GitHub hook for %s", opt.Repository.Path),
-		}
-	}
-	return nil
-}
 
-// CreateOrgHook implements the scm interface
-func (s *GithubSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
-	if !opt.valid() {
-		return ErrMissingFields{
-			Method:  "CreateOrgHook",
-			Message: fmt.Sprintf("%+v", opt),
-		}
-	}
 	hook := &github.Hook{
 		Config: map[string]interface{}{
 			"url":          opt.URL,
@@ -339,12 +313,25 @@ func (s *GithubSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) erro
 			"insecure_ssl": "0",
 		},
 	}
+	var err error
+	// prioritize creating an organization hook
+	if opt.Organization != "" {
+		_, _, err = s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
+		if err != nil {
+			return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.Organization, err)
+		}
+	} else {
+		_, _, err = s.client.Repositories.CreateHook(ctx, opt.Repository.Owner, opt.Repository.Path, hook)
 
-	_, _, err := s.client.Organizations.CreateHook(ctx, opt.Organization, hook)
-	if err != nil {
-		return fmt.Errorf("CreateOrgHook: failed to create GitHub hook for org %s: %w", opt.Organization, err)
 	}
-	return nil
+	if err != nil {
+		return ErrFailedSCM{
+			GitError: err,
+			Method:   "CreateHook",
+			Message:  fmt.Sprintf("failed to create GitHub hook with query: %+v", opt),
+		}
+	}
+	return err
 }
 
 // CreateTeam implements the SCM interface.
