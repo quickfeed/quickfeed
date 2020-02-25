@@ -15,7 +15,10 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 
 	"github.com/autograde/aguis/ci"
 )
@@ -25,10 +28,8 @@ type K8s struct {
 	Endpoint string
 }
 
-//dummy comment
 var (
 	podLog  string
-	stat    bool
 	jobLock sync.Mutex
 	podLock sync.Mutex
 	waiting sync.Cond = *sync.NewCond(&jobLock)
@@ -61,10 +62,10 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit: int32Ptr(8),
-			//Parallelism:  int32Ptr(3), //TODO starting with 1 pod, def
+			//Parallelism:  int32Ptr(4), //TODO starting with 1 pod, def
 			//Completions:             int32Ptr(10), //TODO  starting with 1 pod, def
 			TTLSecondsAfterFinished: int32Ptr(20),
-			ActiveDeadlineSeconds:   int64Ptr(1000), // terminate after 1000 sec ?
+			//ActiveDeadlineSeconds:   int64Ptr(1000), // terminate after 1000 sec ?
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
@@ -73,6 +74,16 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 							Image:           dockJob.Image,
 							Command:         []string{"/bin/sh", "-c", strings.Join(dockJob.Commands, "\n")},
 							ImagePullPolicy: apiv1.PullIfNotPresent,
+							Resources: apiv1.ResourceRequirements{
+								Limits: apiv1.ResourceList{
+									"cpu":    resource.MustParse("100m"),
+									"memory": resource.MustParse("100Mi"),
+								},
+								Requests: apiv1.ResourceList{
+									"cpu":    resource.MustParse("100m"),
+									"memory": resource.MustParse("100Mi"),
+								},
+							},
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyOnFailure,
@@ -85,12 +96,10 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 	if err != nil {
 		return "", err
 	}
-
 	jobLock.Lock()
 	if !jobEvents(*creteadJob, clientset, "agcicd", int32(1), creteadJob.Name) {
 		waiting.Wait()
 	}
-	jobLock.Unlock()
 
 	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{
 		LabelSelector: "job-name=" + creteadJob.Name,
@@ -98,15 +107,20 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 	if err != nil {
 		return "could not list the pods!", nil
 	}
+	jobLock.Unlock()
+
+	//log := make(chan bool)
 
 	for range pods.Items {
+		//channel or condition variables ?
 		podLock.Lock()
 		if !podEvents(clientset, "agcicd", creteadJob.Name) {
 			condPod.Wait()
 		}
 		podLock.Unlock()
+		// go podEvents(clientset, "agcicd", creteadJob.Name, log)
+		//<-log
 	}
-	fmt.Println("Return value: ", podLog)
 	return podLog, nil
 }
 
@@ -130,23 +144,24 @@ func (k *K8s) DeleteObject( /*pod apiv1.Pod,*/ clientset kubernetes.Clientset, n
 }
 
 //PodLogs returns ...
-func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) string {
+func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (string, error) {
 	podLogOpts := apiv1.PodLogOptions{}
 
 	req := clientset.CoreV1().Pods(namespace).GetLogs(pod.Name, &podLogOpts)
 	podLogs, err := req.Stream()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	defer podLogs.Close()
 
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, podLogs)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
+
 	str := buf.String()
-	return str
+	return str, nil
 }
 
 //PodEvents is ...
@@ -160,7 +175,7 @@ func podEvents(clientset *kubernetes.Clientset, namespace string, jobname string
 	}
 	go func(st bool) {
 		for event := range watch.ResultChan() {
-			fmt.Printf("Type: %v\n", event.Type)
+			//fmt.Printf("Type: %v\n", event.Type)
 			pod, ok := event.Object.(*v1.Pod)
 
 			if !ok {
@@ -168,10 +183,18 @@ func podEvents(clientset *kubernetes.Clientset, namespace string, jobname string
 			}
 			if pod.Status.Phase == "Succeeded" {
 				podLock.Lock()
-				podLog = podLogs(*pod, clientset, "agcicd")
+				podLog, err = podLogs(*pod, clientset, "agcicd")
+				if err != nil {
+					panic(err)
+				}
 				st = true
 				condPod.Signal()
 				podLock.Unlock()
+				/* podLog, err = podLogs(*pod, clientset, "agcicd")
+				if err != nil {
+					panic(err)
+				}
+				log <- true */
 			}
 			if pod.Status.Phase == apiv1.PodFailed {
 				fmt.Println("POD FAILED manual print") //TODO: What to do? delete and run the job again?
@@ -191,7 +214,7 @@ func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace strin
 	}
 	go func(st bool) {
 		for event := range watch.ResultChan() {
-			fmt.Printf("Type: %v\n", event.Type)
+			//fmt.Printf("Type: %v\n", event.Type)
 			j, ok := event.Object.(*batchv1.Job)
 			if !ok {
 				log.Fatal("unexpected type")
@@ -206,4 +229,34 @@ func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace strin
 		}
 	}(st)
 	return st
+}
+
+func resourceUsage() {
+	var kubeconfig, master string //empty, assuming inClusterConfig
+	config, err := clientcmd.BuildConfigFromFlags(master, kubeconfig)
+	if err != nil {
+		panic(err)
+	}
+
+	cli, err := metrics.NewForConfig(config)
+
+	podMetrics, err := cli.MetricsV1beta1().PodMetricses(metav1.NamespaceAll).List(metav1.ListOptions{})
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	for _, podMetric := range podMetrics.Items {
+		podContainers := podMetric.Containers
+		for _, container := range podContainers {
+			cpuQuantity, ok := container.Usage.Cpu().AsInt64()
+			memQuantity, ok := container.Usage.Memory().AsInt64()
+			if !ok {
+				return
+			}
+			msg := fmt.Sprintf("Container Name: %s \n CPU usage: %d \n Memory usage: %d", container.Name, cpuQuantity, memQuantity)
+			fmt.Println(msg)
+		}
+
+	}
 }

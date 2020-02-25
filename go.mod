@@ -40,9 +40,10 @@ require (
 	gopkg.in/go-playground/webhooks.v3 v3.13.0
 	gopkg.in/go-playground/webhooks.v5 v5.13.0
 	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.17.1
-	k8s.io/apimachinery v0.17.1
-	k8s.io/client-go v0.17.1
+	k8s.io/api v0.17.3
+	k8s.io/apimachinery v0.17.3
+	k8s.io/client-go v0.17.3
+	k8s.io/metrics v0.17.3
 	k8s.io/utils v0.0.0-20200109141947-94aeca20bf09 // indirect
 	sigs.k8s.io/controller-runtime v0.4.0
 )
