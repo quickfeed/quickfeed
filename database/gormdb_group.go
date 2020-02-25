@@ -161,11 +161,18 @@ func (db *GormDB) GetGroup(groupID uint64) (*pb.Group, error) {
 }
 
 // GetGroupsByCourse returns the groups for the given course.
-func (db *GormDB) GetGroupsByCourse(courseID uint64) ([]*pb.Group, error) {
+func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...pb.Group_GroupStatus) ([]*pb.Group, error) {
+	if len(statuses) == 0 {
+		statuses = []pb.Group_GroupStatus{
+			pb.Group_PENDING,
+			pb.Group_APPROVED,
+		}
+	}
 	var groups []*pb.Group
 	if err := db.conn.
 		Preload("Enrollments").
 		Where(&pb.Group{CourseID: courseID}).
+		Where("status in (?)", statuses).
 		Find(&groups).Error; err != nil {
 		return nil, err
 	}
