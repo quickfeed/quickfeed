@@ -266,16 +266,17 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) (hooks []*Hook, err error) {
 	var githubHooks []*github.Hook
 
+	// we prioritize organization hooks because repository hooks
+	// are no longer used.
 	switch {
-	case repo == nil && org != "":
-		// if org name is provided, get organization level hooks
+	case org != "":
 		orgName := slug.Make(org)
 		githubHooks, _, err = s.client.Organizations.ListHooks(ctx, orgName, nil)
 		if err != nil {
 			return nil, fmt.Errorf("ListHooks: failed to get hooks for organization %q: %w", orgName, err)
 		}
 
-	case org == "" && repo != nil && repo.valid():
+	case repo != nil && repo.valid():
 		githubHooks, _, err = s.client.Repositories.ListHooks(ctx, repo.Owner, repo.Path, nil)
 		if err != nil {
 			return nil, fmt.Errorf("ListHooks: failed to get hooks for repository %q: %w", repo, err)
@@ -480,14 +481,14 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 	}
 	team, err := s.GetTeam(ctx, &TeamOptions{
 		Organization: opt.Organization,
-		TeamName:     opt.TeamSlug,
+		TeamName:     slug.Make(opt.TeamName),
 		TeamID:       uint64(opt.TeamID),
 	})
 	if err != nil {
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "AddTeamMember",
-			Message:  fmt.Sprintf("team %s not found", opt.TeamSlug),
+			Message:  fmt.Sprintf("team %s not found", opt.TeamName),
 		}
 	}
 
@@ -497,7 +498,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "AddTeamMember",
-			Message:  fmt.Sprintf("failed to add user %s to team %s with role %s", opt.Username, opt.TeamSlug, opt.Role),
+			Message:  fmt.Sprintf("failed to add user %s to team %s with role %s", opt.Username, opt.TeamName, opt.Role),
 		}
 	}
 	return nil
@@ -511,12 +512,12 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	team, err := s.GetTeam(ctx, &TeamOptions{Organization: opt.Organization, TeamName: opt.TeamSlug, TeamID: uint64(opt.TeamID)})
+	team, err := s.GetTeam(ctx, &TeamOptions{Organization: opt.Organization, TeamName: slug.Make(opt.TeamName), TeamID: uint64(opt.TeamID)})
 	if err != nil {
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "RemoveTeamMember",
-			Message:  fmt.Sprintf("team %s not found", opt.TeamSlug),
+			Message:  fmt.Sprintf("team %s not found", opt.TeamName),
 		}
 	}
 
@@ -526,11 +527,11 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 		// this is expected and no error will be returned, but it is still useful
 		// to log it in case there were other reasons (invalid token and others).
 		s.logger.Debugf("RemoveTeamMember: failed to get GitHub team membership for '%s' (user %s): %w",
-			opt.TeamSlug, opt.Username, err)
+			opt.TeamName, opt.Username, err)
 	}
 	if isMember == nil {
 		// user is not in this team, log it, and return without further action
-		s.logger.Debugf("RemoveTeamMember: GitHub user '%s' is not member of team '%s'", opt.Username, opt.TeamSlug)
+		s.logger.Debugf("RemoveTeamMember: GitHub user '%s' is not member of team '%s'", opt.Username, opt.TeamName)
 		return nil
 	}
 	// otherwise remove user from team
@@ -539,7 +540,7 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "RemoveTeamMember",
-			Message:  fmt.Sprintf("failed to remove user %s from team %s", opt.Username, opt.TeamSlug),
+			Message:  fmt.Sprintf("failed to remove user %s from team %s", opt.Username, opt.TeamName),
 		}
 	}
 	return nil

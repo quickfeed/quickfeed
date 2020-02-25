@@ -100,7 +100,7 @@ func (opt TeamOptions) valid() bool {
 
 func (opt TeamMembershipOptions) valid() bool {
 	return opt.Organization != "" &&
-		(opt.TeamID > 0 || opt.TeamSlug != "")
+		(opt.TeamID > 0 || opt.TeamName != "")
 }
 
 func (opt OrgMembershipOptions) valid() bool {

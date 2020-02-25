@@ -29,7 +29,7 @@ type SCM interface {
 	UpdateRepoAccess(context.Context, *Repository, string, string) error
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// List the webhooks associated with the provided repository.
+	// List the webhooks associated with the provided repository or organization.
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
 	// Creates a new webhook.
 	CreateHook(context.Context, *CreateHookOptions) error
@@ -158,7 +158,7 @@ type TeamOptions struct {
 type TeamMembershipOptions struct {
 	Organization string
 	TeamID       int64
-	TeamSlug     string // URL-friendly name of the team.
+	TeamName     string
 	Username     string // GitHub username.
 	Role         string // "Member" or "maintainer". A maintainer can add, remove and promote team members.
 }
