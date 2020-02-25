@@ -113,16 +113,12 @@ func (s *FakeSCM) ListHooks(ctx context.Context, repo *Repository, org string) (
 
 // CreateHook implements the SCM interface.
 func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
-	if _, ok := s.Repositories[opt.Repository.ID]; !ok {
-		return errors.New("repository not found")
+	if opt.Repository != nil {
+		if _, ok := s.Repositories[opt.Repository.ID]; !ok {
+			return errors.New("repository not found")
+		}
+		s.Hooks[opt.Repository.ID]++
 	}
-	s.Hooks[opt.Repository.ID]++
-	return nil
-}
-
-// CreateOrgHook implements the scm interface
-func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
