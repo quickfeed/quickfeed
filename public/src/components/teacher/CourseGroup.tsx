@@ -244,7 +244,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                     name: "Approve",
                     extra: "primary",
                     uri: "approve",
-                    description: "list-btn",
                 }, {
                     name: "Edit",
                     extra: "primary",
@@ -253,7 +252,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                     name: "Delete",
                     extra: "danger",
                     uri: "delete",
-                    description: "list-btn",
                 });
                 break;
             case Group.GroupStatus.APPROVED:
@@ -261,16 +259,13 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                     name: "Edit",
                     extra: "primary",
                     uri: "edit",
-                    description: "list-btn",
                 }, {
                     name: "Delete",
                     extra: "danger",
                     uri: "delete",
-                    description: "list-btn",
                 }) : links.push({
                     name: "Approved",
                     extra: "light",
-                    description: "list-btn",
                 });
                 break;
             default:
@@ -282,7 +277,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     private flipEditState() {
         this.setState({
             editing: !this.state.editing,
-
         }, () => this.refreshState());
     }
 

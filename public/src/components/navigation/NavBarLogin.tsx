@@ -104,7 +104,7 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
     // link name can come as a JSX.Element, for example in a case of a button
     // with a glyphicon. In such a case, treat the name as if it was an empty string
     private stringifyLink(linkName?: string | JSX.Element): string {
-        if (linkName && linkName instanceof String) {
+        if (linkName && (linkName instanceof Element || typeof(linkName) === "string")) {
             return linkName.toString();
         }
         return "";
