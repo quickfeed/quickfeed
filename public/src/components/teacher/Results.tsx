@@ -58,9 +58,9 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                                 this.state.assignment.latest = ans;
                                 return true;
                             }
-                        }                   
-                        return false;     
-                    }                    
+                        }
+                        return false;
+                    }
                 }
                 onApproveClick={ async (approve: boolean) => {
                     if (this.state.assignment && this.state.assignment.latest) {
