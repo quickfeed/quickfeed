@@ -334,7 +334,7 @@ export class CourseManager {
     /**
      * Add IStudentSubmissions to an IAssignmentLink
      */
-    private async fillLinks(student: User, studentCourse: IAssignmentLink, assignments?: Assignment[]): Promise<void> {
+    public async fillLinks(student: User, studentCourse: IAssignmentLink, assignments?: Assignment[]): Promise<void> {
         if (!studentCourse.link) {
             return;
         }
@@ -355,7 +355,7 @@ export class CourseManager {
     /**
      * Add group submissions to an IAssignmentLink
      */
-    private async fillLinksGroup(group: Group, groupCourse: IAssignmentLink, assignments?: Assignment[]):
+    public async fillLinksGroup(group: Group, groupCourse: IAssignmentLink, assignments?: Assignment[]):
         Promise<void> {
         if (!groupCourse.link) {
             return;
