@@ -669,6 +669,24 @@ export namespace CourseRequest {
   }
 }
 
+export class UserRequest extends jspb.Message {
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UserRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: UserRequest): UserRequest.AsObject;
+  static serializeBinaryToWriter(message: UserRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UserRequest;
+  static deserializeBinaryFromReader(message: UserRequest, reader: jspb.BinaryReader): UserRequest;
+}
+
+export namespace UserRequest {
+  export type AsObject = {
+    userid: number,
+  }
+}
+
 export class CoursesListRequest extends jspb.Message {
   getUserid(): number;
   setUserid(value: number): void;

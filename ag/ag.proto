@@ -176,6 +176,10 @@ message CourseRequest {
     uint64 courseID = 1;
 }
 
+message UserRequest {
+    uint64 userID = 1;
+}
+
 message CoursesListRequest {
     uint64 userID = 1;
     repeated Enrollment.UserStatus states = 2;
@@ -293,6 +297,7 @@ service AutograderService {
 
     // enrollments //
 
+    rpc GetEnrollmentsByUser(UserRequest) returns (Enrollments) {}
     rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {} 
     rpc UpdateEnrollment(Enrollment) returns (Void) {} 
