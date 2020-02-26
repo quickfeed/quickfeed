@@ -59,7 +59,7 @@ func TestK8sZero(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, time.Now().Format("20060102-150405-99999999"), kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func TestK8sOne(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "1", kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "1", kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +103,7 @@ func TestK8sTwo(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "2", kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "2", kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func TestK8sThree(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "3", kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "3", kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestK8sFour(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "4", kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "4", kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,7 +177,7 @@ func TestSequentials(t *testing.T) {
 				&ci.Job{
 					Image:    "golang",
 					Commands: []string{s},
-				},
+				}, "agcicd",
 				tm, kubeconfig)
 			tests[i].out = out
 			m.Unlock()
@@ -194,12 +194,12 @@ func TestSequentials(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	namespace := time.Now().Format("20060102-150405") + "-delete"
-	cs, k := setupEnv(t, namespace)
+	jobId := time.Now().Format("20060102-150405") + "-delete"
+	cs, k := setupEnv(t, jobId)
 	k.DeleteObject(*cs, "agcicd")
 }
 
-func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s) {
+func setupEnv(t *testing.T, jobId string) (*kubernetes.Clientset, *kube.K8s) {
 	const (
 		script  = `echo -n "hello world"`
 		wantOut = "hello world"
@@ -211,7 +211,7 @@ func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s)
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, namespace, kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", jobId, kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 		fmt.Println(out)
