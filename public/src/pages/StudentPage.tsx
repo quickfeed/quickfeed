@@ -10,6 +10,8 @@ import { IAssignmentLink, IStudentSubmission } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
+import { pbkdf2 } from "crypto";
+import * as grpcWeb from 'grpc-web';
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -259,26 +261,28 @@ export class StudentPage extends ViewPage {
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            // test new method
             const userEnrolls = await this.courseMan.getAllUserEnrollments(curUser.getId());
-            for (const enrol of userEnrolls) {
-                console.log("Got enrollment ");
-                console.log(enrol.toString());
-            }
-
-            this.userCourses = await this.courseMan.getStudentCourses(curUser,
-                [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
-            this.activeUserCourses = this.onlyActiveCourses(this.userCourses as IAssignmentLink[]);
-
-            // preloading groupdata.
+            this.userCourses = [];
+            this.activeUserCourses = [];
             this.GroupUserCourses = [];
 
-            for (const course of this.activeUserCourses) {
-                const group = await this.courseMan.getGroupByUserAndCourse(course.course.getId(), curUser.getId());
-                if (group != null) {
-                    const groupCourse = await this.courseMan.getGroupCourse(group, course.course);
-                    if (groupCourse) {
-                        this.GroupUserCourses.push(groupCourse);
+            for (const enrol of userEnrolls) {
+                const crs = enrol.getCourse()
+                if (crs) {
+                    const newCourseLink: IAssignmentLink = {
+                        course: crs,
+                        link: enrol,
+                        assignments: []
+                    }
+                    await this.courseMan.fillLinks(curUser, newCourseLink, crs.getAssignmentsList())
+                    this.userCourses.push(newCourseLink);
+                    if (enrol.getStatus() === Enrollment.UserStatus.STUDENT || enrol.getStatus() === Enrollment.UserStatus.TEACHER) {
+                        this.activeUserCourses.push(newCourseLink);
+                    }
+                    const grp = enrol.getGroup()
+                    if (grp) {
+                        await this.courseMan.fillLinksGroup(grp, newCourseLink, crs.getAssignmentsList())
+                        this.GroupUserCourses.push(newCourseLink);
                     }
                 }
             }
