@@ -56,9 +56,9 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                                 this.state.assignment.latest = ans;
                                 return true;
                             }
-                        }                   
-                        return false;     
-                    }         
+                        }
+                        return false;
+                    }
                 }
                 onApproveClick={(approve: boolean) => {
                     if (this.state.assignment && this.state.assignment.latest) {
