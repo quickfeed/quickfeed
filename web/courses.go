@@ -150,7 +150,22 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 	return s.db.UpdateCourse(request)
 }
 
-// getEnrollmentsByCourse get all enrollments for a course that match the given enrollment request.
+// getEnrollmentsByUser returns all enrollments for the given user with preloaded
+// courses and groups
+func (s *AutograderService) getEnrollmentsByUser(userID uint64) (*pb.Enrollments, error) {
+	enrollments, err := s.db.GetEnrollmentsByUser(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, enrol := range enrollments {
+		fmt.Println("Got enrollment for user ", userID, ": ", enrol)
+	}
+
+	return &pb.Enrollments{Enrollments: enrollments}, nil
+}
+
+// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
 func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.States...)
 	if err != nil {
