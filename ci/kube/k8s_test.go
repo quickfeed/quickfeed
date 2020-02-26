@@ -17,7 +17,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
-
+//dummy comment
 //var KUBERNTES_HOSTNMAE + PORT nr string
 var home = homeDir()
 var kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
