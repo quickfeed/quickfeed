@@ -33,6 +33,7 @@ import {
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
+import { UserRequest } from '../../proto/ag_pb';
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -117,6 +118,12 @@ export class GrpcManager {
     }
 
     // /* ENROLLMENTS */ //
+
+    public getEnrollmentsByUser(userID: number): Promise<IGrpcResponse<Enrollments>> {
+        const request = new UserRequest();
+        request.setUserid(userID);
+        return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByUser, request);
+    }
 
     public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, state?: any):
         Promise<IGrpcResponse<Enrollments>> {

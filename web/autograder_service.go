@@ -272,6 +272,19 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 	return courses, nil
 }
 
+// GetEnrollmentsByUser returns all enrollments for the given user with preloaded courses and groups.
+// Access policy: user with userID or admin
+func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.UserRequest) (*pb.Enrollments, error) {
+	// check that current user ID = user ID in request unless admin
+
+	// get all enrollments from the db (no scm)
+	enrols, err := s.getEnrollmentsByUser(in.GetUserID())
+	if err != nil {
+		s.logger.Errorf("Get enrollments for user %d failed: %s", in.GetUserID(), err)
+	}
+	return enrols, nil
+}
+
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
 // Access policy: Teacher or student of CourseID.
 func (s *AutograderService) GetEnrollmentsByCourse(ctx context.Context, in *pb.EnrollmentRequest) (*pb.Enrollments, error) {

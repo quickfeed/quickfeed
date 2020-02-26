@@ -34,7 +34,7 @@ export interface ICourseProvider {
     getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]>;
     getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]>;
     getCourseLabs(courseID: number, groupLabs: boolean): Promise<IAssignmentLink[]>;
-
+    getAllUserEnrollments(userID: number): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
@@ -163,6 +163,13 @@ export class CourseManager {
             await this.fillLinks(student, link);
         }
         return links;
+    }
+
+    /**
+     * Fetches all enrollments for the user, courses and groups are preloaded.
+     */
+    public async getAllUserEnrollments(userID: number): Promise<Enrollment[]> {
+        return this.courseProvider.getAllUserEnrollments(userID);
     }
 
     /**
