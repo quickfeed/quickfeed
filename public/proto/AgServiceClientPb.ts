@@ -37,6 +37,7 @@ import {
   URLRequest,
   UpdateSubmissionRequest,
   User,
+  UserRequest,
   Users,
   Void} from './ag_pb';
 
@@ -430,6 +431,28 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoUpdateAssignments,
+      callback);
+  }
+
+  methodInfoGetEnrollmentsByUser = new grpcWeb.AbstractClientBase.MethodInfo(
+    Enrollments,
+    (request: UserRequest) => {
+      return request.serializeBinary();
+    },
+    Enrollments.deserializeBinary
+  );
+
+  getEnrollmentsByUser(
+    request: UserRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Enrollments) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetEnrollmentsByUser',
+      request,
+      metadata || {},
+      this.methodInfoGetEnrollmentsByUser,
       callback);
   }
 
