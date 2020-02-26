@@ -266,8 +266,7 @@ func (s *GithubSCM) RepositoryIsEmpty(ctx context.Context, opt *RepositoryOption
 func (s *GithubSCM) ListHooks(ctx context.Context, repo *Repository, org string) (hooks []*Hook, err error) {
 	var githubHooks []*github.Hook
 
-	// we prioritize organization hooks because repository hooks
-	// are no longer used.
+	// we prioritize organization hooks because repository hooks are no longer used.
 	switch {
 	case org != "":
 		orgName := slug.Make(org)

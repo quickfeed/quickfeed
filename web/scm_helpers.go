@@ -160,6 +160,53 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, organizationPath
 	return nil
 }
 
+func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
+	if err != nil {
+		return nil, err
+	}
+
+	switch state {
+	case pb.Enrollment_STUDENT:
+		// give access to course-info and assignments repositories
+		if err := grantAccessToCourseRepos(ctx, sc, org.GetPath(), login); err != nil {
+			return nil, err
+		}
+
+		// add student to the organization's "students" team
+		if err = addUserToStudentsTeam(ctx, sc, org.GetPath(), login); err != nil {
+			return nil, err
+		}
+
+		return createStudentRepo(ctx, sc, org, pb.StudentRepoName(login), login)
+
+	case pb.Enrollment_TEACHER:
+		// if teacher, promote to owner, remove from students team, add to teachers team
+		orgUpdate := &scm.OrgMembershipOptions{
+			Organization: org.Path,
+			Username:     login,
+			Role:         scm.OrgOwner,
+		}
+		// when promoting to teacher, promote to organization owner as well
+		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
+			return nil, fmt.Errorf("UpdateReposAndTeams: failed to update org membership for %s: %w", login, err)
+		}
+		err = promoteUserToTeachersTeam(ctx, sc, org.GetPath(), login)
+	}
+	return nil, err
+}
+
+func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string) error {
+	commonRepos := []string{pb.InfoRepo, pb.AssignmentRepo}
+
+	for _, repoType := range commonRepos {
+		if err := sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: org, Path: repoType}, login, scm.RepoPull); err != nil {
+			return fmt.Errorf("updateReposAndTeams: failed to update repo access to repo %s for user %s: %w ", repoType, login, err)
+		}
+	}
+	return nil
+}
+
 func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group) error {
 	opt := &scm.TeamOptions{
 		TeamName: group.Name,
