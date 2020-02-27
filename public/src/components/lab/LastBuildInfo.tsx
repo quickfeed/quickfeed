@@ -23,19 +23,19 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
 
     public render() {
         const alltests = this.props.submission.testCases ? this.props.submission.testCases.length : 0;
-        const passedAllTests = this.props.submission.passedTests === this.props.submission.testCases.length ? "passing" : "";
+        const passedAllTests = this.props.submission.passedTests === alltests ? "passing" : "";
         return (
             <div>
                 <Row>
                     <div className="col-lg-12">
                         <table className="table">
-                            <thead><tr><th colSpan={2}>Lab Information </th></tr></thead>
-                            <tbody>
-                                <tr><td>Delivered</td><td>{this.getDeliveredTime()}</td></tr>
-                                <tr><td>Deadline</td><td>{formatDate(this.props.assignment.getDeadline())}</td></tr>
-                                <tr><td>Tests passed</td><td><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
-                                <tr><td>Execution time</td><td>{this.formatTime(this.props.submission.executionTime)} seconds </td></tr>
-                                <tr><td>Slip days</td><td>5</td></tr>
+                            <thead key="thead"><tr><th key="headrow" colSpan={2}>Lab Information </th></tr></thead>
+                            <tbody key="tbody">
+                                <tr><td key="1">Delivered</td><td key="desc1">{this.getDeliveredTime()}</td></tr>
+                                <tr><td key="2">Deadline</td><td key="desc2">{formatDate(this.props.assignment.getDeadline())}</td></tr>
+                                <tr><td key="3">Tests passed</td><td key="desc3"><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
+                                <tr><td key="4">Execution time</td><td key="desc4">{this.formatTime(this.props.submission.executionTime)} seconds </td></tr>
+                                <tr><td key="5">Slip days</td><td key="desc5">5</td></tr>
                             </tbody>
                         </table>
                     </div>
