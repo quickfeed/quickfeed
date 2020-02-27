@@ -346,8 +346,10 @@ export class CourseManager {
                 await this.courseProvider.getAllLabInfos(studentCourse.course.getId(), student.getId());
 
             for (const a of assignments) {
-                const submission = submissions.find((sub) => sub.assignmentid === a.getId());
-                studentCourse.assignments.push({ assignment: a, latest: submission, authorName: student.getName() });
+                if (!a.getIsgrouplab()) {
+                    const submission = submissions.find((sub) => sub.assignmentid === a.getId());
+                    studentCourse.assignments.push({ assignment: a, latest: submission, authorName: student.getName()});
+                }
             }
         }
     }
@@ -366,10 +368,11 @@ export class CourseManager {
         if (assignments.length > 0) {
             const submissions =
                 await this.courseProvider.getAllGroupLabInfos(groupCourse.course.getId(), group.getId());
-
             for (const a of assignments) {
-                const submission = submissions.find((sub) => sub.assignmentid === a.getId());
-                groupCourse.assignments.push({ assignment: a, latest: submission, authorName: group.getName() });
+                if (a.getIsgrouplab()) {
+                    const submission = submissions.find((sub) => sub.assignmentid === a.getId());
+                    groupCourse.assignments.push({ assignment: a, latest: submission, authorName: group.getName() });
+                }
             }
         }
     }
