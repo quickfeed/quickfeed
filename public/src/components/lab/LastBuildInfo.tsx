@@ -23,6 +23,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
 
     public render() {
         const alltests = this.props.submission.testCases ? this.props.submission.testCases.length : 0;
+        const passedAllTests = this.props.submission.passedTests === this.props.submission.testCases.length ? "passing" : "";
         return (
             <div>
                 <Row>
@@ -32,7 +33,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                             <tbody>
                                 <tr><td>Delivered</td><td>{this.getDeliveredTime()}</td></tr>
                                 <tr><td>Deadline</td><td>{formatDate(this.props.assignment.getDeadline())}</td></tr>
-                                <tr><td>Tests passed</td><td>{this.props.submission.passedTests} / {alltests}</td></tr>
+                                <tr><td>Tests passed</td><td><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
                                 <tr><td>Execution time</td><td>{this.formatTime(this.props.submission.executionTime)} seconds </td></tr>
                                 <tr><td>Slip days</td><td>5</td></tr>
                             </tbody>
