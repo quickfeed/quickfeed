@@ -157,11 +157,6 @@ func (s *AutograderService) getEnrollmentsByUser(userID uint64) (*pb.Enrollments
 	if err != nil {
 		return nil, err
 	}
-
-	for _, enrol := range enrollments {
-		fmt.Println("Got enrollment for user ", userID, ": ", enrol)
-	}
-
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
