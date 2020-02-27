@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
+
 //dummy comment
 //var KUBERNTES_HOSTNMAE + PORT nr string
 var home = homeDir()
@@ -66,7 +66,7 @@ func TestK8s(t *testing.T) {
 	}
 }
 
-func TestParallelK8s(t *testing.T) {
+func TestSequentielK8s(t *testing.T) {
 	numberOfPods := 10
 	tests := make([]test, numberOfPods)
 
@@ -77,31 +77,25 @@ func TestParallelK8s(t *testing.T) {
 
 	fmt.Println(tests)
 
-	var wg sync.WaitGroup
 	for i := 0; i < numberOfPods; i++ {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			tm := "ci" + strconv.Itoa(i)
+		tm := "ci" + strconv.Itoa(i)
+		//tm := "ci-" + getTimeNow() + "-" + strconv.Itoa(i)
 
-			k := newKubeCI()
+		k := newKubeCI()
 
-			fmt.Println(tests[i])
-			//err := newError()
-			s := tests[i].script
-			out, _ := k.RunKubeJob(context.Background(),
-				&ci.Job{
-					Image:    "golang",
-					Commands: []string{s},
-				},
-				tm, kubeconfig)
+		fmt.Println(tests[i])
+		//err := newError()
+		s := tests[i].script
+		out, _ := k.RunKubeJob(context.Background(),
+			&ci.Job{
+				Image:    "golang",
+				Commands: []string{s},
+			},
+			tm, kubeconfig)
 
-			tests[i].out = out
-			fmt.Println("Input value: ", s)
-		}(i)
+		tests[i].out = out
+		fmt.Println("Input value: ", s)
 	}
-
-	wg.Wait()
 
 	for i := 0; i < numberOfPods; i++ {
 		tst := tests[i]
@@ -111,8 +105,12 @@ func TestParallelK8s(t *testing.T) {
 	}
 }
 
+func getTimeNow() string {
+	return time.Now().Format("20060102-150405")
+}
+
 func TestDelete(t *testing.T) {
-	namespace := time.Now().Format("20060102-150405") + "-delete"
+	namespace := getTimeNow() + "-delete"
 	cs, k := setupEnv(t, namespace)
 	k.DeleteObject(*cs, "agcicd")
 }
@@ -147,14 +145,6 @@ func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s)
 		return nil, nil
 	}
 	return clientset, k
-}
-
-func TestK8s2(t *testing.T) {
-	k8s := newKubeCI()
-	fmt.Println(k8s)
-	namespace := time.Now().Format("20060102-150405") + "-double"
-	setupEnv(t, namespace)
-	fmt.Println(k8s)
 }
 
 func homeDir() string {

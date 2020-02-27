@@ -81,33 +81,64 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		},
 	}
 
-	creteadJob, err := jobsClient.Create(confJob)
+	createdJob, err := jobsClient.Create(confJob)
 	if err != nil {
 		return "", err
 	}
 
+	//fmt.Println(createdJob.Name)
 	jobLock.Lock()
-	if !jobEvents(*creteadJob, clientset, "agcicd", int32(1), creteadJob.Name) {
+	if !jobEvents(*createdJob, clientset, "agcicd", int32(1), createdJob.Name) {
+		//fmt.Println("Waiting")
 		waiting.Wait()
 	}
 	jobLock.Unlock()
 
-	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{
-		LabelSelector: "job-name=" + creteadJob.Name,
+	//fmt.Println("clientset.CoreV1().Pods")
+	//pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{
+	_, err = clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{
+		LabelSelector: "job-name=" + createdJob.Name,
 	})
 	if err != nil {
 		return "could not list the pods!", nil
 	}
 
-	for range pods.Items {
-		podLock.Lock()
-		if !podEvents(clientset, "agcicd", creteadJob.Name) {
-			condPod.Wait()
-		}
-		podLock.Unlock()
+	out := ""
+	//for range pods.Items {
+	//podLock.Lock()
+	found, o := podEvents(clientset, "agcicd", createdJob.Name)
+	if found {
+		//fmt.Println("Wait")
+		//condPod.Wait()
+		out = o
+		//break
 	}
-	fmt.Println("Return value: ", podLog)
-	return podLog, nil
+	//podLock.Unlock()
+	//}
+	//fmt.Println("Return value: ", podLog)
+
+	err = jobsClient.Delete(createdJob.Name, &metav1.DeleteOptions{
+		GracePeriodSeconds: int64Ptr(30),
+	})
+	if err != nil {
+		return "", err
+	}
+	//for _, pod := range pods.Items {
+	//fmt.Println("My Pods")
+	//fmt.Println(pod)
+	err = clientset.CoreV1().Pods("agcicd").DeleteCollection(&metav1.DeleteOptions{
+		GracePeriodSeconds: int64Ptr(30),
+	},
+		metav1.ListOptions{
+			LabelSelector: "job-name=" + createdJob.Name,
+		})
+
+	if err != nil {
+		return err.Error(), nil
+	}
+	//}
+
+	return out, nil
 }
 
 //DeleteObject deleting ..
@@ -150,35 +181,39 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) s
 }
 
 //PodEvents is ...
-func podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) bool {
-	st := false
+func podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) (bool, string) {
+	//st := false
 	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
 		LabelSelector: "job-name=" + jobname,
 	})
 	if err != nil {
 		panic(err)
 	}
-	go func(st bool) {
-		for event := range watch.ResultChan() {
-			fmt.Printf("Type: %v\n", event.Type)
-			pod, ok := event.Object.(*v1.Pod)
+	//go func(st bool) {
+	for event := range watch.ResultChan() {
+		//fmt.Println(event)
+		fmt.Printf("Type: %v\n", event.Type)
+		pod, ok := event.Object.(*v1.Pod)
 
-			if !ok {
-				panic("unexpected type")
-			}
-			if pod.Status.Phase == "Succeeded" {
-				podLock.Lock()
-				podLog = podLogs(*pod, clientset, "agcicd")
-				st = true
-				condPod.Signal()
-				podLock.Unlock()
-			}
-			if pod.Status.Phase == apiv1.PodFailed {
-				fmt.Println("POD FAILED manual print") //TODO: What to do? delete and run the job again?
-			}
+		if !ok {
+			panic("unexpected type")
 		}
-	}(st)
-	return st
+		if pod.Status.Phase == "Succeeded" {
+			//podLock.Lock()
+			//podLog = podLogs(*pod, clientset, "agcicd")
+			//st = true
+			//condPod.Signal()
+			//podLock.Unlock()
+			out := podLogs(*pod, clientset, "agcicd")
+			//pod.Delete()
+			return true, out
+		}
+		if pod.Status.Phase == apiv1.PodFailed {
+			fmt.Println("POD FAILED manual print") //TODO: What to do? delete and run the job again?
+		}
+	}
+	//}(st)
+	return false, ""
 }
 
 func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32, kubejobname string) bool {
