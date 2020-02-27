@@ -3,20 +3,23 @@ package kube
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/sha1"
 	"fmt"
 	"io"
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 
@@ -25,7 +28,8 @@ import (
 
 // K8s is an implementation of the CI interface using K8s.
 type K8s struct {
-	Endpoint string
+	//Endpoint string
+	//clientset clientset.Interface
 }
 
 var (
@@ -42,8 +46,9 @@ func int64Ptr(i int64) *int64 { return &i }
 //RunKubeJob runs the rescieved push from repository on the podes in our 3 nodes.
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
-func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeconfig *string) (string, error) {
-	// use the current context in kubeconfig
+//TODO: kubeconfig param has to be deleted?
+func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string, id string, kubeconfig *string) (string, error) {
+	// use the current context in kubeconfig TODO: this has to change
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
 		return "", err
@@ -53,9 +58,15 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 	if err != nil {
 		return "", err
 	}
+	//TODO: need to change clientset ?
+	//clientset := K8s{}
+
+	//for now genrate a random secret and put it in the path root/work/volums
+	//TODO: pass data that need to be in secret! and check for RC?
+	jobsecrets(id, courseName, *clientset, kubeRandomSecret())
 
 	//Define the configiration of the job object
-	jobsClient := clientset.BatchV1().Jobs("agcicd")
+	jobsClient := clientset.BatchV1().Jobs(courseName)
 	confJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "cijob" + id,
@@ -84,6 +95,23 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 									"memory": resource.MustParse("100Mi"),
 								},
 							},
+							VolumeMounts: []apiv1.VolumeMount{
+								{
+									Name:      "secreting",
+									MountPath: "/root/work/secreting",
+									ReadOnly:  true,
+								},
+							},
+						},
+					},
+					Volumes: []apiv1.Volume{
+						{
+							Name: "secreting",
+							VolumeSource: apiv1.VolumeSource{
+								Secret: &apiv1.SecretVolumeSource{
+									SecretName: id,
+								},
+							},
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyOnFailure,
@@ -97,11 +125,11 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 		return "", err
 	}
 	jobLock.Lock()
-	if !jobEvents(*creteadJob, clientset, "agcicd", int32(1), creteadJob.Name) {
+	if !jobEvents(*creteadJob, clientset, courseName, int32(1), creteadJob.Name) {
 		waiting.Wait()
 	}
 
-	pods, err := clientset.CoreV1().Pods("agcicd").List(metav1.ListOptions{
+	pods, err := clientset.CoreV1().Pods(courseName).List(metav1.ListOptions{
 		LabelSelector: "job-name=" + creteadJob.Name,
 	})
 	if err != nil {
@@ -114,33 +142,38 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, id string, kubeco
 	for range pods.Items {
 		//channel or condition variables ?
 		podLock.Lock()
-		if !podEvents(clientset, "agcicd", creteadJob.Name) {
+		if !podEvents(clientset, courseName, creteadJob.Name) {
 			condPod.Wait()
 		}
 		podLock.Unlock()
-		// go podEvents(clientset, "agcicd", creteadJob.Name, log)
+		// go podEvents(clientset, courseName, creteadJob.Name, log)
 		//<-log
 	}
 	return podLog, nil
 }
 
 //DeleteObject deleting ..
-func (k *K8s) DeleteObject( /*pod apiv1.Pod,*/ clientset kubernetes.Clientset, namespace string) error {
-	jobs, err := clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	if len(jobs.Items) > 0 {
-		for _, job := range jobs.Items {
-			err := clientset.BatchV1().Jobs(namespace).Delete(job.Name, &metav1.DeleteOptions{
-				GracePeriodSeconds: int64Ptr(30),
-			})
-			if err != nil {
-				return err
+func (k *K8s) DeleteObject(clientset kubernetes.Clientset, namespace string) error {
+	ticker := time.NewTicker(24 * time.Hour)
+	for {
+		<-ticker.C
+		jobs, err := clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+		if len(jobs.Items) > 0 {
+			for _, job := range jobs.Items {
+				err := clientset.BatchV1().Jobs(namespace).Delete(job.Name, &metav1.DeleteOptions{
+					GracePeriodSeconds: int64Ptr(30),
+				})
+				if err != nil {
+					return err
+				}
 			}
+		} else {
+			return nil
 		}
 	}
-	return nil
 }
 
 //PodLogs returns ...
@@ -176,21 +209,21 @@ func podEvents(clientset *kubernetes.Clientset, namespace string, jobname string
 	go func(st bool) {
 		for event := range watch.ResultChan() {
 			//fmt.Printf("Type: %v\n", event.Type)
-			pod, ok := event.Object.(*v1.Pod)
+			pod, ok := event.Object.(*apiv1.Pod)
 
 			if !ok {
 				panic("unexpected type")
 			}
 			if pod.Status.Phase == "Succeeded" {
 				podLock.Lock()
-				podLog, err = podLogs(*pod, clientset, "agcicd")
+				podLog, err = podLogs(*pod, clientset, namespace)
 				if err != nil {
 					panic(err)
 				}
 				st = true
 				condPod.Signal()
 				podLock.Unlock()
-				/* podLog, err = podLogs(*pod, clientset, "agcicd")
+				/* podLog, err = podLogs(*pod, clientset,namespace)
 				if err != nil {
 					panic(err)
 				}
@@ -229,6 +262,37 @@ func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace strin
 		}
 	}(st)
 	return st
+}
+
+//jobsecrets create a secrets.. TODO
+func jobsecrets(secretName string, namespace string, clientset kubernetes.Clientset, pass string) {
+	newSec := &apiv1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			secretName: []byte(pass),
+		},
+		Type: "Opaque",
+	}
+	_, err := clientset.CoreV1().Secrets(namespace).Create(newSec)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func kubeRandomSecret() string {
+	randomness := make([]byte, 10)
+	_, err := rand.Read(randomness)
+	if err != nil {
+		panic("couldn't generate randomness")
+	}
+	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
 func resourceUsage() {

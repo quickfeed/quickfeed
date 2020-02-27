@@ -49,6 +49,7 @@ type test struct {
 
 func TestK8sZero(t *testing.T) {
 	const (
+		//script  = `cat /root/work/secreting/aa; echo -n "hello world 0"`
 		script  = `echo -n "hello world 0"`
 		wantOut = "hello world 0"
 	)
@@ -59,95 +60,7 @@ func TestK8sZero(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, time.Now().Format("20060102-150405-99999999"), kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sOne(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 1"`
-		wantOut = "hello world 1"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "1", kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sTwo(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 2"`
-		wantOut = "hello world 2"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "2", kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sThree(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 3"`
-		wantOut = "hello world 3"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "3", kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sFour(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 4"`
-		wantOut = "hello world 4"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "4", kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "aa" /* time.Now().Format("20060102-150405-99999999") */, kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,7 +90,7 @@ func TestSequentials(t *testing.T) {
 				&ci.Job{
 					Image:    "golang",
 					Commands: []string{s},
-				},
+				}, "agcicd",
 				tm, kubeconfig)
 			tests[i].out = out
 			m.Unlock()
@@ -194,12 +107,12 @@ func TestSequentials(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	namespace := time.Now().Format("20060102-150405") + "-delete"
-	cs, k := setupEnv(t, namespace)
+	jobId := time.Now().Format("20060102-150405") + "-delete"
+	cs, k := setupEnv(t, jobId)
 	k.DeleteObject(*cs, "agcicd")
 }
 
-func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s) {
+func setupEnv(t *testing.T, jobId string) (*kubernetes.Clientset, *kube.K8s) {
 	const (
 		script  = `echo -n "hello world"`
 		wantOut = "hello world"
@@ -211,7 +124,7 @@ func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s)
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, namespace, kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", jobId, kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 		fmt.Println(out)
