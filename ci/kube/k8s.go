@@ -3,6 +3,8 @@ package kube
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/sha1"
 	"fmt"
 	"io"
 	"log"
@@ -59,7 +61,9 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	//TODO: need to change clientset ?
 	//clientset := K8s{}
 
-	jobsecrets(courseName, *clientset, "client token id or this kinds of things ?")
+	//for now genrate a random secret and put it in the path root/work/volums
+	//TODO: pass data that need to be in secret! and check for RC?
+	jobsecrets(id, courseName, *clientset, kubeRandomSecret())
 
 	//Define the configiration of the job object
 	jobsClient := clientset.BatchV1().Jobs(courseName)
@@ -94,7 +98,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 							VolumeMounts: []apiv1.VolumeMount{
 								{
 									Name:      "secreting",
-									MountPath: "/root/work/volums",
+									MountPath: "/root/work/secreting",
 									ReadOnly:  true,
 								},
 							},
@@ -105,7 +109,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 							Name: "secreting",
 							VolumeSource: apiv1.VolumeSource{
 								Secret: &apiv1.SecretVolumeSource{
-									SecretName: "job-secret",
+									SecretName: id,
 								},
 							},
 						},
@@ -261,18 +265,18 @@ func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace strin
 }
 
 //jobsecrets create a secrets.. TODO
-func jobsecrets(namespace string, clientset kubernetes.Clientset, pass string) {
+func jobsecrets(secretName string, namespace string, clientset kubernetes.Clientset, pass string) {
 	newSec := &apiv1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "job-secret",
+			Name:      secretName,
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			"job-secret": []byte(pass),
+			secretName: []byte(pass),
 		},
 		Type: "Opaque",
 	}
@@ -280,6 +284,15 @@ func jobsecrets(namespace string, clientset kubernetes.Clientset, pass string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func kubeRandomSecret() string {
+	randomness := make([]byte, 10)
+	_, err := rand.Read(randomness)
+	if err != nil {
+		panic("couldn't generate randomness")
+	}
+	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
 func resourceUsage() {

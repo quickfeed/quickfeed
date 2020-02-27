@@ -49,6 +49,7 @@ type test struct {
 
 func TestK8sZero(t *testing.T) {
 	const (
+		//script  = `cat /root/work/secreting/aa; echo -n "hello world 0"`
 		script  = `echo -n "hello world 0"`
 		wantOut = "hello world 0"
 	)
@@ -59,95 +60,7 @@ func TestK8sZero(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sOne(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 1"`
-		wantOut = "hello world 1"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "1", kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sTwo(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 2"`
-		wantOut = "hello world 2"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "2", kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sThree(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 3"`
-		wantOut = "hello world 3"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "3", kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sFour(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 4"`
-		wantOut = "hello world 4"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "4", kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "aa" /* time.Now().Format("20060102-150405-99999999") */, kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
