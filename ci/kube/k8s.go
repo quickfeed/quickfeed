@@ -30,14 +30,14 @@ import (
 type K8s struct {
 	//Endpoint string
 	//clientset clientset.Interface
+	isActive   int
+	isLogReady int
+	podLog     string
 }
 
 var (
-	podLog  string
-	jobLock sync.Mutex
-	podLock sync.Mutex
-	waiting sync.Cond = *sync.NewCond(&jobLock)
-	condPod sync.Cond = *sync.NewCond(&podLock)
+	isJobActive sync.Cond = *sync.NewCond(&sync.Mutex{})
+	isPodDone   sync.Cond = *sync.NewCond(&sync.Mutex{})
 )
 
 func int32Ptr(i int32) *int32 { return &i }
@@ -63,7 +63,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 
 	//for now genrate a random secret and put it in the path root/work/volums
 	//TODO: pass data that need to be in secret! and check for RC?
-	jobsecrets(id, courseName, *clientset, kubeRandomSecret())
+	go jobsecrets(id, courseName, *clientset, kubeRandomSecret())
 
 	//Define the configiration of the job object
 	jobsClient := clientset.BatchV1().Jobs(courseName)
@@ -124,9 +124,10 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	if err != nil {
 		return "", err
 	}
-	jobLock.Lock()
-	if !jobEvents(*creteadJob, clientset, courseName, int32(1), creteadJob.Name) {
-		waiting.Wait()
+	isJobActive.L.Lock()
+	k.jobEvents(*creteadJob, clientset, courseName, int32(1), creteadJob.Name)
+	for k.isActive == 0 {
+		isJobActive.Wait()
 	}
 
 	pods, err := clientset.CoreV1().Pods(courseName).List(metav1.ListOptions{
@@ -135,21 +136,18 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	if err != nil {
 		return "could not list the pods!", nil
 	}
-	jobLock.Unlock()
-
-	//log := make(chan bool)
+	isJobActive.L.Unlock()
 
 	for range pods.Items {
-		//channel or condition variables ?
-		podLock.Lock()
-		if !podEvents(clientset, courseName, creteadJob.Name) {
-			condPod.Wait()
+		isPodDone.L.Lock()
+		k.podEvents(clientset, courseName, creteadJob.Name)
+		for k.isLogReady == 0 {
+			isPodDone.Wait()
 		}
-		podLock.Unlock()
-		// go podEvents(clientset, courseName, creteadJob.Name, log)
-		//<-log
+		isPodDone.L.Unlock()
 	}
-	return podLog, nil
+
+	return k.podLog, nil
 }
 
 //DeleteObject deleting ..
@@ -176,6 +174,30 @@ func (k *K8s) DeleteObject(clientset kubernetes.Clientset, namespace string) err
 	}
 }
 
+func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32, kubejobname string) {
+	watch, err := clientset.BatchV1().Jobs(namespace).Watch(metav1.ListOptions{
+		LabelSelector: "job-name=" + kubejobname,
+	})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	go func() {
+		for event := range watch.ResultChan() {
+			j, ok := event.Object.(*batchv1.Job)
+			if !ok {
+				log.Fatal("unexpected type")
+			}
+			//if j.Status.StartTime != nil {
+			if j.Status.Active == nrOfPods {
+				isJobActive.L.Lock()
+				k.isActive++
+				isJobActive.Signal()
+				isJobActive.L.Unlock()
+			}
+		}
+	}()
+}
+
 //PodLogs returns ...
 func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (string, error) {
 	podLogOpts := apiv1.PodLogOptions{}
@@ -198,70 +220,34 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (
 }
 
 //PodEvents is ...
-func podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) bool {
-	st := false
+func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) {
 	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
 		LabelSelector: "job-name=" + jobname,
 	})
 	if err != nil {
 		panic(err)
 	}
-	go func(st bool) {
+	go func() {
 		for event := range watch.ResultChan() {
-			//fmt.Printf("Type: %v\n", event.Type)
 			pod, ok := event.Object.(*apiv1.Pod)
-
 			if !ok {
 				panic("unexpected type")
 			}
 			if pod.Status.Phase == "Succeeded" {
-				podLock.Lock()
-				podLog, err = podLogs(*pod, clientset, namespace)
+				isPodDone.L.Lock()
+				k.podLog, err = podLogs(*pod, clientset, namespace)
 				if err != nil {
 					panic(err)
 				}
-				st = true
-				condPod.Signal()
-				podLock.Unlock()
-				/* podLog, err = podLogs(*pod, clientset,namespace)
-				if err != nil {
-					panic(err)
-				}
-				log <- true */
+				k.isLogReady++
+				isPodDone.Signal()
+				isPodDone.L.Unlock()
 			}
 			if pod.Status.Phase == apiv1.PodFailed {
 				fmt.Println("POD FAILED manual print") //TODO: What to do? delete and run the job again?
 			}
 		}
-	}(st)
-	return st
-}
-
-func jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32, kubejobname string) bool {
-	st := false
-	watch, err := clientset.BatchV1().Jobs(namespace).Watch(metav1.ListOptions{
-		LabelSelector: "job-name=" + kubejobname,
-	})
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	go func(st bool) {
-		for event := range watch.ResultChan() {
-			//fmt.Printf("Type: %v\n", event.Type)
-			j, ok := event.Object.(*batchv1.Job)
-			if !ok {
-				log.Fatal("unexpected type")
-			}
-			//if j.Status.StartTime != nil {
-			if j.Status.Active == nrOfPods {
-				jobLock.Lock()
-				st = true
-				waiting.Signal()
-				jobLock.Unlock()
-			}
-		}
-	}(st)
-	return st
+	}()
 }
 
 //jobsecrets create a secrets.. TODO

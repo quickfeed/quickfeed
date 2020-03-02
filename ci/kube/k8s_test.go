@@ -13,7 +13,6 @@ import (
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
-	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -39,10 +38,6 @@ func newTest(script, wantOut string) *test {
 	return t
 }
 
-func newPod() *apiv1.Pod {
-	return &apiv1.Pod{}
-}
-
 type test struct {
 	script, wantOut, out string
 }
@@ -52,6 +47,51 @@ func TestK8sZero(t *testing.T) {
 		//script  = `cat /root/work/secreting/aa; echo -n "hello world 0"`
 		script  = `echo -n "hello world 0"`
 		wantOut = "hello world 0"
+	)
+
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+
+func TestK8sOne(t *testing.T) {
+	const (
+		//script  = `cat /root/work/secreting/aa; echo -n "hello world 0"`
+		script  = `echo -n "hello world 1"`
+		wantOut = "hello world 1"
+	)
+
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+func TestK8sTwo(t *testing.T) {
+	const (
+		//script  = `cat /root/work/secreting/aa; echo -n "hello world 0"`
+		script  = `echo -n "hello world 2"`
+		wantOut = "hello world 2"
 	)
 
 	job := &ci.Job{
@@ -70,7 +110,7 @@ func TestK8sZero(t *testing.T) {
 	}
 }
 
-func TestSequentials(t *testing.T) {
+func TestOneA(t *testing.T) {
 	numberOfPods := 10
 	tests := make([]test, numberOfPods)
 
@@ -82,7 +122,7 @@ func TestSequentials(t *testing.T) {
 	for i := 0; i < numberOfPods; i++ {
 		wg.Add(1)
 		go func(i int) {
-			tm := "ci" + strconv.Itoa(i)
+			tm := "cia" + strconv.Itoa(i)
 			k := newKubeCI()
 			m.Lock()
 			s := tests[i].script
