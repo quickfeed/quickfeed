@@ -129,7 +129,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	for k.isActive == 0 {
 		isJobActive.Wait()
 	}
-
+	k.isActive--
 	pods, err := clientset.CoreV1().Pods(courseName).List(metav1.ListOptions{
 		LabelSelector: "job-name=" + creteadJob.Name,
 	})
@@ -144,6 +144,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 		for k.isLogReady == 0 {
 			isPodDone.Wait()
 		}
+		k.isLogReady--
 		isPodDone.L.Unlock()
 	}
 
