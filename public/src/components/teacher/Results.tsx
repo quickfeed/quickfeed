@@ -4,6 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IAssignmentLink, IStudentSubmission, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
+import { generateLabRepoLink } from '../../helper';
 
 interface IResultsProp {
     course: Course;
@@ -124,7 +125,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private generateUserRepoLink(name: string, userName: string): JSX.Element {
-        return <a href={this.props.courseURL + userName + "-labs"} target="_blank">{ name }</a>;
+        return <a href={generateLabRepoLink(this.props.courseURL, userName)} target="_blank">{ name }</a>;
     }
 
     private handleOnclick(item: IStudentSubmission): void {
