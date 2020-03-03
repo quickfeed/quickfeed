@@ -151,7 +151,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 separator = " ";
             }
 
-            const nameLink = <span><a href={this.props.courseURL
+            const nameLink = <span key={"s" + i} ><a href={this.props.courseURL
                  + user.getLogin() + "-labs"} target="_blank">{ user.getName() }</a>{separator}</span>;
             names.push(nameLink);
             });

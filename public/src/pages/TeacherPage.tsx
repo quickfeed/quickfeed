@@ -106,7 +106,7 @@ export class TeacherPage extends ViewPage {
                     </BootstrapButton>;
                     break;
             }
-            return <div>
+            return <div key="head">
                 <h1>Overview for {course.getName()}</h1>
                 {button}
             </div>;

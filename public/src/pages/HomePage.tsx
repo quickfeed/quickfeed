@@ -8,10 +8,10 @@ export class HomePage extends ViewPage {
     }
 
     public async renderContent(page: string): Promise<JSX.Element> {
-        return <div className="container">
+        return <div key="container" className="container">
 
-            <div className="row marketing">
-                <div className="col-lg-4">
+            <div key="rowheader" className="row marketing">
+                <div key="gh" className="col-lg-4">
                     <img
                         className="img-circle"
                         src="/img/GitHub-Mark-120px-plus.png"
@@ -27,7 +27,7 @@ export class HomePage extends ViewPage {
                         <a className="btn btn-default" href="#versioncontrol" role="button">View details »</a>
                     </p>
                 </div>
-                <div className="col-lg-4">
+                <div key="ci" className="col-lg-4">
 
                     <img
                         className="img-circle"
@@ -47,7 +47,7 @@ export class HomePage extends ViewPage {
                         </a>
                     </p>
                 </div>
-                <div className="col-lg-4">
+                <div key="grade" className="col-lg-4">
                     <img
                         className="img-circle"
                         src="/img/Aplus2.png"
@@ -66,8 +66,8 @@ export class HomePage extends ViewPage {
             </div>
             <section id="autograder">
                 <hr className="featurette-divider" />
-                <div className="row featurette">
-                    <div className="col-md-7">
+                <div key="row1" className="row featurette">
+                    <div key="c1r1" className="col-md-7">
                         <h2 className="featurette-heading">
                             Autograder: <span className="text-muted">Automated student feedback</span>
                         </h2>
@@ -87,7 +87,7 @@ export class HomePage extends ViewPage {
                             tool in the grading process.
                         </p>
                     </div>
-                    <div className="col-md-5">
+                    <div key="c2r1" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
                             src="/img/intro1.png"
@@ -99,14 +99,14 @@ export class HomePage extends ViewPage {
             <section id="versioncontrol">
 
                 <hr className="featurette-divider" />
-                <div className="row featurette">
-                    <div className="col-md-5">
+                <div key="row2" className="row featurette">
+                    <div key="c1r2" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
                             src="/img/intro3.png"
                             alt="Generic placeholder image" />
                     </div>
-                    <div className="col-md-7">
+                    <div key="c2r2" className="col-md-7">
                         <h2 className="featurette-heading">
                             GitHub Integration: <span className="text-muted">Managing courses and students</span>
                         </h2>
@@ -123,8 +123,8 @@ export class HomePage extends ViewPage {
             <section id="ci">
 
                 <hr className="featurette-divider" />
-                <div className="row featurette">
-                    <div className="col-md-7">
+                <div key="row3" className="row featurette">
+                    <div key="c1r3" className="col-md-7">
                         <h2 className="featurette-heading">
                             Continuous Integration: <span className="text-muted">builds and tests student code. </span>
                         </h2>
@@ -137,7 +137,7 @@ export class HomePage extends ViewPage {
                             and tell students about their progress on the assignments.
                         </p>
                     </div>
-                    <div className="col-md-5">
+                    <div key="c2r3" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
                             src="/img/intro4.png"
@@ -149,14 +149,14 @@ export class HomePage extends ViewPage {
             <section id="grading">
 
                 <hr className="featurette-divider" />
-                <div className="row featurette">
-                    <div className="col-md-5">
+                <div key="row4" className="row featurette">
+                    <div key="c1r4" className="col-md-5">
                         <img
                             className="featurette-image img-responsive"
                             src="/img/intro2.png"
                             alt="Generic placeholder image" />
                     </div>
-                    <div className="col-md-7">
+                    <div key="c2r4" className="col-md-7">
                         <h2 className="featurette-heading">
                             Grading: <span className="text-muted">Easy and Fair</span>
                         </h2>
@@ -179,8 +179,8 @@ export class HomePage extends ViewPage {
 
     public async renderMenu(index: number): Promise<JSX.Element[]> {
         if (index === 1) {
-            return [<div id="0" className="jumbotron">
-                <div className="centerblock container">
+            return [<div key="jb" id="0" className="jumbotron">
+                <div key="cblock" className="centerblock container">
                     <h1>Automated student feedback</h1>
                     <p>
                         <strong>Autograder </strong>

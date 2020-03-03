@@ -77,7 +77,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             <div>
                 <h1>Result: {this.props.course.getName()}</h1>
                 <Row>
-                    <div className="col-lg6 col-md-6 col-sm-12">
+                    <div key="resultshead" className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
                             placeholder="Search for students"
                             onChange={(query) => this.handleOnchange(query)}
@@ -87,7 +87,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                             selector={(item: IAssignmentLink) => this.getResultSelector(item)}
                         />
                     </div>
-                    <div className="col-lg-6 col-md-6 col-sm-12">
+                    <div key="resultsbody" className="col-lg-6 col-md-6 col-sm-12">
                         {studentLab}
                     </div>
                 </Row>
