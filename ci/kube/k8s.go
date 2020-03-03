@@ -72,11 +72,8 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 			Name: "cijob" + id,
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: int32Ptr(8),
-			//Parallelism:  int32Ptr(4), //TODO starting with 1 pod, def
-			//Completions:             int32Ptr(10), //TODO  starting with 1 pod, def
-			TTLSecondsAfterFinished: int32Ptr(20),
-			//ActiveDeadlineSeconds:   int64Ptr(1000), // terminate after 1000 sec ?
+			BackoffLimit:            int32Ptr(8),
+			TTLSecondsAfterFinished: int32Ptr(5), //TODO: add ActiveDeadlineSeconds: int64Ptr(1000), terminate after 1000 sec ?
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
@@ -87,11 +84,11 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 							ImagePullPolicy: apiv1.PullIfNotPresent,
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
-									"cpu":    resource.MustParse("100m"),
+									"cpu":    resource.MustParse("100m"), //TODO: test by changing this to "2" and run 8 in parallell
 									"memory": resource.MustParse("100Mi"),
 								},
 								Requests: apiv1.ResourceList{
-									"cpu":    resource.MustParse("100m"),
+									"cpu":    resource.MustParse("100m"), //TODO: test by changing this to "2" and run 8 in parallell
 									"memory": resource.MustParse("100Mi"),
 								},
 							},
@@ -124,31 +121,43 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	if err != nil {
 		return "", err
 	}
-	isJobActive.L.Lock()
+
 	k.jobEvents(*creteadJob, clientset, courseName, int32(1), creteadJob.Name)
-	for k.isActive == 0 {
-		isJobActive.Wait()
-	}
-	k.isActive--
+	k.jobWaitToActive()
+
 	pods, err := clientset.CoreV1().Pods(courseName).List(metav1.ListOptions{
 		LabelSelector: "job-name=" + creteadJob.Name,
 	})
 	if err != nil {
 		return "could not list the pods!", nil
 	}
-	isJobActive.L.Unlock()
 
 	for range pods.Items {
-		isPodDone.L.Lock()
 		k.podEvents(clientset, courseName, creteadJob.Name)
-		for k.isLogReady == 0 {
-			isPodDone.Wait()
-		}
-		k.isLogReady--
-		isPodDone.L.Unlock()
+		k.podWaitToSucc()
 	}
 
 	return k.podLog, nil
+}
+
+//podWaitToSucc waits for the pod to success. The signal will be send from the k.podEvents function
+func (k *K8s) podWaitToSucc() {
+	isPodDone.L.Lock()
+	for k.isLogReady == 0 {
+		isPodDone.Wait()
+	}
+	k.isLogReady--
+	isPodDone.L.Unlock()
+}
+
+//jobWaitToActive waits for the pod to success. The signal will be send from the k.podEvents function
+func (k *K8s) jobWaitToActive() {
+	isJobActive.L.Lock()
+	for k.isActive == 0 {
+		isJobActive.Wait()
+	}
+	k.isActive--
+	isJobActive.L.Unlock()
 }
 
 //DeleteObject deleting ..
@@ -175,6 +184,7 @@ func (k *K8s) DeleteObject(clientset kubernetes.Clientset, namespace string) err
 	}
 }
 
+//jobEvents watch the events of the jobs. If job is active, then sends signal to the jobWaitToActive() method.
 func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32, kubejobname string) {
 	watch, err := clientset.BatchV1().Jobs(namespace).Watch(metav1.ListOptions{
 		LabelSelector: "job-name=" + kubejobname,
@@ -199,7 +209,7 @@ func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namesp
 	}()
 }
 
-//PodLogs returns ...
+//podLogs read the logs of the cuurently running pods.
 func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (string, error) {
 	podLogOpts := apiv1.PodLogOptions{}
 
@@ -220,7 +230,7 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (
 	return str, nil
 }
 
-//PodEvents is ...
+//podEvents watch the pods events, and send signal to the podWaitToSucc() method if pod successed.
 func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) {
 	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
 		LabelSelector: "job-name=" + jobname,
