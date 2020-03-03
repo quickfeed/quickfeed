@@ -5,13 +5,14 @@ import { ILink, NavigationManager, UserManager } from "../../managers";
 import { IUserRelation } from "../../models";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
+import { generateLabRepoLink } from '../../helper';
 
 interface IUserViewerProps {
     users: IUserRelation[];
     isCourseList: boolean;
     userMan?: UserManager;
     navMan?: NavigationManager;
-    courseURL?: string;
+    courseURL: string;
     searchable?: boolean;
     actions?: ILink[];
     optionalActions?: (user: IUserRelation) => ILink[];
@@ -179,7 +180,6 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     // return link to github account if there is no course information, otherwise return link to the student labs repo
     private repoLink(user: string): string {
-        const repoLink = this.props.courseURL + user + "-labs";
-        return this.props.isCourseList ? repoLink : this.gitLink(user);
+        return this.props.isCourseList ? generateLabRepoLink(this.props.courseURL, user) : this.gitLink(user);
     }
 }

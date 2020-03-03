@@ -62,6 +62,7 @@ export class AdminPage extends ViewPage {
 
                 }}
                 linkType={ActionType.InRow}
+                courseURL=""
                 actionClick={
                     (user, link) => {
                         this.handleAdminRoleClick(user);
