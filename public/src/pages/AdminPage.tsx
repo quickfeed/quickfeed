@@ -42,7 +42,7 @@ export class AdminPage extends ViewPage {
             enrol.setStatus(0);
             return {
                 user,
-                link: enrol,
+                enrollment: enrol,
             };
         });
 
