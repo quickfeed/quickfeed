@@ -12,6 +12,7 @@ import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
 import { pbkdf2 } from "crypto";
 import * as grpcWeb from 'grpc-web';
+import { showLoader } from '../loader';
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -66,14 +67,14 @@ export class StudentPage extends ViewPage {
                 navMan={this.navMan}
             />);
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async enroll(navInfo: INavInfo<any>): View {
         await this.setupData();
         const curUser = this.userMan.getCurrentUser();
         if (!curUser) {
-            return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+            return showLoader();
         }
         return <div>
             <h1>Enrollment page</h1>
@@ -98,7 +99,7 @@ export class StudentPage extends ViewPage {
                 onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}
                 onGroupLabClick={(courseId: number, labId: number) => this.handleGroupLabClick(courseId, labId)} />);
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async courseWithLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
@@ -119,7 +120,7 @@ export class StudentPage extends ViewPage {
                 </StudentLab>;
             }
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async courseWithGroupLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
@@ -170,7 +171,7 @@ export class StudentPage extends ViewPage {
             }
 
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async courseMissing(navInfo: INavInfo<{ courseid: number, page: string }>): View {

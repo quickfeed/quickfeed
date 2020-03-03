@@ -10,9 +10,9 @@ import { INavInfo } from "../NavigationHelper";
 import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { IUserRelation } from "../models";
-
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
+import { showLoader } from '../loader';
 
 export class TeacherPage extends ViewPage {
 
@@ -214,7 +214,7 @@ export class TeacherPage extends ViewPage {
                 pagePath={this.pagePath}
             />;
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
@@ -244,7 +244,7 @@ export class TeacherPage extends ViewPage {
                 groupData={group}
             />;
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
@@ -377,7 +377,7 @@ export class TeacherPage extends ViewPage {
                 Repository.Type.SOLUTIONS]);
             return fn(course);
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     private setConfirmString(approve: boolean): string {
