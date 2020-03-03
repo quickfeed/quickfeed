@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Course, Enrollment } from "../../../proto/ag_pb";
 import { DynamicTable } from "../../components";
-import { IAssignmentLink } from "../../models";
+import { IStudentLabsForCourse } from "../../models";
 
 export interface IEnrollmentViewProps {
-    courses: IAssignmentLink[];
+    courses: IStudentLabsForCourse[];
     onEnrollmentClick: (course: Course) => void;
 }
 
@@ -13,21 +13,21 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
         return <DynamicTable
             data={this.props.courses}
             header={["Course code", "Course Name", "Action"]}
-            selector={(course: IAssignmentLink) => this.createEnrollmentRow(course)}>
+            selector={(course: IStudentLabsForCourse) => this.createEnrollmentRow(course)}>
         </DynamicTable>;
 
     }
 
-    public createEnrollmentRow(course: IAssignmentLink):
-        (string | JSX.Element)[] {
-        const base: (string | JSX.Element)[] = [course.course.getCode(), course.course.getName()];
-        if (course.link) {
-            if (course.link.getStatus() === Enrollment.UserStatus.STUDENT
-                 || course.link.getStatus() === Enrollment.UserStatus.TEACHER) {
+    public createEnrollmentRow(course: IStudentLabsForCourse):
+        Array<string | JSX.Element> {
+        const base: Array<string | JSX.Element> = [course.course.getCode(), course.course.getName()];
+        if (course.enrollment) {
+            if (course.enrollment.getStatus() === Enrollment.UserStatus.STUDENT
+                 || course.enrollment.getStatus() === Enrollment.UserStatus.TEACHER) {
                 base.push("");
-            } else if (course.link.getStatus() === Enrollment.UserStatus.PENDING) {
+            } else if (course.enrollment.getStatus() === Enrollment.UserStatus.PENDING) {
                 base.push("Pending");
-            } else if (course.link.getStatus() === Enrollment.UserStatus.NONE) {
+            } else if (course.enrollment.getStatus() === Enrollment.UserStatus.NONE) {
                 base.push(
                     <button
                         onClick={() => { this.props.onEnrollmentClick(course.course); }}

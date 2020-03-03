@@ -258,10 +258,10 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     }
 
     private userValidate(curUser: IUserRelation | undefined): boolean {
-        if (curUser && curUser.link.getStatus() === Enrollment.UserStatus.TEACHER) {
+        if (curUser && curUser.enrollment.getStatus() === Enrollment.UserStatus.TEACHER) {
             return true
         } else {
-            return curUser ? curUser.link.getStatus() === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser) : false
+            return curUser ? curUser.enrollment.getStatus() === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser) : false
         }
     }
 

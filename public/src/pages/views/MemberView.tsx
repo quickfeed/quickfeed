@@ -65,7 +65,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 [],
                 ActionType.InRow,
                 (user: IUserRelation) => {
-                    return this.generateUserButtons(user.link);
+                    return this.generateUserButtons(user.enrollment);
                 });
         }
     }
@@ -79,7 +79,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 [],
                 ActionType.InRow,
                 (user: IUserRelation) => {
-                    return this.generateUserButtons(user.link);
+                    return this.generateUserButtons(user.enrollment);
                 });
         }
     }
@@ -123,11 +123,15 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     private async handleAccept(userRel: IUserRelation) {
-        const result = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
-        if (result.getCode() === 0) {
-            userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
-        } else {
-            this.generateErrorMessage(result);
+        const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.STUDENT);
+        if (result) {
+            userRel.enrollment.setStatus(Enrollment.UserStatus.STUDENT);
+            const i = this.state.pendingUsers.indexOf(userRel);
+            if (i >= 0) {
+                this.state.pendingUsers.splice(i, 1);
+                this.state.acceptedUsers.push(userRel);
+            }
+            this.props.navMan.refresh();
         }
     }
 
@@ -147,9 +151,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
             if (readyToDelete) {
                 const result =
-            await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.NONE);
-                if (result.getCode() === 0) {
-                    switch (userRel.link.getStatus()) {
+            await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.NONE);
+                if (result) {
+                    switch (userRel.enrollment.getStatus()) {
                         case Enrollment.UserStatus.PENDING:
                             const i = this.state.pendingUsers.indexOf(userRel);
                             if (i >= 0) {
@@ -163,7 +167,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                             }
                             break;
                         default:
-                            console.log("Got wrong user status " + userRel.link.getStatus + " when rejecting");
+                            console.log("Got wrong user status " + userRel.enrollment.getStatus + " when rejecting");
                     }
                 } else {
                     this.generateErrorMessage(result);
@@ -177,12 +181,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             `Are you sure you want to promote
             ${userRel.user.getName()} to teacher status?`,
         )) {
-            const ans = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.TEACHER);
-            if (ans.getCode() === 0) {
-                userRel.link.setStatus(Enrollment.UserStatus.TEACHER);
-            } else {
-                this.generateErrorMessage(ans);
-            }
+            this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.TEACHER);
         }
     }
 
@@ -191,12 +190,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             `Warning! ${userRel.user.getName()} is a teacher.
             Do you want to demote ${userRel.user.getName()} to student?`,
         )) {
-            const ans = await this.props.courseMan.changeUserState(userRel.link, Enrollment.UserStatus.STUDENT);
-            if (ans.getCode() === 0) {
-                userRel.link.setStatus(Enrollment.UserStatus.STUDENT);
-            } else {
-                this.generateErrorMessage(ans);
-            }
+            this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.STUDENT);
         }
     }
 

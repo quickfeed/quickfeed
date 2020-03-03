@@ -1,38 +1,38 @@
 import * as React from "react";
 import { formatDate } from "../../helper";
-import { IAssignmentLink, IStudentSubmission } from "../../models";
+import { IStudentLabsForCourse, IStudentLab } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {
-    courseAndLabs: IAssignmentLink;
-    groupAndLabs?: IAssignmentLink;
+    courseAndLabs: IStudentLabsForCourse;
+    groupAndLabs?: IStudentLabsForCourse;
     onLabClick: (courseId: number, labId: number) => void;
     onGroupLabClick: (courseId: number, labId: number) => void;
 }
 
-export class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps, any> {
+export class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps> {
     public render() {
-        let groupLabs: IStudentSubmission[] = [];
+        let groupLabs: IStudentLab[] = [];
         if (this.props.groupAndLabs !== undefined) {
-            groupLabs = this.props.groupAndLabs.assignments;
+            groupLabs = this.props.groupAndLabs.labs;
         }
-        let submissionArray = this.buildInfo(this.props.courseAndLabs.assignments, groupLabs);
+        let submissionArray = this.buildInfo(this.props.courseAndLabs.labs, groupLabs);
 
         // Fallback if the length of grouplabs and userlabs is different.
         if (!submissionArray) {
-            submissionArray = this.props.courseAndLabs.assignments;
+            submissionArray = this.props.courseAndLabs.labs;
         }
 
         const labs: JSX.Element[] = submissionArray.map((submission, k) => {
             let submissionInfo = <div>No submissions</div>;
-            if (submission.latest) {
+            if (submission.submission) {
                 submissionInfo = <div className="row">
                     <div className="col-md-6 col-lg-8">
-                        <ProgressBar progress={submission.latest.score} />
+                        <ProgressBar progress={submission.submission.score} />
                     </div>
                     <div className="col-md-3 col-lg-2" >
-                        <span className="text-success"> Passed: {submission.latest.passedTests} </span>
-                        <span className="text-danger"> Failed: {submission.latest.failedTests} </span>
+                        <span className="text-success"> Passed: {submission.submission.passedTests} </span>
+                        <span className="text-danger"> Failed: {submission.submission.failedTests} </span>
                     </div>
                     <div className="col-md-3 col-lg-2">
                         Deadline:
@@ -69,9 +69,9 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
             </div >
         );
     }
-    private buildInfo(studentLabs: IStudentSubmission[], groupLabs: IStudentSubmission[]):
-     IStudentSubmission[] | null {
-        const labAndGrouplabs: IStudentSubmission[] = [];
+    private buildInfo(studentLabs: IStudentLab[], groupLabs: IStudentLab[]):
+     IStudentLab[] | null {
+        const labAndGrouplabs: IStudentLab[] = [];
         if (studentLabs.length !== groupLabs.length) {
             return null;
         }

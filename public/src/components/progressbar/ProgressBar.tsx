@@ -4,7 +4,7 @@ interface IProgressBarProps {
     progress: number;
 }
 
-export class ProgressBar extends React.Component<IProgressBarProps, any> {
+export class ProgressBar extends React.Component<IProgressBarProps> {
 
     public render() {
         const progressBarStyle = {
