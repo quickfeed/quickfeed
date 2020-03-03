@@ -61,6 +61,11 @@ func (db *GormDB) GetEnrollmentsByCourse(courseID uint64, statuses ...pb.Enrollm
 	return db.getEnrollments(&pb.Course{ID: courseID}, statuses...)
 }
 
+// GetEnrollmentsByUser returns all existing enrollments for the given user
+func (db *GormDB) GetEnrollmentsByUser(userID uint64) ([]*pb.Enrollment, error) {
+	return db.getEnrollments(&pb.User{ID: userID})
+}
+
 // getEnrollments is generic helper function that return enrollments for either course and user.
 func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
 	if len(statuses) == 0 {
@@ -71,7 +76,7 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 		}
 	}
 	var enrollments []*pb.Enrollment
-	if err := db.conn.Preload("User").Preload("Course").Model(model).
+	if err := db.conn.Preload("User").Preload("Course").Preload("Group").Model(model).
 		Where("status in (?)", statuses).
 		Association("Enrollments").
 		Find(&enrollments).Error; err != nil {
