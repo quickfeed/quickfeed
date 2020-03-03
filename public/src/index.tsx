@@ -28,6 +28,7 @@ import { UserPage } from "./pages/UserPage";
 
 import { AddMenu } from "./components/navigation/AddMenu";
 import { GrpcManager } from "./managers/GRPCManager";
+import { showLoader } from './loader';
 
 interface IAutoGraderState {
     activePage?: ViewPage;
@@ -149,7 +150,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         if (this.state.activePage) {
             return this.state.currentContent;
         } else {
-            return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+            return showLoader();
         }
     }
 
@@ -157,7 +158,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         if (this.state.activePage) {
             return this.renderTemplate(this.state.activePage, this.state.activePage.template);
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     private handleClick(link: ILink) {
@@ -185,7 +186,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
             this.currentBodyContent = await page.renderContent(subPage);
             return this.currentBodyContent;
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     private checkLinks(links: ILink[]): void {
