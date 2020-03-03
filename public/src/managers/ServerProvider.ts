@@ -11,9 +11,9 @@ import {
     Void,
 } from "../../proto/ag_pb";
 import {
-    IAssignmentLink,
+    IStudentLabsForCourse,
     IBuildInfo,
-    IStudentSubmission,
+    IStudentLab,
     ISubmission,
     ITestCases,
     IUser,
@@ -231,7 +231,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IAssignmentLink[]> {
+    public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
         const result = await this.grpcHelper.getCourseLabSubmissions(courseID, groupLabs);
         if (result.status.getCode() !== 0 || !result.data) {
             return [];
@@ -240,18 +240,18 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const results = result.data.getLabsList();
         const labCourse = new Course();
         labCourse.setId(courseID);
-        const labs: IAssignmentLink[] = [];
+        const labs: IStudentLabsForCourse[] = [];
         for (const studentLabs of results) {
-            const subs: IStudentSubmission[] = [];
+            const subs: IStudentLab[] = [];
             const allSubs = studentLabs.getSubmissionsList();
             if (allSubs) {
                 for (const lab of allSubs) {
                     // populate student submissions
                     const labAssignment = new Assignment();
                     labAssignment.setId(lab.getAssignmentid());
-                    const ILab: IStudentSubmission = {
+                    const ILab: IStudentLab = {
                         assignment:  labAssignment,
-                        latest: this.toISubmission(lab),
+                        submission: this.toISubmission(lab),
                         authorName: studentLabs.getAuthorname(),
                     };
                     subs.push(ILab);
@@ -262,10 +262,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             if (!enrol) {
                 enrol = new Enrollment();
             }
-            const labLink: IAssignmentLink = {
+            const labLink: IStudentLabsForCourse = {
                 course: labCourse,
-                link: enrol,
-                assignments: subs,
+                enrollment: enrol,
+                labs: subs,
             };
             labs.push(labLink);
         }

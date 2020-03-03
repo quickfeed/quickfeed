@@ -1,9 +1,9 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
-import { IStudentSubmission } from "../../models";
+import { IStudentLab } from "../../models";
 
 interface ILabInfoProps {
-    assignment: IStudentSubmission;
+    assignment: IStudentLab;
     showApprove: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
@@ -12,8 +12,8 @@ interface ILabInfoProps {
 export class LabResultView extends React.Component<ILabInfoProps> {
 
     public render() {
-        if (this.props.assignment.latest) {
-            const latest = this.props.assignment.latest;
+        if (this.props.assignment.submission) {
+            const latest = this.props.assignment.submission;
             const buildLog = latest.buildLog.split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
             return (
                 <div key="labhead" className="col-md-9 col-sm-9 col-xs-12">

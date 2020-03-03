@@ -1,9 +1,9 @@
 import * as React from "react";
-import { IStudentSubmission } from "../../models";
+import { IStudentLab } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
 
 interface IStudentLabProps {
-    assignment: IStudentSubmission;
+    assignment: IStudentLab;
     showApprove: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;

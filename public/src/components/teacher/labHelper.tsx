@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Assignment } from "../../../proto/ag_pb";
-import { IAssignmentLink, IStudentSubmission } from "../../models";
+import { IStudentLabsForCourse, IStudentLab } from "../../models";
 
-export function sortByScore(students: IAssignmentLink[], labs: Assignment[], isGroupLab: boolean): IAssignmentLink[] {
+export function sortByScore(students: IStudentLabsForCourse[], labs: Assignment[], isGroupLab: boolean): IStudentLabsForCourse[] {
     // if no assignments yet, disregard
     if (labs.length < 1) {
         return students;
@@ -26,14 +26,14 @@ export function sortByScore(students: IAssignmentLink[], labs: Assignment[], isG
         assignmentID = latestLab.getId();
         assignmentIndex = labs.indexOf(latestLab);
     }
-    const withSubmission: IAssignmentLink[] = [];
-    const withoutSubmission: IAssignmentLink[] = [];
+    const withSubmission: IStudentLabsForCourse[] = [];
+    const withoutSubmission: IStudentLabsForCourse[] = [];
     // split all students into two arrays: with and without submission to the last lab
     students.forEach((ele) => {
         let hasSubmission = false;
-        ele.assignments.forEach((a) => {
+        ele.labs.forEach((a) => {
             // check if there is a submission for the latest course assignment
-            if (a.assignment.getId() === assignmentID && a.latest) {
+            if (a.assignment.getId() === assignmentID && a.submission) {
                 hasSubmission = true;
             }
         });
@@ -45,8 +45,8 @@ export function sortByScore(students: IAssignmentLink[], labs: Assignment[], isG
     });
     // sort students with submissions
     const sorted = withSubmission.sort((left, right) => {
-        const leftLab = left.assignments[assignmentIndex].latest;
-        const rightLab = right.assignments[assignmentIndex].latest;
+        const leftLab = left.labs[assignmentIndex].submission;
+        const rightLab = right.labs[assignmentIndex].submission;
         if (leftLab && rightLab) {
             if (leftLab.score > rightLab.score) {
                 return -1;
@@ -84,11 +84,11 @@ export function generateGroupRepoLink(groupName: string, courseURL: string): JSX
     return <a href={courseURL + slugify(groupName)} target="_blank">{ groupName }</a>;
 }
 
-export function generateCellClass(lab: IStudentSubmission): string {
-    if (lab.latest && lab.latest.approved) {
+export function generateCellClass(lab: IStudentLab): string {
+    if (lab.submission && lab.submission.approved) {
         return "approved-cell";
     }
     const passing = ((lab.assignment.getScorelimit() > 0)
-     && lab.latest && (lab.latest.score >= lab.assignment.getScorelimit()));
+     && lab.submission && (lab.submission.score >= lab.assignment.getScorelimit()));
     return passing ? "passing" : "";
 }

@@ -3,11 +3,11 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable } from "../../components";
 import { formatDate } from "../../helper";
 import { NavigationManager } from "../../managers/NavigationManager";
-import { IStudentSubmission } from "../../models";
+import { IStudentLab } from "../../models";
 
 interface IPanelProps {
     course: Course;
-    labs: IStudentSubmission[];
+    labs: IStudentLab[];
     navMan: NavigationManager;
 }
 
@@ -26,15 +26,15 @@ export class CoursePanel extends React.Component<IPanelProps> {
                         <DynamicTable
                             header={["Labs", "Score", "Deadline"]}
                             data={this.props.labs}
-                            selector={(item: IStudentSubmission) => {
-                                const score = item.latest ? (item.latest.score.toString() + "%") : "N/A";
+                            selector={(item: IStudentLab) => {
+                                const score = item.submission ? (item.submission.score.toString() + "%") : "N/A";
                                 return [
                                     item.assignment.getName(),
                                     score,
                                     formatDate(item.assignment.getDeadline()),
                                 ];
                             }}
-                            onRowClick={(lab: IStudentSubmission) => {
+                            onRowClick={(lab: IStudentLab) => {
                                 const path = !lab.assignment.getIsgrouplab() ? labPath : glabPath;
                                 this.handleRowClick(path, lab.assignment);
                             }}
