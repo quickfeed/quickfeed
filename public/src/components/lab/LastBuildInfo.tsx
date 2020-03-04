@@ -33,7 +33,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                                 <tr><td>Delivered</td><td>{this.getDeliveredTime()}</td></tr>
                                 <tr><td>Deadline</td><td>{formatDate(this.props.assignment.getDeadline())}</td></tr>
                                 <tr><td>Tests passed</td><td>{this.props.submission.passedTests} / {alltests}</td></tr>
-                                <tr><td>Execution time</td><td>{this.props.submission.executetionTime} ms</td></tr>
+                                <tr><td>Execution time</td><td>{this.formatTime(this.props.submission.executionTime)} seconds </td></tr>
                                 <tr><td>Slip days</td><td>5</td></tr>
                             </tbody>
                         </table>
@@ -50,8 +50,11 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
         if (delivered >= deadline) {
             classString = "past-deadline";
         }
-
         return <div className={classString}>{formatDate(delivered)}</div>;
+    }
+
+    private formatTime(executionTime: number): number {
+        return executionTime / 1000.0;
     }
 
 }

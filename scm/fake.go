@@ -138,7 +138,7 @@ func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error 
 // CreateTeam implements the SCM interface.
 func (s *FakeSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
-	return &Team{ID: 1, Name: "", URL: ""}, nil
+	return &Team{ID: 1, Name: opt.TeamName, URL: ""}, nil
 }
 
 // DeleteTeam implements the SCM interface.

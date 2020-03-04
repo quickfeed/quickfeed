@@ -515,14 +515,14 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// student1 attempts to demote student2, must fail
-	ctx = withUserContext(context.Background(), student1)
+	// TA attempts to demote self, must succeed
+	ctx = withUserContext(context.Background(), ta)
 	if _, err := ags.UpdateEnrollment(ctx, &pb.Enrollment{
-		UserID:   student2.ID,
+		UserID:   ta.ID,
 		CourseID: course.ID,
 		Status:   pb.Enrollment_STUDENT,
-	}); err == nil {
-		t.Error("expected error: 'only course creator can change status of other teachers'")
+	}); err != nil {
+		t.Fatal(err)
 	}
 
 	// student2 attempts to demote course creator, must fail

@@ -32,7 +32,7 @@ var (
 func New(ags *AutograderService, public, httpAddr, scriptPath string, fake bool) {
 	entryPoint := filepath.Join(public, "index.html")
 	if _, err := os.Stat(entryPoint); os.IsNotExist(err) {
-		ags.logger.Fatalf("file note found %s", entryPoint)
+		ags.logger.Fatalf("file not found %s", entryPoint)
 	}
 
 	store := newStore([]byte("secret"))
@@ -165,7 +165,6 @@ func registerFrontend(e *echo.Echo, entryPoint, public string) {
 }
 
 func runWebServer(l *zap.SugaredLogger, e *echo.Echo, httpAddr string) {
-
 	e.Server.WriteTimeout = writeTimeout
 	e.Server.ReadTimeout = readTimeout
 	e.Server.IdleTimeout = idleTimeout

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentSubmission } from "../../models";
+import { Submission } from "../../../proto/ag_pb";
 
 interface ILabInfoProps {
     assignment: IStudentSubmission;

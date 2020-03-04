@@ -143,12 +143,12 @@ type CreateHookOptions struct {
 type OrgHookOptions struct {
 	URL          string
 	Secret       string
-	Organization *pb.Organization
+	Organization string
 }
 
 // TeamOptions contains information about the team and the users of the team.
 type TeamOptions struct {
-	Organization *pb.Organization
+	Organization string
 	TeamName     string
 	TeamID       uint64
 	Users        []string
@@ -156,7 +156,7 @@ type TeamOptions struct {
 
 // TeamMembershipOptions contain information on organization team and associated user
 type TeamMembershipOptions struct {
-	Organization *pb.Organization
+	Organization string
 	TeamID       int64
 	TeamSlug     string // slugified team name
 	Username     string // GitHub username
@@ -165,7 +165,7 @@ type TeamMembershipOptions struct {
 
 // OrgMembershipOptions represent user's membership in organization
 type OrgMembershipOptions struct {
-	Organization *pb.Organization
+	Organization string
 	Username     string // GitHub username
 	Role         string // role can be "admin" (organization owner) or "member"
 }

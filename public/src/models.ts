@@ -62,7 +62,7 @@ export interface ISubmission {
     score: number;
     buildId: number;
     buildDate: Date;
-    executetionTime: number;
+    executionTime: number;
     buildLog: string;
     testCases: ITestCases[];
     approved: boolean;
