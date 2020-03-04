@@ -117,7 +117,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 		},
 	}
 
-	creteadJob, err := jobsClient.Create(confJob)
+	createdJob, err := jobsClient.Create(confJob)
 	if err != nil {
 		return "", err
 	}

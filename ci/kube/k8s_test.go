@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+//dummy comment
 //var KUBERNTES_HOSTNMAE + PORT nr string
 var (
 	home       = homeDir()
@@ -44,7 +45,6 @@ type test struct {
 
 func TestK8sZero(t *testing.T) {
 	const (
-		//script  = `cat /root/work/secreting/aa; echo -n "hello world 0"`
 		script  = `echo -n "hello world 0"`
 		wantOut = "hello world 0"
 	)
@@ -67,7 +67,6 @@ func TestK8sZero(t *testing.T) {
 
 func TestK8sOne(t *testing.T) {
 	const (
-		//script  = `cat /root/work/secreting/aa; echo -n "hello world 0"`
 		script  = `echo -n "hello world 1"`
 		wantOut = "hello world 1"
 	)
@@ -89,7 +88,28 @@ func TestK8sOne(t *testing.T) {
 }
 func TestK8sTwo(t *testing.T) {
 	const (
-		//script  = `cat /root/work/secreting/aa; echo -n "hello world 0"`
+		script  = `echo -n "hello world 2"`
+		wantOut = "hello world 2"
+	)
+
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+
+func TestK8sThree(t *testing.T) {
+	const (
 		script  = `echo -n "hello world 2"`
 		wantOut = "hello world 2"
 	)
@@ -118,26 +138,29 @@ func TestOneA(t *testing.T) {
 		t := newTest(`echo -n "`+strconv.Itoa(i)+`"`, strconv.Itoa(i))
 		tests[i] = *t
 	}
-	var wg sync.WaitGroup
+
+	fmt.Println(tests)
+
 	for i := 0; i < numberOfPods; i++ {
-		wg.Add(1)
-		go func(i int) {
-			tm := "cia" + strconv.Itoa(i)
-			k := newKubeCI()
-			m.Lock()
-			s := tests[i].script
-			out, _ := k.RunKubeJob(context.Background(),
-				&ci.Job{
-					Image:    "golang",
-					Commands: []string{s},
-				}, "agcicd",
-				tm, kubeconfig)
-			tests[i].out = out
-			m.Unlock()
-			wg.Done()
-		}(i)
+		tm := "ci" + strconv.Itoa(i)
+		//tm := "ci-" + getTimeNow() + "-" + strconv.Itoa(i)
+
+		k := newKubeCI()
+
+		fmt.Println(tests[i])
+		//err := newError()
+		s := tests[i].script
+		out, _ := k.RunKubeJob(context.Background(),
+			&ci.Job{
+				Image:    "golang",
+				Commands: []string{s},
+			},
+			tm, kubeconfig)
+
+		tests[i].out = out
+		fmt.Println("Input value: ", s)
 	}
-	wg.Wait()
+
 	for i := 0; i < numberOfPods; i++ {
 		tst := tests[i]
 		if tst.out != tst.wantOut {
@@ -146,9 +169,13 @@ func TestOneA(t *testing.T) {
 	}
 }
 
+func getTimeNow() string {
+	return time.Now().Format("20060102-150405")
+}
+
 func TestDelete(t *testing.T) {
-	jobId := time.Now().Format("20060102-150405") + "-delete"
-	cs, k := setupEnv(t, jobId)
+	namespace := getTimeNow() + "-delete"
+	cs, k := setupEnv(t, namespace)
 	k.DeleteObject(*cs, "agcicd")
 }
 
