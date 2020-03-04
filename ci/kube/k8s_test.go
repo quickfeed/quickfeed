@@ -77,7 +77,7 @@ func testK8s(t *testing.T, echo string) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, course, time.Now().Format("20060102-150405-99999999"), kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, course, time.Now().Format("20060102-150405"), kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func testSequentialK8s(t *testing.T, j int) {
 	}
 
 	for i := 0; i < numberOfPods; i++ {
-		tm := "ci" + strconv.Itoa(i) + strconv.Itoa(j)
+		tm := "ci" + time.Now().Format("20060102-150405-") + strconv.Itoa(i) + strconv.Itoa(j)
 
 		k := newKubeCI()
 		s := tests[i].script
@@ -135,10 +135,6 @@ func testSequentialK8s(t *testing.T, j int) {
 			t.Errorf("have %#v want %#v", tst.out, tst.wantOut)
 		}
 	}
-}
-
-func getTimeNow() string {
-	return time.Now().Format("20060102-150405")
 }
 
 /*func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s) {

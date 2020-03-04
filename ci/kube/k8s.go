@@ -64,7 +64,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	//for now genrate a random secret and put it in the path root/work/volums
 	//TODO: pass data that need to be in secret! and check for RC?
 	go jobsecrets(id, courseName, *clientset, kubeRandomSecret())
-
+	fmt.Println("after secret")
 	//Define the configiration of the job object
 	jobsClient := clientset.BatchV1().Jobs(courseName)
 	confJob := &batchv1.Job{
@@ -72,8 +72,8 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 			Name: "cijob" + id,
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit:            int32Ptr(8),
-			TTLSecondsAfterFinished: int32Ptr(5), //TODO: add ActiveDeadlineSeconds: int64Ptr(1000), terminate after 1000 sec ?
+			BackoffLimit: int32Ptr(8),
+			//TTLSecondsAfterFinished: int32Ptr(5), //TODO: add ActiveDeadlineSeconds: int64Ptr(1000), terminate after 1000 sec ?
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
@@ -121,22 +121,54 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	if err != nil {
 		return "", err
 	}
+	fmt.Println("after job")
+	fmt.Println("created: ", createdJob.Name)
 
 	k.jobEvents(*createdJob, clientset, courseName, int32(1), createdJob.Name)
 	k.jobWaitToActive()
+	fmt.Println("after jobevent")
 
-	pods, err := clientset.CoreV1().Pods(courseName).List(metav1.ListOptions{
+	/*pods, err := clientset.CoreV1().Pods(courseName).List(metav1.ListOptions{
 		LabelSelector: "job-name=" + createdJob.Name,
 	})
 	if err != nil {
 		return "could not list the pods!", nil
 	}
 
-	for range pods.Items {
-		k.podEvents(clientset, courseName, createdJob.Name)
-		k.podWaitToSucc()
+	for range pods.Items {*/
+	k.podEvents(clientset, courseName, createdJob.Name)
+	k.podWaitToSucc()
+	fmt.Println("after podevent")
+	fmt.Println("delete: ", createdJob.Name)
+	//}
+
+	err = jobsClient.Delete(createdJob.Name, &metav1.DeleteOptions{
+		GracePeriodSeconds: int64Ptr(30),
+	})
+	if err != nil {
+		return "", err
 	}
 
+	/*err = jobsClient.DeleteCollection(&metav1.DeleteOptions{
+		GracePeriodSeconds: int64Ptr(30),
+	},
+		metav1.ListOptions{
+			LabelSelector: "job-name=" + createdJob.Name,
+		})
+	if err != nil {
+		return "", err
+	}*/
+
+	err = clientset.CoreV1().Pods("agcicd").DeleteCollection(&metav1.DeleteOptions{
+		GracePeriodSeconds: int64Ptr(30),
+	},
+		metav1.ListOptions{
+			LabelSelector: "job-name=" + createdJob.Name,
+		})
+
+	if err != nil {
+		return err.Error(), nil
+	}
 	return k.podLog, nil
 }
 
@@ -150,7 +182,7 @@ func (k *K8s) podWaitToSucc() {
 	isPodDone.L.Unlock()
 }
 
-//jobWaitToActive waits for the pod to success. The signal will be send from the k.podEvents function
+//jobWaitToActive waits for the pod to success. The signal will be send from the k.jobEvents function
 func (k *K8s) jobWaitToActive() {
 	isJobActive.L.Lock()
 	for k.isActive == 0 {
