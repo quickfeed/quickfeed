@@ -122,18 +122,18 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 		return "", err
 	}
 
-	k.jobEvents(*creteadJob, clientset, courseName, int32(1), creteadJob.Name)
+	k.jobEvents(*createdJob, clientset, courseName, int32(1), createdJob.Name)
 	k.jobWaitToActive()
 
 	pods, err := clientset.CoreV1().Pods(courseName).List(metav1.ListOptions{
-		LabelSelector: "job-name=" + creteadJob.Name,
+		LabelSelector: "job-name=" + createdJob.Name,
 	})
 	if err != nil {
 		return "could not list the pods!", nil
 	}
 
 	for range pods.Items {
-		k.podEvents(clientset, courseName, creteadJob.Name)
+		k.podEvents(clientset, courseName, createdJob.Name)
 		k.podWaitToSucc()
 	}
 
