@@ -279,32 +279,40 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
 	}
 
-	// create user repo, user team, and add user to students team
-	repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
-	if err != nil {
-		s.logger.Errorf("failed to update repos or team membersip for student %s: %s", user.Login, err.Error())
-		return err
-	}
-	s.logger.Debug("Enrolling student: ", user.GetLogin(), " repo and team update done")
-
-	// add student repo to database if SCM interaction above was successful
-	userRepo := pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepositoryID:   repo.ID,
-		UserID:         user.ID,
-		HTMLURL:        repo.WebURL,
-		RepoType:       pb.Repository_USER,
-	}
-
-	// only create database record if there are no user repos
-	// TODO(vera): this can be set as a unique constraint in go tag in proto
-	// but will it be compatible with the database created without this constraint?
-	if dbRepo, _ := s.db.GetRepositories(&userRepo); len(dbRepo) < 1 {
-		if err := s.db.CreateRepository(&userRepo); err != nil {
+	if enrolled.Status == pb.Enrollment_TEACHER {
+		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationID(), user.GetLogin())
+		if err != nil {
+			s.logger.Errorf("Revoking teacher status failed for user %s and course %s: %s", user.Login, course.Name, err)
+		}
+	} else {
+		// create user repo, user team, and add user to students team
+		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
+		if err != nil {
+			s.logger.Errorf("failed to update repos or team membersip for student %s: %s", user.Login, err.Error())
 			return err
 		}
+		s.logger.Debug("Enrolling student: ", user.GetLogin(), " repo and team update done")
+
+		// add student repo to database if SCM interaction above was successful
+		userRepo := pb.Repository{
+			OrganizationID: course.GetOrganizationID(),
+			RepositoryID:   repo.ID,
+			UserID:         user.ID,
+			HTMLURL:        repo.WebURL,
+			RepoType:       pb.Repository_USER,
+		}
+
+		// only create database record if there are no user repos
+		// TODO(vera): this can be set as a unique constraint in go tag in proto
+		// but will it be compatible with the database created without this constraint?
+		if dbRepo, _ := s.db.GetRepositories(&userRepo); len(dbRepo) < 1 {
+			if err := s.db.CreateRepository(&userRepo); err != nil {
+				return err
+			}
+		}
 	}
-	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
+
+	return s.db.EnrollStudent(user.ID, course.ID)
 }
 
 // enrollTeacher promotes the given user to teacher of the given course

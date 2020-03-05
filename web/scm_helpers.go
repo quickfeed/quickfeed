@@ -216,6 +216,7 @@ func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group) error {
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
+// remove user from the organization, delete user repository
 func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *pb.Repository) error {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
 		ID: repo.GetOrganizationID(),
@@ -232,6 +233,30 @@ func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *p
 		return err
 	}
 	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()})
+}
+
+// remove user from teachers team, set organization status from owner to regular member
+func revokeTeacherStatus(ctx context.Context, sc scm.SCM, orgID uint64, userName string) error {
+	// TODO(vera): temp - remove this and pass the organization name directly when the relevant PR is applied
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
+		ID: orgID,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = sc.RemoveTeamMember(ctx, &scm.TeamMembershipOptions{
+		Organization: org.GetPath(),
+		TeamSlug:     scm.TeachersTeam,
+		Username:     userName,
+	})
+
+	err = sc.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
+		Organization: org.GetPath(),
+		Username:     userName,
+		Role:         scm.OrgMember,
+	})
+	return err
 }
 
 // isEmpty ensured that all of the provided repositories are empty
