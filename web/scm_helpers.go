@@ -61,10 +61,11 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group
 	}
 
 	err = sc.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
-		TeamID:     team.ID,
-		Owner:      repo.Owner,
-		Repo:       repo.Path,
-		Permission: scm.RepoPush,
+		TeamID:         team.ID,
+		OrganizationID: org.GetID(),
+		Owner:          repo.Owner,
+		Repo:           repo.Path,
+		Permission:     scm.RepoPush,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
@@ -81,12 +82,12 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group
 }
 
 // deletes group repository and team
-func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID uint64, teamID uint64) error {
+func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID uint64, teamID, orgID uint64) error {
 	if err := sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID}); err != nil {
 		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete repository: %w", err)
 	}
 
-	if err := sc.DeleteTeam(ctx, &scm.TeamOptions{TeamID: teamID}); err != nil {
+	if err := sc.DeleteTeam(ctx, &scm.TeamOptions{TeamID: teamID, OrganizationID: orgID}); err != nil {
 		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete team: %w", err)
 	}
 	return nil
@@ -208,10 +209,9 @@ func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string
 }
 
 func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group) error {
-	opt := &scm.TeamOptions{
-		TeamName: group.Name,
-		TeamID:   group.TeamID,
-		Users:    group.UserNames(),
+	opt := &scm.UpdateTeamOptions{
+		TeamID: group.TeamID,
+		Users:  group.UserNames(),
 	}
 	return sc.UpdateTeamMembers(ctx, opt)
 }

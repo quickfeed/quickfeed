@@ -49,7 +49,7 @@ type SCM interface {
 	// RemoveTeamMember removes team member
 	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions
-	UpdateTeamMembers(context.Context, *TeamOptions) error
+	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 	// GetUserName returns the currently logged in user's login name.
 	GetUserName(context.Context) (string, error)
 	// GetUserNameByID returns the login name of user with the given remoteID.
@@ -143,11 +143,19 @@ type CreateHookOptions struct {
 }
 
 // TeamOptions contains information about the team and the users of the team.
+// It must include either both IDs or both names for the team and organization/
 type TeamOptions struct {
-	Organization string
-	TeamName     string
-	TeamID       uint64
-	Users        []string
+	Organization   string
+	OrganizationID uint64
+	TeamName       string
+	TeamID         uint64
+	Users          []string
+}
+
+// UpdateTeamOptions used when updating team members.
+type UpdateTeamOptions struct {
+	TeamID uint64
+	Users  []string
 }
 
 // TeamMembershipOptions contain information on organization team and associated user
@@ -174,6 +182,7 @@ type CreateClonePathOptions struct {
 }
 
 // AddTeamRepoOptions contains information about the repos to be added to a team.
+// All fields must be provided.
 type AddTeamRepoOptions struct {
 	TeamID     uint64
 	Repo       string
