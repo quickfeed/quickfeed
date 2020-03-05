@@ -155,6 +155,8 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 	gothic.Store = store
 
 	e := echo.New()
+	rou := e.Router()
+	rou.Add("GET", "/:provider", func(echo.Context) error { return nil })
 	c := e.NewContext(r, w)
 
 	if haveSession {
