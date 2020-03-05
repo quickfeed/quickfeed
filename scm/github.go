@@ -343,7 +343,7 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 	}
 
 	// first check whether the team with this name already exists on this organization
-	team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, slug.Make(opt.TeamName))
+	team, _, err := s.client.Teams.GetTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
 	if err != nil {
 		s.logger.Debugf("Team %s not found as expected: %s", opt.TeamName, err)
 	}
@@ -390,23 +390,23 @@ func (s *GithubSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	team, err := s.GetTeam(ctx, opt)
-	if err != nil {
-		return ErrFailedSCM{
-			Method:   "DeleteTeam",
-			Message:  fmt.Sprintf("GitHub team '%s' not found in organization '%s'", opt.TeamName, opt.Organization),
-			GitError: fmt.Errorf("failed to get GitHub team '%s': %w", opt.TeamName, err),
-		}
+
+	var err error
+	if opt.TeamID > 0 {
+		_, err = s.client.Teams.DeleteTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
+
+	} else {
+		_, err = s.client.Teams.DeleteTeamBySlug(ctx, slug.Make(opt.Organization), slug.Make(opt.TeamName))
 	}
 
-	if _, err := s.client.Teams.DeleteTeam(ctx, int64(team.ID)); err != nil {
+	if err != nil {
 		return ErrFailedSCM{
 			Method:   "DeleteTeam",
 			Message:  fmt.Sprintf("failed to delete GitHub team '%s'", opt.TeamName),
 			GitError: fmt.Errorf("failed to get GitHub team '%s': %w", opt.TeamName, err),
 		}
 	}
-	return nil
+	return err
 }
 
 // GetTeam implements the SCM interface
@@ -425,7 +425,7 @@ func (s *GithubSCM) GetTeam(ctx context.Context, opt *TeamOptions) (scmTeam *Tea
 			return nil, fmt.Errorf("GetTeam: failed to get GitHub team by slug '%s': %w", slug, err)
 		}
 	} else {
-		team, _, err = s.client.Teams.GetTeam(ctx, int64(opt.TeamID))
+		team, _, err = s.client.Teams.GetTeamByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID))
 		if err != nil {
 			return nil, fmt.Errorf("GetTeam: failed to get GitHub team by ID '%d': %w", opt.TeamID, err)
 		}
@@ -533,40 +533,32 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 }
 
 // UpdateTeamMembers implements the SCM interface
-func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) error {
+func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOptions) error {
 	if !opt.valid() {
 		return ErrMissingFields{
 			Method:  "UpdateTeamMembers",
 			Message: fmt.Sprintf("%+v", opt),
 		}
 	}
-	groupTeam, _, err := s.client.Teams.GetTeam(ctx, int64(opt.TeamID))
-	if err != nil {
-		return ErrFailedSCM{
-			GitError: err,
-			Method:   "UpdateTeamMember",
-			Message:  fmt.Sprintf("failed to update GitHub team members: team %s not found", opt.TeamName),
-		}
-	}
 
 	// find current team members
-	oldUsers, _, err := s.client.Teams.ListTeamMembers(ctx, groupTeam.GetID(), nil)
+	oldUsers, _, err := s.client.Teams.ListTeamMembers(ctx, int64(opt.TeamID), nil)
 	if err != nil {
 		return ErrFailedSCM{
 			GitError: err,
 			Method:   "UpdateTeamMember",
-			Message:  fmt.Sprintf("failed to get members for team %s", groupTeam.GetName()),
+			Message:  fmt.Sprintf("failed to get members for team ID %d", opt.TeamID),
 		}
 	}
 
 	// check whether group members are already in team; add missing members
 	for _, member := range opt.Users {
-		_, _, err = s.client.Teams.AddTeamMembership(ctx, groupTeam.GetID(), member, nil)
+		_, _, err = s.client.Teams.AddTeamMembership(ctx, int64(opt.TeamID), member, nil)
 		if err != nil {
 			return ErrFailedSCM{
 				GitError: err,
 				Method:   "UpdateTeamMember",
-				Message:  fmt.Sprintf("failed to add user %s to team %s", member, groupTeam.GetName()),
+				Message:  fmt.Sprintf("failed to add user %s to team ID %d", member, opt.TeamID),
 			}
 		}
 
@@ -581,12 +573,12 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) err
 			}
 		}
 		if toRemove {
-			_, err = s.client.Teams.RemoveTeamMembership(ctx, groupTeam.GetID(), teamMember.GetLogin())
+			_, err = s.client.Teams.RemoveTeamMembership(ctx, int64(opt.TeamID), teamMember.GetLogin())
 			if err != nil {
 				return ErrFailedSCM{
 					GitError: err,
 					Method:   "UpdateTeamMember",
-					Message:  fmt.Sprintf("failed to remove user %s from team %s", teamMember.GetLogin(), groupTeam.GetName()),
+					Message:  fmt.Sprintf("failed to remove user %s from team ID %d", teamMember.GetLogin(), opt.TeamID),
 				}
 			}
 		}
@@ -612,7 +604,7 @@ func (s *GithubSCM) AddTeamRepo(ctx context.Context, opt *AddTeamRepoOptions) er
 		}
 	}
 
-	_, err := s.client.Teams.AddTeamRepo(ctx, int64(opt.TeamID), opt.Owner, opt.Repo,
+	_, err := s.client.Teams.AddTeamRepoByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), opt.Owner, opt.Repo,
 		&github.TeamAddTeamRepoOptions{
 			Permission: opt.Permission, // make sure users can pull and push
 		})

@@ -23,9 +23,9 @@ func NewGitlabSCMClient(token string) *GitlabSCM {
 // CreateOrganization implements the SCM interface.
 func (s *GitlabSCM) CreateOrganization(ctx context.Context, opt *CreateOrgOptions) (*pb.Organization, error) {
 	group, _, err := s.client.Groups.CreateGroup(&gitlab.CreateGroupOptions{
-		Name:            &opt.Name,
-		Path:            &opt.Path,
-		VisibilityLevel: getVisibilityLevel(false),
+		Name:       &opt.Name,
+		Path:       &opt.Path,
+		Visibility: getVisibilityLevel(false),
 	}, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (s *GitlabSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 }
 
 // UpdateTeamMembers implements the SCM interface
-func (s *GitlabSCM) UpdateTeamMembers(context.Context, *TeamOptions) error {
+func (s *GitlabSCM) UpdateTeamMembers(context.Context, *UpdateTeamOptions) error {
 	// TODO no implementation provided yet
 	return ErrNotSupported{
 		SCM:    "gitlab",
@@ -249,11 +249,11 @@ func (s *GitlabSCM) CreateCloneURL(opt *CreateClonePathOptions) string {
 	return ""
 }
 
-func getVisibilityLevel(private bool) *gitlab.VisibilityLevelValue {
+func getVisibilityLevel(private bool) *gitlab.VisibilityValue {
 	if private {
-		return gitlab.VisibilityLevel(gitlab.PrivateVisibility)
+		return gitlab.Visibility(gitlab.PrivateVisibility)
 	}
-	return gitlab.VisibilityLevel(gitlab.PublicVisibility)
+	return gitlab.Visibility(gitlab.PublicVisibility)
 }
 
 // UpdateOrgMembership implements the SCM interface

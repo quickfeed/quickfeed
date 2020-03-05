@@ -9,8 +9,8 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/jinzhu/gorm"
-	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
+	echo "github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
 )

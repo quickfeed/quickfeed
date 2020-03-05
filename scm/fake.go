@@ -175,7 +175,7 @@ func (s *FakeSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptio
 }
 
 // UpdateTeamMembers implements the SCM interface.
-func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) error {
+func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/google/go-cmp/cmp"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
 

@@ -6,7 +6,7 @@ import (
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/database"
 	"github.com/jinzhu/gorm"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // JSONuser is a model to improve marshalling of user structure for authentication
