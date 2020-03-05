@@ -158,7 +158,8 @@ type UpdateTeamOptions struct {
 	Users  []string
 }
 
-// TeamMembershipOptions contain information on organization team and associated user
+// TeamMembershipOptions contain information on organization team and associated user.
+// Username and either team ID, or names of both the team and organization must be provided.
 type TeamMembershipOptions struct {
 	Organization string
 	TeamID       int64
