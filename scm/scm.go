@@ -185,10 +185,11 @@ type CreateClonePathOptions struct {
 // AddTeamRepoOptions contains information about the repos to be added to a team.
 // All fields must be provided.
 type AddTeamRepoOptions struct {
-	TeamID     uint64
-	Repo       string
-	Owner      string // Name of the organization. Only used by GitHub.
-	Permission string // Permission level for team members. Can be "push", "pull", "admin".
+	OrganizationID uint64
+	TeamID         uint64
+	Repo           string
+	Owner          string // Name of the organization. Only used by GitHub.
+	Permission     string // Permission level for team members. Can be "push", "pull", "admin".
 }
 
 // Team represents a git Team

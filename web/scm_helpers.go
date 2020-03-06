@@ -61,11 +61,10 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group
 	}
 
 	err = sc.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
-		TeamID:         team.ID,
-		OrganizationID: org.GetID(),
-		Owner:          repo.Owner,
-		Repo:           repo.Path,
-		Permission:     scm.RepoPush,
+		TeamID:     team.ID,
+		Owner:      repo.Owner,
+		Repo:       repo.Path,
+		Permission: scm.RepoPush,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
@@ -247,13 +246,13 @@ func revokeTeacherStatus(ctx context.Context, sc scm.SCM, orgID uint64, userName
 
 	teamOpts := &scm.TeamMembershipOptions{
 		Organization: org.GetPath(),
-		TeamSlug:     scm.TeachersTeam,
+		TeamName:     scm.TeachersTeam,
 		Username:     userName,
 	}
 
 	err = sc.RemoveTeamMember(ctx, teamOpts)
 
-	teamOpts.TeamSlug = scm.StudentsTeam
+	teamOpts.TeamName = scm.StudentsTeam
 	err = sc.AddTeamMember(ctx, teamOpts)
 
 	err = sc.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{

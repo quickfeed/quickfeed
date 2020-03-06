@@ -467,11 +467,11 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 	}
 
 	if opt.TeamID < 1 {
-		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, opt.TeamSlug)
+		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, opt.TeamName)
 		if err != nil {
 			return ErrFailedSCM{
 				Method:   "AddTeamMember",
-				Message:  fmt.Sprintf("failed to get team %s in organization %s", opt.TeamSlug, opt.Organization),
+				Message:  fmt.Sprintf("failed to get team %s in organization %s", opt.TeamName, opt.Organization),
 				GitError: err,
 			}
 		}
@@ -499,11 +499,11 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 	}
 
 	if opt.TeamID < 1 {
-		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, opt.TeamSlug)
+		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, opt.TeamName)
 		if err != nil {
 			return ErrFailedSCM{
 				Method:   "RemoveTeamMember",
-				Message:  fmt.Sprintf("failed to get team %s in organization %s", opt.TeamSlug, opt.Organization),
+				Message:  fmt.Sprintf("failed to get team %s in organization %s", opt.TeamName, opt.Organization),
 				GitError: err,
 			}
 		}
