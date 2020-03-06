@@ -50,9 +50,6 @@ type Database interface {
 	RejectEnrollment(userID, courseID uint64) error
 	// UpdateEnrollmentStatus changes status of the course enrollment for the given user and course.
 	UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enrollment_UserStatus) error
-	// UpdateGroupEnrollment is used to reset group ID when previously aproved group is
-	// being removed or a user is removed from the group
-	UpdateGroupEnrollment(userID, courseID uint64) error
 	// GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error)
 	// GetEnrollmentsByCourse fetches all course enrollments with given statuses.

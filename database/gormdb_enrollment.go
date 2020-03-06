@@ -41,14 +41,6 @@ func (db *GormDB) UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enro
 
 }
 
-// UpdateGroupEnrollment sets GroupID of a student enrollment to 0.
-func (db *GormDB) UpdateGroupEnrollment(userID, courseID uint64) error {
-	return db.conn.
-		Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: courseID, UserID: userID}).
-		Update("group_id", uint64(0)).Error
-}
-
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 func (db *GormDB) GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error) {
 	var enrollment pb.Enrollment
