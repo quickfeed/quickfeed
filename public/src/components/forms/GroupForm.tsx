@@ -261,11 +261,8 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         if (!curUser) {
             return false;
         }
-        if (!((curUser.enrollment.getStatus() === Enrollment.UserStatus.TEACHER) ||
-         (curUser.enrollment.getStatus() === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser)))) {
-            return false;
-         }
-        return true;
+        const status = curUser.enrollment.getStatus();
+        return status === Enrollment.UserStatus.TEACHER || (status === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser));
     }
 
     private getFlashErrors(errors: string[]): JSX.Element {
