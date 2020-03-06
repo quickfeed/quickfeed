@@ -6,6 +6,7 @@ import (
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/ci"
+	"github.com/gosimple/slug"
 )
 
 // rebuildSubmission rebuilds the given assignment and submission.
@@ -47,7 +48,7 @@ func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.L
 		Repo:       repo,
 		CloneURL:   repo.GetHTMLURL(),
 		CommitID:   submission.GetCommitHash(),
-		JobOwner:   name,
+		JobOwner:   slug.Make(name),
 	}
 	ci.RunTests(s.logger, s.db, s.runner, runData)
 	return s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
