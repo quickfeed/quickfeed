@@ -245,11 +245,16 @@ func revokeTeacherStatus(ctx context.Context, sc scm.SCM, orgID uint64, userName
 		return err
 	}
 
-	err = sc.RemoveTeamMember(ctx, &scm.TeamMembershipOptions{
+	teamOpts := &scm.TeamMembershipOptions{
 		Organization: org.GetPath(),
 		TeamSlug:     scm.TeachersTeam,
 		Username:     userName,
-	})
+	}
+
+	err = sc.RemoveTeamMember(ctx, teamOpts)
+
+	teamOpts.TeamSlug = scm.StudentsTeam
+	err = sc.AddTeamMember(ctx, teamOpts)
 
 	err = sc.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
 		Organization: org.GetPath(),
