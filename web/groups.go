@@ -47,7 +47,7 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 
 // DeleteGroup deletes group with the provided ID.
 func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request *pb.GroupRequest) error {
-	group, repos, orgID, err := s.getCourseGroupRepos(request)
+	group, repos, _, err := s.getCourseGroupRepos(request)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (s *AutograderService) deleteGroup(ctx context.Context, sc scm.SCM, request
 				return err
 			}
 		}
-		if err = deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID(), orgID); err != nil {
+		if err = deleteGroupRepoAndTeam(ctx, sc, repo.GetRepositoryID(), group.GetTeamID(), repo.GetOrganizationID()); err != nil {
 			return err
 		}
 	}

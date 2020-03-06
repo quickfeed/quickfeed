@@ -284,7 +284,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
 		if len(repos) > 0 {
 			// repo already exist, update enrollment in database
-			return s.db.EnrollStudent(user.ID, course.ID)
+			return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
 		}
 		// create user repo, user team, and add user to students team
 		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
@@ -313,7 +313,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		}
 	}
 
-	return s.db.EnrollStudent(user.ID, course.ID)
+	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
 }
 
 // enrollTeacher promotes the given user to teacher of the given course

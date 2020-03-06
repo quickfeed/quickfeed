@@ -101,7 +101,7 @@ func (opt TeamOptions) valid() bool {
 
 func (opt TeamMembershipOptions) valid() bool {
 	return (opt.TeamID > 0 ||
-		opt.TeamSlug != "" && opt.Organization != "") &&
+		opt.TeamName != "" && opt.Organization != "") &&
 		opt.Username != ""
 }
 
