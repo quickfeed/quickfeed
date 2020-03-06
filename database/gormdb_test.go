@@ -423,51 +423,6 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	}
 }
 
-func TestGormDBUpdateGroupEnrollment(t *testing.T) {
-	db, cleanup := setup(t)
-	defer cleanup()
-
-	teacher := createFakeUser(t, db, 1)
-	c := pb.Course{OrganizationID: 1}
-	if err := db.CreateCourse(teacher.ID, &c); err != nil {
-		t.Fatal(err)
-	}
-	course, err := db.GetCourseByOrganizationID(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	user := createFakeUser(t, db, 10)
-
-	if err := db.CreateEnrollment(&pb.Enrollment{
-		UserID:   user.ID,
-		CourseID: course.ID,
-		GroupID:  1,
-	}); err != nil {
-		t.Fatal(err)
-	}
-
-	enrolled, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err = db.UpdateGroupEnrollment(user.ID, course.ID); err != nil {
-		t.Fatal(err)
-	}
-	enrolled.GroupID = 0
-
-	updated, err := db.GetEnrollmentByCourseAndUser(enrolled.CourseID, enrolled.UserID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(updated, enrolled) {
-		t.Errorf("have enrollment %+v want %+v", updated, enrolled)
-	}
-
-}
-
 func TestGormDBGetCoursesByUser(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
