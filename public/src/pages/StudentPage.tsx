@@ -106,7 +106,7 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
-            this.selectAssignment(navInfo.params.labid);
+            this.selectAssignment(navInfo.params.labid, false);
             if (this.selectedAssignment) {
                 return <StudentLab
                     assignment={this.selectedAssignment}
@@ -127,7 +127,7 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserGroupCourse) {
-            await this.selectGroupAssignment(navInfo.params.labid);
+            await this.selectAssignment(navInfo.params.labid, true);
             if (this.selectedAssignment) {
                 return <StudentLab
                     assignment={this.selectedAssignment}
@@ -302,18 +302,13 @@ export class StudentPage extends ViewPage {
             (e) => e.course.getId() === course);
     }
 
-    private selectAssignment(labId: number) {
-        if (this.selectedUserCourse) {
-            // TODO: Be carefull not to return anything that sould not be able to be returned
+    private selectAssignment(labId: number, groupLab: boolean) {
+        if (this.selectedUserCourse && !groupLab) {
             this.selectedAssignment = this.selectedUserCourse.labs.find(
                 (e) => e.assignment.getId() === labId,
             );
         }
-    }
-
-    private selectGroupAssignment(labId: number) {
-        if (this.selectedUserGroupCourse) {
-            // TODO: Be carefull not to return anything that sould not be able to be returned
+        if (this.selectedUserGroupCourse && groupLab) {
             this.selectedAssignment = this.selectedUserGroupCourse.labs.find(
                 (e) => e.assignment.getId() === labId,
             );
