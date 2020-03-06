@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Course, Group, User, Status } from '../../../proto/ag_pb';
 import { BootstrapButton, DynamicTable, Search } from "../../components";
-import { bindFunc, RProp } from "../../helper";
+import { bindFunc, RProp, generateLabRepoLink } from '../../helper';
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
 import { generateGroupRepoLink } from "./labHelper";
