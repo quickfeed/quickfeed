@@ -152,7 +152,7 @@ func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) 
 func (s *AutograderService) getUserAndSCMForCourse(ctx context.Context, courseID uint64) (*pb.User, scm.SCM, error) {
 	crs, err := s.getCourse(courseID)
 	if err != nil {
-		return nil, nil, status.Errorf(codes.NotFound, "failed to get course with ID %d: %w", courseID, err)
+		return nil, nil, fmt.Errorf("failed to get course with ID %d: %w", courseID, err)
 	}
 	return s.getUserAndSCM(ctx, crs.GetProvider())
 }

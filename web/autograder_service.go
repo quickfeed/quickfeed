@@ -240,7 +240,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments failed: authentication error: %w", err)
+		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
@@ -435,7 +435,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
+		s.logger.Errorf("DeleteGroup failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	grp, err := s.getGroup(&pb.GetGroupRequest{GroupID: in.GetGroupID()})
