@@ -273,11 +273,6 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 	if err != nil {
 		return err
 	}
-	s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
-	if len(repos) > 0 {
-		// repo already exist, update enrollment in database
-		return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
-	}
 
 	if enrolled.Status == pb.Enrollment_TEACHER {
 		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationID(), user.GetLogin())
@@ -285,6 +280,12 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			s.logger.Errorf("Revoking teacher status failed for user %s and course %s: %s", user.Login, course.Name, err)
 		}
 	} else {
+
+		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
+		if len(repos) > 0 {
+			// repo already exist, update enrollment in database
+			return s.db.EnrollStudent(user.ID, course.ID)
+		}
 		// create user repo, user team, and add user to students team
 		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
 		if err != nil {
