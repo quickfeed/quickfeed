@@ -509,24 +509,22 @@ func (m *Groups) GetGroups() []*Group {
 }
 
 type Course struct {
-	ID              uint64                `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	CourseCreatorID uint64                `protobuf:"varint,2,opt,name=courseCreatorID,proto3" json:"courseCreatorID,omitempty"`
-	Name            string                `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Code            string                `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty"`
-	Year            uint32                `protobuf:"varint,5,opt,name=year,proto3" json:"year,omitempty"`
-	Tag             string                `protobuf:"bytes,6,opt,name=tag,proto3" json:"tag,omitempty"`
-	Provider        string                `protobuf:"bytes,7,opt,name=provider,proto3" json:"provider,omitempty"`
-	OrganizationID  uint64                `protobuf:"varint,8,opt,name=organizationID,proto3" json:"organizationID,omitempty"`
-	Enrolled        Enrollment_UserStatus `protobuf:"varint,9,opt,name=enrolled,proto3,enum=Enrollment_UserStatus" json:"enrolled,omitempty" sql:"-"`
-	Enrollments     []*Enrollment         `protobuf:"bytes,10,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
-	Assignments     []*Assignment         `protobuf:"bytes,12,rep,name=assignments,proto3" json:"assignments,omitempty"`
-	Groups          []*Group              `protobuf:"bytes,13,rep,name=groups,proto3" json:"groups,omitempty"`
-	// or rename all Path fields to something else? See also scm structs.
-	// Name sounds best, but would be misleading
-	OrganizationPath     string   `protobuf:"bytes,14,opt,name=organizationPath,proto3" json:"organizationPath,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID                   uint64                `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	CourseCreatorID      uint64                `protobuf:"varint,2,opt,name=courseCreatorID,proto3" json:"courseCreatorID,omitempty"`
+	Name                 string                `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Code                 string                `protobuf:"bytes,4,opt,name=code,proto3" json:"code,omitempty"`
+	Year                 uint32                `protobuf:"varint,5,opt,name=year,proto3" json:"year,omitempty"`
+	Tag                  string                `protobuf:"bytes,6,opt,name=tag,proto3" json:"tag,omitempty"`
+	Provider             string                `protobuf:"bytes,7,opt,name=provider,proto3" json:"provider,omitempty"`
+	OrganizationID       uint64                `protobuf:"varint,8,opt,name=organizationID,proto3" json:"organizationID,omitempty"`
+	Enrolled             Enrollment_UserStatus `protobuf:"varint,9,opt,name=enrolled,proto3,enum=Enrollment_UserStatus" json:"enrolled,omitempty" sql:"-"`
+	Enrollments          []*Enrollment         `protobuf:"bytes,10,rep,name=enrollments,proto3" json:"enrollments,omitempty"`
+	Assignments          []*Assignment         `protobuf:"bytes,12,rep,name=assignments,proto3" json:"assignments,omitempty"`
+	Groups               []*Group              `protobuf:"bytes,13,rep,name=groups,proto3" json:"groups,omitempty"`
+	OrganizationPath     string                `protobuf:"bytes,14,opt,name=organizationPath,proto3" json:"organizationPath,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
+	XXX_unrecognized     []byte                `json:"-"`
+	XXX_sizecache        int32                 `json:"-"`
 }
 
 func (m *Course) Reset()         { *m = Course{} }
