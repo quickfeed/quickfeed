@@ -60,6 +60,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 
 				// ID field from the parsed yaml is used to set Order, not assignment ID,
 				// or it will cause a database constraint violation (IDs must be unique)
+				// The Name field below is the folder name of the assignment.
 				assignment := &pb.Assignment{
 					CourseID:    courseID,
 					Deadline:    newAssignment.Deadline,
