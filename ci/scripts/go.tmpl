@@ -36,18 +36,6 @@ rm $(find ./ | grep _ag_test.go)
 # echo "Removing `pwd`/go.mod, if any"
 rm -f go.mod
 
-# Create common dir (silently, if already exists)
-mkdir -p /go/tests/common
-
-# Generate new secret.go with new secret value for each run
-cat <<EOF > /go/tests/common/secret.go
-package common
-
-func Secret() string {
-  return "{{ .RandomSecret }}"
-}
-EOF
-
 # Copy tests into student assignments folder for running tests
 cp -r /go/tests/* /go/assignments/
 
