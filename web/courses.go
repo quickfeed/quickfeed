@@ -275,7 +275,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 	}
 
 	if enrolled.Status == pb.Enrollment_TEACHER {
-		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationID(), user.GetLogin())
+		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
 		if err != nil {
 			s.logger.Errorf("Revoking teacher status failed for user %s and course %s: %s", user.Login, course.Name, err)
 		}
