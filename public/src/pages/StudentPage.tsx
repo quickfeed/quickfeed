@@ -111,7 +111,7 @@ export class StudentPage extends ViewPage {
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
-                        return ans;
+                        return ans ? true : false;
                     }}
                     onApproveClick={() => { }}>
                 </StudentLab>;
@@ -134,7 +134,7 @@ export class StudentPage extends ViewPage {
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
-                        return ans;
+                        return ans ? true : false;
                     }}
                     onApproveClick={() => { }}>
                 </StudentLab>;

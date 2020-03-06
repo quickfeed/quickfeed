@@ -23,6 +23,7 @@ import {
     RepositoryRequest,
     Status,
     SubmissionRequest,
+    Submission,
     Submissions,
     UpdateSubmissionRequest,
     URLRequest,
@@ -224,11 +225,11 @@ export class GrpcManager {
         return this.grpcSend<LabResultLinks>(this.agService.getCourseLabSubmissions, request);
     }
 
-    public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Void>> {
+    public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
         const request = new LabRequest();
         request.setAssignmentid(assignmentID);
         request.setSubmissionid(submissionID);
-        return this.grpcSend<Void>(this.agService.rebuildSubmission, request);
+        return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
     }
 
     public updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<IGrpcResponse<Void>> {

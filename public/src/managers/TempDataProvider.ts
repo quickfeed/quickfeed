@@ -298,7 +298,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<boolean> {
+    public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
         throw new Error("Method not implemented");
     }
 
@@ -510,7 +510,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 1",
-                executetionTime: 1,
+                executionTime: 1,
                 score: 75,
 
                 failedTests: 2,
@@ -529,7 +529,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 2",
-                executetionTime: 1,
+                executionTime: 1,
                 score: 75,
 
                 failedTests: 2,
@@ -548,7 +548,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 3",
-                executetionTime: 1,
+                executionTime: 1,
                 score: 75,
 
                 failedTests: 2,
@@ -567,7 +567,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 4",
-                executetionTime: 1,
+                executionTime: 1,
                 score: 75,
 
                 failedTests: 2,
@@ -586,7 +586,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
                 buildDate: new Date(2017, 6, 4),
                 buildLog: "Build log for build 5",
-                executetionTime: 1,
+                executionTime: 1,
                 score: 75,
 
                 failedTests: 2,
