@@ -10,7 +10,7 @@ import (
 	"github.com/autograde/aguis/database"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo-contrib/session"
-	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
 )
