@@ -155,7 +155,7 @@ func TestOneA(t *testing.T) {
 				Image:    "golang",
 				Commands: []string{s},
 			},
-			tm, kubeconfig)
+			"agcicd", tm, kubeconfig)
 
 		tests[i].out = out
 		fmt.Println("Input value: ", s)
