@@ -336,6 +336,7 @@ export class CourseManager {
     /**
      * Add lab submissions for every course lab
      * to the given student or group enrollment.
+     * Used on StudentPage.
      */
     public async fillLinks(courseLabLink: IStudentLabsForCourse, student?: User, group?: Group,  assignments?: Assignment[]): Promise<void> {
         if (!(student || group)) {

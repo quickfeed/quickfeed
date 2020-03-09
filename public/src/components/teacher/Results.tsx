@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, Submission } from "../../../proto/ag_pb";
+import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
@@ -102,10 +102,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IStudentLabsForCourse): Array<string | JSX.Element | ICellElement> {
+    private getResultSelector(student: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
         const user = student.enrollment.getUser();
         const displayName = user ? this.generateUserRepoLink(user.getName(), user.getLogin()) : "";
-        let selector: Array<string | JSX.Element | ICellElement> = [displayName];
+        let selector: (string | JSX.Element | ICellElement)[] = [displayName];
         selector = selector.concat(student.labs.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
                 let cellCss: string = "";

@@ -28,12 +28,12 @@ import {
     UpdateSubmissionRequest,
     URLRequest,
     User,
+    UserRequest,
     Users,
     Void,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
-import { UserRequest } from '../../proto/ag_pb';
 
 export interface IGrpcResponse<T> {
     status: Status;

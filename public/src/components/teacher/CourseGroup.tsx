@@ -75,7 +75,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             <div className="approved-groups">
                 <h3>Approved Groups</h3> {this.editButton()}
                 <DynamicTable
-                    header={["Name", "Members","Status"]}
+                    header={["Name", "Members", "Status"]}
                     data={this.state.approvedGroups}
                     classType={"table-grp"}
                     selector={
@@ -101,8 +101,8 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         );
     }
 
-    private renderRow(group: Group, withLink: boolean): Array<string | JSX.Element> {
-        const selector: Array<string | JSX.Element> = [];
+    private renderRow(group: Group, withLink: boolean): (string | JSX.Element)[] {
+        const selector: (string | JSX.Element)[] = [];
         const groupName = withLink ? generateGroupRepoLink(group.getName(), this.props.courseURL) : group.getName();
         selector.push(groupName, this.getMembers(group.getUsersList()));
         const actionButtonLinks = this.generateGroupButtons(group);

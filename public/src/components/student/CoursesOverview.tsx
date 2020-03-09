@@ -1,7 +1,7 @@
 import * as React from "react";
 import { CoursePanel, Row } from "../../components";
 import { NavigationManager } from "../../managers/NavigationManager";
-import { IStudentLabsForCourse, IStudentLab } from "../../models";
+import { IStudentLabsForCourse } from "../../models";
 
 interface ICourseOverviewProps {
     courseOverview: IStudentLabsForCourse[];
