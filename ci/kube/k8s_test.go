@@ -14,6 +14,8 @@ import (
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 //dummy comment
@@ -171,7 +173,7 @@ func setupEnv(t *testing.T, jobId string) (*kubernetes.Clientset, *kube.K8s) {
 		return nil, nil
 	}
 	return clientset, k
-}*/
+}
 
 func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
