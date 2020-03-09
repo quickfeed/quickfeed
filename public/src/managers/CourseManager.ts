@@ -160,7 +160,7 @@ export class CourseManager {
             }
         }
         for (const link of links) {
-            await this.fillLinks(student, link);
+            await this.fillLinks(link, student);
         }
         return links;
     }
@@ -225,7 +225,7 @@ export class CourseManager {
                 labs: [],
                 course,
             };
-            await this.fillLinksGroup(group, groupCourse);
+            await this.fillLinks(groupCourse, undefined, group);
             return groupCourse;
         }
         return null;
@@ -289,7 +289,9 @@ export class CourseManager {
 
     /**
      * Generates a list with last submission build info
-     * for every course assignment for all course students
+     * for every course assignment for all course students.
+     * Used when displaying all course lab submissions for all
+     * course students on TeacherPage.
      */
     public async fillLabLinks(
         course: Course,
@@ -332,47 +334,38 @@ export class CourseManager {
     }
 
     /**
-     * Add IStudentSubmissions to an IAssignmentLink
+     * Add lab submissions for every course lab
+     * to the given student or group enrollment.
      */
-    public async fillLinks(student: User, studentCourse: IStudentLabsForCourse, assignments?: Assignment[]): Promise<void> {
-        if (!studentCourse.enrollment) {
+    public async fillLinks(courseLabLink: IStudentLabsForCourse, student?: User, group?: Group,  assignments?: Assignment[]): Promise<void> {
+        if (!(student || group)) {
             return;
         }
-        if (!assignments || assignments.length < 1) {
-            assignments = await this.getAssignments(studentCourse.course.getId());
-        }
-        if (assignments.length > 0) {
-            const submissions =
-                await this.courseProvider.getAllLabInfos(studentCourse.course.getId(), student.getId());
 
-            for (const a of assignments) {
-                if (!a.getIsgrouplab()) {
-                    const submission = submissions.find((sub) => sub.assignmentid === a.getId());
-                    studentCourse.labs.push({ assignment: a, submission: submission, authorName: student.getName()});
-                }
+        if (!assignments || assignments.length < 1) {
+            assignments = await this.getAssignments(courseLabLink.course.getId());
+            if (assignments.length < 1) {
+                return;
             }
         }
-    }
+        let submissions : ISubmission[] = [];
+        let labAuthorName = "";
+        if (student) {
+            submissions =
+                await this.courseProvider.getAllLabInfos(courseLabLink.course.getId(), student.getId());
+            labAuthorName = student.getName();
+        }
 
-    /**
-     * Add group submissions to an IAssignmentLink
-     */
-    public async fillLinksGroup(group: Group, groupCourse: IStudentLabsForCourse, assignments?: Assignment[]):
-        Promise<void> {
-        if (!groupCourse.enrollment) {
-            return;
+        if (group) {
+            submissions =
+                await this.courseProvider.getAllGroupLabInfos(courseLabLink.course.getId(), group.getId());
+            labAuthorName = group.getName();
         }
-        if (!assignments || assignments.length < 1) {
-            assignments = await this.getAssignments(groupCourse.course.getId());
-        }
-        if (assignments.length > 0) {
-            const submissions =
-                await this.courseProvider.getAllGroupLabInfos(groupCourse.course.getId(), group.getId());
-            for (const a of assignments) {
-                if (a.getIsgrouplab()) {
-                    const submission = submissions.find((sub) => sub.assignmentid === a.getId());
-                    groupCourse.labs.push({ assignment: a, submission: submission, authorName: group.getName() });
-                }
+
+        for (const a of assignments) {
+            if (!a.getIsgrouplab()) {
+                const lab = submissions.find((sub) => sub.assignmentid === a.getId());
+                courseLabLink.labs.push({ assignment: a, submission: lab, authorName: labAuthorName});
             }
         }
     }
