@@ -62,8 +62,10 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 
 	//for now genrate a random secret and put it in the path root/work/volums
 	//TODO: pass data that need to be in secret! and check for RC?
-	go jobsecrets(id, courseName, *clientset, kubeRandomSecret())
-	fmt.Println("after secret")
+	err = jobsecrets(id, courseName, *clientset, kubeRandomSecret())
+	if err != nil {
+		return "", err
+	}
 	//Define the configiration of the job object
 	jobsClient := clientset.BatchV1().Jobs(courseName)
 	confJob := &batchv1.Job{
@@ -74,7 +76,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 			BackoffLimit:            int32Ptr(8),
 			Parallelism:             int32Ptr(1), //1 is default, change this if the k8s struggling running the scripts
 			Completions:             int32Ptr(1), //1 is default, change this if the k8s struggling running the scripts
-			TTLSecondsAfterFinished: int32Ptr(180),
+			TTLSecondsAfterFinished: int32Ptr(60),
 			ActiveDeadlineSeconds:   int64Ptr(1200), // This depends on how big the tasks are.
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
@@ -123,36 +125,18 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("after job")
-	fmt.Println("created: ", createdJob.Name)
-
-	k.jobEvents(*createdJob, clientset, courseName, int32(1), createdJob.Name)
+	err = k.jobEvents(*createdJob, clientset, courseName, int32(1), createdJob.Name)
+	if err != nil {
+		return "", err
+	}
 	k.jobWaitToActive()
 	fmt.Println("after jobevent")
 
-	k.podEvents(clientset, courseName, createdJob.Name)
-	k.podWaitToSucc()
-
-	/*err = jobsClient.DeleteCollection(&metav1.DeleteOptions{
-		GracePeriodSeconds: int64Ptr(30),
-	},
-		metav1.ListOptions{
-			LabelSelector: "job-name=" + createdJob.Name,
-		})
+	err = k.podEvents(clientset, courseName, createdJob.Name)
 	if err != nil {
 		return "", err
-	}*/
-
-	err = clientset.CoreV1().Pods("agcicd").DeleteCollection(&metav1.DeleteOptions{
-		GracePeriodSeconds: int64Ptr(30),
-	},
-		metav1.ListOptions{
-			LabelSelector: "job-name=" + createdJob.Name,
-		})
-
-	if err != nil {
-		return err.Error(), nil
 	}
+	k.podWaitToSucc()
 	return k.podLog, nil
 }
 
@@ -177,18 +161,18 @@ func (k *K8s) jobWaitToActive() {
 }
 
 //jobEvents watch the events of the jobs. If job is active, then sends signal to the jobWaitToActive() method.
-func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32, kubejobname string) {
+func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32, kubejobname string) error {
 	watch, err := clientset.BatchV1().Jobs(namespace).Watch(metav1.ListOptions{
 		LabelSelector: "job-name=" + kubejobname,
 	})
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 	go func() {
 		for event := range watch.ResultChan() {
 			j, ok := event.Object.(*batchv1.Job)
 			if !ok {
-				log.Fatal("unexpected type")
+				log.Fatal("unexpected type") //TODO need to handle this?
 			}
 			//if j.Status.StartTime != nil {
 			if j.Status.Active == nrOfPods {
@@ -199,6 +183,7 @@ func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namesp
 			}
 		}
 	}()
+	return nil
 }
 
 //podLogs read the logs of the cuurently running pods.
@@ -218,43 +203,48 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (
 		return "", err
 	}
 
-	str := buf.String()
-	return str, nil
+	logsStr := buf.String()
+	return logsStr, nil
 }
 
 //podEvents watch the pods events, and send signal to the podWaitToSucc() method if pod successed.
-func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) {
+func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) error {
 	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
 		LabelSelector: "job-name=" + jobname,
 	})
 	if err != nil {
-		panic(err)
+		return err
 	}
-	go func() {
+	var logError error
+	go func(logError error) {
 		for event := range watch.ResultChan() {
 			pod, ok := event.Object.(*apiv1.Pod)
 			if !ok {
-				panic("unexpected type")
+				log.Fatal("unexpected type")
 			}
 			if pod.Status.Phase == "Succeeded" {
 				isPodDone.L.Lock()
 				k.podLog, err = podLogs(*pod, clientset, namespace)
 				if err != nil {
-					panic(err)
+					logError = err
 				}
 				k.isLogReady++
 				isPodDone.Signal()
 				isPodDone.L.Unlock()
 			}
 			if pod.Status.Phase == apiv1.PodFailed {
-				fmt.Println("POD FAILED manual print") //TODO: What to do? delete and run the job again?
+				logError = err
 			}
 		}
-	}()
+	}(logError)
+	if logError != nil {
+		return err
+	}
+	return nil
 }
 
 //jobsecrets create a secrets.. TODO
-func jobsecrets(secretName string, namespace string, clientset kubernetes.Clientset, pass string) {
+func jobsecrets(secretName string, namespace string, clientset kubernetes.Clientset, pass string) error {
 	newSec := &apiv1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
@@ -271,24 +261,25 @@ func jobsecrets(secretName string, namespace string, clientset kubernetes.Client
 	}
 	_, err := clientset.CoreV1().Secrets(namespace).Create(newSec)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func kubeRandomSecret() string {
 	randomness := make([]byte, 10)
 	_, err := rand.Read(randomness)
 	if err != nil {
-		panic("couldn't generate randomness")
+		log.Fatal("couldn't generate randomness")
 	}
 	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }
 
-func resourceUsage() {
+func monitorResourceUsage() error {
 	var kubeconfig string
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	cli, err := metrics.NewForConfig(config)
@@ -296,7 +287,7 @@ func resourceUsage() {
 	podMetrics, err := cli.MetricsV1beta1().PodMetricses(metav1.NamespaceAll).List(metav1.ListOptions{})
 	if err != nil {
 		fmt.Println("Error:", err)
-		return
+		return err
 	}
 
 	for _, podMetric := range podMetrics.Items {
@@ -305,11 +296,12 @@ func resourceUsage() {
 			cpuQuantity, ok := container.Usage.Cpu().AsInt64()
 			memQuantity, ok := container.Usage.Memory().AsInt64()
 			if !ok {
-				return
+				log.Fatal("couldn'tfind the quntities!")
 			}
 			msg := fmt.Sprintf("Container Name: %s \n CPU usage: %d \n Memory usage: %d", container.Name, cpuQuantity, memQuantity)
 			fmt.Println(msg)
 		}
 
 	}
+	return nil
 }
