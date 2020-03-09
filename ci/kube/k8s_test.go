@@ -137,7 +137,11 @@ func testSequentialK8s(t *testing.T, j int) {
 	}
 }
 
-/*func setupEnv(t *testing.T, namespace string) (*kubernetes.Clientset, *kube.K8s) {
+func getTimeNow() string {
+	return time.Now().Format("20060102-150405")
+}
+
+func setupEnv(t *testing.T, jobId string) (*kubernetes.Clientset, *kube.K8s) {
 	const (
 		script  = `echo -n "hello world"`
 		wantOut = "hello world"
