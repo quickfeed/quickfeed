@@ -155,7 +155,7 @@ func TestOneA(t *testing.T) {
 				Image:    "golang",
 				Commands: []string{s},
 			},
-			tm, kubeconfig)
+			"agcicd", tm, kubeconfig)
 
 		tests[i].out = out
 		fmt.Println("Input value: ", s)
@@ -171,12 +171,6 @@ func TestOneA(t *testing.T) {
 
 func getTimeNow() string {
 	return time.Now().Format("20060102-150405")
-}
-
-func TestDelete(t *testing.T) {
-	namespace := getTimeNow() + "-delete"
-	cs, k := setupEnv(t, namespace)
-	k.DeleteObject(*cs, "agcicd")
 }
 
 func setupEnv(t *testing.T, jobId string) (*kubernetes.Clientset, *kube.K8s) {

@@ -10,7 +10,6 @@ import (
 	"log"
 	"strings"
 	"sync"
-	"time"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -73,7 +72,10 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit:            int32Ptr(8),
-			TTLSecondsAfterFinished: int32Ptr(5), //TODO: add ActiveDeadlineSeconds: int64Ptr(1000), terminate after 1000 sec ?
+			Parallelism:             int32Ptr(1), //1 is default, change this if the k8s struggling running the scripts
+			Completions:             int32Ptr(1), //1 is default, change this if the k8s struggling running the scripts
+			TTLSecondsAfterFinished: int32Ptr(180),
+			ActiveDeadlineSeconds:   int64Ptr(1200), // This depends on how big the tasks are.
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
@@ -84,8 +86,8 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 							ImagePullPolicy: apiv1.PullIfNotPresent,
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
-									"cpu":    resource.MustParse("100m"), //TODO: test by changing this to "2" and run 8 in parallell
-									"memory": resource.MustParse("100Mi"),
+									"cpu":    resource.MustParse("200m"), //TODO: test by changing this to "2" and run 8 in parallell
+									"memory": resource.MustParse("200Mi"),
 								},
 								Requests: apiv1.ResourceList{
 									"cpu":    resource.MustParse("100m"), //TODO: test by changing this to "2" and run 8 in parallell
@@ -125,17 +127,8 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 	k.jobEvents(*createdJob, clientset, courseName, int32(1), createdJob.Name)
 	k.jobWaitToActive()
 
-	pods, err := clientset.CoreV1().Pods(courseName).List(metav1.ListOptions{
-		LabelSelector: "job-name=" + createdJob.Name,
-	})
-	if err != nil {
-		return "could not list the pods!", nil
-	}
-
-	for range pods.Items {
-		k.podEvents(clientset, courseName, createdJob.Name)
-		k.podWaitToSucc()
-	}
+	k.podEvents(clientset, courseName, createdJob.Name)
+	k.podWaitToSucc()
 
 	return k.podLog, nil
 }
@@ -158,30 +151,6 @@ func (k *K8s) jobWaitToActive() {
 	}
 	k.isActive--
 	isJobActive.L.Unlock()
-}
-
-//DeleteObject deleting ..
-func (k *K8s) DeleteObject(clientset kubernetes.Clientset, namespace string) error {
-	ticker := time.NewTicker(24 * time.Hour)
-	for {
-		<-ticker.C
-		jobs, err := clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{})
-		if err != nil {
-			return err
-		}
-		if len(jobs.Items) > 0 {
-			for _, job := range jobs.Items {
-				err := clientset.BatchV1().Jobs(namespace).Delete(job.Name, &metav1.DeleteOptions{
-					GracePeriodSeconds: int64Ptr(30),
-				})
-				if err != nil {
-					return err
-				}
-			}
-		} else {
-			return nil
-		}
-	}
 }
 
 //jobEvents watch the events of the jobs. If job is active, then sends signal to the jobWaitToActive() method.
@@ -293,8 +262,8 @@ func kubeRandomSecret() string {
 }
 
 func resourceUsage() {
-	var kubeconfig, master string //empty, assuming inClusterConfig
-	config, err := clientcmd.BuildConfigFromFlags(master, kubeconfig)
+	var kubeconfig string
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		panic(err)
 	}
