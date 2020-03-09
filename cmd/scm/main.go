@@ -470,7 +470,7 @@ func deleteTeams(client *scm.SCM) cli.ActionFunc {
 
 			for _, team := range teams {
 				var errs []error
-				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamID: team.ID}); err != nil {
+				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: team.Name, Organization: c.String("namespace")}); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted team", team.Name)
