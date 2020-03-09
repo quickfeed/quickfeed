@@ -55,7 +55,7 @@ func TestK8sZero(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", "mytest02" /* time.Now().Format("20060102-150405-99999999") */, kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
