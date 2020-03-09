@@ -49,8 +49,31 @@ type test struct {
 	script, wantOut, out string
 }
 
+<<<<<<< HEAD
 func TestK8s(t *testing.T) {
 	testK8s(t, "Hallo World")
+=======
+func TestK8sZero(t *testing.T) {
+	const (
+		script  = `echo -n "hello world 0"`
+		wantOut = "hello world 0"
+	)
+
+	job := &ci.Job{
+		Image:    "golang",
+		Commands: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+>>>>>>> ag_dev
 }
 
 func TestK8s1(t *testing.T) {

@@ -89,11 +89,11 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
 									"cpu":    resource.MustParse("200m"), //TODO: test by changing this to "2" and run 8 in parallell
-									"memory": resource.MustParse("200Mi"),
+									"memory": resource.MustParse("16Mi"),
 								},
 								Requests: apiv1.ResourceList{
 									"cpu":    resource.MustParse("100m"), //TODO: test by changing this to "2" and run 8 in parallell
-									"memory": resource.MustParse("100Mi"),
+									"memory": resource.MustParse("16Mi"),
 								},
 							},
 							VolumeMounts: []apiv1.VolumeMount{
