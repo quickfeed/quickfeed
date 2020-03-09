@@ -11,18 +11,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-//dummy comment
-//var KUBERNTES_HOSTNMAE + PORT nr string
 var (
-	home       = homeDir()
-	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	m          sync.Mutex
+	home   = homeDir()
+	config = &kube.KubeConf{
+		ConfigFlag: flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file"),
+	}
+	m sync.Mutex
 )
 
 func init() { //TODO kube clinet
@@ -49,78 +48,13 @@ func TestK8sZero(t *testing.T) {
 		wantOut = "hello world 0"
 	)
 
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
+	container := &kube.PodContainer{
+		BaseImage:    "golang",
+		ContainerCmd: []string{script},
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sOne(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 1"`
-		wantOut = "hello world 1"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-func TestK8sTwo(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 2"`
-		wantOut = "hello world 2"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
-}
-
-func TestK8sThree(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 2"`
-		wantOut = "hello world 2"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), container, "agcicd", time.Now().Format("20060102-150405-99999999"), config.ConfigFlag)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,6 +65,7 @@ func TestK8sThree(t *testing.T) {
 }
 
 func TestOneA(t *testing.T) {
+
 	numberOfPods := 10
 	tests := make([]test, numberOfPods)
 
@@ -151,11 +86,11 @@ func TestOneA(t *testing.T) {
 		//err := newError()
 		s := tests[i].script
 		out, _ := k.RunKubeJob(context.Background(),
-			&ci.Job{
-				Image:    "golang",
-				Commands: []string{s},
+			&kube.PodContainer{
+				BaseImage:    "golang",
+				ContainerCmd: []string{s},
 			},
-			"agcicd", tm, kubeconfig)
+			"agcicd", tm, config.ConfigFlag)
 
 		tests[i].out = out
 		fmt.Println("Input value: ", s)
@@ -179,19 +114,19 @@ func setupEnv(t *testing.T, jobId string) (*kubernetes.Clientset, *kube.K8s) {
 		wantOut = "hello world"
 	)
 
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
+	container := &kube.PodContainer{
+		BaseImage:    "golang",
+		ContainerCmd: []string{script},
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", jobId, kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), container, "agcicd", jobId, config.ConfigFlag)
 	if err != nil {
 		t.Fatal(err)
 		fmt.Println(out)
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", *config.ConfigFlag)
 	if err != nil {
 		t.Errorf(err.Error())
 		return nil, nil
