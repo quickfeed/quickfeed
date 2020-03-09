@@ -10,8 +10,6 @@ import { IStudentLabsForCourse, IStudentLab } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
-import { pbkdf2 } from "crypto";
-import * as grpcWeb from 'grpc-web';
 import { showLoader } from '../loader';
 
 export class StudentPage extends ViewPage {
@@ -116,7 +114,9 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={() => { }}>
+                    onApproveClick={() => {
+                        return;
+                    }}>
                 </StudentLab>;
             }
         }
@@ -137,7 +137,9 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={() => { }}>
+                    onApproveClick={() => {
+                        return;
+                    }}>
                 </StudentLab>;
             }
         }
@@ -275,14 +277,14 @@ export class StudentPage extends ViewPage {
                         enrollment: enrol,
                         labs: []
                     }
-                    await this.courseMan.fillLinks(curUser, newCourseLink, crs.getAssignmentsList())
+                    await this.courseMan.fillLinks(newCourseLink, curUser, undefined, crs.getAssignmentsList())
                     this.userCourses.push(newCourseLink);
                     if (enrol.getStatus() === Enrollment.UserStatus.STUDENT || enrol.getStatus() === Enrollment.UserStatus.TEACHER) {
                         this.activeUserCourses.push(newCourseLink);
                     }
                     const grp = enrol.getGroup()
                     if (grp) {
-                        await this.courseMan.fillLinksGroup(grp, newCourseLink, crs.getAssignmentsList())
+                        await this.courseMan.fillLinks(newCourseLink, undefined, grp, crs.getAssignmentsList())
                         this.GroupUserCourses.push(newCourseLink);
                     }
                 }
