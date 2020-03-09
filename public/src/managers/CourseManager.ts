@@ -338,7 +338,7 @@ export class CourseManager {
         if (!studentCourse.enrollment) {
             return;
         }
-        if (!assignments || assignments?.length < 1) {
+        if (!assignments || assignments.length < 1) {
             assignments = await this.getAssignments(studentCourse.course.getId());
         }
         if (assignments.length > 0) {
@@ -362,7 +362,7 @@ export class CourseManager {
         if (!groupCourse.enrollment) {
             return;
         }
-        if (!assignments) {
+        if (!assignments || assignments.length < 1) {
             assignments = await this.getAssignments(groupCourse.course.getId());
         }
         if (assignments.length > 0) {
