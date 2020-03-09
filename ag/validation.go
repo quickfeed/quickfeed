@@ -71,9 +71,14 @@ func (c Course) IsValid() bool {
 		c.GetTag() != ""
 }
 
-// IsValid chacks required fields of a user request
+// IsValid checks required fields of a user request
 func (u User) IsValid() bool {
 	return u.GetID() > 0
+}
+
+// IsValid ensures that user ID is set
+func (u UserRequest) IsValid() bool {
+	return u.GetUserID() > 0
 }
 
 // IsValid checks required fields of an enrollment request.
