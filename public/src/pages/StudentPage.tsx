@@ -127,7 +127,7 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserGroupCourse) {
-            await this.selectAssignment(navInfo.params.labid, true);
+            this.selectAssignment(navInfo.params.labid, true);
             if (this.selectedAssignment) {
                 return <StudentLab
                     assignment={this.selectedAssignment}
@@ -247,17 +247,6 @@ export class StudentPage extends ViewPage {
             ];
         }
         return [];
-    }
-
-    private onlyActiveCourses(studentCourse: IStudentLabsForCourse[]): IStudentLabsForCourse[] {
-        const userCourses: IStudentLabsForCourse[] = [];
-        studentCourse.forEach((a) => {
-            if (a.enrollment && (a.enrollment.getStatus() === Enrollment.UserStatus.STUDENT
-                || a.enrollment.getStatus() === Enrollment.UserStatus.TEACHER)) {
-                userCourses.push(a);
-            }
-        });
-        return userCourses;
     }
 
     // Loads and cache information when user enters a page.

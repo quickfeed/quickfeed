@@ -75,7 +75,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             <div>
                 <h1>Result: {this.props.course.getName()}</h1>
                 <Row>
-                    <div className="col-lg6 col-md-6 col-sm-12">
+                    <div key="resulthead" className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
                             placeholder="Search for groups"
                             onChange={(query) => this.handleOnchange(query)}
@@ -85,7 +85,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                             selector={(item: IStudentLabsForCourse) => this.getGroupResultSelector(item)}
                         />
                     </div>
-                    <div className="col-lg-6 col-md-6 col-sm-12">
+                    <div key="resultbody" className="col-lg-6 col-md-6 col-sm-12">
                         {groupLab}
                     </div>
                 </Row>
@@ -99,10 +99,10 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return headers;
     }
 
-    private getGroupResultSelector(group: IStudentLabsForCourse): Array<string | JSX.Element | ICellElement> {
+    private getGroupResultSelector(group: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
         const grp = group.enrollment.getGroup();
         const name = grp ? generateGroupRepoLink(grp.getName(), this.props.courseURL) : "";
-        let selector: Array<string | JSX.Element | ICellElement> = [name];
+        let selector: (string | JSX.Element | ICellElement)[] = [name];
         selector = selector.concat(group.labs.filter((e, i) => e.assignment.getIsgrouplab()).map(
             (e, i) => {
                 let cellCss: string = "";

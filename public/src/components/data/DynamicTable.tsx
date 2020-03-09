@@ -1,5 +1,4 @@
 import * as React from "react";
-import { type } from "os";
 
 interface IDynamicTableProps<T> {
     header: string[];
