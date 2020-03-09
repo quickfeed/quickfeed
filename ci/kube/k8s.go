@@ -19,16 +19,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/api/resource"
-
-	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
-
-	"github.com/autograde/aguis/ci"
 )
 
 // K8s is an implementation of the CI interface using K8s.
 type K8s struct {
 	//Endpoint string
-	//clientset clientset.Interface
 	isActive   int
 	isLogReady int
 	podLog     string
@@ -46,26 +41,24 @@ func int64Ptr(i int64) *int64 { return &i }
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 //TODO: kubeconfig param has to be deleted?
-func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string, id string, kubeconfig *string) (string, error) {
-	// use the current context in kubeconfig TODO: this has to change
+func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName string, id string, kubeconfig *string) (string, error) {
+	// use the current context in kubeconfig TODO: this has to be changed
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
 		return "", err
 	}
-	//K8s clinet
+
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return "", err
 	}
-	//TODO: need to change clientset ?
-	//clientset := K8s{}
 
-	//for now genrate a random secret and put it in the path root/work/volums
 	//TODO: pass data that need to be in secret! and check for RC?
-	err = jobsecrets(id, courseName, *clientset, kubeRandomSecret())
+	err = k.jobsecrets(id, courseName, clientset, kubeRandomSecret())
 	if err != nil {
 		return "", err
 	}
+
 	//Define the configiration of the job object
 	jobsClient := clientset.BatchV1().Jobs(courseName)
 	confJob := &batchv1.Job{
@@ -83,8 +76,8 @@ func (k *K8s) RunKubeJob(ctx context.Context, dockJob *ci.Job, courseName string
 					Containers: []apiv1.Container{
 						{
 							Name:            "cijob" + id,
-							Image:           dockJob.Image,
-							Command:         []string{"/bin/sh", "-c", strings.Join(dockJob.Commands, "\n")},
+							Image:           podRun.BaseImage,
+							Command:         []string{"/bin/sh", "-c", strings.Join(podRun.ContainerCmd, "\n")},
 							ImagePullPolicy: apiv1.PullIfNotPresent,
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
@@ -185,27 +178,6 @@ func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namesp
 	return nil
 }
 
-//podLogs read the logs of the cuurently running pods.
-func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (string, error) {
-	podLogOpts := apiv1.PodLogOptions{}
-
-	req := clientset.CoreV1().Pods(namespace).GetLogs(pod.Name, &podLogOpts)
-	podLogs, err := req.Stream()
-	if err != nil {
-		return "", err
-	}
-	defer podLogs.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, podLogs)
-	if err != nil {
-		return "", err
-	}
-
-	logsStr := buf.String()
-	return logsStr, nil
-}
-
 //podEvents watch the pods events, and send signal to the podWaitToSucc() method if pod successed.
 func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) error {
 	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
@@ -243,7 +215,7 @@ func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobna
 }
 
 //jobsecrets create a secrets.. TODO
-func jobsecrets(secretName string, namespace string, clientset kubernetes.Clientset, pass string) error {
+func (k *K8s) jobsecrets(secretName string, namespace string, clientset *kubernetes.Clientset, pass string) error {
 	newSec := &apiv1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
@@ -265,6 +237,27 @@ func jobsecrets(secretName string, namespace string, clientset kubernetes.Client
 	return nil
 }
 
+//podLogs read the logs of the cuurently running pods.
+func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (string, error) {
+	podLogOpts := apiv1.PodLogOptions{}
+
+	req := clientset.CoreV1().Pods(namespace).GetLogs(pod.Name, &podLogOpts)
+	podLogs, err := req.Stream()
+	if err != nil {
+		return "", err
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		return "", err
+	}
+
+	logsStr := buf.String()
+	return logsStr, nil
+}
+
 func kubeRandomSecret() string {
 	randomness := make([]byte, 10)
 	_, err := rand.Read(randomness)
@@ -272,35 +265,4 @@ func kubeRandomSecret() string {
 		log.Fatal("couldn't generate randomness")
 	}
 	return fmt.Sprintf("%x", sha1.Sum(randomness))
-}
-
-func monitorResourceUsage() error {
-	var kubeconfig string
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		return err
-	}
-
-	cli, err := metrics.NewForConfig(config)
-
-	podMetrics, err := cli.MetricsV1beta1().PodMetricses(metav1.NamespaceAll).List(metav1.ListOptions{})
-	if err != nil {
-		fmt.Println("Error:", err)
-		return err
-	}
-
-	for _, podMetric := range podMetrics.Items {
-		podContainers := podMetric.Containers
-		for _, container := range podContainers {
-			cpuQuantity, ok := container.Usage.Cpu().AsInt64()
-			memQuantity, ok := container.Usage.Memory().AsInt64()
-			if !ok {
-				log.Fatal("couldn'tfind the quntities!")
-			}
-			msg := fmt.Sprintf("Container Name: %s \n CPU usage: %d \n Memory usage: %d", container.Name, cpuQuantity, memQuantity)
-			fmt.Println(msg)
-		}
-
-	}
-	return nil
 }
