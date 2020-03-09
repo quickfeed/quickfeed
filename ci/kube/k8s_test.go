@@ -173,12 +173,6 @@ func getTimeNow() string {
 	return time.Now().Format("20060102-150405")
 }
 
-func TestDelete(t *testing.T) {
-	namespace := getTimeNow() + "-delete"
-	cs, k := setupEnv(t, namespace)
-	k.DeleteObject(*cs, "agcicd")
-}
-
 func setupEnv(t *testing.T, jobId string) (*kubernetes.Clientset, *kube.K8s) {
 	const (
 		script  = `echo -n "hello world"`
