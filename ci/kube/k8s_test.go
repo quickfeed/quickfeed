@@ -14,8 +14,6 @@ import (
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
 	apiv1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 //dummy comment
@@ -49,31 +47,8 @@ type test struct {
 	script, wantOut, out string
 }
 
-<<<<<<< HEAD
 func TestK8s(t *testing.T) {
 	testK8s(t, "Hallo World")
-=======
-func TestK8sZero(t *testing.T) {
-	const (
-		script  = `echo -n "hello world 0"`
-		wantOut = "hello world 0"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	}
->>>>>>> ag_dev
 }
 
 func TestK8s1(t *testing.T) {
@@ -102,7 +77,7 @@ func testK8s(t *testing.T, echo string) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, course, time.Now().Format("20060102-150405"), kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), job, course, time.Now().Format("20060102-150405-")+echo, kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,42 +135,6 @@ func testSequentialK8s(t *testing.T, j int) {
 			t.Errorf("have %#v want %#v", tst.out, tst.wantOut)
 		}
 	}
-}
-
-func getTimeNow() string {
-	return time.Now().Format("20060102-150405")
-}
-
-func setupEnv(t *testing.T, jobId string) (*kubernetes.Clientset, *kube.K8s) {
-	const (
-		script  = `echo -n "hello world"`
-		wantOut = "hello world"
-	)
-
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
-	}
-
-	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, namespace, kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-		fmt.Println(out)
-	}
-
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		t.Errorf(err.Error())
-		return nil, nil
-	}
-	//K8s clinet
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		t.Errorf(err.Error())
-		return nil, nil
-	}
-	return clientset, k
 }
 
 func homeDir() string {
