@@ -351,20 +351,22 @@ export class CourseManager {
         }
         let submissions : ISubmission[] = [];
         let labAuthorName = "";
+        let wantGroupLinks = false;
         if (student) {
             submissions =
                 await this.courseProvider.getAllLabInfos(courseLabLink.course.getId(), student.getId());
             labAuthorName = student.getName();
-        }
-
-        if (group) {
+        } else if (group) {
             submissions =
                 await this.courseProvider.getAllGroupLabInfos(courseLabLink.course.getId(), group.getId());
             labAuthorName = group.getName();
+            wantGroupLinks = true;
+        } else {
+            return;
         }
 
         for (const a of assignments) {
-            if (!a.getIsgrouplab()) {
+            if (a.getIsgrouplab() === wantGroupLinks) {
                 const lab = submissions.find((sub) => sub.assignmentid === a.getId());
                 courseLabLink.labs.push({ assignment: a, submission: lab, authorName: labAuthorName});
             }
