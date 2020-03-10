@@ -49,6 +49,7 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 	logger.Debugf("Running tests for %s", jobName)
 	start := time.Now()
 	out, err := runner.Run(context.Background(), job, jobName)
+	//out, err := KubeRunner.KubeRun(..., info.RandomSecret)
 	if err != nil {
 		logger.Errorf("Test execution failed: %w", err)
 		return
