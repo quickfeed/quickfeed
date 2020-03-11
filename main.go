@@ -64,7 +64,7 @@ var (
 
 func init() {
 	// Register standard server metrics and customized metrics to registry.
-	reg.MustRegister(grpcMetrics, pb.CustomizedCounterMetric)
+	reg.MustRegister(grpcMetrics, pb.CustomizedCounterMetric, pb.CustomizedResponseTimeMetric)
 	pb.CustomizedCounterMetric.WithLabelValues("Test")
 }
 
