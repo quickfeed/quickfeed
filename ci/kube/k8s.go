@@ -65,10 +65,10 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 			Name: "cijob" + id,
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: int32Ptr(8),
-			//Parallelism:  int32Ptr(4), //1 is default, change this if the k8s struggling running the scripts
-			Completions: int32Ptr(2), //1 is default, change this if the k8s struggling running the scripts
-			//TTLSecondsAfterFinished: int32Ptr(60),
+			BackoffLimit:            int32Ptr(8),
+			Parallelism:             int32Ptr(1), //1 is default, change this if the k8s struggling running the scripts
+			Completions:             int32Ptr(1), //1 is default, change this if the k8s struggling running the scripts
+			TTLSecondsAfterFinished: int32Ptr(600),
 			//ActiveDeadlineSeconds:   int64Ptr(1200), // This depends on how big the tasks are.
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
@@ -81,11 +81,11 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
 									"cpu":    resource.MustParse("900m"), //TODO: test by changing this to "2" and run 8 in parallell
-									"memory": resource.MustParse("500Mi"),
+									"memory": resource.MustParse("2Gi"),
 								},
 								Requests: apiv1.ResourceList{
 									"cpu":    resource.MustParse("900m"), //TODO: test by changing this to "2" and run 8 in parallell
-									"memory": resource.MustParse("500Mi"),
+									"memory": resource.MustParse("1Gi"),
 								},
 							},
 							VolumeMounts: []apiv1.VolumeMount{
