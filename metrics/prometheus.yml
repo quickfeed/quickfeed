@@ -1,0 +1,39 @@
+# Sample config for Prometheus.
+
+global:
+  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+      monitor: 'ag_metrics'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets: ['localhost:9096']
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+# scrapes envoy endpoint
+# to access manually run: curl 127.0.0.1:9901/stats
+  - job_name: 'envoy'
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    metrics_path: /stats/prometheus
+    static_configs:
+      - targets: ['localhost:9901']
+
+# scrapes the grpc server
+  - job_name: 'ag_server'
+    scrape_interval: 2s
+    static_configs:
+      - targets: ['localhost:9097']
+  

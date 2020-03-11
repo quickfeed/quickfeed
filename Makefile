@@ -135,3 +135,6 @@ local:
 remote:
 	@echo "Changing grpc client location to remote domain"
 	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
+
+prometheus:
+	sudo prometheus --web.listen-address="0.0.0.0:9095" --config.file=/metrics/prometheus.yml
