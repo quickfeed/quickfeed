@@ -3,8 +3,10 @@ package ag
 import (
 	"context"
 	"reflect"
+	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -22,6 +24,14 @@ type idCleaner interface {
 	RemoveRemoteID()
 }
 
+var (
+	// CustomizedCounterMetric creates a customized prometheus counter metric.
+	CustomizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "ag_server_grpc_method_calls_handle_count",
+		Help: "Total number of RPCs handled on the server.",
+	}, []string{"name"})
+)
+
 // Interceptor returns a new unary server interceptor that validates requests
 // that implements the validator interface.
 // Invalid requests are rejected without logging and before it reaches any
@@ -29,6 +39,8 @@ type idCleaner interface {
 // In addition, the interceptor also implements a cancel mechanism.
 func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		CustomizedCounterMetric.WithLabelValues(strings.Split(info.FullMethod, "/")[2]).Inc()
+
 		if v, ok := req.(validator); ok {
 			if !v.IsValid() {
 				return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
