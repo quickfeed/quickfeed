@@ -3,6 +3,7 @@ package kube
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"strings"
@@ -39,7 +40,7 @@ func int64Ptr(i int64) *int64 { return &i }
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 //TODO: kubeconfig param has to be deleted?
-func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName string, id string, kubeconfig *string /*, randomSecret string */) (string, error) {
+func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName string, id string, kubeconfig *string /*randomSecret string*/) (string, error) {
 	// use the current context in kubeconfig TODO: this has to be changed
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
@@ -52,7 +53,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 	}
 
 	//TODO: pass DATA that need to be in secret! This will be given as a paramter when the RunKubeJob(...) is called in the tests_run.go.
-	err = k.jobsecrets(id, courseName, clientset, kubeRandomSecret())
+	err = k.jobsecrets(id, courseName, clientset, "randomSecret")
 	if err != nil {
 		return "", err
 	}
@@ -64,11 +65,11 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 			Name: "cijob" + id,
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit:            int32Ptr(8),
-			Parallelism:             int32Ptr(1), //1 is default, change this if the k8s struggling running the scripts
-			Completions:             int32Ptr(1), //1 is default, change this if the k8s struggling running the scripts
-			TTLSecondsAfterFinished: int32Ptr(60),
-			ActiveDeadlineSeconds:   int64Ptr(1200), // This depends on how big the tasks are.
+			BackoffLimit: int32Ptr(8),
+			//Parallelism:  int32Ptr(4), //1 is default, change this if the k8s struggling running the scripts
+			Completions: int32Ptr(2), //1 is default, change this if the k8s struggling running the scripts
+			//TTLSecondsAfterFinished: int32Ptr(60),
+			//ActiveDeadlineSeconds:   int64Ptr(1200), // This depends on how big the tasks are.
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
@@ -79,12 +80,12 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 							ImagePullPolicy: apiv1.PullIfNotPresent,
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
-									"cpu":    resource.MustParse("200m"), //TODO: test by changing this to "2" and run 8 in parallell
-									"memory": resource.MustParse("32Mi"),
+									"cpu":    resource.MustParse("900m"), //TODO: test by changing this to "2" and run 8 in parallell
+									"memory": resource.MustParse("500Mi"),
 								},
 								Requests: apiv1.ResourceList{
-									"cpu":    resource.MustParse("100m"), //TODO: test by changing this to "2" and run 8 in parallell
-									"memory": resource.MustParse("16Mi"),
+									"cpu":    resource.MustParse("900m"), //TODO: test by changing this to "2" and run 8 in parallell
+									"memory": resource.MustParse("500Mi"),
 								},
 							},
 							VolumeMounts: []apiv1.VolumeMount{

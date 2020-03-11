@@ -73,13 +73,21 @@ func testK8s(t *testing.T, echo string) {
 	script := `echo -n ` + echo
 	wantOut := echo
 
-	job := &ci.Job{
-		Image:    "golang",
-		Commands: []string{script},
+	container := &kube.PodContainer{
+		BaseImage:    "golang",
+		ContainerCmd: []string{script},
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), job, course, time.Now().Format("20060102-150405-")+echo, kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), container, course, time.Now().Format("20060102-150405-")+echo, kubeconfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
 func TestK8sZero(t *testing.T) {
 	const (
 		script  = `echo -n "hello world 0"`
@@ -92,7 +100,7 @@ func TestK8sZero(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), container, "agcicd", time.Now().Format("20060102-150405-99999999"), config.ConfigFlag)
+	out, err := k.RunKubeJob(context.Background(), container, "agcicd", time.Now().Format("20060102-150405-99999999"), kubeconfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,19 +119,24 @@ func randomSecret() string {
 }
 
 func TestK8sFP(t *testing.T) {
+	tea := time.Now()
+	fmt.Println(tea.Format("20060102-150405"))
 	cloneURL := "https://github.com/dat320-2019/assignments.git"
-	getURLTest := "https://github.com/dat320-2019/tests"
+	getURLTest := "https://github.com/dat320-2019/tests.git"
+
+	jobName := tea.Format("20060102-150405")
+
 	ass := &ci.AssignmentInfo{
-		AssignmentName:     "Lab5",
+		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "course.GetAccessToken()",
+		CreatorAccessToken: "",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       randomSecret(),
+		RandomSecret:       jobName,
 	}
-	jobdock, err := ci.ParseScriptTemplate("ci/scripts", ass)
+	jobdock, err := ci.ParseScriptTemplate("", ass) ///root/work/aguisforYannic/aguis/ci/scripts
 	if err != nil {
 		panic(err)
 	}
@@ -136,7 +149,7 @@ func TestK8sFP(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), container, "agcicd", time.Now().Format("20060102-150405-99999999"), config.ConfigFlag)
+	out, err := k.RunKubeJob(context.Background(), container, "agcicd", jobName, kubeconfig)
 	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)
@@ -147,7 +160,7 @@ func TestK8sFP(t *testing.T) {
 	} else {
 		fmt.Println(wantOut)
 	}
-
+	fmt.Println(time.Since(tea))
 }
 
 func TestSequentials1(t *testing.T) {
