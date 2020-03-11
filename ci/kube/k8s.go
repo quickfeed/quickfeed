@@ -3,9 +3,6 @@ package kube
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
-	"crypto/sha1"
-	"fmt"
 	"io"
 	"log"
 	"strings"
@@ -264,13 +261,4 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (
 
 	logsStr := buf.String()
 	return logsStr, nil
-}
-
-func kubeRandomSecret() string {
-	randomness := make([]byte, 10)
-	_, err := rand.Read(randomness)
-	if err != nil {
-		log.Fatal("couldn't generate randomness")
-	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }

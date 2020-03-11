@@ -39,7 +39,7 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 		logger.Errorf("Failed to construct assignment info: %w", err)
 		return
 	}
-	job, err := parseScriptTemplate(scriptPath, info)
+	job, err := ParseScriptTemplate(scriptPath, info)
 	if err != nil {
 		logger.Errorf("Failed to parse script template: %w", err)
 		return
