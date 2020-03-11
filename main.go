@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"mime"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -20,6 +22,10 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"google.golang.org/grpc"
+
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func init() {
@@ -46,6 +52,26 @@ func envString(env, fallback string) string {
 		return fallback
 	}
 	return e
+}
+
+var (
+	// Create a metrics registry.
+	reg = prometheus.NewRegistry()
+
+	// Create some standard server metrics.
+	grpcMetrics = grpc_prometheus.NewServerMetrics()
+
+	// Create a customized counter metric.
+	customizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "demo_server_say_hello_method_handle_count",
+		Help: "Total number of RPCs handled on the server.",
+	}, []string{"name"})
+)
+
+func init() {
+	// Register standard server metrics and customized metrics to registry.
+	reg.MustRegister(grpcMetrics, customizedCounterMetric)
+	customizedCounterMetric.WithLabelValues("Test")
 }
 
 func main() {
@@ -101,6 +127,14 @@ func main() {
 	}
 	opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
+
+	// Create a HTTP server for prometheus.
+	httpServer := &http.Server{Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}), Addr: fmt.Sprintf("0.0.0.0:%d", 9097)}
+	go func() {
+		if err := httpServer.ListenAndServe(); err != nil {
+			log.Fatal("Unable to start a http server.")
+		}
+	}()
 	pb.RegisterAutograderServiceServer(grpcServer, agService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)

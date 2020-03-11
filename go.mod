@@ -16,6 +16,7 @@ require (
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/gorilla/sessions v1.2.0
 	github.com/gosimple/slug v1.9.0
+	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/jinzhu/gorm v1.9.12
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/labstack/echo-contrib v0.8.1-0.20200115200653-2d4a7f3c41d8
@@ -25,6 +26,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/client_golang v1.1.0
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/tebeka/selenium v0.9.3
 	github.com/urfave/cli v1.22.2
