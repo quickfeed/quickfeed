@@ -30,6 +30,11 @@ var (
 		Name: "ag_server_grpc_method_calls_handle_count",
 		Help: "Total number of RPCs handled on the server.",
 	}, []string{"name"})
+
+	// CustomizedResponseTimeMetric describes response time for grpc methods
+	CustomizedResponseTimeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ag_server_method_response_time",
+	}, []string{"name", "resp_time"})
 )
 
 // Interceptor returns a new unary server interceptor that validates requests
@@ -39,7 +44,9 @@ var (
 // In addition, the interceptor also implements a cancel mechanism.
 func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		CustomizedCounterMetric.WithLabelValues(strings.Split(info.FullMethod, "/")[2]).Inc()
+		methodName := strings.Split(info.FullMethod, "/")[2]
+		start := time.Now()
+		CustomizedCounterMetric.WithLabelValues(methodName).Inc()
 
 		if v, ok := req.(validator); ok {
 			if !v.IsValid() {
@@ -59,6 +66,8 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 				v.RemoveRemoteID()
 			}
 		}
+		elapsed := time.Since(start)
+		CustomizedResponseTimeMetric.WithLabelValues(methodName, elapsed.String())
 		return resp, err
 	}
 }
