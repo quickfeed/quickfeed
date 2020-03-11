@@ -2,11 +2,15 @@ package kube_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha1"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -16,8 +20,6 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 )
 
-//dummy comment
-//var KUBERNTES_HOSTNMAE + PORT nr string
 var (
 	home       = homeDir()
 	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -78,6 +80,64 @@ func testK8s(t *testing.T, echo string) {
 
 	k := newKubeCI()
 	out, err := k.RunKubeJob(context.Background(), job, course, time.Now().Format("20060102-150405-")+echo, kubeconfig)
+func TestK8sZero(t *testing.T) {
+	const (
+		script  = `echo -n "hello world 0"`
+		wantOut = "hello world 0"
+	)
+
+	container := &kube.PodContainer{
+		BaseImage:    "golang",
+		ContainerCmd: []string{script},
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), container, "agcicd", time.Now().Format("20060102-150405-99999999"), config.ConfigFlag)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+func randomSecret() string {
+	randomness := make([]byte, 10)
+	_, err := rand.Read(randomness)
+	if err != nil {
+		log.Fatal("couldn't generate randomness")
+	}
+	return fmt.Sprintf("%x", sha1.Sum(randomness))
+}
+
+func TestK8sFP(t *testing.T) {
+	cloneURL := "https://github.com/dat320-2019/assignments.git"
+	getURLTest := "https://github.com/dat320-2019/tests"
+	ass := &ci.AssignmentInfo{
+		AssignmentName:     "Lab5",
+		Language:           "go",
+		CreatorAccessToken: "course.GetAccessToken()",
+		GetURL:             cloneURL,
+		TestURL:            getURLTest,
+		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
+		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
+		RandomSecret:       randomSecret(),
+	}
+	jobdock, err := ci.ParseScriptTemplate("ci/scripts", ass)
+	if err != nil {
+		panic(err)
+	}
+	wantOut := ""
+	script := jobdock.Commands
+
+	container := &kube.PodContainer{
+		BaseImage:    "golang",
+		ContainerCmd: script,
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), container, "agcicd", time.Now().Format("20060102-150405-99999999"), config.ConfigFlag)
+	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,9 +178,9 @@ func testSequentialK8s(t *testing.T, j int) {
 		k := newKubeCI()
 		s := tests[i].script
 		out, _ := k.RunKubeJob(context.Background(),
-			&ci.Job{
-				Image:    "golang",
-				Commands: []string{s},
+			&kube.PodContainer{
+				BaseImage:    "golang",
+				ContainerCmd: []string{s},
 			},
 			course,
 			tm, kubeconfig)
