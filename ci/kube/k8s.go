@@ -3,13 +3,11 @@ package kube
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
-	"crypto/sha1"
-	"fmt"
 	"io"
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -41,7 +39,7 @@ func int64Ptr(i int64) *int64 { return &i }
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 //TODO: kubeconfig param has to be deleted?
-func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName string, id string, kubeconfig *string) (string, error) {
+func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName string, id string, kubeconfig *string /*, randomSecret string */) (string, error) {
 	// use the current context in kubeconfig TODO: this has to be changed
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
@@ -53,7 +51,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 		return "", err
 	}
 
-	//TODO: pass data that need to be in secret! and check for RC?
+	//TODO: pass DATA that need to be in secret! This will be given as a paramter when the RunKubeJob(...) is called in the tests_run.go.
 	err = k.jobsecrets(id, courseName, clientset, kubeRandomSecret())
 	if err != nil {
 		return "", err
@@ -82,7 +80,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
 									"cpu":    resource.MustParse("200m"), //TODO: test by changing this to "2" and run 8 in parallell
-									"memory": resource.MustParse("16Mi"),
+									"memory": resource.MustParse("32Mi"),
 								},
 								Requests: apiv1.ResourceList{
 									"cpu":    resource.MustParse("100m"), //TODO: test by changing this to "2" and run 8 in parallell
@@ -209,21 +207,28 @@ func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobna
 		}
 	}(logError)
 	if logError != nil {
-		return err
+		return logError
 	}
 	return nil
 }
 
 //jobsecrets create a secrets.. TODO
 func (k *K8s) jobsecrets(secretName string, namespace string, clientset *kubernetes.Clientset, pass string) error {
+	tm := time.Now()
+	timeBeforeDelet := time.Duration(int64(time.Minute))
+	out := tm.Add(timeBeforeDelet)
 	newSec := &apiv1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: namespace,
+			Name:                       secretName,
+			Namespace:                  namespace,
+			DeletionGracePeriodSeconds: int64Ptr(15),
+			DeletionTimestamp: &metav1.Time{
+				Time: out,
+			},
 		},
 		Data: map[string][]byte{
 			secretName: []byte(pass),
@@ -256,13 +261,4 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (
 
 	logsStr := buf.String()
 	return logsStr, nil
-}
-
-func kubeRandomSecret() string {
-	randomness := make([]byte, 10)
-	_, err := rand.Read(randomness)
-	if err != nil {
-		log.Fatal("couldn't generate randomness")
-	}
-	return fmt.Sprintf("%x", sha1.Sum(randomness))
 }

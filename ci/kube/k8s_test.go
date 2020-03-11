@@ -2,15 +2,20 @@ package kube_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha1"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -55,6 +60,51 @@ func TestK8sZero(t *testing.T) {
 
 	k := newKubeCI()
 	out, err := k.RunKubeJob(context.Background(), container, "agcicd", time.Now().Format("20060102-150405-99999999"), config.ConfigFlag)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	}
+}
+func randomSecret() string {
+	randomness := make([]byte, 10)
+	_, err := rand.Read(randomness)
+	if err != nil {
+		log.Fatal("couldn't generate randomness")
+	}
+	return fmt.Sprintf("%x", sha1.Sum(randomness))
+}
+
+func TestK8sFP(t *testing.T) {
+	cloneURL := "https://github.com/dat320-2019/assignments.git"
+	getURLTest := "https://github.com/dat320-2019/tests"
+	ass := &ci.AssignmentInfo{
+		AssignmentName:     "Lab5",
+		Language:           "go",
+		CreatorAccessToken: "course.GetAccessToken()",
+		GetURL:             cloneURL,
+		TestURL:            getURLTest,
+		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
+		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
+		RandomSecret:       randomSecret(),
+	}
+	jobdock, err := ci.ParseScriptTemplate("ci/scripts", ass)
+	if err != nil {
+		panic(err)
+	}
+	wantOut := ""
+	script := jobdock.Commands
+
+	container := &kube.PodContainer{
+		BaseImage:    "golang",
+		ContainerCmd: script,
+	}
+
+	k := newKubeCI()
+	out, err := k.RunKubeJob(context.Background(), container, "agcicd", time.Now().Format("20060102-150405-99999999"), config.ConfigFlag)
+	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)
 	}
