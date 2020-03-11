@@ -15,7 +15,7 @@ agport				:= 8081
 ag2port				:= 3006
 
 # necessary when target is not tied to a file
-.PHONY: dowload install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
+.PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
 
 download:
 	@echo Download go.mod dependencies
