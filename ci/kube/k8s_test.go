@@ -2,12 +2,9 @@ package kube_test
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -15,12 +12,13 @@ import (
 	"github.com/autograde/aguis/ci/kube"
 )
 
-var (
+/* var (
 	home       = homeDir()
 	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	course     = "agcicd"
 	m          sync.Mutex
-)
+) */
+var course = "agcicd"
 
 func newKubeCI() *kube.K8s {
 	return &kube.K8s{}
@@ -51,12 +49,12 @@ func testK8s(t *testing.T, echo string) {
 	wantOut := echo
 
 	container := &kube.PodContainer{
-		BaseImage:    "golang",
-		ContainerCmd: []string{script},
+		Image:    "golang",
+		Commands: []string{script},
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), container, course, time.Now().Format("20060102-150405-")+echo, kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), container, course, time.Now().Format("20060102-150405-")+echo /* , kubeconfig */)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,12 +90,12 @@ func TestK8sFP(t *testing.T) {
 	script := jobdock.Commands
 
 	container := &kube.PodContainer{
-		BaseImage:    "golang",
-		ContainerCmd: script,
+		Image:    "golang",
+		Commands: script,
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), container, "agcicd", jobName, kubeconfig)
+	out, err := k.RunKubeJob(context.Background(), container, "agcicd", jobName /* , kubeconfig */)
 	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)

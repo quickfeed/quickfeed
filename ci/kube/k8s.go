@@ -3,9 +3,12 @@ package kube
 import (
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -28,7 +31,14 @@ type K8s struct {
 	podLog     string
 }
 
+//Sec will contain the secret for running current job
+/* type Sec struct {
+	secret string
+} */
+
 var (
+	home                  = homeDir()
+	kubeconfig            = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "")
 	isJobActive sync.Cond = *sync.NewCond(&sync.Mutex{})
 	isPodDone   sync.Cond = *sync.NewCond(&sync.Mutex{})
 )
@@ -40,7 +50,7 @@ func int64Ptr(i int64) *int64 { return &i }
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 //TODO: kubeconfig param has to be deleted?
-func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName string, id string, kubeconfig *string /*randomSecret string*/) (string, error) {
+func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, id string, courseName string /* , randomSecret string */) (string /* , string */, error) {
 	// use the current context in kubeconfig TODO: this has to be changed
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
@@ -53,7 +63,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 	}
 
 	//TODO: pass DATA that need to be in secret! This will be given as a paramter when the RunKubeJob(...) is called in the tests_run.go.
-	err = k.jobsecrets(id, courseName, clientset, "randomSecret")
+	err = jobsecrets(id, courseName, clientset, "randomSecret")
 	if err != nil {
 		return "", err
 	}
@@ -65,26 +75,26 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 			Name: "cijob" + id,
 		},
 		Spec: batchv1.JobSpec{
-			BackoffLimit: int32Ptr(8),
-			//Parallelism:  int32Ptr(4), //1 is default, change this if the k8s struggling running the scripts
-			//Completions: int32Ptr(2), //1 is default, change this if the k8s struggling running the scripts
-			//TTLSecondsAfterFinished: int32Ptr(60),
-			//ActiveDeadlineSeconds:   int64Ptr(1200), // This depends on how big the tasks are.
+			BackoffLimit:            int32Ptr(8),
+			Parallelism:             int32Ptr(1),
+			Completions:             int32Ptr(1),
+			TTLSecondsAfterFinished: int32Ptr(60),
+			ActiveDeadlineSeconds:   int64Ptr(120000), // change this if jobs can take longer time.
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
 							Name:            "cijob" + id,
-							Image:           podRun.BaseImage,
-							Command:         []string{"/bin/sh", "-c", strings.Join(podRun.ContainerCmd, "\n")},
+							Image:           podRun.Image,
+							Command:         []string{"/bin/sh", "-c", strings.Join(podRun.Commands, "\n")},
 							ImagePullPolicy: apiv1.PullIfNotPresent,
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
-									"cpu":    resource.MustParse("900m"), //TODO: test by changing this to "2" and run 8 in parallell
+									"cpu":    resource.MustParse("900m"),
 									"memory": resource.MustParse("2Gi"),
 								},
 								Requests: apiv1.ResourceList{
-									"cpu":    resource.MustParse("900m"), //TODO: test by changing this to "2" and run 8 in parallell
+									"cpu":    resource.MustParse("700m"),
 									"memory": resource.MustParse("1Gi"),
 								},
 							},
@@ -129,7 +139,16 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 		return "", err
 	}
 	k.podWaitToSucc()
-	return k.podLog, nil
+
+	//get the secert after running the job.
+	//cliSec := &Sec{}
+	//cliSec.secret
+	/* secret, */
+	_, err = getJobSecret(id, courseName, clientset)
+	if err != nil {
+		return "", err
+	}
+	return k.podLog /*  secret, */, nil
 }
 
 //podWaitToSucc waits for the pod to success. The signal will be send from the k.podEvents function
@@ -215,7 +234,7 @@ func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobna
 }
 
 //jobsecrets create a secrets.. TODO
-func (k *K8s) jobsecrets(secretName string, namespace string, clientset *kubernetes.Clientset, pass string) error {
+func jobsecrets(id string, namespace string, clientset *kubernetes.Clientset, pass string) error {
 	tm := time.Now()
 	timeBeforeDelet := time.Duration(int64(time.Minute))
 	out := tm.Add(timeBeforeDelet)
@@ -225,7 +244,7 @@ func (k *K8s) jobsecrets(secretName string, namespace string, clientset *kuberne
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:                       secretName,
+			Name:                       id,
 			Namespace:                  namespace,
 			DeletionGracePeriodSeconds: int64Ptr(15),
 			DeletionTimestamp: &metav1.Time{
@@ -233,7 +252,7 @@ func (k *K8s) jobsecrets(secretName string, namespace string, clientset *kuberne
 			},
 		},
 		Data: map[string][]byte{
-			secretName: []byte(pass),
+			id: []byte(pass),
 		},
 		Type: "Opaque",
 	}
@@ -242,6 +261,15 @@ func (k *K8s) jobsecrets(secretName string, namespace string, clientset *kuberne
 		return err
 	}
 	return nil
+}
+
+func getJobSecret(id string, namespace string, clienset *kubernetes.Clientset) (string, error) {
+	sec, err := clienset.CoreV1().Secrets(namespace).Get(id, metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	extractSecret := sec.Data[id]
+	return string(extractSecret), nil
 }
 
 //podLogs read the logs of the cuurently running pods.
@@ -263,4 +291,11 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (
 
 	logsStr := buf.String()
 	return logsStr, nil
+}
+
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
+	}
+	return os.Getenv("USERPROFILE") // windows
 }

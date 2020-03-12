@@ -1,4 +1,4 @@
-package ci
+package kube
 
 import (
 	"context"
@@ -33,7 +33,7 @@ func (r RunData) String(secret string) string {
 }
 
 // RunTests runs the assignment specified in the provided RunData structure.
-func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rData *RunData) {
+func RunTests(logger *zap.SugaredLogger, db database.Database, runner KubeRunner, rData *RunData) {
 	info, err := createAssignmentInfo(db, rData.Course, rData.Assignment, rData.CloneURL)
 	if err != nil {
 		logger.Errorf("Failed to construct assignment info: %w", err)
@@ -48,14 +48,14 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 	jobName := rData.String(info.RandomSecret[:6])
 	logger.Debugf("Running tests for %s", jobName)
 	start := time.Now()
-	out, err := runner.Run(context.Background(), job, jobName)
+	out /* , sec */, err := runner.RunKubeJob(context.Background(), job, jobName, "agcicd" /*, randomSecret()*/)
 	if err != nil {
 		logger.Errorf("Test execution failed: %w", err)
 		return
 	}
 	execTime := time.Since(start)
 
-	result, err := ExtractResult(logger, out, info.RandomSecret, execTime)
+	result, err := ExtractKubeResult(logger, out, info.RandomSecret, execTime)
 	if err != nil {
 		logger.Errorf("Failed to extract results from log: %w", err)
 		return
