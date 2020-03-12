@@ -496,6 +496,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 // for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
 func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
+	defer pb.GetCourseLabSubmissionsMetric.Observe(1)
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %w", err)
