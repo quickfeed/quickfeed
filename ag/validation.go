@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -23,19 +22,6 @@ type validator interface {
 type idCleaner interface {
 	RemoveRemoteID()
 }
-
-var (
-	// CustomizedCounterMetric creates a customized prometheus counter metric.
-	CustomizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "ag_server_grpc_method_calls_handle_count",
-		Help: "Total number of RPCs handled on the server.",
-	}, []string{"name"})
-
-	// CustomizedResponseTimeMetric describes response time for grpc methods
-	CustomizedResponseTimeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ag_server_method_response_time",
-	}, []string{"name", "resp_time"})
-)
 
 // Interceptor returns a new unary server interceptor that validates requests
 // that implements the validator interface.
