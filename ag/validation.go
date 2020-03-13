@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -32,7 +33,8 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		methodName := strings.Split(info.FullMethod, "/")[2]
 		AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
-		start := time.Now()
+		responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set))
+		defer responseTimer.ObserveDuration().Milliseconds()
 
 		if v, ok := req.(validator); ok {
 			if !v.IsValid() {
@@ -53,8 +55,6 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 				v.RemoveRemoteID()
 			}
 		}
-		elapsed := time.Since(start).Milliseconds()
-		AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set(float64(elapsed))
 		if err != nil {
 			AgFailedMethodsMetric.WithLabelValues(methodName).Inc()
 			AgMethodSuccessRateMetric.WithLabelValues(methodName, "error").Inc()
