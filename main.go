@@ -44,6 +44,10 @@ func init() {
 	mustAddExtensionType(".jsx", "application/javascript")
 	mustAddExtensionType(".map", "application/json")
 	mustAddExtensionType(".ts", "application/x-typescript")
+
+	reg.MustRegister(grpcMetrics, pb.AgFailedMethodsMetric, pb.AgResponsePayloadSizeMetric, pb.AgResponseTimeByMethodsMetric)
+	// to initialize the metric even if no data yet
+	pb.AgFailedMethodsMetric.WithLabelValues("testMethod")
 }
 
 func envString(env, fallback string) string {
@@ -61,12 +65,6 @@ var (
 	// Create some standard server metrics.
 	grpcMetrics = grpc_prometheus.NewServerMetrics()
 )
-
-func init() {
-	// Register standard server metrics and customized metrics to registry.
-	reg.MustRegister(grpcMetrics, pb.CustomizedCounterMetric, pb.CustomizedResponseTimeMetric)
-	pb.CustomizedCounterMetric.WithLabelValues("Test")
-}
 
 func main() {
 	var (
@@ -129,6 +127,7 @@ func main() {
 			log.Fatal("Unable to start a http server.")
 		}
 	}()
+
 	pb.RegisterAutograderServiceServer(grpcServer, agService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)

@@ -32,7 +32,6 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		methodName := strings.Split(info.FullMethod, "/")[2]
 		start := time.Now()
-		CustomizedCounterMetric.WithLabelValues(methodName).Inc()
 
 		if v, ok := req.(validator); ok {
 			if !v.IsValid() {
@@ -52,8 +51,11 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 				v.RemoveRemoteID()
 			}
 		}
-		elapsed := time.Since(start)
-		CustomizedResponseTimeMetric.WithLabelValues(methodName, elapsed.String())
+		elapsed := time.Since(start).Milliseconds()
+		AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set(float64(elapsed))
+		if err != nil {
+			AgFailedMethodsMetric.WithLabelValues(methodName).Inc()
+		}
 		return resp, err
 	}
 }
