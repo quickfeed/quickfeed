@@ -45,7 +45,7 @@ func init() {
 	mustAddExtensionType(".map", "application/json")
 	mustAddExtensionType(".ts", "application/x-typescript")
 
-	reg.MustRegister(grpcMetrics, pb.AgFailedMethodsMetric, pb.AgResponsePayloadSizeMetric, pb.AgResponseTimeByMethodsMetric)
+	reg.MustRegister(grpcMetrics, pb.AgFailedMethodsMetric, pb.AgMethodSuccessRateMetric, pb.AgResponseTimeByMethodsMetric)
 	// to initialize the metric even if no data yet
 	pb.AgFailedMethodsMetric.WithLabelValues("testMethod")
 }

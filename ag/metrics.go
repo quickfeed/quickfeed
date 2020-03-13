@@ -13,8 +13,9 @@ var (
 		Name: "ag_methods_failed",
 	}, []string{"method"})
 
-	// AgResponsePayloadSizeMetric records response size in bytes for every method
-	AgResponsePayloadSizeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ag_payload_size_by_method",
-	}, []string{"method"})
+	// AgMethodSuccessRateMetric counts the amount of calls for every method, allows
+	// grouping by method name and by result ("total", "success", "error")
+	AgMethodSuccessRateMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "ag_method_success_failure_rate",
+	}, []string{"method", "result"})
 )
