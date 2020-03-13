@@ -31,6 +31,7 @@ type idCleaner interface {
 func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		methodName := strings.Split(info.FullMethod, "/")[2]
+		AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
 		start := time.Now()
 
 		if v, ok := req.(validator); ok {
@@ -47,6 +48,7 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 		// if response has information on remote ID, it will be removed
 		resp, err := handler(ctx, req)
 		if resp != nil {
+			AgMethodSuccessRateMetric.WithLabelValues(methodName, "success").Inc()
 			if v, ok := resp.(idCleaner); ok {
 				v.RemoveRemoteID()
 			}
@@ -55,6 +57,7 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 		AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set(float64(elapsed))
 		if err != nil {
 			AgFailedMethodsMetric.WithLabelValues(methodName).Inc()
+			AgMethodSuccessRateMetric.WithLabelValues(methodName, "error").Inc()
 		}
 		return resp, err
 	}
