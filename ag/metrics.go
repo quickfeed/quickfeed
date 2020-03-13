@@ -3,19 +3,18 @@ package ag
 import "github.com/prometheus/client_golang/prometheus"
 
 var (
-	// CustomizedCounterMetric creates a customized prometheus counter metric.
-	CustomizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "ag_server_grpc_method_calls_handle_count",
-		Help: "Total number of RPCs handled on the server.",
-	}, []string{"name"})
+	// AgResponseTimeByMethodsMetric records response time by method name
+	AgResponseTimeByMethodsMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ag_response_time_by_method",
+	}, []string{"method"})
 
-	// CustomizedResponseTimeMetric describes response time for grpc methods
-	CustomizedResponseTimeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ag_server_method_response_time",
-	}, []string{"name"})
+	// AgFailedMethodsMetric counts amount of times every method resulted in error
+	AgFailedMethodsMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "ag_methods_failed",
+	}, []string{"method"})
 
-	// GetCourseLabSubmissionsMetric describes response times for the slowest method
-	GetCourseLabSubmissionsMetric = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "ag_server_GetCourseLabSubmissions_response_time",
-	})
+	// AgResponsePayloadSizeMetric records response size in bytes for every method
+	AgResponsePayloadSizeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "ag_payload_size_by_method",
+	}, []string{"method"})
 )
