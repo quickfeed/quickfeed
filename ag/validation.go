@@ -33,7 +33,9 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		methodName := strings.Split(info.FullMethod, "/")[2]
 		AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
-		responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set))
+		responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
+			AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set),
+		)
 		defer responseTimer.ObserveDuration().Milliseconds()
 
 		if v, ok := req.(validator); ok {
