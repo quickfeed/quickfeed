@@ -29,6 +29,11 @@ import (
 )
 
 func init() {
+	var (
+		// Create some standard server metrics.
+		grpcMetrics = grpc_prometheus.NewServerMetrics()
+	)
+
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
 			panic(err)
@@ -45,9 +50,12 @@ func init() {
 	mustAddExtensionType(".map", "application/json")
 	mustAddExtensionType(".ts", "application/x-typescript")
 
-	reg.MustRegister(grpcMetrics, pb.AgFailedMethodsMetric, pb.AgMethodSuccessRateMetric, pb.AgResponseTimeByMethodsMetric)
-	// to initialize the metric even if no data yet
-	pb.AgFailedMethodsMetric.WithLabelValues("testMethod")
+	reg.MustRegister(
+		grpcMetrics,
+		pb.AgFailedMethodsMetric,
+		pb.AgMethodSuccessRateMetric,
+		pb.AgResponseTimeByMethodsMetric,
+	)
 }
 
 func envString(env, fallback string) string {
@@ -61,9 +69,6 @@ func envString(env, fallback string) string {
 var (
 	// Create a metrics registry.
 	reg = prometheus.NewRegistry()
-
-	// Create some standard server metrics.
-	grpcMetrics = grpc_prometheus.NewServerMetrics()
 )
 
 func main() {
@@ -121,7 +126,10 @@ func main() {
 	grpcServer := grpc.NewServer(opt)
 
 	// Create a HTTP server for prometheus.
-	httpServer := &http.Server{Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}), Addr: fmt.Sprintf("0.0.0.0:%d", 9097)}
+	httpServer := &http.Server{
+		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
+		Addr:    fmt.Sprintf("0.0.0.0:%d", 9097),
+	}
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil {
 			log.Fatal("Unable to start a http server.")
