@@ -31,7 +31,7 @@ type idCleaner interface {
 // In addition, the interceptor also implements a cancel mechanism.
 func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		methodName := strings.Split(info.FullMethod, "/")[2]
+		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
 		AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
 		responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
 			AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set),
