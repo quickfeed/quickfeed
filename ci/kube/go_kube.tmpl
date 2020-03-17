@@ -1,0 +1,52 @@
+#image/golang:latest
+
+echo "*** Preparing for Test Execution ***\n"
+# echo "Current dir: `pwd`"
+# echo "Path: $PATH"
+
+git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+# Fetch student repo
+git clone {{ .GetURL }} assignments
+# Fetch tests repo
+git clone {{ .TestURL }}
+
+
+# Move to folder for assignment to test.
+cd /go/assignments/{{ .AssignmentName }}/
+
+
+# Make sure there are no Autograder tests in the student repo
+rm $(find ./ | grep _ag_test.go)
+
+# echo "Removing `pwd`/go.mod, if any"
+rm -f go.mod
+
+# Secret will be mounted in a file while the container running. 
+cat <<EOF > "/root/work/secreting" #TODO: jobname needs to be added ?
+{{ .RandomSecret }}
+EOF
+
+
+# Copy tests into student assignments folder for running tests
+cp -r /go/tests/* /go/assignments/
+
+# Clear access token and the shell history to avoid leaking information to student test code.
+git config --global url."https://0:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+history -c
+
+# (ensure) Move to folder for assignment to test.
+cd /go/assignments/{{ .AssignmentName }}/
+
+# Perform lab specific setup
+if [ -f "setup.sh" ]; then
+    bash setup.sh
+fi
+
+# Avoid fetching dependencies from proxy.
+export GOPROXY=direct
+
+echo "\n*** Running Tests ***\n"
+go test -v -timeout 30s ./... 2>&1
+echo "\n*** Finished Running Tests ***\n"
+
