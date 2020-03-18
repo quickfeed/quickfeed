@@ -1,4 +1,4 @@
-package kube_test
+package kube
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
+	"go.uber.org/zap"
 )
 
 /* var (
@@ -19,6 +20,8 @@ import (
 	m          sync.Mutex
 ) */
 var course = "agcicd"
+
+var scriptPath = "kube/kube_scripts"
 
 func newKubeCI() *kube.K8s {
 	return &kube.K8s{}
@@ -48,13 +51,13 @@ func testK8s(t *testing.T, echo string) {
 	script := `echo -n ` + echo
 	wantOut := echo
 
-	container := &kube.PodContainer{
+	container := &kube.Container{
 		Image:    "golang",
 		Commands: []string{script},
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), container, course, time.Now().Format("20060102-150405-")+echo /* , kubeconfig */)
+	out, err := k.KRun(context.Background(), container, course, time.Now().Format("20060102-150405-")+echo /* , kubeconfig */)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,23 +85,34 @@ func TestK8sFP(t *testing.T) {
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
 		RandomSecret:       jobName,
 	}
-	jobdock, err := ci.ParseScriptTemplate("", ass) ///root/work/aguisforYannic/aguis/ci/scripts
+	//jobdock, err := ci.ParseScriptTemplate("", ass)         ///root/work/aguisforYannic/aguis/ci/scripts
+	jobdock, err := ci.ParseScriptTemplate(scriptPath, ass) ///root/work/aguisforYannic/aguis/ci/scripts
 	if err != nil {
 		panic(err)
 	}
 	wantOut := ""
 	script := jobdock.Commands
 
-	container := &kube.PodContainer{
+	container := &kube.Container{
 		Image:    "golang",
 		Commands: script,
 	}
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), container, "agcicd", jobName /* , kubeconfig */)
+	//out, err := k.KRun(context.Background(), container, "agcicd", jobName, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
+	out, err := k.KRun(context.Background(), container, "agcicd", jobName, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
 	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	res, err := ExtractKubeResult(zap.NewNop().Sugar(), out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(res.BuildInfo.BuildLog, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73") {
+		t.Fatal("build log contains secret")
+		t.Logf("res %+v", res.BuildInfo)
 	}
 
 	if out != wantOut {

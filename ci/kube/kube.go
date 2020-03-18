@@ -4,14 +4,14 @@ import (
 	"context"
 )
 
-// Job describes how to execute a CI job.
-type PodContainer struct {
+//Container describes how to execute a CI job.
+type Container struct {
 	Image    string
 	Commands []string
 }
 
-// Runner contains methods for running user provided code in isolation.
-type KubeRunner interface {
+//KRunner contains methods for running user provided code in isolation.
+type KRunner interface {
 	// RunKubeJob should synchronously execute the described job and return the output.
-	RunKubeJob(context.Context, *PodContainer, string, string /* , string */) (string /* , string */, error)
+	KRun(context.Context, *Container, string, string, string) (string, error)
 }

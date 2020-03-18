@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	scriptPath = "ci/scripts"
+	scriptPath = "kube/kube_scripts"
 )
 
 type RunData struct {
@@ -33,7 +33,7 @@ func (r RunData) String(secret string) string {
 }
 
 // RunTests runs the assignment specified in the provided RunData structure.
-func RunTests(logger *zap.SugaredLogger, db database.Database, runner KubeRunner, rData *RunData) {
+func RunTests(logger *zap.SugaredLogger, db database.Database, runner KRunner, rData *RunData) {
 	info, err := createAssignmentInfo(db, rData.Course, rData.Assignment, rData.CloneURL)
 	if err != nil {
 		logger.Errorf("Failed to construct assignment info: %w", err)
@@ -48,7 +48,7 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner KubeRunner
 	jobName := rData.String(info.RandomSecret[:6])
 	logger.Debugf("Running tests for %s", jobName)
 	start := time.Now()
-	out /* , sec */, err := runner.RunKubeJob(context.Background(), job, jobName, "agcicd" /*, randomSecret()*/)
+	out, err := runner.KRun(context.Background(), job, jobName, "agcicd", randomSecret())
 	if err != nil {
 		logger.Errorf("Test execution failed: %w", err)
 		return

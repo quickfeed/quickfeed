@@ -46,11 +46,11 @@ var (
 func int32Ptr(i int32) *int32 { return &i }
 func int64Ptr(i int64) *int64 { return &i }
 
-//RunKubeJob runs the rescieved push from repository on the podes in our 3 nodes.
+//KRun runs the rescieved push from repository on the podes in our 3 nodes.
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
 //TODO: kubeconfig param has to be deleted?
-func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, id string, courseName string /* , randomSecret string */) (string /* , string */, error) {
+func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName string, secretAg string) (string, error) {
 	// use the current context in kubeconfig TODO: this has to be changed
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
@@ -63,7 +63,7 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, id string, c
 	}
 
 	//TODO: pass DATA that need to be in secret! This will be given as a paramter when the RunKubeJob(...) is called in the tests_run.go.
-	err = jobsecrets(id, courseName, clientset, "randomSecret")
+	err = jobsecrets(id, courseName, clientset, secretAg)
 	if err != nil {
 		return "", err
 	}
@@ -144,11 +144,11 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, id string, c
 	//cliSec := &Sec{}
 	//cliSec.secret
 	/* secret, */
-	_, err = getJobSecret(id, courseName, clientset)
-	if err != nil {
-		return "", err
-	}
-	return k.podLog /*  secret, */, nil
+	/* 	_, err = getJobSecret(id, courseName, clientset)
+	   	if err != nil {
+	   		return "", err
+	   	} */
+	return k.podLog, nil
 }
 
 //podWaitToSucc waits for the pod to success. The signal will be send from the k.podEvents function
