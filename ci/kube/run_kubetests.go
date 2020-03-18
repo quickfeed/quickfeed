@@ -18,6 +18,7 @@ const (
 	scriptPath = "kube/kube_scripts"
 )
 
+//RunData contains..
 type RunData struct {
 	Course     *pb.Course
 	Assignment *pb.Assignment
@@ -39,7 +40,7 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner KRunner, r
 		logger.Errorf("Failed to construct assignment info: %w", err)
 		return
 	}
-	job, err := ParseScriptTemplate(scriptPath, info)
+	job, err := ParseKubeScriptTemplate(scriptPath, info)
 	if err != nil {
 		logger.Errorf("Failed to parse script template: %w", err)
 		return

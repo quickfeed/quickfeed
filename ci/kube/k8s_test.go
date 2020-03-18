@@ -1,4 +1,4 @@
-package kube
+package kube_test
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
 	"go.uber.org/zap"
 )
@@ -55,9 +54,9 @@ func testK8s(t *testing.T, echo string) {
 		Image:    "golang",
 		Commands: []string{script},
 	}
-
+	jobName := time.Now().Format("20060102-150405-") + echo
 	k := newKubeCI()
-	out, err := k.KRun(context.Background(), container, course, time.Now().Format("20060102-150405-")+echo /* , kubeconfig */)
+	out, err := k.KRun(context.Background(), container, course, jobName, jobName /* , kubeconfig */)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +74,7 @@ func TestK8sFP(t *testing.T) {
 
 	jobName := tea.Format("20060102-150405")
 
-	ass := &ci.AssignmentInfo{
+	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
 		CreatorAccessToken: "166f3712bbd32a6750c436244f74d031c0c91257",
@@ -86,7 +85,7 @@ func TestK8sFP(t *testing.T) {
 		RandomSecret:       jobName,
 	}
 	//jobdock, err := ci.ParseScriptTemplate("", ass)         ///root/work/aguisforYannic/aguis/ci/scripts
-	jobdock, err := ci.ParseScriptTemplate(scriptPath, ass) ///root/work/aguisforYannic/aguis/ci/scripts
+	jobdock, err := kube.ParseKubeScriptTemplate(scriptPath, ass) ///root/work/aguisforYannic/aguis/ci/scripts
 	if err != nil {
 		panic(err)
 	}
@@ -106,7 +105,7 @@ func TestK8sFP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := ExtractKubeResult(zap.NewNop().Sugar(), out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
+	res, err := kube.ExtractKubeResult(zap.NewNop().Sugar(), out, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", 10)
 	if err != nil {
 		t.Fatal(err)
 	}

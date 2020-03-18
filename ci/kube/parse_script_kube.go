@@ -21,10 +21,10 @@ type AssignmentInfo struct {
 	RandomSecret       string
 }
 
-// ParseScriptTemplate returns a job describing the docker image to use and
+// ParseKubeScriptTemplate returns a job describing the docker image to use and
 // the commands of the job. The job is extracted from a script template file
 // provided as input along with assignment metadata for the template.
-func ParseScriptTemplate(scriptPath string, info *AssignmentInfo) (*PodContainer, error) {
+func ParseKubeScriptTemplate(scriptPath string, info *AssignmentInfo) (*Container, error) {
 	tmplFile := filepath.Join(scriptPath, info.Language+".tmpl")
 	t, err := template.ParseFiles(tmplFile)
 	if err != nil {
@@ -42,5 +42,5 @@ func ParseScriptTemplate(scriptPath string, info *AssignmentInfo) (*PodContainer
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("no docker image specified in script template %s", tmplFile)
 	}
-	return &PodContainer{Image: parts[1], Commands: s[1:]}, nil
+	return &Container{Image: parts[1], Commands: s[1:]}, nil
 }
