@@ -23,8 +23,7 @@ rm $(find ./ | grep _ag_test.go)
 rm -f go.mod
 
 # Secret will be mounted in a file while the container running. 
-cat <<EOF > "/root/work/secreting" 
-EOF
+cat "/root/work/secreting" 
 #TODO: jobname needs to be added ?
 
 

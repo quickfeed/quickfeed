@@ -77,7 +77,7 @@ func TestK8sFP(t *testing.T) {
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "cefc2f208607b2fc24dea9942ba6542d6dba9305",
+		CreatorAccessToken: "678adbbf28fa6ae5d29237ac8a56086d75bc2c10",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
@@ -100,7 +100,6 @@ func TestK8sFP(t *testing.T) {
 	k := newKubeCI()
 	//out, err := k.KRun(context.Background(), container,  jobName,"agcicd", "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
 	out, err := k.KRun(context.Background(), container, jobName, "agcicd", "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
-	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)
 	}
