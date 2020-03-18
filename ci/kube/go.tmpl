@@ -23,7 +23,8 @@ rm $(find ./ | grep _ag_test.go)
 rm -f go.mod
 
 # Secret will be mounted in a file while the container running. 
-cat "/root/work/secreting" 
+cat /root/work/secreting/{{ .RandomSecret }} 
+#RandomSecret is only the name of the job, will be changed, only for test
 #TODO: jobname needs to be added ?
 
 
