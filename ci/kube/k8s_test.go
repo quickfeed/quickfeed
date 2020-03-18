@@ -98,8 +98,49 @@ func TestK8sFP(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	//out, err := k.KRun(context.Background(), container,  jobName,"agcicd", "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
 	out, err := k.KRun(context.Background(), container, jobName, "agcicd", "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != wantOut {
+		t.Errorf("have %#v want %#v", out, wantOut)
+	} else {
+		fmt.Println(wantOut)
+	}
+	fmt.Println(time.Since(tea))
+}
+
+func TestK8sFPSecret(t *testing.T) {
+	tea := time.Now()
+	fmt.Println(tea.Format("20060102-150405"))
+	cloneURL := "https://github.com/dat320-2019/assignments.git"
+	getURLTest := "https://github.com/dat320-2019/tests.git"
+
+	jobName := tea.Format("20060102-150405")
+
+	ass := &kube.AssignmentInfo{
+		AssignmentName:     "lab5",
+		Language:           "go",
+		CreatorAccessToken: "7f412a8a67aa29051f12c19eb01d654eeed1bd5c",
+		GetURL:             cloneURL,
+		TestURL:            getURLTest,
+		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
+		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
+		RandomSecret:       jobName,
+	}
+	jobdock, err := kube.ParseKubeScriptTemplate("", ass) ///root/work/aguisforYannic/aguis/ci/scripts
+	if err != nil {
+		panic(err)
+	}
+	script := jobdock.Commands
+	container := &kube.Container{
+		Image:    "golang",
+		Commands: script,
+	}
+
+	k := newKubeCI()
+	out, err := k.KRun(context.Background(), container, jobName, "agcicd", "59fd5fe1c4f741604c1beeab875b9c789d2a7c73")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,13 +153,7 @@ func TestK8sFP(t *testing.T) {
 		t.Fatal("build log contains secret")
 		t.Logf("res %+v", res.BuildInfo)
 	}
-
-	if out != wantOut {
-		t.Errorf("have %#v want %#v", out, wantOut)
-	} else {
-		fmt.Println(wantOut)
-	}
-	fmt.Println(time.Since(tea))
+	fmt.Println(out)
 }
 
 func homeDir() string {

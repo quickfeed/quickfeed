@@ -31,11 +31,6 @@ type K8s struct {
 	podLog     string
 }
 
-//Sec will contain the secret for running current job
-/* type Sec struct {
-	secret string
-} */
-
 var (
 	home                  = homeDir()
 	kubeconfig            = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "")
@@ -140,14 +135,6 @@ func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName
 	}
 	k.podWaitToSucc()
 
-	//get the secert after running the job.
-	//cliSec := &Sec{}
-	//cliSec.secret
-	/* secret, */
-	/* 	_, err = getJobSecret(id, courseName, clientset)
-	   	if err != nil {
-	   		return "", err
-	   	} */
 	return k.podLog, nil
 }
 
