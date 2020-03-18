@@ -98,8 +98,8 @@ func TestK8sFP(t *testing.T) {
 	}
 
 	k := newKubeCI()
-	//out, err := k.KRun(context.Background(), container, "agcicd", jobName, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
-	out, err := k.KRun(context.Background(), container, "agcicd", jobName, "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
+	//out, err := k.KRun(context.Background(), container,  jobName,"agcicd", "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
+	out, err := k.KRun(context.Background(), container, jobName, "agcicd", "59fd5fe1c4f741604c1beeab875b9c789d2a7c73" /* , kubeconfig */)
 	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)
