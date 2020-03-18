@@ -20,7 +20,7 @@ import (
 ) */
 var course = "agcicd"
 
-var scriptPath = "kube/kube_scripts"
+//var scriptPath = "kube/kube_scripts"
 
 func newKubeCI() *kube.K8s {
 	return &kube.K8s{}
@@ -77,7 +77,7 @@ func TestK8sFP(t *testing.T) {
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "166f3712bbd32a6750c436244f74d031c0c91257",
+		CreatorAccessToken: "cefc2f208607b2fc24dea9942ba6542d6dba9305",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
@@ -85,7 +85,7 @@ func TestK8sFP(t *testing.T) {
 		RandomSecret:       jobName,
 	}
 	//jobdock, err := ci.ParseScriptTemplate("", ass)         ///root/work/aguisforYannic/aguis/ci/scripts
-	jobdock, err := kube.ParseKubeScriptTemplate(scriptPath, ass) ///root/work/aguisforYannic/aguis/ci/scripts
+	jobdock, err := kube.ParseKubeScriptTemplate("", ass) ///root/work/aguisforYannic/aguis/ci/scripts
 	if err != nil {
 		panic(err)
 	}
