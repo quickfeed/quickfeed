@@ -364,7 +364,6 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
 		}
 	}
-	fmt.Println("CreateTeam: team ID in opts: ", opt.OrganizationID, " and team ID in github team struct: ", team.GetOrganization().GetID())
 	for _, user := range opt.Users {
 		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, team.GetOrganization().GetID(), team.GetID(), user, nil)
 		if err != nil {
