@@ -26,6 +26,13 @@ func newKubeCI() *kube.K8s {
 	return &kube.K8s{}
 }
 
+func newPodContainer(baseImage string, script []string) *kube.PodContainer {
+	return &kube.PodContainer{
+		BaseImage:    baseImage,
+		ContainerCmd: script,
+	}
+}
+
 type test struct {
 	script, wantOut, out string
 }
@@ -50,11 +57,7 @@ func testK8s(t *testing.T, echo string) {
 	script := `echo -n ` + echo
 	wantOut := echo
 
-	container := &kube.PodContainer{
-		BaseImage:    "golang",
-		ContainerCmd: []string{script},
-	}
-
+	container := newPodContainer("golang", []string{script})
 	k := newKubeCI()
 	out, err := k.RunKubeJob(context.Background(), container, course, time.Now().Format("20060102-150405-")+echo, kubeconfig)
 	if err != nil {
@@ -67,34 +70,19 @@ func testK8s(t *testing.T, echo string) {
 }
 
 func TestK8sFP(t *testing.T) {
-	tea := time.Now()
-	fmt.Println(tea.Format("20060102-150405"))
-	cloneURL := "https://github.com/dat320-2019/assignments.git"
-	getURLTest := "https://github.com/dat320-2019/tests.git"
+	startTime := time.Now()
+	fmt.Println(startTime.Format("20060102-150405"))
 
-	jobName := tea.Format("20060102-150405")
-
-	ass := &ci.AssignmentInfo{
-		AssignmentName:     "lab5",
-		Language:           "go",
-		CreatorAccessToken: "166f3712bbd32a6750c436244f74d031c0c91257",
-		GetURL:             cloneURL,
-		TestURL:            getURLTest,
-		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
-		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       jobName,
-	}
-	jobdock, err := ci.ParseScriptTemplate("", ass) ///root/work/aguisforYannic/aguis/ci/scripts
+	jobName := startTime.Format("20060102-150405")
+	info := getAssignmentInfo()
+	jobdock, err := ci.ParseScriptTemplate("", info) ///root/work/aguisforYannic/aguis/ci/scripts
 	if err != nil {
 		panic(err)
 	}
 	wantOut := ""
 	script := jobdock.Commands
 
-	container := &kube.PodContainer{
-		BaseImage:    "golang",
-		ContainerCmd: script,
-	}
+	container := newPodContainer("golang", script)
 
 	k := newKubeCI()
 	out, err := k.RunKubeJob(context.Background(), container, "agcicd", jobName, kubeconfig)
@@ -108,7 +96,7 @@ func TestK8sFP(t *testing.T) {
 	} else {
 		fmt.Println(wantOut)
 	}
-	fmt.Println(time.Since(tea))
+	fmt.Println(time.Since(startTime))
 }
 
 func homeDir() string {
@@ -116,4 +104,21 @@ func homeDir() string {
 		return h
 	}
 	return os.Getenv("USERPROFILE") // windows
+}
+
+func getAssignmentInfo() *ci.AssignmentInfo {
+	cloneURL := "https://github.com/dat320-2019/assignments.git"
+	getURLTest := "https://github.com/dat320-2019/tests.git"
+
+	info := &ci.AssignmentInfo{
+		AssignmentName:     "lab5",
+		Language:           "go",
+		CreatorAccessToken: "a5aa206e0ff288d6063cce76cd7ddafe3e15113e",
+		GetURL:             cloneURL,
+		TestURL:            getURLTest,
+		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
+		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
+		RandomSecret:       time.Now().Format("20060102-150405"),
+	}
+	return info
 }

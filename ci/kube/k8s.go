@@ -122,7 +122,6 @@ func (k *K8s) RunKubeJob(ctx context.Context, podRun *PodContainer, courseName s
 		return "", err
 	}
 	k.jobWaitToActive()
-	fmt.Println("after jobevent")
 
 	err = k.podEvents(clientset, courseName, createdJob.Name)
 	if err != nil {
