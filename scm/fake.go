@@ -123,7 +123,7 @@ func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error 
 }
 
 // CreateTeam implements the SCM interface.
-func (s *FakeSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
+func (s *FakeSCM) CreateTeam(ctx context.Context, opt *NewTeamOptions) (*Team, error) {
 	newTeam := &Team{
 		ID:           uint64(len(s.Teams) + 1),
 		Name:         opt.TeamName,

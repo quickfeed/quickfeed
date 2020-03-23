@@ -35,7 +35,7 @@ type SCM interface {
 	// is provided. Otherwise creates a hook for the given repo.
 	CreateHook(context.Context, *CreateHookOptions) error
 	// Create team.
-	CreateTeam(context.Context, *TeamOptions) (*Team, error)
+	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
 	DeleteTeam(context.Context, *TeamOptions) error
 	// Get a single team by ID or name
@@ -142,14 +142,20 @@ type CreateHookOptions struct {
 	Repository   *Repository
 }
 
-// TeamOptions contains information about the team and the users of the team.
+// TeamOptions contains information about the team and the organization it belongs to.
 // It must include either both IDs or both names for the team and organization/
 type TeamOptions struct {
 	Organization   string
 	OrganizationID uint64
 	TeamName       string
 	TeamID         uint64
-	Users          []string
+}
+
+// NewTeamOptions used when creating a new team
+type NewTeamOptions struct {
+	Organization string
+	TeamName     string
+	Users        []string
 }
 
 // UpdateTeamOptions used when updating team members.

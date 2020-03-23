@@ -89,14 +89,13 @@ func (opt CreateHookOptions) valid() bool {
 			opt.Repository.valid()))
 }
 
-func (opt TeamOptions) validWithOrg() bool {
-	return opt.Organization != "" &&
-		opt.valid()
-}
-
 func (opt TeamOptions) valid() bool {
 	return opt.TeamName != "" && opt.Organization != "" ||
 		opt.TeamID > 0 && opt.OrganizationID > 0
+}
+
+func (opt NewTeamOptions) valid() bool {
+	return opt.TeamName != "" && opt.Organization != ""
 }
 
 func (opt TeamMembershipOptions) valid() bool {
