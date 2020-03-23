@@ -152,7 +152,7 @@ func (s *AutograderService) updateGroup(ctx context.Context, sc scm.SCM, request
 
 	// if there are changes in group membership, update SCM team
 	if !group.ContainsAll(newGroup) {
-		if err := updateGroupTeam(ctx, sc, newGroup); err != nil {
+		if err := updateGroupTeam(ctx, sc, newGroup, course.GetOrganizationID()); err != nil {
 			return err
 		}
 	}

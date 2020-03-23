@@ -207,10 +207,11 @@ func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string
 	return nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group) error {
+func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group, orgID uint64) error {
 	opt := &scm.UpdateTeamOptions{
-		TeamID: group.TeamID,
-		Users:  group.UserNames(),
+		TeamID:         group.TeamID,
+		OrganizationID: orgID,
+		Users:          group.UserNames(),
 	}
 	return sc.UpdateTeamMembers(ctx, opt)
 }

@@ -76,7 +76,7 @@ func (opt AddTeamRepoOptions) valid() bool {
 }
 
 func (opt UpdateTeamOptions) valid() bool {
-	return opt.TeamID > 0
+	return opt.TeamID > 0 && opt.OrganizationID > 0
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
@@ -100,7 +100,7 @@ func (opt TeamOptions) valid() bool {
 }
 
 func (opt TeamMembershipOptions) valid() bool {
-	return (opt.TeamID > 0 ||
+	return (opt.TeamID > 0 && opt.OrganizationID > 0 ||
 		opt.TeamName != "" && opt.Organization != "") &&
 		opt.Username != ""
 }

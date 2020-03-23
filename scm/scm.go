@@ -154,18 +154,20 @@ type TeamOptions struct {
 
 // UpdateTeamOptions used when updating team members.
 type UpdateTeamOptions struct {
-	TeamID uint64
-	Users  []string
+	OrganizationID uint64
+	TeamID         uint64
+	Users          []string
 }
 
 // TeamMembershipOptions contain information on organization team and associated user.
 // Username and either team ID, or names of both the team and organization must be provided.
 type TeamMembershipOptions struct {
-	Organization string
-	TeamID       int64
-	TeamName     string
-	Username     string // GitHub username.
-	Role         string // "Member" or "maintainer". A maintainer can add, remove and promote team members.
+	Organization   string
+	OrganizationID uint64
+	TeamID         uint64
+	TeamName       string
+	Username       string // GitHub username.
+	Role           string // "Member" or "maintainer". A maintainer can add, remove and promote team members.
 }
 
 // OrgMembershipOptions represent user's membership in organization
