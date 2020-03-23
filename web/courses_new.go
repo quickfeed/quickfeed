@@ -95,7 +95,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, fmt.Errorf("createCourse: failed to get course creator record from database: %w", err)
 	}
 	// create teacher team with course creator
-	opt := &scm.TeamOptions{
+	opt := &scm.NewTeamOptions{
 		Organization: org.Path,
 		TeamName:     scm.TeachersTeam,
 		Users:        []string{courseCreator.GetLogin()},
@@ -105,7 +105,7 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, err
 	}
 	// create student team without any members
-	studOpt := &scm.TeamOptions{Organization: org.Path, TeamName: scm.StudentsTeam}
+	studOpt := &scm.NewTeamOptions{Organization: org.Path, TeamName: scm.StudentsTeam}
 	if _, err = sc.CreateTeam(ctx, studOpt); err != nil {
 		s.logger.Debugf("createCourse: failed to create students team: %s", err)
 		return nil, err

@@ -334,8 +334,8 @@ func (s *GithubSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) erro
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	if !opt.validWithOrg() {
+func (s *GithubSCM) CreateTeam(ctx context.Context, opt *NewTeamOptions) (*Team, error) {
+	if !opt.valid() || opt.TeamName == "" || opt.Organization == "" {
 		return nil, ErrMissingFields{
 			Method:  "CreateTeam",
 			Message: fmt.Sprintf("%+v", opt),

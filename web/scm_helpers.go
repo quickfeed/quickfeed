@@ -51,7 +51,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
 	}
 
-	team, err := sc.CreateTeam(ctx, &scm.TeamOptions{
+	team, err := sc.CreateTeam(ctx, &scm.NewTeamOptions{
 		Organization: org.Path,
 		TeamName:     group.GetName(),
 		Users:        group.UserNames(),

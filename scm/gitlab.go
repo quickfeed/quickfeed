@@ -163,7 +163,7 @@ func (s *GitlabSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) (err
 }
 
 // CreateTeam implements the SCM interface.
-func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
+func (s *GitlabSCM) CreateTeam(ctx context.Context, opt *NewTeamOptions) (*Team, error) {
 	// TODO no implementation provided yet
 	return nil, ErrNotSupported{
 		SCM:    "gitlab",
