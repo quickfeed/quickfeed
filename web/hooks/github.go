@@ -10,7 +10,7 @@ import (
 	"github.com/autograde/aguis/assignments"
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v30/github"
 	"go.uber.org/zap"
 )
 

@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	pb "github.com/autograde/aguis/ag"
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v30/github"
 	"github.com/gosimple/slug"
 	"golang.org/x/oauth2"
 )
@@ -364,9 +364,9 @@ func (s *GithubSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, er
 			s.logger.Debugf("Team %s already exists on organization %s", opt.TeamName, opt.Organization)
 		}
 	}
-
+	fmt.Println("CreateTeam: team ID in opts: ", opt.OrganizationID, " and team ID in github team struct: ", team.GetOrganization().GetID())
 	for _, user := range opt.Users {
-		_, _, err = s.client.Teams.AddTeamMembership(ctx, team.GetID(), user, nil)
+		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, team.GetOrganization().GetID(), team.GetID(), user, nil)
 		if err != nil {
 			return nil, ErrFailedSCM{
 				Method:   "CreateTeam",
@@ -466,27 +466,23 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 		}
 	}
 
+	var err error
 	if opt.TeamID < 1 {
-		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, opt.TeamName)
-		if err != nil {
-			return ErrFailedSCM{
-				Method:   "AddTeamMember",
-				Message:  fmt.Sprintf("failed to get team %s in organization %s", opt.TeamName, opt.Organization),
-				GitError: err,
-			}
-		}
-		opt.TeamID = team.GetID()
+		_, _, err = s.client.Teams.AddTeamMembershipBySlug(ctx, opt.Organization, slug.Make(opt.TeamName), opt.Username,
+			&github.TeamAddTeamMembershipOptions{Role: opt.Role})
+	} else {
+		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), opt.Username,
+			&github.TeamAddTeamMembershipOptions{Role: opt.Role})
 	}
 
-	if _, _, err := s.client.Teams.AddTeamMembership(ctx, int64(opt.TeamID), opt.Username,
-		&github.TeamAddTeamMembershipOptions{Role: opt.Role}); err != nil {
-		return ErrFailedSCM{
+	if err != nil {
+		err = ErrFailedSCM{
 			GitError: err,
 			Method:   "AddTeamMember",
-			Message:  fmt.Sprintf("failed to add user %s to team ID %d with role %s", opt.Username, opt.TeamID, opt.Role),
+			Message:  fmt.Sprintf("failed to add user username: %s to team (ID %d, team name: %s) with role %s", opt.Username, opt.TeamID, opt.TeamName, opt.Role),
 		}
 	}
-	return nil
+	return err
 }
 
 // RemoveTeamMember implements the scm interface
@@ -498,27 +494,21 @@ func (s *GithubSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOpt
 		}
 	}
 
+	var err error
 	if opt.TeamID < 1 {
-		team, _, err := s.client.Teams.GetTeamBySlug(ctx, opt.Organization, opt.TeamName)
-		if err != nil {
-			return ErrFailedSCM{
-				Method:   "RemoveTeamMember",
-				Message:  fmt.Sprintf("failed to get team %s in organization %s", opt.TeamName, opt.Organization),
-				GitError: err,
-			}
-		}
-		opt.TeamID = team.GetID()
+		_, err = s.client.Teams.RemoveTeamMembershipBySlug(ctx, opt.Organization, opt.TeamName, opt.Username)
+	} else {
+		_, err = s.client.Teams.RemoveTeamMembershipByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), opt.Username)
 	}
 
-	// otherwise remove user from team
-	if _, err := s.client.Teams.RemoveTeamMembership(ctx, int64(opt.TeamID), opt.Username); err != nil {
-		return ErrFailedSCM{
+	if err != nil {
+		err = ErrFailedSCM{
 			GitError: err,
 			Method:   "RemoveTeamMember",
 			Message:  fmt.Sprintf("failed to remove user %s from team ID %d", opt.Username, opt.TeamID),
 		}
 	}
-	return nil
+	return err
 }
 
 // UpdateTeamMembers implements the SCM interface
@@ -531,7 +521,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 	}
 
 	// find current team members
-	oldUsers, _, err := s.client.Teams.ListTeamMembers(ctx, int64(opt.TeamID), nil)
+	oldUsers, _, err := s.client.Teams.ListTeamMembersByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), nil)
 	if err != nil {
 		return ErrFailedSCM{
 			GitError: err,
@@ -542,7 +532,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 
 	// check whether group members are already in team; add missing members
 	for _, member := range opt.Users {
-		_, _, err = s.client.Teams.AddTeamMembership(ctx, int64(opt.TeamID), member, nil)
+		_, _, err = s.client.Teams.AddTeamMembershipByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), member, nil)
 		if err != nil {
 			return ErrFailedSCM{
 				GitError: err,
@@ -562,7 +552,7 @@ func (s *GithubSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOption
 			}
 		}
 		if toRemove {
-			_, err = s.client.Teams.RemoveTeamMembership(ctx, int64(opt.TeamID), teamMember.GetLogin())
+			_, err = s.client.Teams.RemoveTeamMembershipByID(ctx, int64(opt.OrganizationID), int64(opt.TeamID), teamMember.GetLogin())
 			if err != nil {
 				return ErrFailedSCM{
 					GitError: err,
@@ -670,7 +660,7 @@ func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions)
 func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
 	// Authorizations.List method will always return nil, response struct and error,
 	// we are only interested in response. Its header will contain all scopes for current user
-	_, resp, _ := s.client.Authorizations.List(ctx, &github.ListOptions{})
+	_, resp, _ := s.client.Users.Get(ctx, "")
 	if resp == nil {
 		s.logger.Errorf("GetUserScopes: got no scopes: no authorized user")
 		tmpScopes := make([]string, 0)
