@@ -94,7 +94,11 @@ protoset:
 
 test:
 	@cd ./web; go test
+	@cd ./web/hooks; go test
 	@cd ./database; go test
+	@cd ./scm; go test
+	@cd ./assignments; go test
+	@cd ./ci; go test
 
 scm:
 	@echo "Compiling the scm tool"
