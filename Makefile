@@ -93,12 +93,8 @@ protoset:
 	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
 
 test:
-	@cd ./web; go test
-	@cd ./web/hooks; go test
-	@cd ./database; go test
-	@cd ./scm; go test
-	@cd ./assignments; go test
-	@cd ./ci; go test
+	@go clean -testcache ./...
+	@go test ./...
 
 scm:
 	@echo "Compiling the scm tool"
