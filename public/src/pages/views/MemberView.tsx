@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Status } from '../../../proto/ag_pb';
+import { Course, Enrollment, Status, Users } from '../../../proto/ag_pb';
 import { Search } from "../../components";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { IUserRelation } from "../../models";
@@ -108,24 +108,34 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     public async handleAction(userRel: IUserRelation, link: ILink) {
         switch (link.uri) {
             case "accept":
-                this.handleAccept(userRel);
+                await this.handleAccept(userRel);
                 break;
             case "reject":
-                this.handleReject(userRel);
+                await this.handleReject(userRel);
                 break;
             case "teacher":
-                this.handlePromote(userRel);
+                await this.handlePromote(userRel);
                 break;
             case "demote":
-                this.handleDemote(userRel);
+                await this.handleDemote(userRel);
                 break;
         }
+        this.flipEditState();
+        this.props.navMan.refresh();
+        this.flipEditState();
     }
 
     private async handleAccept(userRel: IUserRelation) {
         const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.STUDENT);
-        if (result && result.getCode() !== 0) {
+        if (result.getCode() !== 0) {
             this.generateErrorMessage(result);
+        } else {
+            userRel.enrollment.setStatus(Enrollment.UserStatus.STUDENT);
+            const i = this.state.pendingUsers.indexOf(userRel);
+            if (i >= 0) {
+                this.state.pendingUsers.splice(i, 1);
+                this.state.acceptedUsers.push(userRel);
+            }
         }
     }
 
@@ -146,8 +156,17 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             if (readyToDelete) {
                 const result =
             await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.NONE);
-                if (result && result.getCode() !== 0) {
+                if (result.getCode() !== 0) {
                     this.generateErrorMessage(result);
+                } else {
+                    const i = this.state.pendingUsers.indexOf(userRel);
+                    if (i >= 0) {
+                        this.state.pendingUsers.splice(i, 1);
+                    }
+                    const j = this.state.acceptedUsers.indexOf(userRel);
+                    if (j >= 0) {
+                        this.state.acceptedUsers.splice(j, 1);
+                    }
                 }
             }
        }
@@ -159,10 +178,11 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             ${userRel.user.getName()} to teacher status?`,
         )) {
             const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.TEACHER);
-            if (result && result.getCode() !== 0) {
+            if (result.getCode() !== 0) {
                 this.generateErrorMessage(result);
             }
         }
+        this.flipEditState();
     }
 
     private async handleDemote(userRel: IUserRelation) {
@@ -171,10 +191,11 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             Do you want to demote ${userRel.user.getName()} to student?`,
         )) {
             const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.STUDENT);
-            if (result && result.getCode() !== 0) {
+            if (result.getCode() !== 0) {
                 this.generateErrorMessage(result);
             }
         }
+        this.flipEditState();
     }
 
     private handleSearch(query: string): void {

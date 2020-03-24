@@ -112,8 +112,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
+        const originalState = link.getStatus();
         link.setStatus(state);
         const result = await this.grpcHelper.updateEnrollment(link);
+        if (result.status.getCode() !== 0) {
+            link.setStatus(originalState);
+        }
         return result.status;
     }
 
