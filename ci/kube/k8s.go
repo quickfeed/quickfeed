@@ -85,8 +85,8 @@ func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName
 							ImagePullPolicy: apiv1.PullIfNotPresent,
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
-									"cpu":    resource.MustParse("900m"),
-									"memory": resource.MustParse("2Gi"),
+									"cpu":    resource.MustParse("700m"),
+									"memory": resource.MustParse("1Gi"),
 								},
 								Requests: apiv1.ResourceList{
 									"cpu":    resource.MustParse("700m"),

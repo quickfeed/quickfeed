@@ -24,9 +24,7 @@ rm -f go.mod
 
 # Secret will be mounted in a file while the container running. 
 cat /root/work/secreting/{{ .RandomSecret }} 
-#RandomSecret is only the name of the job, will be changed, only for test
-#TODO: jobname needs to be added ?
-
+#RandomSecret is the name of the job, not the actual RandomSecret, the field name can be changed, only for the test
 
 
 # Copy tests into student assignments folder for running tests
