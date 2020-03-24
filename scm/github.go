@@ -478,7 +478,7 @@ func (s *GithubSCM) AddTeamMember(ctx context.Context, opt *TeamMembershipOption
 		err = ErrFailedSCM{
 			GitError: err,
 			Method:   "AddTeamMember",
-			Message:  fmt.Sprintf("failed to add user username: %s to team (ID %d, team name: %s) with role %s", opt.Username, opt.TeamID, opt.TeamName, opt.Role),
+			Message:  fmt.Sprintf("failed to add user (%s) to team (ID %d, team name: %s) with role %s", opt.Username, opt.TeamID, opt.TeamName, opt.Role),
 		}
 	}
 	return err
@@ -657,15 +657,15 @@ func (s *GithubSCM) RemoveMember(ctx context.Context, opt *OrgMembershipOptions)
 
 // GetUserScopes implements the SCM interface
 func (s *GithubSCM) GetUserScopes(ctx context.Context) *Authorization {
-	// Authorizations.List method will always return nil, response struct and error,
-	// we are only interested in response. Its header will contain all scopes for current user
+	// Users.Get method will always return nil, response struct and error,
+	// we are only interested in response. Its header will contain all scopes for the current user.
 	_, resp, _ := s.client.Users.Get(ctx, "")
 	if resp == nil {
 		s.logger.Errorf("GetUserScopes: got no scopes: no authorized user")
 		tmpScopes := make([]string, 0)
 		return &Authorization{Scopes: tmpScopes}
 	}
-	// header contains a single string with all scopes for authenticated user
+	// header contains a single string with all GitHub scopes for the authenticated user
 	stringScopes := resp.Header.Get("X-OAuth-Scopes")
 	if stringScopes == "" {
 		s.logger.Errorf("GetUserScopes: header was empty")
