@@ -192,10 +192,11 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     private async handleActionOnClick(group: Group, link: ILink): Promise<void> {
         switch (link.uri) {
             case "approve":
-                group.setStatus(Group.GroupStatus.APPROVED);
                 const ans = await this.props.courseMan.updateGroup(group);
                 if (ans.getCode() !== 0) {
-                this.generateErrorMessage(ans);
+                    this.generateErrorMessage(ans);
+                } else {
+                    group.setStatus(Group.GroupStatus.APPROVED);
                 }
                 break;
             case "edit":
