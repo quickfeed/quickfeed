@@ -21,7 +21,7 @@ import {
 
 import { HttpHelper } from "../HttpHelper";
 import { ICourseProvider } from "./CourseManager";
-import { GrpcManager } from "./GRPCManager";
+import { GrpcManager, IGrpcResponse } from './GRPCManager';
 
 import {
     IUserProvider,
@@ -55,7 +55,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getCourses(): Promise<Course[]> {
         const result = await this.grpcHelper.getCourses();
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         return result.data.getCoursesList();
@@ -63,7 +63,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Enrollment[]> {
         const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         const arr: Enrollment[] = [];
@@ -81,7 +81,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getAllUserEnrollments(userID: number): Promise<Enrollment[]> {
         const result = await this.grpcHelper.getEnrollmentsByUser(userID);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         return result.data.getEnrollmentsList();
@@ -92,7 +92,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
 
         const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, state);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         return result.data.getEnrollmentsList();
@@ -100,7 +100,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getAssignments(courseID: number): Promise<Assignment[]> {
         const result = await this.grpcHelper.getAssignments(courseID);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         return result.data.getAssignmentsList();
@@ -108,46 +108,44 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async addUserToCourse(course: Course, user: User): Promise<boolean> {
         const result = await this.grpcHelper.createEnrollment(course.getId(), user.getId());
-        return result.status.getCode() === 0;
+        return this.responseCodeSuccess(result);
     }
 
-    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
-        const originalState = link.getStatus();
-        link.setStatus(state);
-        const result = await this.grpcHelper.updateEnrollment(link);
-        if (result.status.getCode() !== 0) {
-            link.setStatus(originalState);
+    public async changeUserState(enrollment: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
+        const originalState = enrollment.getStatus();
+        enrollment.setStatus(state);
+        const result = await this.grpcHelper.updateEnrollment(enrollment);
+        if (!this.responseCodeSuccess(result)) {
+            enrollment.setStatus(originalState);
         }
         return result.status;
     }
 
     public async approveAll(courseID: number): Promise<boolean> {
         const result = await this.grpcHelper.updateEnrollments(courseID);
-        if (result.status.getCode() !== 0 || !result.data) {
-            return false;
-        }
-        return true;
+        return result.data ? this.responseCodeSuccess(result) : false;
     }
 
     public async isAuthorizedTeacher(): Promise<boolean> {
         const result = await this.grpcHelper.isAuthorizedTeacher();
-        if (result.status.getCode() !== 0 || !result.data) {
-            return false;
+        if (this.responseCodeSuccess(result) && result.data) {
+            return result.data.getIsauthorized();
         }
-        return result.data.getIsauthorized();
+        return false;
+
     }
 
     public async createNewCourse(course: Course): Promise<Course | Status> {
         const result = await this.grpcHelper.createCourse(course);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return result.status;
         }
         return result.data;
     }
 
-    public async getCourse(ID: number): Promise<Course | null> {
-        const result = await this.grpcHelper.getCourse(ID);
-        if (result.status.getCode() !== 0 || !result.data) {
+    public async getCourse(courseID: number): Promise<Course | null> {
+        const result = await this.grpcHelper.getCourse(courseID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return null;
         }
         return result.data;
@@ -155,15 +153,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async updateCourse(course: Course): Promise<Void | Status> {
         const result = await this.grpcHelper.updateCourse(course);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return result.status;
         }
         return new Void();
     }
 
-    public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
-        const result = await this.grpcHelper.createGroup(courseID, name, users);
-        if (result.status.getCode() !== 0 || !result.data) {
+    public async createGroup(courseID: number, groupName: string, users: number[]): Promise<Group | Status> {
+        const result = await this.grpcHelper.createGroup(courseID, groupName, users);
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return result.status;
         }
         return result.data;
@@ -171,7 +169,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getCourseGroups(courseID: number): Promise<Group[]> {
         const result = await this.grpcHelper.getGroups(courseID);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         return result.data.getGroupsList();
@@ -179,7 +177,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null> {
         const result = await this.grpcHelper.getGroupByUserAndCourse(courseID, userID);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return null;
         }
         return result.data;
@@ -192,7 +190,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getGroup(groupID: number): Promise<Group | null> {
         const result = await this.grpcHelper.getGroup(groupID);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return null;
         }
         return result.data;
@@ -210,7 +208,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]> {
         const result = await this.grpcHelper.getGroupSubmissions(courseID, groupID);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
 
@@ -224,7 +222,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]> {
         const result = await this.grpcHelper.getSubmissions(courseID, userID);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         const isubmissions: ISubmission[] = [];
@@ -237,7 +235,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
         const result = await this.grpcHelper.getCourseLabSubmissions(courseID, groupLabs);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
 
@@ -287,7 +285,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getUser(): Promise<User> {
         const result = await this.grpcHelper.getUser();
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return new User();
         }
         return result.data;
@@ -295,7 +293,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getAllUser(): Promise<User[]> {
         const result = await this.grpcHelper.getUsers();
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         return result.data.getUsersList();
@@ -313,20 +311,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         user.setIsadmin(promote);
         const result = await this.grpcHelper.updateUser(user);
         // we are not interested in user data returned in this case, only checking that there were no errors
-        return result.status.getCode() === 0;
+        return this.responseCodeSuccess(result);
     }
 
     public async updateUser(user: User): Promise<boolean> {
         const result = await this.grpcHelper.updateUser(user);
-        if (result.status.getCode() !== 0 || !result.data) {
-            return false;
-        }
-        return true;
+        return result.data ? this.responseCodeSuccess(result) : false;
     }
 
     public async getOrganization(orgName: string): Promise<Organization | Status> {
         const result = await this.grpcHelper.getOrganization(orgName);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return result.status;
         }
         return result.data;
@@ -334,7 +329,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getProviders(): Promise<string[]> {
         const result = await this.grpcHelper.getProviders();
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         return result.data.getProvidersList();
@@ -359,13 +354,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async updateAssignments(courseID: number): Promise<boolean> {
         const result = await this.grpcHelper.updateAssignments(courseID);
-        return result.status.getCode() === 0;
+        return this.responseCodeSuccess(result);
     }
 
     public async getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>> {
         const result = await this.grpcHelper.getRepositories(courseID, types);
         const tsMap = new Map<Repository.Type, string>();
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return tsMap;
         }
         // protobuf and typescript maps have class method mismatch. we need to convert one into another here
@@ -379,15 +374,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
         const result = await this.grpcHelper.updateSubmission(courseID, submissionID, approve);
-        if (result.status.getCode() !== 0) {
-            return false;
-        }
-        return true;
+        return this.responseCodeSuccess(result);
     }
 
     public async rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null> {
         const result = await this.grpcHelper.rebuildSubmission(assignmentID, submissionID);
-        if (result.status.getCode() !== 0 || !result.data) {
+        if (!this.responseCodeSuccess(result) || !result.data) {
             return null;
         }
         return this.toISubmission(result.data);
@@ -395,7 +387,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         const result = await this.grpcHelper.isEmptyRepo(courseID, userID, groupID);
-        return result.status.getCode() === 0;
+        return this.responseCodeSuccess(result);
     }
 
     private toISubmission(sbm: Submission): ISubmission {
@@ -458,5 +450,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             approved: sbm.getApproved(),
         };
         return isbm;
+    }
+
+    private responseCodeSuccess(response: IGrpcResponse<any>): boolean {
+        return response.status.getCode() === 0;
     }
 }
