@@ -160,9 +160,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
     private async handleUpdateStatus(group: Group, status: Group.GroupStatus): Promise<void> {
         const ans = await this.props.courseMan.updateGroupStatus(group.getId(), status);
-        if (ans.getCode() !== 0) {
-            this.generateErrorMessage(ans);
-        }
+        this.checkForErrors(ans);
     }
 
     private async deleteGroup(group: Group) {
@@ -183,9 +181,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
         if (readyToDelete) {
             const ans = await this.props.courseMan.deleteGroup(courseID, group.getId());
-            if (ans.getCode() !== 0) {
-                this.generateErrorMessage(ans);
-            }
+            this.checkForErrors(ans);
         }
     }
 
@@ -193,11 +189,9 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         switch (link.uri) {
             case "approve":
                 const ans = await this.props.courseMan.updateGroup(group);
-                if (ans.getCode() !== 0) {
-                    this.generateErrorMessage(ans);
-                } else {
+                this.checkForErrors(ans, () => {
                     group.setStatus(Group.GroupStatus.APPROVED);
-                }
+                })
                 break;
             case "edit":
                 this.props.navMan
@@ -300,10 +294,20 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             });
     }
 
+    private checkForErrors(status: Status, action?: () => void) {
+        if (status.getCode() !== 0) {
+            this.generateErrorMessage(status);
+            return;
+        } else if (action) {
+            action();
+        }
+    }
+
     private refreshState() {
         this.setState({
             approvedGroups: this.props.approvedGroups,
             pendingGroups: this.props.pendingGroups,
+            errorMsg: null,
         });
         return this.forceUpdate();
     }
