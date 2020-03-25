@@ -140,7 +140,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 id="edit"
                 className="btn btn-success member-btn"
                 onClick={() => this.toggleEditState()}
-    >{this.editButtonString()}</button>;
+        >{this.editButtonString()}</button>;
     }
 
     private getMembers(users: User[]): JSX.Element {
@@ -291,7 +291,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         const err = <div className="alert alert-danger">{status.getError()}</div>;
         this.setState({
                 errorMsg: err,
-            });
+        });
     }
 
     private checkForErrors(status: Status, action?: () => void) {
@@ -311,5 +311,4 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         });
         return this.forceUpdate();
     }
-
 }
