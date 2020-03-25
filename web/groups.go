@@ -204,7 +204,7 @@ func (s *AutograderService) getGroupUsers(request *pb.Group) ([]*pb.User, error)
 // isValidGroupName ensures that SCM team and repository names for the given group
 // will not coincide with one of the existing approved groups
 func (s *AutograderService) isValidGroupName(courseID uint64, groupName string) bool {
-	courseGroups, _ := s.db.GetGroupsByCourse(courseID, pb.Group_APPROVED)
+	courseGroups, _ := s.db.GetGroupsByCourse(courseID)
 	for _, group := range courseGroups {
 		if slug.Make(groupName) == slug.Make(group.GetName()) {
 			s.logger.Errorf("failed to create group %s, another group % already exists, both names will result in %s on GitHub", groupName, group.Name, slug.Make(groupName))
