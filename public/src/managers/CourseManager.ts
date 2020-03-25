@@ -108,8 +108,8 @@ export class CourseManager {
     /**
      * Update status of a course enrollment
      */
-    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
-        const ans = await this.courseProvider.changeUserState(link, state);
+    public async changeUserState(enrollment: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
+        const ans = await this.courseProvider.changeUserState(enrollment, state);
         return ans;
     }
 

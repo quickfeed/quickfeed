@@ -139,7 +139,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         return <button type="button"
                 id="edit"
                 className="btn btn-success member-btn"
-                onClick={() => this.flipEditState()}
+                onClick={() => this.toggleEditState()}
     >{this.editButtonString()}</button>;
     }
 
@@ -283,7 +283,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         return links;
     }
 
-    private flipEditState() {
+    private toggleEditState() {
         this.setState({
             editing: !this.state.editing,
         }, () => this.refreshState());
