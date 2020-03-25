@@ -176,7 +176,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             const result = await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.TEACHER);
             this.checkForErrors(result);
         }
-        this.toggleEditState();
     }
 
     private async handleDemote(userRel: IUserRelation) {
@@ -187,7 +186,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             const result = await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.STUDENT);
             this.checkForErrors(result);
         }
-        this.toggleEditState();
     }
 
     private handleSearch(query: string): void {
@@ -326,11 +324,13 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private checkForErrors(status: Status, action?: () => void) {
         if (status.getCode() !== 0) {
+            console.log("Setting a new error message");
             this.generateErrorMessage(status);
             return;
         } else if (action) {
             action();
         }
+        this.clearErrorMessage();
     }
 
     private generateErrorMessage(status: Status) {
@@ -338,5 +338,12 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         this.setState({
                 errMsg: err,
         });
+    }
+
+    private clearErrorMessage() {
+        this.setState({
+            errMsg: <div></div>,
+        });
+        console.log("Clearing error message");
     }
 }

@@ -307,7 +307,6 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         this.setState({
             approvedGroups: this.props.approvedGroups,
             pendingGroups: this.props.pendingGroups,
-            errorMsg: null,
         });
         return this.forceUpdate();
     }
