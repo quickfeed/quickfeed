@@ -126,7 +126,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     private async handleAccept(userRel: IUserRelation) {
-        const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.STUDENT);
+        const result = await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.STUDENT);
         this.checkForErrors(result, () => {
             userRel.enrollment.setStatus(Enrollment.UserStatus.STUDENT);
             const i = this.state.pendingUsers.indexOf(userRel);
@@ -153,7 +153,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
             if (readyToDelete) {
                 const result =
-            await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.NONE);
+            await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.NONE);
                 this.checkForErrors(result, () => {
                     const i = this.state.pendingUsers.indexOf(userRel);
                     if (i >= 0) {
@@ -173,7 +173,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             `Are you sure you want to promote
             ${userRel.user.getName()} to teacher status?`,
         )) {
-            const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.TEACHER);
+            const result = await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.TEACHER);
             this.checkForErrors(result);
         }
         this.toggleEditState();
@@ -184,7 +184,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             `Warning! ${userRel.user.getName()} is a teacher.
             Do you want to demote ${userRel.user.getName()} to student?`,
         )) {
-            const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.STUDENT);
+            const result = await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.STUDENT);
             this.checkForErrors(result);
         }
         this.toggleEditState();

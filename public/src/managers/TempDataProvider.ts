@@ -131,13 +131,13 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     /**
      * Get all userlinks for a single course
      * @param course The course userlinks should be retrived from
-     * @param state Optinal. The state of the relation, all if not present
+     * @param status Optinal. The status of the relation, all if not present
      */
-    public async getUserLinksForCourse(course: Course, state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+    public async getUserLinksForCourse(course: Course, status?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
         const users: Enrollment[] = [];
         for (const c of await this.getCoursesStudent()) {
             if (course.getId() === c.getCourseid()
-             && (state === undefined || c.getStatus() === Enrollment.UserStatus.STUDENT)) {
+             && (status === undefined || c.getStatus() === Enrollment.UserStatus.STUDENT)) {
                 users.push(c);
             }
         }
@@ -156,10 +156,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return returnUsers;
     }
 
-    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, state?: Enrollment.UserStatus[])
+    public async getUsersForCourse(course: Course, noGroupMembers?: boolean, status?: Enrollment.UserStatus[])
         : Promise<Enrollment[]> {
         const courseStds: Enrollment[] =
-            await this.getUserLinksForCourse(course, state);
+            await this.getUserLinksForCourse(course, status);
         const users = await this.getUsersAsMap(courseStds.map((e) => e.getUserid()));
         return courseStds.map<Enrollment>((link) => {
             const user = users[link.getUserid()];
@@ -187,8 +187,8 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
-        link.setStatus(state);
+    public async changeUserStatus(link: Enrollment, status: Enrollment.UserStatus): Promise<Status> {
+        link.setStatus(status);
         const stat = new Status();
         stat.setCode(0);
         return stat;
@@ -226,12 +226,12 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+    public async getCoursesFor(user: User, status: Enrollment.UserStatus[]): Promise<Enrollment[]> {
         const cLinks: Enrollment[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
             if (user.getId() === c.getUserid()
-             && (state === undefined || c.getStatus() === Enrollment.UserStatus.STUDENT)) {
+             && (status === undefined || c.getStatus() === Enrollment.UserStatus.STUDENT)) {
                 cLinks.push(c);
             }
         }

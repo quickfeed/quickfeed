@@ -61,8 +61,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getCoursesList();
     }
 
-    public async getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Enrollment[]> {
-        const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), state);
+    public async getCoursesFor(user: User, status: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+        const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), status);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
@@ -89,9 +89,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async getUsersForCourse(
         course: Course, noGroupMembers?: boolean,
-        state?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+        status?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
 
-        const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, state);
+        const result = await this.grpcHelper.getEnrollmentsByCourse(course.getId(), noGroupMembers, status);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
@@ -111,12 +111,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
-    public async changeUserState(enrollment: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
-        const originalState = enrollment.getStatus();
-        enrollment.setStatus(state);
+    public async changeUserStatus(enrollment: Enrollment, status: Enrollment.UserStatus): Promise<Status> {
+        const originalStatus = enrollment.getStatus();
+        enrollment.setStatus(status);
         const result = await this.grpcHelper.updateEnrollment(enrollment);
         if (!this.responseCodeSuccess(result)) {
-            enrollment.setStatus(originalState);
+            enrollment.setStatus(originalStatus);
         }
         return result.status;
     }
@@ -183,8 +183,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async updateGroupStatus(groupID: number, states: Group.GroupStatus): Promise<Status> {
-        const result = await this.grpcHelper.updateGroupStatus(groupID, states);
+    public async updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<Status> {
+        const result = await this.grpcHelper.updateGroupStatus(groupID, status);
         return result.status;
     }
 

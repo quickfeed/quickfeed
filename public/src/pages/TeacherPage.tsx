@@ -314,12 +314,12 @@ export class TeacherPage extends ViewPage {
         const confirmedTeacher = await this.userMan.isTeacher();
         if (curUser) {
             if (menu === 0) {
-                const states = [Enrollment.UserStatus.TEACHER];
+                const status = [Enrollment.UserStatus.TEACHER];
                 if (curUser.getIsadmin() || confirmedTeacher) {
-                    states.push(Enrollment.UserStatus.PENDING);
-                    states.push(Enrollment.UserStatus.STUDENT);
+                    status.push(Enrollment.UserStatus.PENDING);
+                    status.push(Enrollment.UserStatus.STUDENT);
                 }
-                const courses = await this.courseMan.getCoursesFor(curUser, states);
+                const courses = await this.courseMan.getCoursesFor(curUser, status);
 
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {

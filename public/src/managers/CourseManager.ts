@@ -5,18 +5,18 @@ import {
     IUserRelation,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void } from '../../proto/ag_pb';
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
     getAssignments(courseID: number): Promise<Assignment[]>;
-    getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Enrollment[]>;
-    getUsersForCourse(course: Course, noGroupMemebers?: boolean, state?: Enrollment.UserStatus[]):
+    getCoursesFor(user: User, status: Enrollment.UserStatus[]): Promise<Enrollment[]>;
+    getUsersForCourse(course: Course, noGroupMemebers?: boolean, status?: Enrollment.UserStatus[]):
         Promise<Enrollment[]>;
 
     addUserToCourse(course: Course, user: User): Promise<boolean>;
-    changeUserState(link: Enrollment, state: Enrollment.UserStatus): Promise<Status>;
+    changeUserStatus(enrollment: Enrollment, status: Enrollment.UserStatus): Promise<Status>;
     approveAll(courseID: number): Promise<boolean>;
 
     createNewCourse(course: Course): Promise<Course | Status>;
@@ -67,7 +67,7 @@ export class CourseManager {
         return this.courseProvider.getCourses();
     }
 
-    public async getCoursesWithState(user: User): Promise<IStudentLabsForCourse[]> {
+    public async getCoursesWithUserStatus(user: User): Promise<IStudentLabsForCourse[]> {
         const userCourses = await this.courseProvider.getCoursesFor(user, []);
         const newMap: IStudentLabsForCourse[] = [];
         userCourses.forEach((ele) => {
@@ -86,9 +86,9 @@ export class CourseManager {
     /**
      * Get all courses where user is enrolled into
      */
-    public async getCoursesFor(user: User, state: Enrollment.UserStatus[]): Promise<Course[]> {
+    public async getCoursesFor(user: User, status: Enrollment.UserStatus[]): Promise<Course[]> {
         const courses: Course[] = [];
-        const enrolList = await this.courseProvider.getCoursesFor(user, state);
+        const enrolList = await this.courseProvider.getCoursesFor(user, status);
         enrolList.forEach((ele) => {
             const crs = ele.getCourse();
             if (crs) {
@@ -108,8 +108,8 @@ export class CourseManager {
     /**
      * Update status of a course enrollment
      */
-    public async changeUserState(enrollment: Enrollment, state: Enrollment.UserStatus): Promise<Status> {
-        const ans = await this.courseProvider.changeUserState(enrollment, state);
+    public async changeUserStatus(enrollment: Enrollment, status: Enrollment.UserStatus): Promise<Status> {
+        const ans = await this.courseProvider.changeUserStatus(enrollment, status);
         return ans;
     }
 
@@ -146,9 +146,9 @@ export class CourseManager {
      * Retrives all course relations, and courses related to a
      * a single student
      */
-    public async getStudentCourses(student: User, state: Enrollment.UserStatus[]): Promise<IStudentLabsForCourse[]> {
+    public async getStudentCourses(student: User, status: Enrollment.UserStatus[]): Promise<IStudentLabsForCourse[]> {
         const links: IStudentLabsForCourse[] = [];
-        const enrollments = await this.courseProvider.getCoursesFor(student, state);
+        const enrollments = await this.courseProvider.getCoursesFor(student, status);
         for (const enrol of enrollments) {
             const crs = enrol.getCourse();
             if (crs) {
@@ -178,9 +178,9 @@ export class CourseManager {
     public async getUsersForCourse(
         course: Course,
         noGroupMemebers?: boolean,
-        state?: Enrollment.UserStatus[]): Promise<IUserRelation[]> {
+        status?: Enrollment.UserStatus[]): Promise<IUserRelation[]> {
         const userlinks: IUserRelation[] = [];
-        const enrolls = await this.courseProvider.getUsersForCourse(course, noGroupMemebers, state);
+        const enrolls = await this.courseProvider.getUsersForCourse(course, noGroupMemebers, status);
         enrolls.forEach((ele) => {
             const usr = ele.getUser();
             if (usr) {
