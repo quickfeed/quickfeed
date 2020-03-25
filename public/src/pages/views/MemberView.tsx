@@ -120,23 +120,21 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 await this.handleDemote(userRel);
                 break;
         }
-        this.flipEditState();
+        this.toggleEditState();
         this.props.navMan.refresh();
-        this.flipEditState();
+        this.toggleEditState();
     }
 
     private async handleAccept(userRel: IUserRelation) {
         const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.STUDENT);
-        if (result.getCode() !== 0) {
-            this.generateErrorMessage(result);
-        } else {
+        this.checkForErrors(result, () => {
             userRel.enrollment.setStatus(Enrollment.UserStatus.STUDENT);
             const i = this.state.pendingUsers.indexOf(userRel);
             if (i >= 0) {
                 this.state.pendingUsers.splice(i, 1);
                 this.state.acceptedUsers.push(userRel);
             }
-        }
+        })
     }
 
     private async handleReject(userRel: IUserRelation) {
@@ -156,9 +154,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             if (readyToDelete) {
                 const result =
             await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.NONE);
-                if (result.getCode() !== 0) {
-                    this.generateErrorMessage(result);
-                } else {
+                this.checkForErrors(result, () => {
                     const i = this.state.pendingUsers.indexOf(userRel);
                     if (i >= 0) {
                         this.state.pendingUsers.splice(i, 1);
@@ -167,7 +163,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                     if (j >= 0) {
                         this.state.acceptedUsers.splice(j, 1);
                     }
-                }
+                })
             }
        }
     }
@@ -178,11 +174,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             ${userRel.user.getName()} to teacher status?`,
         )) {
             const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.TEACHER);
-            if (result.getCode() !== 0) {
-                this.generateErrorMessage(result);
-            }
+            this.checkForErrors(result);
         }
-        this.flipEditState();
+        this.toggleEditState();
     }
 
     private async handleDemote(userRel: IUserRelation) {
@@ -191,11 +185,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             Do you want to demote ${userRel.user.getName()} to student?`,
         )) {
             const result = await this.props.courseMan.changeUserState(userRel.enrollment, Enrollment.UserStatus.STUDENT);
-            if (result.getCode() !== 0) {
-                this.generateErrorMessage(result);
-            }
+            this.checkForErrors(result);
         }
-        this.flipEditState();
+        this.toggleEditState();
     }
 
     private handleSearch(query: string): void {
@@ -255,7 +247,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         return <button type="button"
                 id="edit"
                 className="btn btn-success member-btn"
-                onClick={() => this.flipEditState()}
+                onClick={() => this.toggleEditState()}
     >{this.editButtonString()}</button>;
     }
 
@@ -270,7 +262,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         return this.state.approveAllClicked ? "Approving..." : "Approve all ";
     }
 
-    private flipEditState() {
+    private toggleEditState() {
         this.setState({
             editing: !this.state.editing,
 
@@ -284,9 +276,9 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         return this.state.editing ? "Cancel" : "Edit";
     }
 
-    private generateUserButtons(link: Enrollment): ILink[] {
+    private generateUserButtons(enrollment: Enrollment): ILink[] {
         const links = [];
-        switch (link.getStatus()) {
+        switch (enrollment.getStatus()) {
             case Enrollment.UserStatus.PENDING:
                 links.push({
                     name: "Accept",
@@ -327,9 +319,18 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 });
                 break;
             default:
-                console.log("Got unexpected user status " + link.getStatus() + " when generating links");
+                console.log("Got unexpected user status " + enrollment.getStatus() + " when generating links");
         }
         return links;
+    }
+
+    private checkForErrors(status: Status, action?: () => void) {
+        if (status.getCode() !== 0) {
+            this.generateErrorMessage(status);
+            return;
+        } else if (action) {
+            action();
+        }
     }
 
     private generateErrorMessage(status: Status) {
