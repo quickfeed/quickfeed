@@ -137,4 +137,4 @@ remote:
 	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
 
 prometheus:
-	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=../metrics/data --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
+	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=../metrics/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
