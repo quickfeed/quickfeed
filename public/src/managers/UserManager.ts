@@ -7,7 +7,7 @@ export interface IUserProvider {
     tryLogin(username: string, password: string): Promise<User | null>;
     logout(user: User): Promise<boolean>;
     getUser(): Promise<User>;
-    getAllUser(): Promise<User[]>;
+    getUsers(): Promise<User[]>;
     tryRemoteLogin(provider: string): Promise<User | null>;
     changeAdminRole(user: User, promote: boolean): Promise<boolean>;
     getLoggedInUser(): Promise<User | null>;
@@ -99,8 +99,8 @@ export class UserManager {
         return this.userProvider.isAuthorizedTeacher();
     }
 
-    public async getAllUser(): Promise<User[]> {
-        return this.userProvider.getAllUser();
+    public async getUsers(): Promise<User[]> {
+        return this.userProvider.getUsers();
     }
 
     public async changeAdminRole(user: User, promote: boolean): Promise<boolean> {

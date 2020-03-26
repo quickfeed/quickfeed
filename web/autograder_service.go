@@ -78,7 +78,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 // This function can also promote a user to admin or demote a user.
 // Access policy: Admin can update other users's information and promote to Admin;
 // Current User if Owner can update its own information.
-func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.User, error) {
+func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateUser failed: authentication error: %w", err)
@@ -86,14 +86,13 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	}
 	if !(usr.IsAdmin || usr.IsOwner(in.GetID())) {
 		s.logger.Errorf("UpdateUser failed to update user %d: user is not admin or course creator", in.GetID())
-		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
+		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user's information")
 	}
-	usr, err = s.updateUser(usr, in)
-	if err != nil {
+	if _, err = s.updateUser(usr, in); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %w", in.GetID(), err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
+		return nil, status.Errorf(codes.InvalidArgument, "failed to update user")
 	}
-	return usr, nil
+	return &pb.Void{}, nil
 }
 
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
