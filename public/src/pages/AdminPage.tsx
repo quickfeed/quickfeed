@@ -35,7 +35,7 @@ export class AdminPage extends ViewPage {
     }
 
     public async users(info: INavInfo<{}>): View {
-        const allUsers = (await this.userMan.getAllUser()).map((user) => {
+        const allUsers = (await this.userMan.getUsers()).map((user) => {
             const enrol = new Enrollment();
             enrol.setUserid(user.getId());
             enrol.setCourseid(0);

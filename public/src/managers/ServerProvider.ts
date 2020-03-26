@@ -27,7 +27,6 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
-import { Results } from "../components/teacher/Results";
 
 interface IEndpoints {
     user: string;
@@ -291,7 +290,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async getAllUser(): Promise<User[]> {
+    public async getUsers(): Promise<User[]> {
         const result = await this.grpcHelper.getUsers();
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
@@ -404,10 +403,10 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         let scoreObj: ITestCases[];
 
         // IMPORTANT: Field names of the Score struct found in the kit/score/score.go,
-        // the ITestCases struct found in the public/src/models.ts,
-        // and names in the string passed to JSON.parse() metod must match.
-        // If experiencing an uncaught error in the browser which results in blank page
-        // when addressing lab information for a student/group, it is likely to originate from here
+        // of the ITestCases struct found in the public/src/models.ts,
+        // and names in the string passed to JSON.parse() method must match.
+        // If experiencing an uncaught error in the browser which results in a blank page
+        // when addressing lab information for a student/group, it is likely originates from here.
         try {
             buildInfo = JSON.parse(buildInfoAsString);
         } catch (e) {

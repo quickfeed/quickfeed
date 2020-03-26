@@ -40,7 +40,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented.");
     }
 
-    public async getAllUser(): Promise<User[]> {
+    public async getUsers(): Promise<User[]> {
         const users: User[] = [];
         const dummyUsers = MapHelper.toArray(this.localUsers);
         dummyUsers.forEach((ele) => {
@@ -146,7 +146,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async getUsersAsMap(IDs: number[]): Promise<IMap<User>> {
         const returnUsers: IMap<User> = {};
-        const allUsers = await this.getAllUser();
+        const allUsers = await this.getUsers();
         IDs.forEach((ele) => {
             const temp = allUsers[ele];
             if (temp) {

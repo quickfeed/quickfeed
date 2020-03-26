@@ -78,8 +78,8 @@ export class GrpcManager {
         return this.grpcSend<Course>(this.agService.createCourse, course);
     }
 
-    public updateCourse(course: Course): Promise<IGrpcResponse<Course>> {
-        return this.grpcSend<Course>(this.agService.updateCourse, course);
+    public updateCourse(course: Course): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateCourse, course);
     }
 
     public getCourse(courseID: number): Promise<IGrpcResponse<Course>> {
