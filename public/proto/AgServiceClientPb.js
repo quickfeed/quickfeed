@@ -16,9 +16,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetUsers = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Users, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Users.deserializeBinary);
-        this.methodInfoUpdateUser = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.User, function (request) {
+        this.methodInfoUpdateUser = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
-        }, ag_pb_1.User.deserializeBinary);
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoIsAuthorizedTeacher = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.AuthorizationResponse, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.AuthorizationResponse.deserializeBinary);

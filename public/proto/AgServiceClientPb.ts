@@ -105,18 +105,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoUpdateUser = new grpcWeb.AbstractClientBase.MethodInfo(
-    User,
+    Void,
     (request: User) => {
       return request.serializeBinary();
     },
-    User.deserializeBinary
+    Void.deserializeBinary
   );
 
   updateUser(
     request: User,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: User) => void) {
+               response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/UpdateUser',
