@@ -57,22 +57,19 @@ export class GrpcManager {
     // /* USERS */ //
 
     public getUser(): Promise<IGrpcResponse<User>> {
-        const request = new Void();
-        return this.grpcSend<User>(this.agService.getUser, request);
+        return this.grpcSend<User>(this.agService.getUser, new Void());
     }
 
     public getUsers(): Promise<IGrpcResponse<Users>> {
-        const request = new Void();
-        return this.grpcSend<Users>(this.agService.getUsers, request);
+        return this.grpcSend<Users>(this.agService.getUsers, new Void());
     }
 
-    public updateUser(user: User): Promise<IGrpcResponse<User>> {
-        return this.grpcSend<User>(this.agService.updateUser, user);
+    public updateUser(user: User): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateUser, user);
     }
 
     public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
-        const voidy = new Void();
-        return this.grpcSend<AuthorizationResponse>(this.agService.isAuthorizedTeacher, voidy);
+        return this.grpcSend<AuthorizationResponse>(this.agService.isAuthorizedTeacher, new Void());
     }
 
     // /* COURSES */ //
@@ -92,8 +89,7 @@ export class GrpcManager {
     }
 
     public getCourses(): Promise<IGrpcResponse<Courses>> {
-        const request = new Void();
-        return this.grpcSend<Courses>(this.agService.getCourses, request);
+        return this.grpcSend<Courses>(this.agService.getCourses, new Void());
     }
 
     public getCoursesWithEnrollment(userID: number, status: Enrollment.UserStatus[]): Promise<IGrpcResponse<Courses>> {
@@ -125,7 +121,7 @@ export class GrpcManager {
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByUser, request);
     }
 
-    public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, status?: any):
+    public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, state?: Enrollment.UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
 
         const request = new EnrollmentRequest();
@@ -265,8 +261,7 @@ export class GrpcManager {
     }
 
     public getProviders(): Promise<IGrpcResponse<Providers>> {
-        const request = new Void();
-        return this.grpcSend<Providers>(this.agService.getProviders, request);
+        return this.grpcSend<Providers>(this.agService.getProviders, new Void());
     }
 
     public isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<IGrpcResponse<Void>> {
