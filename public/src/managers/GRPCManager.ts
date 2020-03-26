@@ -67,7 +67,7 @@ export class GrpcManager {
     }
 
     public updateUser(user: User): Promise<IGrpcResponse<User>> {
-        return this.grpcSend(this.agService.updateUser, user);
+        return this.grpcSend<User>(this.agService.updateUser, user);
     }
 
     public isAuthorizedTeacher(): Promise<IGrpcResponse<AuthorizationResponse>> {
@@ -290,7 +290,7 @@ export class GrpcManager {
                 userID = currentUser.getId().toString();
             }
             method.call(this.agService, request, { "custom-header-1": "value1", "user": userID },
-                (err: grpcWeb.Error, response: T | undefined) => {
+                (err: grpcWeb.Error, response: T) => {
                     if (err) {
                         if (err.code !== grpcWeb.StatusCode.OK) {
                             const code = new Status();
