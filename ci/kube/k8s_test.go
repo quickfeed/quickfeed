@@ -77,7 +77,7 @@ func TestK8sFP(t *testing.T) {
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "f412f7d26f727fd10cabf925de860cecc1eaf7bb",
+		CreatorAccessToken: "14222140d1fa0a451b72e11c07a15d8aeb7705ff",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
@@ -122,7 +122,7 @@ func TestK8sFPSecret(t *testing.T) {
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "f412f7d26f727fd10cabf925de860cecc1eaf7bb",
+		CreatorAccessToken: "14222140d1fa0a451b72e11c07a15d8aeb7705ff",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),

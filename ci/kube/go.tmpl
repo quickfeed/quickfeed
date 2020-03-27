@@ -32,12 +32,14 @@ package common
 import (
 	"io/ioutil"
 	"log"
+	"fmt"
 )
 func Secret() string {
     sec, err := ioutil.ReadFile("/root/work/secreting/{{ .RandomSecret }}")
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("File contents: %s", sec)
   return string(sec)
 }
 EOF
