@@ -4,18 +4,15 @@ import (
 	"context"
 )
 
-type KubeConf struct {
-	ConfigFlag *string //flag that addresses to the kubeconfig file path
+//Container describes how to execute a CI job.
+type Container struct {
+	Image    string
+	Commands []string
 }
 
-// Job describes how to execute a CI job.
-type PodContainer struct {
-	BaseImage    string
-	ContainerCmd []string
-}
-
-// Runner contains methods for running user provided code in isolation.
-type KubeRunner interface {
-	// Run should synchronously execute the described job and return the output.
-	RunKubeJob(context.Context, *PodContainer, string, string, *KubeConf) (string, error)
+//KRunner contains methods for running user provided code in isolation.
+type KRunner interface {
+	Jobsecrets(string, string, string)
+	// RunKubeJob should synchronously execute the described job and return the output.
+	KRun(context.Context, *Container, string, string) (string, error)
 }

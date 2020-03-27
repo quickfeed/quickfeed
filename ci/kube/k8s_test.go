@@ -2,34 +2,29 @@ package kube_test
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
-	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
 )
 
 var (
-	home       = homeDir()
-	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	course     = "agcicd"
-	m          sync.Mutex
+	course = "agcicd"
+	sec    = "59fd5fe1c4f741604c1beeab875b9c789d2a7c73"
 )
+
+//var scriptPath = "kube/kube_scripts"
 
 func newKubeCI() *kube.K8s {
 	return &kube.K8s{}
 }
 
-func newPodContainer(baseImage string, script []string) *kube.PodContainer {
-	return &kube.PodContainer{
-		BaseImage:    baseImage,
-		ContainerCmd: script,
+func newPodContainer(baseImage string, script []string) *kube.Container {
+	return &kube.Container{
+		Image:    baseImage,
+		Commands: script,
 	}
 }
 
@@ -56,13 +51,23 @@ func TestK8s4(t *testing.T) {
 func testK8s(t *testing.T, echo string) {
 	script := `echo -n ` + echo
 	wantOut := echo
+	jobName := time.Now().Format("20060102-150405-") + echo
 
-	container := newPodContainer("golang", []string{script})
+	err := kube.Jobsecrets(jobName, "agcicd", sec)
+	if err != nil {
+		panic(err)
+	}
+	container := &kube.Container{
+		Image:    "golang",
+		Commands: []string{script},
+	}
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), container, course, time.Now().Format("20060102-150405-")+echo, kubeconfig)
+	out, err := k.KRun(context.Background(), container, jobName, "agcicd")
 	if err != nil {
 		t.Fatal(err)
+
 	}
+	kube.DeleteJobSecret(jobName, "agcicd")
 
 	if out != wantOut {
 		t.Errorf("have %#v want %#v", out, wantOut)
@@ -74,6 +79,11 @@ func TestK8sFP(t *testing.T) {
 	fmt.Println(startTime.Format("20060102-150405"))
 
 	jobName := startTime.Format("20060102-150405")
+
+	err := kube.Jobsecrets(jobName, "agcicd", sec)
+	if err != nil {
+		panic(err)
+	}
 	info := getAssignmentInfo()
 	jobdock, err := ci.ParseScriptTemplate("", info) ///root/work/aguisforYannic/aguis/ci/scripts
 	if err != nil {
@@ -85,11 +95,11 @@ func TestK8sFP(t *testing.T) {
 	container := newPodContainer("golang", script)
 
 	k := newKubeCI()
-	out, err := k.RunKubeJob(context.Background(), container, "agcicd", jobName, kubeconfig)
-	fmt.Println(out)
+	out, err := k.KRun(context.Background(), container, jobName, "agcicd")
 	if err != nil {
 		t.Fatal(err)
 	}
+	kube.DeleteJobSecret(jobName, "agcicd")
 
 	if out != wantOut {
 		t.Errorf("have %#v want %#v", out, wantOut)
@@ -99,13 +109,6 @@ func TestK8sFP(t *testing.T) {
 	fmt.Println(time.Since(startTime))
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
-}
-
 func getAssignmentInfo() *ci.AssignmentInfo {
 	cloneURL := "https://github.com/dat320-2019/assignments.git"
 	getURLTest := "https://github.com/dat320-2019/tests.git"
@@ -113,12 +116,12 @@ func getAssignmentInfo() *ci.AssignmentInfo {
 	info := &ci.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "a5aa206e0ff288d6063cce76cd7ddafe3e15113e",
+		CreatorAccessToken: "",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       time.Now().Format("20060102-150405"),
+		RandomSecret:       sec,
 	}
 	return info
 }

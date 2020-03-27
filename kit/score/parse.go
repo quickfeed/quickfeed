@@ -16,6 +16,7 @@ var ErrScoreNotFound = errors.New("score not found in string")
 // Parse returns a score object for the provided JSON string s
 // which contains secret.
 func Parse(s, secret string) (*Score, error) {
+
 	if strings.Contains(s, secret) {
 		var sc Score
 		err := json.Unmarshal([]byte(s), &sc)
@@ -31,6 +32,7 @@ func Parse(s, secret string) (*Score, error) {
 		}
 		return nil, err
 	}
+
 	return nil, ErrScoreNotFound
 }
 
