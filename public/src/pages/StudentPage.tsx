@@ -1,15 +1,16 @@
 import * as React from "react";
 import { Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
-import { CoursesOverview, GroupForm, GroupInfo, NavMenu, SingleCourseOverview, StudentLab } from "../components";
+import { CoursesOverview, GroupForm, GroupInfo, SingleCourseOverview, StudentLab } from "../components";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
-import { IAssignmentLink, IStudentSubmission } from "../models";
+import { IStudentLabsForCourse, IStudentLab } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
+import { showLoader } from '../loader';
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -17,15 +18,15 @@ export class StudentPage extends ViewPage {
     private courseMan: CourseManager;
 
     // Single user
-    private userCourses: IAssignmentLink[] = [];
-    private activeUserCourses: IAssignmentLink[] = [];
-    private selectedUserCourse: IAssignmentLink | undefined;
+    private userCourses: IStudentLabsForCourse[] = [];
+    private activeUserCourses: IStudentLabsForCourse[] = [];
+    private selectedUserCourse: IStudentLabsForCourse | undefined;
 
     // Group user
-    private GroupUserCourses: IAssignmentLink[] = [];
-    private selectedUserGroupCourse: IAssignmentLink | undefined;
+    private GroupUserCourses: IStudentLabsForCourse[] = [];
+    private selectedUserGroupCourse: IStudentLabsForCourse | undefined;
 
-    private selectedAssignment: IStudentSubmission | undefined;
+    private selectedAssignment: IStudentLab | undefined;
 
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
@@ -59,24 +60,24 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         if (this.activeUserCourses) {
             return (<CoursesOverview
-                courseOverview={this.activeUserCourses as IAssignmentLink[]}
-                groupCourseOverview={this.GroupUserCourses as IAssignmentLink[]}
+                courseOverview={this.activeUserCourses as IStudentLabsForCourse[]}
+                groupCourseOverview={this.GroupUserCourses as IStudentLabsForCourse[]}
                 navMan={this.navMan}
             />);
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async enroll(navInfo: INavInfo<any>): View {
         await this.setupData();
         const curUser = this.userMan.getCurrentUser();
         if (!curUser) {
-            return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+            return showLoader();
         }
         return <div>
             <h1>Enrollment page</h1>
             <EnrollmentView
-                courses={await this.courseMan.getCoursesWithState(curUser)}
+                courses={await this.courseMan.getCoursesWithUserStatus(curUser)}
                 onEnrollmentClick={(course: Course) => {
                     this.courseMan.addUserToCourse(course, curUser);
                     this.navMan.refresh();
@@ -91,19 +92,19 @@ export class StudentPage extends ViewPage {
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
             return (<SingleCourseOverview
-                courseAndLabs={this.selectedUserCourse as IAssignmentLink}
-                groupAndLabs={this.selectedUserGroupCourse as IAssignmentLink}
+                courseAndLabs={this.selectedUserCourse as IStudentLabsForCourse}
+                groupAndLabs={this.selectedUserGroupCourse as IStudentLabsForCourse}
                 onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}
                 onGroupLabClick={(courseId: number, labId: number) => this.handleGroupLabClick(courseId, labId)} />);
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async courseWithLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
-            this.selectAssignment(navInfo.params.labid);
+            this.selectAssignment(navInfo.params.labid, false);
             if (this.selectedAssignment) {
                 return <StudentLab
                     assignment={this.selectedAssignment}
@@ -113,20 +114,20 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={() => { }}>
+                    onApproveClick={() => {
+                        return;
+                    }}>
                 </StudentLab>;
             }
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
-    // TODO - Instead of requesting to server for each time
-    // preload grouplab the same way as normal labs are loaded.
     public async courseWithGroupLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserGroupCourse) {
-            await this.selectGroupAssignment(navInfo.params.labid);
+            this.selectAssignment(navInfo.params.labid, true);
             if (this.selectedAssignment) {
                 return <StudentLab
                     assignment={this.selectedAssignment}
@@ -136,7 +137,9 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={() => { }}>
+                    onApproveClick={() => {
+                        return;
+                    }}>
                 </StudentLab>;
             }
         }
@@ -170,7 +173,7 @@ export class StudentPage extends ViewPage {
             }
 
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async courseMissing(navInfo: INavInfo<{ courseid: number, page: string }>): View {
@@ -184,7 +187,7 @@ export class StudentPage extends ViewPage {
                 const courseID = course.course.getId();
                 const allLinks: ILink[] = [];
                 allLinks.push({ name: "Labs" });
-                const labs = course.assignments;
+                const labs = course.labs;
                 const gLabs: ILink[] = [];
                 labs.forEach((lab) => {
                     if (lab.assignment.getIsgrouplab()) {
@@ -214,7 +217,7 @@ export class StudentPage extends ViewPage {
                 allLinks.push({
                     name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
                 });
-                // if there is a group repository, push it too
+
                 allLinks.push({
                     name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
                 });
@@ -246,34 +249,32 @@ export class StudentPage extends ViewPage {
         return [];
     }
 
-    private onlyActiveCourses(studentCourse: IAssignmentLink[]): IAssignmentLink[] {
-        const userCourses: IAssignmentLink[] = [];
-        studentCourse.forEach((a) => {
-            if (a.link && (a.link.getStatus() === Enrollment.UserStatus.STUDENT
-                || a.link.getStatus() === Enrollment.UserStatus.TEACHER)) {
-                userCourses.push(a);
-            }
-        });
-        return userCourses;
-    }
-
     // Loads and cache information when user enters a page.
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            this.userCourses = await this.courseMan.getStudentCourses(curUser,
-                [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
-            this.activeUserCourses = this.onlyActiveCourses(this.userCourses as IAssignmentLink[]);
-
-            // preloading groupdata.
+            const userEnrolls = await this.courseMan.getAllUserEnrollments(curUser.getId());
+            this.userCourses = [];
+            this.activeUserCourses = [];
             this.GroupUserCourses = [];
 
-            for (const course of this.activeUserCourses) {
-                const group = await this.courseMan.getGroupByUserAndCourse(course.course.getId(), curUser.getId());
-                if (group != null) {
-                    const groupCourse = await this.courseMan.getGroupCourse(group, course.course);
-                    if (groupCourse) {
-                        this.GroupUserCourses.push(groupCourse);
+            for (const enrol of userEnrolls) {
+                const crs = enrol.getCourse()
+                if (crs) {
+                    const newCourseLink: IStudentLabsForCourse = {
+                        course: crs,
+                        enrollment: enrol,
+                        labs: []
+                    }
+                    await this.courseMan.fillLinks(newCourseLink, curUser, undefined, crs.getAssignmentsList())
+                    this.userCourses.push(newCourseLink);
+                    if (enrol.getStatus() === Enrollment.UserStatus.STUDENT || enrol.getStatus() === Enrollment.UserStatus.TEACHER) {
+                        this.activeUserCourses.push(newCourseLink);
+                    }
+                    const grp = enrol.getGroup()
+                    if (grp) {
+                        await this.courseMan.fillLinks(newCourseLink, undefined, grp, crs.getAssignmentsList())
+                        this.GroupUserCourses.push(newCourseLink);
                     }
                 }
             }
@@ -292,19 +293,14 @@ export class StudentPage extends ViewPage {
             (e) => e.course.getId() === course);
     }
 
-    private selectAssignment(labId: number) {
-        if (this.selectedUserCourse) {
-            // TODO: Be carefull not to return anything that sould not be able to be returned
-            this.selectedAssignment = this.selectedUserCourse.assignments.find(
+    private selectAssignment(labId: number, groupLab: boolean) {
+        if (this.selectedUserCourse && !groupLab) {
+            this.selectedAssignment = this.selectedUserCourse.labs.find(
                 (e) => e.assignment.getId() === labId,
             );
         }
-    }
-
-    private selectGroupAssignment(labId: number) {
-        if (this.selectedUserGroupCourse) {
-            // TODO: Be carefull not to return anything that sould not be able to be returned
-            this.selectedAssignment = this.selectedUserGroupCourse.assignments.find(
+        if (this.selectedUserGroupCourse && groupLab) {
+            this.selectedAssignment = this.selectedUserGroupCourse.labs.find(
                 (e) => e.assignment.getId() === labId,
             );
         }

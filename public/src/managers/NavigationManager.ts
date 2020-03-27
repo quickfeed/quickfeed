@@ -14,11 +14,11 @@ export interface INavEvent extends IEventData {
 }
 
 export interface ILink {
-    name: string;
+    name: string | JSX.Element;
     description?: string;
     uri?: string;
     active?: boolean;
-    extra?: string;
+    extra?: string | JSX.Element;
     absolute?: boolean;
 }
 

@@ -436,7 +436,7 @@ func createTeam(client *scm.SCM) cli.ActionFunc {
 		if len(users) < 1 {
 			return cli.NewExitError("team user names must be provided (comma separated)", 3)
 		}
-		opt := &scm.TeamOptions{
+		opt := &scm.NewTeamOptions{
 			Organization: c.String("namespace"),
 			TeamName:     c.String("team"),
 			Users:        users,
@@ -470,7 +470,7 @@ func deleteTeams(client *scm.SCM) cli.ActionFunc {
 
 			for _, team := range teams {
 				var errs []error
-				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamID: team.ID}); err != nil {
+				if err := (*client).DeleteTeam(ctx, &scm.TeamOptions{TeamName: team.Name, Organization: c.String("namespace")}); err != nil {
 					errs = append(errs, err)
 				} else {
 					fmt.Println("Deleted team", team.Name)

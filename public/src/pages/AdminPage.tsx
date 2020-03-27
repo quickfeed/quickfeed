@@ -42,12 +42,12 @@ export class AdminPage extends ViewPage {
             enrol.setStatus(0);
             return {
                 user,
-                link: enrol,
+                enrollment: enrol,
             };
         });
 
         // sorting registered user so that admins show first
-        allUsers.sort((x,y) => (x.user.getIsadmin() < y.user.getIsadmin()? 1 : -1));
+        allUsers.sort((x, y) => (x.user.getIsadmin() < y.user.getIsadmin() ? 1 : -1));
 
         return <div>
             <h1>All Users</h1>
@@ -62,6 +62,7 @@ export class AdminPage extends ViewPage {
 
                 }}
                 linkType={ActionType.InRow}
+                courseURL=""
                 actionClick={
                     (user, link) => {
                         this.handleAdminRoleClick(user);

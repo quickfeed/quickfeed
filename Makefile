@@ -15,16 +15,16 @@ agport				:= 8081
 ag2port				:= 3006
 
 # necessary when target is not tied to a file
-.PHONY: dep install ui proto devtools grpcweb envoy-build envoy-run scm
+.PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
 
-dep:
-	go get -u github.com/golang/protobuf/protoc-gen-go
-	go get -u github.com/gogo/protobuf/proto
-	go get -u github.com/gogo/protobuf/gogoproto
-	go get -u github.com/gogo/protobuf/protoc-gen-gofast
-	go get -u github.com/gogo/protobuf/protoc-gen-gogofast
-	go get -u github.com/gogo/protobuf/protoc-gen-gogofaster
-	
+download:
+	@echo Download go.mod dependencies
+	@go mod download
+
+install-tools: download
+	@echo Installing tools from tools.go
+	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+
 install:
 	@echo go install
 	@go install
@@ -93,8 +93,8 @@ protoset:
 	--proto_path=. --descriptor_set_out=ag.protoset --include_imports ag.proto
 
 test:
-	@cd ./web; go test
-	@cd ./database; go test
+	@go clean -testcache ./...
+	@go test ./...
 
 scm:
 	@echo "Compiling the scm tool"
@@ -135,3 +135,6 @@ local:
 remote:
 	@echo "Changing grpc client location to remote domain"
 	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
+
+prometheus:
+	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &

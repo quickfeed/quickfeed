@@ -1,22 +1,23 @@
 import * as React from "react";
-import { Assignment, Course, Submission } from "../../../proto/ag_pb";
+import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IAssignmentLink, IStudentSubmission, ISubmission } from "../../models";
+import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
+import { generateLabRepoLink } from '../../helper';
 
 interface IResultsProp {
     course: Course;
     courseURL: string;
-    students: IAssignmentLink[];
+    students: IStudentLabsForCourse[];
     labs: Assignment[];
     onApproveClick: (submissionID: number, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
-    assignment?: IStudentSubmission;
-    students: IAssignmentLink[];
+    assignment?: IStudentLab;
+    students: IStudentLabsForCourse[];
 }
 
 export class Results extends React.Component<IResultsProp, IResultsState> {
@@ -29,7 +30,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         if (currentStudent && courseAssignments && courseAssignments.length > 0) {
             this.state = {
                 // Only using the first student to fetch assignments.
-                assignment: currentStudent.assignments[0],
+                assignment: currentStudent.labs[0],
                 students: sortByScore(this.props.students, this.props.labs, false),
             };
         } else {
@@ -52,21 +53,21 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 showApprove={true}
                 onRebuildClick={
                     async () => {
-                        if (this.state.assignment && this.state.assignment.latest) {
-                            const ans = await this.props.onRebuildClick(this.state.assignment.assignment.getId(), this.state.assignment.latest.id);
+                        if (this.state.assignment && this.state.assignment.submission) {
+                            const ans = await this.props.onRebuildClick(this.state.assignment.assignment.getId(), this.state.assignment.submission.id);
                             if (ans) {
-                                this.state.assignment.latest = ans;
+                                this.state.assignment.submission = ans;
                                 return true;
                             }
-                        }                   
-                        return false;     
-                    }                    
+                        }
+                        return false;
+                    }
                 }
                 onApproveClick={ async (approve: boolean) => {
-                    if (this.state.assignment && this.state.assignment.latest) {
-                        const ans = await this.props.onApproveClick(this.state.assignment.latest.id, approve);
+                    if (this.state.assignment && this.state.assignment.submission) {
+                        const ans = await this.props.onApproveClick(this.state.assignment.submission.id, approve);
                         if (ans) {
-                            this.state.assignment.latest.approved = approve;
+                            this.state.assignment.submission.approved = approve;
                         }
                     }
                 }}
@@ -77,17 +78,17 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             <div>
                 <h1>Result: {this.props.course.getName()}</h1>
                 <Row>
-                    <div className="col-lg6 col-md-6 col-sm-12">
+                    <div key="resultshead" className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
                             placeholder="Search for students"
                             onChange={(query) => this.handleOnchange(query)}
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.students}
-                            selector={(item: IAssignmentLink) => this.getResultSelector(item)}
+                            selector={(item: IStudentLabsForCourse) => this.getResultSelector(item)}
                         />
                     </div>
-                    <div className="col-lg-6 col-md-6 col-sm-12">
+                    <div key="resultsbody" className="col-lg-6 col-md-6 col-sm-12">
                         {studentLab}
                     </div>
                 </Row>
@@ -101,21 +102,21 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IAssignmentLink): Array<string | JSX.Element | ICellElement> {
-        const user = student.link.getUser();
+    private getResultSelector(student: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
+        const user = student.enrollment.getUser();
         const displayName = user ? this.generateUserRepoLink(user.getName(), user.getLogin()) : "";
-        let selector: Array<string | JSX.Element | ICellElement> = [displayName];
-        selector = selector.concat(student.assignments.filter((e, i) => !e.assignment.getIsgrouplab()).map(
+        let selector: (string | JSX.Element | ICellElement)[] = [displayName];
+        selector = selector.concat(student.labs.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
                 let cellCss: string = "";
-                if (e.latest) {
+                if (e.submission) {
                     cellCss = generateCellClass(e);
                 }
                 const iCell: ICellElement = {
                     value: <a className={cellCss + " lab-cell-link"}
                         onClick={() => this.handleOnclick(e)}
                         href="#">
-                        {e.latest ? (e.latest.score + "%") : "N/A"}</a>,
+                        {e.submission ? (e.submission.score + "%") : "N/A"}</a>,
                     className: cellCss,
                 };
                 return iCell;
@@ -124,10 +125,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private generateUserRepoLink(name: string, userName: string): JSX.Element {
-        return <a href={this.props.courseURL + userName + "-labs"} target="_blank">{ name }</a>;
+        return <a href={generateLabRepoLink(this.props.courseURL, userName)} target="_blank">{ name }</a>;
     }
 
-    private handleOnclick(item: IStudentSubmission): void {
+    private handleOnclick(item: IStudentLab): void {
         this.setState({
             assignment: item,
         });
@@ -135,9 +136,9 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
 
     private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        const filteredData: IAssignmentLink[] = [];
+        const filteredData: IStudentLabsForCourse[] = [];
         this.props.students.forEach((std) => {
-            const usr = std.link.getUser();
+            const usr = std.enrollment.getUser();
             if (usr) {
                 if (usr.getName().toLowerCase().indexOf(query) !== -1
                     || usr.getEmail().toLowerCase().indexOf(query) !== -1

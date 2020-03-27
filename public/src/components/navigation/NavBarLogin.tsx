@@ -59,8 +59,8 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
             if (v.uri) {
                 return <li key={i}>
                     <a onClick={(e) => { e.preventDefault(); this.handleClick(v); }}
-                        href={"/" + v.uri} title={v.name}>
-                        <i className={"fa fa-2x fa-" + v.name.toLowerCase()} ></i>
+                        href={"/" + v.uri} title={this.stringifyLink(v.name)}>
+                        <i className={"fa fa-2x fa-" + this.stringifyLink(v.name).toLowerCase()} ></i>
                     </a>
                 </li>;
             }
@@ -99,5 +99,14 @@ export class NavBarLogin extends React.Component<INavBarLoginProps, INavBarLogin
         if (this.props.onClick) {
             this.props.onClick(link);
         }
+    }
+
+    // link name can come as a JSX.Element, for example in a case of a button
+    // with a glyphicon. In such a case, treat the name as if it was an empty string
+    private stringifyLink(linkName?: string | JSX.Element): string {
+        if (linkName && (linkName instanceof Element || typeof(linkName) === "string")) {
+            return linkName.toString();
+        }
+        return "";
     }
 }

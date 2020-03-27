@@ -11,8 +11,6 @@ import (
 // SCM is a common interface for different source code management solutions,
 // i.e., GitHub and GitLab.
 type SCM interface {
-	// Lists organizations (for logged in user) which can be used as a course directory.
-	ListOrganizations(context.Context) ([]*pb.Organization, error)
 	// Creates a new organization.
 	CreateOrganization(context.Context, *CreateOrgOptions) (*pb.Organization, error)
 	// Updates an organization
@@ -31,14 +29,13 @@ type SCM interface {
 	UpdateRepoAccess(context.Context, *Repository, string, string) error
 	// Returns true if there are no commits in the given repository
 	RepositoryIsEmpty(context.Context, *RepositoryOptions) bool
-	// List the webhooks associated with the provided repository.
+	// List the webhooks associated with the provided repository or organization.
 	ListHooks(context.Context, *Repository, string) ([]*Hook, error)
-	// Creates a new webhook.
+	// Creates a new webhook for organization if the name of organization
+	// is provided. Otherwise creates a hook for the given repo.
 	CreateHook(context.Context, *CreateHookOptions) error
-	// Create an organization level webhook
-	CreateOrgHook(context.Context, *OrgHookOptions) error
 	// Create team.
-	CreateTeam(context.Context, *TeamOptions) (*Team, error)
+	CreateTeam(context.Context, *NewTeamOptions) (*Team, error)
 	// Delete team.
 	DeleteTeam(context.Context, *TeamOptions) error
 	// Get a single team by ID or name
@@ -52,7 +49,7 @@ type SCM interface {
 	// RemoveTeamMember removes team member
 	RemoveTeamMember(context.Context, *TeamMembershipOptions) error
 	// UpdateTeamMembers adds or removes members of an existing team based on list of users in TeamOptions
-	UpdateTeamMembers(context.Context, *TeamOptions) error
+	UpdateTeamMembers(context.Context, *UpdateTeamOptions) error
 	// GetUserName returns the currently logged in user's login name.
 	GetUserName(context.Context) (string, error)
 	// GetUserNameByID returns the login name of user with the given remoteID.
@@ -90,8 +87,10 @@ type CreateOrgOptions struct {
 
 // GetOrgOptions contains information on the organization to fetch
 type GetOrgOptions struct {
-	ID       uint64
-	Name     string
+	ID   uint64
+	Name string
+	// Username field is used to filter organizations
+	// where the given user has a certain role.
 	Username string
 }
 
@@ -101,14 +100,14 @@ type Repository struct {
 	Path    string
 	Owner   string // Only used by GitHub.
 	WebURL  string // Repository website.
-	SSHURL  string // SSH clone URL.
+	SSHURL  string // SSH clone URL, used by GitLab.
 	HTTPURL string // HTTP(S) clone URL.
 	OrgID   uint64
 	Size    uint64
 }
 
-// RepositoryOptions used to fetch a single repository by ID or name
-// either ID or both Path and Owner info must be provided
+// RepositoryOptions is used to fetch a single repository by ID or name.
+// Either ID or both Path and Owner fields must be set.
 type RepositoryOptions struct {
 	ID    uint64
 	Path  string
@@ -128,46 +127,60 @@ type CreateRepositoryOptions struct {
 	Organization *pb.Organization
 	Path         string
 	Private      bool
-	Owner        string // we can create user repositories. Default owner is github organization
-	Permission   string // default permission level for the repo. Can be "read", "write", "admin", "none"
+	Owner        string // The owner of an organization's repo is always the organization itself.
+	Permission   string // Default permission level for the given repo. Can be "read", "write", "admin", "none".
 }
 
 // CreateHookOptions contains information on how to create a webhook.
+// If Organization string is provided, will create a new hook on
+// the organization's level. This hook will be triggered on push to any
+// of the organization's repositories.
 type CreateHookOptions struct {
-	URL        string
-	Secret     string
-	Repository *Repository
-}
-
-// OrgHookOptions contains information about an organization level hook
-type OrgHookOptions struct {
 	URL          string
 	Secret       string
 	Organization string
+	Repository   *Repository
 }
 
-// TeamOptions contains information about the team and the users of the team.
+// TeamOptions contains information about the team and the organization it belongs to.
+// It must include either both IDs or both names for the team and organization/
 type TeamOptions struct {
+	Organization   string
+	OrganizationID uint64
+	TeamName       string
+	TeamID         uint64
+}
+
+// NewTeamOptions used when creating a new team
+type NewTeamOptions struct {
 	Organization string
 	TeamName     string
-	TeamID       uint64
 	Users        []string
 }
 
-// TeamMembershipOptions contain information on organization team and associated user
+// UpdateTeamOptions used when updating team members.
+type UpdateTeamOptions struct {
+	OrganizationID uint64
+	TeamID         uint64
+	Users          []string
+}
+
+// TeamMembershipOptions contain information on organization team and associated user.
+// Username and either team ID, or names of both the team and organization must be provided.
 type TeamMembershipOptions struct {
-	Organization string
-	TeamID       int64
-	TeamSlug     string // slugified team name
-	Username     string // GitHub username
-	Role         string // member or maintainer. Maintainer can add, remove and promote team members
+	Organization   string
+	OrganizationID uint64
+	TeamID         uint64
+	TeamName       string
+	Username       string // GitHub username.
+	Role           string // "Member" or "maintainer". A maintainer can add, remove and promote team members.
 }
 
 // OrgMembershipOptions represent user's membership in organization
 type OrgMembershipOptions struct {
 	Organization string
-	Username     string // GitHub username
-	Role         string // role can be "admin" (organization owner) or "member"
+	Username     string // GitHub username.
+	Role         string // Role can be "admin" (organization owner) or "member".
 }
 
 // CreateClonePathOptions holds elements used when constructing a clone URL string.
@@ -178,18 +191,20 @@ type CreateClonePathOptions struct {
 }
 
 // AddTeamRepoOptions contains information about the repos to be added to a team.
+// All fields must be provided.
 type AddTeamRepoOptions struct {
-	TeamID     uint64
-	Repo       string
-	Owner      string // Name of the team to associate repo with. Only used by GitHub.
-	Permission string // permission level for team members. Can be "push", "pull", "admin"
+	OrganizationID uint64
+	TeamID         uint64
+	Repo           string
+	Owner          string // Name of the organization. Only used by GitHub.
+	Permission     string // Permission level for team members. Can be "push", "pull", "admin".
 }
 
 // Team represents a git Team
 type Team struct {
-	ID   uint64
-	Name string
-	URL  string
+	ID           uint64
+	Name         string
+	Organization string
 }
 
 // Authorization stores information about user scopes

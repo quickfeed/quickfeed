@@ -159,8 +159,6 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
             } else {
                     const isTeacher = await this.props.userMan.isTeacher(this.props.course.getId());
                     // if current user is a course teacher, redirect to the groups list
-                    // TODO(vera): this is a temporary solution, there must be another way to 
-                    // inform about group creation without redirecting the user from the page
                     const redirectTo: string = isTeacher ?
                         "/app/teacher/courses/" + this.props.course.getId() + "/groups"
                         : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
@@ -253,16 +251,16 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
 
         if (!this.userValidate(this.state.curUser)) {
             errors.push("You must be a member of the group");
-        }        
+        }
         return errors;
     }
 
     private userValidate(curUser: IUserRelation | undefined): boolean {
-        if (curUser && curUser.link.getStatus() === Enrollment.UserStatus.TEACHER) {
-            return true
-        } else {
-            return curUser ? curUser.link.getStatus() === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser) : false
+        if (!curUser) {
+            return false;
         }
+        const status = curUser.enrollment.getStatus();
+        return status === Enrollment.UserStatus.TEACHER || (status === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser));
     }
 
     private getFlashErrors(errors: string[]): JSX.Element {

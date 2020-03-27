@@ -5,13 +5,14 @@ import { ILink, NavigationManager, UserManager } from "../../managers";
 import { IUserRelation } from "../../models";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
+import { generateLabRepoLink } from '../../helper';
 
 interface IUserViewerProps {
     users: IUserRelation[];
     isCourseList: boolean;
     userMan?: UserManager;
     navMan?: NavigationManager;
-    courseURL?: string;
+    courseURL: string;
     searchable?: boolean;
     actions?: ILink[];
     optionalActions?: (user: IUserRelation) => ILink[];
@@ -50,6 +51,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             <DynamicTable
                 header={this.getTableHeading()}
                 data={this.state.users}
+                classType={"table-grp"}
                 selector={(item: IUserRelation) => this.renderRow(item)}
             />
         </div>;
@@ -73,9 +75,9 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         return heading;
     }
 
-    private renderRow(user: IUserRelation): Array<string | JSX.Element> {
-        const selector: Array<string | JSX.Element> = [];
-        if (user.link.getStatus() === Enrollment.UserStatus.TEACHER) {
+    private renderRow(user: IUserRelation): (string | JSX.Element)[] {
+        const selector: (string | JSX.Element)[] = [];
+        if (user.enrollment.getStatus() === Enrollment.UserStatus.TEACHER) {
             selector.push(
                 <span className="text-muted">
                     <a href={this.gitLink(user.user.getLogin())} target="_blank">{user.user.getName()}</a>
@@ -136,15 +138,18 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     private renderActionRow(user: IUserRelation, tempActions: ILink[]) {
         return tempActions.map((v, i) => {
             let hoverText = "";
-            // the only option with no uri is promoting to teacher role
             if (v.uri === "teacher") {
                 hoverText = "Promote to teacher";
+            }
+            if (v.uri === "demote") {
+                hoverText = "Demote teacher";
             }
 
             return <BootstrapButton
                 key={i}
                 classType={v.extra ? v.extra as BootstrapClass : "default"}
                 tooltip={hoverText}
+                type={v.description}
                 onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, v); } }}
             >{v.name}
             </BootstrapButton>;
@@ -175,7 +180,6 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
 
     // return link to github account if there is no course information, otherwise return link to the student labs repo
     private repoLink(user: string): string {
-        const repoLink = this.props.courseURL + user + "-labs";
-        return this.props.isCourseList ? repoLink : this.gitLink(user);
+        return this.props.isCourseList ? generateLabRepoLink(this.props.courseURL, user) : this.gitLink(user);
     }
 }

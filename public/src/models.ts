@@ -11,26 +11,26 @@ export interface IUser {
 
 // Browser only objects START
 
-// Contains a course, a student/group enrollment and a list
+// Contains a course, a student/group enrollment, and a list
 // of all assignments and the last submission for each assignment
-export interface IAssignmentLink {
+export interface IStudentLabsForCourse {
     course: Course;
-    link: Enrollment;
-    assignments: IStudentSubmission[];
+    enrollment: Enrollment;
+    labs: IStudentLab[];
 }
 
 // Contains an assignment, a latest submission,
 // and a name of the submitter (user or group)
-export interface IStudentSubmission {
+export interface IStudentLab {
     assignment: Assignment;
-    latest?: ISubmission;
+    submission?: ISubmission;
     authorName: string;
 }
 
 // Contains a user and the relation to a single course.
 export interface IUserRelation {
     user: User;
-    link: Enrollment;
+    enrollment: Enrollment;
 }
 
 // Browser only objects END

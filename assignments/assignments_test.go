@@ -36,17 +36,7 @@ func TestFetchAssignments(t *testing.T) {
 
 	courseOrgID := uint64(gitHubTestOrgID)
 	if courseOrgID == 0 {
-		// find course directory ID for 'autograder-test' or your organization
-		orgs, err := s.ListOrganizations(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, org := range orgs {
-			if org.Path == gitHubTestOrg {
-				courseOrgID = org.ID
-				t.Logf("To speed up test; update const to 'gitHubTestOrgID = %v'", org.ID)
-			}
-		}
+		t.Fatal("Organization ID not provided.")
 	}
 
 	course := &pb.Course{

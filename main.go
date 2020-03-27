@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"mime"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -20,9 +22,18 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"google.golang.org/grpc"
+
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func init() {
+	var (
+		// Create some standard server metrics.
+		grpcMetrics = grpc_prometheus.NewServerMetrics()
+	)
+
 	mustAddExtensionType := func(ext, typ string) {
 		if err := mime.AddExtensionType(ext, typ); err != nil {
 			panic(err)
@@ -38,6 +49,13 @@ func init() {
 	mustAddExtensionType(".jsx", "application/javascript")
 	mustAddExtensionType(".map", "application/json")
 	mustAddExtensionType(".ts", "application/x-typescript")
+
+	reg.MustRegister(
+		grpcMetrics,
+		pb.AgFailedMethodsMetric,
+		pb.AgMethodSuccessRateMetric,
+		pb.AgResponseTimeByMethodsMetric,
+	)
 }
 
 func envString(env, fallback string) string {
@@ -47,6 +65,11 @@ func envString(env, fallback string) string {
 	}
 	return e
 }
+
+var (
+	// Create a metrics registry.
+	reg = prometheus.NewRegistry()
+)
 
 func main() {
 	var (
@@ -101,6 +124,18 @@ func main() {
 	}
 	opt := grpc.UnaryInterceptor(pb.Interceptor(logger))
 	grpcServer := grpc.NewServer(opt)
+
+	// Create a HTTP server for prometheus.
+	httpServer := &http.Server{
+		Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}),
+		Addr:    fmt.Sprintf("0.0.0.0:%d", 9097),
+	}
+	go func() {
+		if err := httpServer.ListenAndServe(); err != nil {
+			log.Fatal("Unable to start a http server.")
+		}
+	}()
+
 	pb.RegisterAutograderServiceServer(grpcServer, agService)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start grpc server: %v\n", err)

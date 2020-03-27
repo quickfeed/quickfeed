@@ -13,6 +13,7 @@ type FakeSCM struct {
 	Repositories  map[uint64]*Repository
 	Organizations map[uint64]*pb.Organization
 	Hooks         map[uint64]int
+	Teams         map[uint64]*Team
 }
 
 // NewFakeSCMClient returns a new Fake client implementing the SCM interface.
@@ -21,17 +22,8 @@ func NewFakeSCMClient() *FakeSCM {
 		Repositories:  make(map[uint64]*Repository),
 		Organizations: make(map[uint64]*pb.Organization),
 		Hooks:         make(map[uint64]int),
+		Teams:         make(map[uint64]*Team),
 	}
-}
-
-// ListOrganizations implements the SCM interface.
-func (s *FakeSCM) ListOrganizations(ctx context.Context) ([]*pb.Organization, error) {
-	var orgs []*pb.Organization
-	for _, org := range s.Organizations {
-		orgs = append(orgs, org)
-	}
-
-	return orgs, nil
 }
 
 // CreateOrganization implements the SCM interface.
@@ -56,16 +48,15 @@ func (s *FakeSCM) UpdateOrganization(ctx context.Context, opt *CreateOrgOptions)
 func (s *FakeSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*pb.Organization, error) {
 	org, ok := s.Organizations[opt.ID]
 	if !ok {
-		return nil, errors.New("directory not found")
+		return nil, errors.New("organization not found")
 	}
 	return org, nil
 }
 
 // CreateRepository implements the SCM interface.
 func (s *FakeSCM) CreateRepository(ctx context.Context, opt *CreateRepositoryOptions) (*Repository, error) {
-	id := len(s.Repositories) + 1
 	repo := &Repository{
-		ID:      uint64(id),
+		ID:      uint64(len(s.Repositories) + 1),
 		Path:    opt.Path,
 		WebURL:  "https://example.com/" + opt.Organization.Path + "/" + opt.Path,
 		SSHURL:  "git@example.com:" + opt.Organization.Path + "/" + opt.Path,
@@ -122,41 +113,53 @@ func (s *FakeSCM) ListHooks(ctx context.Context, repo *Repository, org string) (
 
 // CreateHook implements the SCM interface.
 func (s *FakeSCM) CreateHook(ctx context.Context, opt *CreateHookOptions) error {
-	if _, ok := s.Repositories[opt.Repository.ID]; !ok {
-		return errors.New("repository not found")
+	if opt.Repository != nil {
+		if _, ok := s.Repositories[opt.Repository.ID]; !ok {
+			return errors.New("repository not found")
+		}
+		s.Hooks[opt.Repository.ID]++
 	}
-	s.Hooks[opt.Repository.ID]++
-	return nil
-}
-
-// CreateOrgHook implements the scm interface
-func (s *FakeSCM) CreateOrgHook(ctx context.Context, opt *OrgHookOptions) error {
-	// TODO no implementation provided yet
 	return nil
 }
 
 // CreateTeam implements the SCM interface.
-func (s *FakeSCM) CreateTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	// TODO no implementation provided yet
-	return &Team{ID: 1, Name: opt.TeamName, URL: ""}, nil
+func (s *FakeSCM) CreateTeam(ctx context.Context, opt *NewTeamOptions) (*Team, error) {
+	newTeam := &Team{
+		ID:           uint64(len(s.Teams) + 1),
+		Name:         opt.TeamName,
+		Organization: opt.Organization,
+	}
+	s.Teams[newTeam.ID] = newTeam
+	return newTeam, nil
 }
 
 // DeleteTeam implements the SCM interface.
 func (s *FakeSCM) DeleteTeam(ctx context.Context, opt *TeamOptions) error {
-	// TODO no implementation provided yet
+	if _, ok := s.Teams[opt.TeamID]; !ok {
+		return errors.New("repository not found")
+	}
+	delete(s.Repositories, opt.TeamID)
 	return nil
 }
 
 // GetTeam implements the SCM interface
 func (s *FakeSCM) GetTeam(ctx context.Context, opt *TeamOptions) (*Team, error) {
-	// TODO no implementation provided yet
-	return nil, nil
+	team, ok := s.Teams[opt.TeamID]
+	if !ok {
+		return nil, errors.New("team not found")
+	}
+	return team, nil
 }
 
 // GetTeams implements the SCM interface
 func (s *FakeSCM) GetTeams(ctx context.Context, org *pb.Organization) ([]*Team, error) {
-	// TODO no implementation provided yet
-	return nil, nil
+	var teams []*Team
+	for _, team := range s.Teams {
+		if team.Organization == org.Path {
+			teams = append(teams, team)
+		}
+	}
+	return teams, nil
 }
 
 // AddTeamMember implements the scm interface
@@ -172,7 +175,7 @@ func (s *FakeSCM) RemoveTeamMember(ctx context.Context, opt *TeamMembershipOptio
 }
 
 // UpdateTeamMembers implements the SCM interface.
-func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *TeamOptions) error {
+func (s *FakeSCM) UpdateTeamMembers(ctx context.Context, opt *UpdateTeamOptions) error {
 	// TODO no implementation provided yet
 	return nil
 }

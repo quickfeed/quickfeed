@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -239,7 +240,7 @@ func (s *AutograderService) UpdateEnrollment(ctx context.Context, in *pb.Enrollm
 func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.CourseRequest) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("UpdateEnrollments failed: authentication error: %w", err)
+		s.logger.Errorf("UpdateEnrollments failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
@@ -269,6 +270,27 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 		return nil, status.Errorf(codes.NotFound, "no courses with enrollment found")
 	}
 	return courses, nil
+}
+
+// GetEnrollmentsByUser returns all enrollments for the given user with preloaded courses and groups.
+// Access policy: user with userID or admin
+func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.UserRequest) (*pb.Enrollments, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetEnrollmentsByUser failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if usr.GetID() != in.GetUserID() && !usr.IsAdmin {
+		s.logger.Errorf("GetEnrollmentsByUser failed: current user ID: %d, but requested user ID is %d", usr.ID, in.UserID)
+		return nil, status.Errorf(codes.PermissionDenied, "only admins can request enrollments for other users")
+	}
+
+	// get all enrollments from the db (no scm)
+	enrols, err := s.getEnrollmentsByUser(in.GetUserID())
+	if err != nil {
+		s.logger.Errorf("Get enrollments for user %d failed: %s", in.GetUserID(), err)
+	}
+	return enrols, nil
 }
 
 // GetEnrollmentsByCourse returns all enrollments for the course specified in the request.
@@ -413,7 +435,7 @@ func (s *AutograderService) UpdateGroup(ctx context.Context, in *pb.Group) (*pb.
 func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest) (*pb.Void, error) {
 	usr, scm, err := s.getUserAndSCMForCourse(ctx, in.GetCourseID())
 	if err != nil {
-		s.logger.Errorf("DeleteGroup failed: authentication error: %w", err)
+		s.logger.Errorf("DeleteGroup failed: scm authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
 	grp, err := s.getGroup(&pb.GetGroupRequest{GroupID: in.GetGroupID()})
@@ -430,7 +452,7 @@ func (s *AutograderService) DeleteGroup(ctx context.Context, in *pb.GroupRequest
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
-		if ok, parsedErr := parseSCMError(err); ok {
+		if ok, parsedErr := parseSCMError(errors.Unwrap(err)); ok {
 			return nil, parsedErr
 		}
 		return nil, status.Errorf(codes.InvalidArgument, "failed to delete group")

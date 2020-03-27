@@ -21,17 +21,16 @@ interface IUserLoginEvent extends IEventData {
 
 export class UserManager {
     /**
-     * This event fires when an user is loged in to the service
+     * This event fires when the user has logged in.
      */
     public onLogin = newEvent<IUserLoginEvent>("UserManager.onLogin");
     /**
-     * This event fires when an user is loged out of the service
+     * This event fires when the user has logged out.
      */
     public onLogout = newEvent<IEventData>("UserManager.onLogout");
 
     private userProvider: IUserProvider;
     private currentUser: User | null;
-    // private usersToken: string | null;
 
     /**
      * Creates a new instance of the UserManager
@@ -56,7 +55,7 @@ export class UserManager {
     }
 
     /**
-     * Trys to login to the service with username and password
+     * Tries to login to the service with username and password
      * This is only used for testing
      */
     public async tryLogin(username: string, password: string): Promise<User | null> {

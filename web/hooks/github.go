@@ -10,7 +10,7 @@ import (
 	"github.com/autograde/aguis/assignments"
 	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/database"
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v30/github"
 	"go.uber.org/zap"
 )
 
@@ -118,7 +118,19 @@ func (wh githubWebHook) extractAssignments(payload *github.PushEvent, course *pb
 			// we assume the first path component holds the assignment name
 			name := strings.Split(modifiedFile, "/")[0]
 			modifiedAssignments[name] = true
-			wh.logger.Debugf("Commit %d (%s), file %d: %s", c, commit.GetID(), i, modifiedFile)
+			wh.logger.Debugf("Commit modified %d (%s), file %d: %s", c, commit.GetID(), i, modifiedFile)
+		}
+		for i, addedFile := range commit.Added {
+			// we assume the first path component holds the assignment name
+			name := strings.Split(addedFile, "/")[0]
+			modifiedAssignments[name] = true
+			wh.logger.Debugf("Commit added %d (%s), file %d: %s", c, commit.GetID(), i, addedFile)
+		}
+		for i, removedFile := range commit.Removed {
+			// we assume the first path component holds the assignment name
+			name := strings.Split(removedFile, "/")[0]
+			modifiedAssignments[name] = true
+			wh.logger.Debugf("Commit removed %d (%s), file %d: %s", c, commit.GetID(), i, removedFile)
 		}
 	}
 

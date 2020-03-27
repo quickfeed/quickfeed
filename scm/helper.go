@@ -5,9 +5,9 @@ import "errors"
 const (
 	// Organization roles //
 
-	// OrgOwner is organization owner
+	// OrgOwner is organization's owner
 	OrgOwner = "admin"
-	// OrgMember is organization member
+	// OrgMember is organization's member
 	OrgMember = "member"
 
 	// Team roles //
@@ -69,9 +69,14 @@ func (r Repository) valid() bool {
 
 func (opt AddTeamRepoOptions) valid() bool {
 	return opt.TeamID > 0 &&
+		opt.OrganizationID > 0 &&
 		opt.Repo != "" &&
 		opt.Owner != "" &&
 		opt.Permission != ""
+}
+
+func (opt UpdateTeamOptions) valid() bool {
+	return opt.TeamID > 0 && opt.OrganizationID > 0
 }
 
 func (opt CreateRepositoryOptions) valid() bool {
@@ -79,28 +84,24 @@ func (opt CreateRepositoryOptions) valid() bool {
 }
 
 func (opt CreateHookOptions) valid() bool {
-	return opt.Repository != nil &&
-		opt.Repository.valid() &&
-		opt.URL != ""
-}
-
-func (opt OrgHookOptions) valid() bool {
-	return opt.Organization != "" &&
-		opt.URL != ""
-}
-
-func (opt TeamOptions) validWithOrg() bool {
-	return opt.Organization != "" &&
-		opt.valid()
+	return opt.URL != "" &&
+		(opt.Organization != "" || (opt.Repository != nil &&
+			opt.Repository.valid()))
 }
 
 func (opt TeamOptions) valid() bool {
-	return opt.TeamName != "" || opt.TeamID > 0
+	return opt.TeamName != "" && opt.Organization != "" ||
+		opt.TeamID > 0 && opt.OrganizationID > 0
+}
+
+func (opt NewTeamOptions) valid() bool {
+	return opt.TeamName != "" && opt.Organization != ""
 }
 
 func (opt TeamMembershipOptions) valid() bool {
-	return opt.Organization != "" &&
-		(opt.TeamID > 0 || opt.TeamSlug != "")
+	return (opt.TeamID > 0 && opt.OrganizationID > 0 ||
+		opt.TeamName != "" && opt.Organization != "") &&
+		opt.Username != ""
 }
 
 func (opt OrgMembershipOptions) valid() bool {

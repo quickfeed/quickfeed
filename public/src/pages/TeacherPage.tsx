@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { BootstrapButton, CourseGroup, GroupForm, NavMenu, Results } from "../components";
+import { BootstrapButton, CourseGroup, GroupForm, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 
 import { View, ViewPage } from "./ViewPage";
@@ -10,9 +10,9 @@ import { INavInfo } from "../NavigationHelper";
 import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { IUserRelation } from "../models";
-
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
+import { showLoader } from '../loader';
 
 export class TeacherPage extends ViewPage {
 
@@ -106,7 +106,7 @@ export class TeacherPage extends ViewPage {
                     </BootstrapButton>;
                     break;
             }
-            return <div>
+            return <div key="head">
                 <h1>Overview for {course.getName()}</h1>
                 {button}
             </div>;
@@ -214,7 +214,7 @@ export class TeacherPage extends ViewPage {
                 pagePath={this.pagePath}
             />;
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async editGroup(info: INavInfo<{ cid: string, gid: string }>): View {
@@ -244,7 +244,7 @@ export class TeacherPage extends ViewPage {
                 groupData={group}
             />;
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
@@ -254,7 +254,7 @@ export class TeacherPage extends ViewPage {
             const pendingUsers: IUserRelation[] = [];
             // TODO: Maybe move this to the Members view
             all.forEach((user) => {
-                switch (user.link.getStatus()) {
+                switch (user.enrollment.getStatus()) {
                     case Enrollment.UserStatus.TEACHER:
                     case Enrollment.UserStatus.STUDENT:
                         acceptedUsers.push(user);
@@ -266,7 +266,7 @@ export class TeacherPage extends ViewPage {
             });
 
             // sorting accepted user so that teachers show first
-            acceptedUsers.sort((x,y) => (x.link.getStatus() < y.link.getStatus())? 1 : -1);
+            acceptedUsers.sort((x, y) => (x.enrollment.getStatus() < y.enrollment.getStatus()) ? 1 : -1);
 
             return <MemberView
                 course={course}
@@ -314,12 +314,12 @@ export class TeacherPage extends ViewPage {
         const confirmedTeacher = await this.userMan.isTeacher();
         if (curUser) {
             if (menu === 0) {
-                const states = [Enrollment.UserStatus.TEACHER];
+                const status = [Enrollment.UserStatus.TEACHER];
                 if (curUser.getIsadmin() || confirmedTeacher) {
-                    states.push(Enrollment.UserStatus.PENDING);
-                    states.push(Enrollment.UserStatus.STUDENT);
+                    status.push(Enrollment.UserStatus.PENDING);
+                    status.push(Enrollment.UserStatus.STUDENT);
                 }
-                const courses = await this.courseMan.getCoursesFor(curUser, states);
+                const courses = await this.courseMan.getCoursesFor(curUser, status);
 
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
@@ -377,7 +377,7 @@ export class TeacherPage extends ViewPage {
                 Repository.Type.SOLUTIONS]);
             return fn(course);
         }
-        return <div className="load-text"><div className="lds-ripple"><div></div><div></div></div></div>;
+        return showLoader();
     }
 
     private setConfirmString(approve: boolean): string {

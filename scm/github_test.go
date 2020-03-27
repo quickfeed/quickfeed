@@ -54,7 +54,7 @@ func TestListHooks(t *testing.T) {
 		t.Logf("hook: %v", hook)
 	}
 
-	hooks, err = s.ListHooks(ctx, &scm.Repository{Owner: gitHubTestOrg, Path: "tests"}, gitHubTestOrg)
+	hooks, err = s.ListHooks(ctx, &scm.Repository{Path: "tests"}, "")
 	if err == nil {
 		t.Fatal("expected error 'ListHooks: called with missing or incompatible arguments: ...'")
 	}

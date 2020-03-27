@@ -65,6 +65,7 @@ message Course {
     repeated Enrollment enrollments = 10;
     repeated Assignment assignments = 12;
     repeated Group groups = 13;
+    string organizationPath = 14; // The organization's SCM name, e.g. uis-dat520-2020.
 }
 
 message Courses {
@@ -173,6 +174,10 @@ message LabResultLinks {
 
 message CourseRequest {
     uint64 courseID = 1;
+}
+
+message UserRequest {
+    uint64 userID = 1;
 }
 
 message CoursesListRequest {
@@ -292,6 +297,7 @@ service AutograderService {
 
     // enrollments //
 
+    rpc GetEnrollmentsByUser(UserRequest) returns (Enrollments) {}
     rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {} 
     rpc UpdateEnrollment(Enrollment) returns (Void) {} 

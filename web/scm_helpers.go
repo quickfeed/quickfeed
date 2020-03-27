@@ -33,12 +33,15 @@ var (
 // is also used as the group name and repository path. The provided user names represent the SCM group members.
 // This function performs several sequential queries and updates on the SCM.
 // Ideally, we should provide corresponding rollbacks, but that is not supported yet.
-func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.Group) (*pb.Repository, *scm.Team, error) {
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: orgID})
-	if err != nil {
-		return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
+func createRepoAndTeam(ctx context.Context, sc scm.SCM, course *pb.Course, group *pb.Group) (*pb.Repository, *scm.Team, error) {
+	if course.GetOrganizationPath() == "" {
+		org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.GetOrganizationID()})
+		if err != nil {
+			return nil, nil, fmt.Errorf("createRepoAndTeam: organization not found: %w", err)
+		}
+		course.OrganizationPath = org.GetPath()
 	}
-
+	org := &pb.Organization{ID: course.GetOrganizationID(), Path: course.GetOrganizationPath()}
 	repo, err := sc.CreateRepository(ctx, &scm.CreateRepositoryOptions{
 		Organization: org,
 		Path:         group.GetName(),
@@ -48,7 +51,7 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to create repo: %w", err)
 	}
 
-	team, err := sc.CreateTeam(ctx, &scm.TeamOptions{
+	team, err := sc.CreateTeam(ctx, &scm.NewTeamOptions{
 		Organization: org.Path,
 		TeamName:     group.GetName(),
 		Users:        group.UserNames(),
@@ -58,17 +61,18 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.
 	}
 
 	err = sc.AddTeamRepo(ctx, &scm.AddTeamRepoOptions{
-		TeamID:     team.ID,
-		Owner:      repo.Owner,
-		Repo:       repo.Path,
-		Permission: scm.RepoPush,
+		TeamID:         team.ID,
+		OrganizationID: course.GetOrganizationID(),
+		Owner:          repo.Owner,
+		Repo:           repo.Path,
+		Permission:     scm.RepoPush,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("createRepoAndTeam: failed to add team to repo: %w", err)
 	}
 
 	groupRepo := &pb.Repository{
-		OrganizationID: orgID,
+		OrganizationID: course.GetOrganizationID(),
 		RepositoryID:   repo.ID,
 		GroupID:        group.GetID(),
 		HTMLURL:        repo.WebURL,
@@ -78,12 +82,12 @@ func createRepoAndTeam(ctx context.Context, sc scm.SCM, orgID uint64, group *pb.
 }
 
 // deletes group repository and team
-func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID uint64, teamID uint64) error {
+func deleteGroupRepoAndTeam(ctx context.Context, sc scm.SCM, repositoryID uint64, teamID, orgID uint64) error {
 	if err := sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repositoryID}); err != nil {
 		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete repository: %w", err)
 	}
 
-	if err := sc.DeleteTeam(ctx, &scm.TeamOptions{TeamID: teamID}); err != nil {
+	if err := sc.DeleteTeam(ctx, &scm.TeamOptions{TeamID: teamID, OrganizationID: orgID}); err != nil {
 		return fmt.Errorf("deleteGroupRepoAndTeam: failed to delete team: %w", err)
 	}
 	return nil
@@ -121,10 +125,10 @@ func createStudentRepo(ctx context.Context, sc scm.SCM, org *pb.Organization, pa
 }
 
 // add user to the organization's "students" team.
-func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
+func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, organizationPath string, userName string) error {
 	opt := &scm.TeamMembershipOptions{
-		Organization: org.Path,
-		TeamSlug:     scm.StudentsTeam,
+		Organization: organizationPath,
+		TeamName:     scm.StudentsTeam,
 		Username:     userName,
 		Role:         scm.TeamMember,
 	}
@@ -135,20 +139,20 @@ func addUserToStudentsTeam(ctx context.Context, sc scm.SCM, org *pb.Organization
 }
 
 // add user to the organization's "teachers" team, and remove user from "students" team.
-func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organization, userName string) error {
+func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, organizationPath string, userName string) error {
 	studentsTeam := &scm.TeamMembershipOptions{
-		Organization: org.Path,
+		Organization: organizationPath,
 		Username:     userName,
-		TeamSlug:     scm.StudentsTeam,
+		TeamName:     scm.StudentsTeam,
 	}
 	if err := sc.RemoveTeamMember(ctx, studentsTeam); err != nil {
 		return err
 	}
 
 	teachersTeam := &scm.TeamMembershipOptions{
-		Organization: org.Path,
+		Organization: organizationPath,
 		Username:     userName,
-		TeamSlug:     scm.TeachersTeam,
+		TeamName:     scm.TeachersTeam,
 		Role:         scm.TeamMaintainer,
 	}
 	if err := sc.AddTeamMember(ctx, teachersTeam); err != nil {
@@ -157,15 +161,63 @@ func promoteUserToTeachersTeam(ctx context.Context, sc scm.SCM, org *pb.Organiza
 	return nil
 }
 
-func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group) error {
-	opt := &scm.TeamOptions{
-		TeamName: group.Name,
-		TeamID:   group.TeamID,
-		Users:    group.UserNames(),
+func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
+	if err != nil {
+		return nil, err
+	}
+
+	switch state {
+	case pb.Enrollment_STUDENT:
+		// give access to course-info and assignments repositories
+		if err := grantAccessToCourseRepos(ctx, sc, org.GetPath(), login); err != nil {
+			return nil, err
+		}
+
+		// add student to the organization's "students" team
+		if err = addUserToStudentsTeam(ctx, sc, org.GetPath(), login); err != nil {
+			return nil, err
+		}
+
+		return createStudentRepo(ctx, sc, org, pb.StudentRepoName(login), login)
+
+	case pb.Enrollment_TEACHER:
+		// if teacher, promote to owner, remove from students team, add to teachers team
+		orgUpdate := &scm.OrgMembershipOptions{
+			Organization: org.Path,
+			Username:     login,
+			Role:         scm.OrgOwner,
+		}
+		// when promoting to teacher, promote to organization owner as well
+		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
+			return nil, fmt.Errorf("UpdateReposAndTeams: failed to update org membership for %s: %w", login, err)
+		}
+		err = promoteUserToTeachersTeam(ctx, sc, org.GetPath(), login)
+	}
+	return nil, err
+}
+
+func grantAccessToCourseRepos(ctx context.Context, sc scm.SCM, org, login string) error {
+	commonRepos := []string{pb.InfoRepo, pb.AssignmentRepo}
+
+	for _, repoType := range commonRepos {
+		if err := sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: org, Path: repoType}, login, scm.RepoPull); err != nil {
+			return fmt.Errorf("updateReposAndTeams: failed to update repo access to repo %s for user %s: %w ", repoType, login, err)
+		}
+	}
+	return nil
+}
+
+func updateGroupTeam(ctx context.Context, sc scm.SCM, group *pb.Group, orgID uint64) error {
+	opt := &scm.UpdateTeamOptions{
+		TeamID:         group.TeamID,
+		OrganizationID: orgID,
+		Users:          group.UserNames(),
 	}
 	return sc.UpdateTeamMembers(ctx, opt)
 }
 
+// remove user from the organization, delete user repository
 func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *pb.Repository) error {
 	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{
 		ID: repo.GetOrganizationID(),
@@ -182,6 +234,28 @@ func removeUserFromCourse(ctx context.Context, sc scm.SCM, login string, repo *p
 		return err
 	}
 	return sc.DeleteRepository(ctx, &scm.RepositoryOptions{ID: repo.GetRepositoryID()})
+}
+
+// remove user from teachers team, set organization status from owner to regular member
+func revokeTeacherStatus(ctx context.Context, sc scm.SCM, org, userName string) error {
+
+	teamOpts := &scm.TeamMembershipOptions{
+		Organization: org,
+		TeamName:     scm.TeachersTeam,
+		Username:     userName,
+	}
+
+	err := sc.RemoveTeamMember(ctx, teamOpts)
+
+	teamOpts.TeamName = scm.StudentsTeam
+	err = sc.AddTeamMember(ctx, teamOpts)
+
+	err = sc.UpdateOrgMembership(ctx, &scm.OrgMembershipOptions{
+		Organization: org,
+		Username:     userName,
+		Role:         scm.OrgMember,
+	})
+	return err
 }
 
 // isEmpty ensured that all of the provided repositories are empty

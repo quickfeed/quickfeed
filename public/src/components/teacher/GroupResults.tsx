@@ -1,22 +1,22 @@
 import * as React from "react";
 import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IAssignmentLink, IStudentSubmission, ISubmission } from "../../models";
+import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, generateGroupRepoLink, sortByScore } from "./labHelper";
 
 interface IResultsProps {
     course: Course;
     courseURL: string;
-    groups: IAssignmentLink[];
+    groups: IStudentLabsForCourse[];
     labs: Assignment[];
     onApproveClick: (submissionID: number, approved: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
-    assignment?: IStudentSubmission;
-    groups: IAssignmentLink[];
+    assignment?: IStudentLab;
+    groups: IStudentLabsForCourse[];
 }
 
 export class GroupResults extends React.Component<IResultsProps, IResultsState> {
@@ -25,10 +25,10 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         super(props);
 
         const currentGroup = this.props.groups.length > 0 ? this.props.groups[0] : null;
-        if (currentGroup && currentGroup.assignments.length > 0) {
+        if (currentGroup && currentGroup.labs.length > 0) {
             this.state = {
                 // Only using the first group to fetch assignments.
-                assignment: currentGroup.assignments[0],
+                assignment: currentGroup.labs[0],
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         } else {
@@ -50,21 +50,21 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 showApprove={true}
                 onRebuildClick={
                     async () => {
-                        if (this.state.assignment && this.state.assignment.latest) {
-                            const ans = await this.props.onRebuildClick(this.state.assignment.assignment.getId(), this.state.assignment.latest.id);
+                        if (this.state.assignment && this.state.assignment.submission) {
+                            const ans = await this.props.onRebuildClick(this.state.assignment.assignment.getId(), this.state.assignment.submission.id);
                             if (ans) {
-                                this.state.assignment.latest = ans;
+                                this.state.assignment.submission = ans;
                                 return true;
                             }
-                        }                   
-                        return false;     
-                    }         
+                        }
+                        return false;
+                    }
                 }
                 onApproveClick={(approve: boolean) => {
-                    if (this.state.assignment && this.state.assignment.latest) {
-                        const ans = this.props.onApproveClick(this.state.assignment.latest.id, approve);
+                    if (this.state.assignment && this.state.assignment.submission) {
+                        const ans = this.props.onApproveClick(this.state.assignment.submission.id, approve);
                         if (ans) {
-                            this.state.assignment.latest.approved = approve;
+                            this.state.assignment.submission.approved = approve;
                         }
                     }
                 }}
@@ -75,17 +75,17 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             <div>
                 <h1>Result: {this.props.course.getName()}</h1>
                 <Row>
-                    <div className="col-lg6 col-md-6 col-sm-12">
+                    <div key="resulthead" className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
                             placeholder="Search for groups"
                             onChange={(query) => this.handleOnchange(query)}
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.groups}
-                            selector={(item: IAssignmentLink) => this.getGroupResultSelector(item)}
+                            selector={(item: IStudentLabsForCourse) => this.getGroupResultSelector(item)}
                         />
                     </div>
-                    <div className="col-lg-6 col-md-6 col-sm-12">
+                    <div key="resultbody" className="col-lg-6 col-md-6 col-sm-12">
                         {groupLab}
                     </div>
                 </Row>
@@ -99,21 +99,21 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return headers;
     }
 
-    private getGroupResultSelector(group: IAssignmentLink): Array<string | JSX.Element | ICellElement> {
-        const grp = group.link.getGroup();
+    private getGroupResultSelector(group: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
+        const grp = group.enrollment.getGroup();
         const name = grp ? generateGroupRepoLink(grp.getName(), this.props.courseURL) : "";
-        let selector: Array<string | JSX.Element | ICellElement> = [name];
-        selector = selector.concat(group.assignments.filter((e, i) => e.assignment.getIsgrouplab()).map(
+        let selector: (string | JSX.Element | ICellElement)[] = [name];
+        selector = selector.concat(group.labs.filter((e, i) => e.assignment.getIsgrouplab()).map(
             (e, i) => {
                 let cellCss: string = "";
-                if (e.latest) {
+                if (e.submission) {
                     cellCss = generateCellClass(e);
                 }
                 const iCell: ICellElement = {
                     value: <a className={cellCss + " lab-cell-link"}
                         onClick={() => this.handleOnclick(e)}
                         href="#">
-                        {e.latest ? (e.latest.score + "%") : "N/A"}</a>,
+                        {e.submission ? (e.submission.score + "%") : "N/A"}</a>,
                     className: cellCss,
                 };
                 return iCell;
@@ -121,7 +121,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return selector;
     }
 
-    private handleOnclick(item: IStudentSubmission): void {
+    private handleOnclick(item: IStudentLab): void {
         this.setState({
             assignment: item,
         });
@@ -129,9 +129,9 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
 
     private handleOnchange(query: string): void {
         query = query.toLowerCase();
-        const filteredData: IAssignmentLink[] = [];
+        const filteredData: IStudentLabsForCourse[] = [];
         this.props.groups.forEach((std) => {
-            const grp = std.link.getGroup();
+            const grp = std.enrollment.getGroup();
             const name = grp ? grp.getName() : "";
             if (name.toLowerCase().indexOf(query) !== -1) {
                 filteredData.push(std);

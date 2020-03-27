@@ -13,8 +13,8 @@ import (
 	"github.com/autograde/aguis/web/auth"
 	"github.com/gorilla/sessions"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"go.uber.org/zap"
@@ -155,6 +155,8 @@ func testPreAuthLoggedIn(t *testing.T, haveSession, existingUser bool, newProvid
 	gothic.Store = store
 
 	e := echo.New()
+	rou := e.Router()
+	rou.Add("GET", "/:provider", func(echo.Context) error { return nil })
 	c := e.NewContext(r, w)
 
 	if haveSession {

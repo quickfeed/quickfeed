@@ -224,6 +224,9 @@ export class Course extends jspb.Message {
   clearGroupsList(): void;
   addGroups(value?: Group, index?: number): Group;
 
+  getOrganizationpath(): string;
+  setOrganizationpath(value: string): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Course.AsObject;
   static toObject(includeInstance: boolean, msg: Course): Course.AsObject;
@@ -246,6 +249,7 @@ export namespace Course {
     enrollmentsList: Array<Enrollment.AsObject>,
     assignmentsList: Array<Assignment.AsObject>,
     groupsList: Array<Group.AsObject>,
+    organizationpath: string,
   }
 }
 
@@ -662,6 +666,24 @@ export class CourseRequest extends jspb.Message {
 export namespace CourseRequest {
   export type AsObject = {
     courseid: number,
+  }
+}
+
+export class UserRequest extends jspb.Message {
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UserRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: UserRequest): UserRequest.AsObject;
+  static serializeBinaryToWriter(message: UserRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UserRequest;
+  static deserializeBinaryFromReader(message: UserRequest, reader: jspb.BinaryReader): UserRequest;
+}
+
+export namespace UserRequest {
+  export type AsObject = {
+    userid: number,
   }
 }
 

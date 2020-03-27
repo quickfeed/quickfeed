@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// ErrInvalidUserInfo is returned to user if user information in context is invalid
+// ErrInvalidUserInfo is returned to user if user information in context is invalid.
 var ErrInvalidUserInfo = status.Errorf(codes.PermissionDenied, "authorization failed. please try to logout and sign in again")
 
 func (s *AutograderService) getCurrentUser(ctx context.Context) (*pb.User, error) {
@@ -78,8 +78,8 @@ func (s *AutograderService) isEnrolled(userID, courseID uint64) bool {
 	})
 }
 
-// isValidSubmission returns true if submitter has active course enrollment or
-// if submitting group belongs to the given course
+// isValidSubmission returns true if submitting student has active course enrollment or
+// if submitting group belongs to the given course.
 func (s *AutograderService) isValidSubmissionRequest(submission *pb.SubmissionRequest) bool {
 	if !submission.IsValid() {
 		return false
@@ -99,7 +99,7 @@ func (s *AutograderService) isValidSubmissionRequest(submission *pb.SubmissionRe
 }
 
 // isValidSubmission returns true if submission belongs to active lab of the given course
-// and submitted by valid student or group
+// and submitted by valid student or group.
 func (s *AutograderService) isValidSubmission(submissionID uint64) bool {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
@@ -125,7 +125,7 @@ func (s *AutograderService) isTeacher(userID, courseID uint64) bool {
 	})
 }
 
-// isCourseCreator returns true if the given user is course creator for the given course
+// isCourseCreator returns true if the given user is course creator for the given course.
 func (s *AutograderService) isCourseCreator(courseID, userID uint64) bool {
 	course, _ := s.db.GetCourse(courseID, false)
 	return course.GetCourseCreatorID() == userID
@@ -152,7 +152,7 @@ func (s *AutograderService) getUserAndSCM(ctx context.Context, provider string) 
 func (s *AutograderService) getUserAndSCMForCourse(ctx context.Context, courseID uint64) (*pb.User, scm.SCM, error) {
 	crs, err := s.getCourse(courseID)
 	if err != nil {
-		return nil, nil, status.Errorf(codes.NotFound, "failed to get course with ID %d: %w", courseID, err)
+		return nil, nil, fmt.Errorf("failed to get course with ID %d: %w", courseID, err)
 	}
 	return s.getUserAndSCM(ctx, crs.GetProvider())
 }

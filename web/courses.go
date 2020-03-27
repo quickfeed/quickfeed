@@ -75,51 +75,6 @@ func (s *AutograderService) updateEnrollments(ctx context.Context, sc scm.SCM, c
 	return nil
 }
 
-func updateReposAndTeams(ctx context.Context, sc scm.SCM, course *pb.Course, login string, state pb.Enrollment_UserStatus) (*scm.Repository, error) {
-	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: course.OrganizationID})
-	if err != nil {
-		return nil, err
-	}
-
-	switch state {
-	case pb.Enrollment_STUDENT:
-		// get all repositories for organization
-		repos, err := sc.GetRepositories(ctx, &pb.Organization{ID: org.GetID(), Path: org.GetPath()})
-		if err != nil {
-			return nil, err
-		}
-		// grant read access to assignments and course-info repositories
-		for _, r := range repos {
-			if r.Path == pb.AssignmentRepo || r.Path == pb.InfoRepo {
-				if err = sc.UpdateRepoAccess(ctx, &scm.Repository{Owner: r.Owner, Path: r.Path}, login, scm.RepoPull); err != nil {
-					return nil, fmt.Errorf("updateReposAndTeams: failed to update repo access to repo %s for user %s: %w ", r.Path, login, err)
-				}
-			}
-		}
-
-		// add student to the organization's "students" team
-		if err = addUserToStudentsTeam(ctx, sc, org, login); err != nil {
-			return nil, err
-		}
-
-		return createStudentRepo(ctx, sc, org, pb.StudentRepoName(login), login)
-
-	case pb.Enrollment_TEACHER:
-		// if teacher, promote to owner, remove from students team, add to teachers team
-		orgUpdate := &scm.OrgMembershipOptions{
-			Organization: org.Path,
-			Username:     login,
-			Role:         scm.OrgOwner,
-		}
-		// when promoting to teacher, promote to organization owner as well
-		if err = sc.UpdateOrgMembership(ctx, orgUpdate); err != nil {
-			return nil, fmt.Errorf("UpdateReposAndTeams: failed to update org membership for %s: %w", login, err)
-		}
-		err = promoteUserToTeachersTeam(ctx, sc, org, login)
-	}
-	return nil, err
-}
-
 // GetCourse returns a course object for the given course id.
 func (s *AutograderService) getCourse(courseID uint64) (*pb.Course, error) {
 	return s.db.GetCourse(courseID, false)
@@ -187,14 +142,25 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 		return err
 	}
 	// ensure the organization exists
-	_, err = sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
+	org, err := sc.GetOrganization(ctx, &scm.GetOrgOptions{ID: request.OrganizationID})
 	if err != nil {
 		return err
 	}
+	request.OrganizationPath = org.GetPath()
 	return s.db.UpdateCourse(request)
 }
 
-// getEnrollmentsByCourse get all enrollments for a course that match the given enrollment request.
+// getEnrollmentsByUser returns all enrollments for the given user with preloaded
+// courses and groups
+func (s *AutograderService) getEnrollmentsByUser(userID uint64) (*pb.Enrollments, error) {
+	enrollments, err := s.db.GetEnrollmentsByUser(userID)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Enrollments{Enrollments: enrollments}, nil
+}
+
+// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
 func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
 	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.States...)
 	if err != nil {
@@ -214,7 +180,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
-// getRepositoryURL returns the repository information
+// getRepositoryURL returns URL of a course repository of the given type.
 func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint64, repoType pb.Repository_Type) (string, error) {
 	course, err := s.db.GetCourse(courseID, false)
 	if err != nil {
@@ -248,6 +214,8 @@ func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint
 	return repos[0].HTMLURL, nil
 }
 
+// isEmptyRepo returns nil if all repositories for the given course and student or group are empty,
+// returns an error otherwise.
 func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request *pb.RepositoryRequest) error {
 	course, err := s.db.GetCourse(request.GetCourseID(), false)
 	if err != nil {
@@ -263,7 +231,7 @@ func (s *AutograderService) isEmptyRepo(ctx context.Context, sc scm.SCM, request
 	return isEmpty(ctx, sc, repos)
 }
 
-// rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database
+// rejectEnrollment rejects a student enrollment, if a student repo exists for the given course, removes it from the SCM and database.
 func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
@@ -289,7 +257,7 @@ func (s *AutograderService) rejectEnrollment(ctx context.Context, sc scm.SCM, en
 	return s.db.RejectEnrollment(user.ID, course.ID)
 }
 
-// enrollStudent enrolls the given user as a student into the given course
+// enrollStudent enrolls the given user as a student into the given course.
 func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrolled *pb.Enrollment) error {
 	// course and user are both preloaded, no need to query the database
 	course, user := enrolled.GetCourse(), enrolled.GetUser()
@@ -305,38 +273,47 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 	if err != nil {
 		return err
 	}
-	s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
-	if len(repos) > 0 {
-		// repo already exist, update enrollment in database
-		return s.db.EnrollStudent(user.ID, course.ID)
-	}
 
-	// create user repo, user team, and add user to students team
-	repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
-	if err != nil {
-		s.logger.Errorf("failed to update repos or team membersip for student %s: %s", user.Login, err.Error())
-		return err
-	}
-	s.logger.Debug("Enrolling student: ", user.GetLogin(), " repo and team update done")
+	if enrolled.Status == pb.Enrollment_TEACHER {
+		err = revokeTeacherStatus(ctx, sc, course.GetOrganizationPath(), user.GetLogin())
+		if err != nil {
+			s.logger.Errorf("Revoking teacher status failed for user %s and course %s: %s", user.Login, course.Name, err)
+		}
+	} else {
 
-	// add student repo to database if SCM interaction above was successful
-	userRepo := pb.Repository{
-		OrganizationID: course.GetOrganizationID(),
-		RepositoryID:   repo.ID,
-		UserID:         user.ID,
-		HTMLURL:        repo.WebURL,
-		RepoType:       pb.Repository_USER,
-	}
-
-	// only create database record if there are no user repos
-	// TODO(vera): this can be set as a unique constraint in go tag in proto
-	// but will it be compatible with the database created without this constraint?
-	if dbRepo, _ := s.db.GetRepositories(&userRepo); len(dbRepo) < 1 {
-		if err := s.db.CreateRepository(&userRepo); err != nil {
+		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
+		if len(repos) > 0 {
+			// repo already exist, update enrollment in database
+			return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
+		}
+		// create user repo, user team, and add user to students team
+		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
+		if err != nil {
+			s.logger.Errorf("failed to update repos or team membersip for student %s: %s", user.Login, err.Error())
 			return err
 		}
+		s.logger.Debug("Enrolling student: ", user.GetLogin(), " repo and team update done")
+
+		// add student repo to database if SCM interaction above was successful
+		userRepo := pb.Repository{
+			OrganizationID: course.GetOrganizationID(),
+			RepositoryID:   repo.ID,
+			UserID:         user.ID,
+			HTMLURL:        repo.WebURL,
+			RepoType:       pb.Repository_USER,
+		}
+
+		// only create database record if there are no user repos
+		// TODO(vera): this can be set as a unique constraint in go tag in proto
+		// but will it be compatible with the database created without this constraint?
+		if dbRepo, _ := s.db.GetRepositories(&userRepo); len(dbRepo) < 1 {
+			if err := s.db.CreateRepository(&userRepo); err != nil {
+				return err
+			}
+		}
 	}
-	return s.db.EnrollStudent(user.ID, course.ID)
+
+	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
@@ -349,7 +326,7 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 		s.logger.Errorf("failed to update team membership for teacher %s: %s", user.Login, err.Error())
 		return err
 	}
-	return s.db.EnrollTeacher(user.ID, course.ID)
+	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_TEACHER)
 }
 
 func makeLabResults(course *pb.Course, labCache map[uint64]map[uint64]pb.Submission, groupLab bool) []*pb.LabResultLink {

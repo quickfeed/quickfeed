@@ -1,8 +1,7 @@
 import * as React from "react";
-import { Course, Group, User } from "../../../proto/ag_pb";
+import { Course, Group, User, Status } from '../../../proto/ag_pb';
 import { BootstrapButton, DynamicTable, Search } from "../../components";
-import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { bindFunc, RProp } from "../../helper";
+import { bindFunc, RProp, generateLabRepoLink } from '../../helper';
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
 import { generateGroupRepoLink } from "./labHelper";
@@ -20,6 +19,8 @@ interface ICourseGroupProps {
 interface ICourseGroupState {
     approvedGroups: Group[];
     pendingGroups: Group[];
+    editing: boolean;
+    errorMsg: JSX.Element | null;
 }
 
 export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroupState> {
@@ -29,6 +30,8 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         this.state = {
             approvedGroups: this.props.approvedGroups,
             pendingGroups: this.props.pendingGroups,
+            editing: false,
+            errorMsg: null,
         };
     }
 
@@ -52,9 +55,10 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                     placeholder="Search for groups"
                     onChange={(query) => this.handleSearch(query)}
                 />
+                {this.state.errorMsg}
                 {noGroupsWell}
-                {approvedGroups}
                 {pendingGroups}
+                {approvedGroups}
             </div>
         );
     }
@@ -69,10 +73,11 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     private createApproveGroupView(): JSX.Element {
         return (
             <div className="approved-groups">
-                <h3>Approved Groups</h3>
+                <h3>Approved Groups</h3> {this.editButton()}
                 <DynamicTable
-                    header={["Name", "Members"]}
+                    header={["Name", "Members", "Status"]}
                     data={this.state.approvedGroups}
+                    classType={"table-grp"}
                     selector={
                         (group: Group) => this.renderRow(group, true)
                     }
@@ -89,36 +94,33 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 <DynamicTable
                     header={["Name", "Members", "Actions"]}
                     data={this.state.pendingGroups}
+                    classType={"table-grp"}
                     selector={(group: Group) => this.renderRow(group, false)}
                 />
             </div>
         );
     }
 
-    private renderRow(group: Group, withLink: boolean): Array<string | JSX.Element> {
-        const selector: Array<string | JSX.Element> = [];
+    private renderRow(group: Group, withLink: boolean): (string | JSX.Element)[] {
+        const selector: (string | JSX.Element)[] = [];
         const groupName = withLink ? generateGroupRepoLink(group.getName(), this.props.courseURL) : group.getName();
         selector.push(groupName, this.getMembers(group.getUsersList()));
-        const dropdownMenu = this.renderDropdownMenu(group);
-        selector.push(dropdownMenu);
+        const actionButtonLinks = this.generateGroupButtons(group);
+        const actionButtons = this.renderActionRow(group, actionButtonLinks);
+        selector.push(<div className="btn-group action-btn">{actionButtons}</div>);
         return selector;
     }
 
-    private renderDropdownMenu(group: Group): JSX.Element {
-        const links = [];
-        // only add approve link to not approved groups
-        if (group.getStatus() !== Group.GroupStatus.APPROVED) {
-            links.push({ name: "Approve", uri: "approve", extra: "primary" });
-        }
-        links.push({ name: "Edit", uri: "edit", extra: "primary" });
-        links.push({ name: "Delete", uri: "delete", extra: "danger" });
-        return <ul className="nav nav-pills">
-            <LiDropDownMenu
-                links={links}
-                onClick={(link) => this.handleActionOnClick(group, link)}>
-                <span className="glyphicon glyphicon-option-vertical" />
-            </LiDropDownMenu>
-        </ul>;
+    private renderActionRow(group: Group, tempActions: ILink[]) {
+        return tempActions.map((v, i) => {
+            return <BootstrapButton
+                key={i}
+                classType={v.extra ? v.extra as BootstrapClass : "default"}
+                type={v.description}
+                onClick={(link) => { this.handleActionOnClick(group, v)}}
+            >{v.name}
+            </BootstrapButton>;
+        });
     }
 
     private updateButton(props: RProp<{
@@ -133,6 +135,14 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         </BootstrapButton>;
     }
 
+    private editButton() {
+        return <button type="button"
+                id="edit"
+                className="btn btn-success member-btn"
+                onClick={() => this.toggleEditState()}
+        >{this.editButtonString()}</button>;
+    }
+
     private getMembers(users: User[]): JSX.Element {
         const names: JSX.Element[] = [];
         users.forEach((user, i) => {
@@ -141,16 +151,16 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 separator = " ";
             }
 
-            const nameLink = <span><a href={this.props.courseURL
-                 + user.getLogin() + "-labs"} target="_blank">{ user.getName() }</a>{separator}</span>;
+            const nameLink = <span key={"s" + i} ><a href={ generateLabRepoLink(this.props.courseURL, user.getLogin())}
+             target="_blank">{ user.getName() }</a>{separator}</span>;
             names.push(nameLink);
             });
         return <div>{names}</div>;
     }
 
     private async handleUpdateStatus(group: Group, status: Group.GroupStatus): Promise<void> {
-        await this.props.courseMan.updateGroupStatus(group.getId(), status);
-        this.props.navMan.refresh();
+        const ans = await this.props.courseMan.updateGroupStatus(group.getId(), status);
+        this.checkForErrors(ans);
     }
 
     private async deleteGroup(group: Group) {
@@ -171,17 +181,17 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
         if (readyToDelete) {
             const ans = await this.props.courseMan.deleteGroup(courseID, group.getId());
-            if (ans) {
-                this.props.navMan.refresh();
-            }
+            this.checkForErrors(ans);
         }
     }
 
     private async handleActionOnClick(group: Group, link: ILink): Promise<void> {
         switch (link.uri) {
             case "approve":
-                group.setStatus(Group.GroupStatus.APPROVED);
-                await this.props.courseMan.updateGroup(group);
+                const ans = await this.props.courseMan.updateGroup(group);
+                this.checkForErrors(ans, () => {
+                    group.setStatus(Group.GroupStatus.APPROVED);
+                })
                 break;
             case "edit":
                 this.props.navMan
@@ -229,6 +239,70 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         });
     }
 
+    private generateGroupButtons(group: Group): ILink[] {
+        const links = [];
+        switch (group.getStatus()) {
+            case Group.GroupStatus.PENDING:
+                links.push({
+                    name: "Approve",
+                    extra: "primary",
+                    uri: "approve",
+                }, {
+                    name: "Edit",
+                    extra: "primary",
+                    uri: "edit",
+                }, {
+                    name: "Delete",
+                    extra: "danger",
+                    uri: "delete",
+                });
+                break;
+            case Group.GroupStatus.APPROVED:
+                this.state.editing ? links.push({
+                    name: "Edit",
+                    extra: "primary",
+                    uri: "edit",
+                }, {
+                    name: "Delete",
+                    extra: "danger",
+                    uri: "delete",
+                }) : links.push({
+                    name: "Approved",
+                    extra: "light",
+                });
+                break;
+            default:
+                console.log("Got unexpected group status " + group.getStatus() + " when generating links");
+        }
+        return links;
+    }
+
+    private toggleEditState() {
+        this.setState({
+            editing: !this.state.editing,
+        }, () => this.refreshState());
+    }
+
+    private editButtonString(): string {
+        return this.state.editing ? "Cancel" : "Edit";
+    }
+
+    private generateErrorMessage(status: Status) {
+        const err = <div className="alert alert-danger">{status.getError()}</div>;
+        this.setState({
+                errorMsg: err,
+        });
+    }
+
+    private checkForErrors(status: Status, action?: () => void) {
+        if (status.getCode() !== 0) {
+            this.generateErrorMessage(status);
+            return;
+        } else if (action) {
+            action();
+        }
+    }
+
     private refreshState() {
         this.setState({
             approvedGroups: this.props.approvedGroups,
@@ -236,5 +310,4 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
         });
         return this.forceUpdate();
     }
-
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/autograde/aguis/web"
 	"github.com/autograde/aguis/web/auth"
 	"github.com/google/go-cmp/cmp"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
 
@@ -132,7 +132,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(user.ID, allCourses[0].ID); err != nil {
+		if err := db.UpdateEnrollmentStatus(user.ID, allCourses[0].ID, pb.Enrollment_STUDENT); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -147,7 +147,7 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.EnrollStudent(user.ID, allCourses[1].ID); err != nil {
+		if err := db.UpdateEnrollmentStatus(user.ID, allCourses[1].ID, pb.Enrollment_STUDENT); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -213,7 +213,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 				UserID: user.ID, CourseID: course.ID, GroupID: 1}); err != nil {
 				t.Fatal(err)
 			}
-			if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+			if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 				t.Fatal(err)
 			}
 		} else {
@@ -222,7 +222,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 				UserID: user.ID, CourseID: course.ID}); err != nil {
 				t.Fatal(err)
 			}
-			if err := db.EnrollStudent(user.ID, course.ID); err != nil {
+			if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
 				t.Fatal(err)
 			}
 			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)

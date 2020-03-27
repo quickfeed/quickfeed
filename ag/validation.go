@@ -3,8 +3,10 @@ package ag
 import (
 	"context"
 	"reflect"
+	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -29,6 +31,13 @@ type idCleaner interface {
 // In addition, the interceptor also implements a cancel mechanism.
 func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		methodName := info.FullMethod[strings.LastIndex(info.FullMethod, "/")+1:]
+		AgMethodSuccessRateMetric.WithLabelValues(methodName, "total").Inc()
+		responseTimer := prometheus.NewTimer(prometheus.ObserverFunc(
+			AgResponseTimeByMethodsMetric.WithLabelValues(methodName).Set),
+		)
+		defer responseTimer.ObserveDuration().Milliseconds()
+
 		if v, ok := req.(validator); ok {
 			if !v.IsValid() {
 				return nil, status.Errorf(codes.InvalidArgument, "invalid payload")
@@ -43,9 +52,14 @@ func Interceptor(logger *zap.Logger) grpc.UnaryServerInterceptor {
 		// if response has information on remote ID, it will be removed
 		resp, err := handler(ctx, req)
 		if resp != nil {
+			AgMethodSuccessRateMetric.WithLabelValues(methodName, "success").Inc()
 			if v, ok := resp.(idCleaner); ok {
 				v.RemoveRemoteID()
 			}
+		}
+		if err != nil {
+			AgFailedMethodsMetric.WithLabelValues(methodName).Inc()
+			AgMethodSuccessRateMetric.WithLabelValues(methodName, "error").Inc()
 		}
 		return resp, err
 	}
@@ -71,9 +85,14 @@ func (c Course) IsValid() bool {
 		c.GetTag() != ""
 }
 
-// IsValid chacks required fields of a user request
+// IsValid checks required fields of a user request
 func (u User) IsValid() bool {
 	return u.GetID() > 0
+}
+
+// IsValid ensures that user ID is set
+func (u UserRequest) IsValid() bool {
+	return u.GetUserID() > 0
 }
 
 // IsValid checks required fields of an enrollment request.

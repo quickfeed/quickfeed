@@ -4,7 +4,8 @@ interface IDynamicTableProps<T> {
     header: string[];
     footer?: string[] | ICellElement[];
     data: T[];
-    selector: (item: T) => Array<string | JSX.Element | ICellElement>;
+    classType?: string;
+    selector: (item: T) => (string | JSX.Element | ICellElement)[];
     onRowClick?: (link: T) => void;
 }
 
@@ -25,9 +26,9 @@ export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>> {
             return this.renderRow(v, i);
         });
         const tableFooter = footer ? <tfoot><tr>{this.renderCells(footer)}</tr></tfoot> : null;
-
+        const classString = this.props.onRowClick ? "table table-hover table-striped" : "table table-striped" + " " + this.props.classType;
         return (
-            <table className={this.props.onRowClick ? "table table-hover table-striped" : "table table-striped"}>
+            <table className={classString}>
                 <thead>
                     <tr>{this.renderCells(this.props.header, true)}</tr>
                 </thead>
@@ -39,7 +40,7 @@ export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>> {
         );
     }
 
-    private renderCells(values: Array<string | JSX.Element | ICellElement>, th: boolean = false): JSX.Element[] {
+    private renderCells(values: (string | JSX.Element | ICellElement)[], th: boolean = false): JSX.Element[] {
         return values.map((v, i) => {
             if (th) {
                 if (isICellElement(v)) {

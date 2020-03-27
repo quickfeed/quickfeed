@@ -1,10 +1,9 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
-import { IStudentSubmission } from "../../models";
-import { Submission } from "../../../proto/ag_pb";
+import { IStudentLab } from "../../models";
 
 interface ILabInfoProps {
-    assignment: IStudentSubmission;
+    assignment: IStudentLab;
     showApprove: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
@@ -13,12 +12,12 @@ interface ILabInfoProps {
 export class LabResultView extends React.Component<ILabInfoProps> {
 
     public render() {
-        if (this.props.assignment.latest) {
-            const latest = this.props.assignment.latest;
-            const buildLog = latest.buildLog.split("\n").map((x) => <span>{x}<br /></span>);
+        if (this.props.assignment.submission) {
+            const latest = this.props.assignment.submission;
+            const buildLog = latest.buildLog.split("\n").map((x, i) => <span key={i} >{x}<br /></span>);
             return (
-                <div className="col-md-9 col-sm-9 col-xs-12">
-                    <div className="result-content" id="resultview">
+                <div key="labhead" className="col-md-9 col-sm-9 col-xs-12">
+                    <div key="labview" className="result-content" id="resultview">
                         <section id="result">
                             <LabResult
                                 assignment_id={this.props.assignment.assignment.getId()}
@@ -42,8 +41,8 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 weight={100}
                             />
                             <Row>
-                                <div className="col-lg-12">
-                                    <div className="well">
+                                <div key="loghead" className="col-lg-12">
+                                    <div key="logview" className="well">
                                         <code id="logs">{buildLog}</code>
                                     </div>
                                 </div>

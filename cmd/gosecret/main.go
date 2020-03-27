@@ -18,7 +18,7 @@ import (
   "io/ioutil"
   "log"
 
-  "github.com/autograde/kit/score"
+  "github.com/autograde/aguis/kit/score"
 )
 
 func init() {
