@@ -109,7 +109,6 @@ func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName
 		return "", err
 	}
 	k.jobWaitToActive()
-	fmt.Println("after jobevent")
 
 	err = k.podEvents(clientset, courseName, createdJob.Name)
 	if err != nil {
