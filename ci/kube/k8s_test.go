@@ -3,7 +3,6 @@ package kube_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -11,7 +10,10 @@ import (
 	"github.com/autograde/aguis/ci/kube"
 )
 
-var course = "agcicd"
+var (
+	course = "agcicd"
+	sec    = "59fd5fe1c4f741604c1beeab875b9c789d2a7c73"
+)
 
 //var scriptPath = "kube/kube_scripts"
 
@@ -19,10 +21,10 @@ func newKubeCI() *kube.K8s {
 	return &kube.K8s{}
 }
 
-func newPodContainer(baseImage string, script []string) *kube.PodContainer {
-	return &kube.PodContainer{
-		BaseImage:    baseImage,
-		ContainerCmd: script,
+func newPodContainer(baseImage string, script []string) *kube.Container {
+	return &kube.Container{
+		Image:    baseImage,
+		Commands: script,
 	}
 }
 
@@ -50,7 +52,6 @@ func testK8s(t *testing.T, echo string) {
 	script := `echo -n ` + echo
 	wantOut := echo
 	jobName := time.Now().Format("20060102-150405-") + echo
-	sec := "59fd5fe1c4f741604c1beeab875b9c789d2a7c73"
 
 	err := kube.Jobsecrets(jobName, "agcicd", sec)
 	if err != nil {
@@ -78,6 +79,11 @@ func TestK8sFP(t *testing.T) {
 	fmt.Println(startTime.Format("20060102-150405"))
 
 	jobName := startTime.Format("20060102-150405")
+
+	err := kube.Jobsecrets(jobName, "agcicd", sec)
+	if err != nil {
+		panic(err)
+	}
 	info := getAssignmentInfo()
 	jobdock, err := ci.ParseScriptTemplate("", info) ///root/work/aguisforYannic/aguis/ci/scripts
 	if err != nil {
@@ -103,13 +109,6 @@ func TestK8sFP(t *testing.T) {
 	fmt.Println(time.Since(startTime))
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
-}
-
 func getAssignmentInfo() *ci.AssignmentInfo {
 	cloneURL := "https://github.com/dat320-2019/assignments.git"
 	getURLTest := "https://github.com/dat320-2019/tests.git"
@@ -117,12 +116,12 @@ func getAssignmentInfo() *ci.AssignmentInfo {
 	info := &ci.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "a5aa206e0ff288d6063cce76cd7ddafe3e15113e",
+		CreatorAccessToken: "",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       time.Now().Format("20060102-150405"),
+		RandomSecret:       sec,
 	}
 	return info
 }
