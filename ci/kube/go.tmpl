@@ -4,6 +4,12 @@ echo "*** Preparing for Test Execution ***\n"
 # echo "Current dir: `pwd`"
 # echo "Path: $PATH"
 
+# create bin dir (silently, if already exists)
+mkdir -p /go/bin
+# fetch gosecret binary (This is a HACK)
+wget -q http://www.ux.uis.no/~meling/tmp/gosecret -P /go/bin
+chmod 700 /go/bin/gosecret
+
 git config --global url."https://{{ .CreatorAccessToken }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
 # Fetch student repo
@@ -11,10 +17,18 @@ git clone {{ .GetURL }} assignments
 # Fetch tests repo
 git clone {{ .TestURL }}
 
+# Run gosecret for all tests
+cd /go/tests
+/go/bin/gosecret -secret {{ .RandomSecret }}
 
 # Move to folder for assignment to test.
 cd /go/assignments/{{ .AssignmentName }}/
 
+# Fail student code that attempts to access secret
+if grep -r -e common.Secret -e GlobalSecret * ; then
+  echo "\n=== Misbehavior Detected: Failed ===\n"
+  exit
+fi
 
 # Make sure there are no Autograder tests in the student repo
 rm $(find ./ | grep _ag_test.go)
@@ -22,28 +36,17 @@ rm $(find ./ | grep _ag_test.go)
 # echo "Removing `pwd`/go.mod, if any"
 rm -f go.mod
 
-# Secret will be mounted in a file while the container running. 
-#cat /root/work/secreting/{{ .RandomSecret }} 
-#RandomSecret is the name of the job, not the actual RandomSecret, the field name can be changed, only for the test
+# Create common dir (silently, if already exists)
+mkdir -p /go/tests/common
 
 # Generate new secret.go with new secret value for each run
 cat <<EOF > /go/tests/common/secret.go
 package common
-import (
-	"io/ioutil"
-	"log"
-	"fmt"
-)
+
 func Secret() string {
-    sec, err := ioutil.ReadFile("/root/work/secreting/{{ .RandomSecret }}")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("File contents: %s", sec)
-  return string(sec)
+  return "{{ .RandomSecret }}"
 }
 EOF
-
 
 # Copy tests into student assignments folder for running tests
 cp -r /go/tests/* /go/assignments/
