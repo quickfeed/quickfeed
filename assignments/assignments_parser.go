@@ -64,7 +64,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				// The Name field below is the folder name of the assignment.
 				assignment := &pb.Assignment{
 					CourseID:    courseID,
-					Deadline:    fixDeadline(newAssignment.Deadline),
+					Deadline:    FixDeadline(newAssignment.Deadline),
 					Language:    strings.ToLower(newAssignment.Language),
 					Name:        filepath.Base(filepath.Dir(path)),
 					Order:       uint32(newAssignment.AssignmentID),
@@ -83,7 +83,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 	return assignments, nil
 }
 
-func fixDeadline(in string) string {
+func FixDeadline(in string) string {
 	wantLayout := "2006-01-02T15:04:05"
 	acceptedLayouts := []string{
 		"2006-1-2T15:04:05",
