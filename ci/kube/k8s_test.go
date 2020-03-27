@@ -56,7 +56,9 @@ func testK8s(t *testing.T, echo string) {
 	out, err := k.KRun(context.Background(), container, jobName, "agcicd")
 	if err != nil {
 		t.Fatal(err)
+	
 	}
+	kube.DeleteJobSecret(jobName,"agcicd")
 
 	if out != wantOut {
 		t.Errorf("have %#v want %#v", out, wantOut)
@@ -70,7 +72,7 @@ func TestK8sFP(t *testing.T) {
 	getURLTest := "https://github.com/dat320-2019/tests.git"
 
 	sec := "59fd5fe1c4f741604c1beeab875b9c789d2a7c73"
-	jobName := "jobName"
+	jobName := "jobname"
 	err := kube.Jobsecrets(jobName, "agcicd", sec)
 	if err != nil {
 		panic(err)
@@ -79,7 +81,7 @@ func TestK8sFP(t *testing.T) {
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "dfacdda59b10863f14a712e436a6d9ebfe9c299e",
+		CreatorAccessToken: "4ea3c76b91aae0bea6ef32c7d0dc6c29de447ad1",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
@@ -103,6 +105,7 @@ func TestK8sFP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	kube.DeleteJobSecret(jobName,"agcicd")
 
 	if out != wantOut {
 		t.Errorf("have %#v want %#v", out, wantOut)
