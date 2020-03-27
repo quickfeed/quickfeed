@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/autograde/aguis/kit v0.0.0-00010101000000-000000000000
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v0.0.0-20170803041405-316b4ba9c289
 	github.com/docker/go-connections v0.4.0 // indirect
@@ -12,7 +13,6 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.5
 	github.com/google/go-cmp v0.4.0
-	github.com/google/go-github/v29 v29.0.3
 	github.com/google/go-github/v30 v30.0.0
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/gorilla/sessions v1.2.0
@@ -44,3 +44,5 @@ require (
 	google.golang.org/grpc v1.28.0
 	gopkg.in/yaml.v2 v2.2.8
 )
+
+replace github.com/autograde/aguis/kit => ./kit
