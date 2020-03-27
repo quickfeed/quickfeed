@@ -32,7 +32,7 @@ import (
 	"fmt"
 )
 func Secret() string {
-    sec, err := ioutil.ReadFile("/root/work/secreting/jobName")
+    sec, err := ioutil.ReadFile("/root/work/secreting/jobname")
 	if err != nil {
 		log.Fatal(err)
 	}

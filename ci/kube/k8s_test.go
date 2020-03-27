@@ -73,11 +73,11 @@ func TestK8sFP(t *testing.T) {
 	getURLTest := "https://github.com/dat320-2019/tests.git"
 
 	//jobName := tea.Format("20060102-150405")
-	jobName := "jobName"
+	jobName := "jobname"
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "c0e4b71f27145d0653225d6415f65e39e1ab0f7f",
+		CreatorAccessToken: "dfacdda59b10863f14a712e436a6d9ebfe9c299e",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
@@ -118,12 +118,12 @@ func TestK8sFPSecret(t *testing.T) {
 	getURLTest := "https://github.com/dat320-2019/tests.git"
 
 	//jobName := tea.Format("20060102-150405")
-	jobName := "jobName"
+	jobName := "jobname"
 
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "c0e4b71f27145d0653225d6415f65e39e1ab0f7f",
+		CreatorAccessToken: "dfacdda59b10863f14a712e436a6d9ebfe9c299e",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
