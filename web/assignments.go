@@ -10,11 +10,17 @@ import (
 
 // getAssignments lists the assignments for the provided course.
 func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
-	assignments, err := s.db.GetAssignmentsByCourse(courseID)
+	allAssignments, err := s.db.GetAssignmentsByCourse(courseID)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Assignments{Assignments: assignments}, nil
+	// Hack to ensure that assignments stored in database with wrong format
+	// is displayed correctly in the frontend. This should ideally be removed
+	// when the database no longer contains any incorrectly formatted dates.
+	for _, assignment := range allAssignments {
+		assignment.Deadline = assignments.FixDeadline(assignment.GetDeadline())
+	}
+	return &pb.Assignments{Assignments: allAssignments}, nil
 }
 
 // updateAssignments updates the assignments for the given course.

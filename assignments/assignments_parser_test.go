@@ -184,7 +184,7 @@ func TestFixDeadline(t *testing.T) {
 		{"1-12-2020 6:59:30pm", "2020-12-01T18:59:30"},
 	}
 	for _, c := range deadlineTests {
-		got := fixDeadline(c.in)
+		got := FixDeadline(c.in)
 		if got != c.want {
 			t.Errorf("fixDeadline(%q) == %q, want %q", c.in, got, c.want)
 		}
