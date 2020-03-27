@@ -22,11 +22,8 @@ rm $(find ./ | grep _ag_test.go)
 # echo "Removing `pwd`/go.mod, if any"
 rm -f go.mod
 
-# Secret will be mounted in a file while the container running. 
-#cat /root/work/secreting/{{ .RandomSecret }} 
-#RandomSecret is the name of the job, not the actual RandomSecret, the field name can be changed, only for the test
-
 # Generate new secret.go with new secret value for each run
+# Secret will be mounted in a file while the container running. 
 cat <<EOF > /go/tests/common/secret.go
 package common
 import (
@@ -35,7 +32,7 @@ import (
 	"fmt"
 )
 func Secret() string {
-    sec, err := ioutil.ReadFile("/root/work/secreting/{{ .RandomSecret }}")
+    sec, err := ioutil.ReadFile("/root/work/secreting/jobName")
 	if err != nil {
 		log.Fatal(err)
 	}

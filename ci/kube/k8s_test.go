@@ -72,8 +72,8 @@ func TestK8sFP(t *testing.T) {
 	cloneURL := "https://github.com/dat320-2019/assignments.git"
 	getURLTest := "https://github.com/dat320-2019/tests.git"
 
-	jobName := tea.Format("20060102-150405")
-
+	//jobName := tea.Format("20060102-150405")
+	jobName := "jobName"
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
@@ -82,7 +82,7 @@ func TestK8sFP(t *testing.T) {
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       jobName,
+		RandomSecret:       "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", //jobName,
 	}
 	//jobdock, err := ci.ParseScriptTemplate("", ass)         ///root/work/aguisforYannic/aguis/ci/scripts
 	jobdock, err := kube.ParseKubeScriptTemplate("", ass) ///root/work/aguisforYannic/aguis/ci/scripts
@@ -117,7 +117,8 @@ func TestK8sFPSecret(t *testing.T) {
 	cloneURL := "https://github.com/dat320-2019/assignments.git"
 	getURLTest := "https://github.com/dat320-2019/tests.git"
 
-	jobName := tea.Format("20060102-150405")
+	//jobName := tea.Format("20060102-150405")
+	jobName := "jobName"
 
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
@@ -127,7 +128,7 @@ func TestK8sFPSecret(t *testing.T) {
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
 		RawTestURL:         strings.TrimPrefix(strings.TrimSuffix(getURLTest, ".git"), "https://"),
-		RandomSecret:       jobName,
+		RandomSecret:       "59fd5fe1c4f741604c1beeab875b9c789d2a7c73", //jobName,
 	}
 	jobdock, err := kube.ParseKubeScriptTemplate("", ass) ///root/work/aguisforYannic/aguis/ci/scripts
 	if err != nil {
