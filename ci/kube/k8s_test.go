@@ -77,7 +77,7 @@ func TestK8sFP(t *testing.T) {
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "14222140d1fa0a451b72e11c07a15d8aeb7705ff",
+		CreatorAccessToken: "c0e4b71f27145d0653225d6415f65e39e1ab0f7f",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
@@ -122,7 +122,7 @@ func TestK8sFPSecret(t *testing.T) {
 	ass := &kube.AssignmentInfo{
 		AssignmentName:     "lab5",
 		Language:           "go",
-		CreatorAccessToken: "14222140d1fa0a451b72e11c07a15d8aeb7705ff",
+		CreatorAccessToken: "c0e4b71f27145d0653225d6415f65e39e1ab0f7f",
 		GetURL:             cloneURL,
 		TestURL:            getURLTest,
 		RawGetURL:          strings.TrimPrefix(strings.TrimSuffix(cloneURL, ".git"), "https://"),
@@ -154,6 +154,7 @@ func TestK8sFPSecret(t *testing.T) {
 		t.Fatal("build log contains secret")
 		t.Logf("res %+v", res.BuildInfo)
 	}
+	fmt.Println(out)
 }
 
 func homeDir() string {
