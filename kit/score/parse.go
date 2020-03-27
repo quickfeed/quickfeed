@@ -3,7 +3,6 @@ package score
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -17,10 +16,10 @@ var ErrScoreNotFound = errors.New("score not found in string")
 // Parse returns a score object for the provided JSON string s
 // which contains secret.
 func Parse(s, secret string) (*Score, error) {
+
 	if strings.Contains(s, secret) {
 		var sc Score
 		err := json.Unmarshal([]byte(s), &sc)
-		fmt.Println("here what the sc is :", &sc)
 		if err == nil {
 			if sc.Secret == secret {
 				sc.Secret = hiddenSecret // overwrite secret
@@ -33,6 +32,7 @@ func Parse(s, secret string) (*Score, error) {
 		}
 		return nil, err
 	}
+
 	return nil, ErrScoreNotFound
 }
 
