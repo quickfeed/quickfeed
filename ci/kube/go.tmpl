@@ -23,8 +23,24 @@ rm $(find ./ | grep _ag_test.go)
 rm -f go.mod
 
 # Secret will be mounted in a file while the container running. 
-cat /root/work/secreting/{{ .RandomSecret }} 
+#cat /root/work/secreting/{{ .RandomSecret }} 
 #RandomSecret is the name of the job, not the actual RandomSecret, the field name can be changed, only for the test
+
+# Generate new secret.go with new secret value for each run
+cat <<EOF > /go/tests/common/secret.go
+package common
+import (
+	"io/ioutil"
+	"log"
+)
+func Secret() string {
+    sec, err := ioutil.ReadFile("/root/work/secreting/{{ .RandomSecret }}")
+	if err != nil {
+		log.Fatal(err)
+	}
+  return string(sec)
+}
+EOF
 
 
 # Copy tests into student assignments folder for running tests
