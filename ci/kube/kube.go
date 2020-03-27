@@ -12,6 +12,7 @@ type Container struct {
 
 //KRunner contains methods for running user provided code in isolation.
 type KRunner interface {
+	Jobsecrets(string, string, string)
 	// RunKubeJob should synchronously execute the described job and return the output.
-	KRun(context.Context, *Container, string, string, string) (string, error)
+	KRun(context.Context, *Container, string, string) (string, error)
 }

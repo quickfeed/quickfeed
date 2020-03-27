@@ -48,8 +48,15 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner KRunner, r
 
 	jobName := rData.String(info.RandomSecret[:6])
 	logger.Debugf("Running tests for %s", jobName)
+	//the part added
+	courseName := rData.Course.GetName()
+	err = Jobsecrets(jobName, courseName, info.RandomSecret)
+	if err != nil {
+		logger.Errorf("Test execution failed: %w", err)
+	}
+
 	start := time.Now()
-	out, err := runner.KRun(context.Background(), job, jobName, "agcicd", randomSecret())
+	out, err := runner.KRun(context.Background(), job, jobName, courseName)
 	if err != nil {
 		logger.Errorf("Test execution failed: %w", err)
 		return

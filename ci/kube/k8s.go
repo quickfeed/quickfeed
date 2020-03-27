@@ -3,18 +3,13 @@ package kube
 import (
 	"bytes"
 	"context"
-	"flag"
 	"fmt"
 	"io"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -25,43 +20,30 @@ import (
 
 // K8s is an implementation of the CI interface using K8s.
 type K8s struct {
-	//Endpoint string
 	isActive   int
 	isLogReady int
 	podLog     string
 }
 
 var (
-	home                  = homeDir()
-	kubeconfig            = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "")
 	isJobActive sync.Cond = *sync.NewCond(&sync.Mutex{})
 	isPodDone   sync.Cond = *sync.NewCond(&sync.Mutex{})
 )
 
-func int32Ptr(i int32) *int32 { return &i }
-func int64Ptr(i int64) *int64 { return &i }
-
 //KRun runs the rescieved push from repository on the podes in our 3 nodes.
 //dockJob is the container that will be creted using the base client docker image and commands that will run.
 //id is a unique string for each job object
-//TODO: kubeconfig param has to be deleted?
-func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName string, secretAg string) (string, error) {
-	// use the current context in kubeconfig TODO: this has to be changed
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName string /* , secretAg string */) (string, error) {
+
+	clientset, err := getClient()
 	if err != nil {
 		return "", err
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	/* err = Jobsecrets(id, courseName, secretAg)
 	if err != nil {
 		return "", err
-	}
-
-	//TODO: pass DATA that need to be in secret! This will be given as a paramter when the RunKubeJob(...) is called in the tests_run.go.
-	err = jobsecrets(id, courseName, clientset, secretAg)
-	if err != nil {
-		return "", err
-	}
+	} */
 
 	//Define the configiration of the job object
 	jobsClient := clientset.BatchV1().Jobs(courseName)
@@ -220,45 +202,6 @@ func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobna
 	return nil
 }
 
-//jobsecrets create a secrets.. TODO
-func jobsecrets(id string, namespace string, clientset *kubernetes.Clientset, pass string) error {
-	tm := time.Now()
-	timeBeforeDelet := time.Duration(int64(time.Minute))
-	out := tm.Add(timeBeforeDelet)
-	newSec := &apiv1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Secret",
-			APIVersion: "apps/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:                       id,
-			Namespace:                  namespace,
-			DeletionGracePeriodSeconds: int64Ptr(15),
-			DeletionTimestamp: &metav1.Time{
-				Time: out,
-			},
-		},
-		Data: map[string][]byte{
-			id: []byte(pass),
-		},
-		Type: "Opaque",
-	}
-	_, err := clientset.CoreV1().Secrets(namespace).Create(newSec)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func getJobSecret(id string, namespace string, clienset *kubernetes.Clientset) (string, error) {
-	sec, err := clienset.CoreV1().Secrets(namespace).Get(id, metav1.GetOptions{})
-	if err != nil {
-		return "", err
-	}
-	extractSecret := sec.Data[id]
-	return string(extractSecret), nil
-}
-
 //podLogs read the logs of the cuurently running pods.
 func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (string, error) {
 	podLogOpts := apiv1.PodLogOptions{}
@@ -278,11 +221,4 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (
 
 	logsStr := buf.String()
 	return logsStr, nil
-}
-
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
 }
