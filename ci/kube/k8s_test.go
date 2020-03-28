@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/autograde/aguis/ci"
 	"github.com/autograde/aguis/ci/kube"
 )
 
@@ -53,7 +54,7 @@ func testK8s(t *testing.T, echo string) {
 	wantOut := echo
 	jobName := time.Now().Format("20060102-150405-") + echo
 
-	err := kube.Jobsecrets(jobName, "agcicd", sec)
+	err := kube.Jobsecrets(jobName, course, sec)
 	if err != nil {
 		panic(err)
 	}
@@ -62,12 +63,12 @@ func testK8s(t *testing.T, echo string) {
 		Commands: []string{script},
 	}
 	k := newKubeCI()
-	out, err := k.KRun(context.Background(), container, jobName, "agcicd")
+	out, err := k.KRun(context.Background(), container, jobName, course)
 	if err != nil {
 		t.Fatal(err)
 
 	}
-	kube.DeleteJobSecret(jobName, "agcicd")
+	kube.DeleteJobSecret(jobName, course)
 
 	if out != wantOut {
 		t.Errorf("have %#v want %#v", out, wantOut)
@@ -80,12 +81,12 @@ func TestK8sFP(t *testing.T) {
 
 	jobName := startTime.Format("20060102-150405")
 
-	err := kube.Jobsecrets(jobName, "agcicd", sec)
+	err := kube.Jobsecrets(jobName, course, sec)
 	if err != nil {
 		panic(err)
 	}
 	info := getAssignmentInfo()
-	jobdock, err := ci.ParseScriptTemplate("", info) ///root/work/aguisforYannic/aguis/ci/scripts
+	jobdock, err := ci.ParseScriptTemplate("", info) //TODO: make sure of this func while integrating
 	if err != nil {
 		panic(err)
 	}
@@ -95,11 +96,11 @@ func TestK8sFP(t *testing.T) {
 	container := newPodContainer("golang", script)
 
 	k := newKubeCI()
-	out, err := k.KRun(context.Background(), container, jobName, "agcicd")
+	out, err := k.KRun(context.Background(), container, jobName, course)
 	if err != nil {
 		t.Fatal(err)
 	}
-	kube.DeleteJobSecret(jobName, "agcicd")
+	kube.DeleteJobSecret(jobName, course)
 
 	if out != wantOut {
 		t.Errorf("have %#v want %#v", out, wantOut)

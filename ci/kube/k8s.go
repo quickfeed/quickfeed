@@ -3,7 +3,6 @@ package kube
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"strings"
