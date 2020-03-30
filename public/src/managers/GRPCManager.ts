@@ -121,7 +121,7 @@ export class GrpcManager {
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByUser, request);
     }
 
-    public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, state?: Enrollment.UserStatus[]):
+    public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, status?: Enrollment.UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
 
         const request = new EnrollmentRequest();

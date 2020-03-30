@@ -210,7 +210,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
-    public async getAllUserEnrollments(userID: number): Promise<Enrollment[]> {
+    public async getEnrollmentsForUser(userID: number): Promise<Enrollment[]> {
         return [];
     }
 
