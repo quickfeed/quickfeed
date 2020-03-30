@@ -253,7 +253,7 @@ export class StudentPage extends ViewPage {
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            const userEnrolls = await this.courseMan.getAllUserEnrollments(curUser.getId());
+            const userEnrolls = await this.courseMan.getEnrollmentsForUser(curUser.getId());
             this.userCourses = [];
             this.activeUserCourses = [];
             this.GroupUserCourses = [];
