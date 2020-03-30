@@ -31,9 +31,9 @@ export interface ICourseProvider {
     getGroupByUserAndCourse(courseID: number, userID: number): Promise<Group | null>;
     updateGroup(group: Group): Promise<Status>;
 
-    getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]>;
-    getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getCourseLabs(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]>;
+    getLabsForStudent(courseID: number, userID: number): Promise<ISubmission[]>;
+    getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
+    getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]>;
     getEnrollmentsForUser(userID: number): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
@@ -137,8 +137,8 @@ export class CourseManager {
      * Retrives all course enrollments with the latest
      * lab submissions for all individual course assignments
      */
-    public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
-        return this.courseProvider.getCourseLabs(courseID, groupLabs);
+    public async getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
+        return this.courseProvider.getLabsForCourse(courseID, groupLabs);
     }
 
     /**
@@ -353,11 +353,11 @@ export class CourseManager {
         let wantGroupLinks = false;
         if (student) {
             submissions =
-                await this.courseProvider.getAllLabInfos(courseLabLink.course.getId(), student.getId());
+                await this.courseProvider.getLabsForStudent(courseLabLink.course.getId(), student.getId());
             labAuthorName = student.getName();
         } else if (group) {
             submissions =
-                await this.courseProvider.getAllGroupLabInfos(courseLabLink.course.getId(), group.getId());
+                await this.courseProvider.getLabsForGroup(courseLabLink.course.getId(), group.getId());
             labAuthorName = group.getName();
             wantGroupLinks = true;
         } else {

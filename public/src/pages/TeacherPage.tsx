@@ -117,7 +117,7 @@ export class TeacherPage extends ViewPage {
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
-            const results = await this.courseMan.getCourseLabs(course.getId(), false);
+            const results = await this.courseMan.getLabsForCourse(course.getId(), false);
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
             return <Results
                 course={course}
@@ -141,7 +141,7 @@ export class TeacherPage extends ViewPage {
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const results = await this.courseMan.getCourseLabs(course.getId(), true);
+            const results = await this.courseMan.getLabsForCourse(course.getId(), true);
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
 

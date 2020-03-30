@@ -199,7 +199,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getAllLabInfos(courseID: number): Promise<ISubmission[]> {
+    public async getLabsForStudent(courseID: number): Promise<ISubmission[]> {
         const temp: ISubmission[] = [];
         const assignments = await this.getAssignments(courseID);
         MapHelper.forEach(this.localLabInfo, (ele) => {
@@ -214,7 +214,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return [];
     }
 
-    public async getCourseLabs(courseID: number, groupLab: boolean): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, groupLab: boolean): Promise<IStudentLabsForCourse[]> {
         return [];
     }
 
@@ -273,7 +273,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async updateGroup(group: Group): Promise<Status> {
         throw new Error("Method not implemented");
     }
-    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]> {
+    public async getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]> {
         throw new Error("Method not implemented.");
     }
 
