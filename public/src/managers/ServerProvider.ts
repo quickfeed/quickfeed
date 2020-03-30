@@ -163,7 +163,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async getCourseGroups(courseID: number): Promise<Group[]> {
+    public async getGroupsForCourse(courseID: number): Promise<Group[]> {
         const result = await this.grpcHelper.getGroups(courseID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
