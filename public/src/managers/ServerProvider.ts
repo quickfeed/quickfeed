@@ -202,7 +202,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status;
     }
 
-    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]> {
+    public async getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]> {
         const result = await this.grpcHelper.getGroupSubmissions(courseID, groupID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
@@ -216,7 +216,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]> {
+    public async getLabsForStudent(courseID: number, userID: number): Promise<ISubmission[]> {
         const result = await this.grpcHelper.getSubmissions(courseID, userID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
@@ -229,7 +229,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
         const result = await this.grpcHelper.getCourseLabSubmissions(courseID, groupLabs);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
