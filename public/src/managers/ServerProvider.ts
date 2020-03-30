@@ -150,12 +150,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async updateCourse(course: Course): Promise<Void | Status> {
+    public async updateCourse(course: Course): Promise<Status> {
         const result = await this.grpcHelper.updateCourse(course);
-        if (!this.responseCodeSuccess(result) || !result.data) {
-            return result.status;
-        }
-        return new Void();
+        return result.status;
     }
 
     public async createGroup(courseID: number, groupName: string, users: number[]): Promise<Group | Status> {
