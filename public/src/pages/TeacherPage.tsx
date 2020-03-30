@@ -165,7 +165,7 @@ export class TeacherPage extends ViewPage {
 
     public async groups(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const groups = await this.courseMan.getCourseGroups(course.getId());
+            const groups = await this.courseMan.getGroupsForCourse(course.getId());
             const approvedGroups: Group[] = [];
             const pendingGroups: Group[] = [];
             for (const grp of groups) {

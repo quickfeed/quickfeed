@@ -23,7 +23,7 @@ export interface ICourseProvider {
     getCourse(courseID: number): Promise<Course | null>;
     updateCourse(course: Course): Promise<Status>;
 
-    getCourseGroups(courseID: number): Promise<Group[]>;
+    getGroupsForCourse(courseID: number): Promise<Group[]>;
     updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<Status>;
     createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status>;
     getGroup(groupID: number): Promise<Group | null>;
@@ -205,8 +205,8 @@ export class CourseManager {
     /**
      * getCourseGroup returns all course groups
      */
-    public async getCourseGroups(courseID: number): Promise<Group[]> {
-        return this.courseProvider.getCourseGroups(courseID);
+    public async getGroupsForCourse(courseID: number): Promise<Group[]> {
+        return this.courseProvider.getGroupsForCourse(courseID);
     }
 
     /**
