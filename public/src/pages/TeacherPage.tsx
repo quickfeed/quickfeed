@@ -319,7 +319,7 @@ export class TeacherPage extends ViewPage {
                     status.push(Enrollment.UserStatus.PENDING);
                     status.push(Enrollment.UserStatus.STUDENT);
                 }
-                const courses = await this.courseMan.getCoursesFor(curUser, status);
+                const courses = await this.courseMan.getCoursesForUser(curUser, status);
 
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
@@ -352,7 +352,7 @@ export class TeacherPage extends ViewPage {
     private async getCourses(): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return this.courseMan.getCoursesFor(curUsr, []);
+            return this.courseMan.getCoursesForUser(curUsr, []);
         }
         return [];
     }
