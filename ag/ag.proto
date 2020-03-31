@@ -169,7 +169,6 @@ message LabResultLinks {
     repeated LabResultLink labs = 1;
 }
 
-
 ////    REQUESTS AND RESPONSES      \\\\
 
 message CourseRequest {
@@ -178,11 +177,6 @@ message CourseRequest {
 
 message UserRequest {
     uint64 userID = 1;
-}
-
-message CoursesListRequest {
-    uint64 userID = 1;
-    repeated Enrollment.UserStatus states = 2;
 }
 
 message GetGroupRequest {
@@ -203,12 +197,19 @@ message OrgRequest {
     string orgName = 1;
 }
 
-// depending on situation frontend will have all enrolled users or only those that are not members of any group
-// set filterOutGroupMembers go get list of students not belonging to any group for given course
+// Depending on situation front-end will display all the enrolled users or only those that are not members of any group.
+// Set filterOutGroupMembers to get list of students not belonging to any group for given course.
 message EnrollmentRequest {
     uint64 courseID = 1;
     bool filterOutGroupMembers = 2;
-    repeated Enrollment.UserStatus states = 3;
+    repeated Enrollment.UserStatus statuses = 3;
+}
+
+// Used to request courses and enrollments for a given user 
+// where the user has a specific enrollment status.
+message EnrollmentStatusRequest {
+    uint64 userID = 1;
+    repeated Enrollment.UserStatus statuses = 2;
 }
 
 message SubmissionRequest {
@@ -259,9 +260,9 @@ message LabRequest {
     bool groupLabs = 4;
 }
 
-// messages of type Void used when we want a boolean answer from the server
+// Messages of type Void used when we want a boolean answer from the server
 // GRPC status code 0 indicates that the requested action was a success
-// any other status will include a message explaining what went wrong
+// any other status will include a message explaining what went wrong.
 message Void {}
 
 service AutograderService {
@@ -277,7 +278,7 @@ service AutograderService {
 
     rpc GetGroup(GetGroupRequest) returns (Group) {}
     rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {} 
-    rpc GetGroups(CourseRequest) returns (Groups) {} 
+    rpc GetGroupsByCourse(CourseRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 
     rpc UpdateGroup(Group) returns (Void) {}
     rpc DeleteGroup(GroupRequest) returns (Void) {}
@@ -286,7 +287,7 @@ service AutograderService {
 
     rpc GetCourse(CourseRequest) returns (Course) {} 
     rpc GetCourses(Void) returns (Courses) {} 
-    rpc GetCoursesWithEnrollment(CoursesListRequest) returns (Courses) {}
+    rpc GetCoursesByUser(EnrollmentStatusRequest) returns (Courses) {}
     rpc CreateCourse(Course) returns (Course) {}
     rpc UpdateCourse(Course) returns (Void) {}
  
@@ -297,7 +298,7 @@ service AutograderService {
 
     // enrollments //
 
-    rpc GetEnrollmentsByUser(UserRequest) returns (Enrollments) {}
+    rpc GetEnrollmentsByUser(EnrollmentStatusRequest) returns (Enrollments) {}
     rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {} 
     rpc UpdateEnrollment(Enrollment) returns (Void) {} 
@@ -305,10 +306,12 @@ service AutograderService {
 
     // submissions //
 
+    // Get latest submissions for all course assignmets for a user or a group.
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
+    // Get lab submissions for every course user or every course group
+    rpc GetSubmissionsByCourse(LabRequest) returns (LabResultLinks) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc RebuildSubmission(LabRequest) returns (Submission) {}
-    rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
    
     // misc //
     

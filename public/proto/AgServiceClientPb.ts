@@ -16,9 +16,9 @@ import {
   Course,
   CourseRequest,
   Courses,
-  CoursesListRequest,
   Enrollment,
   EnrollmentRequest,
+  EnrollmentStatusRequest,
   Enrollments,
   GetGroupRequest,
   Group,
@@ -37,7 +37,6 @@ import {
   URLRequest,
   UpdateSubmissionRequest,
   User,
-  UserRequest,
   Users,
   Void} from './ag_pb';
 
@@ -192,7 +191,7 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoGetGroups = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoGetGroupsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
     Groups,
     (request: CourseRequest) => {
       return request.serializeBinary();
@@ -200,17 +199,17 @@ export class AutograderServiceClient {
     Groups.deserializeBinary
   );
 
-  getGroups(
+  getGroupsByCourse(
     request: CourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Groups) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/GetGroups',
+        '/AutograderService/GetGroupsByCourse',
       request,
       metadata || {},
-      this.methodInfoGetGroups,
+      this.methodInfoGetGroupsByCourse,
       callback);
   }
 
@@ -324,25 +323,25 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoGetCoursesWithEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoGetCoursesByUser = new grpcWeb.AbstractClientBase.MethodInfo(
     Courses,
-    (request: CoursesListRequest) => {
+    (request: EnrollmentStatusRequest) => {
       return request.serializeBinary();
     },
     Courses.deserializeBinary
   );
 
-  getCoursesWithEnrollment(
-    request: CoursesListRequest,
+  getCoursesByUser(
+    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Courses) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/GetCoursesWithEnrollment',
+        '/AutograderService/GetCoursesByUser',
       request,
       metadata || {},
-      this.methodInfoGetCoursesWithEnrollment,
+      this.methodInfoGetCoursesByUser,
       callback);
   }
 
@@ -436,14 +435,14 @@ export class AutograderServiceClient {
 
   methodInfoGetEnrollmentsByUser = new grpcWeb.AbstractClientBase.MethodInfo(
     Enrollments,
-    (request: UserRequest) => {
+    (request: EnrollmentStatusRequest) => {
       return request.serializeBinary();
     },
     Enrollments.deserializeBinary
   );
 
   getEnrollmentsByUser(
-    request: UserRequest,
+    request: EnrollmentStatusRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Enrollments) => void) {
@@ -566,6 +565,28 @@ export class AutograderServiceClient {
       callback);
   }
 
+  methodInfoGetSubmissionsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
+    LabResultLinks,
+    (request: LabRequest) => {
+      return request.serializeBinary();
+    },
+    LabResultLinks.deserializeBinary
+  );
+
+  getSubmissionsByCourse(
+    request: LabRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: LabResultLinks) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetSubmissionsByCourse',
+      request,
+      metadata || {},
+      this.methodInfoGetSubmissionsByCourse,
+      callback);
+  }
+
   methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
     (request: UpdateSubmissionRequest) => {
@@ -607,28 +628,6 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoRebuildSubmission,
-      callback);
-  }
-
-  methodInfoGetCourseLabSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
-    LabResultLinks,
-    (request: LabRequest) => {
-      return request.serializeBinary();
-    },
-    LabResultLinks.deserializeBinary
-  );
-
-  getCourseLabSubmissions(
-    request: LabRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: LabResultLinks) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/GetCourseLabSubmissions',
-      request,
-      metadata || {},
-      this.methodInfoGetCourseLabSubmissions,
       callback);
   }
 
