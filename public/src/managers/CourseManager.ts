@@ -5,7 +5,7 @@ import {
     IUserRelation,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void, Enrollments } from '../../proto/ag_pb';
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
@@ -34,7 +34,7 @@ export interface ICourseProvider {
     getLabsForStudent(courseID: number, userID: number): Promise<ISubmission[]>;
     getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
     getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]>;
-    getEnrollmentsForUser(userID: number): Promise<Enrollment[]>;
+    getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
@@ -167,8 +167,8 @@ export class CourseManager {
     /**
      * Fetches all enrollments for the user, courses and groups are preloaded.
      */
-    public async getEnrollmentsForUser(userID: number): Promise<Enrollment[]> {
-        return this.courseProvider.getEnrollmentsForUser(userID);
+    public async getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+        return this.courseProvider.getEnrollmentsForUser(userID, statuses);
     }
 
     /**
