@@ -226,7 +226,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+    public async getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Course[]> {
         const cLinks: Enrollment[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
@@ -236,14 +236,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             }
         }
         const courses: Enrollment[] = [];
-        const tempCourses = await this.getCourses();
-        for (const link of cLinks) {
-            const c = tempCourses[link.getCourseid()];
-            if (c) {
-                courses.push(link);
-            }
-        }
-        return courses;
+        return this.getCourses();
     }
     public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
         throw new Error("Method not implemented");
