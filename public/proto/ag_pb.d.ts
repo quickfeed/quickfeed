@@ -687,30 +687,6 @@ export namespace UserRequest {
   }
 }
 
-export class CoursesListRequest extends jspb.Message {
-  getUserid(): number;
-  setUserid(value: number): void;
-
-  getStatesList(): Array<Enrollment.UserStatus>;
-  setStatesList(value: Array<Enrollment.UserStatus>): void;
-  clearStatesList(): void;
-  addStates(value: Enrollment.UserStatus, index?: number): void;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): CoursesListRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: CoursesListRequest): CoursesListRequest.AsObject;
-  static serializeBinaryToWriter(message: CoursesListRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): CoursesListRequest;
-  static deserializeBinaryFromReader(message: CoursesListRequest, reader: jspb.BinaryReader): CoursesListRequest;
-}
-
-export namespace CoursesListRequest {
-  export type AsObject = {
-    userid: number,
-    statesList: Array<Enrollment.UserStatus>,
-  }
-}
-
 export class GetGroupRequest extends jspb.Message {
   getGroupid(): number;
   setGroupid(value: number): void;
@@ -798,10 +774,10 @@ export class EnrollmentRequest extends jspb.Message {
   getFilteroutgroupmembers(): boolean;
   setFilteroutgroupmembers(value: boolean): void;
 
-  getStatesList(): Array<Enrollment.UserStatus>;
-  setStatesList(value: Array<Enrollment.UserStatus>): void;
-  clearStatesList(): void;
-  addStates(value: Enrollment.UserStatus, index?: number): void;
+  getStatusesList(): Array<Enrollment.UserStatus>;
+  setStatusesList(value: Array<Enrollment.UserStatus>): void;
+  clearStatusesList(): void;
+  addStatuses(value: Enrollment.UserStatus, index?: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): EnrollmentRequest.AsObject;
@@ -815,7 +791,31 @@ export namespace EnrollmentRequest {
   export type AsObject = {
     courseid: number,
     filteroutgroupmembers: boolean,
-    statesList: Array<Enrollment.UserStatus>,
+    statusesList: Array<Enrollment.UserStatus>,
+  }
+}
+
+export class EnrollmentStatusRequest extends jspb.Message {
+  getUserid(): number;
+  setUserid(value: number): void;
+
+  getStatusesList(): Array<Enrollment.UserStatus>;
+  setStatusesList(value: Array<Enrollment.UserStatus>): void;
+  clearStatusesList(): void;
+  addStatuses(value: Enrollment.UserStatus, index?: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): EnrollmentStatusRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: EnrollmentStatusRequest): EnrollmentStatusRequest.AsObject;
+  static serializeBinaryToWriter(message: EnrollmentStatusRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): EnrollmentStatusRequest;
+  static deserializeBinaryFromReader(message: EnrollmentStatusRequest, reader: jspb.BinaryReader): EnrollmentStatusRequest;
+}
+
+export namespace EnrollmentStatusRequest {
+  export type AsObject = {
+    userid: number,
+    statusesList: Array<Enrollment.UserStatus>,
   }
 }
 

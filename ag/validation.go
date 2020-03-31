@@ -107,7 +107,7 @@ func (req CourseRequest) IsValid() bool {
 }
 
 // IsValid ensures that user ID is set
-func (req CoursesListRequest) IsValid() bool {
+func (req EnrollmentStatusRequest) IsValid() bool {
 	return req.GetUserID() > 0
 }
 

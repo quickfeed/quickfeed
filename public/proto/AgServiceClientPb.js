@@ -28,7 +28,7 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetGroupByUserAndCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Group, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Group.deserializeBinary);
-        this.methodInfoGetGroups = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Groups, function (request) {
+        this.methodInfoGetGroupsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Groups, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Groups.deserializeBinary);
         this.methodInfoCreateGroup = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Group, function (request) {
@@ -46,7 +46,7 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetCourses = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Courses, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Courses.deserializeBinary);
-        this.methodInfoGetCoursesWithEnrollment = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Courses, function (request) {
+        this.methodInfoGetCoursesByUser = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Courses, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Courses.deserializeBinary);
         this.methodInfoCreateCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Course, function (request) {
@@ -79,15 +79,15 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submissions, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submissions.deserializeBinary);
+        this.methodInfoGetSubmissionsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.LabResultLinks, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.LabResultLinks.deserializeBinary);
         this.methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
-        this.methodInfoGetCourseLabSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.LabResultLinks, function (request) {
-            return request.serializeBinary();
-        }, ag_pb_1.LabResultLinks.deserializeBinary);
         this.methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Providers, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Providers.deserializeBinary);
@@ -134,9 +134,9 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetGroupByUserAndCourse', request, metadata || {}, this.methodInfoGetGroupByUserAndCourse, callback);
     };
-    AutograderServiceClient.prototype.getGroups = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.getGroupsByCourse = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetGroups', request, metadata || {}, this.methodInfoGetGroups, callback);
+            '/AutograderService/GetGroupsByCourse', request, metadata || {}, this.methodInfoGetGroupsByCourse, callback);
     };
     AutograderServiceClient.prototype.createGroup = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
@@ -158,9 +158,9 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetCourses', request, metadata || {}, this.methodInfoGetCourses, callback);
     };
-    AutograderServiceClient.prototype.getCoursesWithEnrollment = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.getCoursesByUser = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetCoursesWithEnrollment', request, metadata || {}, this.methodInfoGetCoursesWithEnrollment, callback);
+            '/AutograderService/GetCoursesByUser', request, metadata || {}, this.methodInfoGetCoursesByUser, callback);
     };
     AutograderServiceClient.prototype.createCourse = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
@@ -202,6 +202,10 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetSubmissions', request, metadata || {}, this.methodInfoGetSubmissions, callback);
     };
+    AutograderServiceClient.prototype.getSubmissionsByCourse = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/GetSubmissionsByCourse', request, metadata || {}, this.methodInfoGetSubmissionsByCourse, callback);
+    };
     AutograderServiceClient.prototype.updateSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission, callback);
@@ -209,10 +213,6 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.rebuildSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission, callback);
-    };
-    AutograderServiceClient.prototype.getCourseLabSubmissions = function (request, metadata, callback) {
-        return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/GetCourseLabSubmissions', request, metadata || {}, this.methodInfoGetCourseLabSubmissions, callback);
     };
     AutograderServiceClient.prototype.getProviders = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
