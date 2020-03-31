@@ -55,7 +55,7 @@ type Database interface {
 	// GetEnrollmentsByCourse fetches all course enrollments with given statuses.
 	GetEnrollmentsByCourse(courseID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
 	// GetEnrollmentsByUser fetches all enrollments for the given user
-	GetEnrollmentsByUser(userID uint64) ([]*pb.Enrollment, error)
+	GetEnrollmentsByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
 
 	// CreateGroup creates a new group and assign users to newly created group.
 	CreateGroup(*pb.Group) error

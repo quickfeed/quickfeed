@@ -19,12 +19,42 @@ func (s *AutograderService) getCourses() (*pb.Courses, error) {
 }
 
 // getCoursesWithEnrollment returns all courses that match the provided enrollment status.
-func (s *AutograderService) getCoursesWithEnrollment(request *pb.CoursesListRequest) (*pb.Courses, error) {
-	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.States...)
+func (s *AutograderService) getCoursesByUser(request *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
+	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.Courses{Courses: courses}, nil
+}
+
+// getEnrollmentsByUser returns all enrollments for the given user with preloaded
+// courses and groups
+func (s *AutograderService) getEnrollmentsByUser(request *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
+	enrollments, err := s.db.GetEnrollmentsByUser(request.UserID, request.Statuses...)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Enrollments{Enrollments: enrollments}, nil
+}
+
+// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
+func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
+	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.Statuses...)
+	if err != nil {
+		return nil, err
+	}
+
+	// to populate response only with users who are not member of any group, we must filter the result
+	if request.FilterOutGroupMembers {
+		enrollmentsWithoutGroups := make([]*pb.Enrollment, 0)
+		for _, enrollment := range enrollments {
+			if enrollment.GroupID == 0 {
+				enrollmentsWithoutGroups = append(enrollmentsWithoutGroups, enrollment)
+			}
+		}
+		enrollments = enrollmentsWithoutGroups
+	}
+	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
 // createEnrollment creates a pending enrollment for the given user and course.
@@ -148,36 +178,6 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 	}
 	request.OrganizationPath = org.GetPath()
 	return s.db.UpdateCourse(request)
-}
-
-// getEnrollmentsByUser returns all enrollments for the given user with preloaded
-// courses and groups
-func (s *AutograderService) getEnrollmentsByUser(userID uint64) (*pb.Enrollments, error) {
-	enrollments, err := s.db.GetEnrollmentsByUser(userID)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.Enrollments{Enrollments: enrollments}, nil
-}
-
-// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
-	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.States...)
-	if err != nil {
-		return nil, err
-	}
-
-	// to populate response only with users who are not member of any group, we must filter the result
-	if request.FilterOutGroupMembers {
-		enrollmentsWithoutGroups := make([]*pb.Enrollment, 0)
-		for _, enrollment := range enrollments {
-			if enrollment.GroupID == 0 {
-				enrollmentsWithoutGroups = append(enrollmentsWithoutGroups, enrollment)
-			}
-		}
-		enrollments = enrollmentsWithoutGroups
-	}
-	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
 // getRepositoryURL returns URL of a course repository of the given type.

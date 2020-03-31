@@ -62,8 +62,8 @@ func (db *GormDB) GetEnrollmentsByCourse(courseID uint64, statuses ...pb.Enrollm
 }
 
 // GetEnrollmentsByUser returns all existing enrollments for the given user
-func (db *GormDB) GetEnrollmentsByUser(userID uint64) ([]*pb.Enrollment, error) {
-	return db.getEnrollments(&pb.User{ID: userID})
+func (db *GormDB) GetEnrollmentsByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
+	return db.getEnrollments(&pb.User{ID: userID}, statuses...)
 }
 
 // getEnrollments is generic helper function that return enrollments for either course and user.

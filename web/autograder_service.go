@@ -260,10 +260,10 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Course
 	return &pb.Void{}, err
 }
 
-// GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.
+// GetCoursesByUser returns all courses the given user is enrolled into with the given status.
 // Access policy: Any User.
-func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.CoursesListRequest) (*pb.Courses, error) {
-	courses, err := s.getCoursesWithEnrollment(in)
+func (s *AutograderService) GetCoursesByUser(ctx context.Context, in *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
+	courses, err := s.getCoursesByUser(in)
 	if err != nil {
 		s.logger.Errorf("GetCoursesWithEnrollment failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no courses with enrollment found")
@@ -271,9 +271,9 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 	return courses, nil
 }
 
-// GetEnrollmentsByUser returns all enrollments for the given user with preloaded courses and groups.
+// GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
 // Access policy: user with userID or admin
-func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.UserRequest) (*pb.Enrollments, error) {
+func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: authentication error: %w", err)
@@ -285,7 +285,7 @@ func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.Use
 	}
 
 	// get all enrollments from the db (no scm)
-	enrols, err := s.getEnrollmentsByUser(in.GetUserID())
+	enrols, err := s.getEnrollmentsByUser(in)
 	if err != nil {
 		s.logger.Errorf("Get enrollments for user %d failed: %s", in.GetUserID(), err)
 	}
@@ -333,9 +333,9 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GetGroupRequest
 	return group, nil
 }
 
-// GetGroups returns a list of groups created for the course id in the record request.
+// GetGroupsByCourse returns a list of groups created for the course id in the record request.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) GetGroups(ctx context.Context, in *pb.CourseRequest) (*pb.Groups, error) {
+func (s *AutograderService) GetGroupsByCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Groups, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroups failed: authentication error: %w", err)
@@ -491,10 +491,10 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	return submissions, nil
 }
 
-// GetCourseLabSubmissions returns all the latest submissions
+// GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
-func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
+func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %w", err)

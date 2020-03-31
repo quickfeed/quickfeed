@@ -318,8 +318,8 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	courses_request := &pb.CoursesListRequest{UserID: user.ID}
-	courses, err := ags.GetCoursesWithEnrollment(context.Background(), courses_request)
+	courses_request := &pb.EnrollmentStatusRequest{UserID: user.ID}
+	courses, err := ags.GetCoursesByUser(context.Background(), courses_request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -388,8 +388,8 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 
 	stats := make([]pb.Enrollment_UserStatus, 0)
 	stats = append(stats, pb.Enrollment_STUDENT)
-	course_req := &pb.CoursesListRequest{UserID: user.ID, States: stats}
-	courses, err := ags.GetCoursesWithEnrollment(context.Background(), course_req)
+	course_req := &pb.EnrollmentStatusRequest{UserID: user.ID, Statuses: stats}
+	courses, err := ags.GetCoursesByUser(context.Background(), course_req)
 	if err != nil {
 		t.Fatal(err)
 	}
