@@ -814,14 +814,14 @@ func TestGetGroups(t *testing.T) {
 	wantGroups := &pb.Groups{Groups: []*pb.Group{group1, group2}}
 
 	// check that request on non-existent course returns error
-	_, err = ags.GetGroups(ctx, &pb.CourseRequest{CourseID: 15})
+	_, err = ags.GetGroupsByCourse(ctx, &pb.CourseRequest{CourseID: 15})
 	if err == nil {
 		t.Error("expected error; no groups should be returned")
 	}
 
 	// get groups from the database; admin is in ctx, which is also teacher
 	ctx = withUserContext(context.Background(), admin)
-	gotGroups, err := ags.GetGroups(ctx, &pb.CourseRequest{CourseID: course.ID})
+	gotGroups, err := ags.GetGroupsByCourse(ctx, &pb.CourseRequest{CourseID: course.ID})
 	if err != nil {
 		t.Fatal(err)
 	}

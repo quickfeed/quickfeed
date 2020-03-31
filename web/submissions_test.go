@@ -431,7 +431,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that all submissions were saved for the correct labs
-	labsForCourse1, err := ags.GetCourseLabSubmissions(ctx, &pb.LabRequest{CourseID: course1.ID})
+	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.LabRequest{CourseID: course1.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -447,7 +447,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		}
 	}
 
-	labsForCourse2, err := ags.GetCourseLabSubmissions(ctx, &pb.LabRequest{CourseID: course2.ID})
+	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, &pb.LabRequest{CourseID: course2.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -463,18 +463,18 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		}
 	}
 	// check that no submissions will be returned for a wrong course ID
-	if _, err = ags.GetCourseLabSubmissions(ctx, &pb.LabRequest{CourseID: 234}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.LabRequest{CourseID: 234}); err == nil {
 		t.Error("Expected 'no submissions found'")
 	}
 
 	// check that method fails with empty context
-	if _, err = ags.GetCourseLabSubmissions(context.Background(), &pb.LabRequest{CourseID: course1.ID}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.LabRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'authorization failed. please try to logout and sign in again'")
 	}
 
 	// check that method fails for non-teacher user
 	ctx = withUserContext(ctx, student)
-	if _, err = ags.GetCourseLabSubmissions(context.Background(), &pb.LabRequest{CourseID: course1.ID}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.LabRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
 
