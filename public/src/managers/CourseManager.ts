@@ -11,7 +11,7 @@ import { ILogger } from "./LogManager";
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
     getAssignments(courseID: number): Promise<Assignment[]>;
-    getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Enrollment[]>;
+    getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Course[]>;
     getUsersForCourse(course: Course, noGroupMemebers?: boolean, status?: Enrollment.UserStatus[]):
         Promise<Enrollment[]>;
 
@@ -68,7 +68,7 @@ export class CourseManager {
     }
 
     public async getCoursesWithUserStatus(user: User): Promise<IStudentLabsForCourse[]> {
-        const userCourses = await this.courseProvider.getCoursesForUser(user, []);
+        const userCourses = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
         const newMap: IStudentLabsForCourse[] = [];
         userCourses.forEach((ele) => {
             const crs = ele.getCourse();
@@ -87,15 +87,7 @@ export class CourseManager {
      * Get all courses where user is enrolled into
      */
     public async getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Course[]> {
-        const courses: Course[] = [];
-        const enrolList = await this.courseProvider.getCoursesForUser(user, status);
-        enrolList.forEach((ele) => {
-            const crs = ele.getCourse();
-            if (crs) {
-                courses.push(crs);
-            }
-        });
-        return courses;
+        return this.courseProvider.getCoursesForUser(user, status);
     }
 
     /**
@@ -147,7 +139,7 @@ export class CourseManager {
      */
     public async getStudentCourses(student: User, status: Enrollment.UserStatus[]): Promise<IStudentLabsForCourse[]> {
         const links: IStudentLabsForCourse[] = [];
-        const enrollments = await this.courseProvider.getCoursesForUser(student, status);
+        const enrollments = await this.courseProvider.getEnrollmentsForUser(student.getId(), status);
         for (const enrol of enrollments) {
             const crs = enrol.getCourse();
             if (crs) {
