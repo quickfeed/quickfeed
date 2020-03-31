@@ -60,8 +60,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getCoursesList();
     }
 
-    public async getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Enrollment[]> {
-        const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), status);
+    public async getCoursesForUser(user: User, statuses: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+        const result = await this.grpcHelper.getCoursesByUser(user.getId(), statuses);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
@@ -78,7 +78,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return arr;
     }
 
-    public async getEnrollmentsForUser(userID: number): Promise<Enrollment[]> {
+    public async getEnrollmentsForUser(userID: number, statuses: Enrollment.UserStatus[]): Promise<Enrollment[]> {
         const result = await this.grpcHelper.getEnrollmentsByUser(userID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
@@ -164,7 +164,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getGroupsForCourse(courseID: number): Promise<Group[]> {
-        const result = await this.grpcHelper.getGroups(courseID);
+        const result = await this.grpcHelper.getGroupsByCourse(courseID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
@@ -230,7 +230,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
-        const result = await this.grpcHelper.getCourseLabSubmissions(courseID, groupLabs);
+        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, groupLabs);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }

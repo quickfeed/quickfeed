@@ -5,7 +5,7 @@ import {
     Course,
     CourseRequest,
     Courses,
-    CoursesListRequest,
+    EnrollmentStatusRequest,
     Enrollment,
     EnrollmentRequest,
     Enrollments,
@@ -92,11 +92,11 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCourses, new Void());
     }
 
-    public getCoursesWithEnrollment(userID: number, status: Enrollment.UserStatus[]): Promise<IGrpcResponse<Courses>> {
-        const request = new CoursesListRequest();
+    public getCoursesByUser(userID: number, statuses: Enrollment.UserStatus[]): Promise<IGrpcResponse<Courses>> {
+        const request = new EnrollmentStatusRequest();
         request.setUserid(userID);
-        request.setStatesList(status);
-        return this.grpcSend<Courses>(this.agService.getCoursesWithEnrollment, request);
+        request.setStatusesList(statuses);
+        return this.grpcSend<Courses>(this.agService.getCoursesByUser, request);
     }
 
     // /* ASSIGNMENTS */ //
@@ -115,23 +115,20 @@ export class GrpcManager {
 
     // /* ENROLLMENTS */ //
 
-    public getEnrollmentsByUser(userID: number): Promise<IGrpcResponse<Enrollments>> {
-        const request = new UserRequest();
+    public getEnrollmentsByUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<IGrpcResponse<Enrollments>> {
+        const request = new EnrollmentStatusRequest();
         request.setUserid(userID);
+        request.setStatusesList(statuses ?? []);
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByUser, request);
     }
 
-    public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, status?: Enrollment.UserStatus[]):
+    public getEnrollmentsByCourse(courseID: number, noGroupMembers?: boolean, statuses?: Enrollment.UserStatus[]):
         Promise<IGrpcResponse<Enrollments>> {
 
         const request = new EnrollmentRequest();
         request.setCourseid(courseID);
-        if (noGroupMembers) {
-            request.setFilteroutgroupmembers(noGroupMembers);
-        }
-        if (status) {
-            request.setStatesList(status);
-        }
+        request.setFilteroutgroupmembers(noGroupMembers ?? false);
+        request.setStatusesList(statuses ?? []);
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request);
     }
 
@@ -167,10 +164,10 @@ export class GrpcManager {
         return this.grpcSend<Group>(this.agService.getGroupByUserAndCourse, request);
     }
 
-    public getGroups(courseID: number): Promise<IGrpcResponse<Groups>> {
+    public getGroupsByCourse(courseID: number): Promise<IGrpcResponse<Groups>> {
         const request = new CourseRequest();
         request.setCourseid(courseID);
-        return this.grpcSend<Groups>(this.agService.getGroups, request);
+        return this.grpcSend<Groups>(this.agService.getGroupsByCourse, request);
     }
 
     public updateGroupStatus(groupID: number, status: Group.GroupStatus): Promise<IGrpcResponse<Void>> {
@@ -221,11 +218,11 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
-    public getCourseLabSubmissions(courseID: number, groupLabs: boolean): Promise<IGrpcResponse<LabResultLinks>> {
+    public getSubmissionsByCourse(courseID: number, groupLabs: boolean): Promise<IGrpcResponse<LabResultLinks>> {
         const request = new LabRequest();
         request.setCourseid(courseID);
         request.setGrouplabs(groupLabs);
-        return this.grpcSend<LabResultLinks>(this.agService.getCourseLabSubmissions, request);
+        return this.grpcSend<LabResultLinks>(this.agService.getSubmissionsByCourse, request);
     }
 
     public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
