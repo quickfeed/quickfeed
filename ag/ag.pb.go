@@ -1793,8 +1793,9 @@ func (m *OrgRequest) GetOrgName() string {
 	return ""
 }
 
-// Depending on situation front-end will display all the enrolled users or only those that are not members of any group.
-// Set ignoreGroupMembers to get list of students not belonging to any group for given course.
+// EnrollmentRequest is a request for enrolled users of a given course,
+// whose enrollment status match those provided in the request. To ignore group members
+// that otherwise match the enrollment request, set ignoreGroupMembers to true.
 type EnrollmentRequest struct {
 	CourseID             uint64                  `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
 	IgnoreGroupMembers   bool                    `protobuf:"varint,2,opt,name=ignoreGroupMembers,proto3" json:"ignoreGroupMembers,omitempty"`
