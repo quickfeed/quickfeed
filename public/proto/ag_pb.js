@@ -6567,7 +6567,7 @@ proto.EnrollmentRequest.prototype.toObject = function(opt_includeInstance) {
 proto.EnrollmentRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     courseid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    filteroutgroupmembers: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
+    ignoregroupmembers: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
     statusesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f
   };
 
@@ -6611,7 +6611,7 @@ proto.EnrollmentRequest.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 2:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setFilteroutgroupmembers(value);
+      msg.setIgnoregroupmembers(value);
       break;
     case 3:
       var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
@@ -6653,7 +6653,7 @@ proto.EnrollmentRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getFilteroutgroupmembers();
+  f = message.getIgnoregroupmembers();
   if (f) {
     writer.writeBool(
       2,
@@ -6689,10 +6689,10 @@ proto.EnrollmentRequest.prototype.setCourseid = function(value) {
 
 
 /**
- * optional bool filterOutGroupMembers = 2;
+ * optional bool ignoreGroupMembers = 2;
  * @return {boolean}
  */
-proto.EnrollmentRequest.prototype.getFilteroutgroupmembers = function() {
+proto.EnrollmentRequest.prototype.getIgnoregroupmembers = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 2, false));
 };
 
@@ -6701,7 +6701,7 @@ proto.EnrollmentRequest.prototype.getFilteroutgroupmembers = function() {
  * @param {boolean} value
  * @return {!proto.EnrollmentRequest} returns this
  */
-proto.EnrollmentRequest.prototype.setFilteroutgroupmembers = function(value) {
+proto.EnrollmentRequest.prototype.setIgnoregroupmembers = function(value) {
   return jspb.Message.setProto3BooleanField(this, 2, value);
 };
 

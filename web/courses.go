@@ -45,7 +45,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 	}
 
 	// to populate response only with users who are not member of any group, we must filter the result
-	if request.FilterOutGroupMembers {
+	if request.IgnoreGroupMembers {
 		enrollmentsWithoutGroups := make([]*pb.Enrollment, 0)
 		for _, enrollment := range enrollments {
 			if enrollment.GroupID == 0 {

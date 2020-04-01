@@ -235,7 +235,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 		}
 	}
 
-	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID, FilterOutGroupMembers: true})
+	gotEnrollments, err := ags.GetEnrollmentsByCourse(ctx, &pb.EnrollmentRequest{CourseID: course.ID, IgnoreGroupMembers: true})
 	if err != nil {
 		t.Fatal(err)
 	}
