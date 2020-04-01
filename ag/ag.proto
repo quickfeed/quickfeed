@@ -197,8 +197,9 @@ message OrgRequest {
     string orgName = 1;
 }
 
-// Depending on situation front-end will display all the enrolled users or only those that are not members of any group.
-// Set ignoreGroupMembers to get list of students not belonging to any group for given course.
+// EnrollmentRequest is a request for enrolled users of a given course,
+// whose enrollment status match those provided in the request. To ignore group members 
+// that otherwise match the enrollment request, set ignoreGroupMembers to true.
 message EnrollmentRequest {
     uint64 courseID = 1;
     bool ignoreGroupMembers = 2;
