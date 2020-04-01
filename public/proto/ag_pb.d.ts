@@ -771,8 +771,8 @@ export class EnrollmentRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
-  getFilteroutgroupmembers(): boolean;
-  setFilteroutgroupmembers(value: boolean): void;
+  getIgnoregroupmembers(): boolean;
+  setIgnoregroupmembers(value: boolean): void;
 
   getStatusesList(): Array<Enrollment.UserStatus>;
   setStatusesList(value: Array<Enrollment.UserStatus>): void;
@@ -790,7 +790,7 @@ export class EnrollmentRequest extends jspb.Message {
 export namespace EnrollmentRequest {
   export type AsObject = {
     courseid: number,
-    filteroutgroupmembers: boolean,
+    ignoregroupmembers: boolean,
     statusesList: Array<Enrollment.UserStatus>,
   }
 }

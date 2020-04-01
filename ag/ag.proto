@@ -198,15 +198,13 @@ message OrgRequest {
 }
 
 // Depending on situation front-end will display all the enrolled users or only those that are not members of any group.
-// Set filterOutGroupMembers to get list of students not belonging to any group for given course.
+// Set ignoreGroupMembers to get list of students not belonging to any group for given course.
 message EnrollmentRequest {
     uint64 courseID = 1;
-    bool filterOutGroupMembers = 2;
+    bool ignoreGroupMembers = 2;
     repeated Enrollment.UserStatus statuses = 3;
 }
 
-// Used to request courses and enrollments for a given user 
-// where the user has a specific enrollment status.
 message EnrollmentStatusRequest {
     uint64 userID = 1;
     repeated Enrollment.UserStatus statuses = 2;
@@ -260,9 +258,9 @@ message LabRequest {
     bool groupLabs = 4;
 }
 
-// Messages of type Void used when we want a boolean answer from the server
-// GRPC status code 0 indicates that the requested action was a success
-// any other status will include a message explaining what went wrong.
+// Void contains no fields. A server response with a Void still contains a gRPC status code,
+// which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
+// whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from the server.
 message Void {}
 
 service AutograderService {
