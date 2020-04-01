@@ -1859,6 +1859,7 @@ func (m *EnrollmentRequest) GetStatuses() []Enrollment_UserStatus {
 	return nil
 }
 
+// EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.
 type EnrollmentStatusRequest struct {
 	UserID               uint64                  `protobuf:"varint,1,opt,name=userID,proto3" json:"userID,omitempty"`
 	Statuses             []Enrollment_UserStatus `protobuf:"varint,2,rep,packed,name=statuses,proto3,enum=Enrollment_UserStatus" json:"statuses,omitempty"`

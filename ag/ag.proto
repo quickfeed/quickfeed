@@ -206,6 +206,7 @@ message EnrollmentRequest {
     repeated Enrollment.UserStatus statuses = 3;
 }
 
+// EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.
 message EnrollmentStatusRequest {
     uint64 userID = 1;
     repeated Enrollment.UserStatus statuses = 2;
