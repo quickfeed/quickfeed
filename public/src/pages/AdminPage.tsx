@@ -9,9 +9,8 @@ import { View, ViewPage } from "./ViewPage";
 import { CourseView } from "./views/CourseView";
 import { ActionType, UserView } from "./views/UserView";
 
-import { Assignment, Enrollment } from "../../proto/ag_pb";
-import { formatDate } from "../helper"
-import { IUserRelation } from "../models";
+import { Assignment, Enrollment, User } from "../../proto/ag_pb";
+import { formatDate } from "../helper";
 
 export class AdminPage extends ViewPage {
     private navMan: NavigationManager;
@@ -38,24 +37,22 @@ export class AdminPage extends ViewPage {
         const allUsers = (await this.userMan.getAllUser()).map((user) => {
             const enrol = new Enrollment();
             enrol.setUserid(user.getId());
+            enrol.setUser(user);
             enrol.setCourseid(0);
             enrol.setStatus(0);
-            return {
-                user,
-                enrollment: enrol,
-            };
+            return enrol
         });
 
         // sorting registered user so that admins show first
-        allUsers.sort((x, y) => (x.user.getIsadmin() < y.user.getIsadmin() ? 1 : -1));
+        allUsers.sort((x, y) => ((x.getUser()?.getIsadmin() ?? false) < (y.getUser()?.getIsadmin() ?? false) ? 1 : -1));
 
         return <div>
             <h1>All Users</h1>
             <UserView
                 users={allUsers}
                 isCourseList={false}
-                optionalActions={(user: IUserRelation) => {
-                    if (user.user.getIsadmin()) {
+                optionalActions={(enrol: Enrollment) => {
+                    if (enrol.getUser()?.getIsadmin()) {
                         return [{ uri: "demote", name: "Demote", extra: "danger" }];
                     }
                     return [{ uri: "promote", name: "Promote", extra: "primary" }];
@@ -64,8 +61,11 @@ export class AdminPage extends ViewPage {
                 linkType={ActionType.InRow}
                 courseURL=""
                 actionClick={
-                    (user, link) => {
-                        this.handleAdminRoleClick(user);
+                    (enrol, link) => {
+                        const user = enrol.getUser();
+                        if (user) {
+                            this.handleAdminRoleClick(user);
+                        }
                     }
                 }
                 userMan={this.userMan}
@@ -74,10 +74,10 @@ export class AdminPage extends ViewPage {
         </div>;
     }
 
-    public async handleAdminRoleClick(user: IUserRelation): Promise<boolean> {
+    public async handleAdminRoleClick(user: User): Promise<boolean> {
         if (this.userMan && this.navMan) {
             // promote non-admin user to admin, demote otherwise
-            const res = await this.userMan.changeAdminRole(user.user, !user.user.getIsadmin());
+            const res = await this.userMan.changeAdminRole(user, !user.getIsadmin());
             this.navMan.refresh();
             return res;
         }

@@ -27,12 +27,6 @@ export interface IStudentLab {
     authorName: string;
 }
 
-// Contains a user and the relation to a single course.
-export interface IUserRelation {
-    user: User;
-    enrollment: Enrollment;
-}
-
 // Browser only objects END
 
 // Lab submission results

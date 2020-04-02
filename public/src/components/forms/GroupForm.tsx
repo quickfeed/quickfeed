@@ -5,12 +5,11 @@ import { Search } from "../../components";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { UserManager } from "../../managers/UserManager";
-import { IUserRelation } from "../../models";
 
 interface IGroupProps {
     className: string;
-    students: IUserRelation[];
-    freeStudents: IUserRelation[];
+    students: Enrollment[];
+    freeStudents: Enrollment[];
     curUser: User;
     courseMan: CourseManager;
     userMan: UserManager;
@@ -21,9 +20,9 @@ interface IGroupProps {
 }
 interface IGroupState {
     name: string;
-    students: IUserRelation[];
-    selectedStudents: IUserRelation[];
-    curUser: IUserRelation | undefined;
+    students: Enrollment[];
+    selectedStudents: Enrollment[];
+    curUser: Enrollment | undefined;
     errorFlash: JSX.Element | null;
     actionReady: boolean;
 }
@@ -31,9 +30,9 @@ interface IGroupState {
 export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     constructor(props: any) {
         super(props);
-        const currentUser = this.props.students.find((v) => v.user.getId() === this.props.curUser.getId());
-        const as: IUserRelation[] = this.getAvailableStudents();
-        const ss: IUserRelation[] = this.getSelectedStudents(currentUser);
+        const currentUser = this.props.students.find((v) => v.getUserid() === this.props.curUser.getId());
+        const as: Enrollment[] = this.getAvailableStudents();
+        const ss: Enrollment[] = this.getSelectedStudents(currentUser);
         this.state = {
             name: this.props.groupData ? this.props.groupData.getName() : "",
             students: as,
@@ -52,8 +51,8 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         const selectableStudents: JSX.Element[] = [];
         for (const student of this.state.students) {
             selectableStudents.push(
-                <li key={student.user.getId()} className="box-item">
-                    <label>{student.user.getName()}</label>
+                <li key={student.getUserid()} className="box-item">
+                    <label>{student.getUser()?.getName()}</label>
                     <button type="button"
                         className="btn btn-outline-success add-btn"
                          onClick={() => this.handleAddToGroupOnClick(student)}>
@@ -65,12 +64,12 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         const selectedStudents: JSX.Element[] = [];
         for (const student of this.state.selectedStudents) {
             selectedStudents.push(
-                <li key={student.user.getId()} className="box-item">
+                <li key={student.getUserid()} className="box-item">
                     <button className="btn btn-outline-primary rm-btn"
                         onClick={() => this.handleRemoveFromGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-minus-sign" />
                     </button>
-                    <label>{student.user.getName()}</label>
+                    <label>{student.getUser()?.getName()}</label>
                 </li>);
         }
 
@@ -144,7 +143,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
             this.setState({
                 actionReady: false,
             });
-            const userids = this.state.selectedStudents.map((u, i) => u.user.getId());
+            const userids = this.state.selectedStudents.map((u, i) => u.getUserid());
             const result = this.props.groupData ?
                 await this.updateGroup(this.state.name, userids, this.props.groupData.getId())
                  : await this.createGroup(this.state.name, userids);
@@ -197,7 +196,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         });
     }
 
-    private handleAddToGroupOnClick(student: IUserRelation) {
+    private handleAddToGroupOnClick(student: Enrollment) {
         const index = this.state.students.indexOf(student);
         if (index >= 0) {
             const newSelectedArr = this.state.selectedStudents.slice();
@@ -211,7 +210,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         }
     }
 
-    private handleRemoveFromGroupOnClick(student: IUserRelation) {
+    private handleRemoveFromGroupOnClick(student: Enrollment) {
         const index = this.state.selectedStudents.indexOf(student);
         if (index >= 0) {
             const newStudentsdArr = this.state.students.concat(student);
@@ -224,11 +223,12 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
 
     private handleSearch(query: string): void {
         query = query.toLowerCase();
-        const filteredData: IUserRelation[] = [];
+        const filteredData: Enrollment[] = [];
         this.props.freeStudents.forEach((student) => {
-            if ((student.user.getName().toLowerCase().indexOf(query) !== -1
-                || student.user.getEmail().indexOf(query) !== -1
-                || student.user.getLogin().indexOf(query)) !== -1
+            const enr = student.toObject().user;
+            if (enr && (enr.name.toLowerCase().indexOf(query) !== -1
+                || enr.email.indexOf(query) !== -1
+                || enr.login.indexOf(query)) !== -1
                 && this.state.selectedStudents.indexOf(student) === -1
             ) {
                 filteredData.push(student);
@@ -255,11 +255,11 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         return errors;
     }
 
-    private userValidate(curUser: IUserRelation | undefined): boolean {
+    private userValidate(curUser: Enrollment | undefined): boolean {
         if (!curUser) {
             return false;
         }
-        const status = curUser.enrollment.getStatus();
+        const status = curUser.getStatus();
         return status === Enrollment.UserStatus.TEACHER || (status === Enrollment.UserStatus.STUDENT && this.isCurrentStudentSelected(curUser));
     }
 
@@ -278,22 +278,22 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         return flash;
     }
 
-    private isCurrentStudentSelected(student: IUserRelation): boolean {
+    private isCurrentStudentSelected(student: Enrollment): boolean {
         let foundSelected = false;
         this.state.selectedStudents.forEach((user) => {
-            if (user.user.getId() === student.user.getId()) {
+            if (user.getUserid() === student.getUserid()) {
                 foundSelected = true;
             }
         })
         return foundSelected;
     }
 
-    private getSelectedStudents(curUser: IUserRelation | undefined): IUserRelation[] {
-        const ss: IUserRelation[] = [];
+    private getSelectedStudents(curUser: Enrollment | undefined): Enrollment[] {
+        const ss: Enrollment[] = [];
         if (this.props.groupData) {
             // add group members to the list of selected students
             for (const user of this.props.groupData.getUsersList()) {
-                const guser = this.props.students.find((v) => v.user.getId() === user.getId());
+                const guser = this.props.students.find((v) => v.getUserid() === user.getId());
                 if (guser) {
                     ss.push(guser);
                 }
@@ -302,12 +302,12 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         return ss;
     }
 
-    private getAvailableStudents(): IUserRelation[] {
-        const as: IUserRelation[] = this.props.freeStudents.slice();
+    private getAvailableStudents(): Enrollment[] {
+        const as: Enrollment[] = this.props.freeStudents.slice();
         if (this.props.groupData) {
             // remove group members from the list of available students
             for (const user of this.props.groupData.getUsersList()) {
-                const guser = as.find((v) => v.user.getId() === user.getId());
+                const guser = as.find((v) => v.getUserid() === user.getId());
                 if (guser) {
                     const index = as.indexOf(guser);
                     if (index >= 0) {

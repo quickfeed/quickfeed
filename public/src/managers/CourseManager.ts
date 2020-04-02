@@ -2,7 +2,6 @@ import {
     IStudentLabsForCourse,
     IStudentLab,
     ISubmission,
-    IUserRelation,
 } from "../models";
 
 import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void } from '../../proto/ag_pb';
@@ -177,21 +176,8 @@ export class CourseManager {
     public async getUsersForCourse(
         course: Course,
         noGroupMemebers?: boolean,
-        status?: Enrollment.UserStatus[]): Promise<IUserRelation[]> {
-        const userlinks: IUserRelation[] = [];
-        const enrolls = await this.courseProvider.getUsersForCourse(course, noGroupMemebers, status);
-        enrolls.forEach((ele) => {
-            const usr = ele.getUser();
-            if (usr) {
-                ele.setCourseid(course.getId());
-                userlinks.push({
-                    enrollment: ele,
-                    user: usr,
-                });
-            }
-
-        });
-        return userlinks;
+        status?: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+        return this.courseProvider.getUsersForCourse(course, noGroupMemebers, status);
     }
 
     public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {

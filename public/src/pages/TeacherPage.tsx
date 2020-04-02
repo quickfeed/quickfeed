@@ -9,7 +9,6 @@ import { INavInfo } from "../NavigationHelper";
 
 import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { IUserRelation } from "../models";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from '../loader';
@@ -250,11 +249,11 @@ export class TeacherPage extends ViewPage {
     public async courseUsers(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const all = await this.courseMan.getUsersForCourse(course);
-            const acceptedUsers: IUserRelation[] = [];
-            const pendingUsers: IUserRelation[] = [];
+            const acceptedUsers: Enrollment[] = [];
+            const pendingUsers: Enrollment[] = [];
             // TODO: Maybe move this to the Members view
             all.forEach((user) => {
-                switch (user.enrollment.getStatus()) {
+                switch (user.getStatus()) {
                     case Enrollment.UserStatus.TEACHER:
                     case Enrollment.UserStatus.STUDENT:
                         acceptedUsers.push(user);
@@ -266,7 +265,7 @@ export class TeacherPage extends ViewPage {
             });
 
             // sorting accepted user so that teachers show first
-            acceptedUsers.sort((x, y) => (x.enrollment.getStatus() < y.enrollment.getStatus()) ? 1 : -1);
+            acceptedUsers.sort((x, y) => (x.getStatus() < y.getStatus()) ? 1 : -1);
 
             return <MemberView
                 course={course}
