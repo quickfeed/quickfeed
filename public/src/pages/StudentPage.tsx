@@ -11,6 +11,7 @@ import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
 import { showLoader } from '../loader';
+import { ArchiveView } from "./views/ArchiveView";
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -46,6 +47,7 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("courses/{courseid:number}/members", this.members);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
+        // this.navHelper.registerFunction<any>("archive", this.archive);
     }
 
     public checkAuthentication(): boolean {
@@ -84,6 +86,20 @@ export class StudentPage extends ViewPage {
                 }}>
             </EnrollmentView>
         </div >;
+    }
+
+    public async archive(navInfo: INavInfo<any>): View {
+        await this.setupData();
+        const curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
+            return showLoader();
+        }
+        return <div>
+            <h1>Course visibility</h1>
+            <ArchiveView
+                enrollments={await this.courseMan.getAllUserEnrollments(curUser.getId())}
+            ></ArchiveView>
+        </div>
     }
 
     public async course(navInfo: INavInfo<{ courseid: number }>): View {
