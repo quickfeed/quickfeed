@@ -5,6 +5,7 @@ import { ILink } from '../../managers/NavigationManager';
 
 interface ArchiveViewProps {
     enrollments: Enrollment[];
+    onChangeClick: (enrol: Enrollment) => Promise<boolean>;
 }
 
 interface ArchiveViewState {
@@ -88,7 +89,7 @@ export class ArchiveView extends React.Component<ArchiveViewProps, ArchiveViewSt
 
         // TODO: generate buttons from the links
 
-        // TODO: add buttons as a single butt,on group to the table row
+        // TODO: add buttons as a single button group to the table row
 
         return base;
     }
@@ -102,6 +103,16 @@ export class ArchiveView extends React.Component<ArchiveViewProps, ArchiveViewSt
         this.setState({
             editing: !this.state.editing,
         })
+    }
+
+    // TODO: pass to buttons as an onclick function
+    private async handleStateChange(enrol: Enrollment, state: Enrollment.DisplayState) {
+        const baseState = enrol.getState();
+        enrol.setState(state);
+        const ans = await this.props.onChangeClick(enrol);
+        if (!ans) {
+            enrol.setState(baseState);
+        }
     }
 
 }

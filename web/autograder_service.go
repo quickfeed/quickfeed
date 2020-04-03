@@ -193,6 +193,17 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 	return courses, nil
 }
 
+// ChangeCourseVisibility allows to edit what courses are visible in the sidebar.
+// Access policy: Any User.
+func (s *AutograderService) ChangeCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
+	// TODO: check that the enrollment belongs to the current user
+	// TODO: change enrollment state, return appropriate errors
+	if in.State == pb.Enrollment_FAVORITE {
+		return nil, status.Errorf(codes.InvalidArgument, "testing error messages")
+	}
+	return &pb.Void{}, nil
+}
+
 // CreateEnrollment enrolls a new student for the course specified in the request.
 // Access policy: Any User.
 func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
