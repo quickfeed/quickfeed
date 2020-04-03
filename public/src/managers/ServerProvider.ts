@@ -145,6 +145,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status;
     }
 
+    public async changeCourseVisibility(enrol: Enrollment): Promise<boolean> {
+        const result = await this.grpcHelper.changeCourseVisibility(enrol);
+        return this.responseCodeSuccess(result);
+    }
+
     public async createGroup(courseID: number, groupName: string, users: number[]): Promise<Group | Status> {
         const result = await this.grpcHelper.createGroup(courseID, groupName, users);
         if (!this.responseCodeSuccess(result) || !result.data) {

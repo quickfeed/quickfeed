@@ -389,6 +389,28 @@ export class AutograderServiceClient {
       callback);
   }
 
+  methodInfoChangeCourseVisibility = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: Enrollment) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  changeCourseVisibility(
+    request: Enrollment,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/ChangeCourseVisibility',
+      request,
+      metadata || {},
+      this.methodInfoChangeCourseVisibility,
+      callback);
+  }
+
   methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(
     Assignments,
     (request: CourseRequest) => {

@@ -98,6 +98,9 @@ export class StudentPage extends ViewPage {
             <h1>Course visibility</h1>
             <ArchiveView
                 enrollments={await this.courseMan.getAllUserEnrollments(curUser.getId())}
+                onChangeClick={(enrol: Enrollment) => {
+                    return this.courseMan.changeCourseVisibility(enrol);
+                }}
             ></ArchiveView>
         </div>
     }
