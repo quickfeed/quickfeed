@@ -406,6 +406,9 @@ export class Enrollment extends jspb.Message {
   getStatus(): Enrollment.UserStatus;
   setStatus(value: Enrollment.UserStatus): void;
 
+  getState(): Enrollment.DisplayState;
+  setState(value: Enrollment.DisplayState): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Enrollment.AsObject;
   static toObject(includeInstance: boolean, msg: Enrollment): Enrollment.AsObject;
@@ -424,6 +427,7 @@ export namespace Enrollment {
     course?: Course.AsObject,
     group?: Group.AsObject,
     status: Enrollment.UserStatus,
+    state: Enrollment.DisplayState,
   }
 
   export enum UserStatus { 
@@ -432,6 +436,12 @@ export namespace Enrollment {
     REJECTED = 2,
     STUDENT = 3,
     TEACHER = 4,
+  }
+
+  export enum DisplayState { 
+    ACTIVE = 0,
+    ARCHIVED = 1,
+    FAVORITE = 2,
   }
 }
 

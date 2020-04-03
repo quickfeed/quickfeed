@@ -110,6 +110,11 @@ message Enrollment {
         STUDENT = 3;
         TEACHER = 4;
     }
+    enum DisplayState {
+        ACTIVE = 0;
+        ARCHIVED = 1;
+        FAVORITE = 2;
+    }
     uint64 ID = 1;
     uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""];
     uint64 userID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""]; 
@@ -118,6 +123,7 @@ message Enrollment {
     Course course = 6;
     Group group = 7;
     UserStatus status = 8;
+    DisplayState state = 9;
 }
 
 message Enrollments {

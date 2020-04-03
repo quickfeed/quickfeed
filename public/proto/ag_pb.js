@@ -19,6 +19,7 @@ goog.exportSymbol('proto.Course', null, global);
 goog.exportSymbol('proto.CourseRequest', null, global);
 goog.exportSymbol('proto.Courses', null, global);
 goog.exportSymbol('proto.Enrollment', null, global);
+goog.exportSymbol('proto.Enrollment.DisplayState', null, global);
 goog.exportSymbol('proto.Enrollment.UserStatus', null, global);
 goog.exportSymbol('proto.EnrollmentRequest', null, global);
 goog.exportSymbol('proto.EnrollmentStatusRequest', null, global);
@@ -3640,7 +3641,8 @@ proto.Enrollment.toObject = function(includeInstance, msg) {
     user: (f = msg.getUser()) && proto.User.toObject(includeInstance, f),
     course: (f = msg.getCourse()) && proto.Course.toObject(includeInstance, f),
     group: (f = msg.getGroup()) && proto.Group.toObject(includeInstance, f),
-    status: jspb.Message.getFieldWithDefault(msg, 8, 0)
+    status: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    state: jspb.Message.getFieldWithDefault(msg, 9, 0)
   };
 
   if (includeInstance) {
@@ -3711,6 +3713,10 @@ proto.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
     case 8:
       var value = /** @type {!proto.Enrollment.UserStatus} */ (reader.readEnum());
       msg.setStatus(value);
+      break;
+    case 9:
+      var value = /** @type {!proto.Enrollment.DisplayState} */ (reader.readEnum());
+      msg.setState(value);
       break;
     default:
       reader.skipField();
@@ -3800,6 +3806,13 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getState();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      9,
+      f
+    );
+  }
 };
 
 
@@ -3812,6 +3825,15 @@ proto.Enrollment.UserStatus = {
   REJECTED: 2,
   STUDENT: 3,
   TEACHER: 4
+};
+
+/**
+ * @enum {number}
+ */
+proto.Enrollment.DisplayState = {
+  ACTIVE: 0,
+  ARCHIVED: 1,
+  FAVORITE: 2
 };
 
 /**
@@ -4012,6 +4034,24 @@ proto.Enrollment.prototype.getStatus = function() {
  */
 proto.Enrollment.prototype.setStatus = function(value) {
   return jspb.Message.setProto3EnumField(this, 8, value);
+};
+
+
+/**
+ * optional DisplayState state = 9;
+ * @return {!proto.Enrollment.DisplayState}
+ */
+proto.Enrollment.prototype.getState = function() {
+  return /** @type {!proto.Enrollment.DisplayState} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+};
+
+
+/**
+ * @param {!proto.Enrollment.DisplayState} value
+ * @return {!proto.Enrollment} returns this
+ */
+proto.Enrollment.prototype.setState = function(value) {
+  return jspb.Message.setProto3EnumField(this, 9, value);
 };
 
 
