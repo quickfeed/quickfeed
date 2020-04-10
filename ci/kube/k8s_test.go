@@ -54,22 +54,16 @@ func testK8s(t *testing.T, echo string) {
 	wantOut := echo
 	jobName := time.Now().Format("20060102-150405-") + echo
 
-	err := kube.Jobsecrets(jobName, course, sec)
-	if err != nil {
-		panic(err)
-	}
 	container := &kube.Container{
 		Image:    "golang",
 		Commands: []string{script},
 	}
 	k := newKubeCI()
-	out, err := k.KRun(context.Background(), container, jobName, course)
+	out, err := k.KRun(context.Background(), container, jobName, course, sec)
 	if err != nil {
 		t.Fatal(err)
 
 	}
-	kube.DeleteJobSecret(jobName, course)
-
 	if out != wantOut {
 		t.Errorf("have %#v want %#v", out, wantOut)
 	}
@@ -78,29 +72,21 @@ func testK8s(t *testing.T, echo string) {
 func TestK8sFP(t *testing.T) {
 	startTime := time.Now()
 	fmt.Println(startTime.Format("20060102-150405"))
-
 	jobName := startTime.Format("20060102-150405")
-
-	err := kube.Jobsecrets(jobName, course, sec)
-	if err != nil {
-		panic(err)
-	}
 	info := getAssignmentInfo()
-	jobdock, err := ci.ParseScriptTemplate("", info) //TODO: make sure of this func while integrating
+	jobdock, err := ci.ParseScriptTemplate("", info)
 	if err != nil {
 		panic(err)
 	}
 	wantOut := ""
 	script := jobdock.Commands
-
 	container := newPodContainer("golang", script)
-
 	k := newKubeCI()
-	out, err := k.KRun(context.Background(), container, jobName, course)
+
+	out, err := k.KRun(context.Background(), container, jobName, course, sec)
 	if err != nil {
 		t.Fatal(err)
 	}
-	kube.DeleteJobSecret(jobName, course)
 
 	if out != wantOut {
 		t.Errorf("have %#v want %#v", out, wantOut)

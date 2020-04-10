@@ -4,15 +4,15 @@ import (
 	"context"
 )
 
-//Container describes how to execute a CI job.
+// Container contains the Base Docker Image and the Commands.
+// These describe the task that has to be executed in the Container of a K8s Job object.
 type Container struct {
 	Image    string
 	Commands []string
 }
 
-//KRunner contains methods for running user provided code in isolation.
+// KRunner contains methods for configuring a K8s Job Object to run the user-provided code in isolation.
 type KRunner interface {
-	Jobsecrets(string, string, string)
-	// RunKubeJob should synchronously execute the described job and return the output.
-	KRun(context.Context, *Container, string, string) (string, error)
+	// Run should synchronously execute the described Container and return the output.
+	KRun(context.Context, *Container, string, string, string) (string, error)
 }

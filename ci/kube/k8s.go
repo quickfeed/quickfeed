@@ -8,61 +8,63 @@ import (
 	"strings"
 	"sync"
 
-	"k8s.io/client-go/kubernetes"
-
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
-// K8s is an implementation of the CI interface using K8s.
+// K8s is an implementation of the Kube interface using K8s.
 type K8s struct {
 	isActive   int
 	isLogReady int
-	podLog     string
+	result     string
 }
 
 var (
-	isJobActive sync.Cond = *sync.NewCond(&sync.Mutex{})
-	isPodDone   sync.Cond = *sync.NewCond(&sync.Mutex{})
+	jobActivated sync.Cond = *sync.NewCond(&sync.Mutex{})
+	podExecuted  sync.Cond = *sync.NewCond(&sync.Mutex{})
+	nrOfPods               = int32Ptr(1)
+	//cli = getClient()
 )
 
-//KRun runs the rescieved push from repository on the podes in our 3 nodes.
-//dockJob is the container that will be creted using the base client docker image and commands that will run.
-//id is a unique string for each job object
-func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName string /* , secretAg string */) (string, error) {
+// KRun implements the Kube Interface.
+// This method creates a K8s Job and Secret Object.
+// The Job object takes the task from the Autograder, and run it in a Docker Container.
+// The Job Object will be created in the spesified NameSpace by the Parameter "courseName".
+// Tasks can run in parallel. The method will not return before the Job is on completed status.
+func (k *K8s) KRun(ctx context.Context, task *Container, id string, courseName string, secretAg string) (string, error) {
 
 	clientset, err := getClient()
 	if err != nil {
 		return "", err
 	}
 
-	/* err = Jobsecrets(id, courseName, secretAg)
+	err = makeSecret(clientset, id, courseName, secretAg)
 	if err != nil {
 		return "", err
-	} */
+	}
 
-	//Define the configiration of the job object
-	jobsClient := clientset.BatchV1().Jobs(courseName)
-	confJob := &batchv1.Job{
+	jobClient := clientset.BatchV1().Jobs(courseName)
+	// Dynamically define the configuration of the job object.
+	jobConfig := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "cijob" + id,
+			Name: "job" + id,
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit:            int32Ptr(8),
-			Parallelism:             int32Ptr(1),
-			Completions:             int32Ptr(1),
+			Parallelism:             nrOfPods,
+			Completions:             nrOfPods,
 			TTLSecondsAfterFinished: int32Ptr(60),
-			ActiveDeadlineSeconds:   int64Ptr(120000), // change this if jobs can take longer time.
+			ActiveDeadlineSeconds:   int64Ptr(3600),
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:            "cijob" + id,
-							Image:           podRun.Image,
-							Command:         []string{"/bin/sh", "-c", strings.Join(podRun.Commands, "\n")},
+							Name:            "container" + id,
+							Image:           task.Image,
+							Command:         []string{"/bin/sh", "-c", strings.Join(task.Commands, "\n")},
 							ImagePullPolicy: apiv1.PullIfNotPresent,
 							Resources: apiv1.ResourceRequirements{
 								Limits: apiv1.ResourceList{
@@ -74,6 +76,8 @@ func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName
 									"memory": resource.MustParse("1Gi"),
 								},
 							},
+							// The secret is created will be Mounted be the Continer
+							// TODO: Vera Yaseneva - command out line 43 - 46, 80 - 98, and 123, if K8s secret not used.
 							VolumeMounts: []apiv1.VolumeMount{
 								{
 									Name:      "secreting",
@@ -99,49 +103,51 @@ func (k *K8s) KRun(ctx context.Context, podRun *Container, id string, courseName
 		},
 	}
 
-	createdJob, err := jobsClient.Create(confJob)
+	jobObject, err := jobClient.Create(jobConfig)
 	if err != nil {
 		return "", err
 	}
-	err = k.jobEvents(*createdJob, clientset, courseName, int32(1), createdJob.Name)
+	// Watch the Job events until it is activated.
+	err = k.jobEvents(*jobObject, clientset, courseName, jobObject.Name)
 	if err != nil {
 		return "", err
 	}
-	k.jobWaitToActive()
+	k.waitForJob()
+	// Watch the Pod events until it succeed.
+	err = k.podEvents(clientset, courseName, jobObject.Name)
+	if err != nil {
+		return "", err
+	}
+	k.waitForLogs()
 
-	err = k.podEvents(clientset, courseName, createdJob.Name)
-	if err != nil {
-		return "", err
-	}
-	k.podWaitToSucc()
-
-	return k.podLog, nil
+	removeSecret(clientset, id, courseName)
+	return k.result, nil
 }
 
-//podWaitToSucc waits for the pod to success. The signal will be send from the k.podEvents function
-func (k *K8s) podWaitToSucc() {
-	isPodDone.L.Lock()
-	for k.isLogReady == 0 {
-		isPodDone.Wait()
-	}
-	k.isLogReady--
-	isPodDone.L.Unlock()
-}
-
-//jobWaitToActive waits for the pod to success. The signal will be send from the k.jobEvents function
-func (k *K8s) jobWaitToActive() {
-	isJobActive.L.Lock()
+// waitForJob waits for a signal from the jobEvents() that indicates that the job status is set on active.
+func (k *K8s) waitForJob() {
+	jobActivated.L.Lock()
 	for k.isActive == 0 {
-		isJobActive.Wait()
+		jobActivated.Wait()
 	}
 	k.isActive--
-	isJobActive.L.Unlock()
+	jobActivated.L.Unlock()
 }
 
-//jobEvents watch the events of the jobs. If job is active, then sends signal to the jobWaitToActive() method.
-func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, nrOfPods int32, kubejobname string) error {
+// waitForLogs waits for a signal from the podEvents() that indicates that the Pod status is set on Succeeded.
+func (k *K8s) waitForLogs() {
+	podExecuted.L.Lock()
+	for k.isLogReady == 0 {
+		podExecuted.Wait()
+	}
+	k.isLogReady--
+	podExecuted.L.Unlock()
+}
+
+// jobEvents watches a job events. When the job status is active, a signal will be sent to the waitForJob() method.
+func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namespace string, jobname string) error {
 	watch, err := clientset.BatchV1().Jobs(namespace).Watch(metav1.ListOptions{
-		LabelSelector: "job-name=" + kubejobname,
+		LabelSelector: "job-name=" + jobname,
 	})
 	if err != nil {
 		return err
@@ -150,21 +156,20 @@ func (k *K8s) jobEvents(job batchv1.Job, clientset *kubernetes.Clientset, namesp
 		for event := range watch.ResultChan() {
 			j, ok := event.Object.(*batchv1.Job)
 			if !ok {
-				log.Fatal("unexpected type") //TODO need to handle this?
+				log.Fatal("unexpected type")
 			}
-			//if j.Status.StartTime != nil {
-			if j.Status.Active == nrOfPods {
-				isJobActive.L.Lock()
+			if j.Status.Active == *nrOfPods {
+				jobActivated.L.Lock()
 				k.isActive++
-				isJobActive.Signal()
-				isJobActive.L.Unlock()
+				jobActivated.Signal()
+				jobActivated.L.Unlock()
 			}
 		}
 	}()
 	return nil
 }
 
-//podEvents watch the pods events, and send signal to the podWaitToSucc() method if pod successed.
+// podEvents watches a pods events. When the Pod status is Succeeded, a signal will be sent to the waitForLogs() method.
 func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobname string) error {
 	watch, err := clientset.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
 		LabelSelector: "job-name=" + jobname,
@@ -180,18 +185,18 @@ func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobna
 				log.Fatal("unexpected type")
 			}
 			if pod.Status.Phase == "Succeeded" {
-				isPodDone.L.Lock()
-				k.podLog, err = podLogs(*pod, clientset, namespace)
+				podExecuted.L.Lock()
+				k.result, err = podLogs(*pod, clientset, namespace)
 				if err != nil {
 					logError = err
 				}
 				k.isLogReady++
-				isPodDone.Signal()
-				isPodDone.L.Unlock()
+				podExecuted.Signal()
+				podExecuted.L.Unlock()
 			}
-			if pod.Status.Phase == apiv1.PodFailed {
+			/* 			if pod.Status.Phase == apiv1.PodFailed {
 				logError = err
-			}
+			} */
 		}
 	}(logError)
 	if logError != nil {
@@ -200,7 +205,7 @@ func (k *K8s) podEvents(clientset *kubernetes.Clientset, namespace string, jobna
 	return nil
 }
 
-//podLogs read the logs of the cuurently running pods.
+// podLogs read the logs of the Succeeded pod(s).
 func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (string, error) {
 	podLogOpts := apiv1.PodLogOptions{}
 
@@ -216,7 +221,7 @@ func podLogs(pod apiv1.Pod, clientset *kubernetes.Clientset, namespace string) (
 	if err != nil {
 		return "", err
 	}
-
 	logsStr := buf.String()
+
 	return logsStr, nil
 }
