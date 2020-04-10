@@ -5,7 +5,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//CreateNameSpace creates a new namespace which will contain all the dependencies of a Course.
+// CreateNameSpace creates a new namespace which will contain all the dependencies of a Course.
 func CreateNameSpace(courseName string) error {
 	clientset, err := getClient()
 	if err != nil {
@@ -27,8 +27,8 @@ func CreateNameSpace(courseName string) error {
 	return nil
 }
 
-//DeleteNameSpace delete a namespace which reprenset a spesific Course.
-//Warning: This will delete the dependencies of the Course
+// DeleteNameSpace deletes a namespace that represents a specific Course.
+// Warning: This method will delete all the Course's objects and its dependencies from the system.
 func DeleteNameSpace(courseName string) error {
 	clientset, err := getClient()
 	if err != nil {
@@ -41,7 +41,7 @@ func DeleteNameSpace(courseName string) error {
 	return nil
 }
 
-//AllNamespaces lists all the namespaces in the system.
+// AllNamespaces lists all the namespaces in the system.
 func AllNamespaces() (string, error) {
 	clientset, err := getClient()
 	if err != nil {
