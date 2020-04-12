@@ -26,6 +26,7 @@ require (
 	github.com/labstack/echo/v4 v4.1.15
 	github.com/markbates/goth v1.62.0
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -50,8 +51,9 @@ require (
 	k8s.io/api v0.17.1
 	k8s.io/apimachinery v0.17.1
 	k8s.io/client-go v0.17.1
+	k8s.io/metrics v0.17.1
 	k8s.io/utils v0.0.0-20200327001022-6496210b90e8 // indirect
-	sigs.k8s.io/controller-runtime v0.4.0
+	sigs.k8s.io/controller-runtime v0.4.0 // indirect
 )
 
 replace github.com/autograde/aguis/kit => ./kit
