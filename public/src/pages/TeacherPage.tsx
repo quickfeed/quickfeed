@@ -320,8 +320,19 @@ export class TeacherPage extends ViewPage {
                 }
                 const courses = await this.courseMan.getCoursesForUser(curUser, status);
 
+                const enrols = await this.courseMan.getEnrollmentsForUser(curUser.getId());
+                const activeCourses: Course[] = [];
+                enrols.forEach((enrol) => {
+                    const crs = enrol.getCourse();
+                    if (enrol.getState() !== Enrollment.DisplayState.ARCHIVED &&
+                     crs && courses.find(e => e.getId() === crs.getId()
+                     )) {
+                        activeCourses.push(crs);
+                    }
+                });
+
                 const labLinks: ILinkCollection[] = [];
-                courses.forEach((e) => {
+                activeCourses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
                         name: e.getCode(),
                         uri: this.pagePath + "/courses/" + e.getId(),

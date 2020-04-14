@@ -21,7 +21,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
         uri: "activate",
         extra: "primary",
     }
-    private archivateLink = {
+    private archiveLink = {
         name: "Hide",
         uri: "archive",
         extra: "primary",
@@ -70,7 +70,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
         switch (status) {
             case Enrollment.DisplayState.ACTIVE:
                 this.state.editing ?
-                    buttonLinks.push(this.archivateLink, this.makeFavoriteLink) :
+                    buttonLinks.push(this.archiveLink, this.makeFavoriteLink) :
                     buttonLinks.push(this.activeLink);
                 break;
             case Enrollment.DisplayState.ARCHIVED:
@@ -80,7 +80,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
                 break;
             case Enrollment.DisplayState.FAVORITE:
                 this.state.editing ?
-                    buttonLinks.push(this.activateLink, this.archivateLink) :
+                    buttonLinks.push(this.activateLink, this.archiveLink) :
                     buttonLinks.push(this.favoriteLink);
                 break;
             default:
