@@ -2,6 +2,7 @@ import * as React from "react";
 import { Enrollment } from '../../../proto/ag_pb';
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink } from '../../managers/NavigationManager';
+import { sortCoursesByVisibility } from '../../componentHelper';
 
 interface VisibilityViewProps {
     enrollments: Enrollment[];
@@ -46,7 +47,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
         super(props);
         this.state = {
             editing: false,
-            sortedCourses: this.sortCourses(this.props.enrollments),
+            sortedCourses: sortCoursesByVisibility(this.props.enrollments),
         }
     }
 
@@ -62,30 +63,6 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
             header={["Course code", "Course Name", "State"]}
             selector={(enrol: Enrollment) => this.createCourseRow(enrol)}>
         </DynamicTable></div>;
-
-    }
-
-    private sortCourses(enrols: Enrollment[]): Enrollment[] {
-        const sorted: Enrollment[] = [];
-        const active: Enrollment[] = [];
-        const archived: Enrollment[] = [];
-        // TODO: if we want to display active and hidden courses in separate tables,
-        // they can be easily separated and set as a new state here
-        enrols.forEach((enrol) => {
-            switch (enrol.getState()) {
-                case Enrollment.DisplayState.FAVORITE:
-                    sorted.push(enrol);
-                    break;
-                case Enrollment.DisplayState.ACTIVE:
-                    active.push(enrol);
-                    break;
-                case Enrollment.DisplayState.ARCHIVED:
-                    archived.push(enrol);
-                    break;
-            }
-        })
-        sorted.concat(active, archived);
-        return sorted;
     }
 
     private generateCourseStateLinks(status: Enrollment.DisplayState): ILink[] {
@@ -150,8 +127,23 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
     }
 
     private handleSearch(query: string) {
-        // TODO: search by course name, code, year or semester/tag
-        return;
+        query.toLowerCase();
+        const filteredCourses: Enrollment[] = [];
+        this.state.sortedCourses.forEach((enrol) => {
+            const course = enrol.getCourse();
+            if (course) {
+                if (course.getName().toLowerCase().indexOf(query) !== -1 ||
+                    course.getCode().toLowerCase().indexOf(query) !== -1 ||
+                    course.getYear().toString().indexOf(query) !== -1 ||
+                    course.getTag().toLowerCase().indexOf(query) !== -1) {
+                        filteredCourses.push(enrol);
+                    }
+            }
+        });
+
+        this.setState({
+            sortedCourses: filteredCourses,
+        });
     }
 
     private async toggleEdit() {
