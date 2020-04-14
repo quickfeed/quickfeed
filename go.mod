@@ -13,7 +13,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.5
 	github.com/google/go-cmp v0.4.0
-	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-github/v30 v30.0.0
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/gorilla/sessions v1.2.0
@@ -46,12 +46,12 @@ require (
 	google.golang.org/genproto v0.0.0-20200323114720-3f67cca34472 // indirect
 	google.golang.org/grpc v1.28.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/webhooks.v3 v3.13.0
+	gopkg.in/go-playground/webhooks.v3 v3.13.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.17.1
 	k8s.io/apimachinery v0.17.1
 	k8s.io/client-go v0.17.1
-	k8s.io/metrics v0.17.1
+	k8s.io/metrics v0.17.1 // indirect
 	k8s.io/utils v0.0.0-20200327001022-6496210b90e8 // indirect
 	sigs.k8s.io/controller-runtime v0.4.0 // indirect
 )
