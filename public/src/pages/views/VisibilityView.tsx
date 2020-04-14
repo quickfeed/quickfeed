@@ -9,22 +9,26 @@ interface VisibilityViewProps {
 }
 
 interface VisibilityViewState {
+    sortedCourses: Enrollment[];
     editing: boolean;
 }
 
 export class CourseVisibilityView extends React.Component<VisibilityViewProps, VisibilityViewState> {
 
     private activateLink = {
-        name: "Activate",
+        name: "Show",
         uri: "activate",
+        extra: "primary",
     }
     private archivateLink = {
-        name: "Archivate",
-        uri: "archivate",
+        name: "Hide",
+        uri: "archive",
+        extra: "primary",
     }
     private makeFavoriteLink = {
         name: "Make favorite",
         uri: "favorite",
+        extra: "success",
     }
     private activeLink = {
         name: "Active",
@@ -42,6 +46,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
         super(props);
         this.state = {
             editing: false,
+            sortedCourses: this.sortCourses(this.props.enrollments),
         }
     }
 
@@ -53,11 +58,34 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
                 />
             <div>{this.editButton()}</div>
             <DynamicTable
-            data={this.props.enrollments}
+            data={this.state.sortedCourses}
             header={["Course code", "Course Name", "State"]}
             selector={(enrol: Enrollment) => this.createCourseRow(enrol)}>
         </DynamicTable></div>;
 
+    }
+
+    private sortCourses(enrols: Enrollment[]): Enrollment[] {
+        const sorted: Enrollment[] = [];
+        const active: Enrollment[] = [];
+        const archived: Enrollment[] = [];
+        // TODO: if we want to display active and hidden courses in separate tables,
+        // they can be easily separated and set as a new state here
+        enrols.forEach((enrol) => {
+            switch (enrol.getState()) {
+                case Enrollment.DisplayState.FAVORITE:
+                    sorted.push(enrol);
+                    break;
+                case Enrollment.DisplayState.ACTIVE:
+                    active.push(enrol);
+                    break;
+                case Enrollment.DisplayState.ARCHIVED:
+                    archived.push(enrol);
+                    break;
+            }
+        })
+        sorted.concat(active, archived);
+        return sorted;
     }
 
     private generateCourseStateLinks(status: Enrollment.DisplayState): ILink[] {
@@ -97,7 +125,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
                 case "activate":
                     action = Enrollment.DisplayState.ACTIVE;
                     break;
-                case "archivate":
+                case "archive":
                     action = Enrollment.DisplayState.ARCHIVED;
                     break;
                 case "favorite":
@@ -111,12 +139,12 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
                 key={i}
                 classType={v.extra ? v.extra as BootstrapClass : "default"}
                 type={v.description}
-                onClick={(link) => { this.handleStateChange(enrol, action)}}
+                onClick={() => { this.handleStateChange(enrol, action)}}
             >{v.name}
             </BootstrapButton>;
             });
 
-        const btnGroup: JSX.Element = <div className="btn-group action-btn">{linkButtons}</div>
+        const btnGroup = <div className="btn-group action-btn">{linkButtons}</div>
         base.push(btnGroup);
         return base;
     }
@@ -131,6 +159,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
             editing: !this.state.editing,
         })
     }
+
     private async handleStateChange(enrol: Enrollment, state?: Enrollment.DisplayState) {
         if (state) {
             const baseState = enrol.getState();
