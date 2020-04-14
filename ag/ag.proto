@@ -111,9 +111,10 @@ message Enrollment {
         TEACHER = 4;
     }
     enum DisplayState {
-        ACTIVE = 0;
-        ARCHIVED = 1;
-        FAVORITE = 2;
+        UNSET = 0;
+        ACTIVE = 1;
+        ARCHIVED = 2;
+        FAVORITE = 3;
     }
     uint64 ID = 1;
     uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""];
