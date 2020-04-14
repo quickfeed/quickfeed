@@ -439,9 +439,10 @@ export namespace Enrollment {
   }
 
   export enum DisplayState { 
-    ACTIVE = 0,
-    ARCHIVED = 1,
-    FAVORITE = 2,
+    UNSET = 0,
+    ACTIVE = 1,
+    ARCHIVED = 2,
+    FAVORITE = 3,
   }
 }
 

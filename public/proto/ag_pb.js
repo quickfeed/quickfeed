@@ -3831,9 +3831,10 @@ proto.Enrollment.UserStatus = {
  * @enum {number}
  */
 proto.Enrollment.DisplayState = {
-  ACTIVE: 0,
-  ARCHIVED: 1,
-  FAVORITE: 2
+  UNSET: 0,
+  ACTIVE: 1,
+  ARCHIVED: 2,
+  FAVORITE: 3
 };
 
 /**
