@@ -24,3 +24,19 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
     sorted = sorted.concat(active, archived);
     return sorted;
 }
+
+export function searchForCourses(enrols: Enrollment[], query: string): Enrollment[] {
+    const filteredCourses: Enrollment[] = [];
+    enrols.forEach((enrol) => {
+        const course = enrol.getCourse();
+        if (course) {
+            if (course.getName().toLowerCase().indexOf(query) !== -1 ||
+                course.getCode().toLowerCase().indexOf(query) !== -1 ||
+                course.getYear().toString().indexOf(query) !== -1 ||
+                course.getTag().toLowerCase().indexOf(query) !== -1) {
+                    filteredCourses.push(enrol);
+                }
+        }
+    });
+    return filteredCourses;
+}

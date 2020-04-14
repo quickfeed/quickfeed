@@ -2,7 +2,7 @@ import * as React from "react";
 import { Enrollment } from '../../../proto/ag_pb';
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink } from '../../managers/NavigationManager';
-import { sortCoursesByVisibility } from '../../componentHelper';
+import { searchForCourses, sortCoursesByVisibility } from '../../componentHelper';
 
 interface VisibilityViewProps {
     enrollments: Enrollment[];
@@ -128,18 +128,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
 
     private handleSearch(query: string) {
         query.toLowerCase();
-        const filteredCourses: Enrollment[] = [];
-        this.state.sortedCourses.forEach((enrol) => {
-            const course = enrol.getCourse();
-            if (course) {
-                if (course.getName().toLowerCase().indexOf(query) !== -1 ||
-                    course.getCode().toLowerCase().indexOf(query) !== -1 ||
-                    course.getYear().toString().indexOf(query) !== -1 ||
-                    course.getTag().toLowerCase().indexOf(query) !== -1) {
-                        filteredCourses.push(enrol);
-                    }
-            }
-        });
+        const filteredCourses = searchForCourses(sortCoursesByVisibility(this.props.enrollments), query);
 
         this.setState({
             sortedCourses: filteredCourses,
