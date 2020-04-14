@@ -73,6 +73,11 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
                     buttonLinks.push(this.archiveLink, this.makeFavoriteLink) :
                     buttonLinks.push(this.activeLink);
                 break;
+            case Enrollment.DisplayState.UNSET:
+                this.state.editing ?
+                    buttonLinks.push(this.archiveLink, this.makeFavoriteLink) :
+                    buttonLinks.push(this.activeLink);
+                break;
             case Enrollment.DisplayState.ARCHIVED:
                 this.state.editing ?
                     buttonLinks.push(this.activateLink, this.makeFavoriteLink) :
@@ -110,6 +115,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
                     break;
                 default:
                     console.log("Got unexpected link uri: " + v.uri);
+                    action = Enrollment.DisplayState.UNSET;
             }
 
             return <BootstrapButton
@@ -141,7 +147,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
         })
     }
 
-    private async handleStateChange(enrol: Enrollment, state?: Enrollment.DisplayState) {
+    private async handleStateChange(enrol: Enrollment, state: Enrollment.DisplayState) {
         if (state) {
             const baseState = enrol.getState();
             enrol.setState(state);

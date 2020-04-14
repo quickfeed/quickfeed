@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Enrollment } from "../proto/ag_pb";
+import { Course, Enrollment } from "../proto/ag_pb";
 
 
 export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
@@ -18,6 +18,9 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
                 break;
             case Enrollment.DisplayState.ARCHIVED:
                 archived.push(enrol);
+                break;
+            case Enrollment.DisplayState.UNSET:
+                active.push(enrol);
                 break;
         }
     })
@@ -39,4 +42,17 @@ export function searchForCourses(enrols: Enrollment[], query: string): Enrollmen
         }
     });
     return filteredCourses;
+}
+
+export function getActiveCourses(courses: Course[], enrols: Enrollment[], userID: number): Course[] {
+    const activeCourses: Course[] = [];
+    enrols.forEach((enrol) => {
+        const crs = enrol.getCourse();
+        if (enrol.getState() !== Enrollment.DisplayState.ARCHIVED &&
+            crs && courses.find(e => e.getId() === crs.getId()
+            )) {
+            activeCourses.push(crs);
+        }
+    });
+    return activeCourses;
 }
