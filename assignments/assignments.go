@@ -23,15 +23,20 @@ func UpdateFromTestsRepo(logger *zap.SugaredLogger, db database.Database, repo *
 	}
 	assignments, err := FetchAssignments(context.Background(), s, course)
 	if err != nil {
-		logger.Errorf("Failed to fetch assignments from 'tests' repository: %w", err)
+		logger.Errorf("Failed to fetch assignments from '%s' repository: %w", pb.TestsRepo, err)
 		return
+	}
+	for _, assignment := range assignments {
+		logger.Debugf("Found assignment in '%s' repository: %v", pb.TestsRepo, assignment)
 	}
 	if err = db.UpdateAssignments(assignments); err != nil {
 		for _, assignment := range assignments {
-			logger.Debugf("Fetched assignment with ID: %d", assignment.GetID())
+			logger.Debugf("Failed to update database for: %v", assignment)
 		}
 		logger.Errorf("Failed to update assignments in database: %w", err)
+		return
 	}
+	logger.Debugf("Assignments for %s successfully updated from '%s' repo", course.GetCode(), pb.TestsRepo)
 }
 
 // FetchAssignments returns a list of assignments for the given course, by

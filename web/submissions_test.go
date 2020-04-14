@@ -348,6 +348,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		CourseID: course1.ID,
 		Name:     "lab 1",
 		Language: "go",
+		Deadline: "2020-02-23T18:00:00",
 		Order:    1,
 	}
 
@@ -355,18 +356,21 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		CourseID: course1.ID,
 		Name:     "lab 2",
 		Language: "go",
+		Deadline: "2020-03-23T18:00:00",
 		Order:    2,
 	}
 	lab1c2 := &pb.Assignment{
 		CourseID: course2.ID,
 		Name:     "lab 1",
 		Language: "go",
+		Deadline: "2020-04-23T18:00:00",
 		Order:    1,
 	}
 	lab2c2 := &pb.Assignment{
 		CourseID: course2.ID,
 		Name:     "lab 2",
 		Language: "go",
+		Deadline: "2020-05-23T18:00:00",
 		Order:    2,
 	}
 	if err := db.CreateAssignment(lab1c1); err != nil {

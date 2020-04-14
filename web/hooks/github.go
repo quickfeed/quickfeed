@@ -14,7 +14,8 @@ import (
 	"go.uber.org/zap"
 )
 
-type githubWebHook struct {
+// GitHubWebHook holds references and data for handling webhook events.
+type GitHubWebHook struct {
 	logger *zap.SugaredLogger
 	db     database.Database
 	runner ci.Runner
@@ -22,14 +23,14 @@ type githubWebHook struct {
 }
 
 // NewGitHubWebHook creates a new webhook to handle POST requests from GitHub to the Autograder server.
-func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, secret string) *githubWebHook {
-	return &githubWebHook{logger: logger, db: db, runner: runner, secret: secret}
+func NewGitHubWebHook(logger *zap.SugaredLogger, db database.Database, runner ci.Runner, secret string) *GitHubWebHook {
+	return &GitHubWebHook{logger: logger, db: db, runner: runner, secret: secret}
 }
 
 // Handle take POST requests from GitHub, representing Push events
 // associated with course repositories, which then triggers various
 // actions on the Autograder backend.
-func (wh githubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
+func (wh GitHubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	payload, err := github.ValidatePayload(r, []byte(wh.secret))
 	if err != nil {
 		wh.logger.Errorf("Error in request body: %w", err)
@@ -51,7 +52,7 @@ func (wh githubWebHook) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (wh githubWebHook) handlePush(payload *github.PushEvent) {
+func (wh GitHubWebHook) handlePush(payload *github.PushEvent) {
 	if payload.GetRef() != "refs/heads/master" {
 		wh.logger.Debugf("Ignoring push event for non-master branch: %s", payload.GetRef())
 		return
@@ -110,28 +111,13 @@ func jsonString(event interface{}) string {
 // extractAssignments extracts information from the push payload from github
 // and determines the assignments that have been changed in this commit by
 // querying the database based on the lab name.
-// TODO(meling) implement test cases for this function.
-func (wh githubWebHook) extractAssignments(payload *github.PushEvent, course *pb.Course) []*pb.Assignment {
+func (wh GitHubWebHook) extractAssignments(payload *github.PushEvent, course *pb.Course) []*pb.Assignment {
 	modifiedAssignments := make(map[string]bool)
-	for c, commit := range payload.Commits {
-		for i, modifiedFile := range commit.Modified {
-			// we assume the first path component holds the assignment name
-			name := strings.Split(modifiedFile, "/")[0]
-			modifiedAssignments[name] = true
-			wh.logger.Debugf("Commit modified %d (%s), file %d: %s", c, commit.GetID(), i, modifiedFile)
-		}
-		for i, addedFile := range commit.Added {
-			// we assume the first path component holds the assignment name
-			name := strings.Split(addedFile, "/")[0]
-			modifiedAssignments[name] = true
-			wh.logger.Debugf("Commit added %d (%s), file %d: %s", c, commit.GetID(), i, addedFile)
-		}
-		for i, removedFile := range commit.Removed {
-			// we assume the first path component holds the assignment name
-			name := strings.Split(removedFile, "/")[0]
-			modifiedAssignments[name] = true
-			wh.logger.Debugf("Commit removed %d (%s), file %d: %s", c, commit.GetID(), i, removedFile)
-		}
+	for _, commit := range payload.Commits {
+		wh.logger.Debugf("Examining commit (%s) for modifications/additions/removals", commit.GetID())
+		extractChanges(commit.Modified, modifiedAssignments)
+		extractChanges(commit.Added, modifiedAssignments)
+		extractChanges(commit.Removed, modifiedAssignments)
 	}
 
 	var assignments []*pb.Assignment
@@ -140,8 +126,26 @@ func (wh githubWebHook) extractAssignments(payload *github.PushEvent, course *pb
 		assignment, err := wh.db.GetAssignment(&pb.Assignment{Name: name, CourseID: course.GetID()})
 		if err != nil {
 			wh.logger.Errorf("Could not find assignment '%s' for course %d in database: %v", name, course.GetID(), err)
+			continue
 		}
 		assignments = append(assignments, assignment)
 	}
 	return assignments
+}
+
+func extractChanges(changes []string, modifiedAssignments map[string]bool) {
+	for _, changedFile := range changes {
+		index := strings.Index(changedFile, "/")
+		if index == -1 {
+			// ignore root-level files
+			continue
+		}
+		// we assume the first path component holds the assignment name
+		name := changedFile[:index]
+		if name == "" {
+			// ignore names that start with "/" or empty names
+			continue
+		}
+		modifiedAssignments[name] = true
+	}
 }
