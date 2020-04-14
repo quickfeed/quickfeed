@@ -2,7 +2,6 @@ import * as React from "react";
 
 import { BootstrapButton, CourseGroup, GroupForm, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
-
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
@@ -12,6 +11,7 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from '../loader';
+import { getActiveCourses } from '../componentHelper';
 
 export class TeacherPage extends ViewPage {
 
@@ -321,16 +321,8 @@ export class TeacherPage extends ViewPage {
                 const courses = await this.courseMan.getCoursesForUser(curUser, status);
 
                 const enrols = await this.courseMan.getEnrollmentsForUser(curUser.getId());
-                const activeCourses: Course[] = [];
-                enrols.forEach((enrol) => {
-                    const crs = enrol.getCourse();
-                    if (enrol.getState() !== Enrollment.DisplayState.ARCHIVED &&
-                     crs && courses.find(e => e.getId() === crs.getId()
-                     )) {
-                        activeCourses.push(crs);
-                    }
-                });
 
+                const activeCourses = getActiveCourses(courses, enrols, curUser.getId())
                 const labLinks: ILinkCollection[] = [];
                 activeCourses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({

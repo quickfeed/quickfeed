@@ -12,6 +12,7 @@ import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
 import { showLoader } from '../loader';
 import { CourseVisibilityView } from "./views/VisibilityView";
+import { getActiveCourses } from '../componentHelper';
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -203,58 +204,60 @@ export class StudentPage extends ViewPage {
         if (key === 0) {
             const coursesLinks: ILinkCollection[] = [];
             for (const course of this.activeUserCourses) {
-                const courseID = course.course.getId();
-                const allLinks: ILink[] = [];
-                allLinks.push({ name: "Labs" });
-                const labs = course.labs;
-                const gLabs: ILink[] = [];
-                labs.forEach((lab) => {
-                    if (lab.assignment.getIsgrouplab()) {
-                        gLabs.push({
-                            name: lab.assignment.getName(),
-                            uri: this.pagePath + "/courses/" + courseID + "/grouplab/" + lab.assignment.getId(),
-                        });
-                    } else {
-                        allLinks.push({
-                            name: lab.assignment.getName(),
-                            uri: this.pagePath + "/courses/" + courseID + "/lab/" + lab.assignment.getId(),
-                        });
-                    }
-                });
-                allLinks.push({ name: "Group Labs" });
-                allLinks.push(...gLabs);
-                allLinks.push({ name: "Repositories" });
+                if (course.enrollment.getState() !== Enrollment.DisplayState.ARCHIVED) {
+                    const courseID = course.course.getId();
+                    const allLinks: ILink[] = [];
+                    allLinks.push({ name: "Labs" });
+                    const labs = course.labs;
+                    const gLabs: ILink[] = [];
+                    labs.forEach((lab) => {
+                        if (lab.assignment.getIsgrouplab()) {
+                            gLabs.push({
+                                name: lab.assignment.getName(),
+                                uri: this.pagePath + "/courses/" + courseID + "/grouplab/" + lab.assignment.getId(),
+                            });
+                        } else {
+                            allLinks.push({
+                                name: lab.assignment.getName(),
+                                uri: this.pagePath + "/courses/" + courseID + "/lab/" + lab.assignment.getId(),
+                            });
+                        }
+                    });
+                    allLinks.push({ name: "Group Labs" });
+                    allLinks.push(...gLabs);
+                    allLinks.push({ name: "Repositories" });
 
-                const repos = await this.courseMan.getRepositories(
-                    courseID,
-                    [Repository.Type.USER,
-                    Repository.Type.GROUP,
-                    Repository.Type.COURSEINFO,
-                    Repository.Type.ASSIGNMENTS],
-                    );
+                    const repos = await this.courseMan.getRepositories(
+                        courseID,
+                        [Repository.Type.USER,
+                        Repository.Type.GROUP,
+                        Repository.Type.COURSEINFO,
+                        Repository.Type.ASSIGNMENTS],
+                        );
 
-                allLinks.push({
-                    name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
-                });
+                    allLinks.push({
+                        name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
+                    });
 
-                allLinks.push({
-                    name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
-                });
+                    allLinks.push({
+                        name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
+                    });
 
-                allLinks.push({
-                    name: "Course Info", uri: repos.get(Repository.Type.COURSEINFO), absolute: true,
-                });
-                allLinks.push({
-                    name: "Assignments", uri: repos.get(Repository.Type.ASSIGNMENTS), absolute: true,
-                });
+                    allLinks.push({
+                        name: "Course Info", uri: repos.get(Repository.Type.COURSEINFO), absolute: true,
+                    });
+                    allLinks.push({
+                        name: "Assignments", uri: repos.get(Repository.Type.ASSIGNMENTS), absolute: true,
+                    });
 
-                allLinks.push({
-                    name: "New Group", uri: this.pagePath + "/courses/" + courseID + "/members",
-                });
-                coursesLinks.push({
-                    item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + courseID },
-                    children: allLinks,
-                });
+                    allLinks.push({
+                        name: "New Group", uri: this.pagePath + "/courses/" + courseID + "/members",
+                    });
+                    coursesLinks.push({
+                        item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + courseID },
+                        children: allLinks,
+                    });
+                }
             }
 
             this.navMan.checkLinkCollection(coursesLinks, this);
