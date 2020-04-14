@@ -31,7 +31,7 @@ func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
 		return h
 	}
-	return os.Getenv("USERPROFILE") // windows
+	return os.Getenv("USERPROFILE")
 }
 
 func int32Ptr(i int32) *int32 { return &i }

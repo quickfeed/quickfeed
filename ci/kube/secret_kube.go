@@ -16,8 +16,9 @@ func makeSecret(clientset *kubernetes.Clientset, id string, namespace string, pa
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      id,
-			Namespace: namespace,
+			Name:            id,
+			Namespace:       namespace,
+			ResourceVersion: id,
 		},
 		Data: map[string][]byte{
 			id: []byte(pass),
@@ -47,7 +48,7 @@ func getSecretData(id string, namespace string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	sec, err := clientset.CoreV1().Secrets(namespace).Get(id, metav1.GetOptions{})
+	sec, err := clientset.CoreV1().Secrets(namespace).Get(id, metav1.GetOptions{ResourceVersion: id})
 	if err != nil {
 		return "", err
 	}
