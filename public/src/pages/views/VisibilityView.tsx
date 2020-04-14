@@ -51,6 +51,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
                     placeholder="Search for courses"
                     onChange={(query) => this.handleSearch(query)}
                 />
+            <div>{this.editButton()}</div>
             <DynamicTable
             data={this.props.enrollments}
             header={["Course code", "Course Name", "State"]}
@@ -95,10 +96,13 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
             switch (v.uri) {
                 case "activate":
                     action = Enrollment.DisplayState.ACTIVE;
+                    break;
                 case "archivate":
                     action = Enrollment.DisplayState.ARCHIVED;
+                    break;
                 case "favorite":
                     action = Enrollment.DisplayState.FAVORITE;
+                    break;
                 default:
                     console.log("Got unexpected link uri: " + v.uri);
             }
@@ -136,5 +140,17 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
                 enrol.setState(baseState);
             }
         }
+    }
+
+    private editButton() {
+        return <button type="button"
+                id="edit"
+                className="btn btn-success member-btn"
+                onClick={() => this.toggleEdit()}
+        >{this.editButtonString()}</button>;
+    }
+
+    private editButtonString(): string {
+        return this.state.editing ? "Done" : "Edit";
     }
 }
