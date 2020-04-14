@@ -31,6 +31,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                         <table className="table">
                             <thead key="thead"><tr><th key="headrow" colSpan={2}>Lab Information </th></tr></thead>
                             <tbody key="tbody">
+                                <tr><td key="status">Status</td><td key="desc_0">{this.setStatusString()}</td></tr>
                                 <tr><td key="1">Delivered</td><td key="desc1">{this.getDeliveredTime()}</td></tr>
                                 <tr><td key="2">Deadline</td><td key="desc2">{formatDate(this.props.assignment.getDeadline())}</td></tr>
                                 <tr><td key="3">Tests passed</td><td key="desc3"><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
@@ -56,6 +57,10 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
 
     private formatTime(executionTime: number): number {
         return executionTime / 1000.0;
+    }
+
+    private setStatusString(): JSX.Element {
+        return this.props.submission.approved ? <div className="greentext">Approved</div> : <div>Not approved</div>;
     }
 
 }

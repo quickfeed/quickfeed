@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	pb "github.com/autograde/aguis/ag"
 
@@ -63,7 +64,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				// The Name field below is the folder name of the assignment.
 				assignment := &pb.Assignment{
 					CourseID:    courseID,
-					Deadline:    newAssignment.Deadline,
+					Deadline:    FixDeadline(newAssignment.Deadline),
 					Language:    strings.ToLower(newAssignment.Language),
 					Name:        filepath.Base(filepath.Dir(path)),
 					Order:       uint32(newAssignment.AssignmentID),
@@ -80,4 +81,40 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 		return nil, err
 	}
 	return assignments, nil
+}
+
+func FixDeadline(in string) string {
+	wantLayout := "2006-01-02T15:04:05"
+	acceptedLayouts := []string{
+		"2006-1-2T15:04:05",
+		"2006-1-2 15:04:05",
+		"2006-1-2T15:04",
+		"2006-1-2 15:04",
+		"2006-1-2T1504",
+		"2006-1-2 1504",
+		"2006-1-2T15",
+		"2006-1-2 15",
+		"2006-1-2 3pm",
+		"2006-1-2 3:04pm",
+		"2006-1-2 3:04:05pm",
+		"2-1-2006T15:04:05",
+		"2-1-2006 15:04:05",
+		"2-1-2006T15:04",
+		"2-1-2006 15:04",
+		"2-1-2006T1504",
+		"2-1-2006 1504",
+		"2-1-2006T15",
+		"2-1-2006 15",
+		"2-1-2006 3pm",
+		"2-1-2006 3:04pm",
+		"2-1-2006 3:04:05pm",
+	}
+	for _, layout := range acceptedLayouts {
+		t, err := time.Parse(layout, in)
+		if err != nil {
+			continue
+		}
+		return t.Format(wantLayout)
+	}
+	return "Invalid date format: " + in
 }
