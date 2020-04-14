@@ -143,8 +143,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             let hoverText = "";
             if (v.uri === "teacher") {
                 hoverText = "Promote to teacher";
-            }
-            if (v.uri === "demote") {
+            } else if (v.uri === "demote") {
                 hoverText = "Demote teacher";
             }
 

@@ -34,7 +34,6 @@ export class BootstrapButton extends React.Component<IButtonProps> {
         disabled={this.props.disabled}>
         {this.props.children}
         </button>);
-
     }
 
     private handleOnclick(e: React.MouseEvent<HTMLButtonElement>): void {
