@@ -100,7 +100,7 @@ export class GrpcManager {
     }
 
     public changeCourseVisibility(request: Enrollment): Promise<IGrpcResponse<Void>> {
-        return this.grpcSend<Void>(this.changeCourseVisibility, request)
+        return this.grpcSend<Void>(this.agService.changeCourseVisibility, request)
     }
 
     // /* ASSIGNMENTS */ //
