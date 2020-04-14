@@ -127,15 +127,14 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
             editing: !this.state.editing,
         })
     }
-
-    // TODO: pass to buttons as an onclick function
-    private async handleStateChange(enrol: Enrollment, state: Enrollment.DisplayState) {
-        const baseState = enrol.getState();
-        enrol.setState(state);
-        const ans = await this.props.onChangeClick(enrol);
-        if (!ans) {
-            enrol.setState(baseState);
+    private async handleStateChange(enrol: Enrollment, state?: Enrollment.DisplayState) {
+        if (state) {
+            const baseState = enrol.getState();
+            enrol.setState(state);
+            const ans = await this.props.onChangeClick(enrol);
+            if (!ans) {
+                enrol.setState(baseState);
+            }
         }
     }
-
 }
