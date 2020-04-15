@@ -63,27 +63,6 @@ export function sortByScore(students: IStudentLabsForCourse[], labs: Assignment[
     return fullList;
 }
 
-export function slugify(str: string): string {
-
-    str = str.replace(/^\s+|\s+$/g, "").toLowerCase();
-
-    // Remove accents, swap ñ for n, etc
-    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
-    const to   = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
-    for (let i = 0 ; i < from.length ; i++) {
-        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
-    }
-
-    // Remove invalid chars, replace whitespace by dashes, collapse dashes
-    str = str.replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
-
-    return str;
-}
-
-export function generateGroupRepoLink(groupName: string, courseURL: string): JSX.Element {
-    return <a href={courseURL + slugify(groupName)} target="_blank">{ groupName }</a>;
-}
-
 export function generateCellClass(lab: IStudentLab): string {
     if (lab.submission && lab.submission.approved) {
         return "approved-cell";

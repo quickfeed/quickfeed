@@ -4,7 +4,7 @@ import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../com
 import { ILink, NavigationManager, UserManager } from "../../managers";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { generateLabRepoLink } from '../../helper';
+import { generateGitLink } from '../../componentHelper';
 
 interface IUserViewerProps {
     users: Enrollment[];
@@ -83,11 +83,11 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         if (enr.getStatus() === Enrollment.UserStatus.TEACHER) {
             selector.push(
                 <span className="text-muted">
-                    <a href={this.gitLink(user.getLogin())} target="_blank">{user.getName()}</a>
+                    <a href={generateGitLink(user.getLogin())} target="_blank">{user.getName()}</a>
                 </span>);
         } else {
             selector.push(
-                <a href={this.repoLink(user.getLogin())} target="_blank">{user.getName()}</a>);
+                <a href={generateGitLink(user.getLogin())} target="_blank">{user.getName()}</a>);
         }
         selector.push(
             <a href={"mailto:" + enr.getUser()?.getEmail()}>{user?.getEmail()}</a>,
@@ -175,14 +175,5 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         this.setState({
             enrollments: filteredData,
         });
-    }
-
-    private gitLink(user: string): string {
-        return "https://github.com/" + user;
-    }
-
-    // return link to github account if there is no course information, otherwise return link to the student labs repo
-    private repoLink(user: string): string {
-        return this.props.isCourseList ? generateLabRepoLink(this.props.courseURL, user) : this.gitLink(user);
     }
 }

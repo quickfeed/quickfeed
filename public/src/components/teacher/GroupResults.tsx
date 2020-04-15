@@ -3,7 +3,8 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
-import { generateCellClass, generateGroupRepoLink, sortByScore } from "./labHelper";
+import { generateCellClass, sortByScore } from "./labHelper";
+import { groupRepoLink } from '../../componentHelper';
 
 interface IResultsProps {
     course: Course;
@@ -101,7 +102,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
 
     private getGroupResultSelector(group: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
         const grp = group.enrollment.getGroup();
-        const name = grp ? generateGroupRepoLink(grp.getName(), this.props.courseURL) : "";
+        const name = grp ? groupRepoLink(grp.getName(), this.props.courseURL) : "";
         let selector: (string | JSX.Element | ICellElement)[] = [name];
         selector = selector.concat(group.labs.filter((e, i) => e.assignment.getIsgrouplab()).map(
             (e, i) => {
