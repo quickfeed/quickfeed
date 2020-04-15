@@ -20,6 +20,7 @@
     "grpc-web": "^1.0.7",
     "lodash": "^4.17.15",
     "minimist": "^1.2.5",
+    "nan": "^2.14.0",
     "react": "^16.13.1",
     "react-components": "^0.5.1",
     "react-dom": "^16.13.1",
