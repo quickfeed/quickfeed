@@ -187,16 +187,11 @@ This section give step-by-step instructions on how to submit assignments.
 
 ## Lab Approval
 
-To have your lab assignment approved, you must come to the lab during lab hours
-and present your solution. This lets you present the thought process behind your
-solution, and gives us a more information for grading purposes. When you are
-ready to show your solution, reach out to a member of the teaching staff.
+To have your lab assignment approved, you must come to the lab during lab hours and present your solution.
+When you are ready to show your solution, reach out to a member of the teaching staff.
 It is expected that you can explain your code and show how it works.
-You may show your solution on a lab workstation or your own
-computer. The results from Autograder will also be taken into consideration
-when approving a lab. At least 80% of the Autograder tests should pass for the
-lab to be approved. A lab needs to be approved before Autograder will provide
-feedback on the next lab assignment.
+The results from Autograder will also be taken into consideration when approving a lab.
+At least 80% of the Autograder tests should pass for the lab to be approved.
 
 Also see the [Grading and Collaboration
 Policy](https://github.com/dat320-2020/course-info/blob/master/policy.md)
