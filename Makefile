@@ -69,7 +69,7 @@ brew:
 	@echo "Install homebrew packages needed for development"
 	@brew update
 	@brew cleanup
-	@brew install go protobuf npm webpack docker
+	@brew install go protobuf npm docker
 
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
