@@ -11,7 +11,7 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from '../loader';
-import { getActiveCourses } from '../componentHelper';
+import { getActiveCourses, sortCoursesByVisibility } from '../componentHelper';
 
 export class TeacherPage extends ViewPage {
 
@@ -319,10 +319,8 @@ export class TeacherPage extends ViewPage {
                     status.push(Enrollment.UserStatus.STUDENT);
                 }
                 const courses = await this.courseMan.getCoursesForUser(curUser, status);
-
                 const enrols = await this.courseMan.getEnrollmentsForUser(curUser.getId());
-
-                const activeCourses = getActiveCourses(courses, enrols, curUser.getId())
+                const activeCourses = getActiveCourses(courses, enrols, curUser.getId());
                 const labLinks: ILinkCollection[] = [];
                 activeCourses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
