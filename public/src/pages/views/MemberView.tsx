@@ -77,22 +77,22 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.state.pendingUsers,
                 [],
                 ActionType.InRow,
-                (user: Enrollment) => {
-                    return this.generateUserButtons(user);
+                (enrollment: Enrollment) => {
+                    return this.generateUserButtons(enrollment);
                 });
         }
     }
 
     public renderUsers(
         title: string | JSX.Element,
-        users: Enrollment[],
+        enrollments: Enrollment[],
         actions?: ILink[],
         linkType?: ActionType,
-        optionalActions?: ((user: Enrollment) => ILink[])) {
+        optionalActions?: ((enrollment: Enrollment) => ILink[])) {
         return <div>
             <h3>{title}</h3>
             <UserView
-                users={users}
+                users={enrollments}
                 actions={actions}
                 isCourseList={true}
                 courseURL={this.props.courseURL}

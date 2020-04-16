@@ -32,7 +32,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         super(props);
         const currentUser = this.props.students.find((v) => v.getUserid() === this.props.curUser.getId());
         const as: Enrollment[] = this.getAvailableStudents();
-        const ss: Enrollment[] = this.getSelectedStudents(currentUser);
+        const ss: Enrollment[] = this.getSelectedStudents();
         this.state = {
             name: this.props.groupData ? this.props.groupData.getName() : "",
             students: as,
@@ -225,10 +225,10 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         query = query.toLowerCase();
         const filteredData: Enrollment[] = [];
         this.props.freeStudents.forEach((student) => {
-            const enr = student.toObject().user;
-            if (enr && (enr.name.toLowerCase().indexOf(query) !== -1
-                || enr.email.indexOf(query) !== -1
-                || enr.login.indexOf(query)) !== -1
+            const user = student.toObject().user;
+            if (user && (user.name.toLowerCase().indexOf(query) !== -1
+                || user.email.indexOf(query) !== -1
+                || user.login.indexOf(query)) !== -1
                 && this.state.selectedStudents.indexOf(student) === -1
             ) {
                 filteredData.push(student);
@@ -288,7 +288,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
         return foundSelected;
     }
 
-    private getSelectedStudents(curUser: Enrollment | undefined): Enrollment[] {
+    private getSelectedStudents(): Enrollment[] {
         const ss: Enrollment[] = [];
         if (this.props.groupData) {
             // add group members to the list of selected students
