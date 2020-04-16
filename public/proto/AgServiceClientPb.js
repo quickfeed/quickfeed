@@ -5,6 +5,7 @@
  * @public
  */
 exports.__esModule = true;
+exports.AutograderServiceClient = void 0;
 // GENERATED CODE -- DO NOT EDIT!
 var grpcWeb = require("grpc-web");
 var ag_pb_1 = require("./ag_pb");

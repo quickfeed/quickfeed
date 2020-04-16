@@ -208,6 +208,9 @@ export class Course extends jspb.Message {
   getOrganizationpath(): string;
   setOrganizationpath(value: string): void;
 
+  getSlipdays(): number;
+  setSlipdays(value: number): void;
+
   getEnrolled(): Enrollment.UserStatus;
   setEnrolled(value: Enrollment.UserStatus): void;
 
@@ -245,6 +248,7 @@ export namespace Course {
     provider: string,
     organizationid: number,
     organizationpath: string,
+    slipdays: number,
     enrolled: Enrollment.UserStatus,
     enrollmentsList: Array<Enrollment.AsObject>,
     assignmentsList: Array<Assignment.AsObject>,
@@ -361,6 +365,9 @@ export class Enrollment extends jspb.Message {
   getState(): Enrollment.DisplayState;
   setState(value: Enrollment.DisplayState): void;
 
+  getRemainingslipdays(): number;
+  setRemainingslipdays(value: number): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Enrollment.AsObject;
   static toObject(includeInstance: boolean, msg: Enrollment): Enrollment.AsObject;
@@ -381,6 +388,7 @@ export namespace Enrollment {
     group?: Group.AsObject,
     status: Enrollment.UserStatus,
     state: Enrollment.DisplayState,
+    remainingslipdays: number,
   }
 
   export enum UserStatus { 
