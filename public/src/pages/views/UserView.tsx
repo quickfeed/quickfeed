@@ -16,7 +16,7 @@ interface IUserViewerProps {
     actions?: ILink[];
     optionalActions?: (enrol: Enrollment) => ILink[];
     linkType?: ActionType;
-    actionClick?: (user: Enrollment, link: ILink) => void;
+    actionClick?: (enrollment: Enrollment, link: ILink) => void;
 }
 
 export enum ActionType {
@@ -26,7 +26,7 @@ export enum ActionType {
 }
 
 interface IUserViewerState {
-    users: Enrollment[];
+    enrollments: Enrollment[];
 }
 
 export class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
@@ -34,13 +34,13 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     public constructor(props: IUserViewerProps) {
         super(props);
         this.state = {
-            users: props.users,
+            enrollments: props.users,
         };
     }
 
     public componentWillReceiveProps(nextProps: Readonly<IUserViewerProps>, nextContext: any): void {
         this.setState({
-            users: nextProps.users,
+            enrollments: nextProps.users,
         });
     }
 
@@ -49,7 +49,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             {this.renderSearch()}
             <DynamicTable
                 header={this.getTableHeading()}
-                data={this.state.users}
+                data={this.state.enrollments}
                 classType={"table-grp"}
                 selector={(item: Enrollment) => this.renderRow(item)}
             />
@@ -77,12 +77,15 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     private renderRow(enr: Enrollment): (string | JSX.Element)[] {
         const selector: (string | JSX.Element)[] = [];
         const user = enr.getUser();
-        if (user && enr.getStatus() === Enrollment.UserStatus.TEACHER) {
+        if (!user) {
+            return selector;
+        }
+        if (enr.getStatus() === Enrollment.UserStatus.TEACHER) {
             selector.push(
                 <span className="text-muted">
                     <a href={this.gitLink(user.getLogin())} target="_blank">{user.getName()}</a>
                 </span>);
-        } else if (user) {
+        } else {
             selector.push(
                 <a href={this.repoLink(user.getLogin())} target="_blank">{user.getName()}</a>);
         }
@@ -171,7 +174,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         });
 
         this.setState({
-            users: filteredData,
+            enrollments: filteredData,
         });
     }
 
