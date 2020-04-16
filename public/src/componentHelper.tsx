@@ -57,7 +57,6 @@ export function getActiveCourses(courses: Course[], enrols: Enrollment[], userID
     return activeCourses;
 }
 
-
 export function groupRepoLink(groupName: string, courseURL: string): JSX.Element {
     return <a href={courseURL + slugify(groupName)} target="_blank">{ groupName }</a>;
 }
@@ -70,10 +69,13 @@ function labRepoLink(course: string, login: string): string {
     return course + login + "-labs";
 }
 
+// If the courseURL parameter is given, returns a link to the student lab repository,
+// otherwise returns link to the user's GitHub profile.
 export function generateGitLink(user: string, courseURL?: string): string {
     return courseURL ? labRepoLink(courseURL, user) : gitUserLink(user);
 }
 
+// Returns a URL-friendly version of the given string.
 export function slugify(str: string): string {
 
     str = str.replace(/^\s+|\s+$/g, "").toLowerCase();
