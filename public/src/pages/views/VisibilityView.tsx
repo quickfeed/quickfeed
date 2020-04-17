@@ -60,7 +60,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
             <div>{this.editButton()}</div>
             <DynamicTable
             data={this.state.sortedCourses}
-            header={["Course code", "Course Name", "State"]}
+            header={["Course code", "Course Name", "Year", "State"]}
             selector={(enrol: Enrollment) => this.createCourseRow(enrol)}>
         </DynamicTable></div>;
     }
@@ -99,7 +99,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
         if (!course) {
             return [];
         }
-        const base: (string | JSX.Element)[] = [course.getCode(), course.getName()];
+        const base: (string | JSX.Element)[] = [course.getCode(), course.getName(), course.getYear() + "-" + course.getTag()];
         const links = this.generateCourseStateLinks(enrol.getState());
         const linkButtons = links.map((v, i) => {
             let action: Enrollment.DisplayState;
