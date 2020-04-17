@@ -14,7 +14,7 @@ export class CoursesOverview extends React.Component<ICourseOverviewProps> {
 
     public render() {
         const groupCourses = this.props.groupCourseOverview;
-        const activeCourses = this.props.courseOverview.filter(e => e.enrollment.getState() === Enrollment.DisplayState.ARCHIVED);
+        const activeCourses = this.props.courseOverview.filter(e => e.enrollment.getState() !== Enrollment.DisplayState.ARCHIVED);
         const courses = activeCourses.map((val, key) => {
             if (groupCourses && groupCourses[key] && groupCourses[key].course.getId() === val.course.getId()) {
                 for (let iter = 0; iter < val.labs.length; iter++) {

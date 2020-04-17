@@ -97,7 +97,7 @@ export class StudentPage extends ViewPage {
         return <div>
             <h1>Course visibility</h1>
             <CourseVisibilityView
-                enrollments={await this.courseMan.getAllUserEnrollments(curUser.getId())}
+                enrollments={await this.courseMan.getEnrollmentsForUser(curUser.getId())}
                 onChangeClick={(enrol: Enrollment) => {
                     return this.courseMan.changeCourseVisibility(enrol);
                 }}
