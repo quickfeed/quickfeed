@@ -127,7 +127,7 @@ export class GrpcManager {
 
         const request = new EnrollmentRequest();
         request.setCourseid(courseID);
-        request.setFilteroutgroupmembers(noGroupMembers ?? false);
+        request.setIgnoregroupmembers(noGroupMembers ?? false);
         request.setStatusesList(statuses ?? []);
         return this.grpcSend<Enrollments>(this.agService.getEnrollmentsByCourse, request);
     }
