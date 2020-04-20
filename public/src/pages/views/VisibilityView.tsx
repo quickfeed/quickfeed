@@ -133,11 +133,9 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
     }
 
     private handleSearch(query: string) {
-        query.toLowerCase();
         const filteredCourses = searchForCourses(sortCoursesByVisibility(this.props.enrollments), query);
-
         this.setState({
-            sortedCourses: filteredCourses,
+            sortedCourses: filteredCourses as Enrollment[],
         });
     }
 

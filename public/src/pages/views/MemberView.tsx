@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Course, Enrollment, Status, User } from '../../../proto/ag_pb';
 import { Search } from "../../components";
+import { searchForStudents } from '../../componentHelper';
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { ActionType, UserView } from "./UserView";
 
@@ -188,43 +189,13 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
     }
 
     private handleSearch(query: string): void {
-        query = query.toLowerCase();
-        const filteredAccepted: Enrollment[] = [];
-        const filteredPending: Enrollment[] = [];
-
-        // we filter out every student group separately to ensure that student status is easily visible to teacher
-        // filter accepted students
-        this.props.acceptedUsers.forEach((user) => {
-            if (this.found(query, user)) {
-                filteredAccepted.push(user);
-            }
-        });
-
+        const filteredAccepted = searchForStudents(this.props.acceptedUsers, query);
+        const filteredPending = searchForStudents(this.props.pendingUsers, query);
         this.setState({
             acceptedUsers: filteredAccepted,
-        });
-
-        // filter pending students
-        this.props.pendingUsers.forEach((user) => {
-            if (this.found(query, user)) {
-                filteredPending.push(user);
-            }
-        });
-
-        this.setState({
             pendingUsers: filteredPending,
         });
-    }
-
-    private found(query: string, enr: Enrollment): boolean {
-        const user = enr.toObject().user;
-        if (user && (user.name.toLowerCase().indexOf(query) !== -1
-                || user.studentid.toLowerCase().indexOf(query) !== -1
-                || user.login.toLowerCase().indexOf(query) !== -1
-            )) {
-                return true;
-            }
-        return false;
+        this.props.navMan.refresh();
     }
 
     private approveButton() {

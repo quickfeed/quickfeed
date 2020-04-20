@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { generateGitLink } from '../../componentHelper';
+import { generateGitLink, searchForLabs } from '../../componentHelper';
 
 interface IResultsProp {
     course: Course;
@@ -81,7 +81,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                     <div key="resultshead" className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
                             placeholder="Search for students"
-                            onChange={(query) => this.handleOnchange(query)}
+                            onChange={(query) => this.handleSearch(query)}
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.students}
@@ -134,21 +134,8 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         });
     }
 
-    private handleOnchange(query: string): void {
-        query = query.toLowerCase();
-        const filteredData: IStudentLabsForCourse[] = [];
-        this.props.students.forEach((std) => {
-            const usr = std.enrollment.getUser();
-            if (usr) {
-                if (usr.getName().toLowerCase().indexOf(query) !== -1
-                    || usr.getEmail().toLowerCase().indexOf(query) !== -1
-                    || usr.getLogin().toLowerCase().indexOf(query) !== -1
-                ) {
-                    filteredData.push(std);
-                }
-            }
-        });
-
+    private handleSearch(query: string): void {
+        const filteredData = searchForLabs(this.props.students, query);
         this.setState({
             students: filteredData,
         });

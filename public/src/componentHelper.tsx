@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Course, Enrollment } from "../proto/ag_pb";
+import { Course, Enrollment, Group, User } from "../proto/ag_pb";
+import { IStudentLabsForCourse } from './models';
 
 
 export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
@@ -7,7 +8,7 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
     const active: Enrollment[] = [];
     const archived: Enrollment[] = [];
     // TODO: if we want to display active and hidden courses in separate tables,
-    // they can be easily separated and set as a new state here
+    // they can easily be separated here
     enrols.forEach((enrol) => {
         switch (enrol.getState()) {
             case Enrollment.DisplayState.FAVORITE:
@@ -28,20 +29,81 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
     return sorted;
 }
 
-export function searchForCourses(enrols: Enrollment[], query: string): Enrollment[] {
-    const filteredCourses: Enrollment[] = [];
+export function searchForStudents(enrols: Enrollment[], query: string): Enrollment[] {
+    query = query.toLowerCase();
+    const filteredStudents: Enrollment[] = [];
+    console.log("query: " + query);
     enrols.forEach((enrol) => {
-        const course = enrol.getCourse();
-        if (course) {
-            if (course.getName().toLowerCase().indexOf(query) !== -1 ||
-                course.getCode().toLowerCase().indexOf(query) !== -1 ||
-                course.getYear().toString().indexOf(query) !== -1 ||
-                course.getTag().toLowerCase().indexOf(query) !== -1) {
-                    filteredCourses.push(enrol);
-                }
+        const student = enrol.getUser();
+        if (student && foundUser(student, query)) {
+            console.log("adding a student: " + student.getName());
+            filteredStudents.push(enrol);
+        }
+    })
+    return filteredStudents;
+}
+
+export function searchForGroups(groups: Group[], query: string): Group[] {
+    query = query.toLowerCase();
+    const filteredGroups: Group[] = [];
+    groups.forEach((grp) => {
+        if (foundGroup(grp, query)) {
+            filteredGroups.push(grp);
+        }
+    })
+    return filteredGroups;
+}
+
+export function searchForCourses(courses: Enrollment[] | Course[], query: string): Enrollment[] | Course[] {
+    if (courses.length < 1) {
+        return courses;
+    }
+    const enrollmentList: Enrollment[] = [];
+    const coursesList: Course[] = [];
+    query = query.toLowerCase();
+    courses.forEach((e: Enrollment | Course) => {
+        const course = e instanceof Enrollment ? e.getCourse() : e;
+        if (course && foundCourse(course, query)) {
+            e instanceof Enrollment ? enrollmentList.push(e) : coursesList.push(e);
+        }
+    })
+    return enrollmentList.length > 0 ? enrollmentList : coursesList;
+}
+
+export function searchForLabs(labs: IStudentLabsForCourse[], query: string) {
+    query = query.toLowerCase();
+    const filteredLabs: IStudentLabsForCourse[] = [];
+    labs.forEach((e) => {
+        const usr = e.enrollment.getUser();
+        const grp = e.enrollment.getGroup();
+        if (usr && foundUser(usr, query)) {
+                filteredLabs.push(e);
+        } else if (grp && foundGroup(grp, query)) {
+              filteredLabs.push(e);
         }
     });
-    return filteredCourses;
+    return filteredLabs;
+}
+
+function foundGroup(group: Group, query: string): boolean {
+    return group.getName().toLowerCase().indexOf(query) !== -1 ||
+     group.getTeamid().toString().indexOf(query) !== -1;
+}
+
+function foundUser(user: User, query: string): boolean {
+    const student = user.toObject();
+    console.log("looking for student: " + student.name);
+    return student.name.toLowerCase().indexOf(query) !== -1
+    || student.email.toLowerCase().indexOf(query) !== -1
+    || student.studentid.toString().indexOf(query) !== -1
+    || student.login.toLowerCase().indexOf(query) !== -1;
+}
+
+function foundCourse(course: Course, query: string): boolean {
+    return course.getName().toLowerCase().indexOf(query) !== -1 ||
+    course.getCode().toLowerCase().indexOf(query) !== -1 ||
+    course.getYear().toString().indexOf(query) !== -1 ||
+    course.getTag().toLowerCase().indexOf(query) !== -1;
 }
 
 export function getActiveCourses(courses: Course[], enrols: Enrollment[], userID: number): Course[] {

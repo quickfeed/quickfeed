@@ -5,6 +5,7 @@ import { Search } from "../../components";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { UserManager } from "../../managers/UserManager";
+import { searchForStudents } from '../../componentHelper';
 
 interface IGroupProps {
     className: string;
@@ -222,19 +223,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     }
 
     private handleSearch(query: string): void {
-        query = query.toLowerCase();
-        const filteredData: Enrollment[] = [];
-        this.props.freeStudents.forEach((student) => {
-            const user = student.toObject().user;
-            if (user && (user.name.toLowerCase().indexOf(query) !== -1
-                || user.email.indexOf(query) !== -1
-                || user.login.indexOf(query)) !== -1
-                && this.state.selectedStudents.indexOf(student) === -1
-            ) {
-                filteredData.push(student);
-            }
-        });
-
+        const filteredData = searchForStudents(this.props.freeStudents, query);
         this.setState({
             students: filteredData,
         });

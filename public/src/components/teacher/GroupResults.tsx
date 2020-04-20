@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { groupRepoLink } from '../../componentHelper';
+import { groupRepoLink, searchForLabs } from '../../componentHelper';
 
 interface IResultsProps {
     course: Course;
@@ -79,7 +79,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                     <div key="resulthead" className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
                             placeholder="Search for groups"
-                            onChange={(query) => this.handleOnchange(query)}
+                            onChange={(query) => this.handleSearch(query)}
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.groups}
@@ -128,16 +128,8 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         });
     }
 
-    private handleOnchange(query: string): void {
-        query = query.toLowerCase();
-        const filteredData: IStudentLabsForCourse[] = [];
-        this.props.groups.forEach((std) => {
-            const grp = std.enrollment.getGroup();
-            const name = grp ? grp.getName() : "";
-            if (name.toLowerCase().indexOf(query) !== -1) {
-                filteredData.push(std);
-            }
-        });
+    private handleSearch(query: string): void {
+        const filteredData = searchForLabs(this.props.groups, query);
         this.setState({
             groups: filteredData,
         });
