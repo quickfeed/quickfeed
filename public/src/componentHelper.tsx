@@ -105,6 +105,7 @@ function foundCourse(course: Course, query: string): boolean {
 
 export function getActiveCourses(courses: Course[], enrols: Enrollment[], userID: number): Course[] {
     const activeCourses: Course[] = [];
+    enrols = sortCoursesByVisibility(enrols);
     enrols.forEach((enrol) => {
         const crs = enrol.getCourse();
         if (enrol.getState() !== Enrollment.DisplayState.ARCHIVED &&
