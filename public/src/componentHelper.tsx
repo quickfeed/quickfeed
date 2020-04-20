@@ -32,11 +32,9 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
 export function searchForStudents(enrols: Enrollment[], query: string): Enrollment[] {
     query = query.toLowerCase();
     const filteredStudents: Enrollment[] = [];
-    console.log("query: " + query);
     enrols.forEach((enrol) => {
         const student = enrol.getUser();
         if (student && foundUser(student, query)) {
-            console.log("adding a student: " + student.getName());
             filteredStudents.push(enrol);
         }
     })
@@ -92,7 +90,6 @@ function foundGroup(group: Group, query: string): boolean {
 
 function foundUser(user: User, query: string): boolean {
     const student = user.toObject();
-    console.log("looking for student: " + student.name);
     return student.name.toLowerCase().indexOf(query) !== -1
     || student.email.toLowerCase().indexOf(query) !== -1
     || student.studentid.toString().indexOf(query) !== -1
