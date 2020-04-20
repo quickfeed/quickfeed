@@ -4,7 +4,7 @@ import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../com
 import { ILink, NavigationManager, UserManager } from "../../managers";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { generateGitLink } from '../../componentHelper';
+import { generateGitLink, searchForStudents } from '../../componentHelper';
 
 interface IUserViewerProps {
     users: Enrollment[];
@@ -60,7 +60,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         if (this.props.searchable) {
             return <Search className="input-group"
                 placeholder="Search for students"
-                onChange={(query) => this.handleOnchange(query)}
+                onChange={(query) => this.handleSearch(query)}
             />;
         }
         return null;
@@ -158,20 +158,8 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         });
     }
 
-    private handleOnchange(query: string): void {
-        query = query.toLowerCase();
-        const filteredData: Enrollment[] = [];
-        this.props.users.forEach((enr) => {
-            const user = enr.toObject().user;
-            if (user && (user.name.toLowerCase().indexOf(query) !== -1
-                || user.email.toLowerCase().indexOf(query) !== -1
-                || user.studentid.toString().indexOf(query) !== -1
-                || user.login.toLowerCase().indexOf(query) !== -1
-            )) {
-                filteredData.push(enr);
-            }
-        });
-
+    private handleSearch(query: string): void {
+        const filteredData = searchForStudents(this.props.users, query);
         this.setState({
             enrollments: filteredData,
         });

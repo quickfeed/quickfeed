@@ -4,7 +4,7 @@ import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { bindFunc, RProp } from '../../helper';
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
-import { groupRepoLink, generateGitLink } from '../../componentHelper';
+import { groupRepoLink, generateGitLink, searchForGroups } from '../../componentHelper';
 
 interface ICourseGroupProps {
     approvedGroups: Group[];
@@ -212,29 +212,10 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private handleSearch(query: string): void {
-        query = query.toLowerCase();
-        const filteredApproved: Group[] = [];
-        const filteredPending: Group[] = [];
-
-        this.props.approvedGroups.forEach((grp) => {
-            if (grp.getName().toLowerCase().indexOf(query) !== -1
-            ) {
-                filteredApproved.push(grp);
-            }
-        });
-
+        const filteredApproved = searchForGroups(this.props.approvedGroups, query);
+        const filteredPending = searchForGroups(this.props.pendingGroups, query);
         this.setState({
             approvedGroups: filteredApproved,
-        });
-
-        this.props.pendingGroups.forEach((grp) => {
-            if (grp.getName().toLowerCase().indexOf(query) !== -1
-            ) {
-                filteredPending.push(grp);
-            }
-        });
-
-        this.setState({
             pendingGroups: filteredPending,
         });
     }
