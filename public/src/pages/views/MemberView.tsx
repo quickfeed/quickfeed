@@ -49,13 +49,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         </div>;
     }
 
-    public componentWillMount() {
-        this.setState({
-            pendingUsersView: this.renderPendingView(),
-            acceptedUsersView: this.renderUserView(),
-        });
-    }
-
     public renderUserView() {
         const header = <div> Registered users {this.editButton()}</div>;
         if (this.state.acceptedUsers.length > 0 || this.props.acceptedUsers.length > 0) {
@@ -120,9 +113,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 await this.handleDemote(enrol);
                 break;
         }
-        this.toggleEditState();
-        this.props.navMan.refresh();
-        this.toggleEditState();
+        this.rerender();
     }
 
     private async handleAccept(enrol: Enrollment) {
@@ -188,14 +179,11 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         }
     }
 
-    private handleSearch(query: string): void {
-        const filteredAccepted = searchForStudents(this.props.acceptedUsers, query);
-        const filteredPending = searchForStudents(this.props.pendingUsers, query);
+    private handleSearch(query: string) {
         this.setState({
-            acceptedUsers: filteredAccepted,
-            pendingUsers: filteredPending,
-        });
-        this.props.navMan.refresh();
+            acceptedUsers: searchForStudents(this.props.acceptedUsers, query),
+            pendingUsers: searchForStudents(this.props.pendingUsers, query),
+        }, () => this.rerender());
     }
 
     private approveButton() {
@@ -235,10 +223,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         this.setState({
             editing: !this.state.editing,
 
-        }, () => this.setState({
-            pendingUsersView: this.renderPendingView(),
-            acceptedUsersView: this.renderUserView(),
-        }));
+        }, () => this.rerender());
     }
 
     private editButtonString(): string {
@@ -316,5 +301,12 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
             errMsg: <div></div>,
         });
         console.log("Clearing error message");
+    }
+
+    private rerender() {
+        this.setState({
+            pendingUsersView: this.renderPendingView(),
+            acceptedUsersView: this.renderUserView(),
+        });
     }
 }
