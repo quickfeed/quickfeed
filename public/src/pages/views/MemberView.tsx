@@ -49,6 +49,13 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         </div>;
     }
 
+    public componentWillMount() {
+        this.setState({
+            pendingUsersView: this.renderPendingView(),
+            acceptedUsersView: this.renderUserView(),
+        });
+    }
+
     public renderUserView() {
         const header = <div> Registered users {this.editButton()}</div>;
         if (this.state.acceptedUsers.length > 0 || this.props.acceptedUsers.length > 0) {
