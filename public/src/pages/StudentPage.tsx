@@ -203,7 +203,6 @@ export class StudentPage extends ViewPage {
     public async renderMenu(key: number): Promise<JSX.Element[]> {
         if (key === 0) {
             const coursesLinks: ILinkCollection[] = [];
-            // TODO: sort by visibility (requires PR with API updates)
             for (const course of this.activeUserCourses) {
                 if (course.enrollment.getState() !== Enrollment.DisplayState.ARCHIVED) {
                     const courseID = course.course.getId();

@@ -11,6 +11,7 @@ import { ActionType, UserView } from "./views/UserView";
 
 import { Assignment, Enrollment, User } from "../../proto/ag_pb";
 import { formatDate } from "../helper";
+import { sortUsersByAdminStatus } from '../componentHelper';
 
 export class AdminPage extends ViewPage {
     private navMan: NavigationManager;
@@ -44,7 +45,7 @@ export class AdminPage extends ViewPage {
         });
 
         // sorting registered user so that admins show first
-        allUsers.sort((x, y) => ((x.getUser()?.getIsadmin() ?? false) < (y.getUser()?.getIsadmin() ?? false) ? 1 : -1));
+        sortUsersByAdminStatus(allUsers);
 
         return <div>
             <h1>All Users</h1>

@@ -29,6 +29,10 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
     return sorted;
 }
 
+export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {
+    return users.sort((x, y) => ((x.getUser()?.getIsadmin() ?? false) < (y.getUser()?.getIsadmin() ?? false) ? 1 : -1));
+}
+
 export function searchForStudents(enrols: Enrollment[], query: string): Enrollment[] {
     query = query.toLowerCase();
     const filteredStudents: Enrollment[] = [];
