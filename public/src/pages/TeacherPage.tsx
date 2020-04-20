@@ -55,7 +55,8 @@ export class TeacherPage extends ViewPage {
     }
 
     public async init(): Promise<void> {
-        this.courses = await this.getCourses();
+        this.courses = await this.getCourses([]);
+        console.log("Init function got " + this.courses.length + " courses");
         this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].getId().toString() : "");
     }
 
@@ -318,11 +319,9 @@ export class TeacherPage extends ViewPage {
                     status.push(Enrollment.UserStatus.PENDING);
                     status.push(Enrollment.UserStatus.STUDENT);
                 }
-                const courses = await this.courseMan.getCoursesForUser(curUser, status);
-                const enrols = await this.courseMan.getEnrollmentsForUser(curUser.getId());
-                const activeCourses = getActiveCourses(courses, enrols, curUser.getId());
+                const courses = await this.getCourses(status);
                 const labLinks: ILinkCollection[] = [];
-                activeCourses.forEach((e) => {
+                courses.forEach((e) => {
                     labLinks.push(this.generateCollectionFor({
                         name: e.getCode(),
                         uri: this.pagePath + "/courses/" + e.getId(),
@@ -349,10 +348,12 @@ export class TeacherPage extends ViewPage {
         }
     }
 
-    private async getCourses(): Promise<Course[]> {
+    private async getCourses(statuses: Enrollment.UserStatus[]): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return this.courseMan.getCoursesForUser(curUsr, []);
+            const courses = await this.courseMan.getCoursesForUser(curUsr, statuses);
+            const enrols = await this.courseMan.getEnrollmentsForUser(curUsr.getId());
+            return getActiveCourses(courses, enrols, curUsr.getId());
         }
         return [];
     }
