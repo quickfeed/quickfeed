@@ -207,6 +207,7 @@ func TestEnrollmentProcess(t *testing.T) {
 		CourseID: course.ID,
 		UserID:   stud1.ID,
 		Status:   pb.Enrollment_PENDING,
+		State:    pb.Enrollment_ACTIVE,
 		Course:   course,
 		User:     stud1,
 	}
