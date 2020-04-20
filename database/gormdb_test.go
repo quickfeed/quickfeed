@@ -93,6 +93,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 		CourseID: course.ID,
 		UserID:   teacher.ID,
 		Status:   pb.Enrollment_TEACHER,
+		State:    pb.Enrollment_ACTIVE,
 	})
 	teacher.RemoteIdentities = nil
 
@@ -101,6 +102,7 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 		CourseID: course.ID,
 		UserID:   student.ID,
 		Status:   pb.Enrollment_STUDENT,
+		State:    pb.Enrollment_ACTIVE,
 	})
 	student.RemoteIdentities = nil
 

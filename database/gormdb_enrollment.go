@@ -23,6 +23,7 @@ func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 	}
 
 	enrollment.Status = pb.Enrollment_PENDING
+	enrollment.State = pb.Enrollment_ACTIVE
 	return db.conn.Create(&enrollment).Error
 }
 
