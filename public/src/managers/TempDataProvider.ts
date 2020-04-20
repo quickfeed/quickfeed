@@ -77,7 +77,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async tryLogin(username: string, password: string): Promise<User | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
             u.user.getEmail().toLocaleLowerCase() === username.toLocaleLowerCase());
-        if (user && user.password === password) {
+        if (user?.password === password) {
             this.currentLoggedIn = user.user;
             return user.user;
         }

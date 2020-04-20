@@ -32,9 +32,6 @@ export abstract class ViewPage {
     public async renderContent(page: string): View {
         const pageContent = await this.navHelper.navigateTo(page);
         this.currentPage = page;
-        if (pageContent) {
-            return pageContent;
-        }
-        return <div className="info"><p>Choose a course or create a new one.</p></div>;
+        return pageContent ?? <div className="info"><p>Choose a course or create a new one.</p></div>;
     }
 }

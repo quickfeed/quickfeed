@@ -43,7 +43,7 @@ export class TeacherPage extends ViewPage {
 
     public checkAuthentication(): boolean {
         const curUser = this.userMan.getCurrentUser();
-        if (curUser && (curUser.getIsadmin() || this.userMan.isTeacher())) {
+        if (curUser?.getIsadmin() || this.userMan.isTeacher()) {
             this.userMan.isAuthorizedTeacher().then((answer) => {
                 if (!answer) {
                     window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
