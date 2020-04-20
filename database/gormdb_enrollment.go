@@ -38,7 +38,6 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 // UpdateEnrollmentStatus changes status of an enrollment of the given user ID in the given course ID.
 func (db *GormDB) UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enrollment_UserStatus) error {
 	return db.setEnrollment(userID, courseID, status)
-
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.

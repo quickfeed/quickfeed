@@ -196,10 +196,19 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 // ChangeCourseVisibility allows to edit what courses are visible in the sidebar.
 // Access policy: Any User.
 func (s *AutograderService) ChangeCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
-	// TODO: check that the enrollment belongs to the current user
-	// TODO: change enrollment state, return appropriate errors
-	if in.State == pb.Enrollment_FAVORITE {
-		return nil, status.Errorf(codes.InvalidArgument, "testing error messages")
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("ChangeCourseVisibility failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !usr.IsOwner(in.GetUserID()) {
+		s.logger.Errorf("ChangeCourseVisibility failed: user %d attempts to update enrollment for user %s", usr.GetID(), in.GetUserID())
+		return nil, status.Errorf(codes.PermissionDenied, "users cannot set course visibility for another users")
+	}
+	err = s.changeCourseVisibility(in)
+	if err != nil {
+		s.logger.Errorf("ChangeCourseVisibility failed: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to update course visibility")
 	}
 	return &pb.Void{}, nil
 }

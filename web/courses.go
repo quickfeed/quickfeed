@@ -180,6 +180,10 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 	return s.db.UpdateCourse(request)
 }
 
+func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) error {
+	return s.db.UpdateCourseVisibilityState(enrollment)
+}
+
 // getRepositoryURL returns URL of a course repository of the given type.
 func (s *AutograderService) getRepositoryURL(currentUser *pb.User, courseID uint64, repoType pb.Repository_Type) (string, error) {
 	course, err := s.db.GetCourse(courseID, false)

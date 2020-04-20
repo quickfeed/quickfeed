@@ -128,3 +128,10 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 func (db *GormDB) UpdateCourse(course *pb.Course) error {
 	return db.conn.Model(&pb.Course{}).Updates(course).Error
 }
+
+// UpdateCourseVisibilityState changes course visibility for the given enrollment
+func (db *GormDB) UpdateCourseVisibilityState(enrol *pb.Enrollment) error {
+	return db.conn.Model(&pb.Enrollment{}).
+		Where(&pb.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).
+		Update(&pb.Enrollment{State: enrol.State}).Error
+}
