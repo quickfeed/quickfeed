@@ -19,7 +19,7 @@ export class TeacherPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
     private courses: Course[] = [];
-    private repositories: Map<Repository.Type, string>;
+    private repositories: Map<number, Map<Repository.Type, string>>;
 
     private refreshState = 0;
 
@@ -56,7 +56,7 @@ export class TeacherPage extends ViewPage {
 
     public async init(): Promise<void> {
         this.courses = await this.getCourses([]);
-        console.log("Init function got " + this.courses.length + " courses");
+        this.repositories = this.setupRepos();
         this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].getId().toString() : "");
     }
 
@@ -280,7 +280,8 @@ export class TeacherPage extends ViewPage {
         });
     }
 
-    public generateCollectionFor(link: ILink): ILinkCollection {
+    public generateCollectionFor(link: ILink, courseID: number): ILinkCollection {
+        const repoMap = this.repositories.get(courseID);
         return {
             item: link,
             children: [
@@ -290,10 +291,10 @@ export class TeacherPage extends ViewPage {
                 { name: "Members", uri: link.uri + "/members" },
                 { name: "New Group", uri: link.uri + "/new_group"},
                 { name: "Repositories" },
-                { name: "Course Info", uri: this.repositories.get(Repository.Type.COURSEINFO), absolute: true },
-                { name: "Assignments", uri: this.repositories.get(Repository.Type.ASSIGNMENTS), absolute: true },
-                { name: "Tests", uri: this.repositories.get(Repository.Type.TESTS), absolute: true },
-                { name: "Solutions", uri: this.repositories.get(Repository.Type.SOLUTIONS), absolute: true },
+                { name: "Course Info", uri: repoMap?.get(Repository.Type.COURSEINFO) ?? "", absolute: true },
+                { name: "Assignments", uri: repoMap?.get(Repository.Type.ASSIGNMENTS) ?? "", absolute: true },
+                { name: "Tests", uri: repoMap?.get(Repository.Type.TESTS) ?? "", absolute: true },
+                { name: "Solutions", uri: repoMap?.get(Repository.Type.SOLUTIONS) ?? "", absolute: true },
             ],
         };
     }
@@ -322,10 +323,11 @@ export class TeacherPage extends ViewPage {
                 const courses = await this.getCourses(status);
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
+                    this.fetchCourseRepos(e.getId());
                     labLinks.push(this.generateCollectionFor({
                         name: e.getCode(),
                         uri: this.pagePath + "/courses/" + e.getId(),
-                    }));
+                    }, e.getId()));
                 });
 
                 this.navMan.checkLinkCollection(labLinks, this);
@@ -359,23 +361,14 @@ export class TeacherPage extends ViewPage {
     }
 
     private async getCourseURL(courseID: number): Promise<string> {
-        const repoMap = await this.courseMan.getRepositories(
-            courseID,
-            [Repository.Type.COURSEINFO],
-            );
-        const fullRepoName = repoMap.get(Repository.Type.COURSEINFO);
-        return fullRepoName ? fullRepoName.split("course-info")[0] : "";
+        const repoMap = this.repositories.get(courseID);
+        return repoMap?.get(Repository.Type.COURSEINFO) ?? "";
     }
 
     private async courseFunc(courseParam: string, fn: (course: Course) => View): View {
         const courseId = parseInt(courseParam, 10);
-        const course = await this.courseMan.getCourse(courseId);
+        const course = this.courses[0];
         if (course) {
-            this.repositories = await this.courseMan.getRepositories(courseId,
-                [Repository.Type.COURSEINFO,
-                Repository.Type.ASSIGNMENTS,
-                Repository.Type.TESTS,
-                Repository.Type.SOLUTIONS]);
             return fn(course);
         }
         return showLoader();
@@ -385,4 +378,21 @@ export class TeacherPage extends ViewPage {
         return approve ? "approve" : "undo approval for";
     }
 
+    private async fetchCourseRepos(courseID: number): Promise<Map<Repository.Type, string>> {
+        return this.courseMan.getRepositories(courseID,
+                [Repository.Type.COURSEINFO,
+                Repository.Type.ASSIGNMENTS,
+                Repository.Type.TESTS,
+                Repository.Type.SOLUTIONS]);
+    }
+
+    private setupRepos(): Map<number, Map<Repository.Type, string>> {
+        const courses = this.courses;
+        const allRepoMap = new Map<number, Map<Repository.Type, string>>();
+        courses.forEach(async (crs) => {
+            const repoMap = await this.fetchCourseRepos(crs.getId());
+            allRepoMap.set(crs.getId(), repoMap);
+        });
+        return allRepoMap;
+    }
 }
