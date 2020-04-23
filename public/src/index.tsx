@@ -206,7 +206,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         ];
         const dropDownMenuLinks: ILink[] = [
             { name: "Join Course", uri: "app/student/enroll" },
-            { name: "Change course visibility", uri: "app/student/archive"},
+            { name: "Course List", uri: "app/student/archive"},
         ];
         if (this.state.curUser && this.state.curUser.getIsadmin()) {
             dropDownMenuLinks.push({ name: "New Course", uri: "app/admin/courses/new" });

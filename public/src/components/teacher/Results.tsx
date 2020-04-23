@@ -135,9 +135,8 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private handleSearch(query: string): void {
-        const filteredData = searchForLabs(this.props.students, query);
         this.setState({
-            students: filteredData,
+            students: searchForLabs(this.props.students, query),
         });
     }
 }
