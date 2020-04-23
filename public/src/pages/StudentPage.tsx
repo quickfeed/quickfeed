@@ -4,14 +4,14 @@ import { CoursesOverview, GroupForm, GroupInfo, SingleCourseOverview, StudentLab
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
-import { ILink, NavigationManager } from "../managers/NavigationManager";
+import { ILink, NavigationManager } from '../managers/NavigationManager';
 import { UserManager } from "../managers/UserManager";
 import { IStudentLabsForCourse, IStudentLab } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
 import { showLoader } from '../loader';
-import { CourseVisibilityView } from "./views/VisibilityView";
+import { CourseListView } from "./views/CourseListView";
 import { sortCoursesByVisibility } from '../componentHelper';
 
 export class StudentPage extends ViewPage {
@@ -96,13 +96,13 @@ export class StudentPage extends ViewPage {
             return showLoader();
         }
         return <div>
-            <h1>Course visibility</h1>
-            <CourseVisibilityView
+            <h1>Course list</h1>
+            <CourseListView
                 enrollments={await this.courseMan.getEnrollmentsForUser(curUser.getId())}
                 onChangeClick={(enrol: Enrollment) => {
                     return this.courseMan.changeCourseVisibility(enrol);
                 }}
-            ></CourseVisibilityView>
+            ></CourseListView>
         </div>
     }
 
@@ -206,56 +206,27 @@ export class StudentPage extends ViewPage {
             for (const course of this.activeUserCourses) {
                 if (course.enrollment.getState() !== Enrollment.DisplayState.ARCHIVED) {
                     const courseID = course.course.getId();
-                    const allLinks: ILink[] = [];
-                    allLinks.push({ name: "Labs" });
+                    const studentLinks: ILink[] = [];
+                    const labLinks: ILink[] = [];
+                    studentLinks.push({ name: "Labs" });
                     const labs = course.labs;
-                    const gLabs: ILink[] = [];
                     labs.forEach((lab) => {
                         if (lab.assignment.getIsgrouplab()) {
-                            gLabs.push({
+                            labLinks.push({
                                 name: lab.assignment.getName(),
                                 uri: this.pagePath + "/courses/" + courseID + "/grouplab/" + lab.assignment.getId(),
                             });
                         } else {
-                            allLinks.push({
+                            studentLinks.push({
                                 name: lab.assignment.getName(),
                                 uri: this.pagePath + "/courses/" + courseID + "/lab/" + lab.assignment.getId(),
                             });
                         }
                     });
-                    allLinks.push({ name: "Group Labs" });
-                    allLinks.push(...gLabs);
-                    allLinks.push({ name: "Repositories" });
-
-                    const repos = await this.courseMan.getRepositories(
-                        courseID,
-                        [Repository.Type.USER,
-                        Repository.Type.GROUP,
-                        Repository.Type.COURSEINFO,
-                        Repository.Type.ASSIGNMENTS],
-                        );
-
-                    allLinks.push({
-                        name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
-                    });
-
-                    allLinks.push({
-                        name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
-                    });
-
-                    allLinks.push({
-                        name: "Course Info", uri: repos.get(Repository.Type.COURSEINFO), absolute: true,
-                    });
-                    allLinks.push({
-                        name: "Assignments", uri: repos.get(Repository.Type.ASSIGNMENTS), absolute: true,
-                    });
-
-                    allLinks.push({
-                        name: "New Group", uri: this.pagePath + "/courses/" + courseID + "/members",
-                    });
+                    studentLinks.push({ name: "Group Labs" }, ...labLinks, ...await this.generateRepoLinks(courseID))
                     coursesLinks.push({
                         item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + courseID },
-                        children: allLinks,
+                        children: studentLinks,
                     });
                 }
             }
@@ -270,6 +241,33 @@ export class StudentPage extends ViewPage {
         }
         return [];
     }
+
+    private async generateRepoLinks(courseID: number): Promise<ILink[]> {
+        const links: ILink[] = [];
+        links.push({ name: "Repositories" });
+
+        const repos =  await this.courseMan.getRepositories(
+            courseID,
+            [Repository.Type.USER,
+            Repository.Type.GROUP,
+            Repository.Type.COURSEINFO,
+            Repository.Type.ASSIGNMENTS],
+            );
+
+        links.push({
+            name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
+        }, {
+            name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
+        }, {
+            name: "Course Info", uri: repos.get(Repository.Type.COURSEINFO), absolute: true,
+        }, {
+            name: "Assignments", uri: repos.get(Repository.Type.ASSIGNMENTS), absolute: true,
+        }, {
+            name: "New Group", uri: this.pagePath + "/courses/" + courseID + "/members",
+        });
+        return links;
+    }
+
 
     // Loads and cache information when user enters a page.
     private async setupData() {

@@ -4,17 +4,17 @@ import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../com
 import { ILink } from '../../managers/NavigationManager';
 import { searchForCourses, sortCoursesByVisibility } from '../../componentHelper';
 
-interface VisibilityViewProps {
+interface CourseListViewProps {
     enrollments: Enrollment[];
     onChangeClick: (enrol: Enrollment) => Promise<boolean>;
 }
 
-interface VisibilityViewState {
+interface CourseListViewState {
     sortedCourses: Enrollment[];
     editing: boolean;
 }
 
-export class CourseVisibilityView extends React.Component<VisibilityViewProps, VisibilityViewState> {
+export class CourseListView extends React.Component<CourseListViewProps, CourseListViewState> {
 
     private activateLink = {
         name: "Show",
@@ -27,7 +27,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
         extra: "primary",
     }
     private makeFavoriteLink = {
-        name: "Make favorite",
+        name: "Favorite",
         uri: "favorite",
         extra: "success",
     }
@@ -43,7 +43,7 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
         name: "Favorite",
         extra: "light",
     }
-    constructor(props: VisibilityViewProps) {
+    constructor(props: CourseListViewProps) {
         super(props);
         this.state = {
             editing: false,
@@ -133,9 +133,8 @@ export class CourseVisibilityView extends React.Component<VisibilityViewProps, V
     }
 
     private handleSearch(query: string) {
-        const filteredCourses = searchForCourses(sortCoursesByVisibility(this.props.enrollments), query);
         this.setState({
-            sortedCourses: filteredCourses as Enrollment[],
+            sortedCourses: searchForCourses(sortCoursesByVisibility(this.props.enrollments), query) as Enrollment[],
         });
     }
 

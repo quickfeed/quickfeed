@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Course } from "../../../proto/ag_pb";
 import { DynamicTable, Search } from "../../components";
-import { searchForCourses } from "../../componentHelper";
+import { searchForCourses } from '../../componentHelper';
 
 interface ICourseViewProps {
     courses: Course[];
@@ -45,9 +45,8 @@ export class CourseView extends React.Component<ICourseViewProps, ICourseViewSta
     }
 
     private handleSearch(query: string): void {
-        const filteredData = searchForCourses(this.props.courses, query);
         this.setState({
-            courses: filteredData as Course[],
+            courses: searchForCourses(this.props.courses, query) as Course[],
         });
     }
 }
