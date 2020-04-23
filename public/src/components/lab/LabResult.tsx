@@ -1,6 +1,5 @@
 import * as React from "react";
 import { ProgressBar, Row } from "../../components";
-import { Submission } from "../../../proto/ag_pb";
 
 interface ILabResult {
     assignment_id: number;

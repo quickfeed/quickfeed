@@ -28,7 +28,7 @@ import { UserPage } from "./pages/UserPage";
 
 import { AddMenu } from "./components/navigation/AddMenu";
 import { GrpcManager } from "./managers/GRPCManager";
-import { showLoader } from './loader';
+import { showLoader } from "./loader";
 
 interface IAutoGraderState {
     activePage?: ViewPage;

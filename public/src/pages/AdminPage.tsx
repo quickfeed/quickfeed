@@ -11,7 +11,7 @@ import { ActionType, UserView } from "./views/UserView";
 
 import { Assignment, Enrollment, User } from "../../proto/ag_pb";
 import { formatDate } from "../helper";
-import { sortUsersByAdminStatus } from '../componentHelper';
+import { sortUsersByAdminStatus } from "../componentHelper";
 
 export class AdminPage extends ViewPage {
     private navMan: NavigationManager;

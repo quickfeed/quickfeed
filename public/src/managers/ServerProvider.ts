@@ -20,7 +20,7 @@ import {
 
 import { HttpHelper } from "../HttpHelper";
 import { ICourseProvider } from "./CourseManager";
-import { GrpcManager, IGrpcResponse } from './GRPCManager';
+import { GrpcManager, IGrpcResponse } from "./GRPCManager";
 
 import {
     IUserProvider,

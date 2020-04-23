@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Enrollment, User } from "../../../proto/ag_pb";
+import { Enrollment } from "../../../proto/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { generateGitLink, searchForStudents } from '../../componentHelper';
+import { generateGitLink, searchForStudents } from "../../componentHelper";
 
 interface IUserViewerProps {
     users: Enrollment[];

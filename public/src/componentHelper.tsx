@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Course, Enrollment, Group, User } from "../proto/ag_pb";
-import { IStudentLabsForCourse } from './models';
+import { IStudentLabsForCourse } from "./models";
 
 
 export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
