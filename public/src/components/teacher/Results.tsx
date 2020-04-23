@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { generateGitLink, searchForLabs } from '../../componentHelper';
+import { generateGitLink, searchForLabs } from "../../componentHelper";
 
 interface IResultsProp {
     course: Course;

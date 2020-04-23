@@ -5,7 +5,7 @@ import { Search } from "../../components";
 import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 import { UserManager } from "../../managers/UserManager";
-import { searchForStudents } from '../../componentHelper';
+import { searchForStudents } from "../../componentHelper";
 
 interface IGroupProps {
     className: string;

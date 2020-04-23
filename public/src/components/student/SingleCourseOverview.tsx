@@ -1,6 +1,6 @@
 import * as React from "react";
 import { formatDate } from "../../helper";
-import { IStudentLabsForCourse, IStudentLab, ISubmission } from '../../models';
+import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 
 interface ISingleCourseOverviewProps {

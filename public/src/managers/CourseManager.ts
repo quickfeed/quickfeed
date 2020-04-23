@@ -4,7 +4,7 @@ import {
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void, Enrollments } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void, Enrollments } from "../../proto/ag_pb";
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
