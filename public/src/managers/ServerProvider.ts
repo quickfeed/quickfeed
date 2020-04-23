@@ -8,7 +8,6 @@ import {
     Status,
     Submission,
     User,
-    Void,
 } from "../../proto/ag_pb";
 import {
     IStudentLabsForCourse,
@@ -60,8 +59,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getCoursesList();
     }
 
-    public async getCoursesForUser(user: User, statuses: Enrollment.UserStatus[]): Promise<Course[]> {
-        const result = await this.grpcHelper.getCoursesByUser(user.getId(), statuses);
+    public async getCoursesForUser(user: User, statuses: Enrollment.UserStatus[], states: Enrollment.DisplayState[]): Promise<Course[]> {
+        const result = await this.grpcHelper.getCoursesByUser(user.getId(), statuses, states);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }

@@ -40,7 +40,7 @@ type Database interface {
 	// for the given user id.
 	// If enrollment statuses is provided, the set of courses returned
 	// is filtered according to these enrollment statuses.
-	GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
+	GetCoursesByUser(userID uint64, states []pb.Enrollment_DisplayState, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
 	// UpdateCourse updates course information.
 	UpdateCourse(*pb.Course) error
 

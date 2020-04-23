@@ -107,20 +107,6 @@ function foundCourse(course: Course, query: string): boolean {
     course.getTag().toLowerCase().indexOf(query) !== -1;
 }
 
-export function getVisibleCourses(courses: Course[], enrols: Enrollment[], userID: number): Course[] {
-    const activeCourses: Course[] = [];
-    enrols = sortCoursesByVisibility(enrols);
-    enrols.forEach((enrol) => {
-        const crs = enrol.getCourse();
-        if (enrol.getState() !== Enrollment.DisplayState.HIDDEN &&
-            crs && courses.find(e => e.getId() === crs.getId()
-            )) {
-            activeCourses.push(crs);
-        }
-    });
-    return activeCourses;
-}
-
 export function groupRepoLink(groupName: string, courseURL: string): JSX.Element {
     return <a href={courseURL + slugify(groupName)} target="_blank">{ groupName }</a>;
 }
