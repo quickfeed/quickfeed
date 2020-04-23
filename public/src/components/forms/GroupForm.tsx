@@ -56,7 +56,7 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                     <label>{student.getUser()?.getName()}</label>
                     <button type="button"
                         className="btn btn-outline-success add-btn"
-                         onClick={() => this.handleAddToGroupOnClick(student)}>
+                        onClick={() => this.handleAddToGroupOnClick(student)}>
                         <i className="glyphicon glyphicon-plus-sign" />
                     </button>
                 </li>);
@@ -81,8 +81,9 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                 <form className={this.props.className}
                     onSubmit={(e) => this.handleFormSubmit(e)}>
                     <div className="form-group row">
-                    <div className="col-sm-12 alert alert-warning">
-                    Warning: Note that group names cannot be changed once created.</div>
+                        <div className="col-sm-12 alert alert-warning">
+                            Warning: Group names cannot be changed once created.
+                        </div>
                     </div>
                     <div className="form-group row">
                         <label className="col-sm-1 col-form-label" htmlFor="tag">Name:</label>
@@ -145,9 +146,9 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                 actionReady: false,
             });
             const userids = this.state.selectedStudents.map((u, i) => u.getUserid());
-            const result = this.props.groupData ?
-                await this.updateGroup(this.state.name, userids, this.props.groupData.getId())
-                 : await this.createGroup(this.state.name, userids);
+            const result = this.props.groupData
+                ? await this.updateGroup(this.state.name, userids, this.props.groupData.getId())
+                : await this.createGroup(this.state.name, userids);
             if ((result instanceof Status) && (result.getCode() > 0)) {
                 const errMsg = result.getError();
                 const serverErrors: string[] = [];
@@ -157,13 +158,13 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
                     errorFlash: flashErrors,
                 });
             } else {
-                    const isTeacher = await this.props.userMan.isTeacher(this.props.course.getId());
-                    // if current user is a course teacher, redirect to the groups list
-                    const redirectTo: string = isTeacher ?
-                        "/app/teacher/courses/" + this.props.course.getId() + "/groups"
-                        : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
+                const isTeacher = await this.props.userMan.isTeacher(this.props.course.getId());
+                // if current user is a course teacher, redirect to the groups list
+                const redirectTo: string = isTeacher
+                    ? "/app/teacher/courses/" + this.props.course.getId() + "/groups"
+                    : this.props.pagePath + "/courses/" + this.props.course.getId() + "/members";
 
-                    this.props.navMan.navigateTo(redirectTo);
+                this.props.navMan.navigateTo(redirectTo);
             }
         }
     }
@@ -223,9 +224,8 @@ export class GroupForm extends React.Component<IGroupProps, IGroupState> {
     }
 
     private handleSearch(query: string): void {
-        const filteredData = searchForStudents(this.props.freeStudents, query);
         this.setState({
-            students: filteredData,
+            students: searchForStudents(this.props.freeStudents, query),
         });
     }
 

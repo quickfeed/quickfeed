@@ -2,13 +2,10 @@ import * as React from "react";
 import { Course, Enrollment, Group, User } from "../proto/ag_pb";
 import { IStudentLabsForCourse } from "./models";
 
-
 export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
-    let sorted: Enrollment[] = [];
+    const sorted: Enrollment[] = [];
     const active: Enrollment[] = [];
     const archived: Enrollment[] = [];
-    // TODO: if we want to display active and hidden courses in separate tables,
-    // they can easily be separated here
     enrols.forEach((enrol) => {
         switch (enrol.getState()) {
             case Enrollment.DisplayState.FAVORITE:
@@ -25,8 +22,7 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
                 break;
         }
     })
-    sorted = sorted.concat(active, archived);
-    return sorted;
+    return sorted.concat(active, archived);
 }
 
 export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {
@@ -72,43 +68,43 @@ export function searchForCourses(courses: Enrollment[] | Course[], query: string
     return enrollmentList.length > 0 ? enrollmentList : coursesList;
 }
 
-export function searchForLabs(labs: IStudentLabsForCourse[], query: string) {
+export function searchForLabs(labs: IStudentLabsForCourse[], query: string): IStudentLabsForCourse[] {
     query = query.toLowerCase();
     const filteredLabs: IStudentLabsForCourse[] = [];
     labs.forEach((e) => {
         const usr = e.enrollment.getUser();
         const grp = e.enrollment.getGroup();
         if (usr && foundUser(usr, query)) {
-                filteredLabs.push(e);
+            filteredLabs.push(e);
         } else if (grp && foundGroup(grp, query)) {
-              filteredLabs.push(e);
+            filteredLabs.push(e);
         }
     });
     return filteredLabs;
 }
 
 function foundGroup(group: Group, query: string): boolean {
-    return group.getName().toLowerCase().indexOf(query) !== -1 ||
-     group.getTeamid().toString().indexOf(query) !== -1;
+    return group.getName().toLowerCase().indexOf(query) !== -1
+        || group.getTeamid().toString().indexOf(query) !== -1;
 }
 
 function foundUser(user: User, query: string): boolean {
     const student = user.toObject();
     return student.name.toLowerCase().indexOf(query) !== -1
-    || student.email.toLowerCase().indexOf(query) !== -1
-    || student.studentid.toString().indexOf(query) !== -1
-    || student.login.toLowerCase().indexOf(query) !== -1;
+        || student.email.toLowerCase().indexOf(query) !== -1
+        || student.studentid.toString().indexOf(query) !== -1
+        || student.login.toLowerCase().indexOf(query) !== -1;
 }
 
 function foundCourse(course: Course, query: string): boolean {
-    return course.getName().toLowerCase().indexOf(query) !== -1 ||
-    course.getCode().toLowerCase().indexOf(query) !== -1 ||
-    course.getYear().toString().indexOf(query) !== -1 ||
-    course.getTag().toLowerCase().indexOf(query) !== -1;
+    return course.getName().toLowerCase().indexOf(query) !== -1
+        || course.getCode().toLowerCase().indexOf(query) !== -1
+        || course.getYear().toString().indexOf(query) !== -1
+        || course.getTag().toLowerCase().indexOf(query) !== -1;
 }
 
 export function groupRepoLink(groupName: string, courseURL: string): JSX.Element {
-    return <a href={courseURL + slugify(groupName)} target="_blank">{ groupName }</a>;
+    return <a href={courseURL + slugify(groupName)} target="_blank">{groupName}</a>;
 }
 
 function gitUserLink(user: string): string {
@@ -127,18 +123,15 @@ export function generateGitLink(user: string, courseURL?: string): string {
 
 // Returns a URL-friendly version of the given string.
 export function slugify(str: string): string {
-
     str = str.replace(/^\s+|\s+$/g, "").toLowerCase();
 
     // Remove accents, swap ñ for n, etc
     const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
-    const to   = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
-    for (let i = 0 ; i < from.length ; i++) {
+    const to = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
+    for (let i = 0; i < from.length; i++) {
         str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
     }
 
     // Remove invalid chars, replace whitespace by dashes, collapse dashes
-    str = str.replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
-
-    return str;
+    return str.replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }

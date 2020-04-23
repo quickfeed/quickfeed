@@ -87,7 +87,8 @@ func (db *GormDB) getEnrollments(model interface{}, states []pb.Enrollment_Displ
 	}
 	var enrollments []*pb.Enrollment
 	if err := db.conn.Preload("User").Preload("Course").Preload("Group").Model(model).
-		Where("status in (?)", statuses).Where("state in (?)", states).
+		Where("status in (?)", statuses).
+		Where("state in (?)", states).
 		Association("Enrollments").
 		Find(&enrollments).Error; err != nil {
 		return nil, err
