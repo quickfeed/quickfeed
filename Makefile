@@ -11,6 +11,7 @@ sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "se
 testorg				:= ag-test-course
 endpoint 			:= test.itest.run
 agport				:= 8081
+pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 
 # necessary when target is not tied to a file
 .PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
@@ -33,7 +34,7 @@ ui:
 
 proto:
 	@echo Compiling Autograders proto definitions
-	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf --gogofast_out=plugins=grpc,\
+	@cd ag; protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
 	Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\

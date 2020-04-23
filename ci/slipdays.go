@@ -1,11 +1,20 @@
 package ci
 
-import "time"
+import (
+	"time"
 
-func slipdays(rData *RunData) {
+	pb "github.com/autograde/aguis/ag"
+)
+
+// slipdays for user
+func slipdays(rData *RunData, enrol *pb.Enrollment) {
+	// assignment := rData.Assignment
+	// if assignment.Submission.Approved
+
+	// if assignment/submission already approved: return ok?
+
 	//TODO(meling) should start be passed in?
 	start := time.Now()
-	// TODO(meling) move this code to separate file and function: slipdays.go
 	// TODO(meling) write tests for this stuff first
 	//TODO(meling) must also handle groups; if group assignment is late; withdraw one slip day per group member.
 	timeUntilDeadline := rData.Assignment.DurationUntilDeadline(start)
