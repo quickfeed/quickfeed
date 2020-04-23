@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User } from '../../proto/ag_pb';
 import { IStudentLabsForCourse, ISubmission } from "../models";
 
 import { ICourseProvider } from "./CourseManager";
@@ -230,7 +230,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Course[]> {
+    public async getCoursesForUser(user: User, status: Enrollment.UserStatus[], states: Enrollment.DisplayState[]): Promise<Course[]> {
         const cLinks: Enrollment[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {

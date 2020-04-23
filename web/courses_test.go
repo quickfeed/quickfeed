@@ -404,7 +404,7 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantCourses, err := db.GetCoursesByUser(user.ID, pb.Enrollment_STUDENT)
+	wantCourses, err := db.GetCoursesByUser(user.ID, []pb.Enrollment_DisplayState{}, pb.Enrollment_STUDENT)
 	if err != nil {
 		t.Fatal(err)
 	}

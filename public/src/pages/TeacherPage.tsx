@@ -11,7 +11,6 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
-import { getVisibleCourses } from "../componentHelper";
 
 export class TeacherPage extends ViewPage {
 
@@ -57,7 +56,7 @@ export class TeacherPage extends ViewPage {
     public async init(): Promise<void> {
         this.courses = await this.getCourses([]);
         this.repositories = this.setupRepos();
-        this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].getId().toString() : "");
+        this.navHelper.defaultPage = "courses/";
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
@@ -353,9 +352,7 @@ export class TeacherPage extends ViewPage {
     private async getCourses(statuses: Enrollment.UserStatus[]): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            const courses = await this.courseMan.getCoursesForUser(curUsr, statuses);
-            const enrols = await this.courseMan.getEnrollmentsForUser(curUsr.getId());
-            return getVisibleCourses(courses, enrols, curUsr.getId());
+            return this.courseMan.getCoursesForUser(curUsr, statuses, [Enrollment.DisplayState.FAVORITE, Enrollment.DisplayState.VISIBLE]);
         }
         return [];
     }
