@@ -187,7 +187,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
-    public async changeCourseVisibility(enrol: Enrollment): Promise<boolean> {
+    public async updateCourseVisibility(enrol: Enrollment): Promise<boolean> {
         return true;
     }
 

@@ -193,9 +193,9 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 	return courses, nil
 }
 
-// ChangeCourseVisibility allows to edit what courses are visible in the sidebar.
+// UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
 // Access policy: Any User.
-func (s *AutograderService) ChangeCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
+func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: authentication error: %w", err)

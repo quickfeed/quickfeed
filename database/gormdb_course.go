@@ -31,7 +31,12 @@ func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: userID, CourseID: course.ID}); err != nil {
 		return err
 	}
-	if err := db.UpdateEnrollmentStatus(userID, course.ID, pb.Enrollment_TEACHER); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		return err
 	}
 	return nil
@@ -127,11 +132,4 @@ func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_User
 // UpdateCourse updates course information.
 func (db *GormDB) UpdateCourse(course *pb.Course) error {
 	return db.conn.Model(&pb.Course{}).Updates(course).Error
-}
-
-// UpdateCourseVisibilityState changes course visibility for the given enrollment
-func (db *GormDB) UpdateCourseVisibilityState(enrol *pb.Enrollment) error {
-	return db.conn.Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).
-		Update(&pb.Enrollment{State: enrol.State}).Error
 }

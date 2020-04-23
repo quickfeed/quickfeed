@@ -440,8 +440,8 @@ export namespace Enrollment {
 
   export enum DisplayState { 
     UNSET = 0,
-    ACTIVE = 1,
-    ARCHIVED = 2,
+    HIDDEN = 1,
+    VISIBLE = 2,
     FAVORITE = 3,
   }
 }
@@ -815,6 +815,11 @@ export class EnrollmentStatusRequest extends jspb.Message {
   clearStatusesList(): void;
   addStatuses(value: Enrollment.UserStatus, index?: number): void;
 
+  getStatesList(): Array<Enrollment.DisplayState>;
+  setStatesList(value: Array<Enrollment.DisplayState>): void;
+  clearStatesList(): void;
+  addStates(value: Enrollment.DisplayState, index?: number): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): EnrollmentStatusRequest.AsObject;
   static toObject(includeInstance: boolean, msg: EnrollmentStatusRequest): EnrollmentStatusRequest.AsObject;
@@ -827,6 +832,7 @@ export namespace EnrollmentStatusRequest {
   export type AsObject = {
     userid: number,
     statusesList: Array<Enrollment.UserStatus>,
+    statesList: Array<Enrollment.DisplayState>,
   }
 }
 

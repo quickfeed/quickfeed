@@ -99,8 +99,8 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCoursesByUser, request);
     }
 
-    public changeCourseVisibility(request: Enrollment): Promise<IGrpcResponse<Void>> {
-        return this.grpcSend<Void>(this.agService.changeCourseVisibility, request)
+    public updateCourseVisibility(request: Enrollment): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateCourseVisibility, request)
     }
 
     // /* ASSIGNMENTS */ //

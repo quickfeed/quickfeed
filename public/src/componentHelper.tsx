@@ -14,10 +14,10 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
             case Enrollment.DisplayState.FAVORITE:
                 sorted.push(enrol);
                 break;
-            case Enrollment.DisplayState.ACTIVE:
+            case Enrollment.DisplayState.VISIBLE:
                 active.push(enrol);
                 break;
-            case Enrollment.DisplayState.ARCHIVED:
+            case Enrollment.DisplayState.HIDDEN:
                 archived.push(enrol);
                 break;
             case Enrollment.DisplayState.UNSET:
@@ -107,12 +107,12 @@ function foundCourse(course: Course, query: string): boolean {
     course.getTag().toLowerCase().indexOf(query) !== -1;
 }
 
-export function getActiveCourses(courses: Course[], enrols: Enrollment[], userID: number): Course[] {
+export function getVisibleCourses(courses: Course[], enrols: Enrollment[], userID: number): Course[] {
     const activeCourses: Course[] = [];
     enrols = sortCoursesByVisibility(enrols);
     enrols.forEach((enrol) => {
         const crs = enrol.getCourse();
-        if (enrol.getState() !== Enrollment.DisplayState.ARCHIVED &&
+        if (enrol.getState() !== Enrollment.DisplayState.HIDDEN &&
             crs && courses.find(e => e.getId() === crs.getId()
             )) {
             activeCourses.push(crs);

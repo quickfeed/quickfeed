@@ -145,8 +145,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status;
     }
 
-    public async changeCourseVisibility(enrol: Enrollment): Promise<boolean> {
-        const result = await this.grpcHelper.changeCourseVisibility(enrol);
+    public async updateCourseVisibility(enrol: Enrollment): Promise<boolean> {
+        const result = await this.grpcHelper.updateCourseVisibility(enrol);
         return this.responseCodeSuccess(result);
     }
 

@@ -112,8 +112,8 @@ message Enrollment {
     }
     enum DisplayState {
         UNSET = 0;
-        ACTIVE = 1;
-        ARCHIVED = 2;
+        HIDDEN = 1;
+        VISIBLE = 2;
         FAVORITE = 3;
     }
     uint64 ID = 1;
@@ -217,6 +217,7 @@ message EnrollmentRequest {
 message EnrollmentStatusRequest {
     uint64 userID = 1;
     repeated Enrollment.UserStatus statuses = 2;
+    repeated Enrollment.DisplayState states = 3;
 }
 
 message SubmissionRequest {
@@ -297,7 +298,7 @@ service AutograderService {
     rpc GetCoursesByUser(EnrollmentStatusRequest) returns (Courses) {}
     rpc CreateCourse(Course) returns (Course) {}
     rpc UpdateCourse(Course) returns (Void) {}
-    rpc ChangeCourseVisibility(Enrollment) returns (Void) {}
+    rpc UpdateCourseVisibility(Enrollment) returns (Void) {}
  
     // assignments //
 

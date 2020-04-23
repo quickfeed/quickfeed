@@ -181,7 +181,7 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 }
 
 func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) error {
-	return s.db.UpdateCourseVisibilityState(enrollment)
+	return s.db.UpdateEnrollment(enrollment)
 }
 
 // getRepositoryURL returns URL of a course repository of the given type.
@@ -273,6 +273,11 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		UserID:         user.GetID(),
 		RepoType:       pb.Repository_USER,
 	}
+	userEnrolQuery := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
 	repos, err := s.db.GetRepositories(userRepoQuery)
 	if err != nil {
 		return err
@@ -288,7 +293,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
 		if len(repos) > 0 {
 			// repo already exist, update enrollment in database
-			return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
+			return s.db.UpdateEnrollment(userEnrolQuery)
 		}
 		// create user repo, user team, and add user to students team
 		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
@@ -317,7 +322,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		}
 	}
 
-	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
+	return s.db.UpdateEnrollment(userEnrolQuery)
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
@@ -330,7 +335,11 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 		s.logger.Errorf("failed to update team membership for teacher %s: %s", user.Login, err.Error())
 		return err
 	}
-	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_TEACHER)
+	return s.db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	})
 }
 
 func makeLabResults(course *pb.Course, labCache map[uint64]map[uint64]pb.Submission, groupLab bool) []*pb.LabResultLink {
