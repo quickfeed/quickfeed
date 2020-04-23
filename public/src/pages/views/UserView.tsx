@@ -159,9 +159,8 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     }
 
     private handleSearch(query: string): void {
-        const filteredData = searchForStudents(this.props.users, query);
         this.setState({
-            enrollments: filteredData,
+            enrollments: searchForStudents(this.props.users, query),
         });
     }
 }

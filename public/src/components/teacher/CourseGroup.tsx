@@ -117,7 +117,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 key={i}
                 classType={v.extra ? v.extra as BootstrapClass : "default"}
                 type={v.description}
-                onClick={(link) => { this.handleActionOnClick(group, v)}}
+                onClick={(link) => { this.handleActionOnClick(group, v) }}
             >{v.name}
             </BootstrapButton>;
         });
@@ -137,9 +137,9 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
     private editButton() {
         return <button type="button"
-                id="edit"
-                className="btn btn-success member-btn"
-                onClick={() => this.toggleEditState()}
+            id="edit"
+            className="btn btn-success member-btn"
+            onClick={() => this.toggleEditState()}
         >{this.editButtonString()}</button>;
     }
 
@@ -151,10 +151,12 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 separator = " ";
             }
 
-            const nameLink = <span key={"s" + i} ><a href={ generateGitLink(user.getLogin(), this.props.courseURL)}
-             target="_blank">{ user.getName() }</a>{separator}</span>;
+            const nameLink = <span key={"s" + i}>
+                <a href={generateGitLink(user.getLogin(), this.props.courseURL)} target="_blank">
+                    {user.getName()}
+                </a>{separator}</span>;
             names.push(nameLink);
-            });
+        });
         return <div>{names}</div>;
     }
 
@@ -212,11 +214,9 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private handleSearch(query: string): void {
-        const filteredApproved = searchForGroups(this.props.approvedGroups, query);
-        const filteredPending = searchForGroups(this.props.pendingGroups, query);
         this.setState({
-            approvedGroups: filteredApproved,
-            pendingGroups: filteredPending,
+            approvedGroups: searchForGroups(this.props.approvedGroups, query),
+            pendingGroups: searchForGroups(this.props.pendingGroups, query),
         });
     }
 
@@ -271,7 +271,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     private generateErrorMessage(status: Status) {
         const err = <div className="alert alert-danger">{status.getError()}</div>;
         this.setState({
-                errorMsg: err,
+            errorMsg: err,
         });
     }
 

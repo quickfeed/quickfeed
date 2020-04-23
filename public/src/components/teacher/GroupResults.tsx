@@ -129,9 +129,8 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
     }
 
     private handleSearch(query: string): void {
-        const filteredData = searchForLabs(this.props.groups, query);
         this.setState({
-            groups: filteredData,
+            groups: searchForLabs(this.props.groups, query),
         });
     }
 }
