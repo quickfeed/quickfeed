@@ -55,7 +55,7 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateCourse = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
-        this.methodInfoChangeCourseVisibility = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+        this.methodInfoUpdateCourseVisibility = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetAssignments = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Assignments, function (request) {
@@ -173,9 +173,9 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateCourse', request, metadata || {}, this.methodInfoUpdateCourse, callback);
     };
-    AutograderServiceClient.prototype.changeCourseVisibility = function (request, metadata, callback) {
+    AutograderServiceClient.prototype.updateCourseVisibility = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/ChangeCourseVisibility', request, metadata || {}, this.methodInfoChangeCourseVisibility, callback);
+            '/AutograderService/UpdateCourseVisibility', request, metadata || {}, this.methodInfoUpdateCourseVisibility, callback);
     };
     AutograderServiceClient.prototype.getAssignments = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

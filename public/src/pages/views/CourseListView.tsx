@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Enrollment } from '../../../proto/ag_pb';
+import { Enrollment } from "../../../proto/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
-import { ILink } from '../../managers/NavigationManager';
-import { searchForCourses, sortCoursesByVisibility } from '../../componentHelper';
+import { ILink } from "../../managers/NavigationManager";
+import { searchForCourses, sortCoursesByVisibility } from "../../componentHelper";
 
 interface CourseListViewProps {
     enrollments: Enrollment[];
@@ -16,14 +16,14 @@ interface CourseListViewState {
 
 export class CourseListView extends React.Component<CourseListViewProps, CourseListViewState> {
 
-    private activateLink = {
+    private showLink = {
         name: "Show",
-        uri: "activate",
+        uri: "show",
         extra: "primary",
     }
-    private archiveLink = {
+    private hideLink = {
         name: "Hide",
-        uri: "archive",
+        uri: "hide",
         extra: "primary",
     }
     private makeFavoriteLink = {
@@ -31,12 +31,12 @@ export class CourseListView extends React.Component<CourseListViewProps, CourseL
         uri: "favorite",
         extra: "success",
     }
-    private activeLink = {
-        name: "Active",
+    private visibleLink = {
+        name: "Visible",
         extra: "light"
     }
-    private archivedLink = {
-        name: "Archived",
+    private hiddenLink = {
+        name: "Hidden",
         extra: "light",
     }
     private favoriteLink = {
@@ -68,24 +68,24 @@ export class CourseListView extends React.Component<CourseListViewProps, CourseL
     private generateCourseStateLinks(status: Enrollment.DisplayState): ILink[] {
         const buttonLinks: ILink[] = [];
         switch (status) {
-            case Enrollment.DisplayState.ACTIVE:
+            case Enrollment.DisplayState.VISIBLE:
                 this.state.editing ?
-                    buttonLinks.push(this.archiveLink, this.makeFavoriteLink) :
-                    buttonLinks.push(this.activeLink);
+                    buttonLinks.push(this.hideLink, this.makeFavoriteLink) :
+                    buttonLinks.push(this.visibleLink);
                 break;
             case Enrollment.DisplayState.UNSET:
                 this.state.editing ?
-                    buttonLinks.push(this.archiveLink, this.makeFavoriteLink) :
-                    buttonLinks.push(this.activeLink);
+                    buttonLinks.push(this.hideLink, this.makeFavoriteLink) :
+                    buttonLinks.push(this.visibleLink);
                 break;
-            case Enrollment.DisplayState.ARCHIVED:
+            case Enrollment.DisplayState.HIDDEN:
                 this.state.editing ?
-                    buttonLinks.push(this.activateLink, this.makeFavoriteLink) :
-                    buttonLinks.push(this.archivedLink);
+                    buttonLinks.push(this.showLink, this.makeFavoriteLink) :
+                    buttonLinks.push(this.hiddenLink);
                 break;
             case Enrollment.DisplayState.FAVORITE:
                 this.state.editing ?
-                    buttonLinks.push(this.activateLink, this.archiveLink) :
+                    buttonLinks.push(this.showLink, this.hideLink) :
                     buttonLinks.push(this.favoriteLink);
                 break;
             default:
@@ -104,11 +104,11 @@ export class CourseListView extends React.Component<CourseListViewProps, CourseL
         const linkButtons = links.map((v, i) => {
             let action: Enrollment.DisplayState;
             switch (v.uri) {
-                case "activate":
-                    action = Enrollment.DisplayState.ACTIVE;
+                case "show":
+                    action = Enrollment.DisplayState.VISIBLE;
                     break;
-                case "archive":
-                    action = Enrollment.DisplayState.ARCHIVED;
+                case "hide":
+                    action = Enrollment.DisplayState.HIDDEN;
                     break;
                 case "favorite":
                     action = Enrollment.DisplayState.FAVORITE;

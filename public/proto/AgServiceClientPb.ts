@@ -389,7 +389,7 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoChangeCourseVisibility = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoUpdateCourseVisibility = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
     (request: Enrollment) => {
       return request.serializeBinary();
@@ -397,17 +397,17 @@ export class AutograderServiceClient {
     Void.deserializeBinary
   );
 
-  changeCourseVisibility(
+  updateCourseVisibility(
     request: Enrollment,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/ChangeCourseVisibility',
+        '/AutograderService/UpdateCourseVisibility',
       request,
       metadata || {},
-      this.methodInfoChangeCourseVisibility,
+      this.methodInfoUpdateCourseVisibility,
       callback);
   }
 

@@ -132,7 +132,11 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.UpdateEnrollmentStatus(user.ID, allCourses[0].ID, pb.Enrollment_STUDENT); err != nil {
+		if err := db.UpdateEnrollment(&pb.Enrollment{
+			UserID:   user.ID,
+			CourseID: allCourses[0].ID,
+			Status:   pb.Enrollment_STUDENT,
+		}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -147,7 +151,11 @@ func TestGetEnrollmentsByCourse(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.UpdateEnrollmentStatus(user.ID, allCourses[1].ID, pb.Enrollment_STUDENT); err != nil {
+		if err := db.UpdateEnrollment(&pb.Enrollment{
+			UserID:   user.ID,
+			CourseID: allCourses[1].ID,
+			Status:   pb.Enrollment_STUDENT,
+		}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -198,6 +206,11 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 
 	var wantEnrollments []*pb.Enrollment
 	for i, user := range users {
+		query := &pb.Enrollment{
+			UserID:   user.ID,
+			CourseID: course.ID,
+			Status:   pb.Enrollment_STUDENT,
+		}
 		if i == 0 {
 			// we want to skip enrolling admin, as he must have been enrolled when creating course
 			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)
@@ -213,7 +226,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 				UserID: user.ID, CourseID: course.ID, GroupID: 1}); err != nil {
 				t.Fatal(err)
 			}
-			if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+			if err := db.UpdateEnrollment(query); err != nil {
 				t.Fatal(err)
 			}
 		} else {
@@ -222,7 +235,7 @@ func TestEnrollmentsWithoutGroupMembership(t *testing.T) {
 				UserID: user.ID, CourseID: course.ID}); err != nil {
 				t.Fatal(err)
 			}
-			if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+			if err := db.UpdateEnrollment(query); err != nil {
 				t.Fatal(err)
 			}
 			enr, err := db.GetEnrollmentByCourseAndUser(course.ID, user.ID)

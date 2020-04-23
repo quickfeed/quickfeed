@@ -23,7 +23,7 @@ func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 	}
 
 	enrollment.Status = pb.Enrollment_PENDING
-	enrollment.State = pb.Enrollment_ACTIVE
+	enrollment.State = pb.Enrollment_VISIBLE
 	return db.conn.Create(&enrollment).Error
 }
 
@@ -36,9 +36,11 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 	return db.conn.Delete(enrol).Error
 }
 
-// UpdateEnrollmentStatus changes status of an enrollment of the given user ID in the given course ID.
-func (db *GormDB) UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enrollment_UserStatus) error {
-	return db.setEnrollment(userID, courseID, status)
+// UpdateEnrollment changes status and display state of the given enrollment.
+func (db *GormDB) UpdateEnrollment(enrol *pb.Enrollment) error {
+	return db.conn.Model(&pb.Enrollment{}).
+		Where(&pb.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).
+		Update(&pb.Enrollment{State: enrol.State, Status: enrol.Status}).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
@@ -83,12 +85,4 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 		return nil, err
 	}
 	return enrollments, nil
-}
-
-// setEnrollment updates enrollment status.
-func (db *GormDB) setEnrollment(userID, courseID uint64, status pb.Enrollment_UserStatus) error {
-	return db.conn.
-		Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: courseID, UserID: userID}).
-		Update(&pb.Enrollment{Status: status}).Error
 }

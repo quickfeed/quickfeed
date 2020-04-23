@@ -10,8 +10,8 @@ import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/a
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
-import { showLoader } from '../loader';
-import { getActiveCourses, sortCoursesByVisibility } from '../componentHelper';
+import { showLoader } from "../loader";
+import { getVisibleCourses } from "../componentHelper";
 
 export class TeacherPage extends ViewPage {
 
@@ -355,7 +355,7 @@ export class TeacherPage extends ViewPage {
         if (curUsr) {
             const courses = await this.courseMan.getCoursesForUser(curUsr, statuses);
             const enrols = await this.courseMan.getEnrollmentsForUser(curUsr.getId());
-            return getActiveCourses(courses, enrols, curUsr.getId());
+            return getVisibleCourses(courses, enrols, curUsr.getId());
         }
         return [];
     }

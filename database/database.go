@@ -43,15 +43,13 @@ type Database interface {
 	GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error)
 	// UpdateCourse updates course information.
 	UpdateCourse(*pb.Course) error
-	// UpdateCourseVisibilityState updates course visibility for the given enrollment
-	UpdateCourseVisibilityState(*pb.Enrollment) error
 
 	// CreateEnrollment creates a new pending enrollment.
 	CreateEnrollment(*pb.Enrollment) error
 	// RejectEnrollment removes the user enrollment from the database
 	RejectEnrollment(userID, courseID uint64) error
 	// UpdateEnrollmentStatus changes status of the course enrollment for the given user and course.
-	UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enrollment_UserStatus) error
+	UpdateEnrollment(*pb.Enrollment) error
 	// GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error)
 	// GetEnrollmentsByCourse fetches all course enrollments with given statuses.

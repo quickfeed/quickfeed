@@ -4,15 +4,15 @@ import { CoursesOverview, GroupForm, GroupInfo, SingleCourseOverview, StudentLab
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
-import { ILink, NavigationManager } from '../managers/NavigationManager';
+import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
 import { IStudentLabsForCourse, IStudentLab } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
-import { showLoader } from '../loader';
+import { showLoader } from "../loader";
 import { CourseListView } from "./views/CourseListView";
-import { sortCoursesByVisibility } from '../componentHelper';
+import { sortCoursesByVisibility } from "../componentHelper";
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -100,7 +100,7 @@ export class StudentPage extends ViewPage {
             <CourseListView
                 enrollments={await this.courseMan.getEnrollmentsForUser(curUser.getId())}
                 onChangeClick={(enrol: Enrollment) => {
-                    return this.courseMan.changeCourseVisibility(enrol);
+                    return this.courseMan.updateCourseVisibility(enrol);
                 }}
             ></CourseListView>
         </div>
@@ -204,7 +204,7 @@ export class StudentPage extends ViewPage {
         if (key === 0) {
             const coursesLinks: ILinkCollection[] = [];
             for (const course of this.activeUserCourses) {
-                if (course.enrollment.getState() !== Enrollment.DisplayState.ARCHIVED) {
+                if (course.enrollment.getState() !== Enrollment.DisplayState.HIDDEN) {
                     const courseID = course.course.getId();
                     const studentLinks: ILink[] = [];
                     const labLinks: ILink[] = [];
