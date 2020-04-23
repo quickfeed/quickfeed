@@ -13,3 +13,15 @@ func (m Assignment) DurationUntilDeadline(now time.Time) time.Duration {
 	}
 	return now.Sub(deadline)
 }
+
+// IsApproved returns true if this assignment is already approved for the
+// latest submission, or if the score of the latest submission is sufficient
+// to autoapprove the assignment.
+func (m Assignment) IsApproved(latest *Submission, score uint32) bool {
+	// keep approved status if already approved
+	approved := latest.GetApproved()
+	if m.GetAutoApprove() && score >= m.GetScoreLimit() {
+		approved = true
+	}
+	return approved
+}

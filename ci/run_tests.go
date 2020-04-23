@@ -108,17 +108,14 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		logger.Errorf("Failed to get submission data from database: %w", err)
 		return
 	}
-	// keep approved status if already approved
-	approved := newest.GetApproved()
-	if rData.Assignment.AutoApprove && result.TotalScore() >= rData.Assignment.GetScoreLimit() {
-		approved = true
-	}
 
+	score := result.TotalScore()
+	approved := rData.Assignment.IsApproved(newest, score)
 	err = db.CreateSubmission(&pb.Submission{
 		AssignmentID: rData.Assignment.ID,
 		BuildInfo:    buildInfo,
 		CommitHash:   rData.CommitID,
-		Score:        result.TotalScore(),
+		Score:        score,
 		ScoreObjects: scores,
 		UserID:       rData.Repo.UserID,
 		GroupID:      rData.Repo.GroupID,
