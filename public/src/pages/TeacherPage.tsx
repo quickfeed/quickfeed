@@ -11,7 +11,7 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
-import { sortCoursesByVisibility } from '../componentHelper';
+import { sortCoursesByVisibility } from "../componentHelper";
 
 export class TeacherPage extends ViewPage {
 
