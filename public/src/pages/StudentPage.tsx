@@ -48,7 +48,7 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("courses/{courseid:number}/members", this.members);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
-        this.navHelper.registerFunction<any>("archive", this.archive);
+        this.navHelper.registerFunction<any>("courses/list", this.courseList);
     }
 
     public checkAuthentication(): boolean {
@@ -89,7 +89,7 @@ export class StudentPage extends ViewPage {
         </div >;
     }
 
-    public async archive(navInfo: INavInfo<any>): View {
+    public async courseList(navInfo: INavInfo<any>): View {
         await this.setupData();
         const curUser = this.userMan.getCurrentUser();
         if (!curUser) {

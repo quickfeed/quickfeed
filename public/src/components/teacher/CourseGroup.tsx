@@ -4,7 +4,7 @@ import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
-import { groupRepoLink, generateGitLink, searchForGroups } from "../../componentHelper";
+import { groupRepoLink, searchForGroups, userRepoLink } from '../../componentHelper';
 
 interface ICourseGroupProps {
     approvedGroups: Group[];
@@ -152,9 +152,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
             }
 
             const nameLink = <span key={"s" + i}>
-                <a href={generateGitLink(user.getLogin(), this.props.courseURL)} target="_blank">
-                    {user.getName()}
-                </a>{separator}</span>;
+                {userRepoLink(user.getLogin(), user.getName(), this.props.courseURL)}{separator}</span>;
             names.push(nameLink);
         });
         return <div>{names}</div>;
