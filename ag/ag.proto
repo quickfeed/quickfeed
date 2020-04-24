@@ -382,7 +382,8 @@ service AutograderService {
     rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
-   
+    rpc UpdateFeedback(Submission) returns (Void) {}
+
     // misc //
     
     rpc GetProviders(Void) returns (Providers) {}
