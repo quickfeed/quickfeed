@@ -3,7 +3,7 @@ import { Course, Enrollment, Group, User } from "../proto/ag_pb";
 import { IStudentLabsForCourse } from "./models";
 
 export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
-    const sorted: Enrollment[] = [];
+    let sorted: Enrollment[] = [];
     const active: Enrollment[] = [];
     const archived: Enrollment[] = [];
     enrols.forEach((enrol) => {
@@ -22,7 +22,8 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
                 break;
         }
     })
-    return sorted.concat(active, archived);
+    sorted = sorted.concat(active, archived);
+    return sorted;
 }
 
 export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {
