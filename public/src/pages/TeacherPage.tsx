@@ -61,7 +61,7 @@ export class TeacherPage extends ViewPage {
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
-        return this.courseFunc(async (course) => {
+        return this.courseFunc(info.params.course, async (course) => {
             if (info.params.page) {
                 return <h3>You are now on page {info.params.page.toUpperCase()} in course {info.params.course}</h3>;
             }
@@ -115,7 +115,7 @@ export class TeacherPage extends ViewPage {
 
     // TODO(meling) consolidate these two result functions?
     public async results(info: INavInfo<{ course: string }>): View {
-        return this.courseFunc(async (course) => {
+        return this.courseFunc(info.params.course, async (course) => {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
             const results = await this.courseMan.getLabsForCourse(course.getId(), false);
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
@@ -140,7 +140,7 @@ export class TeacherPage extends ViewPage {
     }
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
-        return this.courseFunc(async (course) => {
+        return this.courseFunc(info.params.course, async (course) => {
             const results = await this.courseMan.getLabsForCourse(course.getId(), true);
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
@@ -164,7 +164,7 @@ export class TeacherPage extends ViewPage {
     }
 
     public async groups(info: INavInfo<{ course: string }>): View {
-        return this.courseFunc(async (course) => {
+        return this.courseFunc(info.params.course, async (course) => {
             const groups = await this.courseMan.getGroupsForCourse(course.getId());
             const approvedGroups: Group[] = [];
             const pendingGroups: Group[] = [];
@@ -248,7 +248,7 @@ export class TeacherPage extends ViewPage {
     }
 
     public async courseUsers(info: INavInfo<{ course: string }>): View {
-        return this.courseFunc(async (course) => {
+        return this.courseFunc(info.params.course, async (course) => {
             const all = await this.courseMan.getUsersForCourse(course);
             const acceptedUsers: Enrollment[] = [];
             const pendingUsers: Enrollment[] = [];
@@ -364,8 +364,9 @@ export class TeacherPage extends ViewPage {
         return repoMap?.get(Repository.Type.COURSEINFO) ?? "";
     }
 
-    private async courseFunc(fn: (course: Course) => View): View {
-        const course = this.courses[0];
+    private async courseFunc(courseParam: string, fn: (course: Course) => View): View {
+        const courseID = parseInt(courseParam, 10);
+        const course = this.courses.find(c => c.getId() === courseID);
         if (course) {
             return fn(course);
         }
