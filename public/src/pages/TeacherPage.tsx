@@ -12,6 +12,7 @@ import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
 import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHelper';
+import { DynamicTable } from "../components/data/DynamicTable";
 
 export class TeacherPage extends ViewPage {
 
@@ -106,9 +107,11 @@ export class TeacherPage extends ViewPage {
                     </BootstrapButton>;
                     break;
             }
+            // return a table with all course assignments, on click - link to AssignmentView
             return <div key="head">
                 <h1>Overview for {course.getName()}</h1>
                 {button}
+                {await this.generateAssignmentTable(course.getId())}
             </div>;
         });
     }
@@ -392,5 +395,20 @@ export class TeacherPage extends ViewPage {
             allRepoMap.set(crs.getId(), repoMap);
         });
         return allRepoMap;
+    }
+
+    private async generateAssignmentTable(courseID: number): Promise<JSX.Element> {
+        const assignments: Assignment[] = await this.courseMan.getAssignments(courseID);
+        return <DynamicTable
+            header={["Assignments"]}
+            data={assignments}
+            selector={(assignment: Assignment) => [this.generateAssignmentElement(assignment.getName())]}
+        ></DynamicTable>
+    }
+
+    private generateAssignmentElement(assignment: string): JSX.Element {
+    return <div onClick={
+       () =>  {console.log("Show AssignmentView for assignment: " + assignment);}
+    }>{assignment}</div>
     }
 }
