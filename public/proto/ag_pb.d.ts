@@ -568,10 +568,18 @@ export class Assignment extends jspb.Message {
   getScorelimit(): number;
   setScorelimit(value: number): void;
 
+  getReviewers(): number;
+  setReviewers(value: number): void;
+
   getSubmissionsList(): Array<Submission>;
   setSubmissionsList(value: Array<Submission>): void;
   clearSubmissionsList(): void;
   addSubmissions(value?: Submission, index?: number): Submission;
+
+  getGradingbenchmarksList(): Array<GradingBenchmark>;
+  setGradingbenchmarksList(value: Array<GradingBenchmark>): void;
+  clearGradingbenchmarksList(): void;
+  addGradingbenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
@@ -592,7 +600,9 @@ export namespace Assignment {
     order: number,
     isgrouplab: boolean,
     scorelimit: number,
+    reviewers: number,
     submissionsList: Array<Submission.AsObject>,
+    gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
   }
 }
 
@@ -644,6 +654,12 @@ export class Submission extends jspb.Message {
   getApproved(): boolean;
   setApproved(value: boolean): void;
 
+  getFeedback(): string;
+  setFeedback(value: string): void;
+
+  getFeedbackready(): boolean;
+  setFeedbackready(value: boolean): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Submission.AsObject;
   static toObject(includeInstance: boolean, msg: Submission): Submission.AsObject;
@@ -663,6 +679,8 @@ export namespace Submission {
     buildinfo: string,
     commithash: string,
     approved: boolean,
+    feedback: string,
+    feedbackready: boolean,
   }
 }
 
@@ -683,6 +701,74 @@ export class Submissions extends jspb.Message {
 export namespace Submissions {
   export type AsObject = {
     submissionsList: Array<Submission.AsObject>,
+  }
+}
+
+export class GradingBenchmark extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getAssignmentid(): number;
+  setAssignmentid(value: number): void;
+
+  getHeading(): string;
+  setHeading(value: string): void;
+
+  getCriteriaList(): Array<GradingCriterion>;
+  setCriteriaList(value: Array<GradingCriterion>): void;
+  clearCriteriaList(): void;
+  addCriteria(value?: GradingCriterion, index?: number): GradingCriterion;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GradingBenchmark.AsObject;
+  static toObject(includeInstance: boolean, msg: GradingBenchmark): GradingBenchmark.AsObject;
+  static serializeBinaryToWriter(message: GradingBenchmark, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GradingBenchmark;
+  static deserializeBinaryFromReader(message: GradingBenchmark, reader: jspb.BinaryReader): GradingBenchmark;
+}
+
+export namespace GradingBenchmark {
+  export type AsObject = {
+    id: number,
+    assignmentid: number,
+    heading: string,
+    criteriaList: Array<GradingCriterion.AsObject>,
+  }
+}
+
+export class GradingCriterion extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getBenchmarkid(): number;
+  setBenchmarkid(value: number): void;
+
+  getDescription(): string;
+  setDescription(value: string): void;
+
+  getGrade(): GradingCriterion.Grade;
+  setGrade(value: GradingCriterion.Grade): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GradingCriterion.AsObject;
+  static toObject(includeInstance: boolean, msg: GradingCriterion): GradingCriterion.AsObject;
+  static serializeBinaryToWriter(message: GradingCriterion, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GradingCriterion;
+  static deserializeBinaryFromReader(message: GradingCriterion, reader: jspb.BinaryReader): GradingCriterion;
+}
+
+export namespace GradingCriterion {
+  export type AsObject = {
+    id: number,
+    benchmarkid: number,
+    description: string,
+    grade: GradingCriterion.Grade,
+  }
+
+  export enum Grade { 
+    NONE = 0,
+    FAILED = 1,
+    PASSED = 2,
   }
 }
 

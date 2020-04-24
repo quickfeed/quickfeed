@@ -169,7 +169,10 @@ message Assignment {
     uint32 order = 7;
     bool isGroupLab = 8;
     uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
-    repeated Submission submissions = 10; 
+    uint32 reviewers = 10; // number of TA's to review submissions for this assignment 
+    repeated Submission submissions = 11; 
+    repeated GradingBenchmark gradingBenchmarks = 12;
+    
 }
 
 message Assignments {
@@ -186,14 +189,36 @@ message Submission {
     string buildInfo = 7;
     string commitHash = 8;
     bool approved = 9;
+    string feedback = 10;
+    bool feedbackReady = 11; // defines whether the feedback is visible for the student or group members
 }
 
 message Submissions {
     repeated Submission submissions = 1;
 }
 
+//   MANUAL GRADING   //
 
-////    API REQUESTS AND RESPONSES      \\\\
+message GradingBenchmark {
+    uint64 ID = 1;
+    uint64 assignmentID = 2;
+    string heading = 3;
+    repeated GradingCriterion criteria = 4;
+}
+
+message GradingCriterion {
+    enum Grade {
+        NONE = 0;
+        FAILED = 1;
+        PASSED = 2;
+    }
+    uint64 ID = 1;
+    uint64 benchmarkID = 2;
+    string description = 3;
+    Grade grade = 4;
+}
+
+////    REQUESTS AND RESPONSES      \\\\
 
 message CourseRequest {
     uint64 courseID = 1;
