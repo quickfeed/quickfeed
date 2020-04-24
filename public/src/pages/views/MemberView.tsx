@@ -287,7 +287,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private checkForErrors(status: Status, action?: () => void) {
         if (status.getCode() !== 0) {
-            console.log("Setting a new error message");
             this.generateErrorMessage(status);
             return;
         } else if (action) {
@@ -307,7 +306,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         this.setState({
             errMsg: <div></div>,
         });
-        console.log("Clearing error message");
     }
 
     private rerender() {
