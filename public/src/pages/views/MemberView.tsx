@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Status, User } from '../../../proto/ag_pb';
+import { Course, Enrollment, Status } from "../../../proto/ag_pb";
 import { Search } from "../../components";
 import { searchForStudents } from '../../componentHelper';
 import { CourseManager, ILink, NavigationManager } from "../../managers";
