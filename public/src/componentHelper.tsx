@@ -2,7 +2,7 @@ import * as React from "react";
 import { Course, Enrollment, Group, User } from "../proto/ag_pb";
 import { IStudentLabsForCourse } from "./models";
 
-export function sortEnrollmentsByVisibility(enrols: Enrollment[]): Enrollment[] {
+export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
     let sorted: Enrollment[] = [];
     const active: Enrollment[] = [];
     const archived: Enrollment[] = [];
@@ -15,7 +15,9 @@ export function sortEnrollmentsByVisibility(enrols: Enrollment[]): Enrollment[] 
                 active.push(enrol);
                 break;
             case Enrollment.DisplayState.HIDDEN:
-                archived.push(enrol);
+                if (withHidden) {
+                    archived.push(enrol);
+                }
                 break;
             case Enrollment.DisplayState.UNSET:
                 active.push(enrol);
@@ -39,6 +41,8 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Course[] {
             case Enrollment.DisplayState.VISIBLE:
                 if (crs) active.push(crs);
                 break;
+            case Enrollment.DisplayState.UNSET:
+                if (crs) active.push(crs);
             default:
                 break;
         }

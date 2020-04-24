@@ -47,7 +47,7 @@ export class CourseListView extends React.Component<CourseListViewProps, CourseL
         super(props);
         this.state = {
             editing: false,
-            sortedCourses: sortEnrollmentsByVisibility(this.props.enrollments),
+            sortedCourses: sortEnrollmentsByVisibility(this.props.enrollments, true),
         }
     }
 
@@ -134,7 +134,7 @@ export class CourseListView extends React.Component<CourseListViewProps, CourseL
 
     private handleSearch(query: string) {
         this.setState({
-            sortedCourses: searchForCourses(sortEnrollmentsByVisibility(this.props.enrollments), query) as Enrollment[],
+            sortedCourses: searchForCourses(sortEnrollmentsByVisibility(this.props.enrollments, true), query) as Enrollment[],
         });
     }
 
