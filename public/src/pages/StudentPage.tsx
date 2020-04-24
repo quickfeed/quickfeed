@@ -273,7 +273,7 @@ export class StudentPage extends ViewPage {
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            const userEnrolls = sortEnrollmentsByVisibility(await this.courseMan.getEnrollmentsForUser(curUser.getId()));
+            const userEnrolls = sortEnrollmentsByVisibility(await this.courseMan.getEnrollmentsForUser(curUser.getId()), false);
             this.userCourses = [];
             this.activeUserCourses = [];
             this.GroupUserCourses = [];

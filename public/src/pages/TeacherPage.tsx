@@ -371,7 +371,7 @@ export class TeacherPage extends ViewPage {
 
     private async courseFunc(courseParam: string, fn: (course: Course) => View): View {
         const courseID = parseInt(courseParam, 10);
-        const course = this.courses.find(c => c.getId() === courseID);
+        const course = this.courses.find(c => c.getId() === courseID) ?? await this.courseMan.getCourse(courseID);
         if (course) {
             return fn(course);
         }
