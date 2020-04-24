@@ -361,7 +361,7 @@ export class TeacherPage extends ViewPage {
 
     private async getCourseURL(courseID: number): Promise<string> {
         const repoMap = this.repositories.get(courseID);
-        return repoMap?.get(Repository.Type.COURSEINFO) ?? "";
+        return repoMap?.get(Repository.Type.COURSEINFO)?.split("course-info")[0] ?? "";
     }
 
     private async courseFunc(courseParam: string, fn: (course: Course) => View): View {

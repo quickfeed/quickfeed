@@ -104,7 +104,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
 
     private getResultSelector(student: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
         const user = student.enrollment.getUser();
-        const displayName = user ? userRepoLink(user.getName(), user.getLogin()) : "";
+        const displayName = user ? userRepoLink(user.getLogin(), user.getName(), this.props.courseURL) : "";
         let selector: (string | JSX.Element | ICellElement)[] = [displayName];
         selector = selector.concat(student.labs.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
