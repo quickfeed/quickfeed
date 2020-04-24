@@ -199,9 +199,11 @@ export class TeacherPage extends ViewPage {
             // get full list of students and teachers
             const students = await this.courseMan.getUsersForCourse(
                 course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            console.log("Got all students: " + students.length);
             // get list of users who are not in group
             const freeStudents = await this.courseMan.getUsersForCourse(
                 course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            console.log("Got free students: " + students.length);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -228,9 +230,11 @@ export class TeacherPage extends ViewPage {
             // get full list of students and teachers
             const students = await this.courseMan.getUsersForCourse(
                 course, false, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            console.log("Got all students: " + students.length);
             // get list of users who are not in group
             const freeStudents = await this.courseMan.getUsersForCourse(
                 course, true, [Enrollment.UserStatus.STUDENT, Enrollment.UserStatus.TEACHER]);
+            console.log("Got free students: " + students.length);
             return <GroupForm
                 className="form-horizontal"
                 students={students}
@@ -250,6 +254,7 @@ export class TeacherPage extends ViewPage {
     public async courseUsers(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const all = await this.courseMan.getUsersForCourse(course);
+            console.log("Got all memebrs: " + all.length);
             const acceptedUsers: Enrollment[] = [];
             const pendingUsers: Enrollment[] = [];
             // TODO: Maybe move this to the Members view

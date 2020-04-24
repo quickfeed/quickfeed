@@ -59,8 +59,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getCoursesList();
     }
 
-    public async getCoursesForUser(user: User, statuses: Enrollment.UserStatus[], states: Enrollment.DisplayState[]): Promise<Course[]> {
-        const result = await this.grpcHelper.getCoursesByUser(user.getId(), statuses, states);
+    public async getCoursesForUser(user: User, statuses: Enrollment.UserStatus[]): Promise<Course[]> {
+        const result = await this.grpcHelper.getCoursesByUser(user.getId(), statuses);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }

@@ -230,7 +230,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesForUser(user: User, status: Enrollment.UserStatus[], states: Enrollment.DisplayState[]): Promise<Course[]> {
+    public async getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Course[]> {
         const cLinks: Enrollment[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {

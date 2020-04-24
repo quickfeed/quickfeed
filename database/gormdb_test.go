@@ -491,10 +491,7 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	courses, err := db.GetCoursesByUser(user.ID, []pb.Enrollment_DisplayState{
-		pb.Enrollment_VISIBLE,
-		pb.Enrollment_FAVORITE,
-	})
+	courses, err := db.GetCoursesByUser(user.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

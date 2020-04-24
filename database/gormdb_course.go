@@ -96,8 +96,8 @@ func (db *GormDB) GetCourses(courseIDs ...uint64) ([]*pb.Course, error) {
 // for the given user id.
 // If enrollment statuses is provided, the set of courses returned
 // is filtered according to these enrollment statuses.
-func (db *GormDB) GetCoursesByUser(userID uint64, states []pb.Enrollment_DisplayState, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error) {
-	enrollments, err := db.getEnrollments(&pb.User{ID: userID}, states, statuses...)
+func (db *GormDB) GetCoursesByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Course, error) {
+	enrollments, err := db.getEnrollments(&pb.User{ID: userID}, statuses...)
 	if err != nil {
 		return nil, err
 	}
