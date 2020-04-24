@@ -117,8 +117,8 @@ function labRepoLink(course: string, login: string): string {
 
 // If the courseURL parameter is given, returns a link to the student lab repository,
 // otherwise returns link to the user's GitHub profile.
-export function generateGitLink(user: string, courseURL?: string): string {
-    return courseURL ? labRepoLink(courseURL, user) : gitUserLink(user);
+export function userRepoLink(login: string, name: string, courseURL?: string): JSX.Element {
+    return <a href={courseURL ? labRepoLink(courseURL, login) : gitUserLink(login)} target="_blank">{ name }</a>;
 }
 
 // Returns a URL-friendly version of the given string.

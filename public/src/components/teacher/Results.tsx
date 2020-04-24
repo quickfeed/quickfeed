@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { generateGitLink, searchForLabs } from "../../componentHelper";
+import { searchForLabs, userRepoLink } from "../../componentHelper";
 
 interface IResultsProp {
     course: Course;
@@ -104,7 +104,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
 
     private getResultSelector(student: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
         const user = student.enrollment.getUser();
-        const displayName = user ? this.generateUserRepoLink(user.getName(), user.getLogin()) : "";
+        const displayName = user ? userRepoLink(user.getName(), user.getLogin()) : "";
         let selector: (string | JSX.Element | ICellElement)[] = [displayName];
         selector = selector.concat(student.labs.filter((e, i) => !e.assignment.getIsgrouplab()).map(
             (e, i) => {
@@ -122,10 +122,6 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 return iCell;
             }));
         return selector;
-    }
-
-    private generateUserRepoLink(name: string, userName: string): JSX.Element {
-        return <a href={generateGitLink(userName, this.props.courseURL)} target="_blank">{ name }</a>;
     }
 
     private handleOnclick(item: IStudentLab): void {

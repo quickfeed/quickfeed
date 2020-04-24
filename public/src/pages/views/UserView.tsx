@@ -4,7 +4,7 @@ import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../com
 import { ILink, NavigationManager, UserManager } from "../../managers";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { generateGitLink, searchForStudents } from "../../componentHelper";
+import { searchForStudents, userRepoLink } from '../../componentHelper';
 
 interface IUserViewerProps {
     users: Enrollment[];
@@ -82,12 +82,10 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         }
         if (enr.getStatus() === Enrollment.UserStatus.TEACHER) {
             selector.push(
-                <span className="text-muted">
-                    <a href={generateGitLink(user.getLogin())} target="_blank">{user.getName()}</a>
+                <span className="text-muted">{userRepoLink(user.getLogin(), user.getName())}
                 </span>);
         } else {
-            selector.push(
-                <a href={generateGitLink(user.getLogin())} target="_blank">{user.getName()}</a>);
+            selector.push(userRepoLink(user.getLogin(), user.getName()));
         }
         selector.push(
             <a href={"mailto:" + enr.getUser()?.getEmail()}>{user?.getEmail()}</a>,
