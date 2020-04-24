@@ -2,7 +2,7 @@ import * as React from "react";
 import { Enrollment } from "../../../proto/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink } from "../../managers/NavigationManager";
-import { searchForCourses, sortCoursesByVisibility } from "../../componentHelper";
+import { searchForCourses, sortEnrollmentsByVisibility } from "../../componentHelper";
 
 interface CourseListViewProps {
     enrollments: Enrollment[];
@@ -47,7 +47,7 @@ export class CourseListView extends React.Component<CourseListViewProps, CourseL
         super(props);
         this.state = {
             editing: false,
-            sortedCourses: sortCoursesByVisibility(this.props.enrollments),
+            sortedCourses: sortEnrollmentsByVisibility(this.props.enrollments),
         }
     }
 
@@ -134,7 +134,7 @@ export class CourseListView extends React.Component<CourseListViewProps, CourseL
 
     private handleSearch(query: string) {
         this.setState({
-            sortedCourses: searchForCourses(sortCoursesByVisibility(this.props.enrollments), query) as Enrollment[],
+            sortedCourses: searchForCourses(sortEnrollmentsByVisibility(this.props.enrollments), query) as Enrollment[],
         });
     }
 

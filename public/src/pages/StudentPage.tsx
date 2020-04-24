@@ -12,7 +12,7 @@ import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
 import { showLoader } from "../loader";
 import { CourseListView } from "./views/CourseListView";
-import { sortCoursesByVisibility } from "../componentHelper";
+import { sortEnrollmentsByVisibility } from "../componentHelper";
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -273,7 +273,7 @@ export class StudentPage extends ViewPage {
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            const userEnrolls = sortCoursesByVisibility(await this.courseMan.getEnrollmentsForUser(curUser.getId()));
+            const userEnrolls = sortEnrollmentsByVisibility(await this.courseMan.getEnrollmentsForUser(curUser.getId()));
             this.userCourses = [];
             this.activeUserCourses = [];
             this.GroupUserCourses = [];

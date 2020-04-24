@@ -11,6 +11,7 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
+import { sortCoursesByVisibility } from '../componentHelper';
 
 export class TeacherPage extends ViewPage {
 
@@ -352,7 +353,8 @@ export class TeacherPage extends ViewPage {
     private async getCourses(statuses: Enrollment.UserStatus[]): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return this.courseMan.getCoursesForUser(curUsr, statuses, [Enrollment.DisplayState.FAVORITE, Enrollment.DisplayState.VISIBLE]);
+            const enrols = await this.courseMan.getEnrollmentsForUser(curUsr.getId(), statuses);
+            return sortCoursesByVisibility(enrols);
         }
         return [];
     }

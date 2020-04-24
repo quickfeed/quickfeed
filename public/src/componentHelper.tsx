@@ -2,7 +2,7 @@ import * as React from "react";
 import { Course, Enrollment, Group, User } from "../proto/ag_pb";
 import { IStudentLabsForCourse } from "./models";
 
-export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
+export function sortEnrollmentsByVisibility(enrols: Enrollment[]): Enrollment[] {
     let sorted: Enrollment[] = [];
     const active: Enrollment[] = [];
     const archived: Enrollment[] = [];
@@ -24,6 +24,27 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Enrollment[] {
     })
     sorted = sorted.concat(active, archived);
     return sorted;
+}
+
+// used in menus: ignores hidden courses
+export function sortCoursesByVisibility(enrols: Enrollment[]): Course[] {
+    let favorite: Course[] = [];
+    const active: Course[] = [];
+    enrols.forEach((e) => {
+        const crs = e.getCourse();
+        switch (e.getState()) {
+            case Enrollment.DisplayState.FAVORITE:
+                if (crs) favorite.push(crs);
+                break;
+            case Enrollment.DisplayState.VISIBLE:
+                if (crs) active.push(crs);
+                break;
+            default:
+                break;
+        }
+    });
+    favorite = favorite.concat(active);
+    return favorite;
 }
 
 export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {
