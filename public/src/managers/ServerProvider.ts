@@ -28,6 +28,7 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
+import { GradingBenchmark } from '../../proto/ag_pb';
 
 interface IEndpoints {
     user: string;
@@ -350,17 +351,13 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     private toISubmission(sbm: Submission): ISubmission {
-        let buildInfoAsString = "";
-        let scoreInfoAsString = "";
-        if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {
-            buildInfoAsString = sbm.getBuildinfo();
-        }
-        if (sbm.getScoreobjects() && (sbm.getScoreobjects().trim().length > 2)) {
-            scoreInfoAsString = sbm.getScoreobjects();
-        }
+        const buildInfoAsString = sbm.getBuildinfo();
+        const scoreInfoAsString = sbm.getScoreobjects();
+        const benchmarksAsString = sbm.getFeedback();
 
         let buildInfo: IBuildInfo;
         let scoreObj: ITestCases[];
+        let parsedBenchmarks: GradingBenchmark[];
 
         // IMPORTANT: Field names of the Score struct found in the kit/score/score.go,
         // of the ITestCases struct found in the public/src/models.ts,
@@ -374,6 +371,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
             );
         }
+        console.log("Parsed build info: " + buildInfo);
         try {
             scoreObj = JSON.parse(scoreInfoAsString);
         } catch (e) {
@@ -381,6 +379,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 "[{\"TestName\": \"Test 1\", \"Score\": 3, \"MaxScore\": 4, \"Weight\": 100}]",
             );
         }
+        console.log("Parsed score objects: " + scoreObj.toString());
+        try {
+            parsedBenchmarks = JSON.parse(benchmarksAsString);
+        } catch (e) {
+            parsedBenchmarks = JSON.parse("[{\"id\": \"1\", \"assignmentId\": \"2\", \"heading\": \"Heading\", \"criteriaList\": [{\"id\": \"3\", \"benchmarkId\": \"1\", \"description\": \"somethimg\", \"grade\": \"0\"}] }]",
+            )
+        }
+        console.log("Parsed benchmarks: " + parsedBenchmarks.toString());
+
+
         let failed = 0;
         let passed = 0;
         if (scoreObj) {
@@ -407,6 +415,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             buildLog: buildInfo.buildlog,
             testCases: scoreObj,
             approved: sbm.getApproved(),
+            benchmarks: parsedBenchmarks,
+            feedbackReady: sbm.getFeedbackready(),
         };
         return isbm;
     }

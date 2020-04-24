@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, User } from "../proto/ag_pb";
+import { Assignment, Course, Enrollment, User, GradingBenchmark } from '../proto/ag_pb';
 
 export interface IUser {
     id: number;
@@ -60,4 +60,7 @@ export interface ISubmission {
     buildLog: string;
     testCases: ITestCases[];
     approved: boolean;
+
+    benchmarks: GradingBenchmark[];
+    feedbackReady: boolean;
 }
