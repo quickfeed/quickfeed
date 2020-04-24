@@ -217,7 +217,6 @@ message EnrollmentRequest {
 message EnrollmentStatusRequest {
     uint64 userID = 1;
     repeated Enrollment.UserStatus statuses = 2;
-    repeated Enrollment.DisplayState states = 3;
 }
 
 message SubmissionRequest {

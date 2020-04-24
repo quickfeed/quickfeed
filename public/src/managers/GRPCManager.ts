@@ -91,11 +91,10 @@ export class GrpcManager {
         return this.grpcSend<Courses>(this.agService.getCourses, new Void());
     }
 
-    public getCoursesByUser(userID: number, statuses: Enrollment.UserStatus[], states: Enrollment.DisplayState[]): Promise<IGrpcResponse<Courses>> {
+    public getCoursesByUser(userID: number, statuses: Enrollment.UserStatus[]): Promise<IGrpcResponse<Courses>> {
         const request = new EnrollmentStatusRequest();
         request.setUserid(userID);
         request.setStatusesList(statuses);
-        request.setStatesList(states);
         return this.grpcSend<Courses>(this.agService.getCoursesByUser, request);
     }
 

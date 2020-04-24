@@ -6790,7 +6790,7 @@ proto.EnrollmentRequest.prototype.clearStatusesList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.EnrollmentStatusRequest.repeatedFields_ = [2,3];
+proto.EnrollmentStatusRequest.repeatedFields_ = [2];
 
 
 
@@ -6824,8 +6824,7 @@ proto.EnrollmentStatusRequest.prototype.toObject = function(opt_includeInstance)
 proto.EnrollmentStatusRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     userid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    statusesList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    statesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f
+    statusesList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -6870,10 +6869,6 @@ proto.EnrollmentStatusRequest.deserializeBinaryFromReader = function(msg, reader
       var value = /** @type {!Array<!proto.Enrollment.UserStatus>} */ (reader.readPackedEnum());
       msg.setStatusesList(value);
       break;
-    case 3:
-      var value = /** @type {!Array<!proto.Enrollment.DisplayState>} */ (reader.readPackedEnum());
-      msg.setStatesList(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -6914,13 +6909,6 @@ proto.EnrollmentStatusRequest.serializeBinaryToWriter = function(message, writer
   if (f.length > 0) {
     writer.writePackedEnum(
       2,
-      f
-    );
-  }
-  f = message.getStatesList();
-  if (f.length > 0) {
-    writer.writePackedEnum(
-      3,
       f
     );
   }
@@ -6979,43 +6967,6 @@ proto.EnrollmentStatusRequest.prototype.addStatuses = function(value, opt_index)
  */
 proto.EnrollmentStatusRequest.prototype.clearStatusesList = function() {
   return this.setStatusesList([]);
-};
-
-
-/**
- * repeated Enrollment.DisplayState states = 3;
- * @return {!Array<!proto.Enrollment.DisplayState>}
- */
-proto.EnrollmentStatusRequest.prototype.getStatesList = function() {
-  return /** @type {!Array<!proto.Enrollment.DisplayState>} */ (jspb.Message.getRepeatedField(this, 3));
-};
-
-
-/**
- * @param {!Array<!proto.Enrollment.DisplayState>} value
- * @return {!proto.EnrollmentStatusRequest} returns this
- */
-proto.EnrollmentStatusRequest.prototype.setStatesList = function(value) {
-  return jspb.Message.setField(this, 3, value || []);
-};
-
-
-/**
- * @param {!proto.Enrollment.DisplayState} value
- * @param {number=} opt_index
- * @return {!proto.EnrollmentStatusRequest} returns this
- */
-proto.EnrollmentStatusRequest.prototype.addStates = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 3, value, opt_index);
-};
-
-
-/**
- * Clears the list making it empty but non-null.
- * @return {!proto.EnrollmentStatusRequest} returns this
- */
-proto.EnrollmentStatusRequest.prototype.clearStatesList = function() {
-  return this.setStatesList([]);
 };
 
 

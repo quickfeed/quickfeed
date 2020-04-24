@@ -10,7 +10,7 @@ import { ILogger } from "./LogManager";
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
     getAssignments(courseID: number): Promise<Assignment[]>;
-    getCoursesForUser(user: User, status: Enrollment.UserStatus[], states: Enrollment.DisplayState[]): Promise<Course[]>;
+    getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Course[]>;
     getUsersForCourse(course: Course, noGroupMemebers?: boolean, status?: Enrollment.UserStatus[]):
         Promise<Enrollment[]>;
 
@@ -87,7 +87,7 @@ export class CourseManager {
      * Get all courses where user is enrolled into
      */
     public async getCoursesForUser(user: User, status: Enrollment.UserStatus[], states: Enrollment.DisplayState[]): Promise<Course[]> {
-        return this.courseProvider.getCoursesForUser(user, status, states);
+        return this.courseProvider.getCoursesForUser(user, status);
     }
 
     /**
