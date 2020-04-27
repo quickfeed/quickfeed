@@ -373,7 +373,7 @@ service AutograderService {
     rpc UpdateCourseVisibility(Enrollment) returns (Void) {}
  
     // assignments //
-
+    
     rpc GetAssignments(CourseRequest) returns (Assignments) {}
     rpc UpdateAssignments(CourseRequest) returns (Void) {}
 
@@ -393,6 +393,17 @@ service AutograderService {
     rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
+    
+    // manual grading //
+    rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
+    rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
+    rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
+
+    rpc CreateCriterion(GradingCriterion) returns (GradingCriterion) {}
+    rpc UpdateCriterion(GradingCriterion) returns (Void) {}
+    rpc DeleteCriterion(GradingCriterion) returns (Void) {}
+
+
     rpc UpdateFeedback(Submission) returns (Void) {}
 
     // misc //

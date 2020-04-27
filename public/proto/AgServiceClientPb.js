@@ -92,6 +92,24 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
+        this.methodInfoCreateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.GradingBenchmark, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.GradingBenchmark.deserializeBinary);
+        this.methodInfoUpdateBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoDeleteBenchmark = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoCreateCriterion = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.GradingCriterion, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.GradingCriterion.deserializeBinary);
+        this.methodInfoUpdateCriterion = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoDeleteCriterion = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoUpdateFeedback = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
@@ -224,6 +242,30 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.rebuildSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission, callback);
+    };
+    AutograderServiceClient.prototype.createBenchmark = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/CreateBenchmark', request, metadata || {}, this.methodInfoCreateBenchmark, callback);
+    };
+    AutograderServiceClient.prototype.updateBenchmark = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateBenchmark', request, metadata || {}, this.methodInfoUpdateBenchmark, callback);
+    };
+    AutograderServiceClient.prototype.deleteBenchmark = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/DeleteBenchmark', request, metadata || {}, this.methodInfoDeleteBenchmark, callback);
+    };
+    AutograderServiceClient.prototype.createCriterion = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/CreateCriterion', request, metadata || {}, this.methodInfoCreateCriterion, callback);
+    };
+    AutograderServiceClient.prototype.updateCriterion = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateCriterion', request, metadata || {}, this.methodInfoUpdateCriterion, callback);
+    };
+    AutograderServiceClient.prototype.deleteCriterion = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/DeleteCriterion', request, metadata || {}, this.methodInfoDeleteCriterion, callback);
     };
     AutograderServiceClient.prototype.updateFeedback = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
