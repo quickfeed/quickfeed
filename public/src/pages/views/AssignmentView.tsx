@@ -6,12 +6,13 @@ import { BootstrapButton } from "../../components/bootstrap/BootstrapButton";
 interface AssignmentViewProps {
     course: Course;
     assignment: Assignment;
-    onUpdate: (assignmentID: number, benchmarkID?: number) => Promise<boolean>
+    onUpdate: (benchmarkID?: number) => Promise<boolean>
     benchmarks: GradingBenchmark[];
 }
 
 interface AssignmentViewState {
     editing: boolean;
+    open: boolean;
 }
 
 export class AssigmnentView extends React.Component<AssignmentViewProps, AssignmentViewState> {
@@ -20,23 +21,17 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         super(props);
         this.state = {
             editing: false,
+            open: false,
         }
     }
 
     public render() {
         const newBmButton = <BootstrapButton
             onClick = {() => { this.addNewBenchmark("New benchmark header", this.props.assignment.getId())}}
-        >Add a new benchmark</BootstrapButton>
+        >Add new grading benchmark</BootstrapButton>
         return <div>
-            <h1>{this.props.course.getName()}: {this.props.assignment.getName()}</h1>
-
-            // tables for every benchmark + add new criterion
-            {this.renderBenchmarkTables()}
-            {newBmButton}
-
-            // add new benchmark button/form
-            <BootstrapButton>Add new grading benchmark</BootstrapButton>
-
+            <h3 onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
+            {this.state.open ? (<div>{this.renderBenchmarkTables()}</div>) : null}
         </div>
     }
 
@@ -81,7 +76,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         console.log("Editing criterion: " + c.getDescription());
     }
 
-    private handleDelete(c: GradingCriterion) {
+    private handleDelete(bm: GradingBenchmark, c: GradingCriterion) {
         console.log("Deleting " + c.getDescription());
     }
     private addNewCriteria(bm: GradingBenchmark, description: string) {
@@ -97,6 +92,12 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         bm.setHeading(heading);
         bm.setAssignmentid(assignmentID);
         // update server
+    }
+
+    private toggleOpen() {
+        this.setState({
+            open: !this.state.open,
+        })
     }
 
 

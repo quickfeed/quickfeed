@@ -5,14 +5,13 @@ import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager }
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
-
-import { Assignment, Course, Enrollment, Group, Repository, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
 import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHelper';
-import { DynamicTable } from "../components/data/DynamicTable";
+import { AssigmnentView } from "./views/AssignmentView";
 
 export class TeacherPage extends ViewPage {
 
@@ -111,7 +110,7 @@ export class TeacherPage extends ViewPage {
             return <div key="head">
                 <h1>Overview for {course.getName()}</h1>
                 {button}
-                {await this.generateAssignmentTable(course.getId())}
+                {await this.generateAssignmentList(course)}
             </div>;
         });
     }
@@ -397,13 +396,31 @@ export class TeacherPage extends ViewPage {
         return allRepoMap;
     }
 
-    private async generateAssignmentTable(courseID: number): Promise<JSX.Element> {
-        const assignments: Assignment[] = await this.courseMan.getAssignments(courseID);
-        return <DynamicTable
-            header={["Assignments"]}
-            data={assignments}
-            selector={(assignment: Assignment) => [this.generateAssignmentElement(assignment.getName())]}
-        ></DynamicTable>
+    private async generateAssignmentList(course: Course): Promise<JSX.Element> {
+        const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
+        
+        // TEMP testing
+        const b1 = new GradingBenchmark();
+        b1.setHeading("Benchmark 1");
+        b1.setId(1);
+        const c1 = new GradingCriterion();
+        c1.setBenchmarkid(1);
+        c1.setDescription("Does it crash the application?");
+        c1.setId(1);
+        b1.addCriteria(c1);
+        // end of TEMP
+
+        return <div>{
+            assignments.map(a => <AssigmnentView 
+                course={course}
+                assignment={a}
+                onUpdate={async (bmID: number) => {
+                    console.log("Updating benchmark " + bmID + " for assignment " + a.getId());
+                    return true;
+                }}
+                benchmarks={[b1]}
+            ></AssigmnentView>)
+            }</div>
     }
 
     private generateAssignmentElement(assignment: string): JSX.Element {

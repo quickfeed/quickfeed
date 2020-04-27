@@ -571,6 +571,12 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 	return submission, nil
 }
 
+// UpdateFeedback adds a manual review to a student submission
+func (s *AutograderService) UpdateFeedback(ctx context.Context, in *pb.Submission) (*pb.Void, error) {
+	s.logger.Debugf("Uodating feedback: %+v", in)
+	return &pb.Void{}, nil
+}
+
 // GetAssignments returns a list of all assignments for the given course.
 // Access policy: Any User.
 func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Assignments, error) {
