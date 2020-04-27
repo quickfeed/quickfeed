@@ -1,11 +1,9 @@
 import * as React from "react";
 import { Assignment, Course, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
-import { DynamicTable } from "../../components/data/DynamicTable";
 import { BootstrapButton } from "../../components/bootstrap/BootstrapButton";
 import { EditBenchmark } from "../../components/teacher/EditBenchmark";
 
 interface AssignmentViewProps {
-    course: Course;
     assignment: Assignment;
     updateBenchmark: (bm: GradingBenchmark) => boolean;
     addBenchmark: (bm: GradingBenchmark) => boolean;

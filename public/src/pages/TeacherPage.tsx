@@ -398,7 +398,7 @@ export class TeacherPage extends ViewPage {
 
     private async generateAssignmentList(course: Course): Promise<JSX.Element> {
         const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
-        
+
         // TEMP testing
         const b1 = new GradingBenchmark();
         b1.setHeading("Benchmark 1");
@@ -413,20 +413,34 @@ export class TeacherPage extends ViewPage {
         return <div>{
             assignments.map(a => <AssigmnentView
                 key={a.getId()}
-                course={course}
                 assignment={a}
-                onUpdate={async (bmID: number) => {
-                    console.log("Updating benchmark " + bmID + " for assignment " + a.getId());
+                updateBenchmark={(bm: GradingBenchmark) => {
+                    console.log("Updating benchmark " + bm.getHeading() + " for assignment " + a.getName());
                     return true;
                 }}
+                addBenchmark={(bm: GradingBenchmark) => {
+                    console.log("Adding new benchmark " + bm.getHeading() + " to assignment " + a.getName());
+                    return true;
+                }}
+                removeBenchmark={(id: number) => {
+                    console.log("Removing benchmark " + id + " from assignment " + a.getName());
+                    return true;
+                }}
+                updateCriterion={(c: GradingCriterion) => {
+                    console.log("Updating criterion: " + c.getDescription() + " for assignment " + a.getName());
+                    return true;
+                }}
+                addCriterion={(c: GradingCriterion) => {
+                    console.log("Adding a new criterion: " + c.toString() + " to assignment " + a.getName());
+                    return true;
+                }}
+                removeCriterion={(cid: number, bid: number) => {
+                    console.log("Removing criterion " + cid + " from benchmark " + bid + " of assignment " + a.getName());
+                    return true;
+                }}
+
                 benchmarks={[b1]}
             ></AssigmnentView>)
             }</div>
-    }
-
-    private generateAssignmentElement(assignment: string): JSX.Element {
-    return <div onClick={
-       () =>  {console.log("Show AssignmentView for assignment: " + assignment);}
-    }>{assignment}</div>
     }
 }
