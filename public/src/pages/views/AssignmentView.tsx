@@ -2,11 +2,17 @@ import * as React from "react";
 import { Assignment, Course, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
 import { DynamicTable } from "../../components/data/DynamicTable";
 import { BootstrapButton } from "../../components/bootstrap/BootstrapButton";
+import { EditBenchmark } from "../../components/teacher/EditBenchmark";
 
 interface AssignmentViewProps {
     course: Course;
     assignment: Assignment;
-    onUpdate: (benchmarkID?: number) => Promise<boolean>
+    updateBenchmark: (bm: GradingBenchmark) => boolean;
+    addBenchmark: (bm: GradingBenchmark) => boolean;
+    removeBenchmark: (id: number) => boolean;
+    updateCriterion: (c: GradingCriterion) => boolean;
+    addCriterion: (c: GradingCriterion) => boolean;
+    removeCriterion: (criterionID: number, benchmarkID: number) => boolean;
     benchmarks: GradingBenchmark[];
 }
 
@@ -31,23 +37,30 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         >Add new grading benchmark</BootstrapButton>
         return <div>
             <h3 onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
-            {this.state.open ? (<div>{this.renderBenchmarkTables()}</div>) : null}
+            {this.state.open ? (<div>{this.renderBenchmarks()}</div>) : null}
         </div>
     }
 
-    private renderBenchmarkTables(): JSX.Element[] {
-        const tables: JSX.Element[] = [];
-        this.props.benchmarks.forEach((e) => {
+    private renderBenchmarks(): JSX.Element {
+        return <div>
+            {this.props.benchmarks.map(bm => <EditBenchmark
+                key={bm.getId()}
+                benchmark={bm}
+                onAdd={(c: GradingCriterion) => {
+                    return this.props.addCriterion(c);
+                }}
+                onUpdate={(input: string) => {
+                    bm.setHeading(input);
+                    return this.props.updateBenchmark(bm);
+                }}
+                onDelete={() => this.props.removeBenchmark(bm.getId())}
+                updateCriterion={(c: GradingCriterion) => {
+                    return this.props.updateCriterion(c);
+                }}
+                deleteCriterion={(id: number) => this.props.removeCriterion(id, bm.getId())}
 
-            const tab = <DynamicTable
-                header={[e.getHeading(), "Action"]}
-                data={e.getCriteriaList()}
-                selector={(c: GradingCriterion) => [c.getDescription(), this.generateRowButtons(e, c)]}
-                footer={ this.generateFooterRow(e)}
-            ></DynamicTable>;
-            tables.push(tab);
-        });
-        return tables;
+            />)}
+        </div>
     }
 
     private generateRowButtons(bm: GradingBenchmark, c: GradingCriterion): JSX.Element {
