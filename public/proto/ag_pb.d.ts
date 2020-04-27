@@ -654,8 +654,10 @@ export class Submission extends jspb.Message {
   getApproved(): boolean;
   setApproved(value: boolean): void;
 
-  getFeedback(): string;
-  setFeedback(value: string): void;
+  getFeedbackList(): Array<Review>;
+  setFeedbackList(value: Array<Review>): void;
+  clearFeedbackList(): void;
+  addFeedback(value?: Review, index?: number): Review;
 
   getFeedbackready(): boolean;
   setFeedbackready(value: boolean): void;
@@ -679,7 +681,7 @@ export namespace Submission {
     buildinfo: string,
     commithash: string,
     approved: boolean,
-    feedback: string,
+    feedbackList: Array<Review.AsObject>,
     feedbackready: boolean,
   }
 }
@@ -777,6 +779,44 @@ export namespace GradingCriterion {
     NONE = 0,
     FAILED = 1,
     PASSED = 2,
+  }
+}
+
+export class Review extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getSubmissionid(): number;
+  setSubmissionid(value: number): void;
+
+  getReviewerid(): number;
+  setReviewerid(value: number): void;
+
+  getReview(): string;
+  setReview(value: string): void;
+
+  getComment(): string;
+  setComment(value: string): void;
+
+  getReady(): boolean;
+  setReady(value: boolean): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Review.AsObject;
+  static toObject(includeInstance: boolean, msg: Review): Review.AsObject;
+  static serializeBinaryToWriter(message: Review, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Review;
+  static deserializeBinaryFromReader(message: Review, reader: jspb.BinaryReader): Review;
+}
+
+export namespace Review {
+  export type AsObject = {
+    id: number,
+    submissionid: number,
+    reviewerid: number,
+    review: string,
+    comment: string,
+    ready: boolean,
   }
 }
 

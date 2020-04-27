@@ -189,7 +189,7 @@ message Submission {
     string buildInfo = 7;
     string commitHash = 8;
     bool approved = 9;
-    string feedback = 10;  // JSON-encoded reviews
+    repeated Review feedback = 10;  // JSON-encoded reviews
     bool feedbackReady = 11; // defines whether the feedback is visible for the student or group members
 }
 
@@ -218,6 +218,15 @@ message GradingCriterion {
     string description = 3;
     Grade grade = 4;
     string comment = 5;
+}
+
+message Review {
+    uint64 ID = 1;
+    uint64 submissionID = 2;
+    uint64 reviewerID = 3;
+    string review = 4; // JSON encoded grading criteria
+    string comment = 5;
+    bool ready = 6;
 }
 
 ////    REQUESTS AND RESPONSES      \\\\
