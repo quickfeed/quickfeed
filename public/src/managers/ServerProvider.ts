@@ -3,6 +3,7 @@ import {
     Course,
     CourseSubmissions,
     Enrollment,
+    GradingBenchmark,
     Group,
     Organization,
     Repository,
@@ -14,6 +15,7 @@ import {
 import {
     IStudentLabsForCourse,
     IBuildInfo,
+    IReview,
     IStudentLab,
     ISubmission,
     ITestCases,
@@ -28,8 +30,6 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
-import { GradingBenchmark } from '../../proto/ag_pb';
-
 interface IEndpoints {
     user: string;
     auth: string;
@@ -353,12 +353,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     private toISubmission(sbm: Submission): ISubmission {
         const buildInfoAsString = sbm.getBuildinfo();
         const scoreInfoAsString = sbm.getScoreobjects();
-        const benchmarksAsString = sbm.getFeedback();
-
         let buildInfo: IBuildInfo;
         let scoreObj: ITestCases[];
-        let parsedBenchmarks: GradingBenchmark[];
-
         // IMPORTANT: Field names of the Score struct found in the kit/score/score.go,
         // of the ITestCases struct found in the public/src/models.ts,
         // and names in the string passed to JSON.parse() method must match.
@@ -380,13 +376,30 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             );
         }
         console.log("Parsed score objects: " + scoreObj.toString());
-        try {
-            parsedBenchmarks = JSON.parse(benchmarksAsString);
-        } catch (e) {
-            parsedBenchmarks = JSON.parse("[{\"id\": \"1\", \"assignmentId\": \"2\", \"heading\": \"Heading\", \"criteriaList\": [{\"id\": \"3\", \"benchmarkId\": \"1\", \"description\": \"somethimg\", \"grade\": \"0\"}] }]",
-            )
-        }
-        console.log("Parsed benchmarks: " + parsedBenchmarks.toString());
+
+        const reviews = sbm.getFeedbackList();
+        const ireviews: IReview[] = [];
+        reviews.forEach(r => {
+            let parsedReview: GradingBenchmark[];
+            try {
+                parsedReview = JSON.parse(r.getReview());
+            } catch (e) {
+                parsedReview = JSON.parse(
+                    "[{\"id\": \"1\", \"assignmentId\": \"2\", \"heading\": \"Heading\", \"comment\": \"Comment\", [\"id\": \"3\", \"benchmarkId\": \"1\", \"description\": \"Description\", \"grade\": \"0\", \"comment\": \"Comment\"]}]"
+                );
+            }
+            console.log("Parsed review: " + parsedReview.toString());
+
+            const review: IReview = {
+                id: r.getId(),
+                submissionID: r.getSubmissionid(),
+                reviewerID: r.getReviewerid(),
+                review: parsedReview,
+                comment: r.getComment(),
+                ready: r.getReady(),
+            }
+            ireviews.push(review);
+        })
 
 
         let failed = 0;
@@ -415,7 +428,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             buildLog: buildInfo.buildlog,
             testCases: scoreObj,
             approved: sbm.getApproved(),
-            benchmarks: parsedBenchmarks,
+            reviews: ireviews,
             feedbackReady: sbm.getFeedbackready(),
         };
         return isbm;

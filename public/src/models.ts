@@ -45,6 +45,16 @@ export interface ITestCases {
     Weight: number;
 }
 
+export interface IReview {
+    id: number;
+    submissionID: number;
+    reviewerID: number;
+    review: GradingBenchmark[];
+    comment: string;
+    ready: boolean;
+
+}
+
 // A student/group submission
 export interface ISubmission {
     id: number;
@@ -60,7 +70,6 @@ export interface ISubmission {
     buildLog: string;
     testCases: ITestCases[];
     approved: boolean;
-
-    benchmarks: GradingBenchmark[];
+    reviews: IReview[];
     feedbackReady: boolean;
 }
