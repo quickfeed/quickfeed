@@ -59,7 +59,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&pb.UsedSlipDays{},
 		&pb.GradingBenchmark{},
 		&pb.GradingCriterion{},
-		&pb.Feedback{},
+		&pb.Review{},
 	).Error; err != nil {
 		return nil, err
 	}
