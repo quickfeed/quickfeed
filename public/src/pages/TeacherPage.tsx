@@ -411,7 +411,8 @@ export class TeacherPage extends ViewPage {
         // end of TEMP
 
         return <div>{
-            assignments.map(a => <AssigmnentView 
+            assignments.map(a => <AssigmnentView
+                key={a.getId()}
                 course={course}
                 assignment={a}
                 onUpdate={async (bmID: number) => {

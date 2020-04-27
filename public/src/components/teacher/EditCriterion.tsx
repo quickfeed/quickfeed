@@ -1,23 +1,22 @@
 import * as React from "react";
-import { GradingCriterion } from '../../../proto/ag_pb';
+import { GradingCriterion } from "../../../proto/ag_pb";
 
-interface EditCriterionRowProps {
+interface EditCriterionProps {
     criterion: GradingCriterion;
-    onUpdate: (criterion: GradingCriterion) => boolean;
+    onUpdate: (newDescription: string) => boolean;
     onDelete: () => void;
 
-    // assignment?: Assignment // editable description if assignment view, editable passed/failed if not
+    // assignment?: boolean // editable description if assignment view, editable passed/failed if not
 }
 
-interface EditCriterionRowState {
+interface EditCriterionState {
     editing: boolean;
     description: string;
 }
 
-export class EditCriterionRow extends React.Component<EditCriterionRowProps, EditCriterionRowState> {
+export class EditCriterion extends React.Component<EditCriterionProps, EditCriterionState> {
 
-
-    constructor(props: EditCriterionRowProps) {
+    constructor(props: EditCriterionProps) {
         super(props);
         this.state = {
             editing: false,
@@ -26,8 +25,16 @@ export class EditCriterionRow extends React.Component<EditCriterionRowProps, Edi
     }
 
     public render() {
-        return this.state.editing ?
-        this.renderEditView() : this.renderTextView();
+        return <div>
+            {this.state.editing ? this.renderEditView() : this.renderTextView()}{this.renderDeleteButton()}
+        </div>;
+    }
+
+    private renderDeleteButton(): JSX.Element {
+        return <button 
+            className="btn btn-danger"
+            onClick={() => this.props.onDelete()}
+        >X</button>
     }
 
     private toggleEditState() {
@@ -40,14 +47,11 @@ export class EditCriterionRow extends React.Component<EditCriterionRowProps, Edi
         this.setState({
             editing: false,
         }, () => {
-            const c = this.props.criterion;
-            c.setDescription(this.state.description);
-            if (!this.props.onUpdate(c)) {
+            if (!this.props.onUpdate(this.state.description)) {
                 this.setState({
                     description: this.props.criterion.getDescription(),
                 })
             }
-
         })
     }
 
@@ -64,13 +68,13 @@ export class EditCriterionRow extends React.Component<EditCriterionRowProps, Edi
                 defaultValue={this.state.description}
                 onChange={(e) => this.setDescription(e.target.value)}
         />
-        <div className="btn-group action-btn">
+        <div className="btn-group">
         <button
             className="btn btn-primary"
             onClick={() => this.updateDescription()}>OK</button>
         <button
             className="btn btn-danger"
-            onClick={() => this.props.onDelete()}>X</button></div>
+            onClick={() => this.setState({editing: false, description: this.props.criterion.getDescription()})}>X</button></div>
         </div>
     }
 
@@ -79,4 +83,6 @@ export class EditCriterionRow extends React.Component<EditCriterionRowProps, Edi
             description: inputText,
         })
     }
+
+    // reset state: editing false, desc to initial
 }
