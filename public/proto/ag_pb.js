@@ -6209,7 +6209,7 @@ proto.Submissions.prototype.clearSubmissionsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.GradingBenchmark.repeatedFields_ = [4];
+proto.GradingBenchmark.repeatedFields_ = [5];
 
 
 
@@ -6245,6 +6245,7 @@ proto.GradingBenchmark.toObject = function(includeInstance, msg) {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     assignmentid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     heading: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    comment: jspb.Message.getFieldWithDefault(msg, 4, ""),
     criteriaList: jspb.Message.toObjectList(msg.getCriteriaList(),
     proto.GradingCriterion.toObject, includeInstance)
   };
@@ -6296,6 +6297,10 @@ proto.GradingBenchmark.deserializeBinaryFromReader = function(msg, reader) {
       msg.setHeading(value);
       break;
     case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setComment(value);
+      break;
+    case 5:
       var value = new proto.GradingCriterion;
       reader.readMessage(value,proto.GradingCriterion.deserializeBinaryFromReader);
       msg.addCriteria(value);
@@ -6350,10 +6355,17 @@ proto.GradingBenchmark.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getComment();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
   f = message.getCriteriaList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      4,
+      5,
       f,
       proto.GradingCriterion.serializeBinaryToWriter
     );
@@ -6416,12 +6428,30 @@ proto.GradingBenchmark.prototype.setHeading = function(value) {
 
 
 /**
- * repeated GradingCriterion criteria = 4;
+ * optional string comment = 4;
+ * @return {string}
+ */
+proto.GradingBenchmark.prototype.getComment = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.GradingBenchmark} returns this
+ */
+proto.GradingBenchmark.prototype.setComment = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * repeated GradingCriterion criteria = 5;
  * @return {!Array<!proto.GradingCriterion>}
  */
 proto.GradingBenchmark.prototype.getCriteriaList = function() {
   return /** @type{!Array<!proto.GradingCriterion>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.GradingCriterion, 4));
+    jspb.Message.getRepeatedWrapperField(this, proto.GradingCriterion, 5));
 };
 
 
@@ -6430,7 +6460,7 @@ proto.GradingBenchmark.prototype.getCriteriaList = function() {
  * @return {!proto.GradingBenchmark} returns this
 */
 proto.GradingBenchmark.prototype.setCriteriaList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 4, value);
+  return jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
 
@@ -6440,7 +6470,7 @@ proto.GradingBenchmark.prototype.setCriteriaList = function(value) {
  * @return {!proto.GradingCriterion}
  */
 proto.GradingBenchmark.prototype.addCriteria = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.GradingCriterion, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.GradingCriterion, opt_index);
 };
 
 
@@ -6488,7 +6518,8 @@ proto.GradingCriterion.toObject = function(includeInstance, msg) {
     id: jspb.Message.getFieldWithDefault(msg, 1, 0),
     benchmarkid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     description: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    grade: jspb.Message.getFieldWithDefault(msg, 4, 0)
+    grade: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    comment: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -6540,6 +6571,10 @@ proto.GradingCriterion.deserializeBinaryFromReader = function(msg, reader) {
     case 4:
       var value = /** @type {!proto.GradingCriterion.Grade} */ (reader.readEnum());
       msg.setGrade(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setComment(value);
       break;
     default:
       reader.skipField();
@@ -6595,6 +6630,13 @@ proto.GradingCriterion.serializeBinaryToWriter = function(message, writer) {
   if (f !== 0.0) {
     writer.writeEnum(
       4,
+      f
+    );
+  }
+  f = message.getComment();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
       f
     );
   }
@@ -6679,6 +6721,24 @@ proto.GradingCriterion.prototype.getGrade = function() {
  */
 proto.GradingCriterion.prototype.setGrade = function(value) {
   return jspb.Message.setProto3EnumField(this, 4, value);
+};
+
+
+/**
+ * optional string comment = 5;
+ * @return {string}
+ */
+proto.GradingCriterion.prototype.getComment = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.GradingCriterion} returns this
+ */
+proto.GradingCriterion.prototype.setComment = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 

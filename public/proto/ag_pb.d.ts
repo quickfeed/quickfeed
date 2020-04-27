@@ -714,6 +714,9 @@ export class GradingBenchmark extends jspb.Message {
   getHeading(): string;
   setHeading(value: string): void;
 
+  getComment(): string;
+  setComment(value: string): void;
+
   getCriteriaList(): Array<GradingCriterion>;
   setCriteriaList(value: Array<GradingCriterion>): void;
   clearCriteriaList(): void;
@@ -732,6 +735,7 @@ export namespace GradingBenchmark {
     id: number,
     assignmentid: number,
     heading: string,
+    comment: string,
     criteriaList: Array<GradingCriterion.AsObject>,
   }
 }
@@ -749,6 +753,9 @@ export class GradingCriterion extends jspb.Message {
   getGrade(): GradingCriterion.Grade;
   setGrade(value: GradingCriterion.Grade): void;
 
+  getComment(): string;
+  setComment(value: string): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GradingCriterion.AsObject;
   static toObject(includeInstance: boolean, msg: GradingCriterion): GradingCriterion.AsObject;
@@ -763,6 +770,7 @@ export namespace GradingCriterion {
     benchmarkid: number,
     description: string,
     grade: GradingCriterion.Grade,
+    comment: string,
   }
 
   export enum Grade { 
