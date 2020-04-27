@@ -42,7 +42,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
             const tab = <DynamicTable
                 header={[e.getHeading(), "Action"]}
                 data={e.getCriteriaList()}
-                selector={(c: GradingCriterion) => [c.getDescription(), this.generateRowButtons(c)]}
+                selector={(c: GradingCriterion) => [c.getDescription(), this.generateRowButtons(e, c)]}
                 footer={ this.generateFooterRow(e)}
             ></DynamicTable>;
             tables.push(tab);
@@ -50,14 +50,14 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         return tables;
     }
 
-    private generateRowButtons(c: GradingCriterion): JSX.Element {
+    private generateRowButtons(bm: GradingBenchmark, c: GradingCriterion): JSX.Element {
         const buttons: JSX.Element[] = [
             <BootstrapButton
-            onClick={() => {this.handleEdit(c)}}
+            onClick={() => {this.handleEdit(c, "New description")}}
             >Edit</BootstrapButton>,
             <BootstrapButton
             classType="danger"
-            onClick={() => {this.handleDelete(c)}}
+            onClick={(e) => {this.handleDelete(bm, c)}}
             >Delete</BootstrapButton>
         ]
         return <div className="btn-group action-btn">{buttons}</div>;
@@ -72,12 +72,15 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         return [<div>New criterion text placeholder</div>];
     }
 
-    private handleEdit(c: GradingCriterion) {
-        console.log("Editing criterion: " + c.getDescription());
+    private handleEdit(c: GradingCriterion, newText: string) {
+        c.setDescription(newText);
     }
 
     private handleDelete(bm: GradingBenchmark, c: GradingCriterion) {
-        console.log("Deleting " + c.getDescription());
+        const list = bm.getCriteriaList();
+        list.splice(list.indexOf(c), 1);
+        bm.setCriteriaList(list);
+        // TODO: try a oneliner here
     }
     private addNewCriteria(bm: GradingBenchmark, description: string) {
         const c = new GradingCriterion();
