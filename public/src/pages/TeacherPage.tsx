@@ -409,7 +409,7 @@ export class TeacherPage extends ViewPage {
                 }}
                 addBenchmark={(bm: GradingBenchmark) => {
                     console.log("Adding new benchmark " + bm.getHeading() + " to assignment " + a.getName());
-                    return bm;
+                    return this.courseMan.addNewBenchmark(bm);
                 }}
                 removeBenchmark={(id: number) => {
                     console.log("Removing benchmark " + id + " from assignment " + a.getName());
@@ -421,7 +421,7 @@ export class TeacherPage extends ViewPage {
                 }}
                 addCriterion={(c: GradingCriterion) => {
                     console.log("Adding a new criterion: " + c.toString() + " to assignment " + a.getName());
-                    return c;
+                    return this.courseMan.addNewCriterion(c);
                 }}
                 removeCriterion={(cid: number, bid: number) => {
                     console.log("Removing criterion " + cid + " from benchmark " + bid + " of assignment " + a.getName());

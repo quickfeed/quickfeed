@@ -4,12 +4,12 @@ import { EditCriterion } from './EditCriterion';
 
 interface EditBenchmarkProps {
     benchmark: GradingBenchmark,
-    onAdd: (c: GradingCriterion) => GradingCriterion;
+    onAdd: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     onUpdate: (newHeading: string) => boolean;
-    onDelete: () => void;
+    onDelete: () => boolean;
 
     updateCriterion: (c: GradingCriterion) => boolean;
-    deleteCriterion: (id: number) => void;
+    deleteCriterion: (id: number) => boolean;
 }
 
 interface EditBenchmarkState {
@@ -69,9 +69,16 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
         })
     }
 
-    private addNewCriterion() {
+    private async addNewCriterion() {
+        const newCriterion = new GradingCriterion();
+        newCriterion.setBenchmarkid(this.props.benchmark.getId());
+        newCriterion.setDescription(this.state.newCriterion);
+        const ans = await this.props.onAdd(newCriterion);
+        if (ans) {
+            this.state.criteria.push(ans);
+        }
         this.setState({
-            adding: false
+            adding: false,
         })
     }
 

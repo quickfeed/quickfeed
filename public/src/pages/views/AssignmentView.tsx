@@ -1,15 +1,14 @@
 import * as React from "react";
-import { Assignment, Course, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
-import { BootstrapButton } from "../../components/bootstrap/BootstrapButton";
+import { Assignment, Course, GradingBenchmark, GradingCriterion } from "../../../proto/ag_pb";
 import { EditBenchmark } from "../../components/teacher/EditBenchmark";
 
 interface AssignmentViewProps {
     assignment: Assignment;
     updateBenchmark: (bm: GradingBenchmark) => boolean;
-    addBenchmark: (bm: GradingBenchmark) => GradingBenchmark;
+    addBenchmark: (bm: GradingBenchmark) => Promise<GradingBenchmark | null>;
     removeBenchmark: (id: number) => boolean;
     updateCriterion: (c: GradingCriterion) => boolean;
-    addCriterion: (c: GradingCriterion) => GradingCriterion;
+    addCriterion: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     removeCriterion: (criterionID: number, benchmarkID: number) => boolean;
 }
 
@@ -93,15 +92,17 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         })
     }
 
-    private addNewBenchmark() {
+    private async addNewBenchmark() {
         const bm = new GradingBenchmark();
         bm.setHeading(this.state.newBenchmark);
         bm.setAssignmentid(this.props.assignment.getId());
-        if (this.props.addBenchmark(bm)) {
-            this.toggleAdding();
-        } else {
-            console.log("Failed to add new benchmark");
+        const ans = await this.props.addBenchmark(bm);
+        if (ans) {
+            this.state.benchmarks.push(bm);
         }
+        this.setState({
+            adding: false,
+        })
     }
 
     private toggleOpen() {
