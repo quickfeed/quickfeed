@@ -11,6 +11,8 @@ import {
     EnrollmentRequest,
     Enrollments,
     GetGroupRequest,
+    GradingBenchmark,
+    GradingCriterion,
     Group,
     GroupRequest,
     Groups,
@@ -242,6 +244,32 @@ export class GrpcManager {
         request.setCourseid(courseID);
         request.setApprove(approve);
         return this.grpcSend<Void>(this.agService.updateSubmission, request);
+    }
+
+    // /* MANUAL GRADING */ //
+
+    public createBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<GradingBenchmark>> {
+        return this.grpcSend<GradingBenchmark>(this.agService.createBenchmark, bm);
+    }
+
+    public createCriterion(c: GradingCriterion): Promise<IGrpcResponse<GradingCriterion>> {
+        return this.grpcSend<GradingCriterion>(this.agService.createCriterion, c);
+    }
+
+    public updateBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateBenchmark, bm);
+    }
+
+    public updateCriterion(c: GradingCriterion): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateCriterion, c);
+    }
+
+    public deleteBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.deleteBenchmark, bm);
+    }
+
+    public deleteCriterion(c: GradingCriterion): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.deleteCriterion, c);
     }
 
     // /* REPOSITORY */ //

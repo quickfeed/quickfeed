@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Organization, Repository, Status, User, SubmissionsForCourseRequest } from '../../proto/ag_pb';
 import { IStudentLabsForCourse, ISubmission } from "../models";
 
 import { ICourseProvider } from "./CourseManager";
@@ -277,6 +277,28 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
+
+    public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {
+        return bm;
+    }
+
+    public async addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null> {
+        return c;
+    }
+
+    public async updateBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return true;
+    }
+
+    public async updateCriterion(c: GradingCriterion): Promise<boolean> {
+        return true;
+    }
+
+    public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return true;
+    }
+    public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
+        return true;    }
 
     public async updateAssignments(courseID: number): Promise<any> {
         return new Promise((resolve, reject) => {

@@ -571,6 +571,42 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 	return submission, nil
 }
 
+// CreateBenchmark adds a new grading benchmark for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) CreateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
+	return nil, status.Errorf(codes.Unimplemented, "CreateBenchmark: %+v", in)
+}
+
+// UpdateBenchmark edits a grading benchmark for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) UpdateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "UpdateBenchmark: %+v", in)
+}
+
+// DeleteBenchmark removes a grading benchmark
+// Access policy: Teacher of CourseID
+func (s *AutograderService) DeleteBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "DeleteBenchmark: %+v", in)
+}
+
+// CreateCriterion adds a new grading criterion for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) CreateCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.GradingCriterion, error) {
+	return nil, status.Errorf(codes.Unimplemented, "CreateCriterion: %+v", in)
+}
+
+// UpdateCriterion edits a grading criterion for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) UpdateCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "UpdateCriterion: %+v", in)
+}
+
+// DeleteCriterion removes a grading criterion for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "DeleteCriterion: %+v", in)
+}
+
 // UpdateFeedback adds a manual review to a student submission
 func (s *AutograderService) UpdateFeedback(ctx context.Context, in *pb.Submission) (*pb.Void, error) {
 	s.logger.Debugf("Uodating feedback: %+v", in)

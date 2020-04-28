@@ -4,6 +4,7 @@ import {
     CourseSubmissions,
     Enrollment,
     GradingBenchmark,
+    GradingCriterion,
     Group,
     Organization,
     Repository,
@@ -347,6 +348,41 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         const result = await this.grpcHelper.isEmptyRepo(courseID, userID, groupID);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {
+        const result = await this.grpcHelper.createBenchmark(bm);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return result.data;
+    }
+
+    public async addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null> {
+        const result = await this.grpcHelper.createCriterion(c);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return result.data;
+    }
+
+    public async updateBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        const result = await this.grpcHelper.updateBenchmark(bm);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async updateCriterion(c: GradingCriterion): Promise<boolean> {
+        const result = await this.grpcHelper.updateCriterion(c);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        const result = await this.grpcHelper.deleteBenchmark(bm);
+        return this.responseCodeSuccess(result);
+    }
+    public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
+        const result = await this.grpcHelper.deleteCriterion(c);
         return this.responseCodeSuccess(result);
     }
 

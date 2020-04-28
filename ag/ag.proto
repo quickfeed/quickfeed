@@ -403,7 +403,6 @@ service AutograderService {
     rpc UpdateCriterion(GradingCriterion) returns (Void) {}
     rpc DeleteCriterion(GradingCriterion) returns (Void) {}
 
-
     rpc UpdateFeedback(Submission) returns (Void) {}
 
     // misc //

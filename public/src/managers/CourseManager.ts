@@ -4,7 +4,7 @@ import {
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void, Enrollments, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from '../../proto/ag_pb';
 import { ILogger } from "./LogManager";
 import { sortAssignmentsByOrder } from '../componentHelper';
 
@@ -42,8 +42,14 @@ export interface ICourseProvider {
     updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean>;
     rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null>;
     getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
-
     isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
+    addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null>;
+    addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null>;
+    updateBenchmark(bm: GradingBenchmark): Promise<boolean>;
+    updateCriterion(c: GradingCriterion): Promise<boolean>;
+    deleteBenchmark(bm: GradingBenchmark): Promise<boolean>;
+    deleteCriterion(c: GradingCriterion): Promise<boolean>;
+
 }
 
 export class CourseManager {
@@ -277,6 +283,29 @@ export class CourseManager {
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         return this.courseProvider.isEmptyRepo(courseID, userID, groupID);
+    };
+
+    public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {
+        return this.courseProvider.addNewBenchmark(bm);
+    }
+
+    public async addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null> {
+        return this.courseProvider.addNewCriterion(c);
+    }
+
+    public async updateBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return this.courseProvider.updateBenchmark(bm);
+    }
+
+    public async updateCriterion(c: GradingCriterion): Promise<boolean> {
+        return this.courseProvider.updateCriterion(c);
+    }
+
+    public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return this.courseProvider.deleteBenchmark(bm);
+    }
+    public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
+        return this.courseProvider.deleteCriterion(c);
     }
 
     /**
