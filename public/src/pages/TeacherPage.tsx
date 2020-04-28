@@ -400,8 +400,8 @@ export class TeacherPage extends ViewPage {
         const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
 
         return <div>{
-            assignments.map(a => <AssigmnentView
-                key={a.getId()}
+            assignments.map((a, i) => <AssigmnentView
+                key={i}
                 assignment={a}
                 updateBenchmark={(bm: GradingBenchmark) => {
                     console.log("Updating benchmark " + bm.getHeading() + " for assignment " + a.getName());

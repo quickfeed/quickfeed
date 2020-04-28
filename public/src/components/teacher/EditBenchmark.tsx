@@ -84,8 +84,8 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
 
     private renderCriteriaList(): JSX.Element {
         return <div>
-            {this.state.criteria.map(c => <EditCriterion
-                key={c.getId()}
+            {this.state.criteria.map((c, i) => <EditCriterion
+                key={i}
                 criterion={c}
                 onUpdate={(newDescription: string) => {
                     c.setDescription(newDescription);

@@ -35,14 +35,14 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         return <div>
             <h3 onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
             {this.state.open ? (<div>{this.renderBenchmarks()}</div>) : null}
-            {this.renderAddNew()}
+            {this.state.open ? this.renderAddNew() : null}
         </div>
     }
 
     private renderBenchmarks(): JSX.Element {
         return <div>
-            {this.state.benchmarks.map(bm => <EditBenchmark
-                key={bm.getId()}
+            {this.state.benchmarks.map((bm, i) => <EditBenchmark
+                key={i}
                 benchmark={bm}
                 onAdd={(c: GradingCriterion) => {
                     return this.props.addCriterion(c);
@@ -98,7 +98,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         bm.setAssignmentid(this.props.assignment.getId());
         const ans = await this.props.addBenchmark(bm);
         if (ans) {
-            this.state.benchmarks.push(bm);
+            this.state.benchmarks.push(ans);
         }
         this.setState({
             adding: false,

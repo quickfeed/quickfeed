@@ -574,37 +574,67 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.Rebuil
 // CreateBenchmark adds a new grading benchmark for an assignment
 // Access policy: Teacher of CourseID
 func (s *AutograderService) CreateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
-	return nil, status.Errorf(codes.Unimplemented, "CreateBenchmark: %+v", in)
+	bm, err := s.createBenchmark(in)
+	if err != nil {
+		s.logger.Errorf("CreateBenchmark failed for %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to add benchmark")
+	}
+	return bm, nil
 }
 
 // UpdateBenchmark edits a grading benchmark for an assignment
 // Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
-	return nil, status.Errorf(codes.Unimplemented, "UpdateBenchmark: %+v", in)
+	err := s.updateBenchmark(in)
+	if err != nil {
+		s.logger.Errorf("UpdateBenchmark failed for %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to update benchmark")
+	}
+	return &pb.Void{}, nil
 }
 
 // DeleteBenchmark removes a grading benchmark
 // Access policy: Teacher of CourseID
 func (s *AutograderService) DeleteBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
-	return nil, status.Errorf(codes.Unimplemented, "DeleteBenchmark: %+v", in)
+	err := s.deleteBenchmark(in)
+	if err != nil {
+		s.logger.Errorf("DeleteBenchmark failed for %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to delete benchmark")
+	}
+	return &pb.Void{}, nil
 }
 
 // CreateCriterion adds a new grading criterion for an assignment
 // Access policy: Teacher of CourseID
 func (s *AutograderService) CreateCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.GradingCriterion, error) {
-	return nil, status.Errorf(codes.Unimplemented, "CreateCriterion: %+v", in)
+	c, err := s.createCriterion(in)
+	if err != nil {
+		s.logger.Errorf("CreateCriterion failed for %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to add criterion")
+	}
+	return c, nil
 }
 
 // UpdateCriterion edits a grading criterion for an assignment
 // Access policy: Teacher of CourseID
 func (s *AutograderService) UpdateCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
-	return nil, status.Errorf(codes.Unimplemented, "UpdateCriterion: %+v", in)
+	err := s.updateCriterion(in)
+	if err != nil {
+		s.logger.Errorf("UpdateCriterion failed for %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to update criterion")
+	}
+	return &pb.Void{}, nil
 }
 
 // DeleteCriterion removes a grading criterion for an assignment
 // Access policy: Teacher of CourseID
 func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
-	return nil, status.Errorf(codes.Unimplemented, "DeleteCriterion: %+v", in)
+	err := s.deleteCriterion(in)
+	if err != nil {
+		s.logger.Errorf("DeleteCriterion failed for %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to delete criterion")
+	}
+	return &pb.Void{}, nil
 }
 
 // UpdateFeedback adds a manual review to a student submission
