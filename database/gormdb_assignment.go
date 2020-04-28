@@ -49,12 +49,13 @@ func (db *GormDB) GetAssignment(query *pb.Assignment) (*pb.Assignment, error) {
 }
 
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
-func (db *GormDB) GetAssignmentsByCourse(courseID uint64) ([]*pb.Assignment, error) {
+func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*pb.Assignment, error) {
 	var course pb.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
-	return course.Assignments, nil
+	assignments := course.Assignments
+	return assignments, nil
 }
 
 // UpdateAssignments updates assignment information.

@@ -75,7 +75,7 @@ type Database interface {
 	// GetAssignment returns assignment mathing the given query.
 	GetAssignment(query *pb.Assignment) (*pb.Assignment, error)
 	// GetAssignmentsByCourse returns a list of all assignments for the given course ID.
-	GetAssignmentsByCourse(uint64) ([]*pb.Assignment, error)
+	GetAssignmentsByCourse(uint64, bool) ([]*pb.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*pb.Assignment) error
 	CreateBenchmark(*pb.GradingBenchmark) error
