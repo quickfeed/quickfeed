@@ -78,6 +78,12 @@ type Database interface {
 	GetAssignmentsByCourse(uint64) ([]*pb.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*pb.Assignment) error
+	CreateBenchmark(*pb.GradingBenchmark) error
+	UpdateBenchmark(*pb.GradingBenchmark) error
+	DeleteBenchmark(*pb.GradingBenchmark) error
+	CreateCriterion(*pb.GradingCriterion) error
+	UpdateCriterion(*pb.GradingCriterion) error
+	DeleteCriterion(*pb.GradingCriterion) error
 
 	// CreateSubmission creates a new submission record or updates the most
 	// recent submission, as defined by the provided submissionQuery.

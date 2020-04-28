@@ -91,3 +91,37 @@ func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissio
 	}
 	return filteredAssignments, nil
 }
+
+// CreateBenchmark creates a new grading benchmark
+func (db *GormDB) CreateBenchmark(query *pb.GradingBenchmark) error {
+	return db.conn.Create(query).Error
+}
+
+// UpdateBenchmark updates the given benchmark
+func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
+	return db.conn.Model(query).
+		Where(&pb.GradingBenchmark{ID: query.ID, AssignmentID: query.AssignmentID}).
+		Update(&pb.GradingBenchmark{Heading: query.Heading, Comment: query.Comment}).Error
+}
+
+// DeleteBenchmark removes the given benchmark
+func (db *GormDB) DeleteBenchmark(query *pb.GradingBenchmark) error {
+	return db.conn.Delete(query).Error
+}
+
+// CreateCriterion creates a new grading criterion
+func (db *GormDB) CreateCriterion(query *pb.GradingCriterion) error {
+	return db.conn.Create(query).Error
+}
+
+// UpdateCriterion updates the given criterion
+func (db *GormDB) UpdateCriterion(query *pb.GradingCriterion) error {
+	return db.conn.Model(query).
+		Where(&pb.GradingCriterion{ID: query.ID, BenchmarkID: query.BenchmarkID}).
+		Update(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade}).Error
+}
+
+// DeleteCriterion removes the given criterion
+func (db *GormDB) DeleteCriterion(query *pb.GradingCriterion) error {
+	return db.conn.Delete(query).Error
+}
