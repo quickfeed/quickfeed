@@ -55,6 +55,22 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*
 		return nil, err
 	}
 	assignments := course.Assignments
+	if withGrading {
+		for _, a := range assignments {
+			var benchmarks []*pb.GradingBenchmark
+			if err := db.conn.Where("assignment_id = ?", a.ID).Find(&benchmarks).Error; err != nil {
+				return nil, err
+			}
+			a.GradingBasis = benchmarks
+			for _, b := range a.GradingBasis {
+				var criteria []*pb.GradingCriterion
+				if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
+					return nil, err
+				}
+				b.Criteria = criteria
+			}
+		}
+	}
 	return assignments, nil
 }
 

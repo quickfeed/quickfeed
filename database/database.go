@@ -78,11 +78,17 @@ type Database interface {
 	GetAssignmentsByCourse(uint64, bool) ([]*pb.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*pb.Assignment) error
+	// CreateBenchmark creates a new grading benchmark
 	CreateBenchmark(*pb.GradingBenchmark) error
+	// UpdateBenchmark updates the given benchmark
 	UpdateBenchmark(*pb.GradingBenchmark) error
+	// DeleteBenchmark deletes the given benchmark
 	DeleteBenchmark(*pb.GradingBenchmark) error
+	// CreateCriterion creates a new grading criterion
 	CreateCriterion(*pb.GradingCriterion) error
+	// UpdateCriterion updates the given criterion
 	UpdateCriterion(*pb.GradingCriterion) error
+	// DeleteCriterion deletes the given criterion
 	DeleteCriterion(*pb.GradingCriterion) error
 
 	// CreateSubmission creates a new submission record or updates the most
