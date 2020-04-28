@@ -399,17 +399,6 @@ export class TeacherPage extends ViewPage {
     private async generateAssignmentList(course: Course): Promise<JSX.Element> {
         const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
 
-        // TEMP testing
-        const b1 = new GradingBenchmark();
-        b1.setHeading("Benchmark 1");
-        b1.setId(1);
-        const c1 = new GradingCriterion();
-        c1.setBenchmarkid(1);
-        c1.setDescription("Does it crash the application?");
-        c1.setId(1);
-        b1.addCriteria(c1);
-        // end of TEMP
-
         return <div>{
             assignments.map(a => <AssigmnentView
                 key={a.getId()}
@@ -420,7 +409,7 @@ export class TeacherPage extends ViewPage {
                 }}
                 addBenchmark={(bm: GradingBenchmark) => {
                     console.log("Adding new benchmark " + bm.getHeading() + " to assignment " + a.getName());
-                    return true;
+                    return bm;
                 }}
                 removeBenchmark={(id: number) => {
                     console.log("Removing benchmark " + id + " from assignment " + a.getName());
@@ -432,14 +421,12 @@ export class TeacherPage extends ViewPage {
                 }}
                 addCriterion={(c: GradingCriterion) => {
                     console.log("Adding a new criterion: " + c.toString() + " to assignment " + a.getName());
-                    return true;
+                    return c;
                 }}
                 removeCriterion={(cid: number, bid: number) => {
                     console.log("Removing criterion " + cid + " from benchmark " + bid + " of assignment " + a.getName());
                     return true;
                 }}
-
-                benchmarks={[b1]}
             ></AssigmnentView>)
             }</div>
     }

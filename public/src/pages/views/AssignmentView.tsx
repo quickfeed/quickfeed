@@ -6,17 +6,18 @@ import { EditBenchmark } from "../../components/teacher/EditBenchmark";
 interface AssignmentViewProps {
     assignment: Assignment;
     updateBenchmark: (bm: GradingBenchmark) => boolean;
-    addBenchmark: (bm: GradingBenchmark) => boolean;
+    addBenchmark: (bm: GradingBenchmark) => GradingBenchmark;
     removeBenchmark: (id: number) => boolean;
     updateCriterion: (c: GradingCriterion) => boolean;
-    addCriterion: (c: GradingCriterion) => boolean;
+    addCriterion: (c: GradingCriterion) => GradingCriterion;
     removeCriterion: (criterionID: number, benchmarkID: number) => boolean;
-    benchmarks: GradingBenchmark[];
 }
 
 interface AssignmentViewState {
-    editing: boolean;
+    adding: boolean;
     open: boolean;
+    newBenchmark: string;
+    benchmarks: GradingBenchmark[];
 }
 
 export class AssigmnentView extends React.Component<AssignmentViewProps, AssignmentViewState> {
@@ -24,24 +25,24 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     constructor(props: AssignmentViewProps) {
         super(props);
         this.state = {
-            editing: false,
+            adding: false,
             open: false,
+            newBenchmark: "",
+            benchmarks: this.props.assignment.getGradingbasisList(),
         }
     }
 
     public render() {
-        const newBmButton = <BootstrapButton
-            onClick = {() => { this.addNewBenchmark("New benchmark header", this.props.assignment.getId())}}
-        >Add new grading benchmark</BootstrapButton>
         return <div>
             <h3 onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
             {this.state.open ? (<div>{this.renderBenchmarks()}</div>) : null}
+            {this.renderAddNew()}
         </div>
     }
 
     private renderBenchmarks(): JSX.Element {
         return <div>
-            {this.props.benchmarks.map(bm => <EditBenchmark
+            {this.state.benchmarks.map(bm => <EditBenchmark
                 key={bm.getId()}
                 benchmark={bm}
                 onAdd={(c: GradingCriterion) => {
@@ -56,56 +57,51 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
                     return this.props.updateCriterion(c);
                 }}
                 deleteCriterion={(id: number) => this.props.removeCriterion(id, bm.getId())}
-
             />)}
         </div>
     }
 
-    private generateRowButtons(bm: GradingBenchmark, c: GradingCriterion): JSX.Element {
-        const buttons: JSX.Element[] = [
-            <BootstrapButton
-            onClick={() => {this.handleEdit(c, "New description")}}
-            >Edit</BootstrapButton>,
-            <BootstrapButton
-            classType="danger"
-            onClick={(e) => {this.handleDelete(bm, c)}}
-            >Delete</BootstrapButton>
-        ]
-        return <div className="btn-group action-btn">{buttons}</div>;
+    private renderAddNew(): JSX.Element {
+        const addRow = <div onDoubleClick={() => this.toggleAdding()}>
+            Add a new grading benchmark.
+        </div>;
+        const addingRow = <div className="input-btns"><input
+        type="text"
+        defaultValue=""
+        onChange={(e) => this.setNewHeader(e.target.value)}
+        />
+        <div className="btn-group">
+        <button
+            className="btn btn-primary btn-xs"
+            onClick={() => this.addNewBenchmark()}>OK</button>
+        <button
+            className="btn btn-danger btn-xs"
+            onClick={() => this.toggleAdding()}>X</button></div>
+        </div>;
+        return this.state.adding ? addingRow : addRow;
     }
 
-    private generateFooterRow(bm: GradingBenchmark): JSX.Element[] {
-        const btn = <BootstrapButton
-        className="btn-benchmark"
-        onClick={() => this.addNewCriteria(bm, "new criterion text here") }
-        >
-        Add new criterion</BootstrapButton>
-        return [<div>New criterion text placeholder</div>];
+    private toggleAdding() {
+        this.setState({
+            adding: !this.state.adding,
+        })
     }
 
-    private handleEdit(c: GradingCriterion, newText: string) {
-        c.setDescription(newText);
+    private setNewHeader(input: string) {
+        this.setState({
+            newBenchmark: input,
+        })
     }
 
-    private handleDelete(bm: GradingBenchmark, c: GradingCriterion) {
-        const list = bm.getCriteriaList();
-        list.splice(list.indexOf(c), 1);
-        bm.setCriteriaList(list);
-        // TODO: try a oneliner here
-    }
-    private addNewCriteria(bm: GradingBenchmark, description: string) {
-        const c = new GradingCriterion();
-        c.setDescription(description);
-        c.setBenchmarkid(bm.getId());
-        bm.addCriteria(c);
-        // update server
-    }
-
-    private addNewBenchmark(heading: string, assignmentID: number) {
+    private addNewBenchmark() {
         const bm = new GradingBenchmark();
-        bm.setHeading(heading);
-        bm.setAssignmentid(assignmentID);
-        // update server
+        bm.setHeading(this.state.newBenchmark);
+        bm.setAssignmentid(this.props.assignment.getId());
+        if (this.props.addBenchmark(bm)) {
+            this.toggleAdding();
+        } else {
+            console.log("Failed to add new benchmark");
+        }
     }
 
     private toggleOpen() {

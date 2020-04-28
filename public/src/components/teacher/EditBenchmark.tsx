@@ -4,7 +4,7 @@ import { EditCriterion } from './EditCriterion';
 
 interface EditBenchmarkProps {
     benchmark: GradingBenchmark,
-    onAdd: (c: GradingCriterion) => boolean;
+    onAdd: (c: GradingCriterion) => GradingCriterion;
     onUpdate: (newHeading: string) => boolean;
     onDelete: () => void;
 
@@ -39,9 +39,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
                 {this.state.editing ? this.renderHeader() : this.state.name}
             </h3>
 
-        // list of all criteria
         {this.renderCriteriaList()}
-        // add new criterion
 
         {this.renderAddRow() }
         </div>
@@ -49,17 +47,17 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
 
     private renderAddRow(): JSX.Element {
         const addDiv = <div onDoubleClick={() => this.toggleAdd()}>Add a new grading criterion.</div>;
-        const addingDiv = <div><input
+        const addingDiv = <div className="input-btns"><input
             type="text"
             defaultValue=""
             onChange={(e) => this.setNewDescription(e.target.value)}
         />
         <div className="btn-group">
         <button
-            className="btn btn-primary"
+            className="btn btn-primary btn-xs"
             onClick={() => this.addNewCriterion()}>OK</button>
         <button
-            className="btn btn-danger"
+            className="btn btn-danger btn-xs"
             onClick={() => this.toggleAdd()}>X</button></div>
         </div>;
         return this.state.adding ? addingDiv : addDiv;
@@ -104,7 +102,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     }
 
     private renderHeader(): JSX.Element {
-        return <div>
+        return <div className="input-btns">
             <input
                 type="text"
                 defaultValue={this.state.name}
@@ -112,11 +110,11 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
             />
             <div className="btn-group">
         <button
-            className="btn btn-primary"
+            className="btn btn-primary btn-xs"
             onClick={() => this.updateHeader()}>OK</button>
         <button
-            className="btn btn-danger"
-            onClick={() => this.props.onDelete()}>X</button></div>
+            className="btn btn-danger btn-xs"
+            onClick={() => this.toggleEdit()}>X</button></div>
         </div>
     }
 

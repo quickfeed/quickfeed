@@ -26,13 +26,13 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
 
     public render() {
         return <div>
-            {this.state.editing ? this.renderEditView() : this.renderTextView()}{this.renderDeleteButton()}
+            {this.state.editing ? this.renderEditView() : this.renderTextView()}
         </div>;
     }
 
     private renderDeleteButton(): JSX.Element {
         return <button
-            className="btn btn-danger"
+            className="btn btn-danger btn-xs"
             onClick={() => this.props.onDelete()}
         >X</button>
     }
@@ -58,11 +58,11 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
     private renderTextView(): JSX.Element {
         return <div
             onDoubleClick={() => this.toggleEditState()}
-        >{this.props.criterion.getDescription()}</div>
+    >{this.props.criterion.getDescription()}{this.renderDeleteButton()}</div>
     }
 
     private renderEditView(): JSX.Element {
-        return <div>
+        return <div className="input-btns">
             <input
                 type="text"
                 defaultValue={this.state.description}
@@ -70,10 +70,10 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
         />
         <div className="btn-group">
         <button
-            className="btn btn-primary"
+            className="btn btn-primary btn-xs"
             onClick={() => this.updateDescription()}>OK</button>
         <button
-            className="btn btn-danger"
+            className="btn btn-danger btn-xs"
             onClick={() => this.setState({editing: false, description: this.props.criterion.getDescription()})}>X</button></div>
         </div>
     }
