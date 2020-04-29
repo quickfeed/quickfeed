@@ -369,37 +369,37 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 
 	// make labs with similar lab names for both courses
 	lab1c1 := &pb.Assignment{
-		CourseID:     course1.ID,
-		Name:         "lab 1",
-		Language:     "go",
-		Deadline:     "2020-02-23T18:00:00",
-		Order:        1,
-		GradingBasis: []*pb.GradingBenchmark{},
+		CourseID:          course1.ID,
+		Name:              "lab 1",
+		Language:          "go",
+		Deadline:          "2020-02-23T18:00:00",
+		Order:             1,
+		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
 
 	lab2c1 := &pb.Assignment{
-		CourseID:     course1.ID,
-		Name:         "lab 2",
-		Language:     "go",
-		Deadline:     "2020-03-23T18:00:00",
-		Order:        2,
-		GradingBasis: []*pb.GradingBenchmark{},
+		CourseID:          course1.ID,
+		Name:              "lab 2",
+		Language:          "go",
+		Deadline:          "2020-03-23T18:00:00",
+		Order:             2,
+		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
 	lab1c2 := &pb.Assignment{
-		CourseID:     course2.ID,
-		Name:         "lab 1",
-		Language:     "go",
-		Deadline:     "2020-04-23T18:00:00",
-		Order:        1,
-		GradingBasis: []*pb.GradingBenchmark{},
+		CourseID:          course2.ID,
+		Name:              "lab 1",
+		Language:          "go",
+		Deadline:          "2020-04-23T18:00:00",
+		Order:             1,
+		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
 	lab2c2 := &pb.Assignment{
-		CourseID:     course2.ID,
-		Name:         "lab 2",
-		Language:     "go",
-		Deadline:     "2020-05-23T18:00:00",
-		Order:        2,
-		GradingBasis: []*pb.GradingBenchmark{},
+		CourseID:          course2.ID,
+		Name:              "lab 2",
+		Language:          "go",
+		Deadline:          "2020-05-23T18:00:00",
+		Order:             2,
+		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
 	if err := db.CreateAssignment(lab1c1); err != nil {
 		t.Fatal(err)

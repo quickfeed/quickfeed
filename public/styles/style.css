@@ -346,6 +346,7 @@ body {
     border-top: rgb(26, 25, 27);
     border-style: solid;
     border-width: 1;
+    background-color: darkolivegreen;
 }
 
 .adding-b {
@@ -359,6 +360,17 @@ body {
     border-width: 1;
 }
 
+.comment-div {
+    margin: 0;
+}
+
+.switch-toggle {
+    width: 10em;
+}
+  
+.switch-toggle label:not(.disabled) {
+    cursor: pointer;
+}
 
 /* loader shown while waiting for data being fetched from the server */
 

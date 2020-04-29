@@ -58,7 +58,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
     }
 
     private renderEditView(): JSX.Element {
-        return <div className="input-btns">
+        return <div className="input-group">
             <input
                 type="text"
                 defaultValue={this.state.description}
