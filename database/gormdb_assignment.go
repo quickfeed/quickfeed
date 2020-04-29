@@ -123,6 +123,7 @@ func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
 
 // DeleteBenchmark removes the given benchmark
 func (db *GormDB) DeleteBenchmark(query *pb.GradingBenchmark) error {
+	db.conn.Where("benchmark_id = ?", query.GetID()).Delete(&pb.GradingCriterion{})
 	return db.conn.Delete(query).Error
 }
 
