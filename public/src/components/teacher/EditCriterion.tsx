@@ -3,7 +3,7 @@ import { GradingCriterion } from "../../../proto/ag_pb";
 
 interface EditCriterionProps {
     criterion: GradingCriterion;
-    onUpdate: (newDescription: string) => boolean;
+    onUpdate: (newDescription: string) => void;
     onDelete: () => void;
 
     // assignment?: boolean // editable description if assignment view, editable passed/failed if not
@@ -44,15 +44,11 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
     }
 
     private updateDescription() {
+        this.props.onUpdate(this.state.description);
         this.setState({
             editing: false,
-        }, () => {
-            if (!this.props.onUpdate(this.state.description)) {
-                this.setState({
-                    description: this.props.criterion.getDescription(),
-                })
-            }
-        })
+            description: this.props.criterion.getDescription(),
+        });
     }
 
     private renderTextView(): JSX.Element {

@@ -1,13 +1,13 @@
 import * as React from "react";
-import { Assignment, Course, GradingBenchmark, GradingCriterion } from "../../../proto/ag_pb";
+import { Assignment, Course, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
 import { EditBenchmark } from "../../components/teacher/EditBenchmark";
 
 interface AssignmentViewProps {
     assignment: Assignment;
-    updateBenchmark: (bm: GradingBenchmark) => boolean;
+    updateBenchmark: (bm: GradingBenchmark) => Promise<boolean>;
     addBenchmark: (bm: GradingBenchmark) => Promise<GradingBenchmark | null>;
     removeBenchmark: (id: number) => boolean;
-    updateCriterion: (c: GradingCriterion) => boolean;
+    updateCriterion: (c: GradingCriterion) => Promise<boolean>;
     addCriterion: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     removeCriterion: (criterionID: number, benchmarkID: number) => boolean;
 }
@@ -47,9 +47,12 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
                 onAdd={(c: GradingCriterion) => {
                     return this.props.addCriterion(c);
                 }}
-                onUpdate={(input: string) => {
-                    bm.setHeading(input);
-                    return this.props.updateBenchmark(bm);
+                onUpdate={async (input: string) => {
+                    const oldHeading = bm.getHeading();
+                    const ans = await this.editBenchmarkHeading(bm, input);
+                    if (!ans) {
+                        bm.setHeading(oldHeading);
+                    }
                 }}
                 onDelete={() => this.props.removeBenchmark(bm.getId())}
                 updateCriterion={(c: GradingCriterion) => {
@@ -78,6 +81,11 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
             onClick={() => this.toggleAdding()}>X</button></div>
         </div>;
         return this.state.adding ? addingRow : addRow;
+    }
+
+    private async editBenchmarkHeading(bm: GradingBenchmark, heading: string): Promise<boolean> {
+        bm.setHeading(heading);
+        return this.props.updateBenchmark(bm);
     }
 
     private toggleAdding() {

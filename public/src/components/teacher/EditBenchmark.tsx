@@ -5,17 +5,17 @@ import { EditCriterion } from './EditCriterion';
 interface EditBenchmarkProps {
     benchmark: GradingBenchmark,
     onAdd: (c: GradingCriterion) => Promise<GradingCriterion | null>;
-    onUpdate: (newHeading: string) => boolean;
+    onUpdate: (newHeading: string) => void;
     onDelete: () => boolean;
 
-    updateCriterion: (c: GradingCriterion) => boolean;
+    updateCriterion: (c: GradingCriterion) => Promise<boolean>;
     deleteCriterion: (id: number) => boolean;
 }
 
 interface EditBenchmarkState {
     editing: boolean;
     adding: boolean;
-    name: string;
+    heading: string;
     criteria: GradingCriterion[];
     newCriterion: string;
 }
@@ -27,7 +27,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
         this.state = {
             editing: false,
             adding: false,
-            name: this.props.benchmark.getHeading(),
+            heading: this.props.benchmark.getHeading(),
             criteria: this.props.benchmark.getCriteriaList(),
             newCriterion: "",
         }
@@ -36,7 +36,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     public render() {
         return <div className="b-element">
             <h3 className="b-header" onDoubleClick={() => this.toggleEdit()}>
-                {this.state.editing ? this.renderHeader() : this.state.name}
+                {this.state.editing ? this.renderHeader() : this.state.heading}
             </h3>
 
         {this.renderCriteriaList()}
@@ -82,19 +82,28 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
         })
     }
 
+    private async editCriterion(c: GradingCriterion, input: string): Promise<boolean> {
+        c.setDescription(input);
+        return this.props.updateCriterion(c);
+    }
+
     private renderCriteriaList(): JSX.Element {
         return <div>
             {this.state.criteria.map((c, i) => <EditCriterion
                 key={i}
                 criterion={c}
-                onUpdate={(newDescription: string) => {
-                    c.setDescription(newDescription);
-                    return this.props.updateCriterion(c);
+                onUpdate={async (newDescription: string) => {
+                    const originalDesc = c.getDescription();
+                    const ans = await this.editCriterion(c, newDescription);
+                    if (!ans) {
+                        c.setDescription(originalDesc);
+                    }
                 }}
                 onDelete={() => this.props.deleteCriterion(c.getId())}
             ></EditCriterion>)}
         </div>
     }
+
 
     private toggleEdit() {
         this.setState({
@@ -112,7 +121,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
         return <div className="input-btns">
             <input
                 type="text"
-                defaultValue={this.state.name}
+                defaultValue={this.state.heading}
                 onChange={(e) => this.setHeader(e.target.value)}
             />
             <div className="btn-group">
@@ -127,20 +136,16 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
 
     private setHeader(newHeader: string) {
         this.setState({
-            name: newHeader,
+            heading: newHeader,
         })
     }
 
     private updateHeader() {
+        this.props.onUpdate(this.state.heading);
         this.setState({
             editing: false,
-        }, () => {
-            if (!this.props.onUpdate(this.state.name)) {
-                this.setState({
-                    name: this.props.benchmark.getHeading(),
-                })
-            }
-        })
+            heading: this.props.benchmark.getHeading(),
+        });
     }
 
 }
