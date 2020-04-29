@@ -365,8 +365,10 @@ export class Enrollment extends jspb.Message {
   getState(): Enrollment.DisplayState;
   setState(value: Enrollment.DisplayState): void;
 
-  getRemainingslipdays(): number;
-  setRemainingslipdays(value: number): void;
+  getUsedslipdaysList(): Array<SlipDays>;
+  setUsedslipdaysList(value: Array<SlipDays>): void;
+  clearUsedslipdaysList(): void;
+  addUsedslipdays(value?: SlipDays, index?: number): SlipDays;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Enrollment.AsObject;
@@ -388,7 +390,7 @@ export namespace Enrollment {
     group?: Group.AsObject,
     status: Enrollment.UserStatus,
     state: Enrollment.DisplayState,
-    remainingslipdays: number,
+    usedslipdaysList: Array<SlipDays.AsObject>,
   }
 
   export enum UserStatus { 
@@ -403,6 +405,28 @@ export namespace Enrollment {
     HIDDEN = 1,
     VISIBLE = 2,
     FAVORITE = 3,
+  }
+}
+
+export class SlipDays extends jspb.Message {
+  getAssignmentid(): number;
+  setAssignmentid(value: number): void;
+
+  getUsedslipdays(): number;
+  setUsedslipdays(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SlipDays.AsObject;
+  static toObject(includeInstance: boolean, msg: SlipDays): SlipDays.AsObject;
+  static serializeBinaryToWriter(message: SlipDays, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SlipDays;
+  static deserializeBinaryFromReader(message: SlipDays, reader: jspb.BinaryReader): SlipDays;
+}
+
+export namespace SlipDays {
+  export type AsObject = {
+    assignmentid: number,
+    usedslipdays: number,
   }
 }
 

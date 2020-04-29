@@ -1,17 +1,25 @@
 package ag
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	layout = "2006-01-02T15:04:05"
+	days   = time.Duration(24 * time.Hour)
+	zero   = time.Duration(0)
 )
 
-// DurationUntilDeadline returns the duration since the deadline.
-func (m Assignment) DurationUntilDeadline(now time.Time) time.Duration {
-	deadline, err := time.Parse(layout, m.GetDeadline())
+// SinceDeadline returns the duration since the deadline.
+// A positive duration means the deadline has passed, whereas
+// a negative duration means the deadline has not yet passed.
+func (m Assignment) SinceDeadline(now time.Time) (time.Duration, error) {
+	deadline, err := time.ParseInLocation(layout, m.GetDeadline(), now.Location())
 	if err != nil {
+		// this should not happen if deadlines are parsed and recorded correctly
+		return zero, err
 	}
-	return now.Sub(deadline)
+	return now.Sub(deadline), nil
 }
 
 // IsApproved returns true if this assignment is already approved for the
