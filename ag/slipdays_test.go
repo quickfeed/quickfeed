@@ -93,7 +93,7 @@ func TestSlipDays(t *testing.T) {
 						t.Fatalf("faulty test case: len(sd.submissions[%d])=%d != len(sd.remaining[%d])=%d", i, len(sd.submissions[i]), i, len(sd.remaining[i]))
 					}
 					subm := &pb.Submission{
-						AssignmentID: uint64(i + 1),
+						AssignmentID: sd.labs[i].ID,
 						Approved:     false,
 					}
 					// emulate advancing time for this submission
