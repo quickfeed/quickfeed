@@ -32,15 +32,15 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     }
 
     public render() {
-        return <div>
-            <h3 onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
+        return <div className="a-element">
+            <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
             {this.state.open ? (<div>{this.renderBenchmarks()}</div>) : null}
             {this.state.open ? this.renderAddNew() : null}
         </div>
     }
 
     private renderBenchmarks(): JSX.Element {
-        return <div>
+        return <div className="b-list">
             {this.state.benchmarks.map((bm, i) => <EditBenchmark
                 key={i}
                 benchmark={bm}
@@ -61,7 +61,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     }
 
     private renderAddNew(): JSX.Element {
-        const addRow = <div onDoubleClick={() => this.toggleAdding()}>
+        const addRow = <div className="add-b" onDoubleClick={() => this.toggleAdding()}>
             Add a new grading benchmark.
         </div>;
         const addingRow = <div className="input-btns"><input

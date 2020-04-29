@@ -34,8 +34,8 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     }
 
     public render() {
-        return <div>
-            <h3 onDoubleClick={() => this.toggleEdit()}>
+        return <div className="b-element">
+            <h3 className="b-header" onDoubleClick={() => this.toggleEdit()}>
                 {this.state.editing ? this.renderHeader() : this.state.name}
             </h3>
 
@@ -46,8 +46,8 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     }
 
     private renderAddRow(): JSX.Element {
-        const addDiv = <div onDoubleClick={() => this.toggleAdd()}>Add a new grading criterion.</div>;
-        const addingDiv = <div className="input-btns"><input
+        const addDiv = <div className="add-b" onDoubleClick={() => this.toggleAdd()}>Add a new grading criterion.</div>;
+        const addingDiv = <div className="input-btns adding-b"><input
             type="text"
             defaultValue=""
             onChange={(e) => this.setNewDescription(e.target.value)}

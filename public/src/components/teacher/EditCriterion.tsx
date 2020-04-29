@@ -25,7 +25,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
     }
 
     public render() {
-        return <div>
+        return <div className="c-element">
             {this.state.editing ? this.renderEditView() : this.renderTextView()}
         </div>;
     }

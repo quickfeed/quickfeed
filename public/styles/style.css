@@ -298,7 +298,6 @@ body {
     left: 0;
     right: 0;
     margin: auto;
-
 }
 
 .info {
@@ -310,6 +309,56 @@ body {
     right: 20%;
     margin: auto;
 }
+/* manual grading */
+.a-element {
+    margin: 0;
+    border:rgb(26, 25, 27);
+    border-style: solid;
+    border-width: 1;
+}
+
+.a-header {
+    margin: 0;
+    background-color: darkgray;
+    border-bottom: rgb(26, 25, 27);
+    border-style: solid;
+    border-width: 1;
+}
+
+.b-list {
+    margin: 0;
+}
+
+.b-element {
+    margin: 0;
+}
+
+.b-header {
+    margin: 0;
+    background-color: cadetblue;
+    border-bottom: rgb(26, 25, 27);
+    border-style: solid;
+    border-width: 1;
+}
+
+.add-b {
+    margin: 0;
+    border-top: rgb(26, 25, 27);
+    border-style: solid;
+    border-width: 1;
+}
+
+.adding-b {
+    margin: 0;
+}
+
+.c-element {
+    margin: 0;
+    border-bottom: rgb(26, 25, 27);
+    border-style: solid;
+    border-width: 1;
+}
+
 
 /* loader shown while waiting for data being fetched from the server */
 
