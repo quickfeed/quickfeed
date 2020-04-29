@@ -171,8 +171,7 @@ message Assignment {
     uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
     uint32 reviewers = 10; // number of TA's to review submissions for this assignment 
     repeated Submission submissions = 11; 
-    repeated GradingBenchmark gradingBenchmarks = 12;
-    
+    repeated GradingBenchmark gradingBenchmarks = 12;    
 }
 
 message Assignments {
@@ -189,7 +188,7 @@ message Submission {
     string buildInfo = 7;
     string commitHash = 8;
     bool approved = 9;
-    repeated Review feedback = 10;  // JSON-encoded reviews
+    repeated Review reviews = 10;
     bool feedbackReady = 11; // defines whether the feedback is visible for the student or group members
 }
 

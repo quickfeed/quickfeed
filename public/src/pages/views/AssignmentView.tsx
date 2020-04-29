@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, Course, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
-import { EditBenchmark } from "../../components/teacher/EditBenchmark";
+import { EditBenchmark } from "../../components/manual-grading/EditBenchmark";
 
 interface AssignmentViewProps {
     assignment: Assignment;
@@ -27,7 +27,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
             adding: false,
             open: false,
             newBenchmark: "",
-            benchmarks: this.props.assignment.getGradingbasisList(),
+            benchmarks: this.props.assignment.getGradingbenchmarksList(),
         }
     }
 
@@ -64,10 +64,12 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     }
 
     private async removeBenchmark(bm: GradingBenchmark) {
-        if (await this.props.removeBenchmark(bm)) {
+        const ans = await this.props.removeBenchmark(bm);
+        if (ans) {
             const newList = this.state.benchmarks;
+            newList.splice(this.state.benchmarks.indexOf(bm), 1)
             this.setState({
-                benchmarks: newList.splice(this.state.benchmarks.indexOf(bm), 1),
+                benchmarks: newList,
             })
         }
     }
@@ -76,7 +78,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         const addRow = <div className="add-b" onDoubleClick={() => this.toggleAdding()}>
             Add a new grading benchmark.
         </div>;
-        const addingRow = <div className="input-btns"><input
+        const addingRow = <div className="input-group"><input
         type="text"
         defaultValue=""
         onChange={(e) => this.setNewHeader(e.target.value)}

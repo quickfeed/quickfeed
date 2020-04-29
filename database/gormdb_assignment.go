@@ -61,8 +61,8 @@ func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*
 			if err := db.conn.Where("assignment_id = ?", a.ID).Find(&benchmarks).Error; err != nil {
 				return nil, err
 			}
-			a.GradingBasis = benchmarks
-			for _, b := range a.GradingBasis {
+			a.GradingBenchmarks = benchmarks
+			for _, b := range a.GradingBenchmarks {
 				var criteria []*pb.GradingCriterion
 				if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
 					return nil, err

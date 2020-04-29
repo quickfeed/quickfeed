@@ -654,10 +654,10 @@ export class Submission extends jspb.Message {
   getApproved(): boolean;
   setApproved(value: boolean): void;
 
-  getFeedbackList(): Array<Review>;
-  setFeedbackList(value: Array<Review>): void;
-  clearFeedbackList(): void;
-  addFeedback(value?: Review, index?: number): Review;
+  getReviewsList(): Array<Review>;
+  setReviewsList(value: Array<Review>): void;
+  clearReviewsList(): void;
+  addReviews(value?: Review, index?: number): Review;
 
   getFeedbackready(): boolean;
   setFeedbackready(value: boolean): void;
@@ -681,7 +681,7 @@ export namespace Submission {
     buildinfo: string,
     commithash: string,
     approved: boolean,
-    feedbackList: Array<Review.AsObject>,
+    reviewsList: Array<Review.AsObject>,
     feedbackready: boolean,
   }
 }

@@ -5683,7 +5683,7 @@ proto.Submission.toObject = function(includeInstance, msg) {
     buildinfo: jspb.Message.getFieldWithDefault(msg, 7, ""),
     commithash: jspb.Message.getFieldWithDefault(msg, 8, ""),
     approved: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
-    feedbackList: jspb.Message.toObjectList(msg.getFeedbackList(),
+    reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
     proto.Review.toObject, includeInstance),
     feedbackready: jspb.Message.getBooleanFieldWithDefault(msg, 11, false)
   };
@@ -5761,7 +5761,7 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
     case 10:
       var value = new proto.Review;
       reader.readMessage(value,proto.Review.deserializeBinaryFromReader);
-      msg.addFeedback(value);
+      msg.addReviews(value);
       break;
     case 11:
       var value = /** @type {boolean} */ (reader.readBool());
@@ -5859,7 +5859,7 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getFeedbackList();
+  f = message.getReviewsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       10,
@@ -6040,10 +6040,10 @@ proto.Submission.prototype.setApproved = function(value) {
 
 
 /**
- * repeated Review feedback = 10;
+ * repeated Review reviews = 10;
  * @return {!Array<!proto.Review>}
  */
-proto.Submission.prototype.getFeedbackList = function() {
+proto.Submission.prototype.getReviewsList = function() {
   return /** @type{!Array<!proto.Review>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.Review, 10));
 };
@@ -6053,7 +6053,7 @@ proto.Submission.prototype.getFeedbackList = function() {
  * @param {!Array<!proto.Review>} value
  * @return {!proto.Submission} returns this
 */
-proto.Submission.prototype.setFeedbackList = function(value) {
+proto.Submission.prototype.setReviewsList = function(value) {
   return jspb.Message.setRepeatedWrapperField(this, 10, value);
 };
 
@@ -6063,7 +6063,7 @@ proto.Submission.prototype.setFeedbackList = function(value) {
  * @param {number=} opt_index
  * @return {!proto.Review}
  */
-proto.Submission.prototype.addFeedback = function(opt_value, opt_index) {
+proto.Submission.prototype.addReviews = function(opt_value, opt_index) {
   return jspb.Message.addToRepeatedWrapperField(this, 10, opt_value, proto.Review, opt_index);
 };
 
@@ -6072,8 +6072,8 @@ proto.Submission.prototype.addFeedback = function(opt_value, opt_index) {
  * Clears the list making it empty but non-null.
  * @return {!proto.Submission} returns this
  */
-proto.Submission.prototype.clearFeedbackList = function() {
-  return this.setFeedbackList([]);
+proto.Submission.prototype.clearReviewsList = function() {
+  return this.setReviewsList([]);
 };
 
 
