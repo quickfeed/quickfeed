@@ -6,10 +6,10 @@ interface EditBenchmarkProps {
     benchmark: GradingBenchmark,
     onAdd: (c: GradingCriterion) => Promise<GradingCriterion | null>;
     onUpdate: (newHeading: string) => void;
-    onDelete: () => boolean;
+    onDelete: () => void;
 
     updateCriterion: (c: GradingCriterion) => Promise<boolean>;
-    deleteCriterion: (id: number) => boolean;
+    deleteCriterion: (c: GradingCriterion) => Promise<boolean>;
 }
 
 interface EditBenchmarkState {
@@ -36,13 +36,19 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     public render() {
         return <div className="b-element">
             <h3 className="b-header" onDoubleClick={() => this.toggleEdit()}>
-                {this.state.editing ? this.renderHeader() : this.state.heading}
+                {this.state.editing ? this.renderHeader() : this.state.heading}{this.removeButton()}
             </h3>
 
         {this.renderCriteriaList()}
 
         {this.renderAddRow() }
         </div>
+    }
+
+    private removeButton(): JSX.Element {
+        return <button className="btn btn-danger btn-xs" onClick={
+            () => this.props.onDelete()
+        }>X</button>
     }
 
     private renderAddRow(): JSX.Element {
@@ -99,9 +105,20 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
                         c.setDescription(originalDesc);
                     }
                 }}
-                onDelete={() => this.props.deleteCriterion(c.getId())}
+                onDelete={() => this.removeCriterion(c)}
             ></EditCriterion>)}
         </div>
+    }
+
+    private async removeCriterion(c: GradingCriterion) {
+        const ans = await this.props.deleteCriterion(c);
+        if (ans) {
+            const newList = this.state.criteria;
+            newList.splice(this.state.criteria.indexOf(c), 1);
+            this.setState({
+                criteria: newList,
+            })
+        }
     }
 
 

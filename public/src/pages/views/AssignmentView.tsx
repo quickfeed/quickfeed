@@ -6,10 +6,10 @@ interface AssignmentViewProps {
     assignment: Assignment;
     updateBenchmark: (bm: GradingBenchmark) => Promise<boolean>;
     addBenchmark: (bm: GradingBenchmark) => Promise<GradingBenchmark | null>;
-    removeBenchmark: (id: number) => boolean;
+    removeBenchmark: (bm: GradingBenchmark) => Promise<boolean>;
     updateCriterion: (c: GradingCriterion) => Promise<boolean>;
     addCriterion: (c: GradingCriterion) => Promise<GradingCriterion | null>;
-    removeCriterion: (criterionID: number, benchmarkID: number) => boolean;
+    removeCriterion: (c: GradingCriterion) => Promise<boolean>;
 }
 
 interface AssignmentViewState {
@@ -54,13 +54,22 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
                         bm.setHeading(oldHeading);
                     }
                 }}
-                onDelete={() => this.props.removeBenchmark(bm.getId())}
+                onDelete={() => this.removeBenchmark(bm)}
                 updateCriterion={(c: GradingCriterion) => {
                     return this.props.updateCriterion(c);
                 }}
-                deleteCriterion={(id: number) => this.props.removeCriterion(id, bm.getId())}
+                deleteCriterion={(c: GradingCriterion) => this.props.removeCriterion(c)}
             />)}
         </div>
+    }
+
+    private async removeBenchmark(bm: GradingBenchmark) {
+        if (await this.props.removeBenchmark(bm)) {
+            const newList = this.state.benchmarks;
+            this.setState({
+                benchmarks: newList.splice(this.state.benchmarks.indexOf(bm), 1),
+            })
+        }
     }
 
     private renderAddNew(): JSX.Element {

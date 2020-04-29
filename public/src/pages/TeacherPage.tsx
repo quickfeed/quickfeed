@@ -404,26 +404,22 @@ export class TeacherPage extends ViewPage {
                 key={i}
                 assignment={a}
                 updateBenchmark={(bm: GradingBenchmark) => {
-                    console.log("Updating benchmark " + bm.getHeading() + " for assignment " + a.getName());
                     return this.courseMan.updateBenchmark(bm);
                 }}
                 addBenchmark={(bm: GradingBenchmark) => {
                     return this.courseMan.addNewBenchmark(bm);
                 }}
-                removeBenchmark={(id: number) => {
-                    console.log("Removing benchmark " + id + " from assignment " + a.getName());
-                    return true;
+                removeBenchmark={(bm: GradingBenchmark) => {
+                    return this.courseMan.deleteBenchmark(bm);
                 }}
                 updateCriterion={(c: GradingCriterion) => {
-                    console.log("Updating criterion: " + c.getDescription() + " for assignment " + a.getName());
                     return this.courseMan.updateCriterion(c);
                 }}
                 addCriterion={(c: GradingCriterion) => {
                     return this.courseMan.addNewCriterion(c);
                 }}
-                removeCriterion={(cid: number, bid: number) => {
-                    console.log("Removing criterion " + cid + " from benchmark " + bid + " of assignment " + a.getName());
-                    return true;
+                removeCriterion={(c: GradingCriterion) => {
+                    return this.courseMan.deleteCriterion(c)
                 }}
             ></AssigmnentView>)
             }</div>
