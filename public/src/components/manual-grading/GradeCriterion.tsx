@@ -3,8 +3,8 @@ import { GradingCriterion, Status } from '../../../proto/ag_pb';
 
 interface GradeCriterionProps {
     criterion: GradingCriterion;
-
-    update: (comment: string) => void;
+    addComment: (comment: string) => void;
+    addGrade: (grade: GradingCriterion.Grade) => void;
 }
 
 interface GradeCriterionState {
@@ -42,6 +42,8 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
         <input id="off" name="state-d" type="radio" />
         <label>OFF</label>
       </div>
+
+      // TODO: update grade locally, only update database when prompted by TA
     }
 
     private renderComment(): JSX.Element {
@@ -70,7 +72,7 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
     }
 
     private updateComment() {
-        this.props.update(this.state.comment);
+        this.props.addComment(this.state.comment);
         this.setState({
             commenting: false,
             comment: this.props.criterion.getComment(),
