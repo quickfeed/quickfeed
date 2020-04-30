@@ -1,6 +1,5 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, User } from '../../../proto/ag_pb';
-import { EditBenchmark } from "../../components/manual-grading/EditBenchmark";
+import { Assignment, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
 import { ISubmission, IReview } from '../../models';
 import { GradeBenchmark } from './GradeBenchmark';
 
