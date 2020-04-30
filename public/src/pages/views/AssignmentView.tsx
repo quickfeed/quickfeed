@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
+import { Assignment, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
 import { EditBenchmark } from "../../components/manual-grading/EditBenchmark";
 
 interface AssignmentViewProps {

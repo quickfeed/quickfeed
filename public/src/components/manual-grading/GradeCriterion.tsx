@@ -61,8 +61,15 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
                     }
                 }}
             />
+            <button
+                className="btn btn-primary btn-xs"
+                onClick={() => this.updateComment()}>OK</button>
+            <button
+                className="btn btn-danger btn-xs"
+                onClick={() => this.toggleEdit()}>X</button></div>
+        return <div className="comment-div">
+            {this.state.commenting ? editDiv : commentDiv}
         </div>
-        return <div className="comment-div"></div>
     }
 
     private setComment(input: string) {

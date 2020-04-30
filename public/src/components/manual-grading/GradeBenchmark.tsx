@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GradingBenchmark, GradingCriterion, Grade } from '../../../proto/ag_pb';
+import { GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
 import { GradeCriterion } from "./GradeCriterion";
 
 interface GradeBenchmarkProps {
@@ -31,7 +31,6 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
         </div>
     }
 
-
     private renderList(): JSX.Element[] {
         return this.state.criteria.map((c, i) => <GradeCriterion
             criterion={c}
@@ -45,8 +44,29 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
     }
 
     private renderComment(): JSX.Element {
-        // TODO
-        return <div></div>
+        const commentDiv = <div className="comment-div"
+            onDoubleClick={() => this.toggleEdit()}
+            >{this.state.comment}</div>;
+        const editDiv = <div className="input-group">
+            <input
+                type="text"
+                defaultValue={this.state.comment}
+                onChange={(e) => this.setComment(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        this.updateComment();
+                    }
+                }}
+            />
+            <button
+                className="btn btn-primary btn-xs"
+                onClick={() => this.updateComment()}>OK</button>
+            <button
+                className="btn btn-danger btn-xs"
+                onClick={() => this.toggleEdit()}>X</button></div>
+        return <div className="comment-div">
+            {this.state.commenting ? editDiv : commentDiv}
+        </div>
     }
 
     private setComment(input: string) {
@@ -59,6 +79,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
         this.props.addComment(this.state.comment);
         this.setState({
             commenting: false,
+            comment: this.props.benchmark.getComment(),
         });
     }
 
