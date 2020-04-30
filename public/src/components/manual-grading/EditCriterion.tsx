@@ -45,10 +45,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
 
     private updateDescription() {
         this.props.onUpdate(this.state.description);
-        this.setState({
-            editing: false,
-            description: this.props.criterion.getDescription(),
-        });
+        this.undo();
     }
 
     private renderTextView(): JSX.Element {
@@ -63,6 +60,11 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
                 type="text"
                 defaultValue={this.state.description}
                 onChange={(e) => this.setDescription(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        this.updateDescription();
+                    }
+                }}
         />
         <div className="btn-group">
         <button
@@ -70,7 +72,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
             onClick={() => this.updateDescription()}>OK</button>
         <button
             className="btn btn-danger btn-xs"
-            onClick={() => this.setState({editing: false, description: this.props.criterion.getDescription()})}>X</button></div>
+            onClick={() => this.undo()}>X</button></div>
         </div>
     }
 
@@ -80,5 +82,10 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
         })
     }
 
-    // reset state: editing false, desc to initial
+    private undo() {
+        this.setState({
+            editing: false,
+            description: this.props.criterion.getDescription(),
+        })
+    }
 }

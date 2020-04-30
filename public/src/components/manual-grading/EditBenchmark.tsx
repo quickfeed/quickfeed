@@ -57,6 +57,11 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
             type="text"
             defaultValue=""
             onChange={(e) => this.setNewDescription(e.target.value)}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    this.addNewCriterion();
+                }
+            }}
         />
         <div className="btn-group">
         <button
@@ -139,6 +144,11 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
                 type="text"
                 defaultValue={this.state.heading}
                 onChange={(e) => this.setHeader(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        this.updateHeader();
+                    }
+                }}
             />
             <div className="btn-group">
         <button
