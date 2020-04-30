@@ -110,7 +110,10 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoDeleteCriterion = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
-        this.methodInfoCreateReview = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+        this.methodInfoCreateReview = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Review, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Review.deserializeBinary);
+        this.methodInfoUpdateReview = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Providers, function (request) {
@@ -270,6 +273,10 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.createReview = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/CreateReview', request, metadata || {}, this.methodInfoCreateReview, callback);
+    };
+    AutograderServiceClient.prototype.updateReview = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateReview', request, metadata || {}, this.methodInfoUpdateReview, callback);
     };
     AutograderServiceClient.prototype.getProviders = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

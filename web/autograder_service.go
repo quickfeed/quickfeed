@@ -637,10 +637,16 @@ func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingC
 	return &pb.Void{}, nil
 }
 
-// UpdateFeedback adds a manual review to a student submission
-func (s *AutograderService) UpdateFeedback(ctx context.Context, in *pb.Submission) (*pb.Void, error) {
-	s.logger.Debugf("Uodating feedback: %+v", in)
-	return &pb.Void{}, nil
+// CreateReview adds a new submission review
+// Access policy: Teacher of CourseID
+func (s *AutograderService) CreateReview(ctx context.Context, in *pb.Review) (*pb.Review, error) {
+	return nil, nil
+}
+
+// UpdateReview updates a submission review
+// Access policy: Teacher of CourseID
+func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.Review) (*pb.Void, error) {
+	return nil, nil
 }
 
 // GetAssignments returns a list of all assignments for the given course.

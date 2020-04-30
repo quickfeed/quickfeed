@@ -402,7 +402,8 @@ service AutograderService {
     rpc UpdateCriterion(GradingCriterion) returns (Void) {}
     rpc DeleteCriterion(GradingCriterion) returns (Void) {}
 
-    rpc CreateReview(Review) returns (Void) {}
+    rpc CreateReview(Review) returns (Review) {}
+    rpc UpdateReview(Review) returns (Void) {}
 
     // misc //
     

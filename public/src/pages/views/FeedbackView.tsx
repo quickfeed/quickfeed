@@ -23,4 +23,10 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
             submissions: this.props.student.labs,
         }
     }
+
+    public render() {
+        // TODO: a list of all <Feedback> components for all course assignments
+        // decide what to show when the assignment is not supposed to be graded manually
+        return <div></div>
+    }
 }

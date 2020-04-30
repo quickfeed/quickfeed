@@ -20,4 +20,6 @@ interface GradingViewState {
 export class GradingView extends React.Component<GradingViewProps, GradingViewState> {
  // TODO: render a list of all course students to be always displayed as a menu
  // show a corresponding feedbackView for the chosen student to the right of the menu
+
+ // check that there are submissions for this assignment when creating a view
 }

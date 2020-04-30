@@ -790,6 +790,28 @@ export class AutograderServiceClient {
   }
 
   methodInfoCreateReview = new grpcWeb.AbstractClientBase.MethodInfo(
+    Review,
+    (request: Review) => {
+      return request.serializeBinary();
+    },
+    Review.deserializeBinary
+  );
+
+  createReview(
+    request: Review,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Review) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/CreateReview',
+      request,
+      metadata || {},
+      this.methodInfoCreateReview,
+      callback);
+  }
+
+  methodInfoUpdateReview = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
     (request: Review) => {
       return request.serializeBinary();
@@ -797,17 +819,17 @@ export class AutograderServiceClient {
     Void.deserializeBinary
   );
 
-  createReview(
+  updateReview(
     request: Review,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/CreateReview',
+        '/AutograderService/UpdateReview',
       request,
       metadata || {},
-      this.methodInfoCreateReview,
+      this.methodInfoUpdateReview,
       callback);
   }
 
