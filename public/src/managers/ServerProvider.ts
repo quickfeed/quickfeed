@@ -413,7 +413,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         }
         console.log("Parsed score objects: " + scoreObj.toString());
 
-        const reviews = sbm.getFeedbackList();
+        const reviews = sbm.getReviewsList();
         const ireviews: IReview[] = [];
         reviews.forEach(r => {
             let parsedReview: GradingBenchmark[];
@@ -430,8 +430,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 id: r.getId(),
                 submissionID: r.getSubmissionid(),
                 reviewerID: r.getReviewerid(),
-                review: parsedReview,
-                comment: r.getComment(),
+                reviews: parsedReview,
+                feedback: r.getFeedback(),
                 ready: r.getReady(),
             }
             ireviews.push(review);

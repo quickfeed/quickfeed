@@ -46,10 +46,10 @@ export interface ITestCases {
 }
 
 export interface IReview {
-    id: number;
+    id?: number;
     submissionID: number;
     reviewerID: number;
-    review: GradingBenchmark[];
+    reviews: GradingBenchmark[];
     feedback: string;
     ready: boolean;
 
