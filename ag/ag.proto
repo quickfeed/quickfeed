@@ -224,7 +224,7 @@ message Review {
     uint64 submissionID = 2;
     uint64 reviewerID = 3;
     string review = 4; // JSON encoded grading criteria
-    string comment = 5;
+    string feedback = 5;
     bool ready = 6;
 }
 
@@ -402,7 +402,7 @@ service AutograderService {
     rpc UpdateCriterion(GradingCriterion) returns (Void) {}
     rpc DeleteCriterion(GradingCriterion) returns (Void) {}
 
-    rpc UpdateFeedback(Submission) returns (Void) {}
+    rpc CreateReview(Review) returns (Void) {}
 
     // misc //
     

@@ -50,7 +50,7 @@ export interface IReview {
     submissionID: number;
     reviewerID: number;
     review: GradingBenchmark[];
-    comment: string;
+    feedback: string;
     ready: boolean;
 
 }

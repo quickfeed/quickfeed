@@ -33,6 +33,7 @@ import {
   RebuildRequest,
   Repositories,
   RepositoryRequest,
+  Review,
   Submission,
   SubmissionRequest,
   Submissions,
@@ -788,25 +789,25 @@ export class AutograderServiceClient {
       callback);
   }
 
-  methodInfoUpdateFeedback = new grpcWeb.AbstractClientBase.MethodInfo(
+  methodInfoCreateReview = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: Submission) => {
+    (request: Review) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
-  updateFeedback(
-    request: Submission,
+  createReview(
+    request: Review,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
-        '/AutograderService/UpdateFeedback',
+        '/AutograderService/CreateReview',
       request,
       metadata || {},
-      this.methodInfoUpdateFeedback,
+      this.methodInfoCreateReview,
       callback);
   }
 

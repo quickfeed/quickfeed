@@ -6830,7 +6830,7 @@ proto.Review.toObject = function(includeInstance, msg) {
     submissionid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     reviewerid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     review: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    comment: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    feedback: jspb.Message.getFieldWithDefault(msg, 5, ""),
     ready: jspb.Message.getBooleanFieldWithDefault(msg, 6, false)
   };
 
@@ -6886,7 +6886,7 @@ proto.Review.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
-      msg.setComment(value);
+      msg.setFeedback(value);
       break;
     case 6:
       var value = /** @type {boolean} */ (reader.readBool());
@@ -6949,7 +6949,7 @@ proto.Review.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getComment();
+  f = message.getFeedback();
   if (f.length > 0) {
     writer.writeString(
       5,
@@ -7039,10 +7039,10 @@ proto.Review.prototype.setReview = function(value) {
 
 
 /**
- * optional string comment = 5;
+ * optional string feedback = 5;
  * @return {string}
  */
-proto.Review.prototype.getComment = function() {
+proto.Review.prototype.getFeedback = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
@@ -7051,7 +7051,7 @@ proto.Review.prototype.getComment = function() {
  * @param {string} value
  * @return {!proto.Review} returns this
  */
-proto.Review.prototype.setComment = function(value) {
+proto.Review.prototype.setFeedback = function(value) {
   return jspb.Message.setProto3StringField(this, 5, value);
 };
 

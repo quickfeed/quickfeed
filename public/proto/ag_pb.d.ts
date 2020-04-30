@@ -795,8 +795,8 @@ export class Review extends jspb.Message {
   getReview(): string;
   setReview(value: string): void;
 
-  getComment(): string;
-  setComment(value: string): void;
+  getFeedback(): string;
+  setFeedback(value: string): void;
 
   getReady(): boolean;
   setReady(value: boolean): void;
@@ -815,7 +815,7 @@ export namespace Review {
     submissionid: number,
     reviewerid: number,
     review: string,
-    comment: string,
+    feedback: string,
     ready: boolean,
   }
 }
