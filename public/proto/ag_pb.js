@@ -6831,7 +6831,8 @@ proto.Review.toObject = function(includeInstance, msg) {
     reviewerid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     review: jspb.Message.getFieldWithDefault(msg, 4, ""),
     feedback: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    ready: jspb.Message.getBooleanFieldWithDefault(msg, 6, false)
+    ready: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
+    score: jspb.Message.getFieldWithDefault(msg, 7, 0)
   };
 
   if (includeInstance) {
@@ -6891,6 +6892,10 @@ proto.Review.deserializeBinaryFromReader = function(msg, reader) {
     case 6:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setReady(value);
+      break;
+    case 7:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setScore(value);
       break;
     default:
       reader.skipField();
@@ -6960,6 +6965,13 @@ proto.Review.serializeBinaryToWriter = function(message, writer) {
   if (f) {
     writer.writeBool(
       6,
+      f
+    );
+  }
+  f = message.getScore();
+  if (f !== 0) {
+    writer.writeUint64(
+      7,
       f
     );
   }
@@ -7071,6 +7083,24 @@ proto.Review.prototype.getReady = function() {
  */
 proto.Review.prototype.setReady = function(value) {
   return jspb.Message.setProto3BooleanField(this, 6, value);
+};
+
+
+/**
+ * optional uint64 score = 7;
+ * @return {number}
+ */
+proto.Review.prototype.getScore = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.Review} returns this
+ */
+proto.Review.prototype.setScore = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 

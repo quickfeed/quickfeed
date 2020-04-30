@@ -226,6 +226,7 @@ message Review {
     string review = 4; // JSON encoded grading criteria
     string feedback = 5;
     bool ready = 6;
+    uint64 score = 7;
 }
 
 ////    REQUESTS AND RESPONSES      \\\\

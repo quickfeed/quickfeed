@@ -801,6 +801,9 @@ export class Review extends jspb.Message {
   getReady(): boolean;
   setReady(value: boolean): void;
 
+  getScore(): number;
+  setScore(value: number): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Review.AsObject;
   static toObject(includeInstance: boolean, msg: Review): Review.AsObject;
@@ -817,6 +820,7 @@ export namespace Review {
     review: string,
     feedback: string,
     ready: boolean,
+    score: number,
   }
 }
 
