@@ -14,6 +14,7 @@ interface ReviewProps {
 }
 
 interface ReviewState {
+    open: boolean;
     benchmarks: GradingBenchmark[];
     score: number;
     approved: boolean;
@@ -29,6 +30,7 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
     constructor(props: ReviewProps) {
         super(props);
         this.state = {
+            open: false,
             benchmarks: this.setBenchmarks(),
             score: this.props.submission?.score ?? 0,
             approved: this.props.submission?.approved ?? false,
@@ -42,12 +44,12 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
 
     public render() {
         return <div className="review">
-            <h3 className="a-header">{this.props.assignment.getName()}: {this.props.authorName}</h3>
-            {this.renderInfo()}
-            {this.renderBenchmarkList()}
-            {this.renderFeedbackRow()}
-            {this.graded()}{this.saveButton()}
-            {this.showScore()}{this.readyButton()}
+            <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}: {this.props.authorName}</h3>
+            {this.state.open ? this.renderInfo() : null}
+            {this.state.open ?  this.renderBenchmarkList() : null}
+            {this.state.open ? this.renderFeedbackRow() : null}
+            {this.state.open ? this.graded() : null}{this.state.open ? this.saveButton() : null}
+            {this.state.open ? this.showScore() : null}{this.state.open ? this.readyButton() : null}
         </div>
     }
 
@@ -168,6 +170,12 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
             });
         }
         return counter;
+    }
+
+    private toggleOpen() {
+        this.setState({
+            open: !this.state.open,
+        })
     }
 
     private graded(): JSX.Element {
