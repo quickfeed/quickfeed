@@ -402,7 +402,8 @@ body {
 }
 
 .switch-toggle {
-    width: 10em;
+    display: block;
+    float: right;
 }
   
 .switch-toggle label:not(.disabled) {

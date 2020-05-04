@@ -32,17 +32,15 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
     }
 
     private renderSwitch() {
-        return <div className="switch-toggle">
-        <input id="on" name="state-d" type="radio" checked={false} />
-        <label>ON</label>
-
-        <input id="na" name="state-d" type="radio" disabled checked={true} />
-        <label className="disabled">&nbsp;</label>
-
-        <input id="off" name="state-d" type="radio" />
-        <label>OFF</label>
-      </div>
-
+        return <div className="switch-toggle btn-group">
+            <button className="btn btn-xs btn-success"
+                onClick={() => this.props.addGrade(GradingCriterion.Grade.PASSED)}
+            ><span className="glyphicon glyphicon-ok-circle"></span></button><button className="btn btn-xs btn-basic"
+                onClick={() => this.props.addGrade(GradingCriterion.Grade.NONE)}
+            ><span className="glyphicon glyphicon-ban-circle"></span></button><button className="btn btn-xs btn-danger"
+                onClick={() => this.props.addGrade(GradingCriterion.Grade.FAILED)}
+            ><span className="glyphicon glyphicon-remove-circle"></span></button>
+        </div>
       // TODO: update grade locally, only update database when prompted by TA
     }
 
