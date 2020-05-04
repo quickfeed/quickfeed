@@ -33,6 +33,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
 
     private renderList(): JSX.Element[] {
         return this.state.criteria.map((c, i) => <GradeCriterion
+            key={"c" + i}
             criterion={c}
             addComment={(comment: string) => {
                 c.setComment(comment);
@@ -46,7 +47,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
     private renderComment(): JSX.Element {
         const commentDiv = <div className="comment-div"
             onDoubleClick={() => this.toggleEdit()}
-            >{this.state.comment}</div>;
+            >{this.state.comment !== "" ? this.state.comment : "Add a comment"}</div>;
         const editDiv = <div className="input-group">
             <input
                 type="text"

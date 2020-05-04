@@ -49,7 +49,7 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
     private renderComment(): JSX.Element {
         const commentDiv = <div className="comment-div"
             onDoubleClick={() => this.toggleEdit()}
-            >{this.state.comment}</div>;
+            >{this.state.comment !== "" ? this.state.comment : "Add new comment"}</div>;
         const editDiv = <div className="input-group">
             <input
                 type="text"
