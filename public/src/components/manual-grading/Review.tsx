@@ -5,12 +5,12 @@ import { GradeBenchmark } from './GradeBenchmark';
 
 interface ReviewProps {
     assignment: Assignment;
-    submission: ISubmission;
+    submission: ISubmission | undefined;
     review: IReview | null;
     authorName: string;
     reviewerID: number;
-    addFeedback: (review: IReview) => Promise<boolean>;
-    addFeedbackText: (feedback: string) => Promise<boolean>;
+    addReview: (review: IReview) => Promise<boolean>;
+    updateReview: (review: IReview) => Promise<boolean>; // TODO: add feedback text before updating
 }
 
 interface ReviewState {
@@ -30,8 +30,8 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
         super(props);
         this.state = {
             benchmarks: this.setBenchmarks(),
-            score: this.props.submission.score,
-            approved: this.props.submission.approved,
+            score: this.props.submission?.score ?? 0,
+            approved: this.props.submission?.approved ?? false,
             feedback: this.props.review?.feedback ?? "",
             editing: false,
             criteria: this.criteriaTotal(),
@@ -76,7 +76,7 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
 
     private renderInfo(): JSX.Element {
         return <div className="s-info"><ul>
-            <li key="i1"> Reviews: {this.props.submission.reviews.length}/{this.props.assignment.getReviewers()}</li>
+            <li key="i1"> Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</li>
             <li key="i2"> {this.setApprovedString()} </li>
             </ul></div>
     }
@@ -100,17 +100,17 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
     }
 
     private setApprovedString(): string {
-        return this.props.submission.approved ? "Approved" : "Not approved";
+        return this.props.submission?.approved ? "Approved" : "Not approved";
     }
 
     private updateReview() {
         const r: IReview = this.props.review ?? this.makeNewReview();
-        this.props.addFeedback(r);
+        this.props.addReview(r);
     }
 
     private makeNewReview(): IReview {
         return {
-            submissionID: this.props.submission.id,
+            submissionID: this.props.submission?.id ?? 0,
             reviewerID: this.props.reviewerID,
             reviews: this.state.benchmarks,
             ready: this.state.ready,
@@ -119,7 +119,15 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
     }
 
     private async addFeedback() {
-        const ans = this.props.addFeedbackText(this.state.feedback);
+        const r: IReview = this.props.review ?? {
+            submissionID: this.props.submission?.id ?? 0,
+            reviewerID: this.props.reviewerID,
+            reviews: this.state.benchmarks,
+            feedback: "",
+            ready: this.state.ready,
+        }
+        r.feedback = this.state.feedback;
+        const ans = this.props.updateReview(r);
         if (!ans) {
             this.setState({
                 feedback: this.props.review?.feedback ?? "",
