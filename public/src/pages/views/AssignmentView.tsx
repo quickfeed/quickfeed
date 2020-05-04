@@ -82,14 +82,14 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         type="text"
         defaultValue=""
         onChange={(e) => this.setNewHeader(e.target.value)}
+        onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+                this.addNewBenchmark();
+            } else if (e.key === 'Escape') {
+                this.toggleAdding();
+            }
+        }}
         />
-        <div className="btn-group">
-        <button
-            className="btn btn-primary btn-xs"
-            onClick={() => this.addNewBenchmark()}>OK</button>
-        <button
-            className="btn btn-danger btn-xs"
-            onClick={() => this.toggleAdding()}>X</button></div>
         </div>;
         return this.state.adding ? addingRow : addRow;
     }

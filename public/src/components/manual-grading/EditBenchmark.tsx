@@ -60,16 +60,11 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
             onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                     this.addNewCriterion();
+                } else if (e.key === 'Escape') {
+                    this.toggleAdd();
                 }
             }}
         />
-        <div className="btn-group">
-        <button
-            className="btn btn-primary btn-xs"
-            onClick={() => this.addNewCriterion()}>OK</button>
-        <button
-            className="btn btn-danger btn-xs"
-            onClick={() => this.toggleAdd()}>X</button></div>
         </div>;
         return this.state.adding ? addingDiv : addDiv;
     }
@@ -147,17 +142,11 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         this.updateHeader();
+                    } else if (e.key === 'Escape') {
+                        this.toggleEdit();
                     }
                 }}
-            />
-            <div className="btn-group">
-        <button
-            className="btn btn-primary btn-xs"
-            onClick={() => this.updateHeader()}>OK</button>
-        <button
-            className="btn btn-danger btn-xs"
-            onClick={() => this.toggleEdit()}>X</button></div>
-        </div>
+            /></div>
     }
 
     private setHeader(newHeader: string) {

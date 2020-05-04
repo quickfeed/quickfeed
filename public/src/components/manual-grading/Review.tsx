@@ -48,13 +48,14 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
             {this.state.open ? this.renderInfo() : null}
             {this.state.open ?  this.renderBenchmarkList() : null}
             {this.state.open ? this.renderFeedbackRow() : null}
-            {this.state.open ? this.graded() : null}{this.state.open ? this.saveButton() : null}
-            {this.state.open ? this.showScore() : null}{this.state.open ? this.readyButton() : null}
+            <div className="row">{this.state.open ? this.graded() : null}{this.state.open ? this.saveButton() : null}</div>
+            <div className="row">{this.state.open ? this.showScore() : null}{this.state.open ? this.readyButton() : null}</div>
         </div>
     }
 
     private renderBenchmarkList(): JSX.Element[] {
         return this.state.benchmarks.map((bm, i) => <GradeBenchmark
+            key={"bm" + i}
             benchmark={bm}
             addComment={(comment: string) => {
                 bm.setComment(comment);

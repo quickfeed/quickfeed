@@ -5,8 +5,6 @@ interface EditCriterionProps {
     criterion: GradingCriterion;
     onUpdate: (newDescription: string) => void;
     onDelete: () => void;
-
-    // assignment?: boolean // editable description if assignment view, editable passed/failed if not
 }
 
 interface EditCriterionState {
@@ -63,17 +61,11 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         this.updateDescription();
+                    } else if (e.key === 'Escape') {
+                        this.undo();
                     }
                 }}
-        />
-        <div className="btn-group">
-        <button
-            className="btn btn-primary btn-xs"
-            onClick={() => this.updateDescription()}>OK</button>
-        <button
-            className="btn btn-danger btn-xs"
-            onClick={() => this.undo()}>X</button></div>
-        </div>
+        /></div>
     }
 
     private setDescription(inputText: string) {

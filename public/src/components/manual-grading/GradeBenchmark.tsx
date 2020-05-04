@@ -55,15 +55,11 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         this.updateComment();
+                    } else if (e.key === 'Escape') {
+                        this.toggleEdit();
                     }
                 }}
-            />
-            <button
-                className="btn btn-primary btn-xs"
-                onClick={() => this.updateComment()}>OK</button>
-            <button
-                className="btn btn-danger btn-xs"
-                onClick={() => this.toggleEdit()}>X</button></div>
+            /></div>
         return <div className="comment-div">
             {this.state.commenting ? editDiv : commentDiv}
         </div>

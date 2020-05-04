@@ -109,7 +109,6 @@ export class TeacherPage extends ViewPage {
                     </BootstrapButton>;
                     break;
             }
-            // return a table with all course assignments, on click - link to AssignmentView
             return <div key="head">
                 <h1>Overview for {course.getName()}</h1>
                 {button}

@@ -79,7 +79,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                         selectedStudent: s,
                     })
                 } }
-              >{s.enrollment.getUser()?.getName() ?? "Fetch name here"}</li>)}
+              >{s.enrollment.getUser()?.getName() ?? "No name"}</li>)}
         </ul></div>;
     }
 
