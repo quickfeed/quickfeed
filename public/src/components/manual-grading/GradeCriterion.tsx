@@ -33,15 +33,36 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
 
     private renderSwitch() {
         return <div className="switch-toggle btn-group">
-            <button className="btn btn-xs btn-success"
-                onClick={() => this.props.addGrade(GradingCriterion.Grade.PASSED)}
-            ><span className="glyphicon glyphicon-ok-circle"></span></button><button className="btn btn-xs btn-basic"
-                onClick={() => this.props.addGrade(GradingCriterion.Grade.NONE)}
-            ><span className="glyphicon glyphicon-ban-circle"></span></button><button className="btn btn-xs btn-danger"
-                onClick={() => this.props.addGrade(GradingCriterion.Grade.FAILED)}
+            <button className={this.setButtonClass(GradingCriterion.Grade.PASSED, "btn-success")}
+                onClick={() => {
+                    this.props.addGrade(GradingCriterion.Grade.PASSED);
+                    this.setState({
+                        grade: GradingCriterion.Grade.PASSED,
+                    });
+                }}
+            ><span className="glyphicon glyphicon-ok-circle"></span></button>
+            <button className={this.setButtonClass(GradingCriterion.Grade.NONE, "btn-basic")}
+                onClick={() => {
+                    this.props.addGrade(GradingCriterion.Grade.NONE);
+                    this.setState({
+                        grade: GradingCriterion.Grade.NONE,
+                    });
+                }}
+            ><span className="glyphicon glyphicon-ban-circle"></span></button>
+            <button className={this.setButtonClass(GradingCriterion.Grade.FAILED, "btn-danger")}
+                onClick={() => {
+                    this.props.addGrade(GradingCriterion.Grade.FAILED);
+                    this.setState({
+                        grade: GradingCriterion.Grade.FAILED,
+                    });
+                }}
             ><span className="glyphicon glyphicon-remove-circle"></span></button>
         </div>
       // TODO: update grade locally, only update database when prompted by TA
+    }
+
+    private setButtonClass(grade: GradingCriterion.Grade, classString: string): string {
+        return "btn btn-xs " + (this.state.grade === grade ? classString : "btn-default");
     }
 
     private renderComment(): JSX.Element {
