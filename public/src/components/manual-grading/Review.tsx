@@ -44,7 +44,7 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
 
     public render() {
         return <div className="review">
-            <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}: {this.props.authorName}</h3>
+            <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
             {this.state.open ? this.renderInfo() : null}
             {this.state.open ?  this.renderBenchmarkList() : null}
             {this.state.open ? this.renderFeedbackRow() : null}

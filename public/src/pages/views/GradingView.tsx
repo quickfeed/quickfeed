@@ -15,14 +15,14 @@ interface GradingViewProps {
 }
 
 interface GradingViewState {
-    currentStudent: IStudentLabsForCourse | null;
+    selectedStudent: IStudentLabsForCourse | null;
 }
 
 export class GradingView extends React.Component<GradingViewProps, GradingViewState> {
     constructor(props: GradingViewProps) {
         super(props);
         this.state = {
-            currentStudent: null,
+            selectedStudent: null,
         }
     }
 
@@ -33,12 +33,14 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderReview(): JSX.Element {
-        const student = this.state.currentStudent;
-        if (student) {
-            return <div className="f-view">{
+        const student = this.state.selectedStudent;
+        if (student && student.labs.length > 0) {
+            return <div className="f-view">
+                <h2 className="a-header">{student.labs[0].authorName}</h2>
+                {
                 student.labs.map((l, i) => <Review
                     key={"st" + i}
-                    assignment={l.assignment}
+                    assignment={this.getAssignment(l.assignment)}
                     submission={l.submission}
                     review={this.selectReview(l.submission)}
                     authorName={l.authorName}
@@ -48,7 +50,13 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                 />)
             }</div>
         }
-        return <div>Empty review div, add things</div> // TODO: render empty view (some useful info on grading for TAs), i.e. list of active assignments for the course?
+        return <div>No submissions yet from {this.state.selectedStudent?.enrollment.getUser()?.getName()}</div> // TODO: render empty view (some useful info on grading for TAs), i.e. list of active assignments for the course?
+    }
+
+    private getAssignment(a: Assignment): Assignment {
+        console.log("Looking for assignment: " + a.toString());
+        console.log("Found: " + this.props.assignments.find(item => item.getId() === a.getId())?.toString());
+        return this.props.assignments.find(item => item.getId() === a.getId()) ?? a;
     }
 
     private selectReview(s: ISubmission | undefined): IReview | null {
@@ -68,7 +76,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                 className={this.setSelected(s)}
                 onClick={() => {
                     this.setState({
-                        currentStudent: s,
+                        selectedStudent: s,
                     })
                 } }
               >{s.enrollment.getUser()?.getName() ?? "Fetch name here"}</li>)}
@@ -77,6 +85,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
 
     // TODO: add style
     private setSelected(s: IStudentLabsForCourse): string {
-        return this.state.currentStudent === s ? "li-selected" : "";
+        return this.state.selectedStudent === s ? "li-selected" : "";
     }
 }
