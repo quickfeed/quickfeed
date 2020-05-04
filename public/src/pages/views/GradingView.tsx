@@ -27,16 +27,17 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     public render() {
-        return <div className="grading-view">
-            <div className="students-nav">{this.renderStudentList()}</div><div className="f-view">{this.renderReview()}</div>
+        return <div className="row grading-view">
+            {this.renderStudentList()}{this.renderReview()}
         </div>
     }
 
     private renderReview(): JSX.Element {
         const student = this.state.currentStudent;
         if (student) {
-            return <div>{
+            return <div className="f-view">{
                 student.labs.map((l, i) => <Review
+                    key={"st" + i}
                     assignment={l.assignment}
                     submission={l.submission}
                     review={this.selectReview(l.submission)}
@@ -61,7 +62,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderStudentList(): JSX.Element {
-        return <ul className="nav nav-pills nav-stacked">
+        return <div className="student-div"><ul className=" student-nav nav nav-stacked span2">
               {this.props.students.map((s, i) => <li
                 key={"m" + i}
                 className={this.setSelected(s)}
@@ -71,7 +72,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     })
                 } }
               >{s.enrollment.getUser()?.getName() ?? "Fetch name here"}</li>)}
-        </ul>;
+        </ul></div>;
     }
 
     // TODO: add style

@@ -373,6 +373,31 @@ body {
     background-color: lightblue;
 }
 
+.grading-view {
+    margin: auto;
+    width: 100%;
+}
+
+.student-div {
+    width: 15%;
+    border-style: solid;
+    border-color: slateblue;
+    float: left;
+}
+
+.students-nav li {
+    background-color: salmon;
+}
+
+.f-view {
+    border-style: solid;
+    border-color: red;
+    margin: 0;
+    width: 80%;
+    display: block;
+    float: right;
+}
+
 .switch-toggle {
     width: 10em;
 }
