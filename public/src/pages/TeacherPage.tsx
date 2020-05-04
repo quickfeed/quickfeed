@@ -12,6 +12,8 @@ import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
 import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHelper';
 import { AssigmnentView } from "./views/AssignmentView";
+import { GradingView } from "./views/GradingView";
+import { IReview } from '../models';
 
 export class TeacherPage extends ViewPage {
 
@@ -36,6 +38,7 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("courses/{course}/results", this.results);
         this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
+        this.navHelper.registerFunction("courses/{course}/review", this.manualReview);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
         this.navHelper.registerFunction("courses/{cid}/new_group", this.newGroup);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
@@ -165,6 +168,31 @@ export class TeacherPage extends ViewPage {
         });
     }
 
+    public async manualReview(info: INavInfo<{ course: string }>): View {
+        return this.courseFunc(info.params.course, async (course) => {
+            const assignments = await this.courseMan.getAssignments(course.getId());
+            const students = await this.courseMan.getLabsForCourse(course.getId(), false);
+            const curUser = this.userMan.getCurrentUser();
+            if (curUser) {
+                return <GradingView
+                course={course}
+                assignments={assignments}
+                students={students}
+                curUser={curUser}
+                addReview={async (r: IReview) => {
+                    // TODO: save a new submission review in the database
+                    return true;
+                }}
+                updateReview={async (r: IReview) => {
+                    // TODO: update review in the database
+                    return true;
+                }}
+            />
+            }
+            return <div>Please log in.</div>
+        })
+    }
+
     public async groups(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const groups = await this.courseMan.getGroupsForCourse(course.getId());
@@ -289,6 +317,7 @@ export class TeacherPage extends ViewPage {
             children: [
                 { name: "Results", uri: link.uri + "/results" },
                 { name: "Group Results", uri: link.uri + "/groupresults" },
+                { name: "Review", uri: link.uri + "/review"},
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
                 { name: "New Group", uri: link.uri + "/new_group"},
