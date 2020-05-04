@@ -11,7 +11,6 @@ interface ReviewProps {
     reviewerID: number;
     addFeedback: (review: IReview) => Promise<boolean>;
     addFeedbackText: (feedback: string) => Promise<boolean>;
-    
 }
 
 interface ReviewState {
@@ -44,6 +43,7 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
     public render() {
         return <div className="review">
             <h3 className="a-header">{this.props.assignment.getName()}: {this.props.authorName}</h3>
+            {this.renderInfo()}
             {this.renderBenchmarkList()}
             {this.renderFeedbackRow()}
             {this.graded()}{this.saveButton()}
@@ -71,8 +71,14 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
             onChange={(e) => this.setFeedback(e.target.value)}
             onSubmit={() => this.addFeedback()}
         ></textarea>
-
         </div>
+    }
+
+    private renderInfo(): JSX.Element {
+        return <div className="s-info"><ul>
+            <li key="i1"> Reviews: {this.props.submission.reviews.length}/{this.props.assignment.getReviewers()}</li>
+            <li key="i2"> {this.setApprovedString()} </li>
+            </ul></div>
     }
 
     private saveButton(): JSX.Element {
@@ -91,6 +97,10 @@ export class Review extends React.Component<ReviewProps, ReviewState> {
                 })
             }}
         >Mark as ready</button>
+    }
+
+    private setApprovedString(): string {
+        return this.props.submission.approved ? "Approved" : "Not approved";
     }
 
     private updateReview() {

@@ -364,6 +364,15 @@ body {
     margin: 0;
 }
 
+.s-info {
+    display: block;
+    float: right;
+    border-style: solid;
+    border-color: darkslategray;
+    border-width: 0.5;
+    background-color: lightblue;
+}
+
 .switch-toggle {
     width: 10em;
 }
