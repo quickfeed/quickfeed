@@ -5,6 +5,7 @@ import { GradeCriterion } from "./GradeCriterion";
 interface GradeBenchmarkProps {
     benchmark: GradingBenchmark,
     addComment: (comment: string) => void;
+    onUpdate: (criteria: GradingCriterion[]) => void;
 }
 
 interface GradeBenchmarkState {
@@ -37,9 +38,11 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
             criterion={c}
             addComment={(comment: string) => {
                 c.setComment(comment);
+                this.props.onUpdate(this.state.criteria);
             }}
             addGrade={(grade: GradingCriterion.Grade) => {
                 c.setGrade(grade);
+                this.props.onUpdate(this.state.criteria);
             }}
         />)
     }

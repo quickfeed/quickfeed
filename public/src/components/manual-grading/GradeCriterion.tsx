@@ -98,8 +98,8 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
         this.props.addComment(this.state.comment);
         this.setState({
             commenting: false,
-            comment: this.props.criterion.getComment(),
-        })
+            // comment: this.props.criterion.getComment(),
+        });
     }
 
     private toggleEdit() {

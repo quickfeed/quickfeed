@@ -60,6 +60,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             addComment={(comment: string) => {
                 bm.setComment(comment);
             }}
+            onUpdate={(c: GradingCriterion[]) => {
+                bm.setCriteriaList(c);
+            }}
         />)
     }
 
