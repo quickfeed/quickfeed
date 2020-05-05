@@ -40,17 +40,14 @@ func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, c
 }
 
 func (s *AutograderService) createBenchmark(query *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
-	_, err := s.db.GetAssignment(&pb.Assignment{
+	if _, err := s.db.GetAssignment(&pb.Assignment{
 		ID: query.AssignmentID,
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
-	err = s.db.CreateBenchmark(query)
-	if err != nil {
+	if err := s.db.CreateBenchmark(query); err != nil {
 		return nil, err
 	}
-	s.logger.Debugf("created a benchmark, make sure ID is set now: %+v", query)
 	return query, nil
 }
 
@@ -63,11 +60,9 @@ func (s *AutograderService) deleteBenchmark(query *pb.GradingBenchmark) error {
 }
 
 func (s *AutograderService) createCriterion(query *pb.GradingCriterion) (*pb.GradingCriterion, error) {
-	err := s.db.CreateCriterion(query)
-	if err != nil {
+	if err := s.db.CreateCriterion(query); err != nil {
 		return nil, err
 	}
-	s.logger.Debugf("created a criterion, make sure ID is set now: %+v", query)
 	return query, nil
 }
 
@@ -77,4 +72,18 @@ func (s *AutograderService) updateCriterion(query *pb.GradingCriterion) error {
 
 func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
 	return s.db.DeleteCriterion(query)
+}
+
+func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
+	if _, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID}); err != nil {
+		return nil, err
+	}
+	if err := s.db.CreateReview(query); err != nil {
+		return nil, err
+	}
+	return query, nil
+}
+
+func (s *AutograderService) updateReview(query *pb.Review) error {
+	return s.db.UpdateReview(query)
 }

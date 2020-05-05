@@ -90,9 +90,9 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Vo
 	}
 	if _, err = s.updateUser(usr, in); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %w", in.GetID(), err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to update user")
+		err = status.Errorf(codes.InvalidArgument, "failed to update user")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
@@ -208,9 +208,9 @@ func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.E
 	err = s.changeCourseVisibility(in)
 	if err != nil {
 		s.logger.Errorf("ChangeCourseVisibility failed: %w", err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to update course visibility")
+		err = status.Errorf(codes.InvalidArgument, "failed to update course visibility")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // CreateEnrollment enrolls a new student for the course specified in the request.
@@ -219,9 +219,9 @@ func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollm
 	err := s.createEnrollment(in)
 	if err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %w", err)
-		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
+		err = status.Error(codes.InvalidArgument, "failed to create enrollment")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
@@ -553,9 +553,9 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 	err = s.updateSubmission(in.GetSubmissionID(), in.GetApprove())
 	if err != nil {
 		s.logger.Errorf("ApproveSubmission failed: %w", err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to approve submission")
+		err = status.Errorf(codes.InvalidArgument, "failed to approve submission")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // RebuildSubmission rebuilds the submission with the given ID
@@ -588,9 +588,9 @@ func (s *AutograderService) UpdateBenchmark(ctx context.Context, in *pb.GradingB
 	err := s.updateBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("UpdateBenchmark failed for %+v: %s", in, err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to update benchmark")
+		err = status.Errorf(codes.InvalidArgument, "failed to update benchmark")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // DeleteBenchmark removes a grading benchmark
@@ -599,9 +599,9 @@ func (s *AutograderService) DeleteBenchmark(ctx context.Context, in *pb.GradingB
 	err := s.deleteBenchmark(in)
 	if err != nil {
 		s.logger.Errorf("DeleteBenchmark failed for %+v: %s", in, err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to delete benchmark")
+		err = status.Errorf(codes.InvalidArgument, "failed to delete benchmark")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // CreateCriterion adds a new grading criterion for an assignment
@@ -621,9 +621,9 @@ func (s *AutograderService) UpdateCriterion(ctx context.Context, in *pb.GradingC
 	err := s.updateCriterion(in)
 	if err != nil {
 		s.logger.Errorf("UpdateCriterion failed for %+v: %s", in, err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to update criterion")
+		err = status.Errorf(codes.InvalidArgument, "failed to update criterion")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // DeleteCriterion removes a grading criterion for an assignment
@@ -632,21 +632,48 @@ func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingC
 	err := s.deleteCriterion(in)
 	if err != nil {
 		s.logger.Errorf("DeleteCriterion failed for %+v: %s", in, err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to delete criterion")
+		err = status.Errorf(codes.InvalidArgument, "failed to delete criterion")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // CreateReview adds a new submission review
 // Access policy: Teacher of CourseID
 func (s *AutograderService) CreateReview(ctx context.Context, in *pb.Review) (*pb.Review, error) {
-	return nil, nil
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("CreateReview failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !usr.IsOwner(in.GetReviewerID()) {
+		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.ReviewerID)
+		return nil, status.Errorf(codes.PermissionDenied, "failed to create review: reviewers' IDs don't match")
+	}
+	review, err := s.createReview(in)
+	if err != nil {
+		s.logger.Errorf("CreateReview failed for review %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create review")
+	}
+	return review, nil
 }
 
 // UpdateReview updates a submission review
-// Access policy: Teacher of CourseID
+// Access policy: Teacher of CourseID, Author of the given Review
 func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.Review) (*pb.Void, error) {
-	return nil, nil
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("UpdateReview failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !usr.IsOwner(in.GetReviewerID()) {
+		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.ReviewerID)
+		return nil, status.Errorf(codes.PermissionDenied, "reviews can only be updated by original authors")
+	}
+	if err = s.updateReview(in); err != nil {
+		s.logger.Errorf("UpdateReview failed for review %+v: %s", in, err)
+		err = status.Errorf(codes.InvalidArgument, "failed to update review")
+	}
+	return &pb.Void{}, err
 }
 
 // GetAssignments returns a list of all assignments for the given course.

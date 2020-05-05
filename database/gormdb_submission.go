@@ -128,5 +128,6 @@ func (db *GormDB) UpdateReview(query *pb.Review) error {
 		Feedback: query.Feedback,
 		Review:   query.Review,
 		Ready:    query.Ready,
+		Score:    query.Score,
 	}).Error
 }
