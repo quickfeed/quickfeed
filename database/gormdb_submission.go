@@ -74,7 +74,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 // GetSubmission fetches a submission record.
 func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	var submission pb.Submission
-	if err := db.conn.Where(query).Last(&submission).Error; err != nil {
+	if err := db.conn.Preload("Reviews").Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
 	return &submission, nil
@@ -111,4 +111,22 @@ func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
 		Model(&pb.Submission{}).
 		Where(&pb.Submission{ID: sid}).
 		Update("approved", approved).Error
+}
+
+// CreateReview creates a new submission review
+func (db *GormDB) CreateReview(query *pb.Review) error {
+	return db.conn.Create(query).Error
+}
+
+// UpdateReview updates feedback text, review and ready status
+func (db *GormDB) UpdateReview(query *pb.Review) error {
+	return db.conn.Model(query).Where(&pb.Review{
+		ID:           query.ID,
+		SubmissionID: query.SubmissionID,
+		ReviewerID:   query.ReviewerID,
+	}).Update(&pb.Review{
+		Feedback: query.Feedback,
+		Review:   query.Review,
+		Ready:    query.Ready,
+	}).Error
 }

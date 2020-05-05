@@ -78,17 +78,17 @@ type Database interface {
 	GetAssignmentsByCourse(uint64, bool) ([]*pb.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*pb.Assignment) error
-	// CreateBenchmark creates a new grading benchmark
+	// CreateBenchmark creates a new grading benchmark.
 	CreateBenchmark(*pb.GradingBenchmark) error
-	// UpdateBenchmark updates the given benchmark
+	// UpdateBenchmark updates the given benchmark.
 	UpdateBenchmark(*pb.GradingBenchmark) error
-	// DeleteBenchmark deletes the given benchmark
+	// DeleteBenchmark deletes the given benchmark.
 	DeleteBenchmark(*pb.GradingBenchmark) error
-	// CreateCriterion creates a new grading criterion
+	// CreateCriterion creates a new grading criterion.
 	CreateCriterion(*pb.GradingCriterion) error
-	// UpdateCriterion updates the given criterion
+	// UpdateCriterion updates the given criterion.
 	UpdateCriterion(*pb.GradingCriterion) error
-	// DeleteCriterion deletes the given criterion
+	// DeleteCriterion deletes the given criterion.
 	DeleteCriterion(*pb.GradingCriterion) error
 
 	// CreateSubmission creates a new submission record or updates the most
@@ -105,6 +105,10 @@ type Database interface {
 	GetCourseAssignmentsWithSubmissions(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(submissionID uint64, approved bool) error
+	// CreateReview adds a new submission review.
+	CreateReview(*pb.Review) error
+	// UpdateReview updates the given review.
+	UpdateReview(*pb.Review) error
 
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error
