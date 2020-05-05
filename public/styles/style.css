@@ -353,6 +353,12 @@ body {
     margin: 0;
 }
 
+.bm-btn {
+    display: block;
+    float: right;
+    margin-right: 1%;
+}
+
 .c-element {
     margin: 0;
     border-bottom: rgb(26, 25, 27);

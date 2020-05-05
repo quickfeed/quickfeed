@@ -30,7 +30,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
 
     private renderDeleteButton(): JSX.Element {
         return <button
-            className="btn btn-danger btn-xs"
+            className="btn btn-danger btn-xs bm-btn"
             onClick={() => this.props.onDelete()}
         >X</button>
     }

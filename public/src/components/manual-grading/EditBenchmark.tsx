@@ -46,7 +46,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     }
 
     private removeButton(): JSX.Element {
-        return <button className="btn btn-danger btn-xs" onClick={
+        return <button className="btn btn-danger btn-xs bm-btn" onClick={
             () => this.props.onDelete()
         }>X</button>
     }
@@ -137,6 +137,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     private renderHeader(): JSX.Element {
         return <div className="input-group">
             <input
+                autoFocus={true}
                 type="text"
                 defaultValue={this.state.heading}
                 onChange={(e) => this.setHeader(e.target.value)}
