@@ -30,6 +30,7 @@ type assignmentData struct {
 	AutoApprove  bool   `yaml:"autoapprove"`
 	ScoreLimit   uint   `yaml:"scorelimit"`
 	IsGroupLab   bool   `yaml:"isgrouplab"`
+	Reviewers    uint   `yaml:"reviewers"`
 }
 
 // ParseAssignments recursively walks the given directory and parses
@@ -71,6 +72,7 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 					AutoApprove: newAssignment.AutoApprove,
 					ScoreLimit:  uint32(newAssignment.ScoreLimit),
 					IsGroupLab:  newAssignment.IsGroupLab,
+					Reviewers:   uint32(newAssignment.Reviewers),
 				}
 				assignments = append(assignments, assignment)
 			}

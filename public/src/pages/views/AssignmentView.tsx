@@ -34,6 +34,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     public render() {
         return <div className="a-element">
             <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
+            <p>Reviewers: {this.props.assignment.getReviewers()}</p>
             {this.state.open ? (<div>{this.renderBenchmarks()}</div>) : null}
             {this.state.open ? this.renderAddNew() : null}
         </div>
