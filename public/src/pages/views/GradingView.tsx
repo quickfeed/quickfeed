@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Course, GradingBenchmark, GradingCriterion, Assignment, User, Submission } from '../../../proto/ag_pb';
 import { IStudentLabsForCourse, IReview, ISubmission } from '../../models';
-import { Review } from '../../components/manual-grading/Review';
+import { ReviewPage } from '../../components/manual-grading/Review';
 
 
 interface GradingViewProps {
@@ -38,7 +38,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
             return <div className="f-view">
                 <h2 className="a-header">{student.labs[0].authorName}</h2>
                 {
-                student.labs.map((l, i) => <Review
+                student.labs.map((l, i) => <ReviewPage
                     key={"st" + i}
                     assignment={this.getAssignment(l.assignment)}
                     submission={l.submission}

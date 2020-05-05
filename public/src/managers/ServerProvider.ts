@@ -12,6 +12,7 @@ import {
     Submission,
     SubmissionsForCourseRequest,
     User,
+    Review,
 } from "../../proto/ag_pb";
 import {
     IStudentLabsForCourse,
@@ -31,6 +32,7 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
+import { IReview } from '../models';
 interface IEndpoints {
     user: string;
     auth: string;
@@ -384,6 +386,25 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
         const result = await this.grpcHelper.deleteCriterion(c);
         return this.responseCodeSuccess(result);
+    }
+
+    public async addReview(ir: IReview): Promise<IReview | null> {
+        const r = new Review();
+        r.setSubmissionid(ir.submissionID);
+        r.setReviewerid(ir.reviewerID);
+        r.setFeedback(ir.feedback);
+        r.setScore(ir.score);
+        r.setReady(ir.ready);
+        r.setReview(JSON.stringify(ir.reviews));
+        const result = await this.grpcHelper.createReview(r);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return this.toIreview(result.data);
+    }
+
+    private toIreview(r: Review): IReview {
+        // TODO
     }
 
     private toISubmission(sbm: Submission): ISubmission {

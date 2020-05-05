@@ -3,7 +3,7 @@ import { Assignment, GradingBenchmark, GradingCriterion } from '../../../proto/a
 import { ISubmission, IReview } from '../../models';
 import { GradeBenchmark } from './GradeBenchmark';
 
-interface ReviewProps {
+interface ReviewPageProps {
     assignment: Assignment;
     submission: ISubmission | undefined;
     review: IReview | null;
@@ -13,7 +13,7 @@ interface ReviewProps {
     updateReview: (review: IReview) => Promise<boolean>; // TODO: add feedback text before updating
 }
 
-interface ReviewState {
+interface ReviewPageState {
     open: boolean;
     benchmarks: GradingBenchmark[];
     score: number;
@@ -25,9 +25,9 @@ interface ReviewState {
     ready: boolean;
 }
 
-export class Review extends React.Component<ReviewProps, ReviewState> {
+export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState> {
 
-    constructor(props: ReviewProps) {
+    constructor(props: ReviewPageProps) {
         super(props);
         this.state = {
             open: false,

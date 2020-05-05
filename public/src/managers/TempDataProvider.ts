@@ -1,5 +1,5 @@
-import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Organization, Repository, Status, User, SubmissionsForCourseRequest } from '../../proto/ag_pb';
-import { IStudentLabsForCourse, ISubmission } from "../models";
+import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Organization, Repository, Status, User, Review, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { IReview, IStudentLabsForCourse, ISubmission } from "../models";
 
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
@@ -298,7 +298,16 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
     public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
-        return true;    }
+        return true;
+    }
+
+    public async addReview(r: IReview): Promise<IReview | null> {
+        return r;
+    }
+
+    public async editReview(r: IReview): Promise<boolean> {
+        return true;
+    }
 
     public async updateAssignments(courseID: number): Promise<any> {
         return new Promise((resolve, reject) => {

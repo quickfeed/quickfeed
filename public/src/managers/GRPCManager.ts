@@ -23,6 +23,7 @@ import {
     Repositories,
     Repository,
     RepositoryRequest,
+    Review,
     Status,
     SubmissionRequest,
     SubmissionsForCourseRequest,
@@ -270,6 +271,14 @@ export class GrpcManager {
 
     public deleteCriterion(c: GradingCriterion): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>(this.agService.deleteCriterion, c);
+    }
+
+    public createReview(r: Review): Promise<IGrpcResponse<Review>> {
+        return this.grpcSend<Review>(this.agService.createReview, r);
+    }
+
+    public updateReview(r: Review): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateReview, r);
     }
 
     // /* REPOSITORY */ //

@@ -1,10 +1,11 @@
 import {
+    IReview,
     IStudentLabsForCourse,
     IStudentLab,
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void, Enrollments, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from '../../proto/ag_pb';
 import { ILogger } from "./LogManager";
 import { sortAssignmentsByOrder } from '../componentHelper';
 
@@ -49,6 +50,8 @@ export interface ICourseProvider {
     updateCriterion(c: GradingCriterion): Promise<boolean>;
     deleteBenchmark(bm: GradingBenchmark): Promise<boolean>;
     deleteCriterion(c: GradingCriterion): Promise<boolean>;
+    addReview(r: IReview): Promise<IReview | null>;
+    editReview(r: IReview): Promise<boolean>;
 
 }
 
@@ -306,6 +309,14 @@ export class CourseManager {
     }
     public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
         return this.courseProvider.deleteCriterion(c);
+    }
+
+    public async addReview(r: IReview): Promise<IReview | null> {
+        return this.courseProvider.addReview(r);
+    }
+
+    public async editReview(r: IReview): Promise<boolean> {
+        return this.courseProvider.editReview(r);
     }
 
     /**

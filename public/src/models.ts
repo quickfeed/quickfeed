@@ -52,6 +52,7 @@ export interface IReview {
     reviews: GradingBenchmark[];
     feedback: string;
     ready: boolean;
+    score: number;
 
 }
 
