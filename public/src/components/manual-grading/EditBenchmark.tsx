@@ -54,6 +54,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     private renderAddRow(): JSX.Element {
         const addDiv = <div className="add-b" onDoubleClick={() => this.toggleAdd()}>Add a new grading criterion.</div>;
         const addingDiv = <div className="input-group adding-b"><input
+            autoFocus={true}
             type="text"
             defaultValue=""
             onChange={(e) => this.setNewDescription(e.target.value)}

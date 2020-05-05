@@ -79,6 +79,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
             Add a new grading benchmark.
         </div>;
         const addingRow = <div className="input-group"><input
+        autoFocus={true}
         type="text"
         defaultValue=""
         onChange={(e) => this.setNewHeader(e.target.value)}
