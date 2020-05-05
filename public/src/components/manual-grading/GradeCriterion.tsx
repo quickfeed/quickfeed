@@ -58,7 +58,6 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
                 }}
             ><span className="glyphicon glyphicon-remove-circle"></span></button>
         </div>
-      // TODO: update grade locally, only update database when prompted by TA
     }
 
     private setButtonClass(grade: GradingCriterion.Grade, classString: string): string {

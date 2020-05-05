@@ -178,9 +178,8 @@ export class TeacherPage extends ViewPage {
                 assignments={assignments}
                 students={students}
                 curUser={curUser}
-                addReview={async (r: IReview) => {
-                    // TODO: save a new submission review in the database
-                    return true;
+                addReview={(r: IReview) => {
+                    return this.courseMan.addReview(r);
                 }}
                 updateReview={async (r: IReview) => {
                     // TODO: update review in the database

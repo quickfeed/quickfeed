@@ -9,13 +9,14 @@ interface GradingViewProps {
     assignments: Assignment[];
     students: IStudentLabsForCourse[];
     curUser: User;
-    addReview: (review: IReview) => Promise<boolean>;
+    addReview: (review: IReview) => Promise<IReview | null>;
     updateReview: (review: IReview) => Promise<boolean>;
 
 }
 
 interface GradingViewState {
     selectedStudent: IStudentLabsForCourse | null;
+    selectedSubmission: ISubmission | null;
 }
 
 export class GradingView extends React.Component<GradingViewProps, GradingViewState> {
@@ -23,6 +24,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         super(props);
         this.state = {
             selectedStudent: null,
+            selectedSubmission: null,
         }
     }
 
@@ -45,7 +47,19 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     review={this.selectReview(l.submission)}
                     authorName={l.authorName}
                     reviewerID={this.props.curUser.getId()}
-                    addReview={(r: IReview) => this.props.addReview(r)}
+                    addReview={async (r: IReview) => {
+                        if (l.submission) {
+                            this.setState({
+                                selectedSubmission: l.submission,
+                            });
+                            const ans = await this.props.addReview(r);
+                            if (ans) {
+                                l.submission.reviews.push(r);
+                                return true;
+                            }
+                        }
+                        return false;
+                    }}
                     updateReview={(r: IReview) => this.props.updateReview(r)}
                 />)
             }</div>
