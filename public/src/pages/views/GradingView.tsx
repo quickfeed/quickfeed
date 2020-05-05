@@ -16,7 +16,6 @@ interface GradingViewProps {
 
 interface GradingViewState {
     selectedStudent: IStudentLabsForCourse | null;
-    selectedSubmission: ISubmission | null;
 }
 
 export class GradingView extends React.Component<GradingViewProps, GradingViewState> {
@@ -24,7 +23,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         super(props);
         this.state = {
             selectedStudent: null,
-            selectedSubmission: null,
         }
     }
 
@@ -49,9 +47,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     reviewerID={this.props.curUser.getId()}
                     addReview={async (r: IReview) => {
                         if (l.submission) {
-                            this.setState({
-                                selectedSubmission: l.submission,
-                            });
                             const ans = await this.props.addReview(r);
                             if (ans) {
                                 l.submission.reviews.push(r);
@@ -60,7 +55,17 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                         }
                         return false;
                     }}
-                    updateReview={(r: IReview) => this.props.updateReview(r)}
+                    updateReview={ async (r: IReview) => {
+                        if (l.submission) {
+                            const ans = await this.props.updateReview(r);
+                            if (ans) {
+                                const ix = l.submission.reviews.findIndex(rw => rw.id === r.id);
+                                l.submission.reviews[ix] = r;
+                                return true;
+                            }
+                        }
+                        return false;
+                    }}
                 />)
             }</div>
         }
@@ -68,8 +73,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private getAssignment(a: Assignment): Assignment {
-        console.log("Looking for assignment: " + a.toString());
-        console.log("Found: " + this.props.assignments.find(item => item.getId() === a.getId())?.toString());
         return this.props.assignments.find(item => item.getId() === a.getId()) ?? a;
     }
 

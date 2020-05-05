@@ -182,8 +182,7 @@ export class TeacherPage extends ViewPage {
                     return this.courseMan.addReview(r);
                 }}
                 updateReview={async (r: IReview) => {
-                    // TODO: update review in the database
-                    return true;
+                    return this.courseMan.editReview(r);
                 }}
             />
             }
