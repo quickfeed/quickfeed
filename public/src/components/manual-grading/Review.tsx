@@ -10,7 +10,7 @@ interface ReviewPageProps {
     authorName: string;
     reviewerID: number;
     addReview: (review: IReview) => Promise<boolean>;
-    updateReview: (review: IReview) => Promise<boolean>; // TODO: add feedback text before updating
+    updateReview: (review: IReview) => Promise<boolean>;
 }
 
 interface ReviewPageState {
@@ -32,7 +32,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         this.state = {
             open: false,
             benchmarks: this.setBenchmarks(),
-            score: this.props.submission?.score ?? 0,
+            score: this.props.review?.score ?? 0,
             approved: this.props.submission?.approved ?? false,
             feedback: this.props.review?.feedback ?? "",
             editing: false,
@@ -118,17 +118,12 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             reviews: this.state.benchmarks,
             ready: this.state.ready,
             feedback: this.state.feedback,
+            score: this.state.score,
         };
     }
 
     private async addFeedback() {
-        const r: IReview = this.props.review ?? {
-            submissionID: this.props.submission?.id ?? 0,
-            reviewerID: this.props.reviewerID,
-            reviews: this.state.benchmarks,
-            feedback: "",
-            ready: this.state.ready,
-        }
+        const r: IReview = this.props.review ?? this.makeNewReview();
         r.feedback = this.state.feedback;
         const ans = this.props.updateReview(r);
         if (!ans) {
