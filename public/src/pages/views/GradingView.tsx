@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, GradingBenchmark, GradingCriterion, Assignment, User, Submission } from '../../../proto/ag_pb';
+import { Course, Assignment, User } from '../../../proto/ag_pb';
 import { IStudentLabsForCourse, IReview, ISubmission } from '../../models';
 import { ReviewPage } from '../../components/manual-grading/Review';
 
@@ -69,7 +69,11 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                 />)
             }</div>
         }
-        return <div>No submissions yet from {this.state.selectedStudent?.enrollment.getUser()?.getName()}</div> // TODO: render empty view (some useful info on grading for TAs), i.e. list of active assignments for the course?
+        return <div>{this.voidMessage()}</div>
+    }
+
+    private voidMessage(): string {
+        return this.state.selectedStudent ? "No submissions yet from " + this.state.selectedStudent?.enrollment.getUser()?.getName() : "Select a course student for review";
     }
 
     private getAssignment(a: Assignment): Assignment {
