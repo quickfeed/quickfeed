@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export GITHUB_KEY=c667b046ce9cb465be17
+export GITHUB_SECRET=c776c622e0b13aa1c1df2df11d9c46492dcf6746

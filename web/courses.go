@@ -401,6 +401,5 @@ func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.Submi
 	sort.Slice(unsorted, func(i, j int) bool {
 		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
 	})
-
 	return unsorted
 }

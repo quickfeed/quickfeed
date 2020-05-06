@@ -45,3 +45,12 @@ func (r Review) FromReviewString() error {
 	r.Reviews = rws
 	return nil
 }
+
+// MakeSubmissionReviews unmarshalls review string for a submission
+func (s Submission) MakeSubmissionReviews() {
+	for _, r := range s.Reviews {
+		r.FromReviewString()
+		// TODO: design a proper error handling
+		// for marshalling/unmarshalling methods
+	}
+}
