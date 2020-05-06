@@ -491,7 +491,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.Review = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.Review.repeatedFields_, null);
 };
 goog.inherits(proto.Review, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -6795,6 +6795,13 @@ proto.GradingCriterion.prototype.setComment = function(value) {
 
 
 
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.Review.repeatedFields_ = [8];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -6832,7 +6839,9 @@ proto.Review.toObject = function(includeInstance, msg) {
     review: jspb.Message.getFieldWithDefault(msg, 4, ""),
     feedback: jspb.Message.getFieldWithDefault(msg, 5, ""),
     ready: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
-    score: jspb.Message.getFieldWithDefault(msg, 7, 0)
+    score: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
+    proto.GradingBenchmark.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -6896,6 +6905,11 @@ proto.Review.deserializeBinaryFromReader = function(msg, reader) {
     case 7:
       var value = /** @type {number} */ (reader.readUint64());
       msg.setScore(value);
+      break;
+    case 8:
+      var value = new proto.GradingBenchmark;
+      reader.readMessage(value,proto.GradingBenchmark.deserializeBinaryFromReader);
+      msg.addReviews(value);
       break;
     default:
       reader.skipField();
@@ -6973,6 +6987,14 @@ proto.Review.serializeBinaryToWriter = function(message, writer) {
     writer.writeUint64(
       7,
       f
+    );
+  }
+  f = message.getReviewsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      8,
+      f,
+      proto.GradingBenchmark.serializeBinaryToWriter
     );
   }
 };
@@ -7101,6 +7123,44 @@ proto.Review.prototype.getScore = function() {
  */
 proto.Review.prototype.setScore = function(value) {
   return jspb.Message.setProto3IntField(this, 7, value);
+};
+
+
+/**
+ * repeated GradingBenchmark reviews = 8;
+ * @return {!Array<!proto.GradingBenchmark>}
+ */
+proto.Review.prototype.getReviewsList = function() {
+  return /** @type{!Array<!proto.GradingBenchmark>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.GradingBenchmark, 8));
+};
+
+
+/**
+ * @param {!Array<!proto.GradingBenchmark>} value
+ * @return {!proto.Review} returns this
+*/
+proto.Review.prototype.setReviewsList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 8, value);
+};
+
+
+/**
+ * @param {!proto.GradingBenchmark=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.GradingBenchmark}
+ */
+proto.Review.prototype.addReviews = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.GradingBenchmark, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.Review} returns this
+ */
+proto.Review.prototype.clearReviewsList = function() {
+  return this.setReviewsList([]);
 };
 
 

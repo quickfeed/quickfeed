@@ -227,6 +227,7 @@ message Review {
     string feedback = 5;
     bool ready = 6;
     uint64 score = 7;
+    repeated GradingBenchmark reviews = 8 [(gogoproto.moretags) = "sql:\"-\""];
 }
 
 ////    REQUESTS AND RESPONSES      \\\\
