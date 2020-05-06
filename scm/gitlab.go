@@ -2,6 +2,7 @@ package scm
 
 import (
 	"context"
+	"log"
 	"strconv"
 
 	pb "github.com/autograde/aguis/ag"
@@ -15,9 +16,12 @@ type GitlabSCM struct {
 
 // NewGitlabSCMClient returns a new GitLab client implementing the SCM interface.
 func NewGitlabSCMClient(token string) *GitlabSCM {
-	cli, _ := gitlab.NewOAuthClient(token, gitlab.WithoutRetries())
+	newCli, err := gitlab.NewOAuthClient(token, nil)
+	if err != nil {
+		log.Println("Error initializing new GitLab client: ", err.Error())
+	}
 	return &GitlabSCM{
-		client: cli,
+		client: newCli,
 	}
 }
 
