@@ -9,7 +9,7 @@ import (
 
 // MakeReviewString generates a slice of JSON strings
 // to store in the database
-func (r Review) MakeReviewString() error {
+func (r *Review) MakeReviewString() error {
 	fmt.Println("Marshalling reviews: ", r.Reviews)
 	m := jsonpb.Marshaler{}
 	str := make([]string, 0)
@@ -22,24 +22,24 @@ func (r Review) MakeReviewString() error {
 		str = append(str, s)
 
 	}
-	fmt.Println("Reviews marshalled successfully: ", str)
+	fmt.Println("Reviews marshalled successfully: ", strings.Join(str, ";"))
 	r.Review = strings.Join(str, "; ")
 	return nil
 }
 
 // FromReviewString converts database string with all submission reviews
 // into protobuf messages
-func (r Review) FromReviewString() error {
-	rs := strings.Split(r.Review, "; ")
-	fmt.Println("Unmarshalling reviews: ", rs)
+func (r *Review) FromReviewString() error {
+	rs := strings.Split(r.Review, ";")
 	rws := make([]*GradingBenchmark, 0)
 	for _, s := range rs {
-		var bm *GradingBenchmark
-		if err := jsonpb.UnmarshalString(s, bm); err != nil {
+		fmt.Println("Unmarshalling review: ", s)
+		bm := GradingBenchmark{}
+		if err := jsonpb.UnmarshalString(s, &bm); err != nil {
 			fmt.Println("Failed to unmarshall ", s, ": ", err.Error())
-			return err
+			// return err
 		}
-		rws = append(rws, bm)
+		rws = append(rws, &bm)
 	}
 	fmt.Println("Unmarshalled successfully: ", rws)
 	r.Reviews = rws
