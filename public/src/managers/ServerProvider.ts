@@ -8,16 +8,15 @@ import {
     Group,
     Organization,
     Repository,
+    Review,
     Status,
     Submission,
     SubmissionsForCourseRequest,
     User,
-    Review,
 } from "../../proto/ag_pb";
 import {
     IStudentLabsForCourse,
     IBuildInfo,
-    IReview,
     IStudentLab,
     ISubmission,
     ITestCases,
@@ -387,52 +386,17 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
-    public async addReview(ir: IReview): Promise<IReview | null> {
-        const result = await this.grpcHelper.createReview(this.toReview(ir));
+    public async addReview(ir: Review): Promise<Review | null> {
+        const result = await this.grpcHelper.createReview(ir);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return null;
         }
-        return this.toIreview(result.data);
+        return result.data;
     }
 
-    public async editReview(ir: IReview): Promise<boolean> {
-        const result = await this.grpcHelper.updateReview(this.toReview(ir));
+    public async editReview(ir: Review): Promise<boolean> {
+        const result = await this.grpcHelper.updateReview(ir);
         return this.responseCodeSuccess(result);
-    }
-
-    private toReview(ir: IReview): Review {
-        const r = new Review();
-        if (ir.id) r.setId(ir.id);
-        r.setSubmissionid(ir.submissionID);
-        r.setReviewerid(ir.reviewerID);
-        r.setFeedback(ir.feedback);
-        r.setScore(ir.score);
-        r.setReady(ir.ready);
-        r.setReview(JSON.stringify(ir.reviews));
-        return r;
-    }
-
-    private toIreview(r: Review): IReview {
-        let parsedReview: GradingBenchmark[];
-        try {
-            parsedReview = JSON.parse(r.getReview());
-        } catch (e) {
-            parsedReview = JSON.parse(
-                "[{\"id\": \"1\", \"assignmentId\": \"2\", \"heading\": \"Heading\", \"comment\": \"Comment\", [\"id\": \"3\", \"benchmarkId\": \"1\", \"description\": \"Description\", \"grade\": \"0\", \"comment\": \"Comment\"]}]"
-            );
-        }
-        console.log("Parsed review: " + parsedReview.toString());
-
-        const review: IReview = {
-            id: r.getId(),
-            submissionID: r.getSubmissionid(),
-            reviewerID: r.getReviewerid(),
-            reviews: parsedReview,
-            feedback: r.getFeedback(),
-            ready: r.getReady(),
-            score: r.getScore(),
-        }
-        return review;
     }
 
     private toISubmission(sbm: Submission): ISubmission {
@@ -452,7 +416,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 "{\"builddate\": \"2017-07-28\", \"buildid\": 1, \"buildlog\": \"This is cool\", \"execTime\": 1}",
             );
         }
-        console.log("Parsed build info: " + buildInfo);
         try {
             scoreObj = JSON.parse(scoreInfoAsString);
         } catch (e) {
@@ -460,13 +423,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 "[{\"TestName\": \"Test 1\", \"Score\": 3, \"MaxScore\": 4, \"Weight\": 100}]",
             );
         }
-        console.log("Parsed score objects: " + scoreObj.toString());
-
-        const reviews = sbm.getReviewsList();
-        const ireviews: IReview[] = [];
-        reviews.forEach(r => {
-            ireviews.push(this.toIreview(r));
-        });
 
         let failed = 0;
         let passed = 0;
@@ -494,7 +450,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             buildLog: buildInfo.buildlog,
             testCases: scoreObj,
             approved: sbm.getApproved(),
-            reviews: ireviews,
+            reviews: sbm.getReviewsList(),
             feedbackReady: sbm.getFeedbackready(),
         };
         return isbm;

@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, User, GradingBenchmark } from '../proto/ag_pb';
+import { Assignment, Course, Enrollment, Review } from '../proto/ag_pb';
 
 export interface IUser {
     id: number;
@@ -45,17 +45,6 @@ export interface ITestCases {
     Weight: number;
 }
 
-export interface IReview {
-    id?: number;
-    submissionID: number;
-    reviewerID: number;
-    reviews: GradingBenchmark[];
-    feedback: string;
-    ready: boolean;
-    score: number;
-
-}
-
 // A student/group submission
 export interface ISubmission {
     id: number;
@@ -71,6 +60,6 @@ export interface ISubmission {
     buildLog: string;
     testCases: ITestCases[];
     approved: boolean;
-    reviews: IReview[];
+    reviews: Review[];
     feedbackReady: boolean;
 }

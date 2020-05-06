@@ -301,11 +301,11 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async addReview(r: IReview): Promise<IReview | null> {
+    public async addReview(r: Review): Promise<Review | null> {
         return r;
     }
 
-    public async editReview(r: IReview): Promise<boolean> {
+    public async editReview(r: Review): Promise<boolean> {
         return true;
     }
 

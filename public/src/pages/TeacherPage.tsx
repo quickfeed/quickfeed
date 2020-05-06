@@ -5,7 +5,7 @@ import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager }
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
-import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
@@ -13,7 +13,6 @@ import { showLoader } from "../loader";
 import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHelper';
 import { AssigmnentView } from "./views/AssignmentView";
 import { GradingView } from "./views/GradingView";
-import { IReview } from '../models';
 
 export class TeacherPage extends ViewPage {
 
@@ -178,10 +177,10 @@ export class TeacherPage extends ViewPage {
                 assignments={assignments}
                 students={students}
                 curUser={curUser}
-                addReview={(r: IReview) => {
+                addReview={(r: Review) => {
                     return this.courseMan.addReview(r);
                 }}
-                updateReview={async (r: IReview) => {
+                updateReview={async (r: Review) => {
                     return this.courseMan.editReview(r);
                 }}
             />

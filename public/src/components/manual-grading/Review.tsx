@@ -1,16 +1,16 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
-import { ISubmission, IReview } from '../../models';
+import { Assignment, GradingBenchmark, GradingCriterion, Review } from '../../../proto/ag_pb';
+import { ISubmission } from '../../models';
 import { GradeBenchmark } from './GradeBenchmark';
 
 interface ReviewPageProps {
     assignment: Assignment;
     submission: ISubmission | undefined;
-    review: IReview | null;
+    review: Review | null;
     authorName: string;
     reviewerID: number;
-    addReview: (review: IReview) => Promise<boolean>;
-    updateReview: (review: IReview) => Promise<boolean>;
+    addReview: (review: Review) => Promise<boolean>;
+    updateReview: (review: Review) => Promise<boolean>;
 }
 
 interface ReviewPageState {
@@ -32,13 +32,13 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         this.state = {
             open: false,
             benchmarks: this.setBenchmarks(),
-            score: this.props.review?.score ?? 0,
+            score: this.props.review?.getScore() ?? 0,
             approved: this.props.submission?.approved ?? false,
-            feedback: this.props.review?.feedback ?? "",
+            feedback: this.props.review?.getFeedback() ?? "",
             editing: false,
             criteria: this.criteriaTotal(),
             graded: this.gradedTotal(),
-            ready: this.props.review?.ready ?? false,
+            ready: this.props.review?.getReady() ?? false,
         }
     }
 
@@ -75,7 +75,11 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             className="form-control"
             defaultValue={this.state.feedback}
             onChange={(e) => this.setFeedback(e.target.value)}
-            onSubmit={() => this.addFeedback()}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    this.addFeedback();
+                }
+            }}
         ></textarea>
         </div>
     }
@@ -110,28 +114,28 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private updateReview() {
-        const r: IReview = this.props.review ?? this.makeNewReview();
+        const r: Review = this.props.review ?? this.makeNewReview();
         this.props.addReview(r);
     }
 
-    private makeNewReview(): IReview {
-        return {
-            submissionID: this.props.submission?.id ?? 0,
-            reviewerID: this.props.reviewerID,
-            reviews: this.state.benchmarks,
-            ready: this.state.ready,
-            feedback: this.state.feedback,
-            score: this.state.score,
-        };
+    private makeNewReview(): Review {
+        const r = new Review();
+        r.setSubmissionid(this.props.submission?.id ?? 0);
+        r.setReviewerid(this.props.reviewerID);
+        r.setReviewsList(this.state.benchmarks);
+        r.setReady(this.state.ready);
+        r.setFeedback(this.state.feedback);
+        r.setScore(this.state.score);
+        return r;
     }
 
     private async addFeedback() {
-        const r: IReview = this.props.review ?? this.makeNewReview();
-        r.feedback = this.state.feedback;
+        const r: Review = this.props.review ?? this.makeNewReview();
+        r.setFeedback(this.state.feedback);
         const ans = this.props.updateReview(r);
         if (!ans) {
             this.setState({
-                feedback: this.props.review?.feedback ?? "",
+                feedback: this.props.review?.getFeedback() ?? "",
             })
         }
     }
@@ -143,12 +147,13 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private setBenchmarks(): GradingBenchmark[] {
-        return this.props.review?.reviews ?? this.props.assignment.getGradingbenchmarksList();
+        return this.props.review?.getReviewsList() ?? this.props.assignment.getGradingbenchmarksList();
     }
 
     private criteriaTotal(): number {
         let counter = 0;
-        const bms: GradingBenchmark[] = this.props.review?.reviews ?? this.props.assignment.getGradingbenchmarksList();
+        const bms: GradingBenchmark[] = this.props.review?.getReviewsList() ?? this.props.assignment.getGradingbenchmarksList();
+        console.log("criteriaTotal got " + bms.length + "benchmarks");
         bms.forEach((bm) => {
             bm.getCriteriaList().forEach(() => {
                 counter++;
@@ -160,7 +165,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private gradedTotal(): number {
         let counter = 0;
         if (this.props.review) {
-            this.props.review.reviews.forEach((r) => {
+            this.props.review.getReviewsList().forEach((r) => {
                 r.getCriteriaList().forEach((c) => {
                     if (c.getGrade() !== GradingCriterion.Grade.NONE) {
                         counter++;

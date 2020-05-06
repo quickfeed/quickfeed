@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GradingCriterion, Status } from '../../../proto/ag_pb';
+import { GradingCriterion } from '../../../proto/ag_pb';
 
 interface GradeCriterionProps {
     criterion: GradingCriterion;

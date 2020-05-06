@@ -1,5 +1,4 @@
 import {
-    IReview,
     IStudentLabsForCourse,
     IStudentLab,
     ISubmission,
@@ -50,8 +49,8 @@ export interface ICourseProvider {
     updateCriterion(c: GradingCriterion): Promise<boolean>;
     deleteBenchmark(bm: GradingBenchmark): Promise<boolean>;
     deleteCriterion(c: GradingCriterion): Promise<boolean>;
-    addReview(r: IReview): Promise<IReview | null>;
-    editReview(r: IReview): Promise<boolean>;
+    addReview(r: Review): Promise<Review | null>;
+    editReview(r: Review): Promise<boolean>;
 
 }
 
@@ -311,11 +310,11 @@ export class CourseManager {
         return this.courseProvider.deleteCriterion(c);
     }
 
-    public async addReview(r: IReview): Promise<IReview | null> {
+    public async addReview(r: Review): Promise<Review | null> {
         return this.courseProvider.addReview(r);
     }
 
-    public async editReview(r: IReview): Promise<boolean> {
+    public async editReview(r: Review): Promise<boolean> {
         return this.courseProvider.editReview(r);
     }
 

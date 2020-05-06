@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Course, Assignment, User } from '../../../proto/ag_pb';
-import { IStudentLabsForCourse, IReview, ISubmission } from '../../models';
+import { Course, Assignment, Review, User } from '../../../proto/ag_pb';
+import { IStudentLabsForCourse, ISubmission } from '../../models';
 import { ReviewPage } from '../../components/manual-grading/Review';
 
 
@@ -9,8 +9,8 @@ interface GradingViewProps {
     assignments: Assignment[];
     students: IStudentLabsForCourse[];
     curUser: User;
-    addReview: (review: IReview) => Promise<IReview | null>;
-    updateReview: (review: IReview) => Promise<boolean>;
+    addReview: (review: Review) => Promise<Review | null>;
+    updateReview: (review: Review) => Promise<boolean>;
 
 }
 
@@ -45,7 +45,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     review={this.selectReview(l.submission)}
                     authorName={l.authorName}
                     reviewerID={this.props.curUser.getId()}
-                    addReview={async (r: IReview) => {
+                    addReview={async (r: Review) => {
                         if (l.submission) {
                             const ans = await this.props.addReview(r);
                             if (ans) {
@@ -55,11 +55,11 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                         }
                         return false;
                     }}
-                    updateReview={ async (r: IReview) => {
+                    updateReview={ async (r: Review) => {
                         if (l.submission) {
                             const ans = await this.props.updateReview(r);
                             if (ans) {
-                                const ix = l.submission.reviews.findIndex(rw => rw.id === r.id);
+                                const ix = l.submission.reviews.findIndex(rw => rw.getId() === r.getId());
                                 l.submission.reviews[ix] = r;
                                 return true;
                             }
@@ -80,10 +80,10 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         return this.props.assignments.find(item => item.getId() === a.getId()) ?? a;
     }
 
-    private selectReview(s: ISubmission | undefined): IReview | null {
-        let review: IReview | null = null;
+    private selectReview(s: ISubmission | undefined): Review | null {
+        let review: Review | null = null;
         s?.reviews.forEach((r) => {
-            if (r.reviewerID === this.props.curUser.getId()) {
+            if (r.getReviewerid() === this.props.curUser.getId()) {
                 review = r;
             }
         });
