@@ -113,9 +113,12 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return this.props.submission?.approved ? "Approved" : "Not approved";
     }
 
-    private updateReview() {
+    private async updateReview() {
         const r: Review = this.props.review ?? this.makeNewReview();
-        this.props.addReview(r);
+        const ans = await this.props.addReview(r);
+        if (ans) {
+            this.setScore();
+        }
     }
 
     private makeNewReview(): Review {
@@ -187,11 +190,18 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private showScore(): JSX.Element {
-        return <div className="score-div">{this.state.score}%</div>;
+        return <div className="score-div">{this.state.score.toFixed()}%</div>;
     }
 
     private setScore(): number {
-        // TODO: calculate score from number of graded criteria vs total
-        return 123;
+        let passed = 0;
+        this.state.benchmarks.forEach((bm) => {
+            bm.getCriteriaList().forEach((c) => {
+                if (c.getGrade() === GradingCriterion.Grade.PASSED) passed++;
+            })
+        });
+        const score = passed * 100 / this.criteriaTotal();
+        console.log("Score now: " + score);
+        return score;
     }
 }
