@@ -649,6 +649,9 @@ func (s *AutograderService) CreateReview(ctx context.Context, in *pb.Review) (*p
 		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.ReviewerID)
 		return nil, status.Errorf(codes.PermissionDenied, "failed to create review: reviewers' IDs don't match")
 	}
+	if err := in.MakeReviewString(); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
+	}
 	review, err := s.createReview(in)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %s", in, err)
@@ -668,6 +671,9 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.Review) (*p
 	if !usr.IsOwner(in.GetReviewerID()) {
 		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.ReviewerID)
 		return nil, status.Errorf(codes.PermissionDenied, "reviews can only be updated by original authors")
+	}
+	if err := in.MakeReviewString(); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
 	}
 	if err = s.updateReview(in); err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %s", in, err)
