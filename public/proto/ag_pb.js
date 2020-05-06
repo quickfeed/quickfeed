@@ -48,6 +48,7 @@ goog.exportSymbol('proto.RepositoryRequest', null, global);
 goog.exportSymbol('proto.Review', null, global);
 goog.exportSymbol('proto.Status', null, global);
 goog.exportSymbol('proto.Submission', null, global);
+goog.exportSymbol('proto.Submission.Status', null, global);
 goog.exportSymbol('proto.SubmissionLink', null, global);
 goog.exportSymbol('proto.SubmissionRequest', null, global);
 goog.exportSymbol('proto.Submissions', null, global);
@@ -5876,6 +5877,16 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
   }
 };
 
+
+/**
+ * @enum {number}
+ */
+proto.Submission.Status = {
+  NONE: 0,
+  APPROVED: 1,
+  REJECTED: 2,
+  REVISION: 3
+};
 
 /**
  * optional uint64 ID = 1;

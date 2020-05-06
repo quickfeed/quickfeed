@@ -179,6 +179,12 @@ message Assignments {
 }
 
 message Submission {
+    enum Status {
+        NONE = 0;
+        APPROVED = 1;
+        REJECTED = 2;
+        REVISION = 3;
+    }
     uint64 ID = 1;
     uint64 assignmentID = 2;
     uint64 userID = 3;
@@ -187,9 +193,10 @@ message Submission {
     string scoreObjects = 6;
     string buildInfo = 7;
     string commitHash = 8;
-    bool approved = 9;
+    bool approved = 9; // to be deprecated
     repeated Review reviews = 10;
     bool feedbackReady = 11; // defines whether the feedback is visible for the student or group members
+
 }
 
 message Submissions {

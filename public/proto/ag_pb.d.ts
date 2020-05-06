@@ -684,6 +684,13 @@ export namespace Submission {
     reviewsList: Array<Review.AsObject>,
     feedbackready: boolean,
   }
+
+  export enum Status { 
+    NONE = 0,
+    APPROVED = 1,
+    REJECTED = 2,
+    REVISION = 3,
+  }
 }
 
 export class Submissions extends jspb.Message {
