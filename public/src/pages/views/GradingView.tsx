@@ -44,6 +44,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     submission={l.submission}
                     authorName={l.authorName}
                     reviewerID={this.props.curUser.getId()}
+                    review={this.selectReview(l.submission)}
                     addReview={async (r: Review) => {
                         if (l.submission) {
                             console.log("GradingView: adding a new review: " + r.toString());
@@ -103,4 +104,19 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     private setSelected(s: IStudentLabsForCourse): string {
         return this.state.selectedStudent === s ? "li-selected" : "";
     }
+
+    private selectReview(s: ISubmission | undefined): Review | null {
+        let rw: Review | null = null;
+        if (s?.reviews) {
+            s.reviews.forEach((r) => {
+                if (r.getReviewerid() === this.props.curUser.getId()) {
+                    console.log("Found an existing review by user: " + this.props.curUser.getLogin());
+                    rw = r;
+                }
+            });
+        }
+        return rw;
+    }
+
+    
 }

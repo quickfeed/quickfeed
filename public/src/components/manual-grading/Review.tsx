@@ -6,6 +6,7 @@ import { GradeBenchmark } from './GradeBenchmark';
 interface ReviewPageProps {
     assignment: Assignment;
     submission: ISubmission | undefined;
+    review: Review | null;
     authorName: string;
     reviewerID: number;
     addReview: (review: Review) => Promise<Review | null>;
@@ -13,11 +14,9 @@ interface ReviewPageProps {
 }
 
 interface ReviewPageState {
-    currentReview: Review;
     open: boolean;
     benchmarks: GradingBenchmark[];
     score: number;
-    approved: boolean;
     feedback: string;
     ready: boolean;
 }
@@ -27,11 +26,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     constructor(props: ReviewPageProps) {
         super(props);
         this.state = {
-            currentReview: this.makeNewReview(),
             open: false,
-            benchmarks: this.props.assignment.getGradingbenchmarksList(),
+            benchmarks: [],
             score: 0,
-            approved: this.props.submission?.approved ?? false,
             feedback: "",
             ready: false,
         }
@@ -49,7 +46,8 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private renderBenchmarkList(): JSX.Element[] {
-        return this.state.benchmarks.map((bm, i) => <GradeBenchmark
+        const bms: GradingBenchmark[] = this.props.review?.getReviewsList() ?? this.props.assignment.getGradingbenchmarksList();
+        return bms.map((bm, i) => <GradeBenchmark
             key={"bm" + i}
             benchmark={bm}
             addComment={(comment: string) => {
@@ -57,6 +55,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             }}
             onUpdate={(c: GradingCriterion[]) => {
                 bm.setCriteriaList(c);
+                this.setState({
+                    benchmarks: bms,
+                })
             }}
         />)
     }
@@ -105,25 +106,15 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     private async updateReview() {
         // TODO: update or add review depending on the context
-        const r: Review = this.state.currentReview;
+        const r: Review = this.props.review ?? this.makeNewReview();
         r.setReady(this.state.ready);
         r.setReviewsList(this.state.benchmarks);
         r.setScore(this.state.score);
         r.setFeedback(this.state.feedback);
         if (r.getId() > 0) {
-            const ans = await this.props.updateReview(r);
-            if (ans) {
-                this.setState({
-                    currentReview: r,
-                });
-            }
+            this.props.updateReview(r);
         } else {
-            const result = await this.props.addReview(r);
-            if (result) {
-                this.setState({
-                    currentReview: result,
-                });
-            }
+            await this.props.addReview(r);
         }
         this.setScore();
     }
@@ -144,7 +135,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private criteriaTotal(): number {
         let counter = 0;
         const bms: GradingBenchmark[] = this.props.assignment.getGradingbenchmarksList();
-        console.log("Review: got " + bms.length + "benchmarks for this review");
+        console.log("Review for " + this.props.authorName + ": got " + bms.length + "benchmarks for this review");
         bms.forEach((bm) => {
             bm.getCriteriaList().forEach(() => {
                 counter++;
@@ -156,15 +147,13 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     private gradedTotal(): number {
         let counter = 0;
-        if (this.state.currentReview) {
-            this.state.currentReview.getReviewsList().forEach((r) => {
-                r.getCriteriaList().forEach((c) => {
-                    if (c.getGrade() !== GradingCriterion.Grade.NONE) {
-                        counter++;
-                    }
-                });
+        this.state.benchmarks.forEach((r) => {
+            r.getCriteriaList().forEach((c) => {
+                if (c.getGrade() !== GradingCriterion.Grade.NONE) {
+                    counter++;
+                }
             });
-        }
+        });
         return counter;
     }
 
@@ -172,10 +161,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         this.setState({
             open: !this.state.open,
         });
-        if (this.props.submission) {
-            this.selectReview(this.props.submission);
-            console.log("Selecting review for a submission");
-        }
     }
 
     private graded(): JSX.Element {
@@ -183,7 +168,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private showScore(): JSX.Element {
-        return <div className="score-div">Score: {this.state.score.toFixed()}%</div>;
+        return <div className="score-div">Score: {this.props.review?.getScore() ?? this.state.score.toFixed()}%</div>;
     }
 
     private setScore() {
@@ -198,32 +183,5 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         this.setState({
             score: scoreNow,
         })
-    }
-
-    private selectReview(s: ISubmission | undefined) {
-        let found = false;
-        s?.reviews.forEach((r) => {
-            if (r.getReviewerid() === this.props.reviewerID) {
-                console.log("Found existing review for the current user");
-                this.setState({
-                    currentReview: r,
-                    benchmarks: r.getReviewsList(),
-                    score: r.getScore(),
-                    feedback: r.getFeedback(),
-                    ready: r.getReady(),
-                });
-                found = true;
-            }
-        });
-        if (!found) {
-            console.log("Found no existing reviews, making an empty one");
-            this.setState({
-                currentReview: this.makeNewReview(),
-                benchmarks: this.props.assignment.getGradingbenchmarksList(),
-                score: 0,
-                feedback: "",
-                ready: false,
-            });
-        }
     }
 }
