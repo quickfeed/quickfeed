@@ -407,6 +407,12 @@ body {
     float: right;
 }
 
+.r-row {
+    display: flexbox;
+    border-style: solid;
+    border-color: #337ab7;
+}
+
 .switch-toggle {
     display: block;
     float: right;
