@@ -42,25 +42,30 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     key={"st" + i}
                     assignment={this.getAssignment(l.assignment)}
                     submission={l.submission}
-                    review={this.selectReview(l.submission)}
                     authorName={l.authorName}
                     reviewerID={this.props.curUser.getId()}
                     addReview={async (r: Review) => {
                         if (l.submission) {
+                            console.log("GradingView: adding a new review: " + r.toString());
                             const ans = await this.props.addReview(r);
                             if (ans) {
-                                l.submission.reviews.push(r);
-                                return true;
+                                console.log("Review added successfully");
+                                l.submission.reviews.push(ans);
+                                return ans;
                             }
                         }
-                        return false;
+                        console.log("Failed to add review");
+                        return null;
                     }}
                     updateReview={ async (r: Review) => {
                         if (l.submission) {
+                            console.log("Grading view: updating review");
                             const ans = await this.props.updateReview(r);
                             if (ans) {
                                 const ix = l.submission.reviews.findIndex(rw => rw.getId() === r.getId());
+                                console.log("Review before update: " + l.submission.reviews[ix].toString());
                                 l.submission.reviews[ix] = r;
+                                console.log("Review after update: " + l.submission.reviews[ix].toString());
                                 return true;
                             }
                         }
@@ -78,16 +83,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
 
     private getAssignment(a: Assignment): Assignment {
         return this.props.assignments.find(item => item.getId() === a.getId()) ?? a;
-    }
-
-    private selectReview(s: ISubmission | undefined): Review | null {
-        let review: Review | null = null;
-        s?.reviews.forEach((r) => {
-            if (r.getReviewerid() === this.props.curUser.getId()) {
-                review = r;
-            }
-        });
-        return review;
     }
 
     private renderStudentList(): JSX.Element {

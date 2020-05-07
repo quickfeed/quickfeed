@@ -6,22 +6,19 @@ import { GradeBenchmark } from './GradeBenchmark';
 interface ReviewPageProps {
     assignment: Assignment;
     submission: ISubmission | undefined;
-    review: Review | null;
     authorName: string;
     reviewerID: number;
-    addReview: (review: Review) => Promise<boolean>;
+    addReview: (review: Review) => Promise<Review | null>;
     updateReview: (review: Review) => Promise<boolean>;
 }
 
 interface ReviewPageState {
+    currentReview: Review;
     open: boolean;
     benchmarks: GradingBenchmark[];
     score: number;
     approved: boolean;
     feedback: string;
-    editing: boolean;
-    criteria: number;
-    graded: number;
     ready: boolean;
 }
 
@@ -30,15 +27,13 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     constructor(props: ReviewPageProps) {
         super(props);
         this.state = {
+            currentReview: this.makeNewReview(),
             open: false,
-            benchmarks: this.setBenchmarks(),
-            score: this.props.review?.getScore() ?? 0,
+            benchmarks: this.props.assignment.getGradingbenchmarksList(),
+            score: 0,
             approved: this.props.submission?.approved ?? false,
-            feedback: this.props.review?.getFeedback() ?? "",
-            editing: false,
-            criteria: this.criteriaTotal(),
-            graded: this.gradedTotal(),
-            ready: this.props.review?.getReady() ?? false,
+            feedback: "",
+            ready: false,
         }
     }
 
@@ -48,8 +43,8 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             {this.state.open ? this.renderInfo() : null}
             {this.state.open ?  this.renderBenchmarkList() : null}
             {this.state.open ? this.renderFeedbackRow() : null}
-            <div className="row">{this.state.open ? this.graded() : null}{this.state.open ? this.saveButton() : null}</div>
-            <div className="row">{this.state.open ? this.showScore() : null}{this.state.open ? this.readyButton() : null}</div>
+            <div className="r-row">{this.state.open ? this.graded() : null}{this.state.open ? this.saveButton() : null}</div>
+            <div className="r-row">{this.state.open ? this.showScore() : null}{this.state.open ? this.readyButton() : null}</div>
         </div>
     }
 
@@ -75,11 +70,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             className="form-control"
             defaultValue={this.state.feedback}
             onChange={(e) => this.setFeedback(e.target.value)}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                    this.addFeedback();
-                }
-            }}
         ></textarea>
         </div>
     }
@@ -114,33 +104,35 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private async updateReview() {
-        const r: Review = this.props.review ?? this.makeNewReview();
-        const ans = await this.props.addReview(r);
-        if (ans) {
-            this.setScore();
+        // TODO: update or add review depending on the context
+        const r: Review = this.state.currentReview;
+        r.setReady(this.state.ready);
+        r.setReviewsList(this.state.benchmarks);
+        r.setScore(this.state.score);
+        r.setFeedback(this.state.feedback);
+        if (r.getId() > 0) {
+            const ans = await this.props.updateReview(r);
+            if (ans) {
+                this.setState({
+                    currentReview: r,
+                });
+            }
+        } else {
+            const result = await this.props.addReview(r);
+            if (result) {
+                this.setState({
+                    currentReview: result,
+                });
+            }
         }
+        this.setScore();
     }
 
     private makeNewReview(): Review {
         const r = new Review();
         r.setSubmissionid(this.props.submission?.id ?? 0);
         r.setReviewerid(this.props.reviewerID);
-        r.setReviewsList(this.state.benchmarks);
-        r.setReady(this.state.ready);
-        r.setFeedback(this.state.feedback);
-        r.setScore(this.state.score);
         return r;
-    }
-
-    private async addFeedback() {
-        const r: Review = this.props.review ?? this.makeNewReview();
-        r.setFeedback(this.state.feedback);
-        const ans = this.props.updateReview(r);
-        if (!ans) {
-            this.setState({
-                feedback: this.props.review?.getFeedback() ?? "",
-            })
-        }
     }
 
     private setFeedback(input: string) {
@@ -149,26 +141,23 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         })
     }
 
-    private setBenchmarks(): GradingBenchmark[] {
-        return this.props.review?.getReviewsList() ?? this.props.assignment.getGradingbenchmarksList();
-    }
-
     private criteriaTotal(): number {
         let counter = 0;
-        const bms: GradingBenchmark[] = this.props.review?.getReviewsList() ?? this.props.assignment.getGradingbenchmarksList();
-        console.log("criteriaTotal got " + bms.length + "benchmarks");
+        const bms: GradingBenchmark[] = this.props.assignment.getGradingbenchmarksList();
+        console.log("Review: got " + bms.length + "benchmarks for this review");
         bms.forEach((bm) => {
             bm.getCriteriaList().forEach(() => {
                 counter++;
             });
         });
+        console.log("Review: got " + counter + " criterias total for this review");
         return counter;
     }
 
     private gradedTotal(): number {
         let counter = 0;
-        if (this.props.review) {
-            this.props.review.getReviewsList().forEach((r) => {
+        if (this.state.currentReview) {
+            this.state.currentReview.getReviewsList().forEach((r) => {
                 r.getCriteriaList().forEach((c) => {
                     if (c.getGrade() !== GradingCriterion.Grade.NONE) {
                         counter++;
@@ -182,26 +171,59 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private toggleOpen() {
         this.setState({
             open: !this.state.open,
-        })
+        });
+        if (this.props.submission) {
+            this.selectReview(this.props.submission);
+            console.log("Selecting review for a submission");
+        }
     }
 
     private graded(): JSX.Element {
-        return <div className="graded-div">{this.state.graded}/{this.state.criteria}</div>;
+        return <div className="graded-div">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</div>;
     }
 
     private showScore(): JSX.Element {
-        return <div className="score-div">{this.state.score.toFixed()}%</div>;
+        return <div className="score-div">Score: {this.state.score.toFixed()}%</div>;
     }
 
-    private setScore(): number {
+    private setScore() {
         let passed = 0;
         this.state.benchmarks.forEach((bm) => {
             bm.getCriteriaList().forEach((c) => {
                 if (c.getGrade() === GradingCriterion.Grade.PASSED) passed++;
             })
         });
-        const score = passed * 100 / this.criteriaTotal();
-        console.log("Score now: " + score);
-        return score;
+        const scoreNow = passed * 100 / this.criteriaTotal();
+        console.log("Score now: " + scoreNow);
+        this.setState({
+            score: scoreNow,
+        })
+    }
+
+    private selectReview(s: ISubmission | undefined) {
+        let found = false;
+        s?.reviews.forEach((r) => {
+            if (r.getReviewerid() === this.props.reviewerID) {
+                console.log("Found existing review for the current user");
+                this.setState({
+                    currentReview: r,
+                    benchmarks: r.getReviewsList(),
+                    score: r.getScore(),
+                    feedback: r.getFeedback(),
+                    ready: r.getReady(),
+                });
+                found = true;
+            }
+        });
+        if (!found) {
+            console.log("Found no existing reviews, making an empty one");
+            this.setState({
+                currentReview: this.makeNewReview(),
+                benchmarks: this.props.assignment.getGradingbenchmarksList(),
+                score: 0,
+                feedback: "",
+                ready: false,
+            });
+        }
     }
 }
