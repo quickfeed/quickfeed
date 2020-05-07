@@ -138,7 +138,7 @@ message UsedSlipDays {
 
 message Enrollments {
     repeated Enrollment enrollments = 1;
-}
+} 
 
 //   UI structures, never saved in the database   //
 
@@ -196,7 +196,7 @@ message Submission {
     bool approved = 9; // to be deprecated
     repeated Review reviews = 10;
     bool feedbackReady = 11; // defines whether the feedback is visible for the student or group members
-
+    Status status = 12;
 }
 
 message Submissions {

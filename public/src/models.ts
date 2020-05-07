@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, Review } from '../proto/ag_pb';
+import { Assignment, Course, Enrollment, Review, Submission } from '../proto/ag_pb';
 
 export interface IUser {
     id: number;
@@ -62,4 +62,5 @@ export interface ISubmission {
     approved: boolean;
     reviews: Review[];
     feedbackReady: boolean;
+    status: Submission.Status;
 }

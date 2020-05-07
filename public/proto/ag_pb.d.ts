@@ -662,6 +662,9 @@ export class Submission extends jspb.Message {
   getFeedbackready(): boolean;
   setFeedbackready(value: boolean): void;
 
+  getStatus(): Submission.Status;
+  setStatus(value: Submission.Status): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Submission.AsObject;
   static toObject(includeInstance: boolean, msg: Submission): Submission.AsObject;
@@ -683,6 +686,7 @@ export namespace Submission {
     approved: boolean,
     reviewsList: Array<Review.AsObject>,
     feedbackready: boolean,
+    status: Submission.Status,
   }
 
   export enum Status { 

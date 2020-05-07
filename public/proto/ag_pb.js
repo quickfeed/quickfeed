@@ -5686,7 +5686,8 @@ proto.Submission.toObject = function(includeInstance, msg) {
     approved: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
     reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
     proto.Review.toObject, includeInstance),
-    feedbackready: jspb.Message.getBooleanFieldWithDefault(msg, 11, false)
+    feedbackready: jspb.Message.getBooleanFieldWithDefault(msg, 11, false),
+    status: jspb.Message.getFieldWithDefault(msg, 12, 0)
   };
 
   if (includeInstance) {
@@ -5767,6 +5768,10 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
     case 11:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setFeedbackready(value);
+      break;
+    case 12:
+      var value = /** @type {!proto.Submission.Status} */ (reader.readEnum());
+      msg.setStatus(value);
       break;
     default:
       reader.skipField();
@@ -5872,6 +5877,13 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
   if (f) {
     writer.writeBool(
       11,
+      f
+    );
+  }
+  f = message.getStatus();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      12,
       f
     );
   }
@@ -6103,6 +6115,24 @@ proto.Submission.prototype.getFeedbackready = function() {
  */
 proto.Submission.prototype.setFeedbackready = function(value) {
   return jspb.Message.setProto3BooleanField(this, 11, value);
+};
+
+
+/**
+ * optional Status status = 12;
+ * @return {!proto.Submission.Status}
+ */
+proto.Submission.prototype.getStatus = function() {
+  return /** @type {!proto.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 12, 0));
+};
+
+
+/**
+ * @param {!proto.Submission.Status} value
+ * @return {!proto.Submission} returns this
+ */
+proto.Submission.prototype.setStatus = function(value) {
+  return jspb.Message.setProto3EnumField(this, 12, value);
 };
 
 
