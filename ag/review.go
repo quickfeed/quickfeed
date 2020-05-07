@@ -11,12 +11,12 @@ import (
 // to store in the database
 func (r *Review) MakeReviewString() error {
 	fmt.Println("Marshalling reviews: ", r.Reviews)
-	m := jsonpb.Marshaler{}
+	m := jsonpb.Marshaler{EnumsAsInts: true}
 	str := make([]string, 0)
 	for _, rw := range r.Reviews {
 		s, err := m.MarshalToString(rw)
 		if err != nil {
-			fmt.Println("Failed to parse ", rw, " to string: ", err.Error())
+			fmt.Println("Failed to marshall ", rw, " to string: ", err.Error())
 			return err
 		}
 		str = append(str, s)
