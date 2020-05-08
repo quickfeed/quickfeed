@@ -55,26 +55,20 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     }}
                     addReview={async (r: Review) => {
                         if (l.submission) {
-                            console.log("GradingView: adding a new review: " + r.toString());
                             const ans = await this.props.addReview(r);
                             if (ans) {
-                                console.log("Review added successfully");
                                 l.submission.reviews.push(ans);
                                 return ans;
                             }
                         }
-                        console.log("Failed to add review");
                         return null;
                     }}
                     updateReview={ async (r: Review) => {
                         if (l.submission) {
-                            console.log("Grading view: updating review");
                             const ans = await this.props.updateReview(r);
                             if (ans) {
                                 const ix = l.submission.reviews.findIndex(rw => rw.getId() === r.getId());
-                                console.log("Review before update: " + l.submission.reviews[ix].toString());
                                 l.submission.reviews[ix] = r;
-                                console.log("Review after update: " + l.submission.reviews[ix].toString());
                                 return true;
                             }
                         }
@@ -119,7 +113,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         if (s?.reviews) {
             s.reviews.forEach((r) => {
                 if (r.getReviewerid() === this.props.curUser.getId()) {
-                    console.log("Found an existing review by user: " + this.props.curUser.getLogin());
                     rw = r;
                 }
             });

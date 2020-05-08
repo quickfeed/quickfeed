@@ -22,6 +22,8 @@ interface ReviewPageState {
     ready: boolean;
     editing: boolean;
     score: number;
+    alert: string;
+    graded: number;
 }
 
 export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState> {
@@ -35,26 +37,27 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             ready: false,
             editing: false,
             score: 0,
+            alert: "",
+            graded: 0,
         }
     }
 
     public render() {
-            console.log("Review: rendering Review, props open: " + this.props.open + ", state open: " + this.state.open);
             const open = this.props.open && this.state.open;
             return <div className="review">
                 <h3 className="a-header" onClick={() => {
                     this.props.setOpen();
                     this.toggleOpen();
                 }}>{this.props.assignment.getName()}</h3>
-                {open ? this.renderInfo() : null}
+                <div className="alert alert-warning">{open ? this.state.alert : null}</div>{open ? this.renderInfo() : null}
                 {open ?  this.renderBenchmarkList() : null}
                 {open ? this.renderFeedback() : null}
                 <div className="r-row">{open ? this.graded() : null}{open ? this.saveButton() : null}</div>
                 <div className="r-row">{open ? this.showScore() : null}{open ? this.readyButton() : null}</div>
             </div>
     }
+
     private renderBenchmarkList(): JSX.Element[] {
-        console.log("Review: rendering benchmark list, review in props: " + this.props.review);
         const bms: GradingBenchmark[] = this.props.review?.getReviewsList() ?? this.props.assignment.getGradingbenchmarksList();
         return bms.map((bm, i) => <GradeBenchmark
             key={"bm" + i}
@@ -70,7 +73,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 bm.setCriteriaList(c);
                 this.setState({
                     benchmarks: bms,
-                });
+                }, () => this.setState({
+                    graded: this.gradedTotal(),
+                }));
                 this.updateReview();
             }}
         />)
@@ -99,7 +104,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
 
     private renderInfo(): JSX.Element {
-        console.log("Review: rendering info");
         return <div className="s-info"><ul>
             <li key="i1"> Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</li>
             <li key="i2"> {this.setApprovedString()} </li>
@@ -117,12 +121,25 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private readyButton(): JSX.Element {
         return <button
             onClick={() => {
+                if (this.props.review && this.props.review.getReady()) {
                 this.setState({
-                    ready: true,
-                });
-                this.updateReview();
+                    ready: false,
+                }, () => this.updateReview());
+                } else {
+                    this.setReady();
+                }
             }}
         >Mark as ready</button>
+    }
+
+    private setReady() {
+        if (this.state.graded < this.criteriaTotal()) {
+            this.setAlert("All grading criteria must be checked before marking review as ready.");
+        } else {
+            this.setState({
+                ready: true,
+            }, () => this.updateReview());
+        }
     }
 
     private setApprovedString(): string {
@@ -141,6 +158,10 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             await this.props.addReview(r);
         }
         this.setScore();
+        this.setState({
+            editing: false,
+            alert: "",
+        });
     }
 
     private makeNewReview(): Review {
@@ -211,7 +232,22 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             score: this.props.review?.getScore() ?? 0,
             benchmarks: this.props.review?.getReviewsList() ?? [],
             feedback: this.props.review?.getFeedback() ?? "",
-            open: !this.state.open,
+            open: this.props.open ? !this.state.open : true,
+            alert: this.makeAlertString(),
+            graded: this.gradedTotal(),
         });
+    }
+
+    private setAlert(alert?: string) {
+        this.setState({
+            alert: this.makeAlertString(alert),
+        });
+    }
+
+    private makeAlertString(alert?: string): string {
+        if (!this.props.submission) return "No submissions yet for assignment " + this.props.assignment.getName();
+        if (this.props.assignment.getReviewers() === 0) return "This assignment has no grading criteria";
+        if (!this.props.review && this.props.assignment.getReviewers() === this.props.submission.reviews.length) return "All reviews are redy for this submission";
+        return alert ?? "";
     }
 }
