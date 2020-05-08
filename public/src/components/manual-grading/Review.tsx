@@ -98,7 +98,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private renderInfo(): JSX.Element {
         return <div className="s-info"><ul>
             <li key="i1"> Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</li>
-            <li key="i2"> {this.setApprovedString()} </li>
+            <li key="i3">Review status: {this.reviewStatus()}</li>
             </ul></div>
     }
 
@@ -230,6 +230,12 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         });
     }
 
+    private reviewStatus(): string {
+        if (!this.props.submission) return "No submissions";
+        if (!this.props.review) return "Not reviewed";
+        return this.state.ready ? "Ready" : "In progress";
+    }
+
     private renderAlert(): JSX.Element | null {
         return this.state.alert === "" ? null : <div className="alert alert-warning">{ this.state.alert }</div>
     }
@@ -243,7 +249,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private makeAlertString(alert?: string): string {
         if (!this.props.submission) return "No submissions yet for assignment " + this.props.assignment.getName();
         if (this.props.assignment.getReviewers() === 0) return "This assignment has no grading criteria";
-        if (!this.props.review && this.props.assignment.getReviewers() === this.props.submission.reviews.length) return "All reviews are redy for this submission";
+        if (!this.props.review && this.props.assignment.getReviewers() <= this.props.submission.reviews.length) return "All reviews are redy for this submission";
         return alert ?? "";
     }
 }
