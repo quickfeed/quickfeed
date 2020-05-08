@@ -49,7 +49,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                     this.props.setOpen();
                     this.toggleOpen();
                 }}>{this.props.assignment.getName()}</h3>
-                <div className="alert alert-warning">{open ? this.state.alert : null}</div>{open ? this.renderInfo() : null}
+                {open ? this.renderAlert() : null}{open ? this.renderInfo() : null}
                 {open ? this.renderBenchmarkList() : null}
                 {open ? this.renderFeedback() : null}
                 <div className="r-row">{open ? this.graded() : null}{open ? this.saveButton() : null}</div>
@@ -228,6 +228,10 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             alert: this.makeAlertString(),
             graded: this.gradedTotal(),
         });
+    }
+
+    private renderAlert(): JSX.Element | null {
+        return this.state.alert === "" ? null : <div className="alert alert-warning">{ this.state.alert }</div>
     }
 
     private setAlert(alert?: string) {
