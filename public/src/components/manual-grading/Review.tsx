@@ -50,7 +50,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                     this.toggleOpen();
                 }}>{this.props.assignment.getName()}</h3>
                 <div className="alert alert-warning">{open ? this.state.alert : null}</div>{open ? this.renderInfo() : null}
-                {open ?  this.renderBenchmarkList() : null}
+                {open ? this.renderBenchmarkList() : null}
                 {open ? this.renderFeedback() : null}
                 <div className="r-row">{open ? this.graded() : null}{open ? this.saveButton() : null}</div>
                 <div className="r-row">{open ? this.showScore() : null}{open ? this.readyButton() : null}</div>
@@ -58,24 +58,17 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private renderBenchmarkList(): JSX.Element[] {
-        const bms: GradingBenchmark[] = this.props.review?.getReviewsList() ?? this.props.assignment.getGradingbenchmarksList();
+        console.log("Rendering benchmarks, submission ID: " + this.props.submission?.id + " review in props:" + this.props.review ?? "none");
+        const bms: GradingBenchmark[] = this.state.benchmarks;
         return bms.map((bm, i) => <GradeBenchmark
             key={"bm" + i}
             benchmark={bm}
             addComment={(comment: string) => {
                 bm.setComment(comment);
-                this.setState({
-                    benchmarks: bms,
-                });
                 this.updateReview();
             }}
             onUpdate={(c: GradingCriterion[]) => {
                 bm.setCriteriaList(c);
-                this.setState({
-                    benchmarks: bms,
-                }, () => this.setState({
-                    graded: this.gradedTotal(),
-                }));
                 this.updateReview();
             }}
         />)
@@ -101,7 +94,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         {this.state.editing ? editFeedbackDiv : feedbackDiv}
     </div>;
     }
-
 
     private renderInfo(): JSX.Element {
         return <div className="s-info"><ul>
@@ -146,10 +138,10 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return this.props.submission?.approved ? "Approved" : "Not approved";
     }
 
-    private async updateReview() {
+    private async updateReview(bms?: GradingBenchmark[]) {
         const r: Review = this.props.review ?? this.makeNewReview();
         r.setReady(this.state.ready);
-        r.setReviewsList(this.state.benchmarks);
+        r.setReviewsList(bms ?? this.state.benchmarks);
         r.setScore(this.setScore());
         r.setFeedback(this.state.feedback);
         if (r.getId() > 0) {
@@ -230,7 +222,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private toggleOpen() {
         this.setState({
             score: this.props.review?.getScore() ?? 0,
-            benchmarks: this.props.review?.getReviewsList() ?? [],
+            benchmarks: this.props.review ? this.props.review.getReviewsList() : this.props.assignment.getGradingbenchmarksList(),
             feedback: this.props.review?.getFeedback() ?? "",
             open: this.props.open ? !this.state.open : true,
             alert: this.makeAlertString(),
