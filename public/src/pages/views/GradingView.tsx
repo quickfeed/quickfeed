@@ -16,6 +16,7 @@ interface GradingViewProps {
 
 interface GradingViewState {
     selectedStudent: IStudentLabsForCourse | null;
+    openState: boolean;
 }
 
 export class GradingView extends React.Component<GradingViewProps, GradingViewState> {
@@ -23,6 +24,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         super(props);
         this.state = {
             selectedStudent: null,
+            openState: true,
         }
     }
 
@@ -45,6 +47,12 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     authorName={l.authorName}
                     reviewerID={this.props.curUser.getId()}
                     review={this.selectReview(l.submission)}
+                    open={this.state.openState}
+                    setOpen={() => {
+                        this.setState({
+                            openState: true,
+                        });
+                    }}
                     addReview={async (r: Review) => {
                         if (l.submission) {
                             console.log("GradingView: adding a new review: " + r.toString());
@@ -94,6 +102,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                 onClick={() => {
                     this.setState({
                         selectedStudent: s,
+                        openState: false,
                     })
                 } }
               >{s.enrollment.getUser()?.getName() ?? "No name"}</li>)}
@@ -117,6 +126,4 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         }
         return rw;
     }
-
-    
 }

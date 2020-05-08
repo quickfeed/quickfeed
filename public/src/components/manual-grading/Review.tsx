@@ -9,8 +9,10 @@ interface ReviewPageProps {
     review: Review | null;
     authorName: string;
     reviewerID: number;
+    open: boolean;
     addReview: (review: Review) => Promise<Review | null>;
     updateReview: (review: Review) => Promise<boolean>;
+    setOpen: () => void;
 }
 
 interface ReviewPageState {
@@ -35,14 +37,18 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     public render() {
-        return <div className="review">
-            <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
-            {this.state.open ? this.renderInfo() : null}
-            {this.state.open ?  this.renderBenchmarkList() : null}
-            {this.state.open ? this.renderFeedbackRow() : null}
-            <div className="r-row">{this.state.open ? this.graded() : null}{this.state.open ? this.saveButton() : null}</div>
-            <div className="r-row">{this.state.open ? this.showScore() : null}{this.state.open ? this.readyButton() : null}</div>
-        </div>
+            const open = this.props.open && this.state.open;
+            return <div className="review">
+                <h3 className="a-header" onClick={() => {
+                    this.props.setOpen();
+                    this.toggleOpen();
+                }}>{this.props.assignment.getName()}</h3>
+                {open ? this.renderInfo() : null}
+                {open ?  this.renderBenchmarkList() : null}
+                {open ? this.renderFeedbackRow() : null}
+                <div className="r-row">{open ? this.graded() : null}{open ? this.saveButton() : null}</div>
+                <div className="r-row">{open ? this.showScore() : null}{open ? this.readyButton() : null}</div>
+            </div>
     }
 
     private renderBenchmarkList(): JSX.Element[] {
@@ -57,7 +63,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 bm.setCriteriaList(c);
                 this.setState({
                     benchmarks: bms,
-                })
+                });
             }}
         />)
     }
@@ -74,7 +80,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         ></textarea>
         </div>
     }
-
     private renderInfo(): JSX.Element {
         return <div className="s-info"><ul>
             <li key="i1"> Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</li>
@@ -129,19 +134,17 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private setFeedback(input: string) {
         this.setState({
             feedback: input,
-        })
+        });
     }
 
     private criteriaTotal(): number {
         let counter = 0;
         const bms: GradingBenchmark[] = this.props.assignment.getGradingbenchmarksList();
-        console.log("Review for " + this.props.authorName + ": got " + bms.length + "benchmarks for this review");
         bms.forEach((bm) => {
             bm.getCriteriaList().forEach(() => {
                 counter++;
             });
         });
-        console.log("Review: got " + counter + " criterias total for this review");
         return counter;
     }
 
@@ -157,12 +160,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return counter;
     }
 
-    private toggleOpen() {
-        this.setState({
-            open: !this.state.open,
-        });
-    }
-
     private graded(): JSX.Element {
         return <div className="graded-div">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</div>;
     }
@@ -176,12 +173,18 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         this.state.benchmarks.forEach((bm) => {
             bm.getCriteriaList().forEach((c) => {
                 if (c.getGrade() === GradingCriterion.Grade.PASSED) passed++;
-            })
+            });
         });
         const scoreNow = passed * 100 / this.criteriaTotal();
         console.log("Score now: " + scoreNow);
         this.setState({
             score: scoreNow,
-        })
+        });
+    }
+
+    private toggleOpen() {
+        this.setState({
+            open: !this.state.open,
+        });
     }
 }
