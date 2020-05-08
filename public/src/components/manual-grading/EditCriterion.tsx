@@ -59,6 +59,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
                 type="text"
                 defaultValue={this.state.description}
                 onChange={(e) => this.setDescription(e.target.value)}
+                onBlur={() => this.undo()}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         this.updateDescription();

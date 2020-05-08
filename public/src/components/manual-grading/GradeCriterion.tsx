@@ -66,13 +66,14 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
 
     private renderComment(): JSX.Element {
         const commentDiv = <div className="comment-div"
-            onDoubleClick={() => this.toggleEdit()}
+            onClick={() => this.toggleEdit()}
             >{this.state.comment !== "" ? this.state.comment : "Add new comment"}</div>;
         const editDiv = <div className="input-group">
             <input
                 autoFocus={true}
                 type="text"
                 defaultValue={this.state.comment}
+                onBlur={() => this.toggleEdit()}
                 onChange={(e) => this.setComment(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -80,7 +81,8 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
                     } else if (e.key === 'Escape') {
                         this.toggleEdit();
                     }
-                }}
+                }
+            }
             /></div>
         return <div className="comment-div">
             {this.state.commenting ? editDiv : commentDiv}

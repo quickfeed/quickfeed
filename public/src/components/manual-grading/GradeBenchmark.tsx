@@ -57,6 +57,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
                 type="text"
                 defaultValue={this.state.comment}
                 onChange={(e) => this.setComment(e.target.value)}
+                onBlur={() => this.toggleEdit()}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         this.updateComment();

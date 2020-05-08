@@ -58,6 +58,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
             type="text"
             defaultValue=""
             onChange={(e) => this.setNewDescription(e.target.value)}
+            onBlur={() => this.toggleAdd()}
             onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                     this.addNewCriterion();
@@ -141,6 +142,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
                 type="text"
                 defaultValue={this.state.heading}
                 onChange={(e) => this.setHeader(e.target.value)}
+                onBlur={() => this.toggleEdit()}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         this.updateHeader();
