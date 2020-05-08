@@ -390,21 +390,31 @@ body {
     border-style: solid;
     border-color: slateblue;
     float: left;
-    overflow-y: scroll;
+    overflow-y: auto;    
 }
 
 .students-nav {
     margin: 0;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.student-nav>li {
+    border-bottom: #601203;
+    border-style: outset;
+    width: 98%;
 }
 
 .f-view {
     border-style: solid;
     border-color: red;
-    margin: 0;
+    margin: auto;
     padding: 0;
     width: 80%;
     display: block;
     float: right;
+    height: 100%;
+    overflow-y: auto;
 }
 
 .r-row {

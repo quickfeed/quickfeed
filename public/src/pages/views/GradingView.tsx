@@ -89,10 +89,10 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderStudentList(): JSX.Element {
-        return <div className="student-div"><ul className=" student-nav nav nav-pills nav-stacked flex-column">
+        return <div className="student-div"><ul className=" student-nav nav nav-pills nav-fill flex-column">
               {this.props.students.map((s, i) => <li
                 key={"m" + i}
-                className={"nav-item" + this.setSelected(s)}
+                className={"nav-item nav-link" + this.setSelected(s)}
                 onClick={() => {
                     this.setState({
                         selectedStudent: s,
@@ -105,7 +105,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
 
     // TODO: add style
     private setSelected(s: IStudentLabsForCourse): string {
-        return this.state.selectedStudent === s ? "li-selected" : "";
+        return this.state.selectedStudent === s ? "active" : "";
     }
 
     private selectReview(s: ISubmission | undefined): Review | null {
