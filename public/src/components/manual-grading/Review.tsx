@@ -21,6 +21,7 @@ interface ReviewPageState {
     feedback: string;
     ready: boolean;
     editing: boolean;
+    score: number;
 }
 
 export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState> {
@@ -33,6 +34,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             feedback: "",
             ready: false,
             editing: false,
+            score: 0,
         }
     }
 
@@ -59,34 +61,43 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             benchmark={bm}
             addComment={(comment: string) => {
                 bm.setComment(comment);
+                this.setState({
+                    benchmarks: bms,
+                });
+                this.updateReview();
             }}
             onUpdate={(c: GradingCriterion[]) => {
                 bm.setCriteriaList(c);
                 this.setState({
                     benchmarks: bms,
                 });
+                this.updateReview();
             }}
         />)
     }
 
     private renderFeedback(): JSX.Element {
-        let feedbackText = this.props.review?.getFeedback() ?? this.state.feedback;
-        if (feedbackText === "") feedbackText = "Add feedback";
-        return <div><div onClick={() => this.toggleEditing()}>Submission feedback:</div>{this.state.editing ? this.renderFeedbackRow() : feedbackText}</div>
+    const feedbackDiv = <div onDoubleClick={() => this.toggleEdit()}>{this.props.review?.getFeedback() ?? "Add a feedback"}</div>;
+    const editFeedbackDiv = <div className="input-group">
+    <input
+        autoFocus={true}
+        type="text"
+        defaultValue={this.state.feedback}
+        onChange={(e) => this.setFeedback(e.target.value)}
+        onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+                this.updateReview();
+            } else if (e.key === 'Escape') {
+                this.toggleEdit();
+            }
+        }}
+    /></div>;
+    return <div className="feedback">
+        {this.state.editing ? editFeedbackDiv : feedbackDiv}
+    </div>;
     }
 
-    private renderFeedbackRow(): JSX.Element {
-        return <div className="input-group">
-            <div className="input-group-prepend">
-        <span className="input-group-text">Add feedback</span>
-        </div>
-        <textarea
-            className="form-control"
-            defaultValue={this.state.feedback !== "" ? this.state.feedback : this.props.review?.getFeedback() ?? ""}
-            onChange={(e) => this.setFeedback(e.target.value)}
-        ></textarea>
-        </div>
-    }
+
     private renderInfo(): JSX.Element {
         console.log("Review: rendering info");
         return <div className="s-info"><ul>
@@ -188,14 +199,18 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return scoreNow;
     }
 
-    private toggleEditing() {
+    private toggleEdit() {
         this.setState({
+            feedback: this.props.review?.getFeedback() ?? "",
             editing: !this.state.editing,
         });
     }
 
     private toggleOpen() {
         this.setState({
+            score: this.props.review?.getScore() ?? 0,
+            benchmarks: this.props.review?.getReviewsList() ?? [],
+            feedback: this.props.review?.getFeedback() ?? "",
             open: !this.state.open,
         });
     }
