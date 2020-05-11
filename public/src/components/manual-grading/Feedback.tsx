@@ -2,15 +2,17 @@ import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, User } from '../../../proto/ag_pb';
 import { userSubmissionLink } from '../../componentHelper';
 import { DynamicTable } from '../data/DynamicTable';
+import { ISubmission } from "../../models";
 
 interface FeedbackProps {
     reviews: Review[];
     reviewers: User[];
-    // submission: ISubmission;
+    submission: ISubmission;
     assignment: Assignment;
     student: User;
     courseURL: string;
-    teacherView: boolean;
+    studentView: boolean;
+    courseCreatorView: boolean;
     setApproved?: () => void;
     setReady?: () => void;
 }
@@ -18,16 +20,25 @@ interface FeedbackProps {
 export class Feedback extends React.Component<FeedbackProps>{
 
     public render() {
-        if (this.props.reviews.length < 1) {
+        if (this.props.reviews.length < 1 || (this.props.studentView && !this.props.submission.feedbackReady)) {
             return <div>No ready reviews yet for submission by {this.props.student.getName()}</div>
         }
-        return <div className="feedback">
+        if (this.props.courseCreatorView) {
+            return <div className="feedback">
             <h3>Reviews for submission for lab {this.props.assignment.getName()} by {this.props.student.getName}}</h3>
             {userSubmissionLink(this.props.student.getLogin(), this.props.assignment.getName(), this.props.courseURL)}
             {this.renderReviewers()}
             {this.renderReviewTable()}
             {this.renderButtons()}
-        </div>;
+            </div>;
+        }
+        if (this.props.studentView && this.props.submission.feedbackReady) {
+            return <div className="Feedback">
+                {this.renderReviewTable()}
+            </div>;
+        }
+        return <div className="feedback">A general view accessible by all teachers and TAs</div>;
+        // TODO: show general review info after the lab has been marked as open for feedback by the course teacher
     }
 
     private renderReviewers(): JSX.Element {
