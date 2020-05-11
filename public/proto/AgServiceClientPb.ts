@@ -34,6 +34,7 @@ import {
   Repositories,
   RepositoryRequest,
   Review,
+  ReviewRequest,
   Submission,
   SubmissionRequest,
   Submissions,
@@ -791,14 +792,14 @@ export class AutograderServiceClient {
 
   methodInfoCreateReview = new grpcWeb.AbstractClientBase.MethodInfo(
     Review,
-    (request: Review) => {
+    (request: ReviewRequest) => {
       return request.serializeBinary();
     },
     Review.deserializeBinary
   );
 
   createReview(
-    request: Review,
+    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Review) => void) {
@@ -813,14 +814,14 @@ export class AutograderServiceClient {
 
   methodInfoUpdateReview = new grpcWeb.AbstractClientBase.MethodInfo(
     Void,
-    (request: Review) => {
+    (request: ReviewRequest) => {
       return request.serializeBinary();
     },
     Void.deserializeBinary
   );
 
   updateReview(
-    request: Review,
+    request: ReviewRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Void) => void) {

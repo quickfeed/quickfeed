@@ -841,6 +841,30 @@ export namespace Review {
   }
 }
 
+export class ReviewRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getReview(): Review | undefined;
+  setReview(value?: Review): void;
+  hasReview(): boolean;
+  clearReview(): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ReviewRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ReviewRequest): ReviewRequest.AsObject;
+  static serializeBinaryToWriter(message: ReviewRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ReviewRequest;
+  static deserializeBinaryFromReader(message: ReviewRequest, reader: jspb.BinaryReader): ReviewRequest;
+}
+
+export namespace ReviewRequest {
+  export type AsObject = {
+    courseid: number,
+    review?: Review.AsObject,
+  }
+}
+
 export class CourseRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;

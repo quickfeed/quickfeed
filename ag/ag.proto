@@ -239,6 +239,11 @@ message Review {
 
 ////    REQUESTS AND RESPONSES      \\\\
 
+message ReviewRequest {
+    uint64 courseID = 1;
+    Review review = 2;
+}
+
 message CourseRequest {
     uint64 courseID = 1;
 }
@@ -411,8 +416,8 @@ service AutograderService {
     rpc UpdateCriterion(GradingCriterion) returns (Void) {}
     rpc DeleteCriterion(GradingCriterion) returns (Void) {}
 
-    rpc CreateReview(Review) returns (Review) {}
-    rpc UpdateReview(Review) returns (Void) {}
+    rpc CreateReview(ReviewRequest) returns (Review) {}
+    rpc UpdateReview(ReviewRequest) returns (Void) {}
 
     // misc //
     
