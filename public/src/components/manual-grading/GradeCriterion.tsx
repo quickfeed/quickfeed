@@ -26,9 +26,20 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
 
     public render() {
         return <div className="c-element">
-            {this.props.criterion.getDescription()}{this.renderSwitch()}
+            {this.renderRow()}
             {this.renderComment()}
         </div>
+    }
+
+    private renderRow(): JSX.Element {
+        switch (this.props.criterion.getGrade()) {
+            case GradingCriterion.Grade.PASSED:
+        return <div className="success">{this.props.criterion.getDescription()}{this.renderSwitch()}</div>;
+            case GradingCriterion.Grade.FAILED:
+        return <div className="failed">{this.props.criterion.getDescription()}{this.renderSwitch()}</div>;
+            default:
+        return <div className="active">{this.props.criterion.getDescription()}{this.renderSwitch()}</div>;
+        }
     }
 
     private renderSwitch() {
@@ -99,7 +110,7 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
         this.props.addComment(this.state.comment);
         this.setState({
             commenting: false,
-            // comment: this.props.criterion.getComment(),
+            comment: this.props.criterion.getComment(),
         });
     }
 
