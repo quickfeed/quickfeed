@@ -639,20 +639,24 @@ func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingC
 
 // CreateReview adds a new submission review
 // Access policy: Teacher of CourseID
-func (s *AutograderService) CreateReview(ctx context.Context, in *pb.Review) (*pb.Review, error) {
+func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !usr.IsOwner(in.GetReviewerID()) {
-		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.ReviewerID)
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("CreateReview failed: user is not teacher")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can add reviews")
+	}
+	if !usr.IsOwner(in.Review.GetReviewerID()) {
+		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
 		return nil, status.Errorf(codes.PermissionDenied, "failed to create review: reviewers' IDs don't match")
 	}
-	if err := in.MakeReviewString(); err != nil {
+	if err := in.Review.MakeReviewString(); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
 	}
-	review, err := s.createReview(in)
+	review, err := s.createReview(in.Review)
 	if err != nil {
 		s.logger.Errorf("CreateReview failed for review %+v: %s", in, err)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create review")
@@ -662,20 +666,24 @@ func (s *AutograderService) CreateReview(ctx context.Context, in *pb.Review) (*p
 
 // UpdateReview updates a submission review
 // Access policy: Teacher of CourseID, Author of the given Review
-func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.Review) (*pb.Void, error) {
+func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateReview failed: authentication error: %w", err)
 		return nil, ErrInvalidUserInfo
 	}
-	if !usr.IsOwner(in.GetReviewerID()) {
-		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.ReviewerID)
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("UpdateReview failed: user is not teacher")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update reviews")
+	}
+	if !usr.IsOwner(in.Review.GetReviewerID()) {
+		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
 		return nil, status.Errorf(codes.PermissionDenied, "reviews can only be updated by original authors")
 	}
-	if err := in.MakeReviewString(); err != nil {
+	if err := in.Review.MakeReviewString(); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
 	}
-	if err = s.updateReview(in); err != nil {
+	if err = s.updateReview(in.Review); err != nil {
 		s.logger.Errorf("UpdateReview failed for review %+v: %s", in, err)
 		err = status.Errorf(codes.InvalidArgument, "failed to update review")
 	}
