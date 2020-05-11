@@ -1,7 +1,7 @@
 import * as React from "react";
 
 interface IDynamicTableProps<T> {
-    header: string[];
+    header: (string | JSX.Element)[];
     footer?: string[] | ICellElement[] | JSX.Element[];
     data: T[];
     classType?: string;

@@ -108,7 +108,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         const displayName = user ? userRepoLink(user.getLogin(), user.getName(), this.props.courseURL) : "";
         let selector: (string | JSX.Element | ICellElement)[] = [displayName];
         selector = selector.concat(student.labs.filter((e, i) => !e.assignment.getIsgrouplab()).map(
-            (e, i) => {
+            (e) => {
                 let cellCss: string = "";
                 if (e.submission) {
                     cellCss = generateCellClass(e);
