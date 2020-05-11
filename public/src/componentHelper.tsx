@@ -163,6 +163,10 @@ export function userRepoLink(login: string, name: string, courseURL?: string): J
     return <a href={courseURL ? labRepoLink(courseURL, login) : gitUserLink(login)} target="_blank">{ name }</a>;
 }
 
+export function userSubmissionLink(login: string, assignmentName: string, courseURL: string): JSX.Element {
+    return <a href={labRepoLink(courseURL, login) + "/" + assignmentName} target="_blank">Open submission repository.</a>
+}
+
 // Returns a URL-friendly version of the given string.
 export function slugify(str: string): string {
     str = str.replace(/^\s+|\s+$/g, "").toLowerCase();

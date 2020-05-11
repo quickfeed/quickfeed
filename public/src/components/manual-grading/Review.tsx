@@ -1,13 +1,16 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review } from '../../../proto/ag_pb';
-import { ISubmission } from '../../models';
-import { GradeBenchmark } from './GradeBenchmark';
+import { Assignment, GradingBenchmark, GradingCriterion, Review } from "../../../proto/ag_pb";
+import { ISubmission } from "../../models";
+import { GradeBenchmark } from "./GradeBenchmark";
+import { userSubmissionLink } from "../../componentHelper";
 
 interface ReviewPageProps {
     assignment: Assignment;
     submission: ISubmission | undefined;
     review: Review | null;
     authorName: string;
+    authorLogin: string;
+    courseURL: string;
     reviewerID: number;
     open: boolean;
     addReview: (review: Review) => Promise<Review | null>;
@@ -50,6 +53,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                     this.toggleOpen();
                 }}>{this.props.assignment.getName()}</h3>
                 {open ? this.renderAlert() : null}{open ? this.renderInfo() : null}
+                {open ? userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL) : null}
                 {open ? this.renderBenchmarkList() : null}
                 {open ? this.renderFeedback() : null}
                 <div className="r-row">{open ? this.graded() : null}{open ? this.saveButton() : null}</div>
@@ -83,9 +87,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         defaultValue={this.state.feedback}
         onChange={(e) => this.setFeedback(e.target.value)}
         onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
                 this.updateReview();
-            } else if (e.key === 'Escape') {
+            } else if (e.key === "Escape") {
                 this.toggleEdit();
             }
         }}

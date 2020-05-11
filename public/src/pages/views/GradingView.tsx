@@ -5,7 +5,7 @@ import { ReviewPage } from '../../components/manual-grading/Review';
 
 
 interface GradingViewProps {
-    course: Course;
+    courseURL: string;
     assignments: Assignment[];
     students: IStudentLabsForCourse[];
     curUser: User;
@@ -45,6 +45,8 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     assignment={this.getAssignment(l.assignment)}
                     submission={l.submission}
                     authorName={l.authorName}
+                    authorLogin={student.enrollment.getUser()?.getLogin() ?? "Login not found"}
+                    courseURL={this.props.courseURL}
                     reviewerID={this.props.curUser.getId()}
                     review={this.selectReview(l.submission)}
                     open={this.state.openState}
@@ -89,23 +91,18 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderStudentList(): JSX.Element {
-        return <div className="student-div"><ul className=" student-nav nav nav-pills nav-fill flex-column">
-              {this.props.students.map((s, i) => <li
+        return <div className="student-div"><ul className=" student-nav nav nav-pills flex-column">
+              {this.props.students.map((s, i: number) => <li
                 key={"m" + i}
-                className={"nav-item nav-link" + this.setSelected(s)}
+                className={"nav-item"}
                 onClick={() => {
                     this.setState({
                         selectedStudent: s,
                         openState: false,
-                    })
+                    });
                 } }
               >{s.enrollment.getUser()?.getName() ?? "No name"}</li>)}
         </ul></div>;
-    }
-
-    // TODO: add style
-    private setSelected(s: IStudentLabsForCourse): string {
-        return this.state.selectedStudent === s ? "active" : "";
     }
 
     private selectReview(s: ISubmission | undefined): Review | null {
