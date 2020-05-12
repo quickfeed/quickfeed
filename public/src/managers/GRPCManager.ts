@@ -34,9 +34,11 @@ import {
     User,
     Users,
     Void,
+    Reviewers,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
+import { SubmissionReviewersRequest } from '../../proto/ag_pb';
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -279,6 +281,13 @@ export class GrpcManager {
 
     public updateReview(r: Review): Promise<IGrpcResponse<Void>> {
         return this.grpcSend<Void>(this.agService.updateReview, r);
+    }
+
+    public getReviewers(submissionID: number, courseID: number): Promise<IGrpcResponse<Reviewers>> {
+        const request = new SubmissionReviewersRequest();
+        request.setSubmissionid(submissionID);
+        request.setCourseid(courseID);
+        return this.grpcSend<Reviewers>(this.agService.getReviewers, request);
     }
 
     // /* REPOSITORY */ //

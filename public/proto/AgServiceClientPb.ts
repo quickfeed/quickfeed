@@ -35,6 +35,7 @@ import {
   RepositoryRequest,
   Review,
   ReviewRequest,
+  Reviewers,
   Submission,
   SubmissionRequest,
   Submissions,
@@ -831,6 +832,28 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoUpdateReview,
+      callback);
+  }
+
+  methodInfoGetReviewers = new grpcWeb.AbstractClientBase.MethodInfo(
+    Reviewers,
+    (request: ReviewRequest) => {
+      return request.serializeBinary();
+    },
+    Reviewers.deserializeBinary
+  );
+
+  getReviewers(
+    request: ReviewRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Reviewers) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/GetReviewers',
+      request,
+      metadata || {},
+      this.methodInfoGetReviewers,
       callback);
   }
 

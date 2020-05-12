@@ -841,6 +841,26 @@ export namespace Review {
   }
 }
 
+export class Reviewers extends jspb.Message {
+  getReviewersList(): Array<string>;
+  setReviewersList(value: Array<string>): void;
+  clearReviewersList(): void;
+  addReviewers(value: string, index?: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Reviewers.AsObject;
+  static toObject(includeInstance: boolean, msg: Reviewers): Reviewers.AsObject;
+  static serializeBinaryToWriter(message: Reviewers, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Reviewers;
+  static deserializeBinaryFromReader(message: Reviewers, reader: jspb.BinaryReader): Reviewers;
+}
+
+export namespace Reviewers {
+  export type AsObject = {
+    reviewersList: Array<string>,
+  }
+}
+
 export class ReviewRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
@@ -1119,6 +1139,12 @@ export class UpdateSubmissionRequest extends jspb.Message {
   getApprove(): boolean;
   setApprove(value: boolean): void;
 
+  getFeedbackready(): boolean;
+  setFeedbackready(value: boolean): void;
+
+  getStatus(): Submission.Status;
+  setStatus(value: Submission.Status): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UpdateSubmissionRequest.AsObject;
   static toObject(includeInstance: boolean, msg: UpdateSubmissionRequest): UpdateSubmissionRequest.AsObject;
@@ -1132,6 +1158,30 @@ export namespace UpdateSubmissionRequest {
     submissionid: number,
     courseid: number,
     approve: boolean,
+    feedbackready: boolean,
+    status: Submission.Status,
+  }
+}
+
+export class SubmissionReviewersRequest extends jspb.Message {
+  getSubmissionid(): number;
+  setSubmissionid(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SubmissionReviewersRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: SubmissionReviewersRequest): SubmissionReviewersRequest.AsObject;
+  static serializeBinaryToWriter(message: SubmissionReviewersRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SubmissionReviewersRequest;
+  static deserializeBinaryFromReader(message: SubmissionReviewersRequest, reader: jspb.BinaryReader): SubmissionReviewersRequest;
+}
+
+export namespace SubmissionReviewersRequest {
+  export type AsObject = {
+    submissionid: number,
+    courseid: number,
   }
 }
 

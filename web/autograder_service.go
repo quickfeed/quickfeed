@@ -690,6 +690,22 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 	return &pb.Void{}, err
 }
 
+// GetReviewers returns names of all active reviewers for a student submission
+// Access policy: Creator of CourseID
+func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionReviewersRequest) (*pb.Reviewers, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetReviewers failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isCourseCreator(in.GetCourseID(), usr.GetID()) {
+		s.logger.Error("GetReviewers failed: user is not course creator")
+		return nil, status.Errorf(codes.PermissionDenied, "only course creator teacher can request information about reviewers")
+	}
+	// TODO: web method to get all reviewer users by IDs (have to unmarshall first) and return their names
+	return &pb.Reviewers{}, err
+}
+
 // GetAssignments returns a list of all assignments for the given course.
 // Access policy: Any User.
 func (s *AutograderService) GetAssignments(ctx context.Context, in *pb.CourseRequest) (*pb.Assignments, error) {

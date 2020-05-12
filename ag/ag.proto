@@ -237,6 +237,10 @@ message Review {
     repeated GradingBenchmark reviews = 8 [(gogoproto.moretags) = "sql:\"-\""];
 }
 
+message Reviewers {
+    repeated string reviewers = 1;
+}
+
 ////    REQUESTS AND RESPONSES      \\\\
 
 message ReviewRequest {
@@ -306,6 +310,13 @@ message UpdateSubmissionRequest {
     uint64 submissionID = 1;
     uint64 courseID = 2;
     bool approve = 3;
+    bool feedbackReady = 4;
+    Submission.Status status = 5;
+}
+
+message SubmissionReviewersRequest {
+    uint64 submissionID = 1;
+    uint64 courseID = 2;
 }
 
 message Providers {
@@ -418,6 +429,7 @@ service AutograderService {
 
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Void) {}
+    rpc  GetReviewers(ReviewRequest) returns (Reviewers);
 
     // misc //
     
