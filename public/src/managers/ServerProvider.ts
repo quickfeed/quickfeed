@@ -399,6 +399,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
+    public async getReviewers(submissionID: number, courseID: number): Promise<string[]> {
+        const result = await this.grpcHelper.getReviewers(submissionID, courseID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return [];
+        }
+        return result.data.getReviewersList();
+    }
+
     private toISubmission(sbm: Submission): ISubmission {
         const buildInfoAsString = sbm.getBuildinfo();
         const scoreInfoAsString = sbm.getScoreobjects();

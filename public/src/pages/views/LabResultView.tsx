@@ -2,7 +2,7 @@ import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentLab, ISubmission } from '../../models';
 import { Feedback } from "../../components/manual-grading/Feedback";
-import { User } from "../../../proto/ag_pb";
+import { User, Submission } from '../../../proto/ag_pb';
 
 interface ILabInfoProps {
     studentSubmission: IStudentLab;
@@ -14,9 +14,9 @@ interface ILabInfoProps {
     courseCreatorView: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
-    getReviewers: (submissionID: number) => string[];
-    setApproved?: (submissionID: number) => void;
-    setReady?: (submissionID: number) => void;
+    getReviewers: (submissionID: number) => Promise<string[]>;
+    setApproved?: (submissionID: number, status: Submission.Status) => void;
+    setReady?: (submissionID: number, ready: boolean) => void;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps> {
@@ -64,10 +64,10 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         return <h1>No submissions yet</h1>;
     }
 
-    private renderBuildLogOrInfo(log: JSX.Element[], latest: ISubmission): JSX.Element {
+    private async renderBuildLogOrInfo(log: JSX.Element[], latest: ISubmission): Promise<JSX.Element> {
         const buildLog = <div key="logview" className="well"><code id="logs">{log}</code></div>;
         const feedback = <Feedback
-        reviewers={this.props.getReviewers(latest.id)}
+        reviewers={await this.props.getReviewers(latest.id)}
         submission={latest}
         assignment={this.props.studentSubmission.assignment}
         student={this.props.student}

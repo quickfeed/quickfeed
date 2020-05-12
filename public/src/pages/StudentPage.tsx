@@ -127,7 +127,7 @@ export class StudentPage extends ViewPage {
             this.selectAssignment(navInfo.params.labid, false);
             if (this.selectedAssignment) {
                 return <StudentLab
-                    assignment={this.selectedAssignment}
+                    studentSubmission={this.selectedAssignment}
                     showApprove={false}
                     slipdays={this.selectedUserCourse.enrollment.getSlipdaysremaining()}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
@@ -151,7 +151,7 @@ export class StudentPage extends ViewPage {
             this.selectAssignment(navInfo.params.labid, true);
             if (this.selectedAssignment) {
                 return <StudentLab
-                    assignment={this.selectedAssignment}
+                    studentSubmission={this.selectedAssignment}
                     showApprove={false}
                     slipdays={this.selectedUserGroupCourse.enrollment.getSlipdaysremaining()}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {

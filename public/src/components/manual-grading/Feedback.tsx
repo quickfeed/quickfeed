@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review, User } from '../../../proto/ag_pb';
+import { Assignment, GradingBenchmark, GradingCriterion, Review, User, Submission } from '../../../proto/ag_pb';
 import { userSubmissionLink } from '../../componentHelper';
 import { DynamicTable } from '../data/DynamicTable';
 import { ISubmission } from "../../models";
@@ -12,8 +12,8 @@ interface FeedbackProps {
     courseURL: string;
     teacherPageView: boolean;
     courseCreatorView: boolean;
-    setApproved?: (submissionID: number) => void;
-    setReady?: (submissionID: number) => void;
+    setApproved?: (submissionID: number, status: Submission.Status) => void;
+    setReady?: (submissionID: number, ready: boolean) => void;
 }
 
 interface FeedbackState {

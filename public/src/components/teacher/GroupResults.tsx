@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, Enrollment } from '../../../proto/ag_pb';
+import { Assignment, Course, User } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
@@ -11,6 +11,7 @@ interface IResultsProps {
     courseURL: string;
     groups: IStudentLabsForCourse[];
     labs: Assignment[];
+    getReviewers: (submissionID: number) => Promise<string[]>;
     onApproveClick: (submissionID: number, approved: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
@@ -48,9 +49,14 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             && this.state.submissionLink
             && this.state.submissionLink.assignment.getIsgrouplab()) {
             groupLab = <StudentLab
-                assignment={this.state.submissionLink}
+                studentSubmission={this.state.submissionLink}
+                student={new User()}
+                courseURL={this.props.courseURL}
+                teacherPageView={false}
+                courseCreatorView={false}
                 slipdays={this.props.course.getSlipdays()}
                 showApprove={true}
+                getReviewers={this.props.getReviewers}
                 onRebuildClick={
                     async () => {
                         if (this.state.submissionLink && this.state.submissionLink.submission) {

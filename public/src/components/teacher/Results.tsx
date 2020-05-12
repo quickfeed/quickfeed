@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course } from "../../../proto/ag_pb";
+import { Assignment, Course, User, Submission } from '../../../proto/ag_pb';
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
@@ -11,13 +11,18 @@ interface IResultsProp {
     courseURL: string;
     allCourseSubmissions: IStudentLabsForCourse[];
     assignments: Assignment[];
+    teacherPageView: boolean;
+    courseCreatorView: boolean;
     onApproveClick: (submissionID: number, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
     getReviewers: (submissionID: number) => Promise<string[]>
+    setApproved: (submissionID: number, status: Submission.Status) => Promise<boolean>;
+    setReady: (submissionID: number, ready: boolean) => Promise<boolean>;
 }
 
 interface IResultsState {
     selectedSubmission?: IStudentLab;
+    selectedStudent?: IStudentLabsForCourse;
     allSubmissions: IStudentLabsForCourse[];
 }
 
@@ -45,14 +50,44 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     public render() {
         let studentLab: JSX.Element | null = null;
         const currentStudents = this.props.allCourseSubmissions.length > 0 ? this.props.allCourseSubmissions : null;
+        const currentLab = this.state.selectedSubmission;
+        const currentSubmission = this.state.selectedSubmission?.submission;
         if (currentStudents
-            && this.state.selectedSubmission
+            && this.state.selectedSubmission && this.state.selectedStudent
             && !this.state.selectedSubmission.assignment.getIsgrouplab()
         ) {
             studentLab = <StudentLab
-                assignment={this.state.selectedSubmission}
+                studentSubmission={this.state.selectedSubmission}
+                courseURL={this.props.courseURL}
+                student={this.state.selectedStudent.enrollment.getUser() ?? new User()}
+                teacherPageView={this.props.teacherPageView}
+                courseCreatorView={this.props.courseCreatorView}
                 showApprove={true}
-                slipdays={this.state.submissionLink.submission ? getSlipDays(this.props.students, this.state.submissionLink.submission, false) : 0}
+                slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
+                getReviewers={this.props.getReviewers}
+                setApproved={async (submissionID: number, status: Submission.Status) => {
+                    if (currentLab && currentSubmission) {
+                        const ans = await this.props.setApproved(submissionID, status);
+                        if (ans) {
+                            currentSubmission.status = status;
+                            this.setState({
+                                selectedSubmission: currentLab,
+                            });
+                            // TODO: make sure the state is getting properly updated here
+                        }
+                    }
+                }}
+                setReady={async (submissionID: number, ready: boolean) => {
+                    if (currentLab && currentSubmission) {
+                        const ans = await this.props.setReady(submissionID, ready);
+                        if (ans) {
+                            currentSubmission.feedbackReady = ready;
+                            this.setState({
+                                selectedSubmission: currentLab,
+                            });
+                        }
+                    }
+                }}
                 onRebuildClick={
                     async () => {
                         if (this.state.selectedSubmission && this.state.selectedSubmission.submission) {
@@ -116,7 +151,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 }
                 const iCell: ICellElement = {
                     value: <a className={cellCss + " lab-cell-link"}
-                        onClick={() => this.handleOnclick(e)}
+                        onClick={() => this.handleOnclick(e, student)}
                         href="#">
                         {e.submission ? (e.submission.score + "%") : "N/A"}</a>,
                     className: cellCss,
@@ -126,9 +161,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         return selector;
     }
 
-    private handleOnclick(item: IStudentLab): void {
+    private handleOnclick(item: IStudentLab, student: IStudentLabsForCourse): void {
         this.setState({
             selectedSubmission: item,
+            selectedStudent: student,
         });
     }
 
