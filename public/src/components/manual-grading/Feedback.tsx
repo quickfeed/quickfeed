@@ -5,22 +5,24 @@ import { DynamicTable } from '../data/DynamicTable';
 import { ISubmission } from "../../models";
 
 interface FeedbackProps {
-    reviews: Review[];
-    reviewers: User[];
+    reviewers: string[];
     submission: ISubmission;
     assignment: Assignment;
     student: User;
     courseURL: string;
-    studentView: boolean;
+    teacherPageView: boolean;
     courseCreatorView: boolean;
-    setApproved?: () => void;
-    setReady?: () => void;
+    setApproved?: (submissionID: number) => void;
+    setReady?: (submissionID: number) => void;
 }
 
+// State with reviews here
+// only show reviews marked as ready to avoid revealing reviews added because of some error
+// safe to set in constructor
 export class Feedback extends React.Component<FeedbackProps>{
 
     public render() {
-        if (this.props.reviews.length < 1 || (this.props.studentView && !this.props.submission.feedbackReady)) {
+        if (this.props.submission.reviews.length < 1 || (this.props.teacherPageView && !this.props.submission.feedbackReady)) { // reppace by reviews from state
             return <div>No ready reviews yet for submission by {this.props.student.getName()}</div>
         }
         if (this.props.courseCreatorView) {
@@ -32,7 +34,7 @@ export class Feedback extends React.Component<FeedbackProps>{
             {this.renderButtons()}
             </div>;
         }
-        if (this.props.studentView && this.props.submission.feedbackReady) {
+        if (this.props.teacherPageView && this.props.submission.feedbackReady) {
             return <div className="Feedback">
                 {this.renderReviewTable()}
             </div>;
@@ -44,7 +46,7 @@ export class Feedback extends React.Component<FeedbackProps>{
     private renderReviewers(): JSX.Element {
         return <ul className="r-list">
             {this.props.reviewers.map((r, i) => <li key={"rl" + i}>
-                {r.getName()}
+                {r}
             </li>)}
         </ul>;
     }

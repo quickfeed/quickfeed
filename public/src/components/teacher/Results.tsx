@@ -9,15 +9,16 @@ import { searchForLabs, userRepoLink, getSlipDays } from '../../componentHelper'
 interface IResultsProp {
     course: Course;
     courseURL: string;
-    students: IStudentLabsForCourse[];
-    labs: Assignment[];
+    allCourseSubmissions: IStudentLabsForCourse[];
+    assignments: Assignment[];
     onApproveClick: (submissionID: number, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
+    getReviewers: (submissionID: number) => Promise<string[]>
 }
 
 interface IResultsState {
-    submissionLink?: IStudentLab;
-    students: IStudentLabsForCourse[];
+    selectedSubmission?: IStudentLab;
+    allSubmissions: IStudentLabsForCourse[];
 }
 
 export class Results extends React.Component<IResultsProp, IResultsState> {
@@ -25,39 +26,39 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     constructor(props: IResultsProp) {
         super(props);
 
-        const currentStudent = this.props.students.length > 0 ? this.props.students[0] : null;
+        const currentStudent = this.props.allCourseSubmissions.length > 0 ? this.props.allCourseSubmissions[0] : null;
         const courseAssignments = currentStudent ? currentStudent.course.getAssignmentsList() : null;
         if (currentStudent && courseAssignments && courseAssignments.length > 0) {
             this.state = {
                 // Only using the first student to fetch assignments.
-                submissionLink: currentStudent.labs[0],
-                students: sortByScore(this.props.students, this.props.labs, false),
+                selectedSubmission: currentStudent.labs[0],
+                allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
             };
         } else {
             this.state = {
-                submissionLink: undefined,
-                students: sortByScore(this.props.students, this.props.labs, false),
+                selectedSubmission: undefined,
+                allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
             };
         }
     }
 
     public render() {
         let studentLab: JSX.Element | null = null;
-        const currentStudents = this.props.students.length > 0 ? this.props.students : null;
+        const currentStudents = this.props.allCourseSubmissions.length > 0 ? this.props.allCourseSubmissions : null;
         if (currentStudents
-            && this.state.submissionLink
-            && !this.state.submissionLink.assignment.getIsgrouplab()
+            && this.state.selectedSubmission
+            && !this.state.selectedSubmission.assignment.getIsgrouplab()
         ) {
             studentLab = <StudentLab
-                assignment={this.state.submissionLink}
+                assignment={this.state.selectedSubmission}
                 showApprove={true}
                 slipdays={this.state.submissionLink.submission ? getSlipDays(this.props.students, this.state.submissionLink.submission, false) : 0}
                 onRebuildClick={
                     async () => {
-                        if (this.state.submissionLink && this.state.submissionLink.submission) {
-                            const ans = await this.props.onRebuildClick(this.state.submissionLink.assignment.getId(), this.state.submissionLink.submission.id);
+                        if (this.state.selectedSubmission && this.state.selectedSubmission.submission) {
+                            const ans = await this.props.onRebuildClick(this.state.selectedSubmission.assignment.getId(), this.state.selectedSubmission.submission.id);
                             if (ans) {
-                                this.state.submissionLink.submission = ans;
+                                this.state.selectedSubmission.submission = ans;
                                 return true;
                             }
                         }
@@ -65,10 +66,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                     }
                 }
                 onApproveClick={ async (approve: boolean) => {
-                    if (this.state.submissionLink && this.state.submissionLink.submission) {
-                        const ans = await this.props.onApproveClick(this.state.submissionLink.submission.id, approve);
+                    if (this.state.selectedSubmission && this.state.selectedSubmission.submission) {
+                        const ans = await this.props.onApproveClick(this.state.selectedSubmission.submission.id, approve);
                         if (ans) {
-                            this.state.submissionLink.submission.approved = approve;
+                            this.state.selectedSubmission.submission.approved = approve;
                         }
                     }
                 }}
@@ -85,7 +86,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                             onChange={(query) => this.handleSearch(query)}
                         />
                         <DynamicTable header={this.getResultHeader()}
-                            data={this.state.students}
+                            data={this.state.allSubmissions}
                             selector={(item: IStudentLabsForCourse) => this.getResultSelector(item)}
                         />
                     </div>
@@ -99,7 +100,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
 
     private getResultHeader(): string[] {
         let headers: string[] = ["Name"];
-        headers = headers.concat(this.props.labs.filter((e) => !e.getIsgrouplab()).map((e) => e.getName()));
+        headers = headers.concat(this.props.assignments.filter((e) => !e.getIsgrouplab()).map((e) => e.getName()));
         return headers;
     }
 
@@ -127,13 +128,13 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
 
     private handleOnclick(item: IStudentLab): void {
         this.setState({
-            submissionLink: item,
+            selectedSubmission: item,
         });
     }
 
     private handleSearch(query: string): void {
         this.setState({
-            students: searchForLabs(this.props.students, query),
+            allSubmissions: searchForLabs(this.props.allCourseSubmissions, query),
         });
     }
 }

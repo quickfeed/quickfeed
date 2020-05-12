@@ -125,8 +125,8 @@ export class TeacherPage extends ViewPage {
             return <Results
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
-                labs={sortAssignmentsByOrder(labs)}
-                students={labResults}
+                assignments={sortAssignmentsByOrder(labs)}
+                allCourseSubmissions={labResults}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     // update refreshed submission in the labResults
