@@ -38,7 +38,7 @@ import {
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
-import { SubmissionReviewersRequest } from '../../proto/ag_pb';
+import { SubmissionReviewersRequest, ReviewRequest } from '../../proto/ag_pb';
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -275,12 +275,18 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.deleteCriterion, c);
     }
 
-    public createReview(r: Review): Promise<IGrpcResponse<Review>> {
-        return this.grpcSend<Review>(this.agService.createReview, r);
+    public createReview(r: Review, courseID: number): Promise<IGrpcResponse<Review>> {
+        const request = new ReviewRequest();
+        request.setReview(r);
+        request.setCourseid(courseID);
+        return this.grpcSend<Review>(this.agService.createReview, request);
     }
 
-    public updateReview(r: Review): Promise<IGrpcResponse<Void>> {
-        return this.grpcSend<Void>(this.agService.updateReview, r);
+    public updateReview(r: Review, courseID: number): Promise<IGrpcResponse<Void>> {
+        const request = new ReviewRequest();
+        request.setReview(r);
+        request.setCourseid(courseID);
+        return this.grpcSend<Void>(this.agService.updateReview, request);
     }
 
     public getReviewers(submissionID: number, courseID: number): Promise<IGrpcResponse<Reviewers>> {

@@ -386,16 +386,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
-    public async addReview(ir: Review): Promise<Review | null> {
-        const result = await this.grpcHelper.createReview(ir);
+    public async addReview(ir: Review, courseID: number): Promise<Review | null> {
+        const result = await this.grpcHelper.createReview(ir, courseID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return null;
         }
         return result.data;
     }
 
-    public async editReview(ir: Review): Promise<boolean> {
-        const result = await this.grpcHelper.updateReview(ir);
+    public async editReview(ir: Review, courseID: number): Promise<boolean> {
+        const result = await this.grpcHelper.updateReview(ir, courseID);
         return this.responseCodeSuccess(result);
     }
 

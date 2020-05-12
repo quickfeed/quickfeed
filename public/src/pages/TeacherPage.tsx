@@ -178,10 +178,10 @@ export class TeacherPage extends ViewPage {
                 students={students}
                 curUser={curUser}
                 addReview={(r: Review) => {
-                    return this.courseMan.addReview(r);
+                    return this.courseMan.addReview(r, course.getId());
                 }}
                 updateReview={async (r: Review) => {
-                    return this.courseMan.editReview(r);
+                    return this.courseMan.editReview(r, course.getId());
                 }}
             />
             }

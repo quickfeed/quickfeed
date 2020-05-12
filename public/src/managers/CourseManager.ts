@@ -49,8 +49,8 @@ export interface ICourseProvider {
     updateCriterion(c: GradingCriterion): Promise<boolean>;
     deleteBenchmark(bm: GradingBenchmark): Promise<boolean>;
     deleteCriterion(c: GradingCriterion): Promise<boolean>;
-    addReview(r: Review): Promise<Review | null>;
-    editReview(r: Review): Promise<boolean>;
+    addReview(r: Review, courseID: number): Promise<Review | null>;
+    editReview(r: Review, courseID: number): Promise<boolean>;
 
 }
 
@@ -310,12 +310,12 @@ export class CourseManager {
         return this.courseProvider.deleteCriterion(c);
     }
 
-    public async addReview(r: Review): Promise<Review | null> {
-        return this.courseProvider.addReview(r);
+    public async addReview(r: Review, courseID: number): Promise<Review | null> {
+        return this.courseProvider.addReview(r, courseID);
     }
 
-    public async editReview(r: Review): Promise<boolean> {
-        return this.courseProvider.editReview(r);
+    public async editReview(r: Review, courseID: number): Promise<boolean> {
+        return this.courseProvider.editReview(r, courseID);
     }
 
     /**
