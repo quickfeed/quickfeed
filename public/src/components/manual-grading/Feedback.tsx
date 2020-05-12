@@ -16,13 +16,20 @@ interface FeedbackProps {
     setReady?: (submissionID: number) => void;
 }
 
-// State with reviews here
-// only show reviews marked as ready to avoid revealing reviews added because of some error
-// safe to set in constructor
-export class Feedback extends React.Component<FeedbackProps>{
+interface FeedbackState {
+    reviews: Review[];
+}
+export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
+
+    constructor(props: FeedbackProps) {
+        super(props);
+        this.state = {
+            reviews: this.props.teacherPageView ? this.props.submission.reviews : this.selectReadyReviews(),
+        }
+    }
 
     public render() {
-        if (this.props.submission.reviews.length < 1 || (this.props.teacherPageView && !this.props.submission.feedbackReady)) { // reppace by reviews from state
+        if (this.state.reviews.length < 1 || (this.props.teacherPageView && !this.props.submission.feedbackReady)) {
             return <div>No ready reviews yet for submission by {this.props.student.getName()}</div>
         }
         if (this.props.courseCreatorView) {
@@ -41,6 +48,14 @@ export class Feedback extends React.Component<FeedbackProps>{
         }
         return <div className="feedback">A general view accessible by all teachers and TAs</div>;
         // TODO: show general review info after the lab has been marked as open for feedback by the course teacher
+    }
+
+    private selectReadyReviews(): Review[] {
+        const selected: Review[] = [];
+        this.props.submission.reviews.forEach(r => {
+            if (r.getReady()) selected.push(r);
+        });
+        return selected;
     }
 
     private renderReviewers(): JSX.Element {
@@ -63,12 +78,12 @@ export class Feedback extends React.Component<FeedbackProps>{
 
     private reviewSelector(c: GradingCriterion): (string | JSX.Element)[] {
         const tableRow: (string | JSX.Element)[] = [c.getDescription()];
-        return tableRow.concat(this.props.reviews.map(rv => this.cellElement(this.chooseCriterion(c.getId(), rv.getReviewsList()) ?? c)));
+        return tableRow.concat(this.state.reviews.map(rv => this.cellElement(this.chooseCriterion(c.getId(), rv.getReviewsList()) ?? c)));
     }
 
     private makeHeader(bm: GradingBenchmark): (string | JSX.Element)[] {
         const headers: (string | JSX.Element)[] = [bm.getHeading()];
-        return headers.concat(this.props.reviews.map(() => <span className="glyphicon glyphicon-comment" onClick={() => this.showBenchmarkComment(bm)}></span>));
+        return headers.concat(this.state.reviews.map(() => <span className="glyphicon glyphicon-comment" onClick={() => this.showBenchmarkComment(bm)}></span>));
     }
 
     private renderButtons(): JSX.Element {
