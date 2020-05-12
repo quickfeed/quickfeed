@@ -1,6 +1,6 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
-import { IStudentLab } from "../../models";
+import { IStudentLab, ISubmission } from '../../models';
 import { Feedback } from "../../components/manual-grading/Feedback";
 import { User } from "../../../proto/ag_pb";
 
@@ -51,22 +51,9 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 scoreLimit={this.props.studentSubmission.assignment.getScorelimit()}
                                 weight={100}
                             />
-                            <Feedback
-                                reviewers={this.props.getReviewers(latest.id)}
-                                submission={latest}
-                                assignment={this.props.studentSubmission.assignment}
-                                student={this.props.student}
-                                courseURL={this.props.courseURL}
-                                teacherPageView={this.props.teacherPageView}
-                                courseCreatorView={this.props.courseCreatorView}
-                                setApproved={this.props.setApproved}
-                                setReady={this.props.setReady}
-                            />
                             <Row>
                                 <div key="loghead" className="col-lg-12">
-                                    <div key="logview" className="well">
-                                        <code id="logs">{buildLog}</code>
-                                    </div>
+                                    {this.renderBuildLogOrInfo(buildLog, latest)}
                                 </div>
                             </Row>
                         </section>
@@ -77,8 +64,19 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         return <h1>No submissions yet</h1>;
     }
 
-    private renderBuildLogOrInfo(): JSX.Element {
-        return <div></div>;
-        // TODO: add conditions to render review, build log, or log with feedback
+    private renderBuildLogOrInfo(log: JSX.Element[], latest: ISubmission): JSX.Element {
+        const buildLog = <div key="logview" className="well"><code id="logs">{log}</code></div>;
+        const feedback = <Feedback
+        reviewers={this.props.getReviewers(latest.id)}
+        submission={latest}
+        assignment={this.props.studentSubmission.assignment}
+        student={this.props.student}
+        courseURL={this.props.courseURL}
+        teacherPageView={this.props.teacherPageView}
+        courseCreatorView={this.props.courseCreatorView}
+        setApproved={this.props.setApproved}
+        setReady={this.props.setReady}
+    />
+        return this.props.studentSubmission.assignment.getReviewers() > 1 ? feedback : buildLog;
     }
 }
