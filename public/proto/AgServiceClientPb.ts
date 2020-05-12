@@ -38,6 +38,7 @@ import {
   Reviewers,
   Submission,
   SubmissionRequest,
+  SubmissionReviewersRequest,
   Submissions,
   SubmissionsForCourseRequest,
   URLRequest,
@@ -837,14 +838,14 @@ export class AutograderServiceClient {
 
   methodInfoGetReviewers = new grpcWeb.AbstractClientBase.MethodInfo(
     Reviewers,
-    (request: ReviewRequest) => {
+    (request: SubmissionReviewersRequest) => {
       return request.serializeBinary();
     },
     Reviewers.deserializeBinary
   );
 
   getReviewers(
-    request: ReviewRequest,
+    request: SubmissionReviewersRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Reviewers) => void) {

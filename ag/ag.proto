@@ -429,7 +429,7 @@ service AutograderService {
 
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Void) {}
-    rpc  GetReviewers(ReviewRequest) returns (Reviewers);
+    rpc  GetReviewers(SubmissionReviewersRequest) returns (Reviewers);
 
     // misc //
     
