@@ -12,8 +12,8 @@ interface FeedbackProps {
     courseURL: string;
     teacherPageView: boolean;
     courseCreatorView: boolean;
-    setApproved?: (submissionID: number, status: Submission.Status) => void;
-    setReady?: (submissionID: number, ready: boolean) => void;
+    setApproved: (submissionID: number, status: Submission.Status) => void;
+    setReady: (submissionID: number, ready: boolean) => void;
 }
 
 interface FeedbackState {
@@ -87,9 +87,22 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
     }
 
     private renderButtons(): JSX.Element {
-        return <div>
+        return <div className="form-group">
+            <button
+                className={this.props.submission.feedbackReady ? "btn btn-success" : "btn btn-default"}
+                onClick={() => this.props.setReady(this.props.submission.id, !this.props.submission.feedbackReady)}
+            >{this.setReadyButtonText()}</button>
+            <label htmlFor="submissionStatus">Example select</label>
+            <select className="form-control" id="submissionStatus">
+                <option onSelect={() => this.updateStatus(Submission.Status.NONE)}>Not reviewed</option>
+                <option onSelect={() => this.updateStatus(Submission.Status.APPROVED)}>Approved</option>
+                <option onSelect={() => this.updateStatus(Submission.Status.REJECTED)}>Reject</option>
+                <option onSelect={() => this.updateStatus(Submission.Status.REVISION)}>Revision</option>
+            </select></div>;
+    }
 
-        </div>
+    private updateStatus(status: Submission.Status) {
+        this.props.setApproved(this.props.submission.id, status);
     }
 
     private showBenchmarkComment(bm: GradingBenchmark) {
@@ -118,6 +131,9 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
         }
     }
 
+    private setReadyButtonText(): string {
+        return this.props.submission.feedbackReady ? "Mark as in progress" : "Mark as ready";
+    }
 
     private chooseCriterion(ID: number, bms: GradingBenchmark[]): GradingCriterion | null {
         bms.forEach(bm => {

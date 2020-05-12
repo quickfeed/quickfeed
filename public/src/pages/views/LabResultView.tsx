@@ -15,8 +15,8 @@ interface ILabInfoProps {
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
     getReviewers: (submissionID: number) => Promise<string[]>;
-    setApproved?: (submissionID: number, status: Submission.Status) => void;
-    setReady?: (submissionID: number, ready: boolean) => void;
+    setApproved: (submissionID: number, status: Submission.Status) => void;
+    setReady: (submissionID: number, ready: boolean) => void;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps> {

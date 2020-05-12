@@ -57,6 +57,8 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 slipdays={this.props.course.getSlipdays()}
                 showApprove={true}
                 getReviewers={this.props.getReviewers}
+                setApproved={() => {return}}
+                setReady={() => {return}}
                 onRebuildClick={
                     async () => {
                         if (this.state.submissionLink && this.state.submissionLink.submission) {

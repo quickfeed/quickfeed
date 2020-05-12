@@ -13,8 +13,8 @@ interface IStudentLabProps {
     courseCreatorView: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
-    setApproved?: (submissionID: number, status: Submission.Status) => void;
-    setReady?: (submissionID: number, ready: boolean) => void;
+    setApproved: (submissionID: number, status: Submission.Status) => void;
+    setReady: (submissionID: number, ready: boolean) => void;
     getReviewers: (submissionID: number) => Promise<string[]>;
 }
 
