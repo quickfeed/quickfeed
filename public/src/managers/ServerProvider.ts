@@ -333,8 +333,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return tsMap;
     }
 
-    public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
-        const result = await this.grpcHelper.updateSubmission(courseID, submissionID, approve);
+    public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
+        const result = await this.grpcHelper.updateSubmission(courseID, submission);
         return this.responseCodeSuccess(result);
     }
 

@@ -13,6 +13,7 @@ import { showLoader } from "../loader";
 import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHelper';
 import { AssigmnentView } from "./views/AssignmentView";
 import { GradingView } from "./views/GradingView";
+import { ISubmission } from '../models';
 
 export class TeacherPage extends ViewPage {
 
@@ -136,17 +137,17 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
-                    return this.approveFunc(submissionID, course.getId(), approve);
+                onApproveClick={async (submission: ISubmission): Promise<boolean> => {
+                    return this.approveFunc(submission, course.getId());
                 }}
                 getReviewers={(submissionID: number) => {
                     return this.courseMan.getReviewers(submissionID, course.getId());
                 }}
-                setApproved={(submissionID: number, status: Submission.Status) => {
-                    return this.courseMan.updateSubmission(submissionID, status);
+                setApproved={(submission: ISubmission) => {
+                    return this.courseMan.updateSubmission(course.getId(), submission);
                 }}
-                setReady={(submissionID: number, ready: boolean) => {
-                    return this.courseMan.updateSubmission(submissionID, ready);
+                setReady={(submission: ISubmission) => {
+                    return this.courseMan.updateSubmission(course.getId(), submission);
                 }}
             >
             </Results>;
@@ -170,17 +171,17 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
-                    return this.approveFunc(submissionID, course.getId(), approve);
+                onApproveClick={async (submission: ISubmission): Promise<boolean> => {
+                    return this.approveFunc(submission, course.getId());
                 }}
                 getReviewers={(submissionID: number) => {
                     return this.courseMan.getReviewers(submissionID, course.getId());
                 }}
-                setApproved={(submissionID: number, status: Submission.Status) => {
-                    return this.courseMan.updateSubmission(submissionID, status);
+                setApproved={(submission: ISubmission) => {
+                    return this.courseMan.updateSubmission(course.getId(), submission);
                 }}
-                setReady={(submissionID: number, ready: boolean) => {
-                    return this.courseMan.updateSubmission(submissionID, ready);
+                setReady={(submission: ISubmission) => {
+                    return this.courseMan.updateSubmission(course.getId(), submission);
                 }}>
             </GroupResults>;
         });
@@ -346,11 +347,11 @@ export class TeacherPage extends ViewPage {
         };
     }
 
-    public async approveFunc(submissionID: number, courseID: number, approve: boolean): Promise<boolean> {
+    public async approveFunc(submission: ISubmission, courseID: number): Promise<boolean> {
         if (confirm(
-            `Do you want to ${this.setConfirmString(approve)} this lab?`,
+            `Do you want to ${this.setConfirmString(submission.approved)} this lab?`,
         )) {
-            const ans = await this.courseMan.updateSubmission(courseID, submissionID, approve);
+            const ans = await this.courseMan.updateSubmission(courseID, submission);
             this.navMan.refresh();
             return ans;
         }

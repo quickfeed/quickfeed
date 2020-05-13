@@ -128,6 +128,7 @@ export class StudentPage extends ViewPage {
             return showLoader();
         }
         if (this.selectedUserCourse) {
+            const courseID = this.selectedUserCourse.course.getId();
             this.selectAssignment(navInfo.params.labid, false);
             if (this.selectedAssignment) {
                 return <StudentLab
@@ -146,14 +147,14 @@ export class StudentPage extends ViewPage {
                     onApproveClick={() => {
                         return;
                     }}
-                    getReviewers={(submissionID: number) => {
-                        return this.courseMan.getReviewers(submissionID, course.getId());
+                    getReviewers={async () => {
+                        return [];
                     }}
-                    setApproved={(submissionID: number, status: Submission.Status) => {
-                        return this.courseMan.updateSubmission(submissionID, status);
+                    setApproved={() => {
+                        return;
                     }}
-                    setReady={(submissionID: number, ready: boolean) => {
-                        return this.courseMan.updateSubmission(submissionID, ready);
+                    setReady={() => {
+                        return;
                     }}
                     >
                 </StudentLab>;
@@ -188,14 +189,14 @@ export class StudentPage extends ViewPage {
                     onApproveClick={() => {
                         return;
                     }}
-                    getReviewers={(submissionID: number) => {
-                        return this.courseMan.getReviewers(submissionID, course.getId());
+                    getReviewers={async () => {
+                        return [];
                     }}
-                    setApproved={(submissionID: number, status: Submission.Status) => {
-                        return this.courseMan.updateSubmission(submissionID, status);
+                    setApproved={() => {
+                        return;
                     }}
-                    setReady={(submissionID: number, ready: boolean) => {
-                        return this.courseMan.updateSubmission(submissionID, ready);
+                    setReady={() => {
+                        return;
                     }}
                     >
                 </StudentLab>;

@@ -1,5 +1,5 @@
 import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Organization, Repository, Status, User, Review, SubmissionsForCourseRequest } from '../../proto/ag_pb';
-import { IReview, IStudentLabsForCourse, ISubmission } from "../models";
+import { IStudentLabsForCourse, ISubmission } from "../models";
 
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
@@ -36,7 +36,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalCourseGroups();
     }
 
-    public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
+    public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 
@@ -212,6 +212,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             }
         });
         return temp;
+    }
+
+    public async getReviewers(submissionID: number, courseID: number): Promise<string[]> {
+        return [];
     }
 
     public async getEnrollmentsForUser(userID: number): Promise<Enrollment[]> {

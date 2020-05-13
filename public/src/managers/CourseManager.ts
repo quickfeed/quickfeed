@@ -4,7 +4,7 @@ import {
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, Submission, SubmissionsForCourseRequest } from '../../proto/ag_pb';
 import { ILogger } from "./LogManager";
 import { sortAssignmentsByOrder } from '../componentHelper';
 
@@ -39,7 +39,7 @@ export interface ICourseProvider {
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
-    updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean>;
+    updateSubmission(courseID: number, submission: ISubmission): Promise<boolean>;
     rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null>;
     getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
     isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
@@ -279,8 +279,8 @@ export class CourseManager {
         return this.courseProvider.rebuildSubmission(assignmentID, submissionID);
     }
 
-    public async updateSubmission(courseID: number, submissionID: number, approved: boolean): Promise<boolean> {
-        return this.courseProvider.updateSubmission(courseID, submissionID, approved);
+    public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
+        return this.courseProvider.updateSubmission(courseID, submission);
     }
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {

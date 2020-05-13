@@ -24,11 +24,13 @@ import {
     Repository,
     RepositoryRequest,
     Review,
+    ReviewRequest,
     Status,
     SubmissionRequest,
     SubmissionsForCourseRequest,
     Submission,
     Submissions,
+    SubmissionReviewersRequest,
     UpdateSubmissionRequest,
     URLRequest,
     User,
@@ -38,7 +40,7 @@ import {
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
-import { SubmissionReviewersRequest, ReviewRequest } from '../../proto/ag_pb';
+import { IStudentLab, ISubmission } from '../models';
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -241,11 +243,13 @@ export class GrpcManager {
         return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
     }
 
-    public updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<IGrpcResponse<Void>> {
+    public updateSubmission(courseID: number, s: ISubmission): Promise<IGrpcResponse<Void>> {
         const request = new UpdateSubmissionRequest();
-        request.setSubmissionid(submissionID);
+        request.setSubmissionid(s.id);
         request.setCourseid(courseID);
-        request.setApprove(approve);
+        request.setApprove(s.approved);
+        request.setStatus(s.status);
+        request.setFeedbackready(s.feedbackReady);
         return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 

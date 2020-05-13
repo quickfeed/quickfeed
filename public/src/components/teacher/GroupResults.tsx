@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Assignment, Course, Submission, User } from "../../../proto/ag_pb";
+import { Assignment, Course, Submission, User } from '../../../proto/ag_pb';
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
+import { IStudentLabsForCourse, IStudentLab, ISubmission } from '../../models';
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
 import { getSlipDays, groupRepoLink, searchForLabs } from "../../componentHelper";
@@ -13,10 +13,10 @@ interface IResultsProps {
     labs: Assignment[];
     courseCreatorView: boolean;
     getReviewers: (submissionID: number) => Promise<string[]>;
-    onApproveClick: (submissionID: number, approved: boolean) => Promise<boolean>;
+    onApproveClick: (submission: ISubmission) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
-    setApproved: (submissionID: number, status: Submission.Status) => Promise<boolean>;
-    setReady: (submissionID: number, ready: boolean) => Promise<boolean>;
+    setApproved: (submission: ISubmission) => Promise<boolean>;
+    setReady: (submission: ISubmission) => Promise<boolean>;
 }
 
 interface IResultsState {
@@ -60,8 +60,20 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 courseCreatorView={this.props.courseCreatorView}
                 showApprove={true}
                 getReviewers={this.props.getReviewers}
-                setApproved={() => {return}}
-                setReady={() => {return}}
+                setApproved={(submissionID: number, status: Submission.Status) => {
+                    const current = this.state.assignment?.submission;
+                    if (current && current.id === submissionID) {
+                        current.status = status;
+                        return this.props.setApproved(current);
+                    }
+                }}
+                setReady={(submissionID: number, ready: boolean) => {
+                    const current = this.state.assignment?.submission;
+                    if (current && current.id === submissionID) {
+                        current.feedbackReady = ready;
+                        return this.props.setReady(current);
+                    }
+                }}
                 onRebuildClick={
                     async () => {
                         if (this.state.submissionLink && this.state.submissionLink.submission) {
@@ -75,10 +87,15 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                     }
                 }
                 onApproveClick={(approve: boolean) => {
-                    if (this.state.submissionLink && this.state.submissionLink.submission) {
-                        const ans = this.props.onApproveClick(this.state.submissionLink.submission.id, approve);
+                    const selected = this.state.assignment;
+                    const latest = selected?.submission;
+                    if (latest) {
+                        latest.approved = approve;
+                        const ans = this.props.onApproveClick(latest);
                         if (ans) {
-                            this.state.submissionLink.submission.approved = approve;
+                            this.setState({
+                                assignment: selected,
+                            })
                         }
                     }
                 }}

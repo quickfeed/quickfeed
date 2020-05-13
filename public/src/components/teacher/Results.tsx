@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Assignment, Course, User, Submission } from '../../../proto/ag_pb';
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
+import { IStudentLabsForCourse, IStudentLab, ISubmission } from '../../models';
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
 import { searchForLabs, userRepoLink, getSlipDays } from '../../componentHelper';
@@ -12,11 +12,11 @@ interface IResultsProp {
     allCourseSubmissions: IStudentLabsForCourse[];
     assignments: Assignment[];
     courseCreatorView: boolean;
-    onApproveClick: (submissionID: number, approve: boolean) => Promise<boolean>;
+    onApproveClick: (submission: ISubmission) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
     getReviewers: (submissionID: number) => Promise<string[]>
-    setApproved: (submissionID: number, status: Submission.Status) => Promise<boolean>;
-    setReady: (submissionID: number, ready: boolean) => Promise<boolean>;
+    setApproved: (submission: ISubmission) => Promise<boolean>;
+    setReady: (submission: ISubmission) => Promise<boolean>;
 }
 
 interface IResultsState {
@@ -65,8 +65,9 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
                 getReviewers={this.props.getReviewers}
                 setApproved={async (submissionID: number, status: Submission.Status) => {
-                    if (currentLab && currentSubmission) {
-                        const ans = await this.props.setApproved(submissionID, status);
+                    if (currentLab && currentSubmission && currentSubmission.id === submissionID) {
+                        currentSubmission.status = status;
+                        const ans = await this.props.setApproved(currentSubmission);
                         if (ans) {
                             currentSubmission.status = status;
                             this.setState({
@@ -77,8 +78,9 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                     }
                 }}
                 setReady={async (submissionID: number, ready: boolean) => {
-                    if (currentLab && currentSubmission) {
-                        const ans = await this.props.setReady(submissionID, ready);
+                    if (currentLab && currentSubmission && currentSubmission.id === submissionID) {
+                        currentSubmission.feedbackReady = ready;
+                        const ans = await this.props.setReady(currentSubmission);
                         if (ans) {
                             currentSubmission.feedbackReady = ready;
                             this.setState({
@@ -100,10 +102,15 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                     }
                 }
                 onApproveClick={ async (approve: boolean) => {
-                    if (this.state.selectedSubmission && this.state.selectedSubmission.submission) {
-                        const ans = await this.props.onApproveClick(this.state.selectedSubmission.submission.id, approve);
+                    const current = this.state.selectedSubmission;
+                    const selected = current?.submission;
+                    if (selected) {
+                        selected.approved = approve;
+                        const ans = await this.props.onApproveClick(selected);
                         if (ans) {
-                            this.state.selectedSubmission.submission.approved = approve;
+                            this.setState({
+                                selectedSubmission: current,
+                            })
                         }
                     }
                 }}
