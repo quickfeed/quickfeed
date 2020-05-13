@@ -21,6 +21,7 @@ interface IResultsProp {
 
 interface IResultsState {
     selectedSubmission?: IStudentLab;
+    submissionReviewers: string[];
     selectedStudent?: IStudentLabsForCourse;
     allSubmissions: IStudentLabsForCourse[];
 }
@@ -37,11 +38,13 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 // Only using the first student to fetch assignments.
                 selectedSubmission: currentStudent.labs[0],
                 allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
+                submissionReviewers: [],
             };
         } else {
             this.state = {
                 selectedSubmission: undefined,
                 allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
+                submissionReviewers: [],
             };
         }
     }
@@ -167,7 +170,8 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         return selector;
     }
 
-    private handleOnclick(item: IStudentLab, student: IStudentLabsForCourse): void {
+    private async handleOnclick(item: IStudentLab, student: IStudentLabsForCourse) {
+        const reviewers = await this.props.getReviewers(item.submission?.id ?? 0);
         this.setState({
             selectedSubmission: item,
             selectedStudent: student,

@@ -11,11 +11,11 @@ interface IStudentLabProps {
     slipdays: number;
     teacherPageView: boolean;
     courseCreatorView: boolean;
+    reviewers: string[];
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
     setApproved: (submissionID: number, status: Submission.Status) => void;
     setReady: (submissionID: number, ready: boolean) => void;
-    getReviewers: (submissionID: number) => Promise<string[]>;
 }
 
 export class StudentLab extends React.Component<IStudentLabProps> {
@@ -32,7 +32,7 @@ export class StudentLab extends React.Component<IStudentLabProps> {
             showApprove={this.props.showApprove}
             setApproved={this.props.setApproved}
             setReady={this.props.setReady}
-            getReviewers={this.props.getReviewers}
+            reviewers={this.props.reviewers}
             >
         </LabResultView>;
     }

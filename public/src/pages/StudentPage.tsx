@@ -139,6 +139,7 @@ export class StudentPage extends ViewPage {
                     courseURL={""}
                     teacherPageView={false}
                     courseCreatorView={false}
+                    reviewers={[]}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
@@ -146,9 +147,6 @@ export class StudentPage extends ViewPage {
                     }}
                     onApproveClick={() => {
                         return;
-                    }}
-                    getReviewers={async () => {
-                        return [];
                     }}
                     setApproved={() => {
                         return;
@@ -181,6 +179,7 @@ export class StudentPage extends ViewPage {
                     courseCreatorView={false}
                     courseURL={""}
                     student={curUser}
+                    reviewers={[]}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
@@ -188,9 +187,6 @@ export class StudentPage extends ViewPage {
                     }}
                     onApproveClick={() => {
                         return;
-                    }}
-                    getReviewers={async () => {
-                        return [];
                     }}
                     setApproved={() => {
                         return;

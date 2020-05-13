@@ -6,6 +6,7 @@ import { User, Submission } from '../../../proto/ag_pb';
 
 interface ILabInfoProps {
     studentSubmission: IStudentLab;
+    reviewers: string[];
     student: User;
     courseURL: string;
     showApprove: boolean;
@@ -14,7 +15,6 @@ interface ILabInfoProps {
     courseCreatorView: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
-    getReviewers: (submissionID: number) => Promise<string[]>;
     setApproved: (submissionID: number, status: Submission.Status) => void;
     setReady: (submissionID: number, ready: boolean) => void;
 }
@@ -51,11 +51,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 scoreLimit={this.props.studentSubmission.assignment.getScorelimit()}
                                 weight={100}
                             />
-                            <Row>
-                                <div key="loghead" className="col-lg-12">
-                                    {this.renderBuildLogOrInfo(buildLog, latest)}
-                                </div>
-                            </Row>
+                            {this.renderBuildLogOrInfo(buildLog, latest)}
                         </section>
                     </div>
                 </div>
@@ -64,10 +60,10 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         return <h1>No submissions yet</h1>;
     }
 
-    private async renderBuildLogOrInfo(log: JSX.Element[], latest: ISubmission): Promise<JSX.Element> {
-        const buildLog = <div key="logview" className="well"><code id="logs">{log}</code></div>;
-        const feedback = <Feedback
-        reviewers={await this.props.getReviewers(latest.id)}
+    private renderBuildLogOrInfo(log: JSX.Element[], latest: ISubmission): JSX.Element {
+        const buildLog = <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{log}</code></div></div></Row>;
+        const feedback = <div key="logview"><Feedback
+        reviewers={this.props.reviewers}
         submission={latest}
         assignment={this.props.studentSubmission.assignment}
         student={this.props.student}
@@ -76,7 +72,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         courseCreatorView={this.props.courseCreatorView}
         setApproved={this.props.setApproved}
         setReady={this.props.setReady}
-    />
-        return this.props.studentSubmission.assignment.getReviewers() > 1 ? feedback : buildLog;
+    /></div>
+        return (this.props.studentSubmission.assignment.getReviewers() > 1) ? feedback : buildLog;
     }
 }
