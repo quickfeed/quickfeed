@@ -702,8 +702,15 @@ func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionR
 		s.logger.Error("GetReviewers failed: user is not course creator")
 		return nil, status.Errorf(codes.PermissionDenied, "only course creator teacher can request information about reviewers")
 	}
-	// TODO: web method to get all reviewer users by IDs (have to unmarshall first) and return their names
-	return &pb.Reviewers{}, err
+	reviewers, err := s.getReviewers(in.SubmissionID)
+	if err != nil {
+		s.logger.Errorf("GetReviewers failed: error fetching from database: %s", err.Error)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to get reviewers")
+	}
+	// TODO: remove the testing part
+	s.logger.Info("Got reviewers for submission ", in.SubmissionID, ": ", reviewers)
+	testReviewers := []string{"Test Testersen", "Noname Fullname"}
+	return &pb.Reviewers{Reviewers: testReviewers}, err
 }
 
 // GetAssignments returns a list of all assignments for the given course.
