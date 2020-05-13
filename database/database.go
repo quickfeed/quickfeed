@@ -104,7 +104,7 @@ type Database interface {
 	// for every active course assignment for the given course ID
 	GetCourseAssignmentsWithSubmissions(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
-	UpdateSubmission(submissionID uint64, approved bool) error
+	UpdateSubmission(*pb.Submission) error
 	// CreateReview adds a new submission review.
 	CreateReview(*pb.Review) error
 	// UpdateReview updates the given review.

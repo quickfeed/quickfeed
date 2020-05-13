@@ -106,11 +106,11 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 }
 
 // UpdateSubmission updates submission with the given approved status.
-func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
+func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
 	return db.conn.
-		Model(&pb.Submission{}).
-		Where(&pb.Submission{ID: sid}).
-		Update("approved", approved).Error
+		Model(query).
+		Where(&pb.Submission{ID: query.ID}).
+		Update("approved", query.Approved, "status", query.Status, "feedbackReady", query.FeedbackReady).Error
 }
 
 // CreateReview creates a new submission review

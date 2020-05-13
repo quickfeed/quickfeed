@@ -923,7 +923,8 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
 
-	err = db.UpdateSubmission(submissions[0].GetID(), false)
+	// approved must stay false
+	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -934,8 +935,8 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if submissions[0].GetApproved() == true {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-
-	err = db.UpdateSubmission(submissions[0].GetID(), true)
+	submissions[0].Approved = true
+	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
 	}
