@@ -5,7 +5,7 @@ import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager }
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
-import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, Submission, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
@@ -122,11 +122,13 @@ export class TeacherPage extends ViewPage {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
             const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
+            const curUser = this.userMan.getCurrentUser();
             return <Results
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
                 assignments={sortAssignmentsByOrder(labs)}
                 allCourseSubmissions={labResults}
+                courseCreatorView={course.getCoursecreatorid() === curUser?.getId()}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     // update refreshed submission in the labResults
@@ -134,8 +136,17 @@ export class TeacherPage extends ViewPage {
                     this.navMan.refresh();
                     return ans;
                 }}
-                    onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
+                onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
                     return this.approveFunc(submissionID, course.getId(), approve);
+                }}
+                getReviewers={(submissionID: number) => {
+                    return this.courseMan.getReviewers(submissionID, course.getId());
+                }}
+                setApproved={(submissionID: number, status: Submission.Status) => {
+                    return this.courseMan.updateSubmission(submissionID, status);
+                }}
+                setReady={(submissionID: number, ready: boolean) => {
+                    return this.courseMan.updateSubmission(submissionID, ready);
                 }}
             >
             </Results>;
@@ -147,12 +158,13 @@ export class TeacherPage extends ViewPage {
             const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
-
+            const curUser = this.userMan.getCurrentUser();
             return <GroupResults
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
                 labs={sortAssignmentsByOrder(labs)}
                 groups={labResults}
+                courseCreatorView={course.getCoursecreatorid() === curUser?.getId()}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
@@ -161,7 +173,15 @@ export class TeacherPage extends ViewPage {
                 onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
                     return this.approveFunc(submissionID, course.getId(), approve);
                 }}
-            >
+                getReviewers={(submissionID: number) => {
+                    return this.courseMan.getReviewers(submissionID, course.getId());
+                }}
+                setApproved={(submissionID: number, status: Submission.Status) => {
+                    return this.courseMan.updateSubmission(submissionID, status);
+                }}
+                setReady={(submissionID: number, ready: boolean) => {
+                    return this.courseMan.updateSubmission(submissionID, ready);
+                }}>
             </GroupResults>;
         });
     }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
+import { Course, Enrollment, Group, Repository, Submission } from "../../proto/ag_pb";
 import { CoursesOverview, GroupForm, GroupInfo, SingleCourseOverview, StudentLab } from "../components";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { ILinkCollection } from "../managers";
@@ -123,6 +123,10 @@ export class StudentPage extends ViewPage {
     public async courseWithLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
+        const curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
+            return showLoader();
+        }
         if (this.selectedUserCourse) {
             this.selectAssignment(navInfo.params.labid, false);
             if (this.selectedAssignment) {
@@ -130,6 +134,10 @@ export class StudentPage extends ViewPage {
                     studentSubmission={this.selectedAssignment}
                     showApprove={false}
                     slipdays={this.selectedUserCourse.enrollment.getSlipdaysremaining()}
+                    student={curUser}
+                    courseURL={""}
+                    teacherPageView={false}
+                    courseCreatorView={false}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
@@ -137,7 +145,17 @@ export class StudentPage extends ViewPage {
                     }}
                     onApproveClick={() => {
                         return;
-                    }}>
+                    }}
+                    getReviewers={(submissionID: number) => {
+                        return this.courseMan.getReviewers(submissionID, course.getId());
+                    }}
+                    setApproved={(submissionID: number, status: Submission.Status) => {
+                        return this.courseMan.updateSubmission(submissionID, status);
+                    }}
+                    setReady={(submissionID: number, ready: boolean) => {
+                        return this.courseMan.updateSubmission(submissionID, ready);
+                    }}
+                    >
                 </StudentLab>;
             }
         }
@@ -146,6 +164,10 @@ export class StudentPage extends ViewPage {
 
     public async courseWithGroupLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
+        const curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
+            return showLoader();
+        }
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserGroupCourse) {
             this.selectAssignment(navInfo.params.labid, true);
@@ -154,6 +176,10 @@ export class StudentPage extends ViewPage {
                     studentSubmission={this.selectedAssignment}
                     showApprove={false}
                     slipdays={this.selectedUserGroupCourse.enrollment.getSlipdaysremaining()}
+                    teacherPageView={false}
+                    courseCreatorView={false}
+                    courseURL={""}
+                    student={curUser}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
@@ -161,7 +187,17 @@ export class StudentPage extends ViewPage {
                     }}
                     onApproveClick={() => {
                         return;
-                    }}>
+                    }}
+                    getReviewers={(submissionID: number) => {
+                        return this.courseMan.getReviewers(submissionID, course.getId());
+                    }}
+                    setApproved={(submissionID: number, status: Submission.Status) => {
+                        return this.courseMan.updateSubmission(submissionID, status);
+                    }}
+                    setReady={(submissionID: number, ready: boolean) => {
+                        return this.courseMan.updateSubmission(submissionID, ready);
+                    }}
+                    >
                 </StudentLab>;
             }
         }

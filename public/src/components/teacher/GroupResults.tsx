@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, Course, User } from "../../../proto/ag_pb";
+import { Assignment, Course, Submission, User } from "../../../proto/ag_pb";
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
@@ -11,9 +11,12 @@ interface IResultsProps {
     courseURL: string;
     groups: IStudentLabsForCourse[];
     labs: Assignment[];
+    courseCreatorView: boolean;
     getReviewers: (submissionID: number) => Promise<string[]>;
     onApproveClick: (submissionID: number, approved: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
+    setApproved: (submissionID: number, status: Submission.Status) => Promise<boolean>;
+    setReady: (submissionID: number, ready: boolean) => Promise<boolean>;
 }
 
 interface IResultsState {
@@ -53,8 +56,8 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 student={new User()}
                 courseURL={this.props.courseURL}
                 teacherPageView={false}
-                courseCreatorView={false}
                 slipdays={this.props.course.getSlipdays()}
+                courseCreatorView={this.props.courseCreatorView}
                 showApprove={true}
                 getReviewers={this.props.getReviewers}
                 setApproved={() => {return}}

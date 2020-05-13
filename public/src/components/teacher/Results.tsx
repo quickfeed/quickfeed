@@ -11,7 +11,6 @@ interface IResultsProp {
     courseURL: string;
     allCourseSubmissions: IStudentLabsForCourse[];
     assignments: Assignment[];
-    teacherPageView: boolean;
     courseCreatorView: boolean;
     onApproveClick: (submissionID: number, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
@@ -60,7 +59,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 studentSubmission={this.state.selectedSubmission}
                 courseURL={this.props.courseURL}
                 student={this.state.selectedStudent.enrollment.getUser() ?? new User()}
-                teacherPageView={this.props.teacherPageView}
+                teacherPageView={true}
                 courseCreatorView={this.props.courseCreatorView}
                 showApprove={true}
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
