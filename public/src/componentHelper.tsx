@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Group, User, Assignment } from '../proto/ag_pb';
+import { Course, Enrollment, Group, User, Assignment, Review } from '../proto/ag_pb';
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from './models';
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
@@ -208,4 +208,13 @@ export function editableListElement(
         onClick={toggleFunc}>X</button></div>
     </div>;
     return statebool ? addingDiv : addDiv;
+}
+
+export function totalScore(reviews: Review[]): number {
+    if (reviews.length < 1) return 0;
+    let sum = 0;
+    reviews.forEach(rv => {
+        sum += rv.getScore();
+    });
+    return sum / this.props.submission.reviews.length;
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, User, Submission } from '../../../proto/ag_pb';
-import { userSubmissionLink } from '../../componentHelper';
+import { totalScore, userSubmissionLink } from '../../componentHelper';
 import { DynamicTable } from '../data/DynamicTable';
 import { ISubmission } from "../../models";
 
@@ -18,6 +18,7 @@ interface FeedbackProps {
 
 interface FeedbackState {
     reviews: Review[];
+    score: number;
 }
 export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
 
@@ -25,6 +26,7 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
         super(props);
         this.state = {
             reviews: this.props.teacherPageView ? this.props.submission.reviews : this.selectReadyReviews(),
+            score: totalScore(this.props.teacherPageView ? this.props.submission.reviews : this.selectReadyReviews()),
         }
     }
 
@@ -146,5 +148,4 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
         });
         return null;
     }
-
 }
