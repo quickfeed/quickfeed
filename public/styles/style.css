@@ -370,6 +370,12 @@ body {
     margin: 0;
 }
 
+.r-info {
+    display: block;
+    float: right;
+    margin-right: 5%;
+}
+
 .s-info {
     display: block;
     float: right;

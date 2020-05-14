@@ -50,7 +50,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             const open = this.state.open;
             return <div className="review">
                 <div className="row review-header" onClick={() => this.toggleOpen()}>
-                <h2><span>{this.props.studentNumber}. {this.props.authorName}</span> <span>Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()} </span></h2>
+                <h2><span>{this.props.studentNumber}. {this.props.authorName}</span> <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()} </span></h2>
                 </div>
                 {open ? this.renderAlert() : null}
 
@@ -111,7 +111,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return <div className="row">
             <div className="col-6">
                 <ul className="list-group">
-                    <li key="li1" className="list-group-item">Score: {this.state.score}</li>
+                    <li key="li1" className="list-group-item">Score: {this.showScore()}</li>
                     <li key="li2" className="list-group-item">Submission status: {this.props.submission?.status ?? "None"}</li>
                     <li key="li3" className="list-group-item">Review status: {this.state.ready ? "Ready" : "In progress"}</li>
                     <li key="li4" className="list-group-item">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</li>
@@ -168,7 +168,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 });
             }
         }
-        this.setScore();
         this.setState({
             editing: false,
             alert: "",
@@ -250,6 +249,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 benchmarks: this.props.assignment.getGradingbenchmarksList(),
                 open: !this.state.open,
                 graded: this.gradedTotal(),
+                score: this.setScore(),
             });
         }
     }

@@ -49,8 +49,9 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     <ul className="dropdown-menu">
                         {this.props.assignments.map((a, i) => <li
                             key={i}
+                            className={i === 0 ? "active" : ""}
                             onClick={() => this.toggleAssignment(a)}
-                        >{a.getName()}</li>)}
+                        ><a href="#">{a.getName()}</a></li>)}
                     </ul></div>
             </div>
 
@@ -67,7 +68,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                                 reviewerID={this.props.curUser.getId()}
                                 addReview={this.props.addReview}
                                 updateReview={this.props.updateReview}
-                                studentNumber={i}
+                                studentNumber={this.props.students.indexOf(s) + 1}
                              /></li>
                         )}
                     </ul>
