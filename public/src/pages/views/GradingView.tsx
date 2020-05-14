@@ -67,6 +67,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                                 reviewerID={this.props.curUser.getId()}
                                 addReview={this.props.addReview}
                                 updateReview={this.props.updateReview}
+                                studentNumber={i}
                              /></li>
                         )}
                     </ul>

@@ -9,6 +9,7 @@ interface ReviewPageProps {
     submission: ISubmission | undefined;
     // review: Review | null;
     authorName: string;
+    studentNumber: number;
     authorLogin: string;
     courseURL: string;
     reviewerID: number;
@@ -50,22 +51,29 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     public render() {
             const open = this.state.open;
             return <div className="review">
-                <h3 className="a-header" onClick={() => {
-                    this.toggleOpen();
-                }}>{this.props.assignment.getName()}</h3>
-                {open ? this.renderAlert() : null}{open ? this.renderInfo() : null}
-                {open ? userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL) : null}
+                <div className="row review-header" onClick={() => this.toggleOpen()}>
+                <h2><span>{this.props.studentNumber}. {this.props.authorName}</span> <span>Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()} </span></h2>
+                </div>
+                {open ? this.renderAlert() : null}
+
+                {open ? this.makeHeaderRow() : null}
+
+                {open ? this.renderInfoTableRow() : null}
+
                 {open ? this.renderBenchmarkList() : null}
+
                 {open ? this.renderFeedback() : null}
-                <div className="r-row">{open ? this.graded() : null}{open ? this.saveButton() : null}</div>
-                <div className="r-row">{open ? this.showScore() : null}{open ? this.readyButton() : null}</div>
             </div>
     }
 
-    private renderBenchmarkList(): JSX.Element[] {
-        console.log("Rendering benchmarks, submission ID: " + this.props.submission?.id + " review in props:" + this.props.review ?? "none");
+    private makeHeaderRow(): JSX.Element {
+        return <h3>{this.props.submission ? "Submission for " + this.props.assignment.getName() : "No submissions yet for " + this.props.assignment.getName()}</h3>
+    }
+
+    private renderBenchmarkList(): JSX.Element {
         const bms: GradingBenchmark[] = this.state.benchmarks;
-        return bms.map((bm, i) => <GradeBenchmark
+        return <div className="row">
+            {bms.map((bm, i) => <GradeBenchmark
             key={"bm" + i}
             benchmark={bm}
             addComment={(comment: string) => {
@@ -76,16 +84,17 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 bm.setCriteriaList(c);
                 this.updateReview();
             }}
-        />)
+        />)}
+        </div>
     }
 
     private renderFeedback(): JSX.Element {
-    const feedbackDiv = <div onDoubleClick={() => this.toggleEdit()}>{this.props.review?.getFeedback() ?? "Add a feedback"}</div>;
-    const editFeedbackDiv = <div className="input-group">
+    const feedbackDiv = <div onDoubleClick={() => this.toggleEdit()}>{"Add a feedback"}</div>;
+    const editFeedbackDiv = <div className="input-group col-12">
     <input
         autoFocus={true}
         type="text"
-        defaultValue={this.state.feedback}
+        defaultValue={this.state.review?.getFeedback() ?? this.state.feedback}
         onChange={(e) => this.setFeedback(e.target.value)}
         onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -95,30 +104,36 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             }
         }}
     /></div>;
-    return <div className="feedback">
+    return <div className="row">
         {this.state.editing ? editFeedbackDiv : feedbackDiv}
     </div>;
     }
 
-    private renderInfo(): JSX.Element {
-        return <div className="s-info"><ul>
-            <li key="i1"> Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</li>
-            <li key="i3">Review status: {this.reviewStatus()}</li>
-            </ul></div>
-    }
-
-    private saveButton(): JSX.Element {
-        return <button
-            onClick={() => {
-                this.updateReview();
-            }}
-        >Save changes</button>
+    private renderInfoTableRow(): JSX.Element {
+        return <div className="row">
+            <div className="col-6">
+                <ul className="list-group">
+                    <li key="li1" className="list-group-item">Score: {this.state.score}</li>
+                    <li key="li2" className="list-group-item">Submission status: {this.props.submission?.status ?? "None"}</li>
+                    <li key="li3" className="list-group-item">Review status: {this.state.ready ? "Ready" : "In progress"}</li>
+                    <li key="li4" className="list-group-item">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</li>
+                </ul>
+            </div>
+            <div className="col-4">
+                <div className="row">
+                {this.readyButton()}
+                </div>
+                <div className="row">
+                    {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL)}
+                </div>
+            </div>
+        </div>;
     }
 
     private readyButton(): JSX.Element {
         return <button
             onClick={() => {
-                if (this.props.review && this.props.review.getReady()) {
+                if (this.state.review && this.state.review.getReady()) {
                 this.setState({
                     ready: false,
                 }, () => this.updateReview());
@@ -139,12 +154,8 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         }
     }
 
-    private setApprovedString(): string {
-        return this.props.submission?.approved ? "Approved" : "Not approved";
-    }
-
     private async updateReview(bms?: GradingBenchmark[]) {
-        const r: Review = this.props.review ?? this.makeNewReview();
+        const r: Review = this.state.review ?? this.makeNewReview();
         r.setReady(this.state.ready);
         r.setReviewsList(bms ?? this.state.benchmarks);
         r.setScore(this.setScore());
@@ -152,7 +163,12 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         if (r.getId() > 0) {
             this.props.updateReview(r);
         } else {
-            await this.props.addReview(r);
+            const rw = await this.props.addReview(r);
+            if (rw) {
+                this.setState({
+                    review: rw,
+                });
+            }
         }
         this.setScore();
         this.setState({
@@ -187,7 +203,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     private gradedTotal(): number {
         let counter = 0;
-        const bms = this.props.review?.getReviewsList() ?? this.state.benchmarks;
+        const bms = this.state.benchmarks;
         bms.forEach((r) => {
             r.getCriteriaList().forEach((c) => {
                 if (c.getGrade() !== GradingCriterion.Grade.NONE) {
@@ -196,10 +212,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             });
         });
         return counter;
-    }
-
-    private graded(): JSX.Element {
-        return <div className="graded-div">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</div>;
     }
 
     private showScore(): JSX.Element {
@@ -219,7 +231,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     private toggleEdit() {
         this.setState({
-            feedback: this.props.review?.getFeedback() ?? "",
+            feedback: this.state.review?.getFeedback() ?? "",
             editing: !this.state.editing,
         });
     }
@@ -244,14 +256,8 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         }
     }
 
-    private reviewStatus(): string {
-        if (!this.props.submission) return "No submissions";
-        if (!this.props.review) return "Not reviewed";
-        return this.state.ready ? "Ready" : "In progress";
-    }
-
     private renderAlert(): JSX.Element | null {
-        return this.state.alert === "" ? null : <div className="alert alert-warning">{ this.state.alert }</div>
+        return this.state.alert === "" ? null : <div className="row"><div className="alert alert-warning">{ this.state.alert }</div></div>
     }
 
     private setAlert(alert?: string) {
@@ -261,9 +267,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private makeAlertString(alert?: string): string {
-        if (!this.props.submission) return "No submissions yet for assignment " + this.props.assignment.getName();
+        if (!this.props.submission) return "";
         if (this.props.assignment.getReviewers() === 0) return "This assignment has no grading criteria";
-        if (!this.props.review && this.props.assignment.getReviewers() <= this.props.submission.reviews.length) return "All reviews are redy for this submission";
+        if (!this.state.review && this.props.assignment.getReviewers() <= this.props.submission.reviews.length) return "All reviews are redy for this submission";
         return alert ?? "";
     }
 
