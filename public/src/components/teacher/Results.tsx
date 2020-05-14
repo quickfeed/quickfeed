@@ -175,6 +175,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         this.setState({
             selectedSubmission: item,
             selectedStudent: student,
+            submissionReviewers: reviewers,
         });
     }
 

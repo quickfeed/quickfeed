@@ -22,6 +22,7 @@ interface IResultsProps {
 interface IResultsState {
     submissionLink?: IStudentLab;
     groups: IStudentLabsForCourse[];
+    submissionReviewers: string[];
 }
 
 export class GroupResults extends React.Component<IResultsProps, IResultsState> {
@@ -36,11 +37,13 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 // Only using the first group to fetch assignments.
                 submissionLink: currentGroup.labs[0],
                 groups: sortByScore(this.props.groups, this.props.labs, true),
+                submissionReviewers: [],
             };
         } else {
             this.state = {
                 submissionLink: undefined,
                 groups: sortByScore(this.props.groups, this.props.labs, true),
+                submissionReviewers: [],
             };
         }
     }
@@ -59,7 +62,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 slipdays={this.props.course.getSlipdays()}
                 courseCreatorView={this.props.courseCreatorView}
                 showApprove={true}
-                getReviewers={this.props.getReviewers}
+                reviewers={this.state.submissionReviewers}
                 setApproved={(submissionID: number, status: Submission.Status) => {
                     const current = this.state.assignment?.submission;
                     if (current && current.id === submissionID) {
@@ -152,9 +155,11 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return selector;
     }
 
-    private handleOnclick(item: IStudentLab): void {
+    private async handleOnclick(item: IStudentLab) {
+        const reviewers = await this.props.getReviewers(this.state.assignment?.submission?.id ?? 0);
         this.setState({
-            submissionLink: item,
+            assignment: item,
+            submissionReviewers: reviewers,
         });
     }
 

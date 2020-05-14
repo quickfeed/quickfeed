@@ -13,10 +13,8 @@ interface ReviewPageProps {
     authorLogin: string;
     courseURL: string;
     reviewerID: number;
-    // open: boolean;
     addReview: (review: Review) => Promise<Review | null>;
     updateReview: (review: Review) => Promise<boolean>;
-    //setOpen: () => void;
 }
 
 interface ReviewPageState {

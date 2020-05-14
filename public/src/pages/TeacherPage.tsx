@@ -194,6 +194,7 @@ export class TeacherPage extends ViewPage {
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 return <GradingView
+                course={course}
                 courseURL={await this.getCourseURL(course.getId())}
                 assignments={assignments}
                 students={students}
