@@ -26,7 +26,6 @@ var (
 	jobActivated sync.Cond = *sync.NewCond(&sync.Mutex{})
 	podExecuted  sync.Cond = *sync.NewCond(&sync.Mutex{})
 	nrOfPods               = int32Ptr(1)
-	//cli = getClient()
 )
 
 // KRun implements the Kube Interface.
@@ -41,10 +40,10 @@ func (k *K8s) KRun(ctx context.Context, task *Container, id string, courseName s
 		return "", err
 	}
 
-	err = makeSecret(clientset, id, courseName, secretAg)
-	if err != nil {
-		return "", err
-	}
+	//err = makeSecret(clientset, id, courseName, secretAg)
+	//if err != nil {
+	//	return "", err
+	//}
 
 	jobClient := clientset.BatchV1().Jobs(courseName)
 	// Dynamically define the configuration of the job object.
@@ -78,25 +77,25 @@ func (k *K8s) KRun(ctx context.Context, task *Container, id string, courseName s
 							},
 							// The secret is created will be Mounted be the Continer
 							// TODO: Vera Yaseneva - command out line 43 - 46, 80 - 98, and 123, if K8s secret not used.
-							VolumeMounts: []apiv1.VolumeMount{
-								{
-									Name:      "secreting",
-									MountPath: "/root/work/secreting",
-									ReadOnly:  true,
-								},
-							},
+							//VolumeMounts: []apiv1.VolumeMount{
+							//	{
+							//		Name:      "secreting",
+							//		MountPath: "/root/work/secreting",
+							//		ReadOnly:  true,
+							//	},
+							//},
 						},
 					},
-					Volumes: []apiv1.Volume{
-						{
-							Name: "secreting",
-							VolumeSource: apiv1.VolumeSource{
-								Secret: &apiv1.SecretVolumeSource{
-									SecretName: id,
-								},
-							},
-						},
-					},
+					//Volumes: []apiv1.Volume{
+					//	{
+					//		Name: "secreting",
+					//		VolumeSource: apiv1.VolumeSource{
+					//			Secret: &apiv1.SecretVolumeSource{
+					//				SecretName: id,
+					//			},
+					//		},
+					//	},
+					//},
 					RestartPolicy: apiv1.RestartPolicyOnFailure,
 				},
 			},
@@ -120,7 +119,7 @@ func (k *K8s) KRun(ctx context.Context, task *Container, id string, courseName s
 	}
 	k.waitForLogs()
 
-	removeSecret(clientset, id, courseName)
+	//removeSecret(clientset, id, courseName)
 	return k.result, nil
 }
 

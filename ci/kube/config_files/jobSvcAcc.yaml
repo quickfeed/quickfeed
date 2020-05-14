@@ -5,7 +5,7 @@ metadata:
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   namespace: agcicd
   name: job-role
@@ -18,15 +18,17 @@ rules:
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 
-kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
 metadata:
   name: job-role-ag
-subjects:
-- kind: ServiceAccount
-  name: job-roles
   namespace: agcicd
+subjects:
+- kind: user
+  name: testUser
+  namespace: agcicd
+  apiGroup: rbac.authorization.k8s.io
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: job-role
   apiGroup: rbac.authorization.k8s.io
