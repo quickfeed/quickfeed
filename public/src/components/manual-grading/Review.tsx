@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review } from "../../../proto/ag_pb";
+import { Assignment, GradingBenchmark, GradingCriterion, Review } from '../../../proto/ag_pb';
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
 import { userSubmissionLink } from "../../componentHelper";
@@ -19,6 +19,7 @@ interface ReviewPageProps {
 }
 
 interface ReviewPageState {
+    review: Review | undefined;
     open: boolean;
     benchmarks: GradingBenchmark[];
     feedback: string;
@@ -42,14 +43,14 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             score: 0,
             alert: "",
             graded: 0,
+            review: undefined,
         }
     }
 
     public render() {
-            const open = this.props.open && this.state.open;
+            const open = this.state.open;
             return <div className="review">
                 <h3 className="a-header" onClick={() => {
-                    this.props.setOpen();
                     this.toggleOpen();
                 }}>{this.props.assignment.getName()}</h3>
                 {open ? this.renderAlert() : null}{open ? this.renderInfo() : null}
@@ -224,14 +225,23 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private toggleOpen() {
-        this.setState({
-            score: this.props.review?.getScore() ?? 0,
-            benchmarks: this.props.review ? this.props.review.getReviewsList() : this.props.assignment.getGradingbenchmarksList(),
-            feedback: this.props.review?.getFeedback() ?? "",
-            open: this.props.open ? !this.state.open : true,
-            alert: this.makeAlertString(),
-            graded: this.gradedTotal(),
-        });
+        const rw = this.selectReview(this.props.submission);
+        if (rw) {
+            this.setState({
+                review: rw,
+                score: rw.getScore(),
+                benchmarks: this.refreshBenchmarks(rw),
+                feedback: rw.getFeedback(),
+                open: !this.state.open,
+                graded: this.gradedTotal(),
+            });
+        } else {
+            this.setState({
+                benchmarks: this.props.assignment.getGradingbenchmarksList(),
+                open: !this.state.open,
+                graded: this.gradedTotal(),
+            });
+        }
     }
 
     private reviewStatus(): string {
@@ -257,12 +267,46 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return alert ?? "";
     }
 
+    // check and update review in case the assignment benchmarks have been changed
+    // after the review had been submitted
+    private refreshBenchmarks(r: Review): GradingBenchmark[] {
+        const oldList = r.getReviewsList();
+        // update benchmarks
+        r.getReviewsList().forEach(bm => {
+            const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());
+            // remove deleted benchmarks
+            if (!assignmentBM) {
+                oldList.splice(oldList.indexOf(bm), 1);
+            } else {
+                // remove deleted criteria
+                const oldCriteriaList = bm.getCriteriaList();
+                oldCriteriaList.forEach(c => {
+                    if (assignmentBM.getCriteriaList().indexOf(c) < 0) {
+                        oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
+                    }
+                });
+                // add new criteria
+                assignmentBM.getCriteriaList().forEach(c => {
+                    if (oldCriteriaList.indexOf(c) < 0) {
+                        oldCriteriaList.push(c);
+                    }
+                });
+            }
+        });
+        // add new benchmarks
+        this.props.assignment.getGradingbenchmarksList().forEach(bm => {
+            if (oldList.indexOf(bm) < 0) {
+                oldList.push(bm);
+            }
+        });
+        return oldList;
+    }
 
-    private selectReview(s: ISubmission | undefined): Review | null {
-        let rw: Review | null = null;
+    private selectReview(s: ISubmission | undefined): Review | undefined {
+        let rw: Review | undefined;
         if (s?.reviews) {
             s.reviews.forEach((r) => {
-                if (r.getReviewerid() === this.props.curUser.getId()) {
+                if (r.getReviewerid() === this.props.reviewerID) {
                     rw = r;
                 }
             });
