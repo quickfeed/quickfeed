@@ -49,7 +49,8 @@ func (k *K8s) KRun(ctx context.Context, task *Container, id string, courseName s
 	// Dynamically define the configuration of the job object.
 	jobConfig := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "job" + id,
+			Name:            "job" + id,
+			ResourceVersion: id,
 		},
 		Spec: batchv1.JobSpec{
 			BackoffLimit:            int32Ptr(8),
@@ -75,7 +76,6 @@ func (k *K8s) KRun(ctx context.Context, task *Container, id string, courseName s
 									"memory": resource.MustParse("1Gi"),
 								},
 							},
-							// The secret is created will be Mounted be the Continer
 							// TODO: Vera Yaseneva - command out line 43 - 46, 80 - 98, and 123, if K8s secret not used.
 							//VolumeMounts: []apiv1.VolumeMount{
 							//	{

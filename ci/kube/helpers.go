@@ -14,7 +14,7 @@ var (
 	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "")
 )
 
-//getClient returns client which is needed to talk to the K8s API-Server
+// getClient makes a K8s clientset.
 func getClient() (*kubernetes.Clientset, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
@@ -31,7 +31,7 @@ func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
 		return h
 	}
-	return os.Getenv("USERPROFILE") // windows
+	return os.Getenv("USERPROFILE")
 }
 
 func int32Ptr(i int32) *int32 { return &i }
