@@ -7,15 +7,15 @@ import { userSubmissionLink } from "../../componentHelper";
 interface ReviewPageProps {
     assignment: Assignment;
     submission: ISubmission | undefined;
-    review: Review | null;
+    // review: Review | null;
     authorName: string;
     authorLogin: string;
     courseURL: string;
     reviewerID: number;
-    open: boolean;
+    // open: boolean;
     addReview: (review: Review) => Promise<Review | null>;
     updateReview: (review: Review) => Promise<boolean>;
-    setOpen: () => void;
+    //setOpen: () => void;
 }
 
 interface ReviewPageState {
@@ -255,5 +255,18 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         if (this.props.assignment.getReviewers() === 0) return "This assignment has no grading criteria";
         if (!this.props.review && this.props.assignment.getReviewers() <= this.props.submission.reviews.length) return "All reviews are redy for this submission";
         return alert ?? "";
+    }
+
+
+    private selectReview(s: ISubmission | undefined): Review | null {
+        let rw: Review | null = null;
+        if (s?.reviews) {
+            s.reviews.forEach((r) => {
+                if (r.getReviewerid() === this.props.curUser.getId()) {
+                    rw = r;
+                }
+            });
+        }
+        return rw;
     }
 }

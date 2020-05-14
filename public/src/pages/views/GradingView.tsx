@@ -1,10 +1,12 @@
 import * as React from "react";
-import { Course, Assignment, Review, User } from '../../../proto/ag_pb';
+import { Assignment, Course, Review, User } from '../../../proto/ag_pb';
 import { IStudentLabsForCourse, ISubmission } from '../../models';
 import { ReviewPage } from '../../components/manual-grading/Review';
-
+import { Search } from "../../components";
+import { searchForLabs } from '../../componentHelper';
 
 interface GradingViewProps {
+    course: Course;
     courseURL: string;
     assignments: Assignment[];
     students: IStudentLabsForCourse[];
@@ -15,105 +17,84 @@ interface GradingViewProps {
 }
 
 interface GradingViewState {
-    selectedStudent: IStudentLabsForCourse | null;
-    openState: boolean;
+    selectedStudents: IStudentLabsForCourse[];
+    selectedAssignment: Assignment;
+    errorMessage: string;
 }
 
 export class GradingView extends React.Component<GradingViewProps, GradingViewState> {
     constructor(props: GradingViewProps) {
         super(props);
         this.state = {
-            selectedStudent: null,
-            openState: true,
+            selectedStudents: this.props.students,
+            selectedAssignment: this.props.assignments[0], // TODO: test on courses with no assignments
+            errorMessage: "",
         }
     }
 
     public render() {
-        return <div className="row grading-view">
-            {this.renderStudentList()}{this.renderReview()}
+        if (this.props.assignments.length < 1) {
+            return <div className="alert alert-info">No assignments for {this.props.course.getName()} </div>
+        }
+        return <div className="grading-view">
+            <div className="row"><h1>Review submissions for {this.props.course.getName()}</h1></div>
+
+            <div className="row"><div className="col-md-8"><Search className="input-group"
+                    placeholder="Search for students"
+                    onChange={(query) => this.handleSearch(query)}
+                /></div>
+                 <div className="dropdown col-md-4">
+                    <button className="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Choose assignment to review
+                    <span className="caret"></span></button>
+                    <ul className="dropdown-menu">
+                        {this.props.assignments.map((a, i) => <li
+                            key={i}
+                            onClick={() => this.toggleAssignment(a)}
+                        >{a.getName()}</li>)}
+                    </ul></div>
+            </div>
+
+            <div className="row"><div className="col-md-12">
+                    <ul className="list-group">
+                        {this.state.selectedStudents.map((s, i) =>
+                            <li key={i} className="list-group-item li-review"><ReviewPage
+                                key={"r" + i}
+                                assignment={this.state.selectedAssignment}
+                                submission={this.selectSubmission(s)}
+                                authorName={s.enrollment.getUser()?.getName() ?? "Name not found"}
+                                authorLogin={s.enrollment.getUser()?.getLogin() ?? "Login not found"}
+                                courseURL={this.props.courseURL}
+                                reviewerID={this.props.curUser.getId()}
+                                addReview={this.props.addReview}
+                                updateReview={this.props.updateReview}
+                             /></li>
+                        )}
+                    </ul>
+            </div></div>
+
         </div>
     }
 
-    private renderReview(): JSX.Element {
-        const student = this.state.selectedStudent;
-        if (student && student.labs.length > 0) {
-            return <div className="f-view">
-                <h2 className="a-header">{student.labs[0].authorName}</h2>
-                {
-                student.labs.map((l, i) => <ReviewPage
-                    key={"st" + i}
-                    assignment={this.getAssignment(l.assignment)}
-                    submission={l.submission}
-                    authorName={l.authorName}
-                    authorLogin={student.enrollment.getUser()?.getLogin() ?? "Login not found"}
-                    courseURL={this.props.courseURL}
-                    reviewerID={this.props.curUser.getId()}
-                    review={this.selectReview(l.submission)}
-                    open={this.state.openState}
-                    setOpen={() => {
-                        this.setState({
-                            openState: true,
-                        });
-                    }}
-                    addReview={async (r: Review) => {
-                        if (l.submission) {
-                            const ans = await this.props.addReview(r);
-                            if (ans) {
-                                l.submission.reviews.push(ans);
-                                return ans;
-                            }
-                        }
-                        return null;
-                    }}
-                    updateReview={ async (r: Review) => {
-                        if (l.submission) {
-                            const ans = await this.props.updateReview(r);
-                            if (ans) {
-                                const ix = l.submission.reviews.findIndex(rw => rw.getId() === r.getId());
-                                l.submission.reviews[ix] = r;
-                                return true;
-                            }
-                        }
-                        return false;
-                    }}
-                />)
-            }</div>
-        }
-        return <div>{this.voidMessage()}</div>
+    private selectSubmission(s: IStudentLabsForCourse): ISubmission | undefined {
+        let lab: ISubmission | undefined;
+        s.labs.forEach(l => {
+            if (l.assignment.getId() === this.state.selectedAssignment.getId()) {
+                lab = l.submission;
+            }
+        });
+        return lab;
     }
 
-    private voidMessage(): string {
-        return this.state.selectedStudent ? "No submissions yet from " + this.state.selectedStudent?.enrollment.getUser()?.getName() : "Select a course student for review";
+    private toggleAssignment(a: Assignment) {
+        this.setState({
+            selectedAssignment: a,
+        })
     }
 
-    private getAssignment(a: Assignment): Assignment {
-        return this.props.assignments.find(item => item.getId() === a.getId()) ?? a;
+    private handleSearch(query: string) {
+        this.setState({
+            selectedStudents: searchForLabs(this.props.students, query),
+        })
     }
 
-    private renderStudentList(): JSX.Element {
-        return <div className="student-div"><ul className=" student-nav nav nav-pills flex-column">
-              {this.props.students.map((s, i: number) => <li
-                key={"m" + i}
-                className={"nav-item"}
-                onClick={() => {
-                    this.setState({
-                        selectedStudent: s,
-                        openState: false,
-                    });
-                } }
-              >{s.enrollment.getUser()?.getName() ?? "No name"}</li>)}
-        </ul></div>;
-    }
-
-    private selectReview(s: ISubmission | undefined): Review | null {
-        let rw: Review | null = null;
-        if (s?.reviews) {
-            s.reviews.forEach((r) => {
-                if (r.getReviewerid() === this.props.curUser.getId()) {
-                    rw = r;
-                }
-            });
-        }
-        return rw;
-    }
 }
