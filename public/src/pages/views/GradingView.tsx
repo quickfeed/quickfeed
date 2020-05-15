@@ -43,16 +43,15 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     placeholder="Search for students"
                     onChange={(query) => this.handleSearch(query)}
                 /></div>
-                 <div className="dropdown col-md-4">
-                    <button className="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Choose assignment to review
-                    <span className="caret"></span></button>
-                    <ul className="dropdown-menu">
-                        {this.props.assignments.map((a, i) => <li
+                 <div className="form-group col-md-4">
+                 <select className="form-control">
+                 {this.props.assignments.map((a, i) => <option
                             key={i}
                             className={i === 0 ? "active" : ""}
                             onClick={() => this.toggleAssignment(a)}
-                        ><a href="#">{a.getName()}</a></li>)}
-                    </ul></div>
+                        >{a.getName()}</option>)}
+                    </select>
+                    </div>
             </div>
 
             <div className="row"><div className="col-md-12">
