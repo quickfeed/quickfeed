@@ -103,7 +103,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         const currentID = parseInt(id, 10);
         const current = this.props.assignments.find(item => item.getId() === currentID);
         if (current) {
-            console.log("Setting assignment " + current.getName());
             this.setState({
                 selectedAssignment: current,
                 submissionsForAssignment: this.selectAllSubmissions(current),

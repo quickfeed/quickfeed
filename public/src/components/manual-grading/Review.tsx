@@ -46,13 +46,23 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     public render() {
-        console.log("Rendering review for user " + this.props.authorName + " for lab " + this.props.assignment.getName());
         const open = this.state.open;
+        const reviewInfoSpan = <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</span>;
+        const noReviewsSpan = <span className="r-info">N/A</span>;
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
-        <h3><span>{this.props.studentNumber}. {this.props.authorName}</span> <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()} </span></h3>
+        <h3><span>{this.props.studentNumber}. {this.props.authorName}</span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}</h3>
         </div>;
 
-        const noSubmissionDiv = <div className="alert alert-info">No submissions for assignment {this.props.assignment.getName()}</div>;
+        const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;
+        const noReviewsDiv = <div className="alert alert-info">{this.props.assignment.getName()} is not for manual grading</div>
+
+        if (this.props.assignment.getReviewers() < 1) {
+            return <div className="review">
+                {headerDiv}
+                {open ? noReviewsDiv : null}
+            </div>
+        }
+
 
         if (!this.props.submission) {
             return <div className="review">
@@ -60,6 +70,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 {open ? noSubmissionDiv : null}
             </div>
         }
+
         return <div className="review">
             {headerDiv}
 
@@ -277,7 +288,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 benchmarks: this.props.assignment.getGradingbenchmarksList(),
                 open: !this.state.open,
                 graded: this.gradedTotal(),
-                score: this.setScore(),
+                score: this.setScore() ?? 0,
             });
         }
     }
