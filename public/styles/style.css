@@ -392,6 +392,11 @@ body {
     margin-bottom: 1%;
 }
 
+.li-review {
+    border-right: none;
+    border-left: none;
+}
+
 .s-info {
     display: block;
     float: right;

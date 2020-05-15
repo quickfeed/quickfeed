@@ -133,10 +133,10 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return <div className="row">
             <div className="col-md-10">
                 <ul className="list-group">
-                    <li key="li1" className="list-group-item">Score: {this.showScore()}</li>
-                    <li key="li2" className="list-group-item">Submission status: {submissionStatusToString(this.props.submission?.status)}</li>
-                    <li key="li3" className="list-group-item">Review status: {this.state.ready ? "Ready" : "In progress"}</li>
-                    <li key="li4" className="list-group-item">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</li>
+                    <li key="li1" className="list-group-item li-review">Score: {this.showScore()}</li>
+                    <li key="li2" className="list-group-item li-review">Submission status: {submissionStatusToString(this.props.submission?.status)}</li>
+                    <li key="li3" className="list-group-item li-review">Review status: {this.state.ready ? "Ready" : "In progress"}</li>
+                    <li key="li4" className="list-group-item li-review">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</li>
                 </ul>
             </div>
             <div className="col-md-2">
@@ -234,7 +234,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private showScore(): string {
-        return this.setScore().toFixed() + "%";
+        return this.setScore() + "%";
     }
 
     private setScore(): number {
@@ -244,6 +244,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 if (c.getGrade() === GradingCriterion.Grade.PASSED) passed++;
             });
         });
+        const total = this.criteriaTotal() > 0 ? this.criteriaTotal() : 1;
         const scoreNow = passed * 100 / this.criteriaTotal();
         return scoreNow;
     }
