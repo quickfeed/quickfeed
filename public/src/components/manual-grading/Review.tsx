@@ -50,7 +50,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         const reviewInfoSpan = <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</span>;
         const noReviewsSpan = <span className="r-info">N/A</span>;
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
-        <h3><span>{this.props.studentNumber}. {this.props.authorName}</span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}</h3>
+        <h3><span className="r-header">{this.props.studentNumber}. {this.props.authorName}</span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}</h3>
         </div>;
 
         const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;
@@ -131,7 +131,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     private renderInfoTableRow(): JSX.Element {
         return <div className="row">
-            <div className="col-6">
+            <div className="col-md-10">
                 <ul className="list-group">
                     <li key="li1" className="list-group-item">Score: {this.showScore()}</li>
                     <li key="li2" className="list-group-item">Submission status: {this.props.submission?.status ?? "None"}</li>
@@ -139,19 +139,19 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                     <li key="li4" className="list-group-item">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</li>
                 </ul>
             </div>
-            <div className="col-4">
+            <div className="col-md-2">
                 <div className="row">
                 {this.readyButton()}
                 </div>
                 <div className="row">
-                    {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL)}
+                    {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}
                 </div>
             </div>
         </div>;
     }
 
     private readyButton(): JSX.Element {
-        return <button
+        return <div className="btn btn-default r-btn"
             onClick={() => {
                 if (this.state.review && this.state.review.getReady()) {
                 this.setState({
@@ -161,7 +161,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                     this.setReady();
                 }
             }}
-        >Mark as ready</button>
+        >Mark as ready</div>
     }
 
     private setReady() {
@@ -233,8 +233,8 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return counter;
     }
 
-    private showScore(): JSX.Element {
-        return <div className="score-div">Score: {this.setScore().toFixed()}%</div>;
+    private showScore(): string {
+        return this.setScore().toFixed() + "%";
     }
 
     private setScore(): number {
@@ -256,7 +256,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private toggleOpen() {
-        console.log("Closing, resetting state");
+        console.log("toggle open for : " + this.props.authorName);
         // reset state when closing
         if (this.state.open) {
             this.setState({
@@ -271,7 +271,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         }
         const rw = this.selectReview(this.props.submission);
         if (rw) {
-            console.log("Toggle open: found review in props");
             this.setState({
                 review: rw,
                 score: rw.getScore(),
@@ -283,7 +282,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
             });
         } else {
-            console.log("Toggle open: no review in props");
             this.setState({
                 benchmarks: this.props.assignment.getGradingbenchmarksList(),
                 open: !this.state.open,
@@ -316,7 +314,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         const oldList = r.getReviewsList();
         // update benchmarks
         oldList.forEach(bm => {
-            console.log("Checking old bm: " + bm.toString());
             const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());
             // remove deleted benchmarks
             if (!assignmentBM) {

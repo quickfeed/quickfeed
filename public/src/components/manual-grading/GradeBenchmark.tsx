@@ -26,8 +26,8 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
 
     public render() {
         return <div>
-            <h3 className="b-header">{this.props.benchmark.getHeading()}</h3>
-            {this.renderComment()}
+            <h3 className="b-header">{this.props.benchmark.getHeading()}<span className="glyphicon glyphicaon-comment"></span></h3>
+            {this.state.commenting ? this.renderComment() : null}
             {this.renderList()}
         </div>
     }
@@ -48,10 +48,10 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
     }
 
     private renderComment(): JSX.Element {
-        const commentDiv = <div className="comment-div"
+        const commentDiv = <div className="comment-div col-md-12"
             onDoubleClick={() => this.toggleEdit()}
             >{this.state.comment !== "" ? this.state.comment : "Add a comment"}</div>;
-        const editDiv = <div className="input-group">
+        const editDiv = <div className="input-group col-md-12">
             <input
                 autoFocus={true}
                 type="text"

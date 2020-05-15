@@ -378,6 +378,20 @@ body {
     font-size: 0.7em;
 }
 
+.r-btn {
+    margin-top: 5%;
+    margin-bottom: 10%;
+} 
+
+.r-header {
+    display: block;
+    float: left;
+    font-size: 0.7em;
+    margin-left: 3%;
+    margin-top: 0;
+    margin-bottom: 1%;
+}
+
 .s-info {
     display: block;
     float: right;
