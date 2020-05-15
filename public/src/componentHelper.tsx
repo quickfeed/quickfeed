@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Group, User, Assignment, Review } from '../proto/ag_pb';
+import { Course, Enrollment, Group, User, Assignment, Submission, Review } from '../proto/ag_pb';
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from './models';
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
@@ -226,4 +226,17 @@ export function totalScore(reviews: Review[]): number {
         sum += rv.getScore();
     });
     return sum / this.props.submission.reviews.length;
+}
+
+export function submissionStatusToString(status?: Submission.Status): string {
+    switch (status) {
+        case Submission.Status.APPROVED:
+            return "Approved";
+        case Submission.Status.REJECTED:
+            return "Rejected";
+        case Submission.Status.REVISION:
+            return "Revision";
+        default:
+            return "None";
+    }
 }

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review } from '../../../proto/ag_pb';
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from "./GradeBenchmark";
-import { userSubmissionLink } from "../../componentHelper";
+import { userSubmissionLink, submissionStatusToString } from '../../componentHelper';
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -134,7 +134,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             <div className="col-md-10">
                 <ul className="list-group">
                     <li key="li1" className="list-group-item">Score: {this.showScore()}</li>
-                    <li key="li2" className="list-group-item">Submission status: {this.props.submission?.status ?? "None"}</li>
+                    <li key="li2" className="list-group-item">Submission status: {submissionStatusToString(this.props.submission?.status)}</li>
                     <li key="li3" className="list-group-item">Review status: {this.state.ready ? "Ready" : "In progress"}</li>
                     <li key="li4" className="list-group-item">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</li>
                 </ul>
