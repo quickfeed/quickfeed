@@ -3,7 +3,7 @@ import { Assignment, Course, Review, User } from '../../../proto/ag_pb';
 import { IStudentLabsForCourse, ISubmission, IStudentLab } from '../../models';
 import { ReviewPage } from '../../components/manual-grading/Review';
 import { Search } from "../../components";
-import { searchForLabs } from '../../componentHelper';
+import { searchForLabs, searchForStudents, searchForUsers } from '../../componentHelper';
 
 interface GradingViewProps {
     course: Course;
@@ -17,7 +17,8 @@ interface GradingViewProps {
 }
 
 interface GradingViewState {
-    selectedStudents: IStudentLabsForCourse[];
+
+    selectedStudents: User[];
     selectedAssignment: Assignment;
     submissionsForAssignment: Map<User, IStudentLab>;
     errorMessage: string;
@@ -27,7 +28,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     constructor(props: GradingViewProps) {
         super(props);
         this.state = {
-            selectedStudents: this.props.students,
+            selectedStudents: this.selectAllStudents(),
             selectedAssignment: this.props.assignments[0] ?? new Assignment(), // TODO: test on courses with no assignments
             errorMessage: "",
             submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, IStudentLab>(),
@@ -38,8 +39,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         if (this.props.assignments.length < 1) {
             return <div className="alert alert-info">No assignments for {this.props.course.getName()} </div>
         }
-        const allStudents = Array.from(this.state.submissionsForAssignment.keys());
-
         return <div className="grading-view">
             <div className="row"><h1>Review submissions for {this.props.course.getName()}</h1></div>
 
@@ -48,19 +47,18 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     onChange={(query) => this.handleSearch(query)}
                 /></div>
                  <div className="form-group col-md-4">
-                 <select className="form-control">
+                 <select className="form-control" onChange={(e) => this.toggleAssignment(e.target.value)}>
                  {this.props.assignments.map((a, i) => <option
                             key={i}
-                            className={i === 0 ? "active" : ""}
-                            onClick={() => this.toggleAssignment(a)}
-                        >{a.getName()}</option>)}
+                            value={a.getId()}
+                        >{a.getName()}</option>)}Select assignment
                     </select>
                     </div>
             </div>
 
             <div className="row"><div className="col-md-12">
                     <ul className="list-group">
-                        {allStudents.map((s, i) =>
+                        {this.state.selectedStudents.map((s, i) =>
                             <li key={i} className="list-group-item li-review"><ReviewPage
                                 key={"r" + i}
                                 assignment={this.state.selectedAssignment}
@@ -71,7 +69,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                                 reviewerID={this.props.curUser.getId()}
                                 addReview={this.props.addReview}
                                 updateReview={this.props.updateReview}
-                                studentNumber={allStudents.indexOf(s) + 1}
+                                studentNumber={this.state.selectedStudents.indexOf(s) + 1}
                              /></li>
                         )}
                     </ul>
@@ -80,8 +78,16 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         </div>
     }
 
+    private selectAllStudents(): User[] {
+        const studentUsers: User[] = [];
+        this.props.students.forEach(s => {
+            studentUsers.push(s.enrollment.getUser() ?? new User());
+        });
+        return studentUsers;
+    }
+
     private selectAllSubmissions(a?: Assignment): Map<User, IStudentLab> {
-        const labMap = this.state.submissionsForAssignment;
+        const labMap = new Map<User, IStudentLab>();
         const current = a ?? this.state.selectedAssignment;
         this.props.students.forEach(s => {
             s.labs.forEach(l => {
@@ -93,18 +99,22 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         return labMap;
     }
 
-    private toggleAssignment(a: Assignment) {
-        console.log("Setting assignment " + a.getName());
-        this.setState({
-            selectedAssignment: a,
-            submissionsForAssignment: this.selectAllSubmissions(a),
-        });
+    private toggleAssignment(id: string) {
+        const currentID = parseInt(id, 10);
+        const current = this.props.assignments.find(item => item.getId() === currentID);
+        if (current) {
+            console.log("Setting assignment " + current.getName());
+            this.setState({
+                selectedAssignment: current,
+                submissionsForAssignment: this.selectAllSubmissions(current),
+            });
+        }
     }
 
     private handleSearch(query: string) {
         this.setState({
-            selectedStudents: searchForLabs(this.props.students, query),
-        })
+            selectedStudents: searchForUsers(this.state.selectedStudents, query),
+        });
     }
 
 }

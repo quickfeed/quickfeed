@@ -46,6 +46,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     public render() {
+        console.log("Rendering review for user " + this.props.authorName + " for lab " + this.props.assignment.getName());
         const open = this.state.open;
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
         <h3><span>{this.props.studentNumber}. {this.props.authorName}</span> <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()} </span></h3>
@@ -244,6 +245,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private toggleOpen() {
+        console.log("Closing, resetting state");
         // reset state when closing
         if (this.state.open) {
             this.setState({
@@ -307,29 +309,19 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());
             // remove deleted benchmarks
             if (!assignmentBM) {
-                console.log("Old bm not found in the assignment list");
                 oldList.splice(oldList.indexOf(bm), 1);
             } else {
-                console.log("Old bm found, deleting");
                 // remove deleted criteria
                 const oldCriteriaList = bm.getCriteriaList();
                 oldCriteriaList.forEach(c => {
-                    console.log("Checking old criterion: " + c.toString());
                     if (!assignmentBM.getCriteriaList().find(item => item.getId() === c.getId())) {
-                        console.log("Old criterion not found");
                         oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
-                    } else {
-                        console.log("Old criterion found");
                     }
                 });
                 // add new criteria
                 assignmentBM.getCriteriaList().forEach(c => {
-                    console.log("Checking new criterion: " + c.toString());
                     if (!oldCriteriaList.find(item => item.getId() === c.getId())) {
-                        console.log("New criterion not found, adding");
                         oldCriteriaList.push(c);
-                    } else {
-                        console.log("New criterion found");
                     }
                 });
             }
