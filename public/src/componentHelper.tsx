@@ -83,6 +83,15 @@ export function searchForStudents(enrols: Enrollment[], query: string): Enrollme
     return filteredStudents;
 }
 
+export function searchForUsers(users: User[], query: string): User[] {
+    query = query.toLowerCase();
+    const filteredUsers: User[] = [];
+    users.forEach(u => {
+        if (foundUser(u, query)) filteredUsers.push(u);
+    });
+    return filteredUsers;
+}
+
 export function searchForGroups(groups: Group[], query: string): Group[] {
     query = query.toLowerCase();
     const filteredGroups: Group[] = [];
