@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, Course, Review, User } from '../../../proto/ag_pb';
-import { IStudentLabsForCourse, ISubmission } from '../../models';
+import { IStudentLabsForCourse, ISubmission, IStudentLab } from '../../models';
 import { ReviewPage } from '../../components/manual-grading/Review';
 import { Search } from "../../components";
 import { searchForLabs } from '../../componentHelper';
@@ -19,6 +19,7 @@ interface GradingViewProps {
 interface GradingViewState {
     selectedStudents: IStudentLabsForCourse[];
     selectedAssignment: Assignment;
+    submissionsForAssignment: Map<User, IStudentLab>;
     errorMessage: string;
 }
 
@@ -27,8 +28,9 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         super(props);
         this.state = {
             selectedStudents: this.props.students,
-            selectedAssignment: this.props.assignments[0], // TODO: test on courses with no assignments
+            selectedAssignment: this.props.assignments[0] ?? new Assignment(), // TODO: test on courses with no assignments
             errorMessage: "",
+            submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, IStudentLab>(),
         }
     }
 
@@ -36,6 +38,8 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         if (this.props.assignments.length < 1) {
             return <div className="alert alert-info">No assignments for {this.props.course.getName()} </div>
         }
+        const allStudents = Array.from(this.state.submissionsForAssignment.keys());
+
         return <div className="grading-view">
             <div className="row"><h1>Review submissions for {this.props.course.getName()}</h1></div>
 
@@ -56,18 +60,18 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
 
             <div className="row"><div className="col-md-12">
                     <ul className="list-group">
-                        {this.state.selectedStudents.map((s, i) =>
+                        {allStudents.map((s, i) =>
                             <li key={i} className="list-group-item li-review"><ReviewPage
                                 key={"r" + i}
                                 assignment={this.state.selectedAssignment}
-                                submission={this.selectSubmission(s)}
-                                authorName={s.enrollment.getUser()?.getName() ?? "Name not found"}
-                                authorLogin={s.enrollment.getUser()?.getLogin() ?? "Login not found"}
+                                submission={this.state.submissionsForAssignment.get(s)?.submission}
+                                authorName={s.getName() ?? "Name not found"}
+                                authorLogin={s.getLogin() ?? "Login not found"}
                                 courseURL={this.props.courseURL}
                                 reviewerID={this.props.curUser.getId()}
                                 addReview={this.props.addReview}
                                 updateReview={this.props.updateReview}
-                                studentNumber={this.props.students.indexOf(s) + 1}
+                                studentNumber={allStudents.indexOf(s) + 1}
                              /></li>
                         )}
                     </ul>
@@ -76,21 +80,25 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         </div>
     }
 
-    private selectSubmission(s: IStudentLabsForCourse): ISubmission | undefined {
-        console.log("Selecting submission for student: " + s.labs[0].authorName + " for current assignment: " + this.state.selectedAssignment.getName())
-        let lab: ISubmission | undefined;
-        s.labs.forEach(l => {
-            if (l.assignment.getId() === this.state.selectedAssignment.getId()) {
-                lab = l.submission;
-            }
+    private selectAllSubmissions(a?: Assignment): Map<User, IStudentLab> {
+        const labMap = this.state.submissionsForAssignment;
+        const current = a ?? this.state.selectedAssignment;
+        this.props.students.forEach(s => {
+            s.labs.forEach(l => {
+                if (l.assignment.getId() === current.getId()) {
+                    labMap.set(s.enrollment.getUser() ?? new User(), l);
+                }
+            });
         });
-        return lab;
+        return labMap;
     }
 
     private toggleAssignment(a: Assignment) {
+        console.log("Setting assignment " + a.getName());
         this.setState({
             selectedAssignment: a,
-        })
+            submissionsForAssignment: this.selectAllSubmissions(a),
+        });
     }
 
     private handleSearch(query: string) {

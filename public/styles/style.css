@@ -374,6 +374,8 @@ body {
     display: block;
     float: right;
     margin-right: 5%;
+    color: dimgray;
+    font-size: 0.7em;
 }
 
 .s-info {
