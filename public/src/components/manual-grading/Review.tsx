@@ -7,7 +7,6 @@ import { userSubmissionLink } from "../../componentHelper";
 interface ReviewPageProps {
     assignment: Assignment;
     submission: ISubmission | undefined;
-    // review: Review | null;
     authorName: string;
     studentNumber: number;
     authorLogin: string;
@@ -198,9 +197,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return counter;
     }
 
-    private gradedTotal(): number {
+    private gradedTotal(rw?: Review): number {
         let counter = 0;
-        const bms = this.state.benchmarks;
+        const bms = rw?.getReviewsList() ?? this.state.benchmarks;
         bms.forEach((r) => {
             r.getCriteriaList().forEach((c) => {
                 if (c.getGrade() !== GradingCriterion.Grade.NONE) {
@@ -234,17 +233,33 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private toggleOpen() {
+        // reset state when closing
+        if (this.state.open) {
+            this.setState({
+                review: undefined,
+                score: 0,
+                benchmarks: [],
+                feedback: "",
+                open: false,
+                graded: 0,
+                ready: false,
+            });
+        }
         const rw = this.selectReview(this.props.submission);
         if (rw) {
+            console.log("Toggle open: found review in props");
             this.setState({
                 review: rw,
                 score: rw.getScore(),
                 benchmarks: this.refreshBenchmarks(rw),
                 feedback: rw.getFeedback(),
                 open: !this.state.open,
-                graded: this.gradedTotal(),
+                graded: this.gradedTotal(rw),
+                ready: rw.getReady(),
+
             });
         } else {
+            console.log("Toggle open: no review in props");
             this.setState({
                 benchmarks: this.props.assignment.getGradingbenchmarksList(),
                 open: !this.state.open,
@@ -276,30 +291,41 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private refreshBenchmarks(r: Review): GradingBenchmark[] {
         const oldList = r.getReviewsList();
         // update benchmarks
-        r.getReviewsList().forEach(bm => {
+        oldList.forEach(bm => {
+            console.log("Checking old bm: " + bm.toString());
             const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());
             // remove deleted benchmarks
             if (!assignmentBM) {
+                console.log("Old bm not found in the assignment list");
                 oldList.splice(oldList.indexOf(bm), 1);
             } else {
+                console.log("Old bm found, deleting");
                 // remove deleted criteria
                 const oldCriteriaList = bm.getCriteriaList();
                 oldCriteriaList.forEach(c => {
-                    if (assignmentBM.getCriteriaList().indexOf(c) < 0) {
+                    console.log("Checking old criterion: " + c.toString());
+                    if (!assignmentBM.getCriteriaList().find(item => item.getId() === c.getId())) {
+                        console.log("Old criterion not found");
                         oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
+                    } else {
+                        console.log("Old criterion found");
                     }
                 });
                 // add new criteria
                 assignmentBM.getCriteriaList().forEach(c => {
-                    if (oldCriteriaList.indexOf(c) < 0) {
+                    console.log("Checking new criterion: " + c.toString());
+                    if (!oldCriteriaList.find(item => item.getId() === c.getId())) {
+                        console.log("New criterion not found, adding");
                         oldCriteriaList.push(c);
+                    } else {
+                        console.log("New criterion found");
                     }
                 });
             }
         });
         // add new benchmarks
         this.props.assignment.getGradingbenchmarksList().forEach(bm => {
-            if (oldList.indexOf(bm) < 0) {
+            if (!oldList.find(item => item.getId() === bm.getId())) {
                 oldList.push(bm);
             }
         });
