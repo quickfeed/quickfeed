@@ -77,6 +77,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private selectSubmission(s: IStudentLabsForCourse): ISubmission | undefined {
+        console.log("Selecting submission for student: " + s.labs[0].authorName + " for current assignment: " + this.state.selectedAssignment.getName())
         let lab: ISubmission | undefined;
         s.labs.forEach(l => {
             if (l.assignment.getId() === this.state.selectedAssignment.getId()) {

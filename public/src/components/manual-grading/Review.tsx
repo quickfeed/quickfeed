@@ -46,21 +46,32 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     public render() {
-            const open = this.state.open;
+        const open = this.state.open;
+        const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
+        <h2><span>{this.props.studentNumber}. {this.props.authorName}</span> <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()} </span></h2>
+        </div>;
+
+        const noSubmissionDiv = <div className="alert alert-info">No submissions for assignment {this.props.assignment.getName()}</div>;
+
+        if (!this.props.submission) {
             return <div className="review">
-                <div className="row review-header" onClick={() => this.toggleOpen()}>
-                <h2><span>{this.props.studentNumber}. {this.props.authorName}</span> <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()} </span></h2>
-                </div>
-                {open ? this.renderAlert() : null}
-
-                {open ? this.makeHeaderRow() : null}
-
-                {open ? this.renderInfoTableRow() : null}
-
-                {open ? this.renderBenchmarkList() : null}
-
-                {open ? this.renderFeedback() : null}
+                {headerDiv}
+                {open ? noSubmissionDiv : null}
             </div>
+        }
+        return <div className="review">
+            {headerDiv}
+
+            {open ? this.renderAlert() : null}
+
+            {open ? this.makeHeaderRow() : null}
+
+            {open ? this.renderInfoTableRow() : null}
+
+            {open ? this.renderBenchmarkList() : null}
+
+            {open ? this.renderFeedback() : null}
+        </div>
     }
 
     private makeHeaderRow(): JSX.Element {
