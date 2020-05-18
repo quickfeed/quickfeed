@@ -167,7 +167,7 @@ function labRepoLink(course: string, login: string): string {
 }
 
 // If the courseURL parameter is given, returns a link to the student lab repository,
-// otherwise returns link to the user's GitHub profile.
+// otherwise returns link to the user"s GitHub profile.
 export function userRepoLink(login: string, name: string, courseURL?: string): JSX.Element {
     return <a href={courseURL ? labRepoLink(courseURL, login) : gitUserLink(login)} target="_blank">{ name }</a>;
 }
@@ -205,7 +205,7 @@ export function editableListElement(
         defaultValue={defaultText}
         onChange={(e) => changeFunc(e.target.value)}
         onKeyDown={(e) => {
-            if (e.key === 'Enter') {updateFunc()}
+            if (e.key === "Enter") {updateFunc()}
         }}
     />
     <div className="btn-group">

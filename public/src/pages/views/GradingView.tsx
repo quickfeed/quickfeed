@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Assignment, Course, Review, User, Submission } from '../../../proto/ag_pb';
-import { IStudentLabsForCourse, ISubmission, IStudentLab } from '../../models';
-import { ReviewPage } from '../../components/manual-grading/Review';
+import { Assignment, Course, Review, User, Submission } from "../../../proto/ag_pb";
+import { IStudentLabsForCourse, ISubmission, IStudentLab } from "../../models";
+import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { searchForLabs, searchForStudents, searchForUsers, submissionStatusToString } from '../../componentHelper';
-import { Feedback } from "../../components/manual-grading/Release";
+import { searchForUsers } from "../../componentHelper";
+import { Release } from "../../components/manual-grading/Release";
 
 interface GradingViewProps {
     course: Course;
@@ -71,7 +71,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
             <ul className="list-group">
                 {
                     this.state.selectedStudents.map((s, i) =>
-                        <li key={i} className="list-group-item li-review"><Feedback
+                        <li key={i} className="list-group-item li-review"><Release
                             key={"f" + i}
                             assignment={this.state.selectedAssignment}
                             submission={this.state.submissionsForAssignment.get(s)?.submission}

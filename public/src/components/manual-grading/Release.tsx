@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review, User, Submission } from '../../../proto/ag_pb';
-import { totalScore, userSubmissionLink } from '../../componentHelper';
-import { DynamicTable } from '../data/DynamicTable';
+import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from "../../../proto/ag_pb";
+import { totalScore } from "../../componentHelper";
+import { DynamicTable } from "../data/DynamicTable";
 import { ISubmission } from "../../models";
 
-interface FeedbackProps {
+interface ReleaseProps {
     submission: ISubmission | undefined;
     assignment: Assignment;
     authorName: string;
@@ -16,19 +16,19 @@ interface FeedbackProps {
     getReviewers: (submissionID: number) => Promise<string[]>;
 }
 
-interface FeedbackState {
+interface ReleaseState {
     open: boolean;
     reviews: Review[];
     reviewers: string[];
     score: number;
 }
-export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
+export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
-    constructor(props: FeedbackProps) {
+    constructor(props: ReleaseProps) {
         super(props);
         this.state = {
-            reviews: this.selectReadyReviews(),
-            score: totalScore(this.selectReadyReviews()),
+            reviews: [],
+            score: 0,
             reviewers: [],
             open: false,
         }
@@ -137,13 +137,13 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
         return headers.concat(this.state.reviews.map(() => <span className="glyphicon glyphicon-comment" onClick={() => this.showBenchmarkComment(bm)}></span>));
     }
 
-    private renderButtons(): JSX.Element {
+    private renderStatusButton(): JSX.Element {
         return <div className="input-group">
-            <label className="input-group-addon" htmlFor="submissionStatus">Example select</label>
+            <label className="input-group-addon" htmlFor="submissionStatus">Set status:</label>
             <select className="form-control" id="submissionStatus">
-                <option onSelect={() => this.updateStatus(Submission.Status.NONE)}>Not reviewed</option>
+                <option onSelect={() => this.updateStatus(Submission.Status.NONE)}>None</option>
                 <option onSelect={() => this.updateStatus(Submission.Status.APPROVED)}>Approved</option>
-                <option onSelect={() => this.updateStatus(Submission.Status.REJECTED)}>Reject</option>
+                <option onSelect={() => this.updateStatus(Submission.Status.REJECTED)}>Rejected</option>
                 <option onSelect={() => this.updateStatus(Submission.Status.REVISION)}>Revision</option>
             </select>
             </div>;
@@ -181,9 +181,6 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
         }
     }
 
-    private setReadyButtonText(): string {
-        return this.props.submission?.released ? "Mark as in progress" : "Mark as ready";
-    }
 
     private chooseCriterion(ID: number, bms: GradingBenchmark[]): GradingCriterion | null {
         bms.forEach(bm => {
