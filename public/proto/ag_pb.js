@@ -6947,7 +6947,7 @@ proto.Review.toObject = function(includeInstance, msg) {
     feedback: jspb.Message.getFieldWithDefault(msg, 5, ""),
     ready: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
     score: jspb.Message.getFieldWithDefault(msg, 7, 0),
-    reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
+    benchmarksList: jspb.Message.toObjectList(msg.getBenchmarksList(),
     proto.GradingBenchmark.toObject, includeInstance)
   };
 
@@ -7016,7 +7016,7 @@ proto.Review.deserializeBinaryFromReader = function(msg, reader) {
     case 8:
       var value = new proto.GradingBenchmark;
       reader.readMessage(value,proto.GradingBenchmark.deserializeBinaryFromReader);
-      msg.addReviews(value);
+      msg.addBenchmarks(value);
       break;
     default:
       reader.skipField();
@@ -7096,7 +7096,7 @@ proto.Review.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getReviewsList();
+  f = message.getBenchmarksList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       8,
@@ -7234,10 +7234,10 @@ proto.Review.prototype.setScore = function(value) {
 
 
 /**
- * repeated GradingBenchmark reviews = 8;
+ * repeated GradingBenchmark benchmarks = 8;
  * @return {!Array<!proto.GradingBenchmark>}
  */
-proto.Review.prototype.getReviewsList = function() {
+proto.Review.prototype.getBenchmarksList = function() {
   return /** @type{!Array<!proto.GradingBenchmark>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.GradingBenchmark, 8));
 };
@@ -7247,7 +7247,7 @@ proto.Review.prototype.getReviewsList = function() {
  * @param {!Array<!proto.GradingBenchmark>} value
  * @return {!proto.Review} returns this
 */
-proto.Review.prototype.setReviewsList = function(value) {
+proto.Review.prototype.setBenchmarksList = function(value) {
   return jspb.Message.setRepeatedWrapperField(this, 8, value);
 };
 
@@ -7257,7 +7257,7 @@ proto.Review.prototype.setReviewsList = function(value) {
  * @param {number=} opt_index
  * @return {!proto.GradingBenchmark}
  */
-proto.Review.prototype.addReviews = function(opt_value, opt_index) {
+proto.Review.prototype.addBenchmarks = function(opt_value, opt_index) {
   return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.GradingBenchmark, opt_index);
 };
 
@@ -7266,8 +7266,8 @@ proto.Review.prototype.addReviews = function(opt_value, opt_index) {
  * Clears the list making it empty but non-null.
  * @return {!proto.Review} returns this
  */
-proto.Review.prototype.clearReviewsList = function() {
-  return this.setReviewsList([]);
+proto.Review.prototype.clearBenchmarksList = function() {
+  return this.setBenchmarksList([]);
 };
 
 
