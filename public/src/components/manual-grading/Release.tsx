@@ -5,19 +5,21 @@ import { DynamicTable } from '../data/DynamicTable';
 import { ISubmission } from "../../models";
 
 interface FeedbackProps {
-    reviewers: string[];
-    submission: ISubmission;
+    submission: ISubmission | undefined;
     assignment: Assignment;
-    student: User;
+    authorName: string;
+    authorLogin: string;
+    studentNumber: number;
     courseURL: string;
-    teacherPageView: boolean;
-    courseCreatorView: boolean;
-    setApproved: (submissionID: number, status: Submission.Status) => void;
-    setReady: (submissionID: number, ready: boolean) => void;
+    setGrade: (submissionID: number, status: Submission.Status) => void;
+    release: (submissionID: number, ready: boolean) => void;
+    getReviewers: (submissionID: number) => Promise<string[]>;
 }
 
 interface FeedbackState {
+    open: boolean;
     reviews: Review[];
+    reviewers: string[];
     score: number;
 }
 export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
@@ -25,36 +27,83 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
     constructor(props: FeedbackProps) {
         super(props);
         this.state = {
-            reviews: this.props.teacherPageView ? this.props.submission.reviews : this.selectReadyReviews(),
-            score: totalScore(this.props.teacherPageView ? this.props.submission.reviews : this.selectReadyReviews()),
+            reviews: this.selectReadyReviews(),
+            score: totalScore(this.selectReadyReviews()),
+            reviewers: [],
+            open: false,
         }
     }
 
     public render() {
-        if (this.state.reviews.length < 1 || (this.props.teacherPageView && !this.props.submission.feedbackReady)) {
-            return <div>No ready reviews yet for submission by {this.props.student.getName()}</div>
+        const open = this.state.open;
+        const reviewInfoSpan = <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</span>;
+        const noReviewsSpan = <span className="r-info">N/A</span>;
+        const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;
+        const noReviewsDiv = <div className="alert alert-info">{this.props.assignment.getName()} is not for manual grading</div>
+        const noReadyReviewsDiv = <div className="alert alert-info">No ready reviews for {this.props.assignment.getName()}</div>
+
+        const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
+        <h3><span className="r-header">{this.props.studentNumber}. {this.props.authorName}<span className="r-score">Score: {this.state.score}</span> </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
+        </div>;
+
+
+        if (this.props.assignment.getReviewers() < 1) {
+            return <div className="release">
+                {headerDiv}
+                {open ? noReviewsDiv : null}
+            </div>
         }
-        if (this.props.courseCreatorView) {
-            return <div className="feedback">
-            <h3>Reviews for submission for lab {this.props.assignment.getName()} by {this.props.student.getName}}</h3>
-            {userSubmissionLink(this.props.student.getLogin(), this.props.assignment.getName(), this.props.courseURL)}
-            {this.renderReviewers()}
-            {this.renderReviewTable()}
-            {this.renderButtons()}
-            </div>;
+
+        if (!this.props.submission) {
+            return <div className="release">
+                {headerDiv}
+                {open ? noSubmissionDiv : null}
+            </div>
         }
-        if (this.props.teacherPageView && this.props.submission.feedbackReady) {
-            return <div className="Feedback">
-                {this.renderReviewTable()}
-            </div>;
+
+        if (this.state.reviews.length < 1) {
+            return <div className="release">
+                {headerDiv}
+                {open ? noReadyReviewsDiv : null}
+            </div>
         }
-        return <div className="feedback">A general view accessible by all teachers and TAs</div>;
-        // TODO: show general review info after the lab has been marked as open for feedback by the course teacher
+
+        return <div className="release">
+            {headerDiv}
+        ></div>
+    }
+
+    private releaseButton(): JSX.Element {
+        return <span
+            className={this.releaseButtonClass()}
+            onClick={() => {
+                if (this.props.submission && this.props.assignment.getReviewers() > 0 &&
+                this.state.reviews.length === this.props.assignment.getReviewers()) {
+                    this.props.release(this.props.submission.id, !this.props.submission.released);
+                }
+            }}
+            >{this.releaseButtonString()}</span>
+        }
+
+    private releaseButtonClass(): string {
+        if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
+         this.state.reviews.length < this.props.assignment.getReviewers()) {
+             return "btn btn-disabled";
+         }
+        return "btn btn-default";
+    }
+
+    private releaseButtonString(): string {
+        if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
+         this.state.reviews.length < this.props.assignment.getReviewers()) {
+             return "N/A";
+         }
+        return this.props.submission.released ? "Released" : "Release"
     }
 
     private selectReadyReviews(): Review[] {
         const selected: Review[] = [];
-        this.props.submission.reviews.forEach(r => {
+        this.props.submission?.reviews.forEach(r => {
             if (r.getReady()) selected.push(r);
         });
         return selected;
@@ -62,7 +111,7 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
 
     private renderReviewers(): JSX.Element {
         return <ul className="r-list">
-            {this.props.reviewers.map((r, i) => <li key={"rl" + i}>
+            {this.state.reviewers.map((r, i) => <li key={"rl" + i}>
                 {r}
             </li>)}
         </ul>;
@@ -97,16 +146,13 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
                 <option onSelect={() => this.updateStatus(Submission.Status.REJECTED)}>Reject</option>
                 <option onSelect={() => this.updateStatus(Submission.Status.REVISION)}>Revision</option>
             </select>
-            <button
-                className={this.props.submission.feedbackReady ? "btn btn-success input-group-button" : "btn btn-default input-group-button"}
-                onClick={() => this.props.setReady(this.props.submission.id, !this.props.submission.feedbackReady)}
-            >{this.setReadyButtonText()}</button>
-
             </div>;
     }
 
     private updateStatus(status: Submission.Status) {
-        this.props.setApproved(this.props.submission.id, status);
+        if (this.props.submission) {
+            this.props.setGrade(this.props.submission.id, status);
+        }
     }
 
     private showBenchmarkComment(bm: GradingBenchmark) {
@@ -136,7 +182,7 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
     }
 
     private setReadyButtonText(): string {
-        return this.props.submission.feedbackReady ? "Mark as in progress" : "Mark as ready";
+        return this.props.submission?.released ? "Mark as in progress" : "Mark as ready";
     }
 
     private chooseCriterion(ID: number, bms: GradingBenchmark[]): GradingCriterion | null {
@@ -147,5 +193,14 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
             }
         });
         return null;
+    }
+
+    private async toggleOpen() {
+        this.setState({
+            open: !this.state.open,
+            reviewers: this.props.submission ? await this.props.getReviewers(this.props.submission.id) : this.state.reviewers,
+            reviews: this.selectReadyReviews(),
+            score: totalScore(this.selectReadyReviews())
+        });
     }
 }

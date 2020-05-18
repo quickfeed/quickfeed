@@ -4,7 +4,7 @@ import { IStudentLabsForCourse, ISubmission, IStudentLab } from '../../models';
 import { ReviewPage } from '../../components/manual-grading/Review';
 import { Search } from "../../components";
 import { searchForLabs, searchForStudents, searchForUsers, submissionStatusToString } from '../../componentHelper';
-import { Feedback } from "../../components/manual-grading/Feedback";
+import { Feedback } from "../../components/manual-grading/Release";
 
 interface GradingViewProps {
     course: Course;
@@ -82,6 +82,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                             setGrade={this.props.setGrade}
                             release={this.props.release}
                             getReviewers={this.props.getReviewers}
+                            studentNumber={this.state.selectedStudents.indexOf(s) + 1}
                         /></li>
                     )
                 }
