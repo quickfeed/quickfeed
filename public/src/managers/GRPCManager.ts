@@ -249,7 +249,7 @@ export class GrpcManager {
         request.setCourseid(courseID);
         request.setApprove(s.approved);
         request.setStatus(s.status);
-        request.setFeedbackready(s.feedbackReady);
+        request.setFeedbackready(s.released);
         return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 

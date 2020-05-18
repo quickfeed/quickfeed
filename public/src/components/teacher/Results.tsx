@@ -82,10 +82,10 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 }}
                 setReady={async (submissionID: number, ready: boolean) => {
                     if (currentLab && currentSubmission && currentSubmission.id === submissionID) {
-                        currentSubmission.feedbackReady = ready;
+                        currentSubmission.released = ready;
                         const ans = await this.props.setReady(currentSubmission);
                         if (ans) {
-                            currentSubmission.feedbackReady = ready;
+                            currentSubmission.released = ready;
                             this.setState({
                                 selectedSubmission: currentLab,
                             });

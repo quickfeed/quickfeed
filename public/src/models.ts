@@ -61,6 +61,6 @@ export interface ISubmission {
     testCases: ITestCases[];
     approved: boolean;
     reviews: Review[];
-    feedbackReady: boolean;
+    released: boolean;
     status: Submission.Status;
 }

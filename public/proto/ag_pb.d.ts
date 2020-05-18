@@ -659,8 +659,8 @@ export class Submission extends jspb.Message {
   clearReviewsList(): void;
   addReviews(value?: Review, index?: number): Review;
 
-  getFeedbackready(): boolean;
-  setFeedbackready(value: boolean): void;
+  getReleased(): boolean;
+  setReleased(value: boolean): void;
 
   getStatus(): Submission.Status;
   setStatus(value: Submission.Status): void;
@@ -685,7 +685,7 @@ export namespace Submission {
     commithash: string,
     approved: boolean,
     reviewsList: Array<Review.AsObject>,
-    feedbackready: boolean,
+    released: boolean,
     status: Submission.Status,
   }
 

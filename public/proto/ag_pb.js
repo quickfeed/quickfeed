@@ -5752,7 +5752,7 @@ proto.Submission.toObject = function(includeInstance, msg) {
     approved: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
     reviewsList: jspb.Message.toObjectList(msg.getReviewsList(),
     proto.Review.toObject, includeInstance),
-    feedbackready: jspb.Message.getBooleanFieldWithDefault(msg, 11, false),
+    released: jspb.Message.getBooleanFieldWithDefault(msg, 11, false),
     status: jspb.Message.getFieldWithDefault(msg, 12, 0)
   };
 
@@ -5833,7 +5833,7 @@ proto.Submission.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 11:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setFeedbackready(value);
+      msg.setReleased(value);
       break;
     case 12:
       var value = /** @type {!proto.Submission.Status} */ (reader.readEnum());
@@ -5939,7 +5939,7 @@ proto.Submission.serializeBinaryToWriter = function(message, writer) {
       proto.Review.serializeBinaryToWriter
     );
   }
-  f = message.getFeedbackready();
+  f = message.getReleased();
   if (f) {
     writer.writeBool(
       11,
@@ -6167,10 +6167,10 @@ proto.Submission.prototype.clearReviewsList = function() {
 
 
 /**
- * optional bool feedbackReady = 11;
+ * optional bool released = 11;
  * @return {boolean}
  */
-proto.Submission.prototype.getFeedbackready = function() {
+proto.Submission.prototype.getReleased = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 11, false));
 };
 
@@ -6179,7 +6179,7 @@ proto.Submission.prototype.getFeedbackready = function() {
  * @param {boolean} value
  * @return {!proto.Submission} returns this
  */
-proto.Submission.prototype.setFeedbackready = function(value) {
+proto.Submission.prototype.setReleased = function(value) {
   return jspb.Message.setProto3BooleanField(this, 11, value);
 };
 

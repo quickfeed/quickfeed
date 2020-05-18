@@ -1,7 +1,7 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentLab, ISubmission } from '../../models';
-import { Feedback } from "../../components/manual-grading/Feedback";
+import { Feedback } from "../../components/manual-grading/Release";
 import { User, Submission } from '../../../proto/ag_pb';
 
 interface ILabInfoProps {

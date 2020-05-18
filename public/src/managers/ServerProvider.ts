@@ -459,7 +459,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             testCases: scoreObj,
             approved: sbm.getApproved(),
             reviews: sbm.getReviewsList(),
-            feedbackReady: sbm.getFeedbackready(),
+            released: sbm.getReleased(),
             status: sbm.getStatus(),
         };
         return isbm;

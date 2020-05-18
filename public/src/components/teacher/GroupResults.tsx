@@ -73,7 +73,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 setReady={(submissionID: number, ready: boolean) => {
                     const current = this.state.assignment?.submission;
                     if (current && current.id === submissionID) {
-                        current.feedbackReady = ready;
+                        current.released = ready;
                         return this.props.setReady(current);
                     }
                 }}
