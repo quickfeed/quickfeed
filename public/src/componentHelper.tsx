@@ -223,7 +223,9 @@ export function totalScore(reviews: Review[]): number {
     if (reviews.length < 1) return 0;
     let sum = 0;
     reviews.forEach(rv => {
-        sum += rv.getScore();
+        if (rv.getReady()) {
+            sum += rv.getScore();
+        }
     });
     return sum / this.props.submission.reviews.length;
 }
