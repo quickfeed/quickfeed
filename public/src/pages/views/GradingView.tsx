@@ -15,8 +15,7 @@ interface GradingViewProps {
     releaseView: boolean;
     addReview: (review: Review) => Promise<Review | null>;
     updateReview: (review: Review) => Promise<boolean>;
-    setGrade: (submissionID: number, status: Submission.Status) => Promise<boolean>;
-    release: (submissionID: number, ready: boolean) => Promise<boolean>;
+    onUpdate: (submission: ISubmission) => Promise<boolean>;
     getReviewers: (submissionID: number) => Promise<string[]>;
 }
 
@@ -79,8 +78,29 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                             authorName={s.getName()}
                             authorLogin={s.getLogin()}
                             courseURL={this.props.courseURL}
-                            setGrade={this.props.setGrade}
-                            release={this.props.release}
+                            setGrade={async (status: Submission.Status) => {
+                                const current = this.state.submissionsForAssignment.get(s)?.submission;
+                                if (current) {
+                                    const initialStatus = current.status;
+                                    current.status = status;
+                                    const ans = await this.props.onUpdate(current);
+                                    if (!ans) {
+                                        current.status = initialStatus;
+                                        return false;
+                                    }
+                                    return true;
+                                }
+                            }}
+                            release={async (release: boolean) => {
+                                const current = this.state.submissionsForAssignment.get(s)?.submission;
+                                if (current) {
+                                    current.released = release;
+                                    const ans = this.props.onUpdate(current);
+                                    if (ans) return true;
+                                    current.released = !release;
+                                    return false;
+                                }
+                            }}
                             getReviewers={this.props.getReviewers}
                             studentNumber={this.state.selectedStudents.indexOf(s) + 1}
                         /></li>

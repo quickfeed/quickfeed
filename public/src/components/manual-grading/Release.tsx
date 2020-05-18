@@ -11,8 +11,8 @@ interface FeedbackProps {
     authorLogin: string;
     studentNumber: number;
     courseURL: string;
-    setGrade: (submissionID: number, status: Submission.Status) => void;
-    release: (submissionID: number, ready: boolean) => void;
+    setGrade: (status: Submission.Status) => void;
+    release: (ready: boolean) => void;
     getReviewers: (submissionID: number) => Promise<string[]>;
 }
 
@@ -79,7 +79,7 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
             onClick={() => {
                 if (this.props.submission && this.props.assignment.getReviewers() > 0 &&
                 this.state.reviews.length === this.props.assignment.getReviewers()) {
-                    this.props.release(this.props.submission.id, !this.props.submission.released);
+                    this.props.release(!this.props.submission.released);
                 }
             }}
             >{this.releaseButtonString()}</span>
@@ -151,7 +151,7 @@ export class Feedback extends React.Component<FeedbackProps, FeedbackState>{
 
     private updateStatus(status: Submission.Status) {
         if (this.props.submission) {
-            this.props.setGrade(this.props.submission.id, status);
+            this.props.setGrade(status);
         }
     }
 

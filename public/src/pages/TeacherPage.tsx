@@ -14,6 +14,7 @@ import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHel
 import { AssigmnentView } from "./views/AssignmentView";
 import { GradingView } from "./views/GradingView";
 import { ISubmission } from '../models';
+import { threadId } from "worker_threads";
 
 export class TeacherPage extends ViewPage {
 
@@ -39,9 +40,11 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}/results", this.results);
         this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
         this.navHelper.registerFunction("courses/{course}/review", this.manualReview);
+        this.navHelper.registerFunction("courses/{course}/release", this.releaseReview);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
         this.navHelper.registerFunction("courses/{cid}/new_group", this.newGroup);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
+
     }
 
     public checkAuthentication(): boolean {
@@ -199,15 +202,45 @@ export class TeacherPage extends ViewPage {
                 assignments={assignments}
                 students={students}
                 curUser={curUser}
+                releaseView={false}
                 addReview={(r: Review) => {
                     return this.courseMan.addReview(r, course.getId());
                 }}
                 updateReview={async (r: Review) => {
                     return this.courseMan.editReview(r, course.getId());
                 }}
-            />
+                getReviewers={async () => {return []}}
+                onUpdate={async () => {return false}}
+            />;
             }
-            return <div>Please log in.</div>
+            return <div>Please log in.</div>;
+        })
+    }
+
+    public async releaseReview(info: INavInfo<{ course: string}>): View {
+        return this.courseFunc(info.params.course, async (course) => {
+            const assignments = await this.courseMan.getAssignments(course.getId());
+            const students = await this.courseMan.getLabsForCourse(course.getId(), false);
+            const curUser = this.userMan.getCurrentUser();
+            if (curUser) {
+                return <GradingView
+                    course={course}
+                    courseURL={await this.getCourseURL(course.getId())}
+                    assignments={assignments}
+                    students={students}
+                    curUser={curUser}
+                    releaseView={true}
+                    addReview={async () => {return null}}
+                    updateReview={async () => {return false}}
+                    onUpdate={(submission: ISubmission) => {
+                        return this.courseMan.updateSubmission(course.getId(), submission);
+                    }}
+                    getReviewers={(submissionID: number) => {
+                        return this.courseMan.getReviewers(submissionID, course.getId());
+                    }}
+                />;
+            }
+            return <div>Please log in.</div>;
         })
     }
 
@@ -336,6 +369,7 @@ export class TeacherPage extends ViewPage {
                 { name: "Results", uri: link.uri + "/results" },
                 { name: "Group Results", uri: link.uri + "/groupresults" },
                 { name: "Review", uri: link.uri + "/review"},
+                { name: "Release", uri: link.uri + "/release"},
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
                 { name: "New Group", uri: link.uri + "/new_group"},
