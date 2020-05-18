@@ -1,9 +1,10 @@
 import * as React from "react";
-import { Assignment, Course, Review, User } from '../../../proto/ag_pb';
+import { Assignment, Course, Review, User, Submission } from '../../../proto/ag_pb';
 import { IStudentLabsForCourse, ISubmission, IStudentLab } from '../../models';
 import { ReviewPage } from '../../components/manual-grading/Review';
 import { Search } from "../../components";
-import { searchForLabs, searchForStudents, searchForUsers } from '../../componentHelper';
+import { searchForLabs, searchForStudents, searchForUsers, submissionStatusToString } from '../../componentHelper';
+import { Feedback } from "../../components/manual-grading/Feedback";
 
 interface GradingViewProps {
     course: Course;
@@ -11,9 +12,12 @@ interface GradingViewProps {
     assignments: Assignment[];
     students: IStudentLabsForCourse[];
     curUser: User;
+    releaseView: boolean;
     addReview: (review: Review) => Promise<Review | null>;
     updateReview: (review: Review) => Promise<boolean>;
-
+    setGrade: (submissionID: number, status: Submission.Status) => Promise<boolean>;
+    release: (submissionID: number, ready: boolean) => Promise<boolean>;
+    getReviewers: (submissionID: number) => Promise<string[]>;
 }
 
 interface GradingViewState {
@@ -56,25 +60,53 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     </div>
             </div>
 
-            <div className="row"><div className="col-md-12">
-                    <ul className="list-group">
-                        {this.state.selectedStudents.map((s, i) =>
-                            <li key={i} className="list-group-item li-review"><ReviewPage
-                                key={"r" + i}
-                                assignment={this.state.selectedAssignment}
-                                submission={this.state.submissionsForAssignment.get(s)?.submission}
-                                authorName={s.getName() ?? "Name not found"}
-                                authorLogin={s.getLogin() ?? "Login not found"}
-                                courseURL={this.props.courseURL}
-                                reviewerID={this.props.curUser.getId()}
-                                addReview={this.props.addReview}
-                                updateReview={this.props.updateReview}
-                                studentNumber={this.state.selectedStudents.indexOf(s) + 1}
-                             /></li>
-                        )}
-                    </ul>
-            </div></div>
+            <div className="row">
+                {this.props.releaseView ? this.renderReleaseList() : this.renderReviewList()}
+            </div>
 
+        </div>
+    }
+
+    private renderReleaseList(): JSX.Element {
+        return <div className="col-md-12">
+            <ul className="list-group">
+                {
+                    this.state.selectedStudents.map((s, i) =>
+                        <li key={i} className="list-group-item li-review"><Feedback
+                            key={"f" + i}
+                            assignment={this.state.selectedAssignment}
+                            submission={this.state.submissionsForAssignment.get(s)?.submission}
+                            authorName={s.getName()}
+                            authorLogin={s.getLogin()}
+                            courseURL={this.props.courseURL}
+                            setGrade={this.props.setGrade}
+                            release={this.props.release}
+                            getReviewers={this.props.getReviewers}
+                        /></li>
+                    )
+                }
+            </ul>
+        </div>
+    }
+
+    private renderReviewList(): JSX.Element {
+        return <div className="col-md-12">
+        <ul className="list-group">
+            {this.state.selectedStudents.map((s, i) =>
+                <li key={i} className="list-group-item li-review"><ReviewPage
+                    key={"r" + i}
+                    assignment={this.state.selectedAssignment}
+                    submission={this.state.submissionsForAssignment.get(s)?.submission}
+                    authorName={s.getName() ?? "Name not found"}
+                    authorLogin={s.getLogin() ?? "Login not found"}
+                    courseURL={this.props.courseURL}
+                    reviewerID={this.props.curUser.getId()}
+                    addReview={this.props.addReview}
+                    updateReview={this.props.updateReview}
+                    studentNumber={this.state.selectedStudents.indexOf(s) + 1}
+                     /></li>
+                )}
+            </ul>
         </div>
     }
 
