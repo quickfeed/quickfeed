@@ -177,7 +177,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private async updateReview(bms?: GradingBenchmark[]) {
         const r: Review = this.state.review ?? this.makeNewReview();
         r.setReady(this.state.ready);
-        r.setReviewsList(bms ?? this.state.benchmarks);
+        r.setBenchmarksList(bms ?? this.state.benchmarks);
         r.setScore(this.setScore());
         r.setFeedback(this.state.feedback);
         if (r.getId() > 0) {
@@ -185,8 +185,12 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         } else {
             const rw = await this.props.addReview(r);
             if (rw) {
+                const newRw = this.selectReview(this.props.submission);
+                console.log("Review updated. Review in props: " + newRw?.toString());
+                console.log("Review in response: " + rw.toString());
                 this.setState({
-                    review: rw,
+                    review: newRw ?? rw,
+                    benchmarks: newRw?.getBenchmarksList() ?? rw.getBenchmarksList(),
                 });
             }
         }
@@ -222,7 +226,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     private gradedTotal(rw?: Review): number {
         let counter = 0;
-        const bms = rw?.getReviewsList() ?? this.state.benchmarks;
+        const bms = rw?.getBenchmarksList() ?? this.state.benchmarks;
         bms.forEach((r) => {
             r.getCriteriaList().forEach((c) => {
                 if (c.getGrade() !== GradingCriterion.Grade.NONE) {
@@ -312,7 +316,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     // check and update review in case the assignment benchmarks have been changed
     // after the review had been submitted
     private refreshBenchmarks(r: Review): GradingBenchmark[] {
-        const oldList = r.getReviewsList();
+        const oldList = r.getBenchmarksList();
         // update benchmarks
         oldList.forEach(bm => {
             const assignmentBM = this.props.assignment.getGradingbenchmarksList().find(item => item.getId() === bm.getId());

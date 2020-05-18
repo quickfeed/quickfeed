@@ -371,6 +371,7 @@ body {
 }
 
 .r-info {
+    width: 10%;
     display: block;
     float: right;
     margin-right: 5%;
@@ -390,6 +391,22 @@ body {
     margin-left: 3%;
     margin-top: 0;
     margin-bottom: 1%;
+}
+
+.r-score {
+    width: 10%;
+    font-size: 0.7em;
+    color: dimgray;
+    display: block;
+    float: right;
+    margin-right: 5%;
+}
+
+.release-btn {
+    width: 5%;
+    display: block;
+    float: right;
+    margin-right: 10%;
 }
 
 .li-review {

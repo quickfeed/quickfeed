@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from "../../../proto/ag_pb";
-import { totalScore } from "../../componentHelper";
+import { totalScore } from '../../componentHelper';
 import { DynamicTable } from "../data/DynamicTable";
 import { ISubmission } from "../../models";
 
@@ -43,7 +43,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const noReadyReviewsDiv = <div className="alert alert-info">No ready reviews for {this.props.assignment.getName()}</div>
 
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
-        <h3><span className="r-header">{this.props.studentNumber}. {this.props.authorName}<span className="r-score">Score: {this.state.score}</span> </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
+        <h3><span className="r-header">{this.props.studentNumber}. {this.props.authorName}</span><span className="r-score">Score: {this.props.submission?.score ?? 0} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
 
 
@@ -74,7 +74,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private releaseButton(): JSX.Element {
-        return <span
+        return <div
             className={this.releaseButtonClass()}
             onClick={() => {
                 if (this.props.submission && this.props.assignment.getReviewers() > 0 &&
@@ -82,15 +82,15 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     this.props.release(!this.props.submission.released);
                 }
             }}
-            >{this.releaseButtonString()}</span>
+            >{this.releaseButtonString()}</div>
         }
 
     private releaseButtonClass(): string {
         if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
          this.state.reviews.length < this.props.assignment.getReviewers()) {
-             return "btn btn-disabled";
+             return "btn btn-basic disabled release-btn";
          }
-        return "btn btn-default";
+        return "btn btn-default release-btn";
     }
 
     private releaseButtonString(): string {
@@ -129,7 +129,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
     private reviewSelector(c: GradingCriterion): (string | JSX.Element)[] {
         const tableRow: (string | JSX.Element)[] = [c.getDescription()];
-        return tableRow.concat(this.state.reviews.map(rv => this.cellElement(this.chooseCriterion(c.getId(), rv.getReviewsList()) ?? c)));
+        return tableRow.concat(this.state.reviews.map(rv => this.cellElement(this.chooseCriterion(c.getId(), rv.getBenchmarksList()) ?? c)));
     }
 
     private makeHeader(bm: GradingBenchmark): (string | JSX.Element)[] {
@@ -193,11 +193,16 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private async toggleOpen() {
-        this.setState({
-            open: !this.state.open,
-            reviewers: this.props.submission ? await this.props.getReviewers(this.props.submission.id) : this.state.reviewers,
-            reviews: this.selectReadyReviews(),
-            score: totalScore(this.selectReadyReviews())
-        });
+        const ready = this.selectReadyReviews();
+        if (ready.length > 0) {
+            this.setState({
+                open: !this.state.open,
+                reviewers: this.props.submission ? await this.props.getReviewers(this.props.submission.id) : [],
+                reviews: ready,
+                score: totalScore(ready),
+            });
+        } else {
+            this.setState({open: !this.state.open});
+        }
     }
 }

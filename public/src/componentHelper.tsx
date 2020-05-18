@@ -227,7 +227,7 @@ export function totalScore(reviews: Review[]): number {
             sum += rv.getScore();
         }
     });
-    return sum / this.props.submission.reviews.length;
+    return sum / reviews.length;
 }
 
 export function submissionStatusToString(status?: Submission.Status): string {
