@@ -51,28 +51,12 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 scoreLimit={this.props.studentSubmission.assignment.getScorelimit()}
                                 weight={100}
                             />
-                            {this.renderBuildLogOrInfo(buildLog, latest)}
+                            <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{buildLog}</code></div></div></Row>;
                         </section>
                     </div>
                 </div>
             );
         }
         return <h1>No submissions yet</h1>;
-    }
-
-    private renderBuildLogOrInfo(log: JSX.Element[], latest: ISubmission): JSX.Element {
-        const buildLog = <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{log}</code></div></div></Row>;
-        const feedback = <div key="logview"><Feedback
-        reviewers={this.props.reviewers}
-        submission={latest}
-        assignment={this.props.studentSubmission.assignment}
-        student={this.props.student}
-        courseURL={this.props.courseURL}
-        teacherPageView={this.props.teacherPageView}
-        courseCreatorView={this.props.courseCreatorView}
-        setApproved={this.props.setApproved}
-        setReady={this.props.setReady}
-    /></div>
-        return (this.props.studentSubmission.assignment.getReviewers() > 1) ? feedback : buildLog;
     }
 }
