@@ -12,7 +12,7 @@ interface ReviewPageProps {
     authorLogin: string;
     courseURL: string;
     reviewerID: number;
-    addReview: (review: Review) => Promise<Review | null>;
+    addReview: (review: Review) => Promise<boolean>;
     updateReview: (review: Review) => Promise<boolean>;
 }
 
@@ -133,10 +133,10 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         return <div className="row">
             <div className="col-md-10">
                 <ul className="list-group">
-                    <li key="li1" className="list-group-item li-review">Score: {this.showScore()}</li>
-                    <li key="li2" className="list-group-item li-review">Submission status: {submissionStatusToString(this.props.submission?.status)}</li>
-                    <li key="li3" className="list-group-item li-review">Review status: {this.state.ready ? "Ready" : "In progress"}</li>
-                    <li key="li4" className="list-group-item li-review">Graded: {this.gradedTotal()}/{this.criteriaTotal()}</li>
+                    <li key="li1" className="list-group-item r-li"><span className="r-table">Score: </span>{this.showScore()}</li>
+                    <li key="li2" className="list-group-item r-li"><span className="r-table">Submission status: </span>{submissionStatusToString(this.props.submission?.status)}</li>
+                    <li key="li3" className="list-group-item r-li"><span className="r-table">Review status: </span>{this.state.ready ? "Ready" : "In progress"}</li>
+                    <li key="li4" className="list-group-item r-li"><span className="r-table">Graded: </span>{this.gradedTotal()}/{this.criteriaTotal()}</li>
                 </ul>
             </div>
             <div className="col-md-2">
@@ -183,14 +183,13 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         if (r.getId() > 0) {
             this.props.updateReview(r);
         } else {
-            const rw = await this.props.addReview(r);
-            if (rw) {
+            const ans = await this.props.addReview(r);
+            if (ans) {
                 const newRw = this.selectReview(this.props.submission);
                 console.log("Review updated. Review in props: " + newRw?.toString());
-                console.log("Review in response: " + rw.toString());
                 this.setState({
-                    review: newRw ?? rw,
-                    benchmarks: newRw?.getBenchmarksList() ?? rw.getBenchmarksList(),
+                    review: newRw,
+                    benchmarks: newRw?.getBenchmarksList() ?? this.state.benchmarks,
                 });
             }
         }

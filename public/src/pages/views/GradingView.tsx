@@ -122,8 +122,24 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     authorLogin={s.getLogin() ?? "Login not found"}
                     courseURL={this.props.courseURL}
                     reviewerID={this.props.curUser.getId()}
-                    addReview={this.props.addReview}
-                    updateReview={this.props.updateReview}
+                    addReview={async (review: Review) => {
+                        const current = this.state.submissionsForAssignment.get(s);
+                        if (current?.submission) {
+                            const ans = await this.props.addReview(review);
+                            if (ans) {
+                                current.submission.reviews.push(ans);
+                                return true;
+                            }
+                        }
+                        return false;
+                    }}
+                    updateReview={async (review: Review) => {
+                        const current = this.state.submissionsForAssignment.get(s);
+                        if (current?.submission) {
+                            return this.props.updateReview(review);
+                        }
+                        return false;
+                    }}
                     studentNumber={this.state.selectedStudents.indexOf(s) + 1}
                      /></li>
                 )}

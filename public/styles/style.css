@@ -402,16 +402,25 @@ body {
     margin-right: 5%;
 }
 
+.r-table {
+    width: 10%;
+}
+
 .release-btn {
-    width: 5%;
+    width: 10%;
     display: block;
     float: right;
     margin-right: 10%;
 }
 
-.li-review {
+.r-li {
     border-right: none;
     border-left: none;
+}
+
+.r-table {
+    width: 15%;
+    margin-right: 2%;
 }
 
 .s-info {

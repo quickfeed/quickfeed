@@ -1,8 +1,9 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from "../../../proto/ag_pb";
-import { totalScore } from '../../componentHelper';
+import { totalScore, userSubmissionLink } from '../../componentHelper';
 import { DynamicTable } from "../data/DynamicTable";
 import { ISubmission } from "../../models";
+import { formatDate } from '../../helper';
 
 interface ReleaseProps {
     submission: ISubmission | undefined;
@@ -70,7 +71,30 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
         return <div className="release">
             {headerDiv}
+            {open ? this.infoTable() : null}
         ></div>
+    }
+
+    private infoTable(): JSX.Element {
+        return <div className="row">
+            <div className="col-md-6">
+                <ul className="list-group">
+                    <li key="li0" className="list-group-item r-li"><span className="r-table">Deadline: </span>{formatDate(this.props.assignment.getDeadline())}</li>
+                    <li key="li1" className="list-group-item r-li"><span className="r-table">Delivered: </span>{this.props.submission ? formatDate(this.props.submission?.buildDate) : "Not delivered"}</li>
+                    <li key="li3" className="list-group-item r-li"><span className="r-table">Repository: </span>{userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
+                    <li key="li4" className="list-group-item r-li"><span className="r-table">Status: </span>{this.renderStatusButton()}</li>
+                </ul>
+            </div>
+            <div className="col-md-6">
+                <table className="table">
+                    <thead><tr>
+                            <td>Reviewer</td>
+                            <td>Score</td>
+                        </tr></thead>
+                </table>
+            </div>
+
+        </div>
     }
 
     private releaseButton(): JSX.Element {
