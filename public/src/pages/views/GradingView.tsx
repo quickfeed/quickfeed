@@ -16,7 +16,7 @@ interface GradingViewProps {
     addReview: (review: Review) => Promise<Review | null>;
     updateReview: (review: Review) => Promise<boolean>;
     onUpdate: (submission: ISubmission) => Promise<boolean>;
-    getReviewers: (submissionID: number) => Promise<string[]>;
+    getReviewers: (submissionID: number) => Promise<User[]>;
 }
 
 interface GradingViewState {

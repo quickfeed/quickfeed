@@ -51,7 +51,7 @@ export interface ICourseProvider {
     deleteCriterion(c: GradingCriterion): Promise<boolean>;
     addReview(r: Review, courseID: number): Promise<Review | null>;
     editReview(r: Review, courseID: number): Promise<boolean>;
-    getReviewers(submissionID: number, courseID: number): Promise<string[]>
+    getReviewers(submissionID: number, courseID: number): Promise<User[]>
 }
 
 export class CourseManager {
@@ -318,7 +318,7 @@ export class CourseManager {
         return this.courseProvider.editReview(r, courseID);
     }
 
-    public async getReviewers(submissionID: number, courseID: number): Promise<string[]> {
+    public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
         return this.courseProvider.getReviewers(submissionID, courseID);
     }
 

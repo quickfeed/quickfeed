@@ -842,10 +842,10 @@ export namespace Review {
 }
 
 export class Reviewers extends jspb.Message {
-  getReviewersList(): Array<string>;
-  setReviewersList(value: Array<string>): void;
+  getReviewersList(): Array<User>;
+  setReviewersList(value: Array<User>): void;
   clearReviewersList(): void;
-  addReviewers(value: string, index?: number): void;
+  addReviewers(value?: User, index?: number): User;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Reviewers.AsObject;
@@ -857,7 +857,7 @@ export class Reviewers extends jspb.Message {
 
 export namespace Reviewers {
   export type AsObject = {
-    reviewersList: Array<string>,
+    reviewersList: Array<User.AsObject>,
   }
 }
 

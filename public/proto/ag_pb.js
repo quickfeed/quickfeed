@@ -7310,7 +7310,8 @@ proto.Reviewers.prototype.toObject = function(opt_includeInstance) {
  */
 proto.Reviewers.toObject = function(includeInstance, msg) {
   var f, obj = {
-    reviewersList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
+    reviewersList: jspb.Message.toObjectList(msg.getReviewersList(),
+    proto.User.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -7348,7 +7349,8 @@ proto.Reviewers.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
+      var value = new proto.User;
+      reader.readMessage(value,proto.User.deserializeBinaryFromReader);
       msg.addReviewers(value);
       break;
     default:
@@ -7382,39 +7384,41 @@ proto.Reviewers.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getReviewersList();
   if (f.length > 0) {
-    writer.writeRepeatedString(
+    writer.writeRepeatedMessage(
       1,
-      f
+      f,
+      proto.User.serializeBinaryToWriter
     );
   }
 };
 
 
 /**
- * repeated string reviewers = 1;
- * @return {!Array<string>}
+ * repeated User reviewers = 1;
+ * @return {!Array<!proto.User>}
  */
 proto.Reviewers.prototype.getReviewersList = function() {
-  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 1));
+  return /** @type{!Array<!proto.User>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.User, 1));
 };
 
 
 /**
- * @param {!Array<string>} value
+ * @param {!Array<!proto.User>} value
  * @return {!proto.Reviewers} returns this
- */
+*/
 proto.Reviewers.prototype.setReviewersList = function(value) {
-  return jspb.Message.setField(this, 1, value || []);
+  return jspb.Message.setRepeatedWrapperField(this, 1, value);
 };
 
 
 /**
- * @param {string} value
+ * @param {!proto.User=} opt_value
  * @param {number=} opt_index
- * @return {!proto.Reviewers} returns this
+ * @return {!proto.User}
  */
-proto.Reviewers.prototype.addReviewers = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 1, value, opt_index);
+proto.Reviewers.prototype.addReviewers = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.User, opt_index);
 };
 
 

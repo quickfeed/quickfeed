@@ -399,7 +399,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
-    public async getReviewers(submissionID: number, courseID: number): Promise<string[]> {
+    public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
         const result = await this.grpcHelper.getReviewers(submissionID, courseID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];

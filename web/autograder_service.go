@@ -707,10 +707,7 @@ func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionR
 		s.logger.Errorf("GetReviewers failed: error fetching from database: %s", err.Error)
 		return nil, status.Errorf(codes.InvalidArgument, "failed to get reviewers")
 	}
-	// TODO: remove the testing part
-	s.logger.Info("Got reviewers for submission ", in.SubmissionID, ": ", reviewers)
-	testReviewers := []string{"Test Testersen", "Noname Fullname"}
-	return &pb.Reviewers{Reviewers: testReviewers}, err
+	return &pb.Reviewers{Reviewers: reviewers}, err
 }
 
 // GetAssignments returns a list of all assignments for the given course.

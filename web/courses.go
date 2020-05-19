@@ -228,17 +228,17 @@ func (s *AutograderService) updateSubmission(submissionID uint64, approve bool) 
 	return s.db.UpdateSubmission(submission)
 }
 
-func (s *AutograderService) getReviewers(submissionID uint64) ([]string, error) {
+func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
 		return nil, err
 	}
-	names := make([]string, 0)
+	names := make([]*pb.User, 0)
 	// TODO: make sure to preload reviews here
 	for _, review := range submission.Reviews {
 		// ignore possible error, will just add an empty string
 		u, _ := s.db.GetUser(review.ReviewerID)
-		names = append(names, u.GetName())
+		names = append(names, u)
 	}
 	return names, nil
 }

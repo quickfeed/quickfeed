@@ -238,7 +238,7 @@ message Review {
 }
 
 message Reviewers {
-    repeated string reviewers = 1;
+    repeated User reviewers = 1;
 }
 
 ////    REQUESTS AND RESPONSES      \\\\

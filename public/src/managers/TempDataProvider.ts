@@ -214,7 +214,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
-    public async getReviewers(submissionID: number, courseID: number): Promise<string[]> {
+    public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
         return [];
     }
 

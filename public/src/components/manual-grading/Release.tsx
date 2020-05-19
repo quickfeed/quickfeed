@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission } from "../../../proto/ag_pb";
+import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from "../../../proto/ag_pb";
 import { totalScore, userSubmissionLink } from '../../componentHelper';
 import { DynamicTable } from "../data/DynamicTable";
 import { ISubmission } from "../../models";
@@ -14,13 +14,13 @@ interface ReleaseProps {
     courseURL: string;
     setGrade: (status: Submission.Status) => void;
     release: (ready: boolean) => void;
-    getReviewers: (submissionID: number) => Promise<string[]>;
+    getReviewers: (submissionID: number) => Promise<User[]>;
 }
 
 interface ReleaseState {
     open: boolean;
     reviews: Review[];
-    reviewers: string[];
+    reviewers: Map<User, Review>;
     score: number;
 }
 export class Release extends React.Component<ReleaseProps, ReleaseState>{
@@ -30,7 +30,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         this.state = {
             reviews: [],
             score: 0,
-            reviewers: [],
+            reviewers: new Map<User, Review>(),
             open: false,
         }
     }
@@ -99,9 +99,9 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                             <td>Score:</td>
                         </tr></thead>
                         <tbody>
-                        {this.state.reviews.map((r, i) => <tr key={"it" + i}>
-                            <td>{this.state.reviewers[i]}</td>
-                            <td>{r.getScore()}</td>
+                        {Array.from(this.state.reviewers.keys()).map((r, i) => <tr key={"it" + i}>
+                            <td>{r.getName()}</td>
+                            <td>{this.state.reviewers.get(r)?.getScore() ?? 0}</td>
                         </tr>)}</tbody>
                 </table>
             </div>
@@ -220,7 +220,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         }
     }
 
-
     private chooseCriterion(ID: number, bms: GradingBenchmark[]): GradingCriterion | null {
         bms.forEach(bm => {
             const foundC = bm.getCriteriaList().find(c => c.getId() === ID);
@@ -231,12 +230,29 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return null;
     }
 
+    private async mapReviewers(): Promise<Map<User, Review>> {
+        const reviews = this.selectReadyReviews();
+        const updatedMap = new Map<User, Review>();
+        if (this.props.submission && reviews.length > 0) {
+            const reviewers = await this.props.getReviewers(this.props.submission.id);
+            reviewers.forEach(r => {
+                const selectedReview = this.selectReviewByReviewer(r, reviews);
+                if (selectedReview) updatedMap.set(r, selectedReview);
+            });
+        }
+        return updatedMap;
+    }
+
+    private selectReviewByReviewer(user: User, reviews: Review[]): Review | undefined {
+        return reviews.find(item => item.getReviewerid() === user.getId());
+    }
+
     private async toggleOpen() {
         const ready = this.selectReadyReviews();
         if (ready.length > 0) {
             this.setState({
                 open: !this.state.open,
-                reviewers: this.props.submission ? await this.props.getReviewers(this.props.submission.id) : [],
+                reviewers: await this.mapReviewers(),
                 reviews: ready,
                 score: totalScore(ready),
             });
