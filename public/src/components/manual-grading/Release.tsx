@@ -147,8 +147,8 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const reviewersList = Array.from(this.state.reviewers.keys());
         return <div className="row">
             <table className="table table-condensed">
-            <thead><tr key="rthead"><th>Reviews:</th>{reviewersList.map((u, i) => <th>
-                {u.getName()}
+            <thead><tr key="rthead"><th>Reviews:</th>{reviewersList.map((u, i) => <th className="release-cell">
+                {i + 1}
             </th>)}</tr></thead>
             <tbody>
                 {this.renderTableRows()}
@@ -196,9 +196,9 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private setCellColor(u: User, c: GradingCriterion): string {
             const cr = this.selectCriterion(u, c);
             if (cr.getGrade() === GradingCriterion.Grade.PASSED) {
-                return "danger";
+                return "success";
             }
-            return cr.getGrade() === GradingCriterion.Grade.FAILED ? "success" : "";
+            return cr.getGrade() === GradingCriterion.Grade.FAILED ? "danger" : "";
     }
 
     private selectBenchmark(u: User, bm: GradingBenchmark): GradingBenchmark {
@@ -252,7 +252,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                 case "revision":
                     status = Submission.Status.REVISION;
                 default:
-                    console.log("Got unexpected submission status: " + action);
+                    status = Submission.Status.NONE;
             }
             this.props.setGrade(status);
         }

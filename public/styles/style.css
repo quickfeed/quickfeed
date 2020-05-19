@@ -408,6 +408,16 @@ body {
     width: 10%;
 }
 
+.r-cell {
+    display: block;
+    float: left;
+    margin-left: 2%;
+}
+
+.release-cell {
+    width: 5%;
+}
+
 .release-btn {
     width: 10%;
     display: block;
@@ -417,6 +427,12 @@ body {
 
 .release-info {
     margin-top: 1%;
+}
+
+.release-comment {
+    display: block;
+    float: right;
+    margin: 0;
 }
 
 .r-li {
