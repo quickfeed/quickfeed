@@ -1,7 +1,6 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from "../../../proto/ag_pb";
+import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from '../../../proto/ag_pb';
 import { totalScore, userSubmissionLink } from '../../componentHelper';
-import { DynamicTable } from "../data/DynamicTable";
 import { ISubmission } from "../../models";
 import { formatDate } from '../../helper';
 
@@ -145,23 +144,88 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private renderReviewTable(): JSX.Element {
-        return <div>
-            {this.props.assignment.getGradingbenchmarksList().map((bm, i) => <DynamicTable
-                header={this.makeHeader(bm)}
-                data={bm.getCriteriaList()}
-                selector={(c: GradingCriterion) => this.reviewSelector(c)}
-            />)}
+        const reviewersList = Array.from(this.state.reviewers.keys());
+        return <div className="row">
+            <table className="table table-condensed">
+            <thead><tr key="rthead"><th>Reviews:</th>{reviewersList.map((u, i) => <th>
+                {u.getName()}
+            </th>)}</tr></thead>
+            <tbody>
+                {this.renderTableRows()}
+            </tbody>
+            </table>
         </div>
     }
 
-    private reviewSelector(c: GradingCriterion): (string | JSX.Element)[] {
-        const tableRow: (string | JSX.Element)[] = [c.getDescription()];
-        return tableRow.concat(this.state.reviews.map(rv => this.cellElement(this.chooseCriterion(c.getId(), rv.getBenchmarksList()) ?? c)));
+    private renderTableRows(): JSX.Element[] {
+        const rows: JSX.Element[] = [];
+        const reviewersList = Array.from(this.state.reviewers.keys());
+        this.props.assignment.getGradingbenchmarksList().forEach((bm, i) => {
+            rows.push(<tr key={"rt" + i}><td>{bm.getHeading()}</td>{reviewersList.map(u =>
+                <td>{this.commentSpan(this.selectBenchmark(u, bm).getComment())}</td>)}</tr>);
+            bm.getCriteriaList().forEach((c, j) => {
+                rows.push(<tr key={"rrt" + j}><td>{c.getDescription()}</td>
+                {reviewersList.map(u => <td className={this.setCellColor(u, c)}>
+                    <span className={this.setCellIcon(u, c)}></span>
+                    {this.commentSpan(this.selectCriterion(u, c).getComment())}
+                </td>)}
+                </tr>);
+            });
+        });
+        rows.push(<tr key="rtf"><td>Feedbacks:</td>
+            {reviewersList.map(u => <td>{this.commentSpan(this.state.reviewers.get(u)?.getFeedback() ?? "No feedback")}</td>)}
+        </tr>);
+        rows.push(<tr key="tscore"><td>Score: {this.props.submission?.score ?? 0}</td>
+            {reviewersList.map(u => <td>{this.state.reviewers.get(u)?.getScore() ?? 0}</td>)}
+        </tr>);
+        return rows;
     }
 
-    private makeHeader(bm: GradingBenchmark): (string | JSX.Element)[] {
-        const headers: (string | JSX.Element)[] = [bm.getHeading()];
-        return headers.concat(this.state.reviews.map(() => <span className="glyphicon glyphicon-comment" onClick={() => this.showBenchmarkComment(bm)}></span>));
+    private setCellIcon(u: User, c: GradingCriterion): string {
+        const cr = this.selectCriterion(u, c);
+        switch (cr.getGrade()) {
+            case GradingCriterion.Grade.PASSED:
+                return "r-cell glyphicon glyphicon-ok";
+            case GradingCriterion.Grade.FAILED:
+                return "r-cell glyphicon glyphicon-remove";
+            default:
+                return "r-cell glyphicon glyphicon-ban-circle"
+        }
+    }
+
+    private setCellColor(u: User, c: GradingCriterion): string {
+            const cr = this.selectCriterion(u, c);
+            if (cr.getGrade() === GradingCriterion.Grade.PASSED) {
+                return "danger";
+            }
+            return cr.getGrade() === GradingCriterion.Grade.FAILED ? "success" : "";
+    }
+
+    private selectBenchmark(u: User, bm: GradingBenchmark): GradingBenchmark {
+        const r = this.state.reviewers.get(u);
+        if (r) {
+            const rbm = r.getBenchmarksList().find(item => item.getId() === bm.getId())
+            if (rbm) bm = rbm;
+        }
+        return bm;
+    }
+
+    private selectCriterion(u: User, c: GradingCriterion): GradingCriterion {
+        const r = this.state.reviewers.get(u);
+        if (r) {
+            r.getBenchmarksList().forEach(bm => {
+                const rc = bm.getCriteriaList().find(item => item.getId() === c.getId());
+                if (rc) c = rc;
+            });
+        }
+        return c;
+    }
+
+    private commentSpan(text: string): JSX.Element {
+        return <span className="release-comment glyphicon glyphicon-comment"
+        data-toggle={"tooltip"}
+        data-html={"true"}
+        title={text} ></span>
     }
 
     private renderStatusButton(): JSX.Element {
@@ -192,42 +256,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             }
             this.props.setGrade(status);
         }
-    }
-
-    private showBenchmarkComment(bm: GradingBenchmark) {
-        console.log("Benchmark comment is: " + bm.getComment());
-    }
-
-    private showCriterionComment(c: GradingCriterion) {
-        console.log("Criterion comment: " + c.getComment());
-    }
-
-    private cellElement(c: GradingCriterion): JSX.Element {
-        const commentSpan = c.getComment() !== "" ? <span className="glyphicon glyphicon-comment" onClick={() => this.showCriterionComment(c)}/> : "";
-        switch (c.getGrade()) {
-            case GradingCriterion.Grade.PASSED:
-                return <div className="f-cell-pass">
-                    <span className="glyphicon glyphicon-plus-sign">{commentSpan}</span>
-                </div>;
-            case GradingCriterion.Grade.FAILED:
-                return <div className="f-cell-fail">
-                    <span className="glyphicon glyphicon-minus-sign">{commentSpan}</span>
-                </div>;
-            default:
-                return <div>
-                    <span className="glyphicon glyphicon-question-sign">{commentSpan}</span>
-                </div>;
-        }
-    }
-
-    private chooseCriterion(ID: number, bms: GradingBenchmark[]): GradingCriterion | null {
-        bms.forEach(bm => {
-            const foundC = bm.getCriteriaList().find(c => c.getId() === ID);
-            if (foundC) {
-                return foundC;
-            }
-        });
-        return null;
     }
 
     private async mapReviewers(): Promise<Map<User, Review>> {
