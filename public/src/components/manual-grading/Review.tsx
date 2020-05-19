@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review } from "../../../proto/ag_pb";
 import { ISubmission } from "../../models";
-import { GradeBenchmark } from "./GradeBenchmark";
-import { userSubmissionLink, submissionStatusToString } from "../../componentHelper";
+import { GradeBenchmark } from './GradeBenchmark';
+import { deepCopy, userSubmissionLink, submissionStatusToString } from "../../componentHelper";
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -311,7 +311,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             console.log("Assignment bms in props: " + this.props.assignment.getGradingbenchmarksList().toString());
             this.setState({
                 review: undefined,
-                benchmarks: this.props.assignment.getGradingbenchmarksList(),
+                benchmarks: deepCopy(this.props.assignment.getGradingbenchmarksList()),
                 open: !this.state.open,
                 graded: this.gradedTotal(),
                 score: 0,

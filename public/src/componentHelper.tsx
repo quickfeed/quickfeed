@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Course, Enrollment, Group, User, Assignment, Submission, Review } from '../proto/ag_pb';
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from './models';
+import { Course, Enrollment, Group, Review, User, Submission, Assignment, GradingBenchmark, GradingCriterion } from '../proto/ag_pb';
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
     let sorted: Enrollment[] = [];
@@ -241,4 +241,29 @@ export function submissionStatusToString(status?: Submission.Status): string {
         default:
             return "None";
     }
+}
+
+export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
+    const newList: GradingBenchmark[] = [];
+    bms.forEach((bm, i) => {
+        const newBm = new GradingBenchmark();
+        newBm.setAssignmentid(bm.getAssignmentid());
+        newBm.setComment(bm.getComment());
+        newBm.setHeading(bm.getHeading());
+        newBm.setId(bm.getId());
+        const newCriteria: GradingCriterion[] = [];
+        bm.getCriteriaList().forEach((c, j) => {
+            const newCriterion = new GradingCriterion();
+            newCriterion.setId(c.getId());
+            newCriterion.setBenchmarkid(c.getBenchmarkid());
+            newCriterion.setComment(c.getComment());
+            newCriterion.setDescription(c.getDescription());
+            newCriterion.setGrade(c.getGrade());
+            newCriteria[j] = newCriterion;
+        });
+        bm.setCriteriaList(newCriteria);
+        newList[i] = newBm;
+    });
+    return newList;
+
 }
