@@ -413,14 +413,20 @@ body {
     margin-right: 10%;
 }
 
+.release-info {
+    margin-top: 10%;
+}
+
 .r-li {
     border-right: none;
     border-left: none;
 }
 
 .r-table {
-    width: 15%;
-    margin-right: 2%;
+    width: 20%;
+    margin-right: 5%;
+    display: block;
+    float: left;
 }
 
 .s-info {

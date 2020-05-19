@@ -72,28 +72,39 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return <div className="release">
             {headerDiv}
             {open ? this.infoTable() : null}
+            {open ? this.renderReviewTable() : null}
         ></div>
     }
 
     private infoTable(): JSX.Element {
         return <div className="row">
-            <div className="col-md-6">
+            <div className="col-md-6 release-info">
                 <ul className="list-group">
-                    <li key="li0" className="list-group-item r-li"><span className="r-table">Deadline: </span>{formatDate(this.props.assignment.getDeadline())}</li>
-                    <li key="li1" className="list-group-item r-li"><span className="r-table">Delivered: </span>{this.props.submission ? formatDate(this.props.submission?.buildDate) : "Not delivered"}</li>
-                    <li key="li3" className="list-group-item r-li"><span className="r-table">Repository: </span>{userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
+                    <li key="li0" className="list-group-item r-li">
+                        <span className="r-table">Deadline: </span>
+                            {formatDate(this.props.assignment.getDeadline())}</li>
+                    <li key="li1" className="list-group-item r-li">
+                        <span className="r-table">Delivered: </span>
+                            {this.props.submission ? formatDate(this.props.submission?.buildDate) : "Not delivered"}</li>
+                    <li key="li3" className="list-group-item r-li">
+                        <span className="r-table">Repository: </span>
+                        {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
                     <li key="li4" className="list-group-item r-li"><span className="r-table">Status: </span>{this.renderStatusButton()}</li>
                 </ul>
             </div>
             <div className="col-md-6">
                 <table className="table">
-                    <thead><tr>
-                            <td>Reviewer</td>
-                            <td>Score</td>
+                    <thead><tr key="it">
+                            <td>Reviewer:</td>
+                            <td>Score:</td>
                         </tr></thead>
+                        <tbody>
+                        {this.state.reviews.map((r, i) => <tr key={"it" + i}>
+                            <td>{this.state.reviewers[i]}</td>
+                            <td>{r.getScore()}</td>
+                        </tr>)}</tbody>
                 </table>
             </div>
-
         </div>
     }
 
@@ -133,13 +144,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return selected;
     }
 
-    private renderReviewers(): JSX.Element {
-        return <ul className="r-list">
-            {this.state.reviewers.map((r, i) => <li key={"rl" + i}>
-                {r}
-            </li>)}
-        </ul>;
-    }
 
     private renderReviewTable(): JSX.Element {
         return <div>
@@ -163,7 +167,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
     private renderStatusButton(): JSX.Element {
         return <div className="input-group">
-            <label className="input-group-addon" htmlFor="submissionStatus">Set status:</label>
             <select className="form-control" id="submissionStatus">
                 <option onSelect={() => this.updateStatus(Submission.Status.NONE)}>None</option>
                 <option onSelect={() => this.updateStatus(Submission.Status.APPROVED)}>Approved</option>
