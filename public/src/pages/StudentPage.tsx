@@ -137,21 +137,12 @@ export class StudentPage extends ViewPage {
                     slipdays={this.selectedUserCourse.enrollment.getSlipdaysremaining()}
                     student={curUser}
                     courseURL={""}
-                    teacherPageView={false}
-                    courseCreatorView={false}
-                    reviewers={[]}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
                     onApproveClick={() => {
-                        return;
-                    }}
-                    setApproved={() => {
-                        return;
-                    }}
-                    setReady={() => {
                         return;
                     }}
                     >
@@ -179,7 +170,6 @@ export class StudentPage extends ViewPage {
                     courseCreatorView={false}
                     courseURL={""}
                     student={curUser}
-                    reviewers={[]}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
@@ -188,13 +178,7 @@ export class StudentPage extends ViewPage {
                     onApproveClick={() => {
                         return;
                     }}
-                    setApproved={() => {
-                        return;
-                    }}
-                    setReady={() => {
-                        return;
-                    }}
-                    >
+                  >
                 </StudentLab>;
             }
         }

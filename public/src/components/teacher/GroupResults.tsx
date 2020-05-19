@@ -11,18 +11,13 @@ interface IResultsProps {
     courseURL: string;
     groups: IStudentLabsForCourse[];
     labs: Assignment[];
-    courseCreatorView: boolean;
-    getReviewers: (submissionID: number) => Promise<string[]>;
     onApproveClick: (submission: ISubmission) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
-    setApproved: (submission: ISubmission) => Promise<boolean>;
-    setReady: (submission: ISubmission) => Promise<boolean>;
 }
 
 interface IResultsState {
     submissionLink?: IStudentLab;
     groups: IStudentLabsForCourse[];
-    submissionReviewers: string[];
 }
 
 export class GroupResults extends React.Component<IResultsProps, IResultsState> {
@@ -37,13 +32,11 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 // Only using the first group to fetch assignments.
                 submissionLink: currentGroup.labs[0],
                 groups: sortByScore(this.props.groups, this.props.labs, true),
-                submissionReviewers: [],
             };
         } else {
             this.state = {
                 submissionLink: undefined,
                 groups: sortByScore(this.props.groups, this.props.labs, true),
-                submissionReviewers: [],
             };
         }
     }
@@ -62,21 +55,6 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 slipdays={this.props.course.getSlipdays()}
                 courseCreatorView={this.props.courseCreatorView}
                 showApprove={true}
-                reviewers={this.state.submissionReviewers}
-                setApproved={(submissionID: number, status: Submission.Status) => {
-                    const current = this.state.assignment?.submission;
-                    if (current && current.id === submissionID) {
-                        current.status = status;
-                        return this.props.setApproved(current);
-                    }
-                }}
-                setReady={(submissionID: number, ready: boolean) => {
-                    const current = this.state.assignment?.submission;
-                    if (current && current.id === submissionID) {
-                        current.released = ready;
-                        return this.props.setReady(current);
-                    }
-                }}
                 onRebuildClick={
                     async () => {
                         if (this.state.submissionLink && this.state.submissionLink.submission) {
@@ -156,10 +134,8 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
     }
 
     private async handleOnclick(item: IStudentLab) {
-        const reviewers = await this.props.getReviewers(this.state.assignment?.submission?.id ?? 0);
         this.setState({
             assignment: item,
-            submissionReviewers: reviewers,
         });
     }
 

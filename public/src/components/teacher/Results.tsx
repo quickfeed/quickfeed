@@ -14,14 +14,10 @@ interface IResultsProp {
     courseCreatorView: boolean;
     onApproveClick: (submission: ISubmission) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
-    getReviewers: (submissionID: number) => Promise<string[]>
-    setApproved: (submission: ISubmission) => Promise<boolean>;
-    setReady: (submission: ISubmission) => Promise<boolean>;
 }
 
 interface IResultsState {
     selectedSubmission?: IStudentLab;
-    submissionReviewers: string[];
     selectedStudent?: IStudentLabsForCourse;
     allSubmissions: IStudentLabsForCourse[];
 }
@@ -38,13 +34,11 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 // Only using the first student to fetch assignments.
                 selectedSubmission: currentStudent.labs[0],
                 allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
-                submissionReviewers: [],
             };
         } else {
             this.state = {
                 selectedSubmission: undefined,
                 allSubmissions: sortByScore(this.props.allCourseSubmissions, this.props.assignments, false),
-                submissionReviewers: [],
             };
         }
     }
@@ -62,8 +56,6 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                 studentSubmission={this.state.selectedSubmission}
                 courseURL={this.props.courseURL}
                 student={this.state.selectedStudent.enrollment.getUser() ?? new User()}
-                teacherPageView={true}
-                courseCreatorView={this.props.courseCreatorView}
                 showApprove={true}
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
                 getReviewers={this.props.getReviewers}
@@ -171,11 +163,9 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
     }
 
     private async handleOnclick(item: IStudentLab, student: IStudentLabsForCourse) {
-        const reviewers = await this.props.getReviewers(item.submission?.id ?? 0);
         this.setState({
             selectedSubmission: item,
             selectedStudent: student,
-            submissionReviewers: reviewers,
         });
     }
 

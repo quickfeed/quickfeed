@@ -142,17 +142,7 @@ export class TeacherPage extends ViewPage {
                 }}
                 onApproveClick={async (submission: ISubmission): Promise<boolean> => {
                     return this.approveFunc(submission, course.getId());
-                }}
-                getReviewers={(submissionID: number) => {
-                    return this.courseMan.getReviewers(submissionID, course.getId());
-                }}
-                setApproved={(submission: ISubmission) => {
-                    return this.courseMan.updateSubmission(course.getId(), submission);
-                }}
-                setReady={(submission: ISubmission) => {
-                    return this.courseMan.updateSubmission(course.getId(), submission);
-                }}
-            >
+                }}>
             </Results>;
         });
     }
@@ -168,7 +158,6 @@ export class TeacherPage extends ViewPage {
                 courseURL={await this.getCourseURL(course.getId())}
                 labs={sortAssignmentsByOrder(labs)}
                 groups={labResults}
-                courseCreatorView={course.getCoursecreatorid() === curUser?.getId()}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
@@ -176,15 +165,6 @@ export class TeacherPage extends ViewPage {
                 }}
                 onApproveClick={async (submission: ISubmission): Promise<boolean> => {
                     return this.approveFunc(submission, course.getId());
-                }}
-                getReviewers={(submissionID: number) => {
-                    return this.courseMan.getReviewers(submissionID, course.getId());
-                }}
-                setApproved={(submission: ISubmission) => {
-                    return this.courseMan.updateSubmission(course.getId(), submission);
-                }}
-                setReady={(submission: ISubmission) => {
-                    return this.courseMan.updateSubmission(course.getId(), submission);
                 }}>
             </GroupResults>;
         });

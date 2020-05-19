@@ -5,7 +5,6 @@ import { User, Submission } from "../../../proto/ag_pb";
 
 interface ILabInfoProps {
     studentSubmission: IStudentLab;
-    reviewers: string[];
     student: User;
     courseURL: string;
     showApprove: boolean;
@@ -14,8 +13,6 @@ interface ILabInfoProps {
     courseCreatorView: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
-    setApproved: (submissionID: number, status: Submission.Status) => void;
-    setReady: (submissionID: number, ready: boolean) => void;
 }
 
 export class LabResultView extends React.Component<ILabInfoProps> {

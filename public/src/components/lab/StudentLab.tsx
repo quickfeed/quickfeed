@@ -14,8 +14,6 @@ interface IStudentLabProps {
     reviewers: string[];
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
-    setApproved: (submissionID: number, status: Submission.Status) => void;
-    setReady: (submissionID: number, ready: boolean) => void;
 }
 
 export class StudentLab extends React.Component<IStudentLabProps> {
@@ -25,14 +23,9 @@ export class StudentLab extends React.Component<IStudentLabProps> {
             studentSubmission={this.props.studentSubmission}
             student={this.props.student}
             courseURL={this.props.courseURL}
-            teacherPageView={this.props.teacherPageView}
-            courseCreatorView={this.props.courseCreatorView}
             onApproveClick={this.props.onApproveClick}
             onRebuildClick={this.props.onRebuildClick}
             showApprove={this.props.showApprove}
-            setApproved={this.props.setApproved}
-            setReady={this.props.setReady}
-            reviewers={this.props.reviewers}
             >
         </LabResultView>;
     }
