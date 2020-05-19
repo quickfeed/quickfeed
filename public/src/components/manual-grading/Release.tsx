@@ -144,7 +144,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return selected;
     }
 
-
     private renderReviewTable(): JSX.Element {
         return <div>
             {this.props.assignment.getGradingbenchmarksList().map((bm, i) => <DynamicTable
@@ -166,18 +165,31 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private renderStatusButton(): JSX.Element {
-        return <div className="input-group">
-            <select className="form-control" id="submissionStatus">
-                <option onSelect={() => this.updateStatus(Submission.Status.NONE)}>None</option>
-                <option onSelect={() => this.updateStatus(Submission.Status.APPROVED)}>Approved</option>
-                <option onSelect={() => this.updateStatus(Submission.Status.REJECTED)}>Rejected</option>
-                <option onSelect={() => this.updateStatus(Submission.Status.REVISION)}>Revision</option>
+        return <div className="form-group col-md-4">
+            <select className="form-control" onChange={(e) => this.updateStatus(e.target.value)}>
+                <option key="st0" value="none">None</option>
+                <option key="st1" value="approve">Approved</option>
+                <option key="st2" value="reject">Rejected</option>
+                <option key="st3" value="revision">Revision</option>
             </select>
             </div>;
     }
 
-    private updateStatus(status: Submission.Status) {
+    private updateStatus(action: string) {
         if (this.props.submission) {
+            let status: Submission.Status = Submission.Status.NONE;
+            switch (action) {
+                case "approve":
+                    status = Submission.Status.APPROVED;
+                    break;
+                case "reject":
+                    status = Submission.Status.REJECTED;
+                    break;
+                case "revision":
+                    status = Submission.Status.REVISION;
+                default:
+                    console.log("Got unexpected submission status: " + action);
+            }
             this.props.setGrade(status);
         }
     }
