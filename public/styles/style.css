@@ -309,20 +309,19 @@ body {
     right: 20%;
     margin: auto;
 }
+
 /* manual grading */
 .a-element {
     margin: 0;
-    border:rgb(26, 25, 27);
-    border-style: solid;
-    border-width: 1;
+    border: none;
+    border-bottom: dimgray solid 0.5px;
 }
 
 .a-header {
     margin: 0;
+    border: none;
     background-color: darkgray;
-    border-bottom: rgb(26, 25, 27);
-    border-style: solid;
-    border-width: 1;
+    border-bottom: dimgray solid 0.5px;
 }
 
 .b-list {
@@ -330,27 +329,30 @@ body {
 }
 
 .b-element {
-    margin: 0;
+    margin: auto;
+    padding: 1%;
 }
 
 .b-header {
-    margin: 0;
-    background-color: cadetblue;
-    border-bottom: rgb(26, 25, 27);
-    border-style: solid;
-    border-width: 1;
+    margin: auto;
+    padding: 1%;
+    border: none;
+    background-color: rgb(219, 218, 218);
+    border-bottom: dimgray solid 0.5px;
+
 }
 
 .add-b {
-    margin: 0;
-    border-top: rgb(26, 25, 27);
-    border-style: solid;
-    border-width: 1;
-    background-color: darkolivegreen;
+    margin: auto;
+    padding: 1%;
+    display: block;
+    border: none;
+    border-top: dimgray solid 0.5px;
+    background-color: rgb(211, 197, 197);
 }
 
 .adding-b {
-    margin: 0;
+    width: 100%;
 }
 
 .bm-btn {
@@ -360,10 +362,10 @@ body {
 }
 
 .c-element {
-    margin: 0;
-    border-bottom: rgb(26, 25, 27);
-    border-style: solid;
-    border-width: 1;
+    margin: auto;
+    padding: 1%;
+    border: none;
+    border-bottom: dimgray solid 0.5px;
 }
 
 .comment-div {
@@ -432,10 +434,8 @@ body {
 .s-info {
     display: block;
     float: right;
-    border-style: solid;
-    border-color: darkslategray;
-    border-width: 0.5;
-    background-color: lightblue;
+    border: none;
+    border-bottom: dimgray solid 0.5px;
 }
 
 .grading-view {
@@ -446,8 +446,7 @@ body {
 .student-div {
     width: 15%;
     height: 100%;
-    border-style: solid;
-    border-color: slateblue;
+    border: none;
     float: left;
     overflow-y: auto;    
 }
@@ -459,14 +458,10 @@ body {
 }
 
 .student-nav>li {
-    border-bottom: #601203;
-    border-style: outset;
     width: 98%;
 }
 
 .f-view {
-    border-style: solid;
-    border-color: red;
     margin: auto;
     padding: 0;
     width: 80%;
@@ -478,8 +473,6 @@ body {
 
 .r-row {
     display: flexbox;
-    border-style: solid;
-    border-color: #337ab7;
 }
 
 .switch-toggle {

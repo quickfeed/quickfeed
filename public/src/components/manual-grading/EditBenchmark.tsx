@@ -138,6 +138,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     private renderHeader(): JSX.Element {
         return <div className="input-group">
             <input
+                className="adding-b"
                 autoFocus={true}
                 type="text"
                 defaultValue={this.state.heading}

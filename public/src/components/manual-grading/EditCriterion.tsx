@@ -55,6 +55,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
     private renderEditView(): JSX.Element {
         return <div className="input-group">
             <input
+                className="adding-b"
                 autoFocus={true}
                 type="text"
                 defaultValue={this.state.description}
