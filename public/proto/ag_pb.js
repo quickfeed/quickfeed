@@ -9459,7 +9459,7 @@ proto.UpdateSubmissionRequest.toObject = function(includeInstance, msg) {
     submissionid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     approve: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
-    feedbackready: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
+    released: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
     status: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
@@ -9511,7 +9511,7 @@ proto.UpdateSubmissionRequest.deserializeBinaryFromReader = function(msg, reader
       break;
     case 4:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setFeedbackready(value);
+      msg.setReleased(value);
       break;
     case 5:
       var value = /** @type {!proto.Submission.Status} */ (reader.readEnum());
@@ -9567,7 +9567,7 @@ proto.UpdateSubmissionRequest.serializeBinaryToWriter = function(message, writer
       f
     );
   }
-  f = message.getFeedbackready();
+  f = message.getReleased();
   if (f) {
     writer.writeBool(
       4,
@@ -9639,10 +9639,10 @@ proto.UpdateSubmissionRequest.prototype.setApprove = function(value) {
 
 
 /**
- * optional bool feedbackReady = 4;
+ * optional bool released = 4;
  * @return {boolean}
  */
-proto.UpdateSubmissionRequest.prototype.getFeedbackready = function() {
+proto.UpdateSubmissionRequest.prototype.getReleased = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
 };
 
@@ -9651,7 +9651,7 @@ proto.UpdateSubmissionRequest.prototype.getFeedbackready = function() {
  * @param {boolean} value
  * @return {!proto.UpdateSubmissionRequest} returns this
  */
-proto.UpdateSubmissionRequest.prototype.setFeedbackready = function(value) {
+proto.UpdateSubmissionRequest.prototype.setReleased = function(value) {
   return jspb.Message.setProto3BooleanField(this, 4, value);
 };
 

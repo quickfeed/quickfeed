@@ -1139,8 +1139,8 @@ export class UpdateSubmissionRequest extends jspb.Message {
   getApprove(): boolean;
   setApprove(value: boolean): void;
 
-  getFeedbackready(): boolean;
-  setFeedbackready(value: boolean): void;
+  getReleased(): boolean;
+  setReleased(value: boolean): void;
 
   getStatus(): Submission.Status;
   setStatus(value: Submission.Status): void;
@@ -1158,7 +1158,7 @@ export namespace UpdateSubmissionRequest {
     submissionid: number,
     courseid: number,
     approve: boolean,
-    feedbackready: boolean,
+    released: boolean,
     status: Submission.Status,
   }
 }

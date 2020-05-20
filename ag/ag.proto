@@ -310,7 +310,7 @@ message UpdateSubmissionRequest {
     uint64 submissionID = 1;
     uint64 courseID = 2;
     bool approve = 3;
-    bool feedbackReady = 4;
+    bool released = 4;
     Submission.Status status = 5;
 }
 
