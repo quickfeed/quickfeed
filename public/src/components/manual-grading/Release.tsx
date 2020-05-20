@@ -30,7 +30,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         super(props);
         this.state = {
             reviews: [],
-            score: 0,
+            score: totalScore(this.selectReadyReviews()),
             reviewers: new Map<User, Review>(),
             open: false,
             status: Submission.Status.NONE,
@@ -46,7 +46,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const noReadyReviewsDiv = <div className="alert alert-info">No ready reviews for {this.props.assignment.getName()}</div>
 
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
-        <h3><span className="r-header">{this.props.studentNumber}. {this.props.authorName}</span><span className="r-score">Score: {this.props.submission?.score ?? 0} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
+        <h3><span className="r-header">{this.props.studentNumber}. {this.props.authorName}</span><span className="r-score">Score: {totalScore(this.props.submission?.reviews ?? [])} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
 
 
@@ -235,7 +235,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private renderStatusButton(): JSX.Element {
         return <div className="form-group r-grade">
             <select className="form-control" onChange={(e) => this.updateStatus(e.target.value)}>
-                <option key="st0" value="none">None</option>
+                <option key="st0" value="none">Set status</option>
                 <option key="st1" value="approve">Approved</option>
                 <option key="st2" value="reject">Rejected</option>
                 <option key="st3" value="revision">Revision</option>

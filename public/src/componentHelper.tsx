@@ -227,7 +227,7 @@ export function totalScore(reviews: Review[]): number {
             sum += rv.getScore();
         }
     });
-    return sum / reviews.length;
+    return Math.floor(sum / reviews.length);
 }
 
 export function submissionStatusToString(status?: Submission.Status): string {
@@ -261,7 +261,7 @@ export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
             newCriterion.setGrade(c.getGrade());
             newCriteria[j] = newCriterion;
         });
-        bm.setCriteriaList(newCriteria);
+        newBm.setCriteriaList(newCriteria);
         newList[i] = newBm;
     });
     return newList;
