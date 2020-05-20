@@ -79,11 +79,11 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                             authorName={s.getName()}
                             authorLogin={s.getLogin()}
                             courseURL={this.props.courseURL}
-                            setGrade={async (status: Submission.Status) => {
+                            setGrade={async (status: Submission.Status, approved: boolean) => {
                                 const current = this.state.submissionsForAssignment.get(s);
                                 if (current && current.submission) {
-                                    const initialStatus = current.submission.status;
                                     current.submission.status = status;
+                                    current.submission.approved = approved;
                                     return this.props.onUpdate(current.submission);
                                 }
                                 return false;

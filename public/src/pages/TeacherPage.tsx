@@ -113,7 +113,7 @@ export class TeacherPage extends ViewPage {
                     break;
             }
             return <div key="head">
-                <h1>Overview for {course.getName()}</h1>
+                <h1>Assignments for {course.getName()}</h1>
                 {button}
                 {await this.generateAssignmentList(course)}
             </div>;

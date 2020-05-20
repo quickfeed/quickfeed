@@ -12,7 +12,7 @@ interface ReleaseProps {
     studentNumber: number;
     courseURL: string;
     teacherView: boolean;
-    setGrade: (status: Submission.Status) => Promise<boolean>;
+    setGrade: (status: Submission.Status, approved: boolean) => Promise<boolean>;
     release: (ready: boolean) => void;
     getReviewers: (submissionID: number) => Promise<User[]>;
 }
@@ -98,7 +98,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             <div className="col-md-6">
                 <table className="table">
                     <thead><tr key="it">
-                            <td>Reviewer:</td>
+                            <td>Reviewers:</td>
                             <td>Score:</td>
                         </tr></thead>
                         <tbody>
@@ -246,9 +246,11 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private async updateStatus(action: string) {
         if (this.props.submission) {
             let newStatus: Submission.Status = Submission.Status.NONE;
+            let newBool = false;
             switch (action) {
                 case "approve":
                     newStatus = Submission.Status.APPROVED;
+                    newBool = true;
                     break;
                 case "reject":
                     newStatus = Submission.Status.REJECTED;
@@ -260,7 +262,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     newStatus = Submission.Status.NONE;
                     break;
             }
-            const ans = this.props.setGrade(newStatus);
+            const ans = this.props.setGrade(newStatus, newBool);
             if (ans) {
                 this.setState({
                     status: newStatus,
