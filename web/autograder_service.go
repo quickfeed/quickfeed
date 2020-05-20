@@ -550,7 +550,7 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 		s.logger.Error("ApproveSubmision failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can approve submissions")
 	}
-	err = s.updateSubmission(in.GetSubmissionID(), in.GetApprove(), in.GetStatus(), in.GetFeedbackReady())
+	err = s.updateSubmission(in.GetSubmissionID(), in.GetApprove(), in.GetStatus(), in.GetReleased())
 	if err != nil {
 		s.logger.Errorf("ApproveSubmission failed: %w", err)
 		err = status.Errorf(codes.InvalidArgument, "failed to approve submission")

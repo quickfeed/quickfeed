@@ -110,7 +110,9 @@ func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
 	return db.conn.
 		Model(query).
 		Where(&pb.Submission{ID: query.ID}).
-		Update("approved", query.Approved, "status", query.Status, "feedbackReady", query.Released).Error
+		Update("approved", query.Approved).
+		Update("status", query.Status).
+		Update("released", query.Released).Error
 }
 
 // CreateReview creates a new submission review
