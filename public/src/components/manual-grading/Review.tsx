@@ -109,7 +109,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private renderFeedback(): JSX.Element {
-    const feedbackDiv = <div onClick={() => this.toggleEdit()}>{"Add a feedback"}</div>;
+    const feedbackDiv = <div onClick={() => this.toggleEdit()}>{"Add summary a feedback"}</div>;
     const editFeedbackDiv = <div className="input-group col-12">
     <input
         autoFocus={true}
@@ -166,7 +166,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
     private setReady() {
         if (this.state.graded < this.criteriaTotal()) {
-            console.log("Setting Review Ready: graded in state: " + this.state.graded + ", total criteria: " + this.criteriaTotal());
             this.setAlert("All grading criteria must be checked before marking review as ready.");
         } else {
             this.setState({
@@ -176,21 +175,15 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private async updateReview() {
-        console.log("Updating Review");
         const r: Review = this.state.review ?? this.makeNewReview();
-        if (this.state.review) {
-            console.log("Found review in state with ID: " + this.state.review.getId());
-        }
         r.setReady(this.state.ready);
         r.setBenchmarksList(this.state.benchmarks);
         r.setScore(this.setScore());
         r.setFeedback(this.state.feedback);
         if (r.getId() > 0) {
-            console.log("Updating review in state. Ready: " + r.getReady() + ", score: " + r.getScore() + ", feedback: " + r.getFeedback());
             const ans = await this.props.updateReview(r);
             if (ans) {
                 const newRw = this.selectReview(this.props.submission);
-                console.log("Old review updated. Review in props: " + newRw?.toString());
                 this.setState({
                     review: newRw,
                     benchmarks: newRw?.getBenchmarksList() ?? this.state.benchmarks,
@@ -198,11 +191,9 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 });
             }
         } else {
-            console.log("Adding a new review")
             const ans = await this.props.addReview(r);
             if (ans) {
                 const newRw = this.selectReview(this.props.submission);
-                console.log("New review added. Review in props: " + newRw?.toString());
                 this.setState({
                     review: newRw,
                     benchmarks: newRw?.getBenchmarksList() ?? this.state.benchmarks,
@@ -217,7 +208,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private makeNewReview(): Review {
-        console.log("No review in state, making a new review");
         const r = new Review();
         r.setSubmissionid(this.props.submission?.id ?? 0);
         r.setReviewerid(this.props.reviewerID);
@@ -251,7 +241,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 }
             });
         });
-        console.log("Calculating graded total: " + counter);
         return counter;
     }
 
@@ -279,10 +268,8 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private toggleOpen() {
-        console.log("toggle open for : " + this.props.authorName);
         // reset state when closing
         if (this.state.open) {
-            console.log("closing, flushing state");
             this.setState({
                 review: undefined,
                 score: 0,
@@ -295,7 +282,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         }
         const rw = this.selectReview(this.props.submission);
         if (rw) {
-            console.log("found review in props, setting state");
             this.setState({
                 review: rw,
                 score: rw.getScore(),
@@ -307,8 +293,6 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
             });
         } else {
-            console.log("no review in props");
-            console.log("Assignment bms in props: " + this.props.assignment.getGradingbenchmarksList().toString());
             this.setState({
                 review: undefined,
                 benchmarks: deepCopy(this.props.assignment.getGradingbenchmarksList()),
