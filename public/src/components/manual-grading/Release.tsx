@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from '../../../proto/ag_pb';
-import { totalScore, userSubmissionLink } from '../../componentHelper';
+import { totalScore, userSubmissionLink, submissionStatusToString } from '../../componentHelper';
 import { ISubmission } from "../../models";
 import { formatDate } from '../../helper';
 
@@ -11,7 +11,8 @@ interface ReleaseProps {
     authorLogin: string;
     studentNumber: number;
     courseURL: string;
-    setGrade: (status: Submission.Status) => void;
+    teacherView: boolean;
+    setGrade: (status: Submission.Status) => Promise<boolean>;
     release: (ready: boolean) => void;
     getReviewers: (submissionID: number) => Promise<User[]>;
 }
@@ -21,6 +22,7 @@ interface ReleaseState {
     reviews: Review[];
     reviewers: Map<User, Review>;
     score: number;
+    status: Submission.Status;
 }
 export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
@@ -31,6 +33,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             score: 0,
             reviewers: new Map<User, Review>(),
             open: false,
+            status: Submission.Status.NONE,
         }
     }
 
@@ -70,7 +73,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
         return <div className="release">
             {headerDiv}
-            {open ? this.infoTable() : null}
+            {open && this.props.teacherView ? this.infoTable() : null}
             {open ? this.renderReviewTable() : null}
         ></div>
     }
@@ -88,7 +91,8 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     <li key="li3" className="list-group-item r-li">
                         <span className="r-table">Repository: </span>
                         {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
-                    <li key="li4" className="list-group-item r-li"><span className="r-table">Status: </span>{this.renderStatusButton()}</li>
+                    <li key="li4" className="list-group-item r-li"><span className="r-table">Status: </span>{submissionStatusToString(this.state.status)}</li>
+                    <li key="li5" className="list-group-item r-li">{this.renderStatusButton()}</li>
                 </ul>
             </div>
             <div className="col-md-6">
@@ -112,7 +116,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             className={this.releaseButtonClass()}
             onClick={() => {
                 if (this.props.submission && this.props.assignment.getReviewers() > 0 &&
-                this.state.reviews.length === this.props.assignment.getReviewers()) {
+                this.props.submission.reviews.length === this.props.assignment.getReviewers()) {
                     this.props.release(!this.props.submission.released);
                 }
             }}
@@ -121,7 +125,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
     private releaseButtonClass(): string {
         if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
-         this.state.reviews.length < this.props.assignment.getReviewers()) {
+         this.props.submission.reviews.length < this.props.assignment.getReviewers()) {
              return "btn btn-basic disabled release-btn";
          }
         return "btn btn-default release-btn";
@@ -129,7 +133,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
     private releaseButtonString(): string {
         if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
-         this.state.reviews.length < this.props.assignment.getReviewers()) {
+         this.props.submission.reviews.length < this.props.assignment.getReviewers()) {
              return "N/A";
          }
         return this.props.submission.released ? "Released" : "Release"
@@ -146,7 +150,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private renderReviewTable(): JSX.Element {
         const reviewersList = Array.from(this.state.reviewers.keys());
         return <div className="row">
-            <table className="table table-condensed">
+            <table className="table table-condensed table-bordered">
             <thead><tr key="rthead"><th>Reviews:</th>{reviewersList.map((u, i) => <th className="release-cell">
                 {i + 1}
             </th>)}</tr></thead>
@@ -161,10 +165,10 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const rows: JSX.Element[] = [];
         const reviewersList = Array.from(this.state.reviewers.keys());
         this.props.assignment.getGradingbenchmarksList().forEach((bm, i) => {
-            rows.push(<tr key={"rt" + i}><td>{bm.getHeading()}</td>{reviewersList.map(u =>
+            rows.push(<tr key={"rt" + i} className="b-header"><td>{bm.getHeading()}</td>{reviewersList.map(u =>
                 <td>{this.commentSpan(this.selectBenchmark(u, bm).getComment())}</td>)}</tr>);
             bm.getCriteriaList().forEach((c, j) => {
-                rows.push(<tr key={"rrt" + j}><td>{c.getDescription()}</td>
+                rows.push(<tr key={"rrt" + j + i}><td>{c.getDescription()}</td>
                 {reviewersList.map(u => <td className={this.setCellColor(u, c)}>
                     <span className={this.setCellIcon(u, c)}></span>
                     {this.commentSpan(this.selectCriterion(u, c).getComment())}
@@ -229,7 +233,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private renderStatusButton(): JSX.Element {
-        return <div className="form-group col-md-4">
+        return <div className="form-group r-grade">
             <select className="form-control" onChange={(e) => this.updateStatus(e.target.value)}>
                 <option key="st0" value="none">None</option>
                 <option key="st1" value="approve">Approved</option>
@@ -239,22 +243,30 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             </div>;
     }
 
-    private updateStatus(action: string) {
+    private async updateStatus(action: string) {
         if (this.props.submission) {
-            let status: Submission.Status = Submission.Status.NONE;
+            let newStatus: Submission.Status = Submission.Status.NONE;
             switch (action) {
                 case "approve":
-                    status = Submission.Status.APPROVED;
+                    newStatus = Submission.Status.APPROVED;
                     break;
                 case "reject":
-                    status = Submission.Status.REJECTED;
+                    newStatus = Submission.Status.REJECTED;
                     break;
                 case "revision":
-                    status = Submission.Status.REVISION;
+                    newStatus = Submission.Status.REVISION;
+                    break;
                 default:
-                    status = Submission.Status.NONE;
+                    newStatus = Submission.Status.NONE;
+                    break;
             }
-            this.props.setGrade(status);
+            const ans = this.props.setGrade(newStatus);
+            if (ans) {
+                this.setState({
+                    status: newStatus,
+                })
+            }
+
         }
     }
 
@@ -283,6 +295,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                 reviewers: await this.mapReviewers(),
                 reviews: ready,
                 score: totalScore(ready),
+                status: this.props.submission?.status ?? Submission.Status.NONE,
             });
         } else {
             this.setState({open: !this.state.open});

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Group, Repository, Submission } from "../../proto/ag_pb";
+import { Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
 import { CoursesOverview, GroupForm, GroupInfo, SingleCourseOverview, StudentLab } from "../components";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { ILinkCollection } from "../managers";
@@ -128,7 +128,6 @@ export class StudentPage extends ViewPage {
             return showLoader();
         }
         if (this.selectedUserCourse) {
-            const courseID = this.selectedUserCourse.course.getId();
             this.selectAssignment(navInfo.params.labid, false);
             if (this.selectedAssignment) {
                 return <StudentLab

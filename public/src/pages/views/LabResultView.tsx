@@ -2,6 +2,7 @@ import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { IStudentLab } from "../../models";
 import { User, Submission } from "../../../proto/ag_pb";
+import { TeacherPage } from '../TeacherPage';
 
 interface ILabInfoProps {
     studentSubmission: IStudentLab;
@@ -28,7 +29,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                             <LabResult
                                 assignment_id={this.props.studentSubmission.assignment.getId()}
                                 submission_id={latest.id}
-                                showApprove={this.props.showApprove}
+                                teacherView={this.props.teacherView}
                                 lab={this.props.studentSubmission.assignment.getName()}
                                 progress={latest.score}
                                 isApproved={latest.approved}

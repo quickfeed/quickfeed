@@ -76,7 +76,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     }
 
     private renderAddNew(): JSX.Element {
-        const addRow = <div className="add-b" onDoubleClick={() => this.toggleAdding()}>
+        const addRow = <div className="add-b" onClick={() => this.toggleAdding()}>
             Add a new grading benchmark.
         </div>;
         const addingRow = <div className="input-group"><input

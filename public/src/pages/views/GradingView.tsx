@@ -73,6 +73,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     this.state.selectedStudents.map((s, i) =>
                         <li key={i} className="list-group-item li-review"><Release
                             key={"f" + i}
+                            teacherView={true}
                             assignment={this.state.selectedAssignment}
                             submission={this.state.submissionsForAssignment.get(s)?.submission}
                             authorName={s.getName()}
@@ -83,15 +84,9 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                                 if (current && current.submission) {
                                     const initialStatus = current.submission.status;
                                     current.submission.status = status;
-                                    const ans = await this.props.onUpdate(current.submission);
-                                    if (!ans) {
-                                        console.log("Failed to set grade");
-                                        current.submission.status = initialStatus;
-                                        return false;
-                                    }
-                                    console.log("Grade set successfully");
-                                    return true;
+                                    return this.props.onUpdate(current.submission);
                                 }
+                                return false;
                             }}
                             release={async (release: boolean) => {
                                 const current = this.state.submissionsForAssignment.get(s)?.submission;
@@ -183,7 +178,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
 
     private handleSearch(query: string) {
         this.setState({
-            selectedStudents: searchForUsers(this.state.selectedStudents, query),
+            selectedStudents: searchForUsers(this.selectAllStudents(), query),
         });
     }
 
