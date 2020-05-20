@@ -1,7 +1,7 @@
 import * as React from "react";
 import { IStudentLab } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
-import { User, Submission } from '../../../proto/ag_pb';
+import { User } from '../../../proto/ag_pb';
 
 interface IStudentLabProps {
     studentSubmission: IStudentLab;
@@ -12,6 +12,7 @@ interface IStudentLabProps {
     teacherPageView: boolean;
     courseCreatorView: boolean;
     reviewers: string[];
+    teacherView: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
@@ -25,7 +26,7 @@ export class StudentLab extends React.Component<IStudentLabProps> {
             courseURL={this.props.courseURL}
             onApproveClick={this.props.onApproveClick}
             onRebuildClick={this.props.onRebuildClick}
-            showApprove={this.props.showApprove}
+            teacherView={this.props.teacherView}
             >
         </LabResultView>;
     }

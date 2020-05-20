@@ -7,7 +7,7 @@ interface ILabResult {
     progress: number;
     lab: string;
     authorName?: string;
-    showApprove: boolean;
+    teacherView: boolean;
     isApproved: boolean;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
@@ -29,7 +29,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
     public render() {
         let approveButton = <div></div>;
         let rebuildButton = <div></div>;
-        if (this.props.showApprove) {
+        if (this.props.teacherView) {
             approveButton = <div className="btn lab-btn approve-btn">
                 <button type="button"
                 id="approve"
