@@ -3,6 +3,7 @@ import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, Use
 import { totalScore, userSubmissionLink, submissionStatusToString } from '../../componentHelper';
 import { ISubmission } from "../../models";
 import { formatDate } from '../../helper';
+import ReactTooltip from "react-tooltip";
 
 interface ReleaseProps {
     submission: ISubmission | undefined;
@@ -168,18 +169,18 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const reviewersList = Array.from(this.state.reviewers.keys());
         this.props.assignment.getGradingbenchmarksList().forEach((bm, i) => {
             rows.push(<tr key={"rt" + i} className="b-header"><td>{bm.getHeading()}</td>{reviewersList.map(u =>
-                <td>{this.commentSpan(this.selectBenchmark(u, bm).getComment())}</td>)}</tr>);
+                <td>{this.commentSpan(this.selectBenchmark(u, bm).getComment(), "bm" + bm.getId())}</td>)}</tr>);
             bm.getCriteriaList().forEach((c, j) => {
                 rows.push(<tr key={"rrt" + j + i}><td>{c.getDescription()}</td>
                 {reviewersList.map(u => <td className={this.setCellColor(u, c)}>
                     <span className={this.setCellIcon(u, c)}></span>
-                    {this.commentSpan(this.selectCriterion(u, c).getComment())}
+                    {this.commentSpan(this.selectCriterion(u, c).getComment(), "cr" + c.getId())}
                 </td>)}
                 </tr>);
             });
         });
         rows.push(<tr key="rtf"><td>Feedbacks:</td>
-            {reviewersList.map(u => <td>{this.commentSpan(this.state.reviewers.get(u)?.getFeedback() ?? "No feedback")}</td>)}
+            {reviewersList.map((u, i) => <td>{this.commentSpan(this.state.reviewers.get(u)?.getFeedback() ?? "No feedback", "fb" + i)}</td>)}
         </tr>);
         rows.push(<tr key="tscore"><td>Score: {this.props.submission?.score ?? 0}</td>
             {reviewersList.map(u => <td>{this.state.reviewers.get(u)?.getScore() ?? 0}</td>)}
@@ -227,11 +228,19 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return c;
     }
 
-    private commentSpan(text: string): JSX.Element {
-        return <span className="release-comment glyphicon glyphicon-comment"
-        data-toggle={"tooltip"}
-        data-html={"true"}
-        title={text} ></span>
+    private commentSpan(text: string, id: string): JSX.Element {
+        if (text === "") {
+            return <span></span>;
+        }
+        return <span><span className="release-comment glyphicon glyphicon-comment"
+            data-tip
+            data-for={id}
+        ></span>
+        <ReactTooltip
+            type="light"
+            effect="solid"
+            id={id}
+        ><p>{text}</p></ReactTooltip></span>;
     }
 
     private renderStatusButton(): JSX.Element {
