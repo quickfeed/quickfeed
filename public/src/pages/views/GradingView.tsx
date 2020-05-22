@@ -25,6 +25,7 @@ interface GradingViewState {
     selectedAssignment: Assignment;
     submissionsForAssignment: Map<User, IStudentLab>;
     errorMessage: string;
+    allClosed: boolean;
 }
 
 export class GradingView extends React.Component<GradingViewProps, GradingViewState> {
@@ -35,6 +36,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
             selectedAssignment: this.props.assignments[0] ?? new Assignment(), // TODO: test on courses with no assignments
             errorMessage: "",
             submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, IStudentLab>(),
+            allClosed: true,
         }
     }
 
@@ -79,6 +81,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                             authorName={s.getName()}
                             authorLogin={s.getLogin()}
                             courseURL={this.props.courseURL}
+                            allClosed={this.state.allClosed}
                             setGrade={async (status: Submission.Status, approved: boolean) => {
                                 const current = this.state.submissionsForAssignment.get(s);
                                 if (current && current.submission) {
@@ -100,11 +103,21 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                             }}
                             getReviewers={this.props.getReviewers}
                             studentNumber={this.state.selectedStudents.indexOf(s) + 1}
+                            toggleCloseAll={() => this.toggleClosed()}
                         /></li>
                     )
                 }
             </ul>
         </div>
+    }
+
+    private toggleClosed() {
+        this.setState({
+            allClosed: !this.state.allClosed,
+            selectedStudents: this.selectAllStudents(),
+            submissionsForAssignment: this.state.selectedAssignment ? this.selectAllSubmissions(this.state.selectedAssignment) : this.selectAllSubmissions(this.props.assignments[0]),
+            errorMessage: "",
+        });
     }
 
     private renderReviewList(): JSX.Element {
@@ -138,6 +151,8 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                         return false;
                     }}
                     studentNumber={this.state.selectedStudents.indexOf(s) + 1}
+                    allClosed={this.state.allClosed}
+                    toggleCloseAll={() => this.toggleClosed()}
                      /></li>
                 )}
             </ul>

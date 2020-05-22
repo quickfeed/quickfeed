@@ -12,9 +12,11 @@ interface ReleaseProps {
     studentNumber: number;
     courseURL: string;
     teacherView: boolean;
+    allClosed: boolean;
     setGrade: (status: Submission.Status, approved: boolean) => Promise<boolean>;
     release: (ready: boolean) => void;
     getReviewers: (submissionID: number) => Promise<User[]>;
+    toggleCloseAll: () => void;
 }
 
 interface ReleaseState {
@@ -38,7 +40,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     public render() {
-        const open = this.state.open;
+        const open = this.state.open && !this.props.allClosed;
         const reviewInfoSpan = <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</span>;
         const noReviewsSpan = <span className="r-info">N/A</span>;
         const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;
@@ -290,6 +292,19 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private async toggleOpen() {
+        // if closing, flush the state
+        if (this.state.open) {
+            this.setState({
+                reviews: [],
+                reviewers: new Map<User, Review>(),
+                open: false,
+            })
+        }
+
+        // if opening, close all other reviews
+        if (!(this.state.open && this.props.allClosed)) {
+            this.props.toggleCloseAll();
+        }
         const ready = this.selectReadyReviews();
         if (ready.length > 0) {
             this.setState({

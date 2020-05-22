@@ -12,8 +12,10 @@ interface ReviewPageProps {
     authorLogin: string;
     courseURL: string;
     reviewerID: number;
+    allClosed: boolean;
     addReview: (review: Review) => Promise<boolean>;
     updateReview: (review: Review) => Promise<boolean>;
+    toggleCloseAll: () => void;
 }
 
 interface ReviewPageState {
