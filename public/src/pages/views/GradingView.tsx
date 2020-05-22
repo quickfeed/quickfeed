@@ -26,6 +26,7 @@ interface GradingViewState {
     submissionsForAssignment: Map<User, IStudentLab>;
     errorMessage: string;
     allClosed: boolean;
+    scoreLimit: number;
 }
 
 export class GradingView extends React.Component<GradingViewProps, GradingViewState> {
@@ -37,6 +38,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
             errorMessage: "",
             submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, IStudentLab>(),
             allClosed: true,
+            scoreLimit: 0,
         }
     }
 
@@ -61,10 +63,59 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     </div>
             </div>
 
+            {this.props.releaseView ? this.renderReleaseRow() : null}
+
             <div className="row">
                 {this.props.releaseView ? this.renderReleaseList() : this.renderReviewList()}
             </div>
 
+        </div>
+    }
+
+    private renderReleaseRow(): JSX.Element {
+        return <div className="row">
+            <div className="col-md-12 input-group">
+                <span className="input-group-addon">Set minimal score:</span>
+                <input className="form-control"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={this.state.scoreLimit}
+                        onChange={(e) => {
+                            this.setState({
+                                scoreLimit: parseInt(e.target.value, 10),
+                            });
+                        }}
+                />
+                <div className="input-group-btn">
+                    <button className="btn btn-default"
+                        onClick={() => {
+                          if (this.state.scoreLimit < 1) {
+                              this.setState({
+                                  errorMessage: "Minimal score for approving is not set",
+                              });
+                          } else {
+                            console.log("Approving all submissions with score >= " + this.state.scoreLimit)}
+                          }
+
+                        }
+                    >Approve all</button>
+                </div>
+                <div className="input-group-btn">
+                <button className="btn btn-default"
+                        onClick={() => {
+                            if (this.state.scoreLimit < 1) {
+                                this.setState({
+                                    errorMessage: "Minimal score for releasing is not set",
+                                });
+                            } else {
+                              console.log("Releasing reviews for all submission with score >= " + this.state.scoreLimit)}
+                            }
+
+                        }
+                    >Release all</button>
+                </div>
+            </div>
         </div>
     }
 
