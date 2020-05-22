@@ -237,10 +237,10 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private renderStatusButton(): JSX.Element {
         return <div className="form-group r-grade">
             <select className="form-control" onChange={(e) => this.updateStatus(e.target.value)}>
-                <option key="st0" value="none">Set status</option>
-                <option key="st1" value="approve">Approved</option>
-                <option key="st2" value="reject">Rejected</option>
-                <option key="st3" value="revision">Revision</option>
+                <option key="st0" value="none" selected={this.props.submission?.status === Submission.Status.NONE}>Set status</option>
+                <option key="st1" value="approve" selected={this.props.submission?.status === Submission.Status.APPROVED}>Approved</option>
+                <option key="st2" value="reject" selected={this.props.submission?.status === Submission.Status.REJECTED}>Rejected</option>
+                <option key="st3" value="revision" selected={this.props.submission?.status === Submission.Status.REVISION}>Revision</option>
             </select>
             </div>;
     }
