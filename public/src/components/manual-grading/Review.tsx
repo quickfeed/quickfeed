@@ -50,7 +50,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         const reviewInfoSpan = <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</span>;
         const noReviewsSpan = <span className="r-info">N/A</span>;
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
-        <h3><span className="r-header">{this.props.studentNumber}. {this.props.authorName}</span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}</h3>
+        <h3><span className="r-number">{this.props.studentNumber}. </span> <span className="r-header">{this.props.authorName}</span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}</h3>
         </div>;
 
         const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;

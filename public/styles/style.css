@@ -387,13 +387,19 @@ body {
     margin-bottom: 10%;
 } 
 
+.r-number {
+    display: block;
+    float: left;
+    width: 5%;
+    font-size: 0.7em;
+    margin-left: 3%;
+}
+
 .r-header {
     display: block;
     float: left;
     font-size: 0.7em;
-    margin-left: 3%;
-    margin-top: 0;
-    margin-bottom: 1%;
+    margin-left: 10%;
 }
 
 .r-grade {

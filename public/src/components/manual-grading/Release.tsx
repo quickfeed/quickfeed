@@ -46,7 +46,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const noReadyReviewsDiv = <div className="alert alert-info">No ready reviews for {this.props.assignment.getName()}</div>
 
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
-        <h3><span className="r-header">{this.props.studentNumber}. {this.props.authorName}</span><span className="r-score">Score: {totalScore(this.props.submission?.reviews ?? [])} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
+        <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span><span className="r-score">Score: {totalScore(this.props.submission?.reviews ?? [])} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
 
 
