@@ -74,8 +74,8 @@ export class TeacherPage extends ViewPage {
             let button;
             switch (this.refreshState) {
                 case 0:
-                    button = <BootstrapButton
-                        classType="primary"
+                    button = <div
+                        className="btn btn-primary a-button"
                         onClick={(e) => {
                             this.refreshState = 1;
                             this.courseMan.updateAssignments(course.getId())
@@ -86,19 +86,17 @@ export class TeacherPage extends ViewPage {
                             this.navMan.refresh();
                         }}>
                         Update Course Assignments
-                    </BootstrapButton>;
+                    </div>;
                     break;
                 case 1:
-                    button = <BootstrapButton
-                        classType="default"
-                        disabled={true}>
+                    button = <div
+                        className="btn btn-default a-button disabled">
                         Updating Course Assignments
-                    </BootstrapButton>;
+                    </div>;
                     break;
                 case 2:
-                    button = <BootstrapButton
-                        classType="success"
-                        disabled={false}
+                    button = <div
+                        className="btn btn-success a-button"
                         onClick={(e) => {
                             this.refreshState = 1;
                             this.courseMan.updateAssignments(course.getId())
@@ -109,7 +107,7 @@ export class TeacherPage extends ViewPage {
                             this.navMan.refresh();
                         }}>
                         Course Assignments Updated
-                    </BootstrapButton>;
+                    </div>;
                     break;
             }
             return <div key="head">

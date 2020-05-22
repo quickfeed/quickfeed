@@ -32,9 +32,18 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     }
 
     public render() {
+        const headerDiv = <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>;
+        const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading</div>;
+        const reviewersDiv = <p>Reviewers: {this.props.assignment.getReviewers()}</p>;
+        if (this.props.assignment.getReviewers() < 1) {
+            return <div className="a-element">
+                {headerDiv}
+                {this.state.open ? noReviewersDiv : null}
+            </div>
+        }
         return <div className="a-element">
-            <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>
-            <p>Reviewers: {this.props.assignment.getReviewers()}</p>
+            {headerDiv}
+            {this.state.open ? reviewersDiv : null}
             {this.state.open ? (<div>{this.renderBenchmarks()}</div>) : null}
             {this.state.open ? this.renderAddNew() : null}
         </div>

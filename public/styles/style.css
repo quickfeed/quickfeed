@@ -317,6 +317,12 @@ body {
     border-bottom: dimgray solid 0.5px;
 }
 
+.a-button {
+    display: block;
+    float: right;
+    margin: 5%;
+}
+
 .a-header {
     margin: 0;
     border: none;
