@@ -130,14 +130,13 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private releaseButtonClass(): string {
         if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
          this.props.submission.reviews.length < this.props.assignment.getReviewers()) {
-             return "btn btn-basic disabled release-btn";
+             return "btn btn-basic release-btn";
          }
         return "btn btn-default release-btn";
     }
 
     private releaseButtonString(): string {
-        if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
-         this.props.submission.reviews.length < this.props.assignment.getReviewers()) {
+        if (!this.props.submission || this.props.assignment.getReviewers() < 1) {
              return "N/A";
          }
         return this.props.submission.released ? "Released" : "Release"
