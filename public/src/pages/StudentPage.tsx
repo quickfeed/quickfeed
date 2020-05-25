@@ -6,7 +6,7 @@ import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
-import { IStudentLabsForCourse, IStudentLab } from "../models";
+import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
@@ -20,15 +20,15 @@ export class StudentPage extends ViewPage {
     private courseMan: CourseManager;
 
     // Single user
-    private userCourses: IStudentLabsForCourse[] = [];
-    private activeUserCourses: IStudentLabsForCourse[] = [];
-    private selectedUserCourse: IStudentLabsForCourse | undefined;
+    private userCourses: IAllSubmissionsForEnrollment[] = [];
+    private activeUserCourses: IAllSubmissionsForEnrollment[] = [];
+    private selectedUserCourse: IAllSubmissionsForEnrollment | undefined;
 
     // Group user
-    private GroupUserCourses: IStudentLabsForCourse[] = [];
-    private selectedUserGroupCourse: IStudentLabsForCourse | undefined;
+    private GroupUserCourses: IAllSubmissionsForEnrollment[] = [];
+    private selectedUserGroupCourse: IAllSubmissionsForEnrollment | undefined;
 
-    private selectedAssignment: IStudentLab | undefined;
+    private selectedAssignment: ISubmissionLink | undefined;
 
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
@@ -63,8 +63,8 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         if (this.activeUserCourses) {
             return (<CoursesOverview
-                courseOverview={this.activeUserCourses as IStudentLabsForCourse[]}
-                groupCourseOverview={this.GroupUserCourses as IStudentLabsForCourse[]}
+                courseOverview={this.activeUserCourses as IAllSubmissionsForEnrollment[]}
+                groupCourseOverview={this.GroupUserCourses as IAllSubmissionsForEnrollment[]}
                 navMan={this.navMan}
             />);
         }
@@ -112,8 +112,8 @@ export class StudentPage extends ViewPage {
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
             return (<SingleCourseOverview
-                courseAndLabs={this.selectedUserCourse as IStudentLabsForCourse}
-                groupAndLabs={this.selectedUserGroupCourse as IStudentLabsForCourse}
+                courseAndLabs={this.selectedUserCourse as IAllSubmissionsForEnrollment}
+                groupAndLabs={this.selectedUserGroupCourse as IAllSubmissionsForEnrollment}
                 onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}
                 onGroupLabClick={(courseId: number, labId: number) => this.handleGroupLabClick(courseId, labId)} />);
         }
@@ -299,7 +299,7 @@ export class StudentPage extends ViewPage {
             for (const enrol of userEnrolls) {
                 const crs = enrol.getCourse()
                 if (crs) {
-                    const newCourseLink: IStudentLabsForCourse = {
+                    const newCourseLink: IAllSubmissionsForEnrollment = {
                         course: crs,
                         enrollment: enrol,
                         labs: []

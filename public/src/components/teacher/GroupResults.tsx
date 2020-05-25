@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Assignment, Course, Submission, User } from '../../../proto/ag_pb';
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IStudentLabsForCourse, IStudentLab, ISubmission } from '../../models';
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from '../../models';
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
 import { getSlipDays, groupRepoLink, searchForLabs } from "../../componentHelper";
@@ -9,15 +9,15 @@ import { getSlipDays, groupRepoLink, searchForLabs } from "../../componentHelper
 interface IResultsProps {
     course: Course;
     courseURL: string;
-    groups: IStudentLabsForCourse[];
+    groups: IAllSubmissionsForEnrollment[];
     labs: Assignment[];
     onApproveClick: (submission: ISubmission) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
-    submissionLink?: IStudentLab;
-    groups: IStudentLabsForCourse[];
+    assignment?: ISubmissionLink;
+    groups: IAllSubmissionsForEnrollment[];
 }
 
 export class GroupResults extends React.Component<IResultsProps, IResultsState> {
@@ -94,7 +94,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.groups}
-                            selector={(item: IStudentLabsForCourse) => this.getGroupResultSelector(item)}
+                            selector={(item: IAllSubmissionsForEnrollment) => this.getGroupResultSelector(item)}
                         />
                     </div>
                     <div key="resultbody" className="col-lg-6 col-md-6 col-sm-12">
@@ -111,7 +111,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return headers;
     }
 
-    private getGroupResultSelector(group: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
+    private getGroupResultSelector(group: IAllSubmissionsForEnrollment): (string | JSX.Element | ICellElement)[] {
         const grp = group.enrollment.getGroup();
         const name = grp ? groupRepoLink(grp.getName(), this.props.courseURL) : "";
         let selector: (string | JSX.Element | ICellElement)[] = [name];
@@ -133,7 +133,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return selector;
     }
 
-    private async handleOnclick(item: IStudentLab) {
+    private async handleOnclick(item: ISubmissionLink) {
         this.setState({
             assignment: item,
         });

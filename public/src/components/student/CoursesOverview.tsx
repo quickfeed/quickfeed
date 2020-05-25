@@ -1,12 +1,12 @@
 import * as React from "react";
 import { CoursePanel, Row } from "../../components";
 import { NavigationManager } from "../../managers/NavigationManager";
-import { IStudentLabsForCourse } from "../../models";
+import { IAllSubmissionsForEnrollment } from "../../models";
 import { Enrollment } from "../../../proto/ag_pb";
 
 interface ICourseOverviewProps {
-    courseOverview: IStudentLabsForCourse[];
-    groupCourseOverview: IStudentLabsForCourse[];
+    courseOverview: IAllSubmissionsForEnrollment[];
+    groupCourseOverview: IAllSubmissionsForEnrollment[];
     navMan: NavigationManager;
 }
 

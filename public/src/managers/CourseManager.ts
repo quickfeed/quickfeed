@@ -1,6 +1,6 @@
 import {
-    IStudentLabsForCourse,
-    IStudentLab,
+    IAllSubmissionsForEnrollment,
+    ISubmissionLink,
     ISubmission,
 } from "../models";
 
@@ -76,20 +76,11 @@ export class CourseManager {
         return this.courseProvider.getCourses();
     }
 
-    public async getAllCoursesForEnrollmentPage(user: User): Promise<IStudentLabsForCourse[]> {
-        const userEnrollments = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
-        const allCourses = await this.courseProvider.getCourses();
-        const newMap: IStudentLabsForCourse[] = [];
-        allCourses.forEach((crs) => {
-            let enrol = userEnrollments.find(item => item.getCourseid() === crs.getId());
-            if (!enrol) {
-                enrol = new Enrollment();
-                enrol.setCourseid(crs.getId());
-                enrol.setUserid(user.getId());
-                enrol.setUser(user);
-                enrol.setCourse(crs);
-                enrol.setStatus(Enrollment.UserStatus.NONE);
-            }
+    public async getCoursesWithUserStatus(user: User): Promise<IAllSubmissionsForEnrollment[]> {
+        const userCourses = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
+        const newMap: IAllSubmissionsForEnrollment[] = [];
+        userCourses.forEach((ele) => {
+            const crs = ele.getCourse();
             if (crs) {
                 newMap.push({
                     labs: [],
@@ -151,7 +142,7 @@ export class CourseManager {
      * Retrives all course enrollments with the latest
      * lab submissions for all individual course assignments
      */
-    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
         return this.courseProvider.getLabsForCourse(courseID, type);
     }
 
@@ -159,8 +150,8 @@ export class CourseManager {
      * Retrives all course relations, and courses related to a
      * a single student
      */
-    public async getStudentCourses(student: User, status: Enrollment.UserStatus[]): Promise<IStudentLabsForCourse[]> {
-        const links: IStudentLabsForCourse[] = [];
+    public async getStudentCourses(student: User, status: Enrollment.UserStatus[]): Promise<IAllSubmissionsForEnrollment[]> {
+        const links: IAllSubmissionsForEnrollment[] = [];
         const enrollments = await this.courseProvider.getEnrollmentsForUser(student.getId(), status);
         for (const enrol of enrollments) {
             const crs = enrol.getCourse();
@@ -213,14 +204,14 @@ export class CourseManager {
     /**
      * Load an IAssignmentLink object for a single group and a single course
      */
-    public async getGroupCourse(group: Group, course: Course): Promise<IStudentLabsForCourse | null> {
+    public async getGroupCourse(group: Group, course: Course): Promise<IAllSubmissionsForEnrollment | null> {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
             const enrol = new Enrollment();
             enrol.setGroupid(group.getId());
             enrol.setCourseid(course.getId());
             enrol.setGroup(group);
-            const groupCourse: IStudentLabsForCourse = {
+            const groupCourse: IAllSubmissionsForEnrollment = {
                 enrollment: enrol,
                 labs: [],
                 course,
@@ -330,9 +321,9 @@ export class CourseManager {
      */
     public async fillLabLinks(
         course: Course,
-        labLinks: IStudentLabsForCourse[],
+        labLinks: IAllSubmissionsForEnrollment[],
         assignments?: Assignment[],
-        ): Promise<IStudentLabsForCourse[]> {
+        ): Promise<IAllSubmissionsForEnrollment[]> {
 
         if (!assignments) {
             assignments = await this.getAssignments(course.getId());
@@ -357,7 +348,7 @@ export class CourseManager {
             for (const asm of assignments) {
                 const exists = studentLabs.labs.find((ele) => asm.getId() === ele.assignment.getId());
                 if (!exists) {
-                    const voidSubmission: IStudentLab = {
+                    const voidSubmission: ISubmissionLink = {
                         assignment: asm,
                         authorName: studentName,
                     };
@@ -373,7 +364,7 @@ export class CourseManager {
      * to the given student or group enrollment.
      * Used on StudentPage.
      */
-    public async fillLinks(courseLabLink: IStudentLabsForCourse, student?: User, group?: Group,  assignments?: Assignment[]): Promise<void> {
+    public async fillLinks(courseLabLink: IAllSubmissionsForEnrollment, student?: User, group?: Group,  assignments?: Assignment[]): Promise<void> {
         if (!(student || group)) {
             return;
         }

@@ -1,6 +1,6 @@
 import * as React from "react";
-import { IStudentLabsForCourse, IStudentLab, ISubmission } from './models';
-import { Course, Enrollment, Group, Review, User, Submission, Assignment, GradingBenchmark, GradingCriterion } from '../proto/ag_pb';
+import { Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion, Assignment } from '../proto/ag_pb';
+import { IAllSubmissionsForEnrollment, ISubmission } from "./models";
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
     let sorted: Enrollment[] = [];
@@ -119,9 +119,9 @@ export function searchForCourses(courses: Enrollment[] | Course[], query: string
     return enrollmentList.length > 0 ? enrollmentList : coursesList;
 }
 
-export function searchForLabs(labs: IStudentLabsForCourse[], query: string): IStudentLabsForCourse[] {
+export function searchForLabs(labs: IAllSubmissionsForEnrollment[], query: string): IAllSubmissionsForEnrollment[] {
     query = query.toLowerCase();
-    const filteredLabs: IStudentLabsForCourse[] = [];
+    const filteredLabs: IAllSubmissionsForEnrollment[] = [];
     labs.forEach((e) => {
         const usr = e.enrollment.getUser();
         const grp = e.enrollment.getGroup();

@@ -40,7 +40,7 @@ import {
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
-import { IStudentLab, ISubmission } from '../models';
+import { ISubmissionLink, ISubmission } from '../models';
 
 export interface IGrpcResponse<T> {
     status: Status;

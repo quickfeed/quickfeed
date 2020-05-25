@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, Course, Review, User, Submission } from "../../../proto/ag_pb";
-import { IStudentLabsForCourse, ISubmission, IStudentLab } from "../../models";
+import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from "../../models";
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
 import { searchForUsers } from "../../componentHelper";
@@ -10,7 +10,7 @@ interface GradingViewProps {
     course: Course;
     courseURL: string;
     assignments: Assignment[];
-    students: IStudentLabsForCourse[];
+    students: IAllSubmissionsForEnrollment[];
     curUser: User;
     releaseView: boolean;
     addReview: (review: Review) => Promise<Review | null>;
@@ -23,7 +23,7 @@ interface GradingViewState {
 
     selectedStudents: User[];
     selectedAssignment: Assignment;
-    submissionsForAssignment: Map<User, IStudentLab>;
+    submissionsForAssignment: Map<User, ISubmissionLink>;
     errorMessage: string;
     allClosed: boolean;
     scoreLimit: number;
@@ -36,7 +36,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
             selectedStudents: this.selectAllStudents(),
             selectedAssignment: this.props.assignments[0] ?? new Assignment(), // TODO: test on courses with no assignments
             errorMessage: "",
-            submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, IStudentLab>(),
+            submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, ISubmissionLink>(),
             allClosed: true,
             scoreLimit: 0,
         }
@@ -218,8 +218,8 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         return studentUsers;
     }
 
-    private selectAllSubmissions(a?: Assignment): Map<User, IStudentLab> {
-        const labMap = new Map<User, IStudentLab>();
+    private selectAllSubmissions(a?: Assignment): Map<User, ISubmissionLink> {
+        const labMap = new Map<User, ISubmissionLink>();
         const current = a ?? this.state.selectedAssignment;
         this.props.students.forEach(s => {
             s.labs.forEach(l => {

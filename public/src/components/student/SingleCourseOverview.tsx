@@ -1,19 +1,19 @@
 import * as React from "react";
 import { formatDate } from "../../helper";
-import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
 import { submissionStatusToString } from "../../componentHelper";
 
 interface ISingleCourseOverviewProps {
-    courseAndLabs: IStudentLabsForCourse;
-    groupAndLabs?: IStudentLabsForCourse;
+    courseAndLabs: IAllSubmissionsForEnrollment;
+    groupAndLabs?: IAllSubmissionsForEnrollment;
     onLabClick: (courseId: number, labId: number) => void;
     onGroupLabClick: (courseId: number, labId: number) => void;
 }
 
 export class SingleCourseOverview extends React.Component<ISingleCourseOverviewProps> {
     public render() {
-        let groupLabs: IStudentLab[] = [];
+        let groupLabs: ISubmissionLink[] = [];
         if (this.props.groupAndLabs !== undefined) {
             groupLabs = this.props.groupAndLabs.labs;
         }
@@ -73,9 +73,9 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
             </div >
         );
     }
-    private buildInfo(studentLabs: IStudentLab[], groupLabs: IStudentLab[]):
-     IStudentLab[] | null {
-        const labAndGrouplabs: IStudentLab[] = [];
+    private buildInfo(studentLabs: ISubmissionLink[], groupLabs: ISubmissionLink[]):
+     ISubmissionLink[] | null {
+        const labAndGrouplabs: ISubmissionLink[] = [];
         if (studentLabs.length !== groupLabs.length) {
             return null;
         }

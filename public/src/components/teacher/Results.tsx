@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Assignment, Course, User, Submission } from '../../../proto/ag_pb';
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IStudentLabsForCourse, IStudentLab, ISubmission } from '../../models';
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from '../../models';
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
 import { searchForLabs, userRepoLink, getSlipDays } from '../../componentHelper';
@@ -9,7 +9,7 @@ import { searchForLabs, userRepoLink, getSlipDays } from '../../componentHelper'
 interface IResultsProp {
     course: Course;
     courseURL: string;
-    allCourseSubmissions: IStudentLabsForCourse[];
+    allCourseSubmissions: IAllSubmissionsForEnrollment[];
     assignments: Assignment[];
     courseCreatorView: boolean;
     onApproveClick: (submission: ISubmission) => Promise<boolean>;
@@ -17,9 +17,9 @@ interface IResultsProp {
 }
 
 interface IResultsState {
-    selectedSubmission?: IStudentLab;
-    selectedStudent?: IStudentLabsForCourse;
-    allSubmissions: IStudentLabsForCourse[];
+    selectedSubmission?: ISubmissionLink;
+    selectedStudent?: IAllSubmissionsForEnrollment;
+    allSubmissions: IAllSubmissionsForEnrollment[];
 }
 
 export class Results extends React.Component<IResultsProp, IResultsState> {
@@ -123,7 +123,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.allSubmissions}
-                            selector={(item: IStudentLabsForCourse) => this.getResultSelector(item)}
+                            selector={(item: IAllSubmissionsForEnrollment) => this.getResultSelector(item)}
                         />
                     </div>
                     <div key="resultsbody" className="col-lg-6 col-md-6 col-sm-12">
@@ -140,7 +140,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         return headers;
     }
 
-    private getResultSelector(student: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
+    private getResultSelector(student: IAllSubmissionsForEnrollment): (string | JSX.Element | ICellElement)[] {
         const user = student.enrollment.getUser();
         const displayName = user ? userRepoLink(user.getLogin(), user.getName(), this.props.courseURL) : "";
         let selector: (string | JSX.Element | ICellElement)[] = [displayName];
@@ -162,7 +162,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
         return selector;
     }
 
-    private async handleOnclick(item: IStudentLab, student: IStudentLabsForCourse) {
+    private async handleOnclick(item: ISubmissionLink, student: IAllSubmissionsForEnrollment) {
         this.setState({
             selectedSubmission: item,
             selectedStudent: student,

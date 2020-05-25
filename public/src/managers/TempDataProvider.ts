@@ -1,5 +1,5 @@
 import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Organization, Repository, Status, User, Review, SubmissionsForCourseRequest } from '../../proto/ag_pb';
-import { IStudentLabsForCourse, ISubmission } from "../models";
+import { IAllSubmissionsForEnrollment, ISubmission } from '../models';
 
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
@@ -222,7 +222,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return [];
     }
 
-    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
         return [];
     }
 
