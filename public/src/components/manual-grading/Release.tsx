@@ -119,8 +119,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return <div
             className={this.releaseButtonClass()}
             onClick={() => {
-                if (this.props.submission && this.props.assignment.getReviewers() > 0 &&
-                this.props.submission.reviews.length === this.props.assignment.getReviewers()) {
+                if (this.props.submission && this.props.assignment.getReviewers() > 0) {
                     this.props.release(!this.props.submission.released);
                 }
             }}
@@ -130,7 +129,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private releaseButtonClass(): string {
         if (!this.props.submission || this.props.assignment.getReviewers() < 1 ||
          this.props.submission.reviews.length < this.props.assignment.getReviewers()) {
-             return "btn btn-basic release-btn";
+             return "btn release-btn";
          }
         return "btn btn-default release-btn";
     }

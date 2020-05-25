@@ -443,6 +443,7 @@ body {
     display: block;
     float: right;
     margin-right: 10%;
+    background-color: rgb(231, 231, 235);
 }
 
 .release-info {

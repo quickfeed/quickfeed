@@ -73,12 +73,12 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderReleaseRow(): JSX.Element {
-        return <div className="row">
-            <div className="col-md-12 input-group">
+        return <div className="row"><div className="col-md-12">
+            <div className="input-group">
                 <span className="input-group-addon">Set minimal score:</span>
                 <input
                     className="form-control m-input"
-                    type="range"
+                    type="number"
                     min="0"
                     max="100"
                     value={this.state.scoreLimit}
@@ -117,7 +117,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     >Release all</button>
                 </div>
             </div>
-        </div>
+        </div></div>
     }
 
     private renderReleaseList(): JSX.Element {
