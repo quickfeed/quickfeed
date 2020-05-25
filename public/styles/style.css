@@ -313,21 +313,23 @@ body {
 /* manual grading */
 .a-element {
     margin: 0;
+    padding: 0;
     border: none;
-    border-bottom: dimgray solid 0.5px;
 }
 
 .a-button {
     display: block;
     float: right;
-    margin: 5%;
+    margin-right: 5%;
 }
 
 .a-header {
     margin: 0;
+    padding: 1%;
+    padding-left: 3%;
     border: none;
-    background-color: darkgray;
-    border-bottom: dimgray solid 0.5px;
+    background-color: rgb(227, 226, 229);
+    border-top: dimgray solid 0.2px;
 }
 
 .b-list {
@@ -351,6 +353,7 @@ body {
 
 .add-b {
     margin: auto;
+    margin-bottom: 1%;
     padding: 1%;
     display: block;
     border: none;

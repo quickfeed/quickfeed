@@ -110,9 +110,8 @@ export class TeacherPage extends ViewPage {
                     </div>;
                     break;
             }
-            return <div key="head">
-                <h1>Assignments for {course.getName()}</h1>
-                {button}
+            return <div key="head" className="col-md-12">
+                <div className="row"><h1>Assignments for {course.getName()}{button}</h1></div>
                 {await this.generateAssignmentList(course)}
             </div>;
         });
@@ -458,7 +457,7 @@ export class TeacherPage extends ViewPage {
     private async generateAssignmentList(course: Course): Promise<JSX.Element> {
         const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
 
-        return <div>{
+        return <div className="row">{
             assignments.map((a, i) => <AssigmnentView
                 key={i}
                 assignment={a}
