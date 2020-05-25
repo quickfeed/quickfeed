@@ -81,6 +81,7 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
             >{this.state.comment !== "" ? this.state.comment : "Add new comment"}</div>;
         const editDiv = <div className="input-group">
             <input
+                className="form-control m-input"
                 autoFocus={true}
                 type="text"
                 defaultValue={this.state.comment}

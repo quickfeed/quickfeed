@@ -200,7 +200,8 @@ export function editableListElement(
     statebool: boolean
     ): JSX.Element {
     const addDiv = <div className="add-b" onClick={toggleFunc}>{text}</div>;
-    const addingDiv = <div className="input-group adding-b"><input
+    const addingDiv = <div className="input-group"><input
+        className="form-control m-input"
         type="text"
         defaultValue={defaultText}
         onChange={(e) => changeFunc(e.target.value)}

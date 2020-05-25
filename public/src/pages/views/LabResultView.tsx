@@ -1,7 +1,7 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { ISubmissionLink, ISubmission } from '../../models';
-import { User, Submission } from '../../../proto/ag_pb';
+import { User } from '../../../proto/ag_pb';
 import { Release } from '../../components/manual-grading/Release';
 interface ILabInfoProps {
     submissionLink: ISubmissionLink;
@@ -47,7 +47,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 scoreLimit={this.props.submissionLink.assignment.getScorelimit()}
                                 weight={100}
                             />
-                            {this.props.submissionLink.assignment.getReviewers() > 0 && latest.released ? this.renderReviewTable(latest) : null}
+                            {this.props.submissionLink.assignment.getReviewers() > 0 && latest.released ? this.renderReviewInfo(latest) : null}
                             <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{buildLog}</code></div></div></Row>;
                         </section>
                     </div>
@@ -57,7 +57,11 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         return <h1>No submissions yet</h1>;
     }
 
-    private renderReviewTable(submission: ISubmission): JSX.Element {
+    private renderReviewInfo(submission: ISubmission): JSX.Element {
+        if (this.props.teacherView) {
+            return <div className="row">
+            </div>
+        }
         return <div className="row"><Release
             submission={submission}
             assignment={this.props.submissionLink.assignment}

@@ -76,16 +76,17 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         return <div className="row">
             <div className="col-md-12 input-group">
                 <span className="input-group-addon">Set minimal score:</span>
-                <input className="form-control"
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={this.state.scoreLimit}
-                        onChange={(e) => {
-                            this.setState({
-                                scoreLimit: parseInt(e.target.value, 10),
-                            });
-                        }}
+                <input
+                    className="form-control m-input"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={this.state.scoreLimit}
+                    onChange={(e) => {
+                        this.setState({
+                            scoreLimit: parseInt(e.target.value, 10),
+                        });
+                    }}
                 />
                 <div className="input-group-btn">
                     <button className="btn btn-default"

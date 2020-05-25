@@ -113,7 +113,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     private renderFeedback(): JSX.Element {
-    const feedbackDiv = <div onClick={() => this.toggleEdit()}>{"Add summary a feedback"}</div>;
+    const feedbackDiv = <div onClick={() => this.toggleEdit()}>{"Add a summary feedback"}</div>;
     const editFeedbackDiv = <div className="input-group col-12">
     <input
         autoFocus={true}

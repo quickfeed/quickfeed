@@ -53,6 +53,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
             >{this.state.comment !== "" ? this.state.comment : "Add a benchmark comment"}</div>;
         const editDiv = <div className="input-group col-md-12">
             <input
+                className="form-control m-input"
                 autoFocus={true}
                 type="text"
                 defaultValue={this.state.comment}

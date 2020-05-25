@@ -358,10 +358,6 @@ body {
     background-color: rgb(229, 229, 231);
 }
 
-.adding-b {
-    width: 100%;
-}
-
 .bm-btn {
     display: block;
     float: right;
@@ -406,6 +402,7 @@ body {
     float: left;
     font-size: 0.7em;
     margin-left: 10%;
+    margin-top: 0;
 }
 
 .r-grade {
@@ -508,8 +505,15 @@ body {
     display: flexbox;
 }
 
+.m-input {
+    width: 80%;
+    margin: auto;
+    border: none;
+    background-color: white;
+}
+
 .list-divider {
-    border-top: solid dimgray 0.5px;
+    border-top: solid rgb(172, 170, 170) 0.4px;
 }
 
 .switch-toggle {

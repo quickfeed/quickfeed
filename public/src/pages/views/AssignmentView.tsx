@@ -89,6 +89,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
             Add a new grading criteria group.
         </div>;
         const addingRow = <div className="input-group"><input
+        className="form-control m-input"
         autoFocus={true}
         type="text"
         defaultValue=""
