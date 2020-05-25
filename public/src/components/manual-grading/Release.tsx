@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from '../../../proto/ag_pb';
-import { totalScore, userSubmissionLink, submissionStatusToString } from '../../componentHelper';
+import { totalScore, userSubmissionLink, submissionStatusToString, setDivider } from '../../componentHelper';
 import { ISubmission } from "../../models";
 import { formatDate } from '../../helper';
 import ReactTooltip from "react-tooltip";
@@ -35,7 +35,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             reviews: [],
             score: totalScore(this.selectReadyReviews()),
             reviewers: new Map<User, Review>(),
-            open: false,
+            open: !this.props.teacherView,
             status: Submission.Status.NONE,
         }
     }
@@ -51,7 +51,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
         <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span><span className="r-score">Score: {totalScore(this.props.submission?.reviews ?? [])} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
-
 
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="release">
@@ -75,9 +74,11 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         }
 
         return <div className="release">
-            {headerDiv}
+            {this.props.teacherView ? headerDiv : null}
+            {open ? setDivider() : null}
             {open && this.props.teacherView ? this.infoTable() : null}
-            {open ? this.renderReviewTable() : null}
+            {open ? this.renderReleaseTable() : null}
+            {open}
         ></div>
     }
 
@@ -150,12 +151,12 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         return selected;
     }
 
-    private renderReviewTable(): JSX.Element {
+    private renderReleaseTable(): JSX.Element {
         const reviewersList = Array.from(this.state.reviewers.keys());
         return <div className="row">
             <table className="table table-condensed table-bordered">
             <thead><tr key="rthead"><th>Reviews:</th>{reviewersList.map((u, i) => <th className="release-cell">
-                {i + 1}
+                {(this.state.reviewers.get(u)?.getScore() ?? 0) + "%"}
             </th>)}</tr></thead>
             <tbody>
                 {this.renderTableRows()}

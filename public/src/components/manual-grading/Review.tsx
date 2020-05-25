@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review } from "../../../proto/ag_pb";
 import { ISubmission } from "../../models";
 import { GradeBenchmark } from './GradeBenchmark';
-import { deepCopy, userSubmissionLink, submissionStatusToString } from "../../componentHelper";
+import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider } from '../../componentHelper';
 
 interface ReviewPageProps {
     assignment: Assignment;
@@ -75,6 +75,8 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
 
         return <div className="review">
             {headerDiv}
+
+            {open ? setDivider() : null}
 
             {open ? this.renderAlert() : null}
 

@@ -265,5 +265,8 @@ export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
         newList[i] = newBm;
     });
     return newList;
+}
 
+export function setDivider(): JSX.Element {
+    return <hr className="list-divider"></hr>;
 }

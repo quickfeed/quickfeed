@@ -508,6 +508,10 @@ body {
     display: flexbox;
 }
 
+.list-divider {
+    border-top: solid dimgray 0.5px;
+}
+
 .switch-toggle {
     display: block;
     float: right;

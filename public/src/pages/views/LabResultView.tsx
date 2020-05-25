@@ -1,9 +1,8 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
-import { ISubmissionLink } from "../../models";
-import { User, Submission } from "../../../proto/ag_pb";
-import { TeacherPage } from '../TeacherPage';
-
+import { ISubmissionLink, ISubmission } from '../../models';
+import { User, Submission } from '../../../proto/ag_pb';
+import { Release } from '../../components/manual-grading/Release';
 interface ILabInfoProps {
     submissionLink: ISubmissionLink;
     student: User;
@@ -48,6 +47,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 scoreLimit={this.props.submissionLink.assignment.getScorelimit()}
                                 weight={100}
                             />
+                            {this.props.submissionLink.assignment.getReviewers() > 0 && latest.released ? this.renderReviewTable(latest) : null}
                             <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{buildLog}</code></div></div></Row>;
                         </section>
                     </div>
@@ -55,5 +55,22 @@ export class LabResultView extends React.Component<ILabInfoProps> {
             );
         }
         return <h1>No submissions yet</h1>;
+    }
+
+    private renderReviewTable(submission: ISubmission): JSX.Element {
+        return <div className="row"><Release
+            submission={submission}
+            assignment={this.props.submissionLink.assignment}
+            authorName={this.props.student.getName()}
+            authorLogin={this.props.student.getLogin()}
+            studentNumber={0}
+            courseURL={this.props.courseURL}
+            teacherView={false}
+            allClosed={false}
+            setGrade={async () => { return false }}
+            release={() => { return }}
+            getReviewers={async () => {return []}}
+            toggleCloseAll={() => { return }}
+        /></div>
     }
 }
