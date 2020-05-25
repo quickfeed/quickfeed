@@ -2,6 +2,7 @@ import * as React from "react";
 import { formatDate } from "../../helper";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ProgressBar } from "../progressbar/ProgressBar";
+import { submissionStatusToString } from "../../componentHelper";
 
 interface ISingleCourseOverviewProps {
     courseAndLabs: IStudentLabsForCourse;
@@ -23,24 +24,24 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
             submissionArray = this.props.courseAndLabs.labs;
         }
 
-        const labs: JSX.Element[] = submissionArray.map((submission, k) => {
+        const labs: JSX.Element[] = submissionArray.map((submissionLink, k) => {
             let submissionInfo = <div>No submissions</div>;
-            if (submission.submission) {
+            if (submissionLink.submission) {
                 submissionInfo = <div className="row">
                     <div className="col-md-6 col-lg-6">
-                        <ProgressBar progress={submission.submission.score} />
+                        <ProgressBar progress={submissionLink.submission.score} />
                     </div>
                     <div className="col-md-2 col-lg-2" >
-                        <span className="text-success"> Passed: {submission.submission.passedTests} </span>
-                        <span className="text-danger"> Failed: {submission.submission.failedTests} </span>
+                        <span className="text-success"> Passed: {submissionLink.submission.passedTests} </span>
+                        <span className="text-danger"> Failed: {submissionLink.submission.failedTests} </span>
                     </div>
                     <div className="col-md-2 col-lg-2">
-                        <span > {this.setStatusString(submission.submission)} </span>
+                        <span > {this.setStatusString(submissionLink.submission, submissionLink.assignment.getReviewers() > 0)} </span>
                     </div>
                     <div className="col-md-2 col-lg-2">
                         Deadline:
                         <span style={{ display: "inline-block", verticalAlign: "top", paddingLeft: "10px" }}>
-                            {formatDate(submission.assignment.getDeadline())}
+                            {formatDate(submissionLink.assignment.getDeadline())}
                         </span>
                     </div>
                 </div>;
@@ -49,15 +50,15 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
                 <li key={k} className="list-group-item clickable"
                     // Testing if the onClick handler should be for studentlab or grouplab.
                     onClick={() => {
-                        const courseId = submission.assignment.getCourseid();
-                        const assignmentId = submission.assignment.getId();
-                        if (!submission.assignment.getIsgrouplab()) {
+                        const courseId = submissionLink.assignment.getCourseid();
+                        const assignmentId = submissionLink.assignment.getId();
+                        if (!submissionLink.assignment.getIsgrouplab()) {
                             return this.props.onLabClick(courseId, assignmentId);
                         } else {
                             return this.props.onGroupLabClick(courseId, assignmentId);
                         }
                     }}>
-                    <strong>{submission.assignment.getName()}</strong>
+                    <strong>{submissionLink.assignment.getName()}</strong>
                     {submissionInfo}
                 </li >);
         });
@@ -88,7 +89,10 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
         return labAndGrouplabs;
     }
 
-    private setStatusString(submission: ISubmission): string {
+    private setStatusString(submission: ISubmission, manualReview: boolean): string {
+        if (manualReview) {
+            return submissionStatusToString(submission.status);
+        }
         return submission.approved ? "Approved" : "Not approved";
     }
 }
