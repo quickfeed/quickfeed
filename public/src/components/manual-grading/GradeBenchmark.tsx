@@ -26,7 +26,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
 
     public render() {
         return <div>
-            <h3 className="b-header">{this.props.benchmark.getHeading()}<span className="glyphicon glyphicaon-comment"></span></h3>
+            <h3 className="b-header">{this.props.benchmark.getHeading()}<span className="comment glyphicon glyphicon-comment" onClick={() => this.toggleEdit()}></span></h3>
             {this.renderComment()}
             {this.renderList()}
         </div>
@@ -47,10 +47,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
         />)
     }
 
-    private renderComment(): JSX.Element {
-        const commentDiv = <div className="comment-div col-md-12"
-            onClick={() => this.toggleEdit()}
-            >{this.state.comment !== "" ? this.state.comment : "Add a benchmark comment"}</div>;
+    private renderComment(): JSX.Element | null {
         const editDiv = <div className="input-group col-md-12">
             <input
                 className="form-control m-input"
@@ -58,7 +55,6 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
                 type="text"
                 defaultValue={this.state.comment}
                 onChange={(e) => this.setComment(e.target.value)}
-                onBlur={() => this.toggleEdit()}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         this.updateComment();
@@ -68,7 +64,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
                 }}
             /></div>
         return <div className="comment-div">
-            {this.state.commenting ? editDiv : commentDiv}
+            {this.state.commenting ? editDiv : null}
         </div>
     }
 

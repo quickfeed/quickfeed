@@ -34,12 +34,16 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
     private renderRow(): JSX.Element {
         switch (this.props.criterion.getGrade()) {
             case GradingCriterion.Grade.PASSED:
-        return <div className="success">{this.props.criterion.getDescription()}{this.renderSwitch()}</div>;
+        return <div className="c-success">{this.props.criterion.getDescription()}{this.renderSwitch()}{this.commentSpan()}</div>;
             case GradingCriterion.Grade.FAILED:
-        return <div className="failed">{this.props.criterion.getDescription()}{this.renderSwitch()}</div>;
+        return <div className="c-failed">{this.props.criterion.getDescription()}{this.renderSwitch()}{this.commentSpan()}</div>;
             default:
-        return <div className="active">{this.props.criterion.getDescription()}{this.renderSwitch()}</div>;
+        return <div className="c-active">{this.props.criterion.getDescription()}{this.renderSwitch()}{this.commentSpan()}</div>;
         }
+    }
+
+    private commentSpan(): JSX.Element {
+        return <span className="comment glyphicon glyphicon-comment" onClick={() => this.toggleEdit()}></span>
     }
 
     private renderSwitch() {
@@ -75,17 +79,13 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
         return "btn btn-xs " + (this.state.grade === grade ? classString : "btn-default");
     }
 
-    private renderComment(): JSX.Element {
-        const commentDiv = <div className="comment-div"
-            onClick={() => this.toggleEdit()}
-            >{this.state.comment !== "" ? this.state.comment : "Add new comment"}</div>;
+    private renderComment(): JSX.Element | null {
         const editDiv = <div className="input-group">
             <input
                 className="form-control m-input"
                 autoFocus={true}
                 type="text"
                 defaultValue={this.state.comment}
-                onBlur={() => this.toggleEdit()}
                 onChange={(e) => this.setComment(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -97,7 +97,7 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
             }
             /></div>
         return <div className="comment-div">
-            {this.state.commenting ? editDiv : commentDiv}
+            {this.state.commenting ? editDiv : null}
         </div>
     }
 

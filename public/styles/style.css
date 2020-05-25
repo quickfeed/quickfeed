@@ -374,8 +374,10 @@ body {
     border-bottom: dimgray solid 0.5px;
 }
 
-.comment-div {
-    margin: 0;
+.comment {
+    display: block;
+    float: right;
+    margin-right: 1%;
 }
 
 .r-info {
@@ -406,6 +408,7 @@ body {
     font-size: 0.7em;
     margin-left: 10%;
     margin-top: 0;
+    padding: 0;
 }
 
 .r-grade {
@@ -455,6 +458,8 @@ body {
 .r-li {
     border-right: none;
     border-left: none;
+    margin: 0;
+    padding: 0;
 }
 
 .r-table {
@@ -504,6 +509,11 @@ body {
     overflow-y: auto;
 }
 
+.f-row {
+    padding: 1% 1% 1% 2%;
+    width: 100%;
+}
+
 .r-row {
     display: flexbox;
 }
@@ -522,6 +532,7 @@ body {
 .switch-toggle {
     display: block;
     float: right;
+    margin-right: 1%;
 }
   
 .switch-toggle label:not(.disabled) {
