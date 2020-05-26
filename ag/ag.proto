@@ -248,6 +248,14 @@ message ReviewRequest {
     Review review = 2;
 }
 
+message ReleaseRequest {
+    uint64 courseID = 1;
+    uint64 assignmentID = 2;
+    uint32 scoreLimit = 3;
+    bool release = 4;
+    bool approve = 5;
+}
+
 message CourseRequest {
     uint64 courseID = 1;
 }
@@ -429,7 +437,8 @@ service AutograderService {
 
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Void) {}
-    rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers);
+    rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
+    rpc ReleaseAll(ReleaseRequest) returns (Void) {}
 
     // misc //
     

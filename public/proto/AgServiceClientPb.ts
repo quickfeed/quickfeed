@@ -31,6 +31,7 @@ import {
   Organization,
   Providers,
   RebuildRequest,
+  ReleaseRequest,
   Repositories,
   RepositoryRequest,
   Review,
@@ -855,6 +856,28 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoGetReviewers,
+      callback);
+  }
+
+  methodInfoReleaseAll = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: ReleaseRequest) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  releaseAll(
+    request: ReleaseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/ReleaseAll',
+      request,
+      metadata || {},
+      this.methodInfoReleaseAll,
       callback);
   }
 

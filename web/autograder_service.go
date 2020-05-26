@@ -690,8 +690,26 @@ func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewReque
 	return &pb.Void{}, err
 }
 
+// ReleaseAll approves and/or releases manual reviews for student submission for the given assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) ReleaseAll(ctx context.Context, in *pb.ReleaseRequest) (*pb.Void, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("ReleaseAll failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("ReleaseAll failed: user is not teacher")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update reviews")
+	}
+
+	// decide to approve / release or both in a web method
+
+	return &pb.Void{}, nil
+}
+
 // GetReviewers returns names of all active reviewers for a student submission
-// Access policy: Teacer of CourseID
+// Access policy: Teacher of CourseID
 func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionReviewersRequest) (*pb.Reviewers, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
