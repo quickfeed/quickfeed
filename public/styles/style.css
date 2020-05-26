@@ -457,8 +457,7 @@ body {
 }
 
 .r-li {
-    border-right: none;
-    border-left: none;
+    border: none;
     margin: 0;
     padding: 2%;
 }

@@ -34,8 +34,8 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             reviews: this.selectReadyReviews(),
             score: totalScore(this.selectReadyReviews()),
             reviewers: new Map<User, Review>(),
-            open: !this.props.teacherView,
-            status: Submission.Status.NONE,
+            open: !props.teacherView,
+            status: props.submission?.status ?? Submission.Status.NONE,
         }
     }
 
@@ -151,7 +151,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const reviewersList = Array.from(this.state.reviewers.keys());
         return <div className="row">
             <table className="table table-condensed table-bordered">
-            <thead><tr key="rthead"><th>Reviews:</th>{reviewersList.map((u, i) => <th className="release-cell">
+            <thead><tr key="rthead"><th key="th0">Reviews:</th>{reviewersList.map((u, i) => <th key={"th" + (i + 1)} className="release-cell">
                 {(this.state.reviewers.get(u)?.getScore() ?? 0) + "%"}
             </th>)}</tr></thead>
             <tbody>
@@ -243,11 +243,11 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     private renderStatusButton(): JSX.Element {
         return <div className="input-group r-grade">
             <span className="input-group-addon">Status: </span>
-            <select className="form-control" onChange={(e) => this.updateStatus(e.target.value)}>
-                <option key="st0" value="none" selected={this.props.submission?.status === Submission.Status.NONE}>Set status</option>
-                <option key="st1" value="approve" selected={this.props.submission?.status === Submission.Status.APPROVED}>Approved</option>
-                <option key="st2" value="reject" selected={this.props.submission?.status === Submission.Status.REJECTED}>Rejected</option>
-                <option key="st3" value="revision" selected={this.props.submission?.status === Submission.Status.REVISION}>Revision</option>
+            <select className="form-control" defaultValue={this.state.status} onChange={(e) => this.updateStatus(e.target.value)}>
+                <option key="st0" value={Submission.Status.NONE} >Set status</option>
+                <option key="st1" value={Submission.Status.APPROVED} >Approved</option>
+                <option key="st2" value={Submission.Status.REJECTED} >Rejected</option>
+                <option key="st3" value={Submission.Status.REVISION} >Revision</option>
             </select>
             </div>;
     }
@@ -257,14 +257,14 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             let newStatus: Submission.Status = Submission.Status.NONE;
             let newBool = false;
             switch (action) {
-                case "approve":
+                case "1":
                     newStatus = Submission.Status.APPROVED;
                     newBool = true;
                     break;
-                case "reject":
+                case "2":
                     newStatus = Submission.Status.REJECTED;
                     break;
-                case "revision":
+                case "3":
                     newStatus = Submission.Status.REVISION;
                     break;
                 default:
