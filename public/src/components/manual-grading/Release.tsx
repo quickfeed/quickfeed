@@ -94,8 +94,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     <li key="li3" className="list-group-item r-li">
                         <span className="r-table">Repository: </span>
                         {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
-                    <li key="li4" className="list-group-item r-li"><span className="r-table">Status: </span>{submissionStatusToString(this.state.status)}</li>
-                    <li key="li5" className="list-group-item r-li">{this.renderStatusButton()}</li>
+                    <li key="li4" className="list-group-item r-li">{this.renderStatusButton()}</li>
                 </ul>
             </div>
             <div className="col-md-6">
@@ -242,7 +241,8 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private renderStatusButton(): JSX.Element {
-        return <div className="form-group r-grade">
+        return <div className="input-group r-grade">
+            <span className="input-group-addon">Status: </span>
             <select className="form-control" onChange={(e) => this.updateStatus(e.target.value)}>
                 <option key="st0" value="none" selected={this.props.submission?.status === Submission.Status.NONE}>Set status</option>
                 <option key="st1" value="approve" selected={this.props.submission?.status === Submission.Status.APPROVED}>Approved</option>

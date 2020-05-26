@@ -412,7 +412,7 @@ body {
 }
 
 .r-grade {
-    width: 80%;
+    width: 100%;
 }
 
 .r-score {
@@ -460,7 +460,7 @@ body {
     border-right: none;
     border-left: none;
     margin: 0;
-    padding: 0;
+    padding: 2%;
 }
 
 .r-table {
