@@ -34,7 +34,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         super(props);
         this.state = {
             selectedStudent: undefined,
-            selectedStudents: this.selectAllStudents(),
+            selectedStudents: [],
             selectedAssignment: this.props.assignments[0] ?? new Assignment(), // TODO: test on courses with no assignments
             errorMessage: "",
             submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, ISubmissionLink>(),
@@ -75,7 +75,8 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
 
     public componentDidMount() {
         this.setState((state) => ({
-            selectedStudents: sortStudentsForRelease(state.submissionsForAssignment, state.selectedAssignment.getReviewers()),
+            selectedStudents: this.props.releaseView ? sortStudentsForRelease(state.submissionsForAssignment, state.selectedAssignment.getReviewers()) : this.selectAllStudents(),
+            submissionsForAssignment: this.selectAllSubmissions(state.selectedAssignment),
         }));
     }
 
@@ -98,10 +99,10 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                 <div className="input-group-btn">
                     <button className="btn btn-default"
                         onClick={() => {
-                          if (this.state.scoreLimit < 1) {
-                              this.setState({
+                            if (this.state.scoreLimit < 1) {
+                                this.setState({
                                   errorMessage: "Minimal score for approving is not set",
-                              });
+                            });
                           } else {
                             console.log("Approving all submissions with score >= " + this.state.scoreLimit)}
                           }
@@ -119,7 +120,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                             } else {
                               console.log("Releasing reviews for all submission with score >= " + this.state.scoreLimit)}
                             }
-
                         }
                     >Release all</button>
                 </div>
@@ -128,6 +128,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderReleaseList(): JSX.Element {
+        const allCourseStudents = this.selectAllStudents();
         return <div className="col-md-12">
             <ul className="list-group">
                 {
@@ -161,7 +162,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                                 }
                             }}
                             getReviewers={this.props.getReviewers}
-                            studentNumber={this.state.selectedStudents.indexOf(s) + 1}
+                            studentNumber={allCourseStudents.indexOf(s) + 1}
                         /></li>
                     )
                 }
@@ -170,6 +171,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderReviewList(): JSX.Element {
+        const allCourseStudents = this.selectAllStudents();
         return <div className="col-md-12">
         <ul className="list-group">
             {this.state.selectedStudents.map((s, i) =>
@@ -199,7 +201,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                         }
                         return false;
                     }}
-                    studentNumber={this.state.selectedStudents.indexOf(s) + 1}
+                    studentNumber={allCourseStudents.indexOf(s) + 1}
                     isSelected={this.state.selectedStudent === s}
                      /></li>
                 )}
@@ -237,7 +239,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                 selectedStudent: undefined,
                 selectedAssignment: current,
                 submissionsForAssignment: submissionsList,
-                selectedStudents: sortStudentsForRelease(submissionsList, current.getReviewers()),
+                selectedStudents: this.props.releaseView ? sortStudentsForRelease(submissionsList, current.getReviewers()) : this.selectAllStudents(),
             });
         }
     }

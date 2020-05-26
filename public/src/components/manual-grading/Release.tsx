@@ -78,7 +78,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             {open && this.props.teacherView ? this.infoTable() : null}
             {open ? this.renderReleaseTable() : null}
             {open}
-        ></div>;
+        </div>;
     }
 
     private infoTable(): JSX.Element {
@@ -120,8 +120,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                 if (this.props.submission && this.props.assignment.getReviewers() > 0) {
                     this.props.release(!this.props.submission.released);
                 }
-            }}
-            >{this.releaseButtonString()}</div>;
+            }}>{this.releaseButtonString()}</div>;
         }
 
     private releaseButtonClass(): string {
