@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion, Assignment } from '../proto/ag_pb';
-import { IAllSubmissionsForEnrollment, ISubmission } from "./models";
+import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from '../proto/ag_pb';
+import { IAllSubmissionsForEnrollment, ISubmissionLink, IStudentLabsForCourse, ISubmission } from './models';
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
     let sorted: Enrollment[] = [];
@@ -26,6 +26,22 @@ export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: bo
     })
     sorted = sorted.concat(active, archived);
     return sorted;
+}
+
+export function sortStudentsForRelease(allSubmissions: Map<User, ISubmissionLink>, reviewers: number): User[] {
+    const haveAllReviews: User[] = [];
+    const haveSubmission: User[] = [];
+    const noSubmissions: User[] = [];
+    allSubmissions.forEach((s, u) => {
+        if (s.submission && hasReviews(s.submission, reviewers)) {
+            haveAllReviews.push(u);
+        } else if (s.submission) {
+            haveSubmission.push(u);
+        } else {
+            noSubmissions.push(u);
+        }
+    });
+    return haveAllReviews.concat(haveSubmission, noSubmissions);
 }
 
 // used in menus: ignores hidden courses
@@ -270,4 +286,8 @@ export function deepCopy(bms: GradingBenchmark[]): GradingBenchmark[] {
 
 export function setDivider(): JSX.Element {
     return <hr className="list-divider"></hr>;
+}
+
+export function hasReviews(submission: ISubmission, reviews: number): boolean {
+    return submission.reviews.length === reviews;
 }

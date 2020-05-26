@@ -3,7 +3,7 @@ import { Assignment, Course, Review, User, Submission } from "../../../proto/ag_
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from "../../models";
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { searchForUsers } from "../../componentHelper";
+import { searchForUsers, sortStudentsForRelease } from '../../componentHelper';
 import { Release } from "../../components/manual-grading/Release";
 
 interface GradingViewProps {
@@ -121,10 +121,11 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderReleaseList(): JSX.Element {
+        const sortedStudents = sortStudentsForRelease(this.state.submissionsForAssignment, this.state.selectedAssignment.getReviewers());
         return <div className="col-md-12">
             <ul className="list-group">
                 {
-                    this.state.selectedStudents.map((s, i) =>
+                    sortedStudents.map((s, i) =>
                         <li key={i} className="list-group-item li-review"><Release
                             key={"f" + i}
                             teacherView={true}

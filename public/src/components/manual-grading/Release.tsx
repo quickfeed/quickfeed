@@ -56,21 +56,21 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             return <div className="release">
                 {headerDiv}
                 {open ? noReviewsDiv : null}
-            </div>
+            </div>;
         }
 
         if (!this.props.submission) {
             return <div className="release">
                 {headerDiv}
                 {open ? noSubmissionDiv : null}
-            </div>
+            </div>;
         }
 
         if (this.state.reviews.length < 1) {
             return <div className="release">
                 {headerDiv}
                 {open ? noReadyReviewsDiv : null}
-            </div>
+            </div>;
         }
 
         return <div className="release">
@@ -79,7 +79,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             {open && this.props.teacherView ? this.infoTable() : null}
             {open ? this.renderReleaseTable() : null}
             {open}
-        ></div>
+        ></div>;
     }
 
     private infoTable(): JSX.Element {
@@ -112,7 +112,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                         </tr>)}</tbody>
                 </table>
             </div>
-        </div>
+        </div>;
     }
 
     private releaseButton(): JSX.Element {
@@ -123,7 +123,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     this.props.release(!this.props.submission.released);
                 }
             }}
-            >{this.releaseButtonString()}</div>
+            >{this.releaseButtonString()}</div>;
         }
 
     private releaseButtonClass(): string {
@@ -138,7 +138,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         if (!this.props.submission || this.props.assignment.getReviewers() < 1) {
              return "N/A";
          }
-        return this.props.submission.released ? "Released" : "Release"
+        return this.props.submission.released ? "Released" : "Release";
     }
 
     private selectReadyReviews(): Review[] {
@@ -160,7 +160,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                 {this.renderTableRows()}
             </tbody>
             </table>
-        </div>
+        </div>;
     }
 
     private renderTableRows(): JSX.Element[] {
@@ -195,7 +195,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             case GradingCriterion.Grade.FAILED:
                 return "r-cell glyphicon glyphicon-remove";
             default:
-                return "r-cell glyphicon glyphicon-ban-circle"
+                return "r-cell glyphicon glyphicon-ban-circle";
         }
     }
 
