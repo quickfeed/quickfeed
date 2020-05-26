@@ -25,6 +25,7 @@ export class Search extends React.Component<ISearchProps, ISearchState> {
                 </span>
                 {this.props.children}
                 <input
+                    className="form-control"
                     type="text"
                     placeholder={this.props.placeholder ? this.props.placeholder : ""}
                     onChange={(e) => this.onChange(e)}

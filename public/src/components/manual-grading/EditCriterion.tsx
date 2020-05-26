@@ -53,7 +53,7 @@ export class EditCriterion extends React.Component<EditCriterionProps, EditCrite
     }
 
     private renderEditView(): JSX.Element {
-        return <div className="input-group">
+        return <div className="input-group col-md-12">
             <input
                 className="form-control m-input"
                 autoFocus={true}

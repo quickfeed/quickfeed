@@ -53,7 +53,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
 
     private renderAddRow(): JSX.Element {
         const addDiv = <div className="add-b" onClick={() => this.toggleAdd()}>Add a new grading criterion.</div>;
-        const addingDiv = <div className="input-group"><input
+        const addingDiv = <div className="input-group col-md-12"><input
             className="form-control m-input"
             autoFocus={true}
             type="text"
@@ -137,7 +137,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     }
 
     private renderHeader(): JSX.Element {
-        return <div className="input-group">
+        return <div className="input-group col-md-12">
             <input
                 className="form-control m-input"
                 autoFocus={true}

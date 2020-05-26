@@ -88,7 +88,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         const addRow = <div className="add-b" onClick={() => this.toggleAdding()}>
             Add a new grading criteria group.
         </div>;
-        const addingRow = <div className="input-group"><input
+        const addingRow = <div className="input-group col-md-12"><input
         className="form-control m-input"
         autoFocus={true}
         type="text"

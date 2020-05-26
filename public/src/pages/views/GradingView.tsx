@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Assignment, Course, Review, User, Submission } from "../../../proto/ag_pb";
-import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from "../../models";
+import { Assignment, Course, Group, Review, User, Submission } from "../../../proto/ag_pb";
+import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
 import { searchForUsers, sortStudentsForRelease } from '../../componentHelper';
@@ -24,6 +24,7 @@ interface GradingViewState {
     selectedStudents: User[];
     selectedAssignment: Assignment;
     submissionsForAssignment: Map<User, ISubmissionLink>;
+    submissionsForGroupAssignment: Map<Group, ISubmissionLink>;
     errorMessage: string;
     allClosed: boolean;
     scoreLimit: number;
@@ -37,6 +38,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
             selectedAssignment: this.props.assignments[0] ?? new Assignment(), // TODO: test on courses with no assignments
             errorMessage: "",
             submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, ISubmissionLink>(),
+            submissionsForGroupAssignment: new Map<Group, ISubmissionLink>(),
             allClosed: true,
             scoreLimit: 0,
         }
@@ -58,7 +60,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                  {this.props.assignments.map((a, i) => <option
                             key={i}
                             value={a.getId()}
-                        >{a.getName()}</option>)}Select assignment
+                       >{a.getName()}</option>)}Select assignment
                     </select>
                     </div>
             </div>

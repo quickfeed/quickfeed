@@ -80,7 +80,7 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
     }
 
     private renderComment(): JSX.Element | null {
-        const editDiv = <div className="input-group">
+        const editDiv = <div className="input-group col-md-12">
             <input
                 className="form-control m-input"
                 autoFocus={true}
