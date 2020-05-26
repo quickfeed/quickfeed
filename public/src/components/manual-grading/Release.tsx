@@ -13,11 +13,10 @@ interface ReleaseProps {
     studentNumber: number;
     courseURL: string;
     teacherView: boolean;
-    allClosed: boolean;
+    isSelected: boolean;
     setGrade: (status: Submission.Status, approved: boolean) => Promise<boolean>;
     release: (ready: boolean) => void;
     getReviewers: (submissionID: number) => Promise<User[]>;
-    toggleCloseAll: () => void;
 }
 
 interface ReleaseState {
@@ -32,7 +31,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     constructor(props: ReleaseProps) {
         super(props);
         this.state = {
-            reviews: [],
+            reviews: this.selectReadyReviews(),
             score: totalScore(this.selectReadyReviews()),
             reviewers: new Map<User, Review>(),
             open: !this.props.teacherView,
@@ -41,14 +40,14 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     public render() {
-        const open = this.state.open && !this.props.allClosed;
+        const open = this.state.open && this.props.isSelected;
         const reviewInfoSpan = <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</span>;
         const noReviewsSpan = <span className="r-info">N/A</span>;
         const noSubmissionDiv = <div className="alert alert-info">No submissions for {this.props.assignment.getName()}</div>;
         const noReviewsDiv = <div className="alert alert-info">{this.props.assignment.getName()} is not for manual grading</div>
         const noReadyReviewsDiv = <div className="alert alert-info">No ready reviews for {this.props.assignment.getName()}</div>
 
-        const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
+        const headerDiv = <div className="row review-header" onClick={() => {if (this.props.teacherView) this.toggleOpen()}}>
         <h3><span className="r-number">{this.props.studentNumber}. </span><span className="r-header">{this.props.authorName}</span><span className="r-score">Score: {totalScore(this.props.submission?.reviews ?? [])} </span>{this.props.assignment.getReviewers() > 0 ? reviewInfoSpan : noReviewsSpan}{this.releaseButton()}</h3>
         </div>;
 
@@ -66,7 +65,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             </div>;
         }
 
-        if (this.state.reviews.length < 1) {
+        if (this.selectReadyReviews().length < 1) {
             return <div className="release">
                 {headerDiv}
                 {open ? noReadyReviewsDiv : null}
@@ -309,10 +308,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             })
         }
 
-        // if opening, close all other reviews
-        if (!(this.state.open && this.props.allClosed)) {
-            this.props.toggleCloseAll();
-        }
         const ready = this.selectReadyReviews();
         if (ready.length > 0) {
             this.setState({

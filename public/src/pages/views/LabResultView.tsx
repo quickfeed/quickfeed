@@ -48,7 +48,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 weight={100}
                             />
                             {this.props.submissionLink.assignment.getReviewers() > 0 && latest.released ? this.renderReviewInfo(latest) : null}
-                            <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{buildLog}</code></div></div></Row>;
+                            <Row><div key="loghead" className="col-lg-12"><div key="logview" className="well"><code id="logs">{buildLog}</code></div></div></Row>
                         </section>
                     </div>
                 </div>
@@ -70,11 +70,10 @@ export class LabResultView extends React.Component<ILabInfoProps> {
             studentNumber={0}
             courseURL={this.props.courseURL}
             teacherView={false}
-            allClosed={false}
+            isSelected={true}
             setGrade={async () => { return false }}
             release={() => { return }}
             getReviewers={async () => {return []}}
-            toggleCloseAll={() => { return }}
         /></div>
     }
 }
