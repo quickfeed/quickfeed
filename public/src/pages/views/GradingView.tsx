@@ -20,13 +20,12 @@ interface GradingViewProps {
 }
 
 interface GradingViewState {
-
+    selectedStudent: User | undefined;
     selectedStudents: User[];
     selectedAssignment: Assignment;
     submissionsForAssignment: Map<User, ISubmissionLink>;
     submissionsForGroupAssignment: Map<Group, ISubmissionLink>;
     errorMessage: string;
-    allClosed: boolean;
     scoreLimit: number;
 }
 
@@ -34,12 +33,12 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     constructor(props: GradingViewProps) {
         super(props);
         this.state = {
+            selectedStudent: undefined,
             selectedStudents: this.selectAllStudents(),
             selectedAssignment: this.props.assignments[0] ?? new Assignment(), // TODO: test on courses with no assignments
             errorMessage: "",
             submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, ISubmissionLink>(),
             submissionsForGroupAssignment: new Map<Group, ISubmissionLink>(),
-            allClosed: true,
             scoreLimit: 0,
         }
     }
@@ -72,6 +71,12 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
             </div>
 
         </div>
+    }
+
+    public componentDidMount() {
+        this.setState((state) => ({
+            selectedStudents: sortStudentsForRelease(state.submissionsForAssignment, state.selectedAssignment.getReviewers()),
+        }));
     }
 
     private renderReleaseRow(): JSX.Element {
@@ -123,12 +128,11 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
     }
 
     private renderReleaseList(): JSX.Element {
-        const sortedStudents = sortStudentsForRelease(this.state.submissionsForAssignment, this.state.selectedAssignment.getReviewers());
         return <div className="col-md-12">
             <ul className="list-group">
                 {
-                    sortedStudents.map((s, i) =>
-                        <li key={i} className="list-group-item li-review"><Release
+                    this.state.selectedStudents.map((s, i) =>
+                        <li key={i} onClick={() => this.setState({selectedStudent: s})} className="list-group-item li-review"><Release
                             key={"f" + i}
                             teacherView={true}
                             assignment={this.state.selectedAssignment}
@@ -136,7 +140,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                             authorName={s.getName()}
                             authorLogin={s.getLogin()}
                             courseURL={this.props.courseURL}
-                            allClosed={this.state.allClosed}
+                            isSelected={this.state.selectedStudent === s}
                             setGrade={async (status: Submission.Status, approved: boolean) => {
                                 const current = this.state.submissionsForAssignment.get(s);
                                 if (current && current.submission) {
@@ -158,7 +162,6 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                             }}
                             getReviewers={this.props.getReviewers}
                             studentNumber={this.state.selectedStudents.indexOf(s) + 1}
-                            toggleCloseAll={() => this.toggleClosed()}
                         /></li>
                     )
                 }
@@ -166,20 +169,11 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         </div>
     }
 
-    private toggleClosed() {
-        this.setState({
-            allClosed: !this.state.allClosed,
-            selectedStudents: this.selectAllStudents(),
-            submissionsForAssignment: this.state.selectedAssignment ? this.selectAllSubmissions(this.state.selectedAssignment) : this.selectAllSubmissions(this.props.assignments[0]),
-            errorMessage: "",
-        });
-    }
-
     private renderReviewList(): JSX.Element {
         return <div className="col-md-12">
         <ul className="list-group">
             {this.state.selectedStudents.map((s, i) =>
-                <li key={i} className="list-group-item li-review"><ReviewPage
+                <li key={i} onClick={() => this.setState({selectedStudent: s})} className="list-group-item li-review"><ReviewPage
                     key={"r" + i}
                     assignment={this.state.selectedAssignment}
                     submission={this.state.submissionsForAssignment.get(s)?.submission}
@@ -206,8 +200,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                         return false;
                     }}
                     studentNumber={this.state.selectedStudents.indexOf(s) + 1}
-                    allClosed={this.state.allClosed}
-                    toggleCloseAll={() => this.toggleClosed()}
+                    isSelected={this.state.selectedStudent === s}
                      /></li>
                 )}
             </ul>
@@ -239,9 +232,12 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         const currentID = parseInt(id, 10);
         const current = this.props.assignments.find(item => item.getId() === currentID);
         if (current) {
+            const submissionsList = this.selectAllSubmissions(current);
             this.setState({
+                selectedStudent: undefined,
                 selectedAssignment: current,
-                submissionsForAssignment: this.selectAllSubmissions(current),
+                submissionsForAssignment: submissionsList,
+                selectedStudents: sortStudentsForRelease(submissionsList, current.getReviewers()),
             });
         }
     }

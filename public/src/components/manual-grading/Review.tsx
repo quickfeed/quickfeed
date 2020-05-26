@@ -12,10 +12,9 @@ interface ReviewPageProps {
     authorLogin: string;
     courseURL: string;
     reviewerID: number;
-    allClosed: boolean;
+    isSelected: boolean;
     addReview: (review: Review) => Promise<boolean>;
     updateReview: (review: Review) => Promise<boolean>;
-    toggleCloseAll: () => void;
 }
 
 interface ReviewPageState {
@@ -48,7 +47,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     }
 
     public render() {
-        const open = this.state.open;
+        const open = this.state.open && this.props.isSelected;
         const reviewInfoSpan = <span className="r-info">Reviews: {this.props.submission?.reviews.length ?? 0}/{this.props.assignment.getReviewers()}</span>;
         const noReviewsSpan = <span className="r-info">N/A</span>;
         const headerDiv = <div className="row review-header" onClick={() => this.toggleOpen()}>
@@ -293,7 +292,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 score: rw.getScore(),
                 benchmarks: this.refreshBenchmarks(rw),
                 feedback: rw.getFeedback(),
-                open: !this.state.open,
+                open: this.props.isSelected ? !this.state.open : true,
                 graded: this.gradedTotal(rw),
                 ready: rw.getReady(),
 
@@ -302,7 +301,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             this.setState({
                 review: undefined,
                 benchmarks: deepCopy(this.props.assignment.getGradingbenchmarksList()),
-                open: !this.state.open,
+                open: this.props.isSelected ? !this.state.open : true,
                 graded: this.gradedTotal(),
                 score: 0,
             });

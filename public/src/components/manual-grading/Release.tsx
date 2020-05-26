@@ -311,7 +311,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const ready = this.selectReadyReviews();
         if (ready.length > 0) {
             this.setState({
-                open: !this.state.open,
+                open: this.props.isSelected ? !this.state.open : true,
                 reviewers: await this.mapReviewers(),
                 reviews: ready,
                 score: totalScore(ready),

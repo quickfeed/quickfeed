@@ -41,6 +41,9 @@ export function sortStudentsForRelease(allSubmissions: Map<User, ISubmissionLink
             noSubmissions.push(u);
         }
     });
+    console.log("with all reviews: " + haveAllReviews.length);
+    console.log("with submission: " + haveSubmission.length);
+    console.log("no submissions: " + noSubmissions.length);
     return haveAllReviews.concat(haveSubmission, noSubmissions);
 }
 
