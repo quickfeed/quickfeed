@@ -47,7 +47,7 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
         if (this.props.criterion.getComment() === "") {
             return <span className="comment glyphicon glyphicon-comment" onClick={() => this.toggleEdit()}></span>;
         }
-        const id = this.props.criterion.getId().toString();
+        const id = this.props.criterion.getId().toString() + "cr";
         return <span><span className="comment glyphicon glyphicon-comment"
             data-tip
             data-for={id}

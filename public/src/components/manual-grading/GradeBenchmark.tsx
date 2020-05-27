@@ -27,7 +27,7 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
 
     public render() {
         return <div>
-            <h3 className="b-header">{this.props.benchmark.getHeading()}{this.commentSpan(this.props.benchmark.getComment(), this.props.benchmark.getId().toString())}</h3>
+            <h3 className="b-header">{this.props.benchmark.getHeading()}{this.commentSpan(this.props.benchmark.getComment(), "bm" + this.props.benchmark.getId().toString())}</h3>
             {this.renderComment()}
             {this.renderList()}
         </div>
