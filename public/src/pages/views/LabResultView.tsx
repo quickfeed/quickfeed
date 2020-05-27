@@ -59,6 +59,19 @@ export class LabResultView extends React.Component<ILabInfoProps> {
         return <h1>No submissions yet</h1>;
     }
 
+
+    private reviewersForStudentPage(submission: ISubmission) {
+        const reviewers: User[] = [];
+        submission.reviews.forEach(r => {
+            if (r.getReady()) {
+                const reviewer = new User();
+                reviewer.setId(r.getReviewerid());
+                reviewers.push(reviewer);
+            }
+        });
+        return reviewers;
+    }
+
     private renderReviewInfo(submission: ISubmission): JSX.Element {
         if (this.props.teacherView) {
             return <div className="row">
@@ -75,7 +88,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
             isSelected={true}
             setGrade={async () => { return false }}
             release={() => { return }}
-            getReviewers={async () => {return []}}
+            getReviewers={async () => {return this.reviewersForStudentPage(submission)}}
         /></div>
     }
 }
