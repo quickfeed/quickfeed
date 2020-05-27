@@ -26,20 +26,24 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
     }
 
     public render() {
-        return <div className="c-element">
+        return <div className={"c-element " + this.setColor(this.props.criterion.getGrade())}>
             {this.renderRow()}
             {this.renderComment()}
         </div>
     }
 
     private renderRow(): JSX.Element {
-        switch (this.props.criterion.getGrade()) {
+        return <div>{this.props.criterion.getDescription()}{this.renderSwitch()}{this.commentSpan()}</div>;
+    }
+
+    private setColor(grade: GradingCriterion.Grade): string {
+        switch (grade) {
             case GradingCriterion.Grade.PASSED:
-        return <div className="c-success">{this.props.criterion.getDescription()}{this.renderSwitch()}{this.commentSpan()}</div>;
+                return "bg-success";
             case GradingCriterion.Grade.FAILED:
-        return <div className="c-failed">{this.props.criterion.getDescription()}{this.renderSwitch()}{this.commentSpan()}</div>;
+                return "bg-danger";
             default:
-        return <div className="c-active">{this.props.criterion.getDescription()}{this.renderSwitch()}{this.commentSpan()}</div>;
+                return "bg-light"
         }
     }
 

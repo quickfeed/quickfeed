@@ -369,7 +369,7 @@ body {
 
 .c-element {
     margin: auto;
-    padding: 1%;
+    padding: 0.5%;
     border: none;
     border-bottom: dimgray solid 0.5px;
 }

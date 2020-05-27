@@ -321,7 +321,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
     private makeAlertString(alert?: string): string {
         if (!this.props.submission) return "";
         if (this.props.assignment.getReviewers() === 0) return "This assignment has no grading criteria";
-        if (!this.state.review && this.props.assignment.getReviewers() <= this.props.submission.reviews.length) return "All reviews are redy for this submission";
+        if (!this.state.review && this.props.assignment.getReviewers() <= this.props.submission.reviews.length) return "All reviews are ready for this submission";
         return alert ?? "";
     }
 
