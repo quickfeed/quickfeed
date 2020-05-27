@@ -3,6 +3,7 @@ import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
 import { ISubmissionLink, ISubmission } from '../../models';
 import { User } from '../../../proto/ag_pb';
 import { Release } from '../../components/manual-grading/Release';
+import { submissionStatusToString } from '../../componentHelper';
 interface ILabInfoProps {
     submissionLink: ISubmissionLink;
     student: User;
@@ -31,6 +32,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 teacherPageView={this.props.teacherPageView}
                                 lab={this.props.submissionLink.assignment.getName()}
                                 progress={latest.score}
+                                status={latest.status}
                                 isApproved={latest.approved}
                                 authorName={this.props.submissionLink.authorName}
                                 onApproveClick={this.props.onApproveClick}

@@ -1,10 +1,12 @@
 import * as React from "react";
 import { ProgressBar, Row } from "../../components";
+import { Submission } from '../../../proto/ag_pb';
 
 interface ILabResult {
     assignment_id: number;
     submission_id: number;
     progress: number;
+    status: Submission.Status;
     lab: string;
     authorName?: string;
     teacherView: boolean;
