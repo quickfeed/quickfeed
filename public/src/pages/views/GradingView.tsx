@@ -3,7 +3,7 @@ import { Assignment, Course, Group, Review, User, Submission } from "../../../pr
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { searchForUsers, sortStudentsForRelease } from '../../componentHelper';
+import { searchForUsers, sortStudentsForRelease, totalScore } from '../../componentHelper';
 import { Release } from "../../components/manual-grading/Release";
 
 interface GradingViewProps {
@@ -177,6 +177,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                                 if (current && current.submission) {
                                     current.submission.status = status;
                                     current.submission.approved = approved;
+                                    current.submission.score = totalScore(current.submission.reviews);
                                     return this.props.onUpdate(current.submission);
                                 }
                                 return false;
@@ -185,6 +186,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                                 const current = this.state.submissionsForAssignment.get(s)?.submission;
                                 if (current) {
                                     current.released = release;
+                                    current.score = totalScore(current.reviews);
                                     const ans = this.props.onUpdate(current);
                                     if (ans) return true;
                                     current.released = !release;
