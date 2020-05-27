@@ -1,6 +1,7 @@
 import * as React from "react";
 import { GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
 import { GradeCriterion } from "./GradeCriterion";
+import ReactTooltip from "react-tooltip";
 
 interface GradeBenchmarkProps {
     benchmark: GradingBenchmark,
@@ -26,10 +27,26 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
 
     public render() {
         return <div>
-            <h3 className="b-header">{this.props.benchmark.getHeading()}<span className="comment glyphicon glyphicon-comment" onClick={() => this.toggleEdit()}></span></h3>
+            <h3 className="b-header">{this.props.benchmark.getHeading()}{this.commentSpan(this.props.benchmark.getComment(), this.props.benchmark.getId().toString())}</h3>
             {this.renderComment()}
             {this.renderList()}
         </div>
+    }
+
+    private commentSpan(text: string, id: string): JSX.Element {
+        if (text === "") {
+            return <span className="comment glyphicon glyphicon-comment" onClick={() => this.toggleEdit()}></span>;
+        }
+        return <span><span className="comment glyphicon glyphicon-comment"
+            data-tip
+            data-for={id}
+            onClick={() => this.toggleEdit()}
+        ></span>
+        <ReactTooltip
+            type="light"
+            effect="solid"
+            id={id}
+        ><p>{text}</p></ReactTooltip></span>;
     }
 
     private renderList(): JSX.Element[] {

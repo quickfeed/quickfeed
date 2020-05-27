@@ -459,7 +459,8 @@ body {
 .r-li {
     border: none;
     margin: 0;
-    padding: 2%;
+    padding: 1%;
+    height: 3%;
 }
 
 .r-table {

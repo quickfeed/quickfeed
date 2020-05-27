@@ -1,5 +1,6 @@
 import * as React from "react";
 import { GradingCriterion } from '../../../proto/ag_pb';
+import ReactTooltip from "react-tooltip";
 
 interface GradeCriterionProps {
     criterion: GradingCriterion;
@@ -43,7 +44,20 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
     }
 
     private commentSpan(): JSX.Element {
-        return <span className="comment glyphicon glyphicon-comment" onClick={() => this.toggleEdit()}></span>
+        if (this.props.criterion.getComment() === "") {
+            return <span className="comment glyphicon glyphicon-comment" onClick={() => this.toggleEdit()}></span>;    
+        }
+        const id = this.props.criterion.getId().toString();
+        return <span><span className="comment glyphicon glyphicon-comment"
+            data-tip
+            data-for={id}
+            onClick={() => this.toggleEdit()}
+        ></span>
+        <ReactTooltip
+            type="light"
+            effect="solid"
+            id={id}
+        ><p>{this.props.criterion.getComment()}</p></ReactTooltip></span>;
     }
 
     private renderSwitch() {
