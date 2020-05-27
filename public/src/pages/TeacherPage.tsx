@@ -186,6 +186,9 @@ export class TeacherPage extends ViewPage {
                 updateReview={async (r: Review) => {
                     return this.courseMan.editReview(r, course.getId());
                 }}
+                releaseAll={async (assignmentID: number, score: number, release: boolean, approve: boolean) => {
+                    return false;
+                }}
                 getReviewers={async () => {return []}}
                 onUpdate={async () => {return false}}
             />;
@@ -214,6 +217,9 @@ export class TeacherPage extends ViewPage {
                     }}
                     getReviewers={(submissionID: number) => {
                         return this.courseMan.getReviewers(submissionID, course.getId());
+                    }}
+                    releaseAll={async (assignmentID: number, score: number, release: boolean, approve: boolean) => {
+                        return this.courseMan.releaseAll(assignmentID, course.getId(), score, release, approve);
                     }}
                 />;
             }

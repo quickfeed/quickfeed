@@ -17,6 +17,7 @@ interface GradingViewProps {
     updateReview: (review: Review) => Promise<boolean>;
     onUpdate: (submission: ISubmission) => Promise<boolean>;
     getReviewers: (submissionID: number) => Promise<User[]>;
+    releaseAll: (assignmentID: number, score: number, release: boolean, approve: boolean) => Promise<boolean>;
 }
 
 interface GradingViewState {
@@ -25,7 +26,7 @@ interface GradingViewState {
     selectedAssignment: Assignment;
     submissionsForAssignment: Map<User, ISubmissionLink>;
     submissionsForGroupAssignment: Map<Group, ISubmissionLink>;
-    errorMessage: string;
+    alert: string;
     scoreLimit: number;
 }
 
@@ -36,7 +37,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
             selectedStudent: undefined,
             selectedStudents: [],
             selectedAssignment: this.props.assignments[0] ?? new Assignment(), // TODO: test on courses with no assignments
-            errorMessage: "",
+            alert: "",
             submissionsForAssignment: this.props.assignments[0] ? this.selectAllSubmissions(this.props.assignments[0]) : new Map<User, ISubmissionLink>(),
             submissionsForGroupAssignment: new Map<Group, ISubmissionLink>(),
             scoreLimit: 0,
@@ -64,6 +65,8 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     </div>
             </div>
 
+            {this.renderAlert()}
+
             {this.props.releaseView ? this.renderReleaseRow() : null}
 
             <div className="row">
@@ -80,6 +83,10 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
         }));
     }
 
+    private renderAlert(): JSX.Element | null {
+        return this.state.alert === "" ? null : <div className="row"><div className="alert alert-warning">{ this.state.alert }</div></div>
+    }
+
     private renderReleaseRow(): JSX.Element {
         return <div className="row"><div className="col-md-12">
             <div className="input-group">
@@ -89,6 +96,7 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                     type="number"
                     min="0"
                     max="100"
+                    defaultValue={this.state.selectedAssignment.getScorelimit()}
                     value={this.state.scoreLimit}
                     onChange={(e) => {
                         this.setState({
@@ -98,16 +106,27 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                 />
                 <div className="input-group-btn">
                     <button className="btn btn-default"
-                        onClick={() => {
+                        onClick={async () => {
                             if (this.state.scoreLimit < 1) {
                                 this.setState({
-                                  errorMessage: "Minimal score for approving is not set",
+                                  alert: "Minimal score for approving is not set",
                             });
-                          } else {
-                            console.log("Approving all submissions with score >= " + this.state.scoreLimit)}
-                          }
+                        } else {
+                            const ans = this.props.releaseAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, false, true);
+                            if (ans) {
+                                this.setState((state) => ({
+                                    selectedStudents: this.props.releaseView ? sortStudentsForRelease(state.submissionsForAssignment, state.selectedAssignment.getReviewers()) : this.selectAllStudents(),
+                                    submissionsForAssignment: this.selectAllSubmissions(state.selectedAssignment),
+                                    alert: "",
+                                }));
+                            } else {
+                                this.setState({
+                                    alert: "Failed to approve submissions",
+                                });
+                            }
+                        }}
 
-                        }
+                    }
                     >Approve all</button>
                 </div>
                 <div className="input-group-btn">
@@ -115,11 +134,22 @@ export class GradingView extends React.Component<GradingViewProps, GradingViewSt
                         onClick={() => {
                             if (this.state.scoreLimit < 1) {
                                 this.setState({
-                                    errorMessage: "Minimal score for releasing is not set",
+                                    alert: "Minimal score for releasing is not set",
                                 });
                             } else {
-                              console.log("Releasing reviews for all submission with score >= " + this.state.scoreLimit)}
-                            }
+                                const ans = this.props.releaseAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, true, false);
+                                if (ans) {
+                                    this.setState((state) => ({
+                                        selectedStudents: this.props.releaseView ? sortStudentsForRelease(state.submissionsForAssignment, state.selectedAssignment.getReviewers()) : this.selectAllStudents(),
+                                        submissionsForAssignment: this.selectAllSubmissions(state.selectedAssignment),
+                                        alert: "",
+                                    }));
+                                } else {
+                                    this.setState({
+                                        alert: "Failed to release submissions",
+                                    });
+                                }
+                            }}
                         }
                     >Release all</button>
                 </div>

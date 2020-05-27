@@ -52,6 +52,7 @@ export interface ICourseProvider {
     addReview(r: Review, courseID: number): Promise<Review | null>;
     editReview(r: Review, courseID: number): Promise<boolean>;
     getReviewers(submissionID: number, courseID: number): Promise<User[]>
+    releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean>;
 }
 
 export class CourseManager {
@@ -311,6 +312,10 @@ export class CourseManager {
 
     public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
         return this.courseProvider.getReviewers(submissionID, courseID);
+    }
+
+    public async releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        return this.courseProvider.releaseAll(assignmentID, courseID, score, release, approve);
     }
 
     /**

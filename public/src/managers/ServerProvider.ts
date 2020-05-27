@@ -450,6 +450,11 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getReviewersList();
     }
 
+    public async releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        const result = await this.grpcHelper.releaseAll(assignmentID, courseID, score, release, approve);
+        return this.responseCodeSuccess(result);
+    }
+
     private toISubmission(sbm: Submission): ISubmission {
         const buildInfoAsString = sbm.getBuildinfo();
         const scoreInfoAsString = sbm.getScoreobjects();

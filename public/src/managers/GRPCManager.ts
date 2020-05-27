@@ -19,7 +19,11 @@ import {
     Organization,
     OrgRequest,
     Providers,
+<<<<<<< HEAD
     RebuildRequest,
+=======
+    ReleaseRequest,
+>>>>>>> approving or releasing all submissions above a set threshold
     Repositories,
     Repository,
     RepositoryRequest,
@@ -40,7 +44,7 @@ import {
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
-import { ISubmissionLink, ISubmission } from '../models';
+import { ISubmission } from "../models";
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -298,6 +302,16 @@ export class GrpcManager {
         request.setSubmissionid(submissionID);
         request.setCourseid(courseID);
         return this.grpcSend<Reviewers>(this.agService.getReviewers, request);
+    }
+
+    public releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
+        const request = new ReleaseRequest();
+        request.setAssignmentid(assignmentID);
+        request.setCourseid(courseID);
+        request.setScorelimit(score);
+        request.setRelease(release);
+        request.setApprove(approve);
+        return this.grpcSend<Void>(this.agService.releaseAll, request);
     }
 
     // /* REPOSITORY */ //

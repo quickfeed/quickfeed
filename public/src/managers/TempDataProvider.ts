@@ -128,6 +128,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        return true;
+    }
+
     /**
      * Get all userlinks for a single course
      * @param course The course userlinks should be retrived from
