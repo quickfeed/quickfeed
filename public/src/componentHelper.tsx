@@ -28,23 +28,26 @@ export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: bo
     return sorted;
 }
 
-export function sortStudentsForRelease(allSubmissions: Map<User, ISubmissionLink>, reviewers: number): User[] {
-    const haveAllReviews: User[] = [];
-    const haveSubmission: User[] = [];
-    const noSubmissions: User[] = [];
+export function sortStudentsForRelease<T>(allSubmissions: Map<T, ISubmissionLink>, reviewers: number): T[] {
+    const withReviews: T[] = [];
+    const withSubmission: T[] = [];
+    const noSubmissions: T[] = [];
     allSubmissions.forEach((s, u) => {
-        if (s.submission && hasReviews(s.submission, reviewers)) {
-            haveAllReviews.push(u);
+        if (s.submission && hasAllReviews(s.submission, reviewers)) {
+            console.log(s.authorName + " has all reviews");
+            withReviews.push(u);
         } else if (s.submission) {
-            haveSubmission.push(u);
+            console.log(s.authorName + " has submission, no reviews");
+            withSubmission.push(u);
         } else {
+            console.log(s.authorName + " has no submissions");
             noSubmissions.push(u);
         }
     });
-    console.log("with all reviews: " + haveAllReviews.length);
-    console.log("with submission: " + haveSubmission.length);
+    console.log("with all reviews: " + withReviews.length);
+    console.log("with submission: " + withSubmission.length);
     console.log("no submissions: " + noSubmissions.length);
-    return haveAllReviews.concat(haveSubmission, noSubmissions);
+    return withReviews.concat(withSubmission, noSubmissions);
 }
 
 // used in menus: ignores hidden courses
@@ -291,6 +294,6 @@ export function setDivider(): JSX.Element {
     return <hr className="list-divider"></hr>;
 }
 
-export function hasReviews(submission: ISubmission, reviews: number): boolean {
+export function hasAllReviews(submission: ISubmission, reviews: number): boolean {
     return submission.reviews.length === reviews;
 }
