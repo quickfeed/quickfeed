@@ -14,7 +14,7 @@ import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHel
 import { AssigmnentView } from "./views/AssignmentView";
 import { GradingView } from "./views/GradingView";
 import { ISubmission } from '../models';
-import { threadId } from "worker_threads";
+import { FeedbackView } from './views/FeedbackView';
 
 export class TeacherPage extends ViewPage {
 
@@ -173,24 +173,18 @@ export class TeacherPage extends ViewPage {
             const students = await this.courseMan.getLabsForCourse(course.getId(), false);
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
-                return <GradingView
+                return <FeedbackView
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
                 assignments={assignments}
                 students={students}
                 curUser={curUser}
-                releaseView={false}
                 addReview={(r: Review) => {
                     return this.courseMan.addReview(r, course.getId());
                 }}
                 updateReview={async (r: Review) => {
                     return this.courseMan.editReview(r, course.getId());
                 }}
-                releaseAll={async (assignmentID: number, score: number, release: boolean, approve: boolean) => {
-                    return false;
-                }}
-                getReviewers={async () => {return []}}
-                onUpdate={async () => {return false}}
             />;
             }
             return <div>Please log in.</div>;
@@ -201,17 +195,16 @@ export class TeacherPage extends ViewPage {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments = await this.courseMan.getAssignments(course.getId());
             const students = await this.courseMan.getLabsForCourse(course.getId(), false);
+            const groups = await this.courseMan.getLabsForCourse(course.getId(), true);
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
-                return <GradingView
+                return <ReleaseView
                     course={course}
                     courseURL={await this.getCourseURL(course.getId())}
                     assignments={assignments}
                     students={students}
+                    groups={groups}
                     curUser={curUser}
-                    releaseView={true}
-                    addReview={async () => {return null}}
-                    updateReview={async () => {return false}}
                     onUpdate={(submission: ISubmission) => {
                         return this.courseMan.updateSubmission(course.getId(), submission);
                     }}
