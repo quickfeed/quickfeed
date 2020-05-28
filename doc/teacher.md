@@ -114,11 +114,15 @@ deadline: "2019-09-23 12:00:00"
 autoapprove: false
 scorelimit: 80
 isgrouplab: false
+reviewers: 2
 ```
 
-`autoapprove` indicates whether or not Autograder will automatically approve the assignment when a sufficient score has been reached..
+`autoapprove` indicates whether or not Autograder will automatically approve the assignment when a sufficient score has been reached.
+`reviewers` indicate the number of manual reviews expected to be created for a student submission to this assignment.
 `scorelimit` defines the minimal percentage score on a student submission for the corresponding lab to be auto approved.
 If `scorelimit` is not set, only submissions with 80% or higher will be approved automatically.
+
+
 
 ## Student labs
 
