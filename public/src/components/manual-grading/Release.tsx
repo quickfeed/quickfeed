@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from '../../../proto/ag_pb';
-import { totalScore, userSubmissionLink, submissionStatusToString, setDivider } from '../../componentHelper';
+import { totalScore, userSubmissionLink, submissionStatusToString, setDivider, submissionStateSelector } from '../../componentHelper';
 import { ISubmission } from "../../models";
 import { formatDate } from '../../helper';
 import ReactTooltip from "react-tooltip";
@@ -94,7 +94,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     <li key="li3" className="list-group-item r-li">
                         <span className="r-table">Repository: </span>
                         {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
-                    <li key="li4" className="list-group-item r-li">{this.renderStatusButton()}</li>
+                    <li key="li4" className="list-group-item r-li">{submissionStateSelector((status: string) => this.updateStatus(status))}</li>
                 </ul>
             </div>
             <div className="col-md-6">
@@ -270,13 +270,12 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     newStatus = Submission.Status.NONE;
                     break;
             }
-            const ans = this.props.setGrade(newStatus, newBool);
+            const ans = await this.props.setGrade(newStatus, newBool);
             if (ans) {
                 this.setState({
                     status: newStatus,
-                })
+                });
             }
-
         }
     }
 

@@ -67,18 +67,20 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                         return false;
                     }
                 }
-                onApproveClick={(approve: boolean) => {
+                onApproveClick={async (status: Submission.Status, approve: boolean) => {
                     const selected = this.state.assignment;
                     const latest = selected?.submission;
                     if (latest) {
                         latest.approved = approve;
-                        const ans = this.props.onApproveClick(latest);
+                        const ans = await this.props.onApproveClick(latest);
                         if (ans) {
                             this.setState({
                                 assignment: selected,
-                            })
+                            });
                         }
+                        return ans;
                     }
+                    return false;
                 }}
             />;
         }

@@ -311,3 +311,16 @@ export function setDivider(): JSX.Element {
 export function hasAllReviews(submission: ISubmission, reviews: number): boolean {
     return submission.reviews.length === reviews;
 }
+
+export function submissionStateSelector(updateFunc: (status: string) => void): JSX.Element {
+    return <div className="input-group r-grade">
+            <span className="input-group-addon">Status: </span>
+            <select className="form-control" defaultValue={this.state.status} onChange={(e) => updateFunc(e.target.value)}>
+                <option key="st0" value={Submission.Status.NONE} >Set status</option>
+                <option key="st1" value={Submission.Status.APPROVED} >Approved</option>
+                <option key="st2" value={Submission.Status.REJECTED} >Rejected</option>
+                <option key="st3" value={Submission.Status.REVISION} >Revision</option>
+            </select>
+        </div>;
+}
+

@@ -96,18 +96,21 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                         return false;
                     }
                 }
-                onApproveClick={ async (approve: boolean) => {
+                onApproveClick={ async (status: Submission.Status, approve: boolean) => {
                     const current = this.state.selectedSubmission;
                     const selected = current?.submission;
                     if (selected) {
                         selected.approved = approve;
+                        selected.status = status;
                         const ans = await this.props.onApproveClick(selected);
                         if (ans) {
                             this.setState({
                                 selectedSubmission: current,
                             })
                         }
+                        return ans;
                     }
+                    return false;
                 }}
             />;
         }

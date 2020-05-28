@@ -141,8 +141,8 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={() => {
-                        return;
+                    onApproveClick={async () => {
+                        return false;
                     }}
                     >
                 </StudentLab>;
@@ -174,8 +174,8 @@ export class StudentPage extends ViewPage {
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={() => {
-                        return;
+                    onApproveClick={async () => {
+                        return false;
                     }}
                   >
                 </StudentLab>;

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ProgressBar, Row } from "../../components";
 import { Submission } from '../../../proto/ag_pb';
+import { submissionStateSelector } from '../../componentHelper';
 
 interface ILabResult {
     assignment_id: number;
@@ -11,12 +12,13 @@ interface ILabResult {
     authorName?: string;
     teacherView: boolean;
     isApproved: boolean;
-    onApproveClick: (approve: boolean) => void;
+    onApproveClick: (status: Submission.Status, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
 interface ILabResultState {
     rebuilding: boolean;
+    status: Submission.Status;
 }
 
 export class LabResult extends React.Component<ILabResult, ILabResultState> {
@@ -25,6 +27,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         super(props);
         this.state = {
             rebuilding: false,
+            status: this.props.status,
         };
     }
 
@@ -32,14 +35,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         let approveButton = <div></div>;
         let rebuildButton = <div></div>;
         if (this.props.teacherView) {
-            approveButton = <div className="btn lab-btn approve-btn">
-                <button type="button"
-                id="approve"
-                className={this.setButtonColor("approve")}
-                title={this.setTooltip()}
-                onClick={() => this.approve()}>
-                     {this.setButtonString("approve")}
-                </button></div>;
+            approveButton = submissionStateSelector((action: string) => this.approve(action))
             rebuildButton = <div className="btn lab-btn rebuild-btn">
             <button type="button" id="rebuild" className={this.setButtonColor("rebuild")}
                 onClick={
@@ -81,8 +77,30 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         });
     }
 
-    private async approve() {
-        this.props.onApproveClick(!this.props.isApproved);
+    private async approve(action: string) {
+        let newStatus: Submission.Status = Submission.Status.NONE;
+        let newBool = false;
+        switch (action) {
+            case "1":
+                newStatus = Submission.Status.APPROVED;
+                newBool = true;
+                break;
+            case "2":
+                newStatus = Submission.Status.REJECTED;
+                break;
+            case "3":
+                newStatus = Submission.Status.REVISION;
+                break;
+            default:
+                newStatus = Submission.Status.NONE;
+                break;
+        }
+        const ans = await this.props.onApproveClick(newStatus, newBool);
+        if (ans) {
+            this.setState({
+                status: newStatus,
+            });
+        }
     }
 
     private setButtonColor(id: string): string {

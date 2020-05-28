@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ISubmissionLink } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
-import { User } from '../../../proto/ag_pb';
+import { User, Submission } from '../../../proto/ag_pb';
 
 interface IStudentLabProps {
     studentSubmission: ISubmissionLink;
@@ -13,7 +13,7 @@ interface IStudentLabProps {
     courseCreatorView: boolean;
     reviewers: string[];
     teacherView: boolean;
-    onApproveClick: (approve: boolean) => void;
+    onApproveClick: (status: Submission.Status, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
