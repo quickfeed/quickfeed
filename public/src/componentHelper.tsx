@@ -50,6 +50,20 @@ export function sortStudentsForRelease<T>(allSubmissions: Map<T, ISubmissionLink
     return withReviews.concat(withSubmission, noSubmissions);
 }
 
+export function selectFromSubmissionLinks(allCourseLinks: IAllSubmissionsForEnrollment[], groupAssignment: boolean): (User | Group)[] {
+    const list: (User | Group)[] = [];
+    allCourseLinks.forEach(link => {
+        const grp = link.enrollment.getGroup();
+        const usr = link.enrollment.getUser();
+        if (groupAssignment && grp) {
+            list.push(grp);
+        } else if (usr) {
+            list.push(usr);
+        }
+    });
+    return list;
+}
+
 // used in menus: ignores hidden courses
 export function sortCoursesByVisibility(enrols: Enrollment[]): Course[] {
     let favorite: Course[] = [];
