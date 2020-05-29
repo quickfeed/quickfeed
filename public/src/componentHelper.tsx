@@ -324,3 +324,30 @@ export function submissionStateSelector(updateFunc: (status: string) => void): J
         </div>;
 }
 
+export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], forGroups: boolean, a?: Assignment): Map<(User | Group), ISubmissionLink> {
+    const groupMap = new Map<Group, ISubmissionLink>();
+    const studentMap = new Map<User, ISubmissionLink>();
+    if (!a) {
+        return forGroups ? groupMap : studentMap;
+    }
+
+    if (forGroups) {
+        submissions.forEach(grp => {
+            grp.labs.forEach(l => {
+                if (l.assignment.getId() === a.getId()) {
+                    groupMap.set(grp.enrollment.getGroup() ?? new Group(), l);
+                }
+            });
+        });
+        return groupMap;
+    }
+    submissions.forEach(usr => {
+        usr.labs.forEach(l => {
+            if (l.assignment.getId() === a.getId()) {
+                studentMap.set(usr.enrollment.getUser() ?? new User(), l);
+            }
+        });
+    });
+    return studentMap;
+}
+

@@ -1,9 +1,8 @@
 import * as React from "react";
 import { Assignment, Course, Group, User, Submission } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
-import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { searchForUsers, searchForGroups, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForLabs } from '../../componentHelper';
+import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForLabs } from '../../componentHelper';
 import { Release } from "../../components/manual-grading/Release";
 
 interface ReleaseViewProps {
@@ -41,8 +40,8 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
             allGroups: selectFromSubmissionLinks(props.groups, true) as Group[],
             selectedAssignment: a,
             alert: "",
-            submissionsForAssignment: this.mapAllSubmissions(a),
-            submissionsForGroupAssignment: this.mapAllGroupSubmissions(a),
+            submissionsForAssignment: mapAllSubmissions(props.students, false, a) as Map<User, ISubmissionLink>,
+            submissionsForGroupAssignment: mapAllSubmissions(props.groups, true, a) as Map<Group, ISubmissionLink>,
             scoreLimit: a.getScorelimit(),
         }
     }
@@ -223,38 +222,6 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
         </div>
     }
 
-    private mapAllSubmissions(a?: Assignment, users?: IAllSubmissionsForEnrollment[]): Map<User, ISubmissionLink> {
-        const labMap = new Map<User, ISubmissionLink>();
-        const current = a ?? this.state.selectedAssignment;
-        if (current) {
-            const userList = users ?? this.props.students;
-            userList.forEach(s => {
-                s.labs.forEach(l => {
-                    if (l.assignment.getId() === current.getId()) {
-                        labMap.set(s.enrollment.getUser() ?? new User(), l);
-                    }
-                });
-            });
-        }
-        return labMap;
-    }
-
-    private mapAllGroupSubmissions(a?: Assignment, groups?: IAllSubmissionsForEnrollment[]): Map<Group, ISubmissionLink> {
-        const groupMap = new Map<Group, ISubmissionLink>();
-        const current = a ?? this.state.selectedAssignment;
-        if (current) {
-            const groupList = groups ?? this.props.groups;
-            groupList.forEach(g => {
-                g.labs.forEach(l => {
-                    if (l.assignment.getId() === current.getId()) {
-                        groupMap.set(g.enrollment.getGroup() ?? new Group(), l);
-                    }
-                });
-            });
-        }
-        return groupMap;
-    }
-
     private toggleAssignment(id: string) {
         const currentID = parseInt(id, 10);
         const current = this.props.assignments.find(item => item.getId() === currentID);
@@ -263,8 +230,8 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                 selectedStudent: undefined,
                 selectedGroup: undefined,
                 selectedAssignment: current,
-                submissionsForAssignment: this.mapAllSubmissions(current),
-                submissionsForGroupAssignment: this.mapAllGroupSubmissions(current),
+                submissionsForAssignment: mapAllSubmissions(this.props.students, false, current) as Map<User, ISubmissionLink>,
+                submissionsForGroupAssignment: mapAllSubmissions(this.props.groups, true, current) as Map<Group, ISubmissionLink>,
             });
         }
     }
@@ -273,8 +240,8 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
         const foundUsers = searchForLabs(this.props.students, query);
         const foundGroups = searchForLabs(this.props.groups, query);
         this.setState((state) => ({
-            submissionsForAssignment: this.mapAllSubmissions(state.selectedAssignment, foundUsers),
-            submissionsForGroupAssignment: this.mapAllGroupSubmissions(state.selectedAssignment, foundGroups),
+            submissionsForAssignment: mapAllSubmissions(foundUsers, false, state.selectedAssignment) as Map<User, ISubmissionLink>,
+            submissionsForGroupAssignment: mapAllSubmissions(foundGroups, true, state.selectedAssignment) as Map<Group, ISubmissionLink>,
         }));
     }
 

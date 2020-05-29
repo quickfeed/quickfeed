@@ -3,13 +3,14 @@ import { Assignment, Course, Group, Review, User, Submission } from "../../../pr
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { searchForUsers, sortStudentsForRelease, totalScore } from '../../componentHelper';
+import { searchForUsers, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, mapAllSubmissions } from '../../componentHelper';
 
 interface FeedbackViewProps {
     course: Course;
     courseURL: string;
     assignments: Assignment[];
     students: IAllSubmissionsForEnrollment[];
+    groups: IAllSubmissionsForEnrollment[];
     curUser: User;
     addReview: (review: Review) => Promise<Review | null>;
     updateReview: (review: Review) => Promise<boolean>;
@@ -19,12 +20,30 @@ interface FeedbackViewState {
     allStudents: User[]; // immutable, only set once in constructor
     allGroups: Group[]; // immutable, only set once in constructor
     selectedAssignment: Assignment;
+    selectedStudent: User | undefined;
+    selectedGroup: Group | undefined;
     submissionsForAssignment: Map<User, ISubmissionLink>; // recalculate on new assignment
     submissionsForGroupAssignment: Map<Group, ISubmissionLink>; // recalculate on new group assignment
     alert: string;
 }
 
 export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackViewState> {
+
+    constructor(props: FeedbackViewProps) {
+        super(props);
+        const a = this.props.assignments[0];
+        this.state = {
+            selectedStudent: undefined,
+            selectedGroup: undefined,
+            allStudents: selectFromSubmissionLinks(props.students, false) as User[],
+            allGroups: selectFromSubmissionLinks(props.groups, true) as Group[],
+            selectedAssignment: a,
+            alert: "",
+            submissionsForAssignment: mapAllSubmissions(props.students, false, a) as Map<User, ISubmissionLink>,
+            submissionsForGroupAssignment: mapAllSubmissions(props.groups, true, a) as Map<Group, ISubmissionLink>,
+        }
+    }
+
 
 /*
     private renderReviewList(): JSX.Element {
