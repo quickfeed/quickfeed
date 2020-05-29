@@ -54,7 +54,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
             <div className="row"><h1>Release submissions for {this.props.course.getName()}</h1></div>
 
             <div className="row"><div className="col-md-8"><Search className="input-group"
-                    placeholder="Search for students"
+                    placeholder="Search for students or groups"
                     onChange={(query) => this.handleSearch(query)}
                 /></div>
                  <div className="form-group col-md-4">

@@ -29,18 +29,16 @@ export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: bo
 }
 
 export function sortStudentsForRelease<T>(allSubmissions: Map<T, ISubmissionLink>, reviewers: number): T[] {
+    console.log("Sorting labs for release, got entries" + Array.from(allSubmissions.keys()).length);
     const withReviews: T[] = [];
     const withSubmission: T[] = [];
     const noSubmissions: T[] = [];
     allSubmissions.forEach((s, u) => {
         if (s.submission && hasAllReviews(s.submission, reviewers)) {
-            console.log(s.authorName + " has all reviews");
             withReviews.push(u);
         } else if (s.submission) {
-            console.log(s.authorName + " has submission, no reviews");
             withSubmission.push(u);
         } else {
-            console.log(s.authorName + " has no submissions");
             noSubmissions.push(u);
         }
     });
@@ -330,21 +328,38 @@ export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], f
     if (!a) {
         return forGroups ? groupMap : studentMap;
     }
+    let hasSubmission = false;
 
     if (forGroups) {
         submissions.forEach(grp => {
+            // will return an empty name in case groups stopped preloading on the server side
+            // to prevent app crashes
+            const group = grp.enrollment.getGroup() ?? new Group();
             grp.labs.forEach(l => {
                 if (l.assignment.getId() === a.getId()) {
-                    groupMap.set(grp.enrollment.getGroup() ?? new Group(), l);
+                    groupMap.set(group, l);
+                    hasSubmission = true;
                 }
             });
+            if (!hasSubmission) {
+                console.log("Got group with no submission, adding an empty one");
+                groupMap.set(group, {assignment: a, authorName: group.getName()});
+            }
         });
         return groupMap;
     }
     submissions.forEach(usr => {
+        // will return an empty name in case users stopped preloading on the server side
+        // to prevent app crashes
+        const user = usr.enrollment.getUser() ?? new User();
         usr.labs.forEach(l => {
             if (l.assignment.getId() === a.getId()) {
                 studentMap.set(usr.enrollment.getUser() ?? new User(), l);
+                hasSubmission = true;
+            }
+            if (!hasSubmission) {
+                console.log("Got user with no submission, adding an empty one");
+                studentMap.set(user, {assignment: a, authorName: user.getName()});
             }
         });
     });

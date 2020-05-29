@@ -52,7 +52,7 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                     <div className="row"><h1>Review submissions for {this.props.course.getName()}</h1></div>
 
                     <div className="row"><div className="col-md-8"><Search className="input-group"
-                        placeholder="Search for students"
+                        placeholder="Search for students or groups"
                         onChange={(query) => this.handleSearch(query)}
                     /></div>
                     <div className="form-group col-md-4">
@@ -79,8 +79,9 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
             return <div className="alert alert-info col-md-12">Please select an assignment..</div>;
         }
         if (a.getIsgrouplab()) {
+            const groupList = Array.from(this.state.submissionsForGroupAssignment.keys());
             return <div className="col-md-12">
-                <ul className="list-group">{this.state.allGroups.map((grp, i) =>
+                <ul className="list-group">{groupList.map((grp, i) =>
                 <li key={i} onClick={() => this.setState({selectedGroup: grp})} className="list-group-item li-review"><ReviewPage
                     key={"rgrp" + i}
                     assignment={this.state.selectedAssignment}
@@ -114,8 +115,9 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
             </div>;
         }
 
+        const studentList = Array.from(this.state.submissionsForAssignment.keys());
         return <div className="col-md-12">
-                <ul className="list-group">{this.state.allStudents.map((s, i) =>
+                <ul className="list-group">{studentList.map((s, i) =>
                 <li key={i} onClick={() => this.setState({selectedStudent: s})} className="list-group-item li-review"><ReviewPage
                     key={"r" + i}
                     assignment={this.state.selectedAssignment}

@@ -117,7 +117,6 @@ export class TeacherPage extends ViewPage {
         });
     }
 
-    // TODO(meling) consolidate these two result functions?
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
@@ -132,8 +131,6 @@ export class TeacherPage extends ViewPage {
                 courseCreatorView={course.getCoursecreatorid() === curUser?.getId()}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
-                    // update refreshed submission in the labResults
-                    // make a separate method for this that could be used for group and non-group labs
                     this.navMan.refresh();
                     return ans;
                 }}
