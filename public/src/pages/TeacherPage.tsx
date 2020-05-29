@@ -171,6 +171,7 @@ export class TeacherPage extends ViewPage {
         return this.courseFunc(info.params.course, async (course) => {
             const assignments = await this.courseMan.getAssignments(course.getId());
             const students = await this.courseMan.getLabsForCourse(course.getId(), false);
+            const groups = await this.courseMan.getLabsForCourse(course.getId(), true);
             const curUser = this.userMan.getCurrentUser();
             if (curUser) {
                 return <FeedbackView
@@ -178,6 +179,7 @@ export class TeacherPage extends ViewPage {
                 courseURL={await this.getCourseURL(course.getId())}
                 assignments={assignments}
                 students={students}
+                groups={groups}
                 curUser={curUser}
                 addReview={(r: Review) => {
                     return this.courseMan.addReview(r, course.getId());

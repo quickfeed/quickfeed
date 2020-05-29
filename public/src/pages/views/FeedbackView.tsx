@@ -3,7 +3,7 @@ import { Assignment, Course, Group, Review, User, Submission } from "../../../pr
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { searchForUsers, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, mapAllSubmissions } from '../../componentHelper';
+import { searchForLabs,  selectFromSubmissionLinks, mapAllSubmissions } from '../../componentHelper';
 
 interface FeedbackViewProps {
     course: Course;
@@ -44,19 +44,84 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
         }
     }
 
+    public render() {
+        if (this.props.assignments.length < 1) {
+            return <div className="row"><div className="alert alert-info col-md-12">No assignments for {this.props.course.getName()}. </div></div>;
+        }
+        return <div className="feedback-view">
+                    <div className="row"><h1>Review submissions for {this.props.course.getName()}</h1></div>
 
-/*
+                    <div className="row"><div className="col-md-8"><Search className="input-group"
+                        placeholder="Search for students"
+                        onChange={(query) => this.handleSearch(query)}
+                    /></div>
+                    <div className="form-group col-md-4">
+                        <select className="form-control" onChange={(e) => this.toggleAssignment(e.target.value)}>
+                        {this.props.assignments.map((a, i) => <option
+                                key={i}
+                                value={a.getId()}
+                        >{a.getName()}</option>)}Select assignment</select>
+                        </div>
+                    </div>
+
+                    {this.renderAlert()}
+
+                    <div className="row">
+                        {this.renderReviewList()}
+                    </div>
+         </div>;
+    }
+
+
     private renderReviewList(): JSX.Element {
-        const allCourseStudents = this.selectAllStudents();
+        const a = this.state.selectedAssignment;
+        if (!a) {
+            return <div className="alert alert-info col-md-12">Please select an assignment..</div>;
+        }
+        if (a.getIsgrouplab()) {
+            return <div className="col-md-12">
+                <ul className="list-group">{this.state.allGroups.map((grp, i) =>
+                <li key={i} onClick={() => this.setState({selectedGroup: grp})} className="list-group-item li-review"><ReviewPage
+                    key={"rgrp" + i}
+                    assignment={this.state.selectedAssignment}
+                    submission={this.state.submissionsForGroupAssignment.get(grp)?.submission}
+                    authorName={grp.getName()}
+                    authorLogin={grp.getName()}
+                    courseURL={this.props.courseURL}
+                    reviewerID={this.props.curUser.getId()}
+                    addReview={async (review: Review) => {
+                        const current = this.state.submissionsForGroupAssignment.get(grp);
+                        if (current?.submission) {
+                            const ans = await this.props.addReview(review);
+                            if (ans) {
+                                current.submission.reviews.push(ans);
+                                return true;
+                            }
+                        }
+                        return false;
+                    }}
+                    updateReview={async (review: Review) => {
+                        const current = this.state.submissionsForGroupAssignment.get(grp);
+                        if (current?.submission) {
+                            return this.props.updateReview(review);
+                        }
+                        return false;
+                    }}
+                    studentNumber={this.state.allGroups.indexOf(grp) + 1}
+                    isSelected={this.state.selectedGroup === grp}
+                    /></li>)}
+                </ul>
+            </div>;
+        }
+
         return <div className="col-md-12">
-        <ul className="list-group">
-            {this.state.allStudents.map((s, i) =>
+                <ul className="list-group">{this.state.allStudents.map((s, i) =>
                 <li key={i} onClick={() => this.setState({selectedStudent: s})} className="list-group-item li-review"><ReviewPage
                     key={"r" + i}
                     assignment={this.state.selectedAssignment}
                     submission={this.state.submissionsForAssignment.get(s)?.submission}
-                    authorName={s.getName() ?? "Name not found"}
-                    authorLogin={s.getLogin() ?? "Login not found"}
+                    authorName={s.getName()}
+                    authorLogin={s.getLogin()}
                     courseURL={this.props.courseURL}
                     reviewerID={this.props.curUser.getId()}
                     addReview={async (review: Review) => {
@@ -77,13 +142,39 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                         }
                         return false;
                     }}
-                    studentNumber={allCourseStudents.indexOf(s) + 1}
+                    studentNumber={this.state.allStudents.indexOf(s) + 1}
                     isSelected={this.state.selectedStudent === s}
-                     /></li>
-                )}
+                    /></li>)}
             </ul>
-        </div>
-    }*/
+        </div>;
+    }
+
+    private renderAlert(): JSX.Element | null {
+        return this.state.alert === "" ? null : <div className="row"><div className="alert alert-warning col-md-12">{ this.state.alert }</div></div>
+    }
+
+    private toggleAssignment(id: string) {
+        const currentID = parseInt(id, 10);
+        const current = this.props.assignments.find(item => item.getId() === currentID);
+        if (current) {
+            this.setState({
+                selectedStudent: undefined,
+                selectedGroup: undefined,
+                selectedAssignment: current,
+                submissionsForAssignment: mapAllSubmissions(this.props.students, false, current) as Map<User, ISubmissionLink>,
+                submissionsForGroupAssignment: mapAllSubmissions(this.props.groups, true, current) as Map<Group, ISubmissionLink>,
+            });
+        }
+    }
+
+    private handleSearch(query: string) {
+        const foundUsers = searchForLabs(this.props.students, query);
+        const foundGroups = searchForLabs(this.props.groups, query);
+        this.setState((state) => ({
+            submissionsForAssignment: mapAllSubmissions(foundUsers, false, state.selectedAssignment) as Map<User, ISubmissionLink>,
+            submissionsForGroupAssignment: mapAllSubmissions(foundGroups, true, state.selectedAssignment) as Map<Group, ISubmissionLink>,
+        }));
+    }
 
 
 }

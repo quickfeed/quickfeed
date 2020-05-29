@@ -48,7 +48,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
 
     public render() {
         if (this.props.assignments.length < 1) {
-            return <div className="row"><div className="alert alert-info">No assignments for {this.props.course.getName()}. </div></div>;
+            return <div className="row"><div className="alert alert-info col-md-12">No assignments for {this.props.course.getName()}. </div></div>;
         }
         return <div className="release-view">
             <div className="row"><h1>Release submissions for {this.props.course.getName()}</h1></div>
@@ -136,7 +136,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
     private renderReleaseList(): JSX.Element {
         const a = this.state.selectedAssignment;
         if (!a) {
-            return <div className="alert alert-danger col-md-12">No assignment selected.</div>;
+            return <div className="alert alert-dark col-md-12">Please select an assignment.</div>;
         }
         if (a.getIsgrouplab()) {
             const sortedCourseGroups = sortStudentsForRelease<Group>(this.state.submissionsForGroupAssignment, a.getReviewers());
