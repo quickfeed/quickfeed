@@ -571,6 +571,9 @@ export class Assignment extends jspb.Message {
   getReviewers(): number;
   setReviewers(value: number): void;
 
+  getRuntests(): boolean;
+  setRuntests(value: boolean): void;
+
   getSubmissionsList(): Array<Submission>;
   setSubmissionsList(value: Array<Submission>): void;
   clearSubmissionsList(): void;
@@ -601,6 +604,7 @@ export namespace Assignment {
     isgrouplab: boolean,
     scorelimit: number,
     reviewers: number,
+    runtests: boolean,
     submissionsList: Array<Submission.AsObject>,
     gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
   }

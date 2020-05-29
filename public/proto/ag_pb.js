@@ -5057,7 +5057,7 @@ proto.CourseSubmissions.prototype.clearLinksList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.Assignment.repeatedFields_ = [11,12];
+proto.Assignment.repeatedFields_ = [12,13];
 
 
 
@@ -5100,6 +5100,7 @@ proto.Assignment.toObject = function(includeInstance, msg) {
     isgrouplab: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
     scorelimit: jspb.Message.getFieldWithDefault(msg, 9, 0),
     reviewers: jspb.Message.getFieldWithDefault(msg, 10, 0),
+    runtests: jspb.Message.getBooleanFieldWithDefault(msg, 11, false),
     submissionsList: jspb.Message.toObjectList(msg.getSubmissionsList(),
     proto.Submission.toObject, includeInstance),
     gradingbenchmarksList: jspb.Message.toObjectList(msg.getGradingbenchmarksList(),
@@ -5181,11 +5182,15 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setReviewers(value);
       break;
     case 11:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setRuntests(value);
+      break;
+    case 12:
       var value = new proto.Submission;
       reader.readMessage(value,proto.Submission.deserializeBinaryFromReader);
       msg.addSubmissions(value);
       break;
-    case 12:
+    case 13:
       var value = new proto.GradingBenchmark;
       reader.readMessage(value,proto.GradingBenchmark.deserializeBinaryFromReader);
       msg.addGradingbenchmarks(value);
@@ -5289,10 +5294,17 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getRuntests();
+  if (f) {
+    writer.writeBool(
+      11,
+      f
+    );
+  }
   f = message.getSubmissionsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      11,
+      12,
       f,
       proto.Submission.serializeBinaryToWriter
     );
@@ -5300,7 +5312,7 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
   f = message.getGradingbenchmarksList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      12,
+      13,
       f,
       proto.GradingBenchmark.serializeBinaryToWriter
     );
@@ -5489,12 +5501,30 @@ proto.Assignment.prototype.setReviewers = function(value) {
 
 
 /**
- * repeated Submission submissions = 11;
+ * optional bool runTests = 11;
+ * @return {boolean}
+ */
+proto.Assignment.prototype.getRuntests = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 11, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.Assignment} returns this
+ */
+proto.Assignment.prototype.setRuntests = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 11, value);
+};
+
+
+/**
+ * repeated Submission submissions = 12;
  * @return {!Array<!proto.Submission>}
  */
 proto.Assignment.prototype.getSubmissionsList = function() {
   return /** @type{!Array<!proto.Submission>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.Submission, 11));
+    jspb.Message.getRepeatedWrapperField(this, proto.Submission, 12));
 };
 
 
@@ -5503,7 +5533,7 @@ proto.Assignment.prototype.getSubmissionsList = function() {
  * @return {!proto.Assignment} returns this
 */
 proto.Assignment.prototype.setSubmissionsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 11, value);
+  return jspb.Message.setRepeatedWrapperField(this, 12, value);
 };
 
 
@@ -5513,7 +5543,7 @@ proto.Assignment.prototype.setSubmissionsList = function(value) {
  * @return {!proto.Submission}
  */
 proto.Assignment.prototype.addSubmissions = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 11, opt_value, proto.Submission, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.Submission, opt_index);
 };
 
 
@@ -5527,12 +5557,12 @@ proto.Assignment.prototype.clearSubmissionsList = function() {
 
 
 /**
- * repeated GradingBenchmark gradingBenchmarks = 12;
+ * repeated GradingBenchmark gradingBenchmarks = 13;
  * @return {!Array<!proto.GradingBenchmark>}
  */
 proto.Assignment.prototype.getGradingbenchmarksList = function() {
   return /** @type{!Array<!proto.GradingBenchmark>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.GradingBenchmark, 12));
+    jspb.Message.getRepeatedWrapperField(this, proto.GradingBenchmark, 13));
 };
 
 
@@ -5541,7 +5571,7 @@ proto.Assignment.prototype.getGradingbenchmarksList = function() {
  * @return {!proto.Assignment} returns this
 */
 proto.Assignment.prototype.setGradingbenchmarksList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 12, value);
+  return jspb.Message.setRepeatedWrapperField(this, 13, value);
 };
 
 
@@ -5551,7 +5581,7 @@ proto.Assignment.prototype.setGradingbenchmarksList = function(value) {
  * @return {!proto.GradingBenchmark}
  */
 proto.Assignment.prototype.addGradingbenchmarks = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 12, opt_value, proto.GradingBenchmark, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.GradingBenchmark, opt_index);
 };
 
 
