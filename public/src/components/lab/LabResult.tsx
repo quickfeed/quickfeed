@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ProgressBar, Row } from "../../components";
 import { Submission } from '../../../proto/ag_pb';
-import { submissionStateSelector } from '../../componentHelper';
+import { submissionStatusSelector } from '../../componentHelper';
 
 interface ILabResult {
     assignment_id: number;
@@ -35,7 +35,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         let approveButton = <div></div>;
         let rebuildButton = <div></div>;
         if (this.props.teacherView) {
-            approveButton = submissionStateSelector((action: string) => this.approve(action))
+            approveButton = submissionStatusSelector(this.props.status, (action: string) => this.approve(action))
             rebuildButton = <div className="btn lab-btn rebuild-btn">
             <button type="button" id="rebuild" className={this.setButtonColor("rebuild")}
                 onClick={

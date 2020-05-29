@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from '../../../proto/ag_pb';
-import { totalScore, userSubmissionLink, submissionStatusToString, setDivider, submissionStateSelector } from '../../componentHelper';
+import { totalScore, userSubmissionLink, submissionStatusToString, setDivider, submissionStatusSelector } from '../../componentHelper';
 import { ISubmission } from "../../models";
 import { formatDate } from '../../helper';
 import ReactTooltip from "react-tooltip";
@@ -94,7 +94,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     <li key="li3" className="list-group-item r-li">
                         <span className="r-table">Repository: </span>
                         {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
-                    <li key="li4" className="list-group-item r-li">{submissionStateSelector((status: string) => this.updateStatus(status))}</li>
+                    <li key="li4" className="list-group-item r-li">{ submissionStatusSelector(this.props.submission?.status ?? 0, (status: string) => this.updateStatus(status))}</li>
                 </ul>
             </div>
             <div className="col-md-6">
@@ -237,18 +237,6 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             effect="solid"
             id={id}
         ><p>{text}</p></ReactTooltip></span>;
-    }
-
-    private renderStatusButton(): JSX.Element {
-        return <div className="input-group r-grade">
-            <span className="input-group-addon">Status: </span>
-            <select className="form-control" defaultValue={this.state.status} onChange={(e) => this.updateStatus(e.target.value)}>
-                <option key="st0" value={Submission.Status.NONE} >Set status</option>
-                <option key="st1" value={Submission.Status.APPROVED} >Approved</option>
-                <option key="st2" value={Submission.Status.REJECTED} >Rejected</option>
-                <option key="st3" value={Submission.Status.REVISION} >Revision</option>
-            </select>
-            </div>;
     }
 
     private async updateStatus(action: string) {

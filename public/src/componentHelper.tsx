@@ -310,10 +310,10 @@ export function hasAllReviews(submission: ISubmission, reviews: number): boolean
     return submission.reviews.length === reviews;
 }
 
-export function submissionStateSelector(updateFunc: (status: string) => void): JSX.Element {
+export function submissionStatusSelector(initialStatus: Submission.Status, updateFunc: (status: string) => void): JSX.Element {
     return <div className="input-group r-grade">
             <span className="input-group-addon">Status: </span>
-            <select className="form-control" defaultValue={this.state.status} onChange={(e) => updateFunc(e.target.value)}>
+            <select className="form-control" defaultValue={initialStatus} onChange={(e) => updateFunc(e.target.value)}>
                 <option key="st0" value={Submission.Status.NONE} >Set status</option>
                 <option key="st1" value={Submission.Status.APPROVED} >Approved</option>
                 <option key="st2" value={Submission.Status.REJECTED} >Rejected</option>
@@ -328,13 +328,13 @@ export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], f
     if (!a) {
         return forGroups ? groupMap : studentMap;
     }
-    let hasSubmission = false;
 
     if (forGroups) {
         submissions.forEach(grp => {
             // will return an empty name in case groups stopped preloading on the server side
             // to prevent app crashes
             const group = grp.enrollment.getGroup() ?? new Group();
+            let hasSubmission = false;
             grp.labs.forEach(l => {
                 if (l.assignment.getId() === a.getId()) {
                     groupMap.set(group, l);
@@ -352,6 +352,7 @@ export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], f
         // will return an empty name in case users stopped preloading on the server side
         // to prevent app crashes
         const user = usr.enrollment.getUser() ?? new User();
+        let hasSubmission = false;
         usr.labs.forEach(l => {
             if (l.assignment.getId() === a.getId()) {
                 studentMap.set(usr.enrollment.getUser() ?? new User(), l);
