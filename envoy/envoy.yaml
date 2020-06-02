@@ -74,9 +74,9 @@ static_resources:
         common_tls_context:
           tls_certificates:
             - certificate_chain:
-                filename: "/etc/somecert.crt"
+                filename: "/etc/letsencrypt/live/ag3.ux.uis.no/fullchain.pem"
               private_key:
-                filename: "/etc/somecert.key"
+                filename: "/etc/letsencrypt/live/ag3.ux.uis.no/privkey.pem"
   clusters:
   - name: agService
     connect_timeout: 5s
