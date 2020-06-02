@@ -5,9 +5,35 @@ admin:
 
 static_resources:
   listeners:
-  - name: listener_0
+  # manages redirect to https
+  - address:
+      socket_address: { address: 0.0.0.0, port_value: 80 }
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          codec_type: auto
+          stat_prefix: ingress_http
+          route_config:
+            virtual_hosts:
+            - name: ag_server
+              domains:
+                - "uis.itest.run"
+                - "test.ag3.ux.uis.no"
+              routes:
+              - match: { prefix: "/" }
+                redirect:
+                  path_redirect: "/"
+                  https_redirect: true
+          http_filters:
+          - name: envoy.router
+            config: {}
+
+  
+  # manages http and grpc traffic
+  - name: ag_listener
     address:
-      socket_address: { address: 127.0.0.1, port_value: 8080 }
+      socket_address: { address: 0.0.0.0, port_value: 443 }
     filter_chains:
     - filters:
       - name: envoy.http_connection_manager
@@ -18,14 +44,19 @@ static_resources:
               path: "/dev/stdout"
           codec_type: auto
           stat_prefix: ingress_http
-          route_config:
+          route_config: 
             name: local_route
             virtual_hosts:
-            - name: local_service
-              domains: ["*"]
+            - name: ag_server
+              domains:
+                - "uis.itest.run"
+                - "www.uis.itest.run"
+                - "test.ag3.ux.uis.no"
               routes:
               - match: { prefix: "/" }
-                route: { cluster: ag_service, max_grpc_timeout: 0s }
+                route: { cluster: agAuth }
+              - match: { prefix: "/AutograderService" }
+                route: { cluster: agService, max_grpc_timeout: 0s }
               cors:
                 allow_origin_string_match:
                 - prefix: "*"
@@ -37,13 +68,29 @@ static_resources:
           - name: envoy.grpc_web
           - name: envoy.cors
           - name: envoy.router
-          http_protocol_options: { accept_http_10: true }
+            config: {}
+          # http_protocol_options: { accept_http_10: true }
+      tls_context:
+        common_tls_context:
+          tls_certificates:
+            - certificate_chain:
+                filename: "/etc/somecert.crt"
+              private_key:
+                filename: "/etc/somecert.key"
   clusters:
-  - name: ag_service
-    connect_timeout: 15s
+  - name: agService
+    connect_timeout: 5s
     type: logical_dns
     http2_protocol_options: {}
     upstream_connection_options: { tcp_keepalive: { keepalive_time: 300 }}
     lb_policy: round_robin
     # win/mac hosts: Use address: host.docker.internal instead of address: 127.0.0.1 or address:localhost in the line below
     hosts: [{ socket_address: { address: 127.0.0.1, port_value: 9090 }}]
+  - name: agAuth
+    connect_timeout: 0.25s
+    type: strict_dns
+    http2_protocol_options: {}
+    dns_lookup_family: v4_only
+    lb_policy: round_robin
+    hosts: [{ socket_address: { address: 127.0.0.1, port_value: 8081 }}]
+    
