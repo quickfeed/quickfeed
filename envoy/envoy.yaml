@@ -49,9 +49,8 @@ static_resources:
             virtual_hosts:
             - name: ag_server
               domains:
+                - "ag3.ux.uis.no"
                 - "uis.itest.run"
-                - "www.uis.itest.run"
-                - "test.ag3.ux.uis.no"
               routes:
               - match: { prefix: "/" }
                 route: { cluster: agAuth }
