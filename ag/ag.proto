@@ -194,10 +194,9 @@ message Submission {
     string scoreObjects = 6;
     string buildInfo = 7;
     string commitHash = 8;
-    bool approved = 9; // to be deprecated
-    repeated Review reviews = 10;
-    bool released = 11; // defines whether the feedback is visible for the student or group members
-    Status status = 12;
+    bool released = 9; // defines whether the feedback is visible for the student or group members
+    Status status = 10;
+    repeated Review reviews = 11;
 }
 
 message Submissions {
@@ -318,9 +317,8 @@ message SubmissionRequest {
 message UpdateSubmissionRequest {
     uint64 submissionID = 1;
     uint64 courseID = 2;
-    bool approve = 3;
-    bool released = 4;
-    Submission.Status status = 5;
+    bool released = 3;
+    Submission.Status status = 4;
 }
 
 message SubmissionReviewersRequest {

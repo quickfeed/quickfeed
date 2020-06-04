@@ -59,7 +59,6 @@ export interface ISubmission {
     executionTime: number;
     buildLog: string;
     testCases: ITestCases[];
-    approved: boolean;
     reviews: Review[];
     released: boolean;
     status: Submission.Status;

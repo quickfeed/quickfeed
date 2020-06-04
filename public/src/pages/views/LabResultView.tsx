@@ -33,7 +33,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                                 lab={this.props.submissionLink.assignment.getName()}
                                 progress={latest.score}
                                 status={latest.status}
-                                isApproved={latest.approved}
+                                isApproved={latest.status === Submission.Status.APPROVED}
                                 authorName={this.props.submissionLink.authorName}
                                 onApproveClick={this.props.onApproveClick}
                                 onRebuildClick={this.props.onRebuildClick}

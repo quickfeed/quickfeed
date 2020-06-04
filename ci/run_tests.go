@@ -19,7 +19,7 @@ const (
 	layout     = "2006-01-02T15:04:05"
 )
 
-// RunData holds information needed for running tests.
+// RunData stores CI data
 type RunData struct {
 	Course     *pb.Course
 	Assignment *pb.Assignment
@@ -109,6 +109,11 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		logger.Errorf("Failed to get submission data from database: %w", err)
 		return
 	}
+	// keep approved status if already approved
+	approvedStatus := newest.GetStatus()
+	if rData.Assignment.AutoApprove && result.TotalScore() >= rData.Assignment.GetScoreLimit() {
+		approvedStatus = pb.Submission_APPROVED
+	}
 
 	score := result.TotalScore()
 	approved := rData.Assignment.IsApproved(newest, score)
@@ -120,9 +125,8 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		ScoreObjects: scores,
 		UserID:       rData.Repo.UserID,
 		GroupID:      rData.Repo.GroupID,
-		Approved:     approved,
-	}
-	err = db.CreateSubmission(newSubmission)
+		Status:       approvedStatus,
+	})
 	if err != nil {
 		logger.Errorf("Failed to add submission to database: %w", err)
 		return

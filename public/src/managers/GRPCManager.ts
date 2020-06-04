@@ -251,7 +251,6 @@ export class GrpcManager {
         const request = new UpdateSubmissionRequest();
         request.setSubmissionid(s.id);
         request.setCourseid(courseID);
-        request.setApprove(s.approved);
         request.setStatus(s.status);
         request.setReleased(s.released);
         return this.grpcSend<Void>(this.agService.updateSubmission, request);

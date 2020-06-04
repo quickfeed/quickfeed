@@ -912,14 +912,14 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		ID:           submissions[0].ID,
 		AssignmentID: assigment.ID,
 		UserID:       user.ID,
-		Approved:     false,
+		Status:       pb.Submission_NONE,
 		Reviews:      []*pb.Review{},
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
 	}
 
-	if submissions[0].GetApproved() == true {
+	if submissions[0].GetStatus() != pb.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
 
@@ -932,10 +932,10 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetApproved() == true {
+	if submissions[0].GetStatus() != pb.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-	submissions[0].Approved = true
+	submissions[0].Status = pb.Submission_APPROVED
 	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
@@ -944,7 +944,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetApproved() != true {
+	if submissions[0].GetStatus() != pb.Submission_APPROVED {
 		t.Errorf("expected submission to be 'approved' but got 'not-approved'")
 	}
 }

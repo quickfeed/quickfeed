@@ -359,7 +359,7 @@ export class TeacherPage extends ViewPage {
 
     public async approveFunc(submission: ISubmission, courseID: number): Promise<boolean> {
         if (confirm(
-            `Do you want to ${this.setConfirmString(submission.approved)} this lab?`,
+            `Do you want to set ${submissionStatusToString(submission.status)} status for this lab?`,
         )) {
             const ans = await this.courseMan.updateSubmission(courseID, submission);
             this.navMan.refresh();

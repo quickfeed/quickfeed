@@ -219,12 +219,11 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 }
 
 // updateSubmission approves the given submission or undoes a previous approval.
-func (s *AutograderService) updateSubmission(submissionID uint64, approve bool, status pb.Submission_Status, released bool) error {
+func (s *AutograderService) updateSubmission(submissionID uint64, status pb.Submission_Status, released bool) error {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {
 		return err
 	}
-	submission.Approved = approve
 	submission.Status = status
 	submission.Released = released
 	return s.db.UpdateSubmission(submission)

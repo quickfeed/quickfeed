@@ -505,7 +505,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             executionTime: buildInfo.execTime,
             buildLog: buildInfo.buildlog,
             testCases: scoreObj,
-            approved: sbm.getApproved(),
             reviews: sbm.getReviewsList(),
             released: sbm.getReleased(),
             status: sbm.getStatus(),

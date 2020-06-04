@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Assignment } from "../../../proto/ag_pb";
+import { Assignment, Submission } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 
 export function sortByScore(students: IAllSubmissionsForEnrollment[], labs: Assignment[], isGroupLab: boolean): IAllSubmissionsForEnrollment[] {
@@ -64,7 +64,7 @@ export function sortByScore(students: IAllSubmissionsForEnrollment[], labs: Assi
 }
 
 export function generateCellClass(lab: ISubmissionLink): string {
-    if (lab.submission && lab.submission.approved) {
+    if (lab.submission && lab.submission.status === Submission.Status.APPROVED) {
         return "approved-cell";
     }
     const passing = ((lab.assignment.getScorelimit() > 0)

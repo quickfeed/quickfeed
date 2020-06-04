@@ -71,7 +71,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                     const selected = this.state.assignment;
                     const latest = selected?.submission;
                     if (latest) {
-                        latest.approved = approve;
+                        latest.status = Submission.Status.APPROVED;
                         const ans = await this.props.onApproveClick(latest);
                         if (ans) {
                             this.setState({

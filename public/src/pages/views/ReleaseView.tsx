@@ -156,7 +156,6 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForGroupAssignment.get(grp);
                                 if (current && current.submission) {
                                     current.submission.status = status;
-                                    current.submission.approved = approved;
                                     current.submission.score = totalScore(current.submission.reviews);
                                     return this.props.onUpdate(current.submission);
                                 }
@@ -198,7 +197,6 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                                 const current = this.state.submissionsForAssignment.get(s);
                                 if (current && current.submission) {
                                     current.submission.status = status;
-                                    current.submission.approved = approved;
                                     current.submission.score = totalScore(current.submission.reviews);
                                     return this.props.onUpdate(current.submission);
                                 }

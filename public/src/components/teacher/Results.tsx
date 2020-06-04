@@ -6,7 +6,7 @@ import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
 import { searchForLabs, userRepoLink, getSlipDays } from '../../componentHelper';
 
-interface IResultsProp {
+interface IResultsProps {
     course: Course;
     courseURL: string;
     allCourseSubmissions: IAllSubmissionsForEnrollment[];
@@ -22,9 +22,9 @@ interface IResultsState {
     allSubmissions: IAllSubmissionsForEnrollment[];
 }
 
-export class Results extends React.Component<IResultsProp, IResultsState> {
+export class Results extends React.Component<IResultsProps, IResultsState> {
 
-    constructor(props: IResultsProp) {
+    constructor(props: IResultsProps) {
         super(props);
 
         const currentStudent = this.props.allCourseSubmissions.length > 0 ? this.props.allCourseSubmissions[0] : null;
@@ -100,7 +100,6 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
                     const current = this.state.selectedSubmission;
                     const selected = current?.submission;
                     if (selected) {
-                        selected.approved = approve;
                         selected.status = status;
                         const ans = await this.props.onApproveClick(selected);
                         if (ans) {

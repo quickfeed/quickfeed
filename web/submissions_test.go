@@ -302,31 +302,31 @@ func TestApproveSubmission(t *testing.T) {
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
-		Approve:      true,
+		Status:       pb.Submission_APPROVED,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	updatedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
-	wantSubmission.Approved = true
+	wantSubmission.Status = pb.Submission_APPROVED
 
-	if !reflect.DeepEqual(wantSubmission.GetApproved(), updatedSubmission.GetApproved()) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetApproved(), updatedSubmission.GetApproved())
+	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
+		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetStatus().String(), updatedSubmission.GetStatus().String())
 	}
 
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
-		Approve:      false,
+		Status:       pb.Submission_REJECTED,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	updatedSubmission, err = db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
-	wantSubmission.Approved = false
+	wantSubmission.Status = pb.Submission_REJECTED
 
-	if !reflect.DeepEqual(wantSubmission.GetApproved(), updatedSubmission.GetApproved()) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetApproved(), updatedSubmission.GetApproved())
+	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
+		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetStatus().String(), updatedSubmission.GetStatus().String())
 	}
 }
 

@@ -655,19 +655,16 @@ export class Submission extends jspb.Message {
   getCommithash(): string;
   setCommithash(value: string): void;
 
-  getApproved(): boolean;
-  setApproved(value: boolean): void;
-
-  getReviewsList(): Array<Review>;
-  setReviewsList(value: Array<Review>): void;
-  clearReviewsList(): void;
-  addReviews(value?: Review, index?: number): Review;
-
   getReleased(): boolean;
   setReleased(value: boolean): void;
 
   getStatus(): Submission.Status;
   setStatus(value: Submission.Status): void;
+
+  getReviewsList(): Array<Review>;
+  setReviewsList(value: Array<Review>): void;
+  clearReviewsList(): void;
+  addReviews(value?: Review, index?: number): Review;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Submission.AsObject;
@@ -687,10 +684,9 @@ export namespace Submission {
     scoreobjects: string,
     buildinfo: string,
     commithash: string,
-    approved: boolean,
-    reviewsList: Array<Review.AsObject>,
     released: boolean,
     status: Submission.Status,
+    reviewsList: Array<Review.AsObject>,
   }
 
   export enum Status { 
@@ -1174,9 +1170,6 @@ export class UpdateSubmissionRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
-  getApprove(): boolean;
-  setApprove(value: boolean): void;
-
   getReleased(): boolean;
   setReleased(value: boolean): void;
 
@@ -1195,7 +1188,6 @@ export namespace UpdateSubmissionRequest {
   export type AsObject = {
     submissionid: number,
     courseid: number,
-    approve: boolean,
     released: boolean,
     status: Submission.Status,
   }

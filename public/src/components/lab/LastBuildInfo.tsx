@@ -3,7 +3,7 @@ import { Assignment, Submission } from "../../../proto/ag_pb";
 import { Row } from "../../components";
 import { formatDate } from "../../helper";
 import { ISubmission } from "../../models";
-import { submissionStatusToString } from '../../componentHelper';
+import { submissionStatusToString } from "../../componentHelper";
 
 interface ILastBuildInfoProps {
     submission: ISubmission;
@@ -63,11 +63,11 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
     }
 
     private setStatusString(): JSX.Element {
-        const approvedDiv = <div className="greentext">Approved</div>;
+        const className = this.props.submission.status === Submission.Status.APPROVED ? "greentext" : "";
         if (this.props.assignment.getReviewers() > 0) {
             return this.props.submission.status === Submission.Status.APPROVED ? <div className="greentext">Approved</div> : <div>{submissionStatusToString(this.props.submission.status)}</div>
         }
-        return this.props.submission.approved ? approvedDiv : <div>Not approved</div>;
+        return <div className={className}>{submissionStatusToString(this.props.submission.status)}</div>;
     }
 
 }

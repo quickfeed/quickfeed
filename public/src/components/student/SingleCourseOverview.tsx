@@ -93,6 +93,6 @@ export class SingleCourseOverview extends React.Component<ISingleCourseOverviewP
         if (manualReview) {
             return submissionStatusToString(submission.status);
         }
-        return submission.approved ? "Approved" : "Not approved";
+        return submissionStatusToString(submission.status);
     }
 }
