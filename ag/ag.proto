@@ -32,8 +32,7 @@ message RemoteIdentity {
 message Group {
     enum GroupStatus {
         PENDING = 0;
-        REJECTED = 1; // deprecated, do not use
-        APPROVED = 2;
+        APPROVED = 1;
     }
     uint64 ID = 1;
     string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
@@ -60,12 +59,12 @@ message Course {
     string tag = 6;
     string provider = 7;
     uint64 organizationID = 8;
-    Enrollment.UserStatus enrolled = 9 [(gogoproto.moretags) = "sql:\"-\""];
+    string organizationPath = 9; // The organization's SCM name, e.g. uis-dat520-2020.
+    Enrollment.UserStatus enrolled = 10 [(gogoproto.moretags) = "sql:\"-\""];
 
-    repeated Enrollment enrollments = 10;
+    repeated Enrollment enrollments = 11;
     repeated Assignment assignments = 12;
     repeated Group groups = 13;
-    string organizationPath = 14; // The organization's SCM name, e.g. uis-dat520-2020.
 }
 
 message Courses {
@@ -106,9 +105,8 @@ message Enrollment {
     enum UserStatus {
         NONE = 0;
         PENDING = 1;
-        REJECTED = 2; // deprecated, do not use
-        STUDENT = 3;
-        TEACHER = 4;
+        STUDENT = 2;
+        TEACHER = 3;
     }
     enum DisplayState {
         UNSET = 0;
@@ -120,11 +118,12 @@ message Enrollment {
     uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""];
     uint64 userID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""]; 
     uint64 groupID = 4;
-    User user = 5;
-    Course course = 6;
-    Group group = 7;
-    UserStatus status = 8;
-    DisplayState state = 9;
+    bool hasTeacherScopes = 5;
+    User user = 6;
+    Course course = 7;
+    Group group = 8;
+    UserStatus status = 9;
+    DisplayState state = 10;
 }
 
 message Enrollments {
@@ -142,8 +141,8 @@ message Assignment {
     bool autoApprove = 6;
     uint32 order = 7;
     bool isGroupLab = 8;
-    Submission submission = 9; 
-    uint32 scoreLimit = 10;  // defines minimal score limit for auto approval
+    uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
+    Submission submission = 10; 
 }
 
 message Assignments {

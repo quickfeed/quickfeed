@@ -1843,8 +1843,7 @@ proto.Group.serializeBinaryToWriter = function(message, writer) {
  */
 proto.Group.GroupStatus = {
   PENDING: 0,
-  REJECTED: 1,
-  APPROVED: 2
+  APPROVED: 1
 };
 
 /**
@@ -2179,7 +2178,7 @@ proto.Groups.prototype.clearGroupsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.Course.repeatedFields_ = [10,12,13];
+proto.Course.repeatedFields_ = [11,12,13];
 
 
 
@@ -2220,14 +2219,14 @@ proto.Course.toObject = function(includeInstance, msg) {
     tag: jspb.Message.getFieldWithDefault(msg, 6, ""),
     provider: jspb.Message.getFieldWithDefault(msg, 7, ""),
     organizationid: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    enrolled: jspb.Message.getFieldWithDefault(msg, 9, 0),
+    organizationpath: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    enrolled: jspb.Message.getFieldWithDefault(msg, 10, 0),
     enrollmentsList: jspb.Message.toObjectList(msg.getEnrollmentsList(),
     proto.Enrollment.toObject, includeInstance),
     assignmentsList: jspb.Message.toObjectList(msg.getAssignmentsList(),
     proto.Assignment.toObject, includeInstance),
     groupsList: jspb.Message.toObjectList(msg.getGroupsList(),
-    proto.Group.toObject, includeInstance),
-    organizationpath: jspb.Message.getFieldWithDefault(msg, 14, "")
+    proto.Group.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -2297,10 +2296,14 @@ proto.Course.deserializeBinaryFromReader = function(msg, reader) {
       msg.setOrganizationid(value);
       break;
     case 9:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setOrganizationpath(value);
+      break;
+    case 10:
       var value = /** @type {!proto.Enrollment.UserStatus} */ (reader.readEnum());
       msg.setEnrolled(value);
       break;
-    case 10:
+    case 11:
       var value = new proto.Enrollment;
       reader.readMessage(value,proto.Enrollment.deserializeBinaryFromReader);
       msg.addEnrollments(value);
@@ -2314,10 +2317,6 @@ proto.Course.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.Group;
       reader.readMessage(value,proto.Group.deserializeBinaryFromReader);
       msg.addGroups(value);
-      break;
-    case 14:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setOrganizationpath(value);
       break;
     default:
       reader.skipField();
@@ -2404,17 +2403,24 @@ proto.Course.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getOrganizationpath();
+  if (f.length > 0) {
+    writer.writeString(
+      9,
+      f
+    );
+  }
   f = message.getEnrolled();
   if (f !== 0.0) {
     writer.writeEnum(
-      9,
+      10,
       f
     );
   }
   f = message.getEnrollmentsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      10,
+      11,
       f,
       proto.Enrollment.serializeBinaryToWriter
     );
@@ -2433,13 +2439,6 @@ proto.Course.serializeBinaryToWriter = function(message, writer) {
       13,
       f,
       proto.Group.serializeBinaryToWriter
-    );
-  }
-  f = message.getOrganizationpath();
-  if (f.length > 0) {
-    writer.writeString(
-      14,
-      f
     );
   }
 };
@@ -2590,11 +2589,29 @@ proto.Course.prototype.setOrganizationid = function(value) {
 
 
 /**
- * optional Enrollment.UserStatus enrolled = 9;
+ * optional string organizationPath = 9;
+ * @return {string}
+ */
+proto.Course.prototype.getOrganizationpath = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.Course} returns this
+ */
+proto.Course.prototype.setOrganizationpath = function(value) {
+  return jspb.Message.setProto3StringField(this, 9, value);
+};
+
+
+/**
+ * optional Enrollment.UserStatus enrolled = 10;
  * @return {!proto.Enrollment.UserStatus}
  */
 proto.Course.prototype.getEnrolled = function() {
-  return /** @type {!proto.Enrollment.UserStatus} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+  return /** @type {!proto.Enrollment.UserStatus} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
 };
 
 
@@ -2603,17 +2620,17 @@ proto.Course.prototype.getEnrolled = function() {
  * @return {!proto.Course} returns this
  */
 proto.Course.prototype.setEnrolled = function(value) {
-  return jspb.Message.setProto3EnumField(this, 9, value);
+  return jspb.Message.setProto3EnumField(this, 10, value);
 };
 
 
 /**
- * repeated Enrollment enrollments = 10;
+ * repeated Enrollment enrollments = 11;
  * @return {!Array<!proto.Enrollment>}
  */
 proto.Course.prototype.getEnrollmentsList = function() {
   return /** @type{!Array<!proto.Enrollment>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.Enrollment, 10));
+    jspb.Message.getRepeatedWrapperField(this, proto.Enrollment, 11));
 };
 
 
@@ -2622,7 +2639,7 @@ proto.Course.prototype.getEnrollmentsList = function() {
  * @return {!proto.Course} returns this
 */
 proto.Course.prototype.setEnrollmentsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 10, value);
+  return jspb.Message.setRepeatedWrapperField(this, 11, value);
 };
 
 
@@ -2632,7 +2649,7 @@ proto.Course.prototype.setEnrollmentsList = function(value) {
  * @return {!proto.Enrollment}
  */
 proto.Course.prototype.addEnrollments = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 10, opt_value, proto.Enrollment, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 11, opt_value, proto.Enrollment, opt_index);
 };
 
 
@@ -2718,24 +2735,6 @@ proto.Course.prototype.addGroups = function(opt_value, opt_index) {
  */
 proto.Course.prototype.clearGroupsList = function() {
   return this.setGroupsList([]);
-};
-
-
-/**
- * optional string organizationPath = 14;
- * @return {string}
- */
-proto.Course.prototype.getOrganizationpath = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 14, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.Course} returns this
- */
-proto.Course.prototype.setOrganizationpath = function(value) {
-  return jspb.Message.setProto3StringField(this, 14, value);
 };
 
 
@@ -3638,11 +3637,12 @@ proto.Enrollment.toObject = function(includeInstance, msg) {
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
     userid: jspb.Message.getFieldWithDefault(msg, 3, 0),
     groupid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    hasteacherscopes: jspb.Message.getBooleanFieldWithDefault(msg, 5, false),
     user: (f = msg.getUser()) && proto.User.toObject(includeInstance, f),
     course: (f = msg.getCourse()) && proto.Course.toObject(includeInstance, f),
     group: (f = msg.getGroup()) && proto.Group.toObject(includeInstance, f),
-    status: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    state: jspb.Message.getFieldWithDefault(msg, 9, 0)
+    status: jspb.Message.getFieldWithDefault(msg, 9, 0),
+    state: jspb.Message.getFieldWithDefault(msg, 10, 0)
   };
 
   if (includeInstance) {
@@ -3696,25 +3696,29 @@ proto.Enrollment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setGroupid(value);
       break;
     case 5:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setHasteacherscopes(value);
+      break;
+    case 6:
       var value = new proto.User;
       reader.readMessage(value,proto.User.deserializeBinaryFromReader);
       msg.setUser(value);
       break;
-    case 6:
+    case 7:
       var value = new proto.Course;
       reader.readMessage(value,proto.Course.deserializeBinaryFromReader);
       msg.setCourse(value);
       break;
-    case 7:
+    case 8:
       var value = new proto.Group;
       reader.readMessage(value,proto.Group.deserializeBinaryFromReader);
       msg.setGroup(value);
       break;
-    case 8:
+    case 9:
       var value = /** @type {!proto.Enrollment.UserStatus} */ (reader.readEnum());
       msg.setStatus(value);
       break;
-    case 9:
+    case 10:
       var value = /** @type {!proto.Enrollment.DisplayState} */ (reader.readEnum());
       msg.setState(value);
       break;
@@ -3775,10 +3779,17 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getHasteacherscopes();
+  if (f) {
+    writer.writeBool(
+      5,
+      f
+    );
+  }
   f = message.getUser();
   if (f != null) {
     writer.writeMessage(
-      5,
+      6,
       f,
       proto.User.serializeBinaryToWriter
     );
@@ -3786,7 +3797,7 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
   f = message.getCourse();
   if (f != null) {
     writer.writeMessage(
-      6,
+      7,
       f,
       proto.Course.serializeBinaryToWriter
     );
@@ -3794,7 +3805,7 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
   f = message.getGroup();
   if (f != null) {
     writer.writeMessage(
-      7,
+      8,
       f,
       proto.Group.serializeBinaryToWriter
     );
@@ -3802,14 +3813,14 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
   f = message.getStatus();
   if (f !== 0.0) {
     writer.writeEnum(
-      8,
+      9,
       f
     );
   }
   f = message.getState();
   if (f !== 0.0) {
     writer.writeEnum(
-      9,
+      10,
       f
     );
   }
@@ -3822,9 +3833,8 @@ proto.Enrollment.serializeBinaryToWriter = function(message, writer) {
 proto.Enrollment.UserStatus = {
   NONE: 0,
   PENDING: 1,
-  REJECTED: 2,
-  STUDENT: 3,
-  TEACHER: 4
+  STUDENT: 2,
+  TEACHER: 3
 };
 
 /**
@@ -3910,12 +3920,30 @@ proto.Enrollment.prototype.setGroupid = function(value) {
 
 
 /**
- * optional User user = 5;
+ * optional bool hasTeacherScopes = 5;
+ * @return {boolean}
+ */
+proto.Enrollment.prototype.getHasteacherscopes = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 5, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.Enrollment} returns this
+ */
+proto.Enrollment.prototype.setHasteacherscopes = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 5, value);
+};
+
+
+/**
+ * optional User user = 6;
  * @return {?proto.User}
  */
 proto.Enrollment.prototype.getUser = function() {
   return /** @type{?proto.User} */ (
-    jspb.Message.getWrapperField(this, proto.User, 5));
+    jspb.Message.getWrapperField(this, proto.User, 6));
 };
 
 
@@ -3924,7 +3952,7 @@ proto.Enrollment.prototype.getUser = function() {
  * @return {!proto.Enrollment} returns this
 */
 proto.Enrollment.prototype.setUser = function(value) {
-  return jspb.Message.setWrapperField(this, 5, value);
+  return jspb.Message.setWrapperField(this, 6, value);
 };
 
 
@@ -3942,17 +3970,17 @@ proto.Enrollment.prototype.clearUser = function() {
  * @return {boolean}
  */
 proto.Enrollment.prototype.hasUser = function() {
-  return jspb.Message.getField(this, 5) != null;
+  return jspb.Message.getField(this, 6) != null;
 };
 
 
 /**
- * optional Course course = 6;
+ * optional Course course = 7;
  * @return {?proto.Course}
  */
 proto.Enrollment.prototype.getCourse = function() {
   return /** @type{?proto.Course} */ (
-    jspb.Message.getWrapperField(this, proto.Course, 6));
+    jspb.Message.getWrapperField(this, proto.Course, 7));
 };
 
 
@@ -3961,7 +3989,7 @@ proto.Enrollment.prototype.getCourse = function() {
  * @return {!proto.Enrollment} returns this
 */
 proto.Enrollment.prototype.setCourse = function(value) {
-  return jspb.Message.setWrapperField(this, 6, value);
+  return jspb.Message.setWrapperField(this, 7, value);
 };
 
 
@@ -3979,17 +4007,17 @@ proto.Enrollment.prototype.clearCourse = function() {
  * @return {boolean}
  */
 proto.Enrollment.prototype.hasCourse = function() {
-  return jspb.Message.getField(this, 6) != null;
+  return jspb.Message.getField(this, 7) != null;
 };
 
 
 /**
- * optional Group group = 7;
+ * optional Group group = 8;
  * @return {?proto.Group}
  */
 proto.Enrollment.prototype.getGroup = function() {
   return /** @type{?proto.Group} */ (
-    jspb.Message.getWrapperField(this, proto.Group, 7));
+    jspb.Message.getWrapperField(this, proto.Group, 8));
 };
 
 
@@ -3998,7 +4026,7 @@ proto.Enrollment.prototype.getGroup = function() {
  * @return {!proto.Enrollment} returns this
 */
 proto.Enrollment.prototype.setGroup = function(value) {
-  return jspb.Message.setWrapperField(this, 7, value);
+  return jspb.Message.setWrapperField(this, 8, value);
 };
 
 
@@ -4016,16 +4044,16 @@ proto.Enrollment.prototype.clearGroup = function() {
  * @return {boolean}
  */
 proto.Enrollment.prototype.hasGroup = function() {
-  return jspb.Message.getField(this, 7) != null;
+  return jspb.Message.getField(this, 8) != null;
 };
 
 
 /**
- * optional UserStatus status = 8;
+ * optional UserStatus status = 9;
  * @return {!proto.Enrollment.UserStatus}
  */
 proto.Enrollment.prototype.getStatus = function() {
-  return /** @type {!proto.Enrollment.UserStatus} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+  return /** @type {!proto.Enrollment.UserStatus} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
 };
 
 
@@ -4034,16 +4062,16 @@ proto.Enrollment.prototype.getStatus = function() {
  * @return {!proto.Enrollment} returns this
  */
 proto.Enrollment.prototype.setStatus = function(value) {
-  return jspb.Message.setProto3EnumField(this, 8, value);
+  return jspb.Message.setProto3EnumField(this, 9, value);
 };
 
 
 /**
- * optional DisplayState state = 9;
+ * optional DisplayState state = 10;
  * @return {!proto.Enrollment.DisplayState}
  */
 proto.Enrollment.prototype.getState = function() {
-  return /** @type {!proto.Enrollment.DisplayState} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+  return /** @type {!proto.Enrollment.DisplayState} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
 };
 
 
@@ -4052,7 +4080,7 @@ proto.Enrollment.prototype.getState = function() {
  * @return {!proto.Enrollment} returns this
  */
 proto.Enrollment.prototype.setState = function(value) {
-  return jspb.Message.setProto3EnumField(this, 9, value);
+  return jspb.Message.setProto3EnumField(this, 10, value);
 };
 
 
@@ -4256,8 +4284,8 @@ proto.Assignment.toObject = function(includeInstance, msg) {
     autoapprove: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
     order: jspb.Message.getFieldWithDefault(msg, 7, 0),
     isgrouplab: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
-    submission: (f = msg.getSubmission()) && proto.Submission.toObject(includeInstance, f),
-    scorelimit: jspb.Message.getFieldWithDefault(msg, 10, 0)
+    scorelimit: jspb.Message.getFieldWithDefault(msg, 9, 0),
+    submission: (f = msg.getSubmission()) && proto.Submission.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -4327,13 +4355,13 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       msg.setIsgrouplab(value);
       break;
     case 9:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setScorelimit(value);
+      break;
+    case 10:
       var value = new proto.Submission;
       reader.readMessage(value,proto.Submission.deserializeBinaryFromReader);
       msg.setSubmission(value);
-      break;
-    case 10:
-      var value = /** @type {number} */ (reader.readUint32());
-      msg.setScorelimit(value);
       break;
     default:
       reader.skipField();
@@ -4420,19 +4448,19 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getSubmission();
-  if (f != null) {
-    writer.writeMessage(
-      9,
-      f,
-      proto.Submission.serializeBinaryToWriter
-    );
-  }
   f = message.getScorelimit();
   if (f !== 0) {
     writer.writeUint32(
-      10,
+      9,
       f
+    );
+  }
+  f = message.getSubmission();
+  if (f != null) {
+    writer.writeMessage(
+      10,
+      f,
+      proto.Submission.serializeBinaryToWriter
     );
   }
 };
@@ -4583,12 +4611,30 @@ proto.Assignment.prototype.setIsgrouplab = function(value) {
 
 
 /**
- * optional Submission submission = 9;
+ * optional uint32 scoreLimit = 9;
+ * @return {number}
+ */
+proto.Assignment.prototype.getScorelimit = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.Assignment} returns this
+ */
+proto.Assignment.prototype.setScorelimit = function(value) {
+  return jspb.Message.setProto3IntField(this, 9, value);
+};
+
+
+/**
+ * optional Submission submission = 10;
  * @return {?proto.Submission}
  */
 proto.Assignment.prototype.getSubmission = function() {
   return /** @type{?proto.Submission} */ (
-    jspb.Message.getWrapperField(this, proto.Submission, 9));
+    jspb.Message.getWrapperField(this, proto.Submission, 10));
 };
 
 
@@ -4597,7 +4643,7 @@ proto.Assignment.prototype.getSubmission = function() {
  * @return {!proto.Assignment} returns this
 */
 proto.Assignment.prototype.setSubmission = function(value) {
-  return jspb.Message.setWrapperField(this, 9, value);
+  return jspb.Message.setWrapperField(this, 10, value);
 };
 
 
@@ -4615,25 +4661,7 @@ proto.Assignment.prototype.clearSubmission = function() {
  * @return {boolean}
  */
 proto.Assignment.prototype.hasSubmission = function() {
-  return jspb.Message.getField(this, 9) != null;
-};
-
-
-/**
- * optional uint32 scoreLimit = 10;
- * @return {number}
- */
-proto.Assignment.prototype.getScorelimit = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.Assignment} returns this
- */
-proto.Assignment.prototype.setScorelimit = function(value) {
-  return jspb.Message.setProto3IntField(this, 10, value);
+  return jspb.Message.getField(this, 10) != null;
 };
 
 
