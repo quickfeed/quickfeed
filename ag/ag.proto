@@ -82,12 +82,12 @@ message Repository {
         GROUP = 6;
     }
     uint64 ID = 1;
-    uint64 organizationID = 2;
+    uint64 organizationID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
     uint64 repositoryID = 3; // ID of a github repository
-    uint64 userID = 4;
-    uint64 groupID = 5;
+    uint64 userID = 4 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
+    uint64 groupID = 5 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
     string HTMLURL = 6;
-    Type repoType = 7;
+    Type repoType = 7 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
 }
 
 message Organization {
