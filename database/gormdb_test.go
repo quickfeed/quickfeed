@@ -424,14 +424,16 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Get course's rejected enrollments.
-	rejectedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_REJECTED)
+	// Get all enrollments.
+	allEnrollments, err := db.GetEnrollmentsByCourse(course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(rejectedEnrollments) > 0 {
-		t.Fatalf("have %v want 0 rejected enrollment, REJECTED status has been deprecated", len(rejectedEnrollments))
+	for _, enrol := range allEnrollments {
+		if enrol.UserID == user.ID && enrol.CourseID == course.ID {
+			t.Fatalf("Enrollment %+v must have been deleted on rejection, but still found in the database", enrol)
+		}
 	}
 }
 

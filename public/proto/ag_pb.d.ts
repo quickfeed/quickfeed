@@ -156,8 +156,7 @@ export namespace Group {
 
   export enum GroupStatus { 
     PENDING = 0,
-    REJECTED = 1,
-    APPROVED = 2,
+    APPROVED = 1,
   }
 }
 
@@ -206,6 +205,9 @@ export class Course extends jspb.Message {
   getOrganizationid(): number;
   setOrganizationid(value: number): void;
 
+  getOrganizationpath(): string;
+  setOrganizationpath(value: string): void;
+
   getEnrolled(): Enrollment.UserStatus;
   setEnrolled(value: Enrollment.UserStatus): void;
 
@@ -223,9 +225,6 @@ export class Course extends jspb.Message {
   setGroupsList(value: Array<Group>): void;
   clearGroupsList(): void;
   addGroups(value?: Group, index?: number): Group;
-
-  getOrganizationpath(): string;
-  setOrganizationpath(value: string): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Course.AsObject;
@@ -245,11 +244,11 @@ export namespace Course {
     tag: string,
     provider: string,
     organizationid: number,
+    organizationpath: string,
     enrolled: Enrollment.UserStatus,
     enrollmentsList: Array<Enrollment.AsObject>,
     assignmentsList: Array<Assignment.AsObject>,
     groupsList: Array<Group.AsObject>,
-    organizationpath: string,
   }
 }
 
@@ -388,6 +387,9 @@ export class Enrollment extends jspb.Message {
   getGroupid(): number;
   setGroupid(value: number): void;
 
+  getHasteacherscopes(): boolean;
+  setHasteacherscopes(value: boolean): void;
+
   getUser(): User | undefined;
   setUser(value?: User): void;
   hasUser(): boolean;
@@ -423,6 +425,7 @@ export namespace Enrollment {
     courseid: number,
     userid: number,
     groupid: number,
+    hasteacherscopes: boolean,
     user?: User.AsObject,
     course?: Course.AsObject,
     group?: Group.AsObject,
@@ -433,9 +436,8 @@ export namespace Enrollment {
   export enum UserStatus { 
     NONE = 0,
     PENDING = 1,
-    REJECTED = 2,
-    STUDENT = 3,
-    TEACHER = 4,
+    STUDENT = 2,
+    TEACHER = 3,
   }
 
   export enum DisplayState { 
@@ -491,13 +493,13 @@ export class Assignment extends jspb.Message {
   getIsgrouplab(): boolean;
   setIsgrouplab(value: boolean): void;
 
+  getScorelimit(): number;
+  setScorelimit(value: number): void;
+
   getSubmission(): Submission | undefined;
   setSubmission(value?: Submission): void;
   hasSubmission(): boolean;
   clearSubmission(): void;
-
-  getScorelimit(): number;
-  setScorelimit(value: number): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
@@ -517,8 +519,8 @@ export namespace Assignment {
     autoapprove: boolean,
     order: number,
     isgrouplab: boolean,
-    submission?: Submission.AsObject,
     scorelimit: number,
+    submission?: Submission.AsObject,
   }
 }
 
