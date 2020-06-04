@@ -15,8 +15,9 @@ type GitlabSCM struct {
 
 // NewGitlabSCMClient returns a new GitLab client implementing the SCM interface.
 func NewGitlabSCMClient(token string) *GitlabSCM {
+	cli, _ := gitlab.NewOAuthClient(token, gitlab.WithoutRetries())
 	return &GitlabSCM{
-		client: gitlab.NewOAuthClient(nil, token),
+		client: cli,
 	}
 }
 
