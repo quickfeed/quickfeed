@@ -9,10 +9,8 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
-endpoint 			:= junaid.itest.run
-ag2endpoint			:= test.itest.run
+endpoint 			:= test.itest.run
 agport				:= 8081
-ag2port				:= 3006
 
 # necessary when target is not tied to a file
 .PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
@@ -109,14 +107,6 @@ purge: scm
 # change agport variable to the number of bound local port when using tunnel script
 run:
 	@aguis -service.url $(endpoint) -http.addr :$(agport) -http.public ./public
-
-# to run server on itest.run, ag2port variable must correspond to endpoint
-# endpoint is used for github callbacks, and port is used to proxy client calls
-# (TODO): this has to be moved to dev/testing documentation
-
-# will run the server as a background job, will still log to stdout
-itestrun:
-	@aguis -service.url $(ag2endpoint) -database.file ./temp.db -http.addr :$(ag2port) -http.public ./public &
 
 # test nginx configuration syntax
 nginx-test:
