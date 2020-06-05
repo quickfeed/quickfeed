@@ -496,10 +496,10 @@ export class Assignment extends jspb.Message {
   getScorelimit(): number;
   setScorelimit(value: number): void;
 
-  getSubmission(): Submission | undefined;
-  setSubmission(value?: Submission): void;
-  hasSubmission(): boolean;
-  clearSubmission(): void;
+  getSubmissionsList(): Array<Submissions>;
+  setSubmissionsList(value: Array<Submissions>): void;
+  clearSubmissionsList(): void;
+  addSubmissions(value?: Submissions, index?: number): Submissions;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
@@ -520,7 +520,7 @@ export namespace Assignment {
     order: number,
     isgrouplab: boolean,
     scorelimit: number,
-    submission?: Submission.AsObject,
+    submissionsList: Array<Submissions.AsObject>,
   }
 }
 
@@ -614,53 +614,81 @@ export namespace Submissions {
   }
 }
 
-export class LabResultLink extends jspb.Message {
-  getAuthorname(): string;
-  setAuthorname(value: string): void;
+export class SubmissionLink extends jspb.Message {
+  getAssignment(): Assignment | undefined;
+  setAssignment(value?: Assignment): void;
+  hasAssignment(): boolean;
+  clearAssignment(): void;
 
+  getSubmission(): Submission | undefined;
+  setSubmission(value?: Submission): void;
+  hasSubmission(): boolean;
+  clearSubmission(): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SubmissionLink.AsObject;
+  static toObject(includeInstance: boolean, msg: SubmissionLink): SubmissionLink.AsObject;
+  static serializeBinaryToWriter(message: SubmissionLink, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SubmissionLink;
+  static deserializeBinaryFromReader(message: SubmissionLink, reader: jspb.BinaryReader): SubmissionLink;
+}
+
+export namespace SubmissionLink {
+  export type AsObject = {
+    assignment?: Assignment.AsObject,
+    submission?: Submission.AsObject,
+  }
+}
+
+export class AssignmentLink extends jspb.Message {
   getEnrollment(): Enrollment | undefined;
   setEnrollment(value?: Enrollment): void;
   hasEnrollment(): boolean;
   clearEnrollment(): void;
 
-  getSubmissionsList(): Array<Submission>;
-  setSubmissionsList(value: Array<Submission>): void;
+  getSubmissionsList(): Array<SubmissionLink>;
+  setSubmissionsList(value: Array<SubmissionLink>): void;
   clearSubmissionsList(): void;
-  addSubmissions(value?: Submission, index?: number): Submission;
+  addSubmissions(value?: SubmissionLink, index?: number): SubmissionLink;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): LabResultLink.AsObject;
-  static toObject(includeInstance: boolean, msg: LabResultLink): LabResultLink.AsObject;
-  static serializeBinaryToWriter(message: LabResultLink, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): LabResultLink;
-  static deserializeBinaryFromReader(message: LabResultLink, reader: jspb.BinaryReader): LabResultLink;
+  toObject(includeInstance?: boolean): AssignmentLink.AsObject;
+  static toObject(includeInstance: boolean, msg: AssignmentLink): AssignmentLink.AsObject;
+  static serializeBinaryToWriter(message: AssignmentLink, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): AssignmentLink;
+  static deserializeBinaryFromReader(message: AssignmentLink, reader: jspb.BinaryReader): AssignmentLink;
 }
 
-export namespace LabResultLink {
+export namespace AssignmentLink {
   export type AsObject = {
-    authorname: string,
     enrollment?: Enrollment.AsObject,
-    submissionsList: Array<Submission.AsObject>,
+    submissionsList: Array<SubmissionLink.AsObject>,
   }
 }
 
-export class LabResultLinks extends jspb.Message {
-  getLabsList(): Array<LabResultLink>;
-  setLabsList(value: Array<LabResultLink>): void;
-  clearLabsList(): void;
-  addLabs(value?: LabResultLink, index?: number): LabResultLink;
+export class CourseSubmissions extends jspb.Message {
+  getCourse(): Course | undefined;
+  setCourse(value?: Course): void;
+  hasCourse(): boolean;
+  clearCourse(): void;
+
+  getLinksList(): Array<AssignmentLink>;
+  setLinksList(value: Array<AssignmentLink>): void;
+  clearLinksList(): void;
+  addLinks(value?: AssignmentLink, index?: number): AssignmentLink;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): LabResultLinks.AsObject;
-  static toObject(includeInstance: boolean, msg: LabResultLinks): LabResultLinks.AsObject;
-  static serializeBinaryToWriter(message: LabResultLinks, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): LabResultLinks;
-  static deserializeBinaryFromReader(message: LabResultLinks, reader: jspb.BinaryReader): LabResultLinks;
+  toObject(includeInstance?: boolean): CourseSubmissions.AsObject;
+  static toObject(includeInstance: boolean, msg: CourseSubmissions): CourseSubmissions.AsObject;
+  static serializeBinaryToWriter(message: CourseSubmissions, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CourseSubmissions;
+  static deserializeBinaryFromReader(message: CourseSubmissions, reader: jspb.BinaryReader): CourseSubmissions;
 }
 
-export namespace LabResultLinks {
+export namespace CourseSubmissions {
   export type AsObject = {
-    labsList: Array<LabResultLink.AsObject>,
+    course?: Course.AsObject,
+    linksList: Array<AssignmentLink.AsObject>,
   }
 }
 
@@ -1012,7 +1040,35 @@ export namespace Status {
   }
 }
 
-export class LabRequest extends jspb.Message {
+export class SubmissionLinkRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getType(): SubmissionLinkRequest.Type;
+  setType(value: SubmissionLinkRequest.Type): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SubmissionLinkRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: SubmissionLinkRequest): SubmissionLinkRequest.AsObject;
+  static serializeBinaryToWriter(message: SubmissionLinkRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SubmissionLinkRequest;
+  static deserializeBinaryFromReader(message: SubmissionLinkRequest, reader: jspb.BinaryReader): SubmissionLinkRequest;
+}
+
+export namespace SubmissionLinkRequest {
+  export type AsObject = {
+    courseid: number,
+    type: SubmissionLinkRequest.Type,
+  }
+
+  export enum Type { 
+    ALL = 0,
+    INDIVIDUAL = 1,
+    GROUP = 2,
+  }
+}
+
+export class RebuildRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
@@ -1022,23 +1078,19 @@ export class LabRequest extends jspb.Message {
   getAssignmentid(): number;
   setAssignmentid(value: number): void;
 
-  getGrouplabs(): boolean;
-  setGrouplabs(value: boolean): void;
-
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): LabRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: LabRequest): LabRequest.AsObject;
-  static serializeBinaryToWriter(message: LabRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): LabRequest;
-  static deserializeBinaryFromReader(message: LabRequest, reader: jspb.BinaryReader): LabRequest;
+  toObject(includeInstance?: boolean): RebuildRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: RebuildRequest): RebuildRequest.AsObject;
+  static serializeBinaryToWriter(message: RebuildRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RebuildRequest;
+  static deserializeBinaryFromReader(message: RebuildRequest, reader: jspb.BinaryReader): RebuildRequest;
 }
 
-export namespace LabRequest {
+export namespace RebuildRequest {
   export type AsObject = {
     courseid: number,
     submissionid: number,
     assignmentid: number,
-    grouplabs: boolean,
   }
 }
 

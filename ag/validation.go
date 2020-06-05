@@ -177,10 +177,15 @@ func (req Provider) IsValid() bool {
 		provider == "fake"
 }
 
-// IsValid ensures that either course ID or submission ID is set
-func (req LabRequest) IsValid() bool {
+// IsValid ensures that course ID is provided
+func (req SubmissionLinkRequest) IsValid() bool {
+	return req.GetCourseID() != 0
+}
+
+// IsValid ensures that both course and submission IDs are set
+func (req RebuildRequest) IsValid() bool {
 	cid, sid := req.GetCourseID(), req.GetSubmissionID()
-	return cid > 0 || sid > 0
+	return cid > 0 && sid > 0
 }
 
 // IsValid checks that either ID or path field is set

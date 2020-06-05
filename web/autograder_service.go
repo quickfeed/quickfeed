@@ -514,7 +514,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
-func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
+func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.SubmissionLinkRequest) (*pb.CourseSubmissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %w", err)
@@ -526,12 +526,12 @@ func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.L
 	}
 	s.logger.Debugf("GetCourseLabSubmissions: %v", in)
 
-	labs, err := s.getAllLabs(in)
+	courseLinks, err := s.getAllLabs(in)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no submissions found")
 	}
-	return &pb.LabResultLinks{Labs: labs}, nil
+	return courseLinks, nil
 }
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
@@ -559,7 +559,7 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 }
 
 // RebuildSubmission rebuilds the submission with the given ID
-func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Submission, error) {
+func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.RebuildRequest) (*pb.Submission, error) {
 	if !s.isValidSubmission(in.GetSubmissionID()) {
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
 		return nil, status.Errorf(codes.PermissionDenied, "submitter has no course access")
