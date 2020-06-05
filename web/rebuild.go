@@ -10,7 +10,7 @@ import (
 )
 
 // rebuildSubmission rebuilds the given assignment and submission.
-func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.LabRequest) (*pb.Submission, error) {
+func (s *AutograderService) rebuildSubmission(ctx context.Context, request *pb.RebuildRequest) (*pb.Submission, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: request.GetSubmissionID()})
 	if err != nil {
 		return nil, err

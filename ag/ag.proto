@@ -142,7 +142,7 @@ message Assignment {
     uint32 order = 7;
     bool isGroupLab = 8;
     uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
-    repeated Submissions submissions = 10; 
+    repeated Submission submissions = 10; 
 }
 
 message Assignments {
@@ -170,14 +170,14 @@ message SubmissionLink {
     Submission submission = 2;
 }
 
-message AssignmentLink {
+message EnrollmentLink {
     Enrollment enrollment = 2; // must have course and user/group preloaded
     repeated SubmissionLink submissions = 3;
 }
 
 message CourseSubmissions {
     Course course = 1; // preloaded assignments
-    repeated AssignmentLink links = 2;
+    repeated EnrollmentLink links = 2;
 }
 
 ////    REQUESTS AND RESPONSES      \\\\
