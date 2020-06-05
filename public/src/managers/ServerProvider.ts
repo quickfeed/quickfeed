@@ -1,12 +1,14 @@
 import {
     Assignment,
     Course,
+    CourseSubmissions,
     Enrollment,
     Group,
     Organization,
     Repository,
     Status,
     Submission,
+    SubmissionLinkRequest,
     User,
 } from "../../proto/ag_pb";
 import {
@@ -223,45 +225,12 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
-        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, groupLabs);
+    public async getLabsForCourse(courseID: number, type: SubmissionLinkRequest.Type): Promise<IStudentLabsForCourse[]> {
+        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, type);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
-
-        const results = result.data.getLabsList();
-        const labCourse = new Course();
-        labCourse.setId(courseID);
-        const labs: IStudentLabsForCourse[] = [];
-        for (const studentLabs of results) {
-            const subs: IStudentLab[] = [];
-            const allSubs = studentLabs.getSubmissionsList();
-            if (allSubs) {
-                for (const lab of allSubs) {
-                    // populate student submissions
-                    const labAssignment = new Assignment();
-                    labAssignment.setId(lab.getAssignmentid());
-                    const ILab: IStudentLab = {
-                        assignment:  labAssignment,
-                        submission: this.toISubmission(lab),
-                        authorName: studentLabs.getAuthorname(),
-                    };
-                    subs.push(ILab);
-                }
-            }
-            // populate assignment links
-            let enrol = studentLabs.getEnrollment();
-            if (!enrol) {
-                enrol = new Enrollment();
-            }
-            const labLink: IStudentLabsForCourse = {
-                course: labCourse,
-                enrollment: enrol,
-                labs: subs,
-            };
-            labs.push(labLink);
-        }
-        return labs;
+        return this.toUILinks(result.data);
     }
 
     public async tryLogin(username: string, password: string): Promise<User | null> {
@@ -444,5 +413,39 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
 
     private responseCodeSuccess(response: IGrpcResponse<any>): boolean {
         return response.status.getCode() === 0;
+    }
+
+    // temporary fix, will be removed with manual grading update
+    private toUILinks(sbLinks: CourseSubmissions): IStudentLabsForCourse[] {
+        const crs = sbLinks.getCourse();
+        if (!crs) {
+            console.log("Failed to generate lab results: no course in response");
+            return [];
+        }
+        const uilinks: IStudentLabsForCourse[] = [];
+        sbLinks.getLinksList().forEach(l => {
+            const enr = l.getEnrollment();
+            if (enr) {
+                const allLabs: IStudentLab[] = [];
+                l.getSubmissionsList().forEach(s => {
+                    const a = s.getAssignment();
+                    const sb = s.getSubmission();
+                    if (a) {
+                        const name = a.getIsgrouplab() ? enr.getUser()?.getName() : enr.getGroup()?.getName();
+                        allLabs.push({
+                            assignment: a,
+                            submission: sb ? this.toISubmission(sb) : undefined,
+                            authorName: name ?? "Name not found",
+                        });
+                    }
+                });
+                uilinks.push({
+                    course: crs,
+                    enrollment: enr,
+                    labs: allLabs,
+                });
+             }
+        });
+        return uilinks;
     }
 }
