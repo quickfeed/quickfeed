@@ -77,13 +77,13 @@ func (c *Courses) RemoveRemoteID() {
 }
 
 // RemoveRemoteID removes remote identities for enrollment in lab link
-func (l *LabResultLink) RemoveRemoteID() {
+func (l *EnrollmentLink) RemoveRemoteID() {
 	l.Enrollment.RemoveRemoteID()
 }
 
 // RemoveRemoteID removes remote identities for all lab links
-func (l *LabResultLinks) RemoveRemoteID() {
-	for _, link := range l.GetLabs() {
+func (l *CourseSubmissions) RemoveRemoteID() {
+	for _, link := range l.GetLinks() {
 		link.RemoveRemoteID()
 	}
 }

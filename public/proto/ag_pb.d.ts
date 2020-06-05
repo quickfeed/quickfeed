@@ -496,10 +496,10 @@ export class Assignment extends jspb.Message {
   getScorelimit(): number;
   setScorelimit(value: number): void;
 
-  getSubmissionsList(): Array<Submissions>;
-  setSubmissionsList(value: Array<Submissions>): void;
+  getSubmissionsList(): Array<Submission>;
+  setSubmissionsList(value: Array<Submission>): void;
   clearSubmissionsList(): void;
-  addSubmissions(value?: Submissions, index?: number): Submissions;
+  addSubmissions(value?: Submission, index?: number): Submission;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
@@ -520,7 +520,7 @@ export namespace Assignment {
     order: number,
     isgrouplab: boolean,
     scorelimit: number,
-    submissionsList: Array<Submissions.AsObject>,
+    submissionsList: Array<Submission.AsObject>,
   }
 }
 
@@ -640,7 +640,7 @@ export namespace SubmissionLink {
   }
 }
 
-export class AssignmentLink extends jspb.Message {
+export class EnrollmentLink extends jspb.Message {
   getEnrollment(): Enrollment | undefined;
   setEnrollment(value?: Enrollment): void;
   hasEnrollment(): boolean;
@@ -652,14 +652,14 @@ export class AssignmentLink extends jspb.Message {
   addSubmissions(value?: SubmissionLink, index?: number): SubmissionLink;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): AssignmentLink.AsObject;
-  static toObject(includeInstance: boolean, msg: AssignmentLink): AssignmentLink.AsObject;
-  static serializeBinaryToWriter(message: AssignmentLink, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): AssignmentLink;
-  static deserializeBinaryFromReader(message: AssignmentLink, reader: jspb.BinaryReader): AssignmentLink;
+  toObject(includeInstance?: boolean): EnrollmentLink.AsObject;
+  static toObject(includeInstance: boolean, msg: EnrollmentLink): EnrollmentLink.AsObject;
+  static serializeBinaryToWriter(message: EnrollmentLink, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): EnrollmentLink;
+  static deserializeBinaryFromReader(message: EnrollmentLink, reader: jspb.BinaryReader): EnrollmentLink;
 }
 
-export namespace AssignmentLink {
+export namespace EnrollmentLink {
   export type AsObject = {
     enrollment?: Enrollment.AsObject,
     submissionsList: Array<SubmissionLink.AsObject>,
@@ -672,10 +672,10 @@ export class CourseSubmissions extends jspb.Message {
   hasCourse(): boolean;
   clearCourse(): void;
 
-  getLinksList(): Array<AssignmentLink>;
-  setLinksList(value: Array<AssignmentLink>): void;
+  getLinksList(): Array<EnrollmentLink>;
+  setLinksList(value: Array<EnrollmentLink>): void;
   clearLinksList(): void;
-  addLinks(value?: AssignmentLink, index?: number): AssignmentLink;
+  addLinks(value?: EnrollmentLink, index?: number): EnrollmentLink;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): CourseSubmissions.AsObject;
@@ -688,7 +688,7 @@ export class CourseSubmissions extends jspb.Message {
 export namespace CourseSubmissions {
   export type AsObject = {
     course?: Course.AsObject,
-    linksList: Array<AssignmentLink.AsObject>,
+    linksList: Array<EnrollmentLink.AsObject>,
   }
 }
 

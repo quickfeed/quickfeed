@@ -90,7 +90,7 @@ type Database interface {
 	GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error)
 	// GetCourseSubmissions returns a list of all the latest submissions
 	// for every active course assignment for the given course ID
-	GetCourseSubmissions(uint64, bool) ([]pb.Submission, error)
+	GetCourseAssignmentsWithSubmissions(uint64, pb.SubmissionLinkRequest_Type) ([]pb.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(submissionID uint64, approved bool) error
 
