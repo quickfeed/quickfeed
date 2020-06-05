@@ -1434,7 +1434,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []*pb.Repository{&repoCourseInfo, &repoSolution, &repoAssignment}
+	want := []*pb.Repository{&repoCourseInfo, &repoAssignment, &repoSolution}
 
 	gotRepo, err := db.GetRepositories(&pb.Repository{OrganizationID: 120})
 	if err != nil {
