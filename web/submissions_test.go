@@ -455,50 +455,56 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that all submissions were saved for the correct labs
-	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.LabRequest{CourseID: course1.ID})
+	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionLinkRequest{CourseID: course1.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, labLink := range labsForCourse1.GetLabs() {
-		if labLink.GetEnrollment().GetUserID() == student.ID {
-			labs := labLink.GetSubmissions()
+	for _, enrolLink := range labsForCourse1.GetLinks() {
+		if enrolLink.GetEnrollment().GetUserID() == student.ID {
+			labs := enrolLink.GetSubmissions()
+			if len(labs) < 1 {
+				t.Fatal("Got no submissions, expected one")
+			}
 			if len(labs) != 1 {
 				t.Errorf("Expected 1 submission for course 1, got %d", len(labs))
 			}
-			if !reflect.DeepEqual(sub1, labs[0]) {
-				t.Errorf("Want submission %+v, got %+v", sub1, labs[0])
+			if !reflect.DeepEqual(sub1, labs[0].Submission) {
+				t.Errorf("Want submission %+v, got %+v", sub1, labs[0].Submission)
 			}
 		}
 	}
 
-	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, &pb.LabRequest{CourseID: course2.ID})
+	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionLinkRequest{CourseID: course2.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, labLink := range labsForCourse2.GetLabs() {
+	for _, labLink := range labsForCourse2.GetLinks() {
 		if labLink.GetEnrollment().GetUserID() == student.ID {
 			labs := labLink.GetSubmissions()
+			if len(labs) < 1 {
+				t.Fatal("Got no submissions, expected one")
+			}
 			if len(labs) != 1 {
 				t.Errorf("Expected 1 submission for course 1, got %d", len(labs))
 			}
-			if !reflect.DeepEqual(sub2, labs[0]) {
-				t.Errorf("Want submission %+v, got %+v", sub1, labs[0])
+			if !reflect.DeepEqual(sub2, labs[0].Submission) {
+				t.Errorf("Want submission %+v, got %+v", sub1, labs[0].Submission)
 			}
 		}
 	}
 	// check that no submissions will be returned for a wrong course ID
-	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.LabRequest{CourseID: 234}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionLinkRequest{CourseID: 234}); err == nil {
 		t.Error("Expected 'no submissions found'")
 	}
 
 	// check that method fails with empty context
-	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.LabRequest{CourseID: course1.ID}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.SubmissionLinkRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'authorization failed. please try to logout and sign in again'")
 	}
 
 	// check that method fails for non-teacher user
 	ctx = withUserContext(ctx, student)
-	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.LabRequest{CourseID: course1.ID}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.SubmissionLinkRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
 
