@@ -462,11 +462,8 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	for _, enrolLink := range labsForCourse1.GetLinks() {
 		if enrolLink.GetEnrollment().GetUserID() == student.ID {
 			labs := enrolLink.GetSubmissions()
-			if len(labs) < 1 {
-				t.Fatal("Got no submissions, expected one")
-			}
-			if len(labs) != 1 {
-				t.Errorf("Expected 1 submission for course 1, got %d", len(labs))
+			if len(labs) != 2 {
+				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
 			}
 			if !reflect.DeepEqual(sub1, labs[0].Submission) {
 				t.Errorf("Want submission %+v, got %+v", sub1, labs[0].Submission)
@@ -481,14 +478,11 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	for _, labLink := range labsForCourse2.GetLinks() {
 		if labLink.GetEnrollment().GetUserID() == student.ID {
 			labs := labLink.GetSubmissions()
-			if len(labs) < 1 {
-				t.Fatal("Got no submissions, expected one")
+			if len(labs) != 2 {
+				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
 			}
-			if len(labs) != 1 {
-				t.Errorf("Expected 1 submission for course 1, got %d", len(labs))
-			}
-			if !reflect.DeepEqual(sub2, labs[0].Submission) {
-				t.Errorf("Want submission %+v, got %+v", sub1, labs[0].Submission)
+			if !reflect.DeepEqual(sub2, labs[1].Submission) {
+				t.Errorf("Want submission %+v, got %+v", sub1, labs[1].Submission)
 			}
 		}
 	}
