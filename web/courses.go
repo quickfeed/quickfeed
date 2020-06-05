@@ -129,19 +129,11 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionLinkRequest) (*pb.C
 	if err != nil {
 		return nil, err
 	}
-
-	// debug
-	fmt.Println("GetAllLabs: fetched assignments of type: ", request.Type.String(), " got ", len(assignments))
-
 	// fetch course record with all assignments and active enrollments
 	course, err := s.db.GetCourse(request.GetCourseID(), true)
 	if err != nil {
 		return nil, err
 	}
-
-	// debug
-	fmt.Println("GetAllLabs: fetched course, enrollments: ", len(course.Enrollments), ", groups: ", len(course.Groups))
-
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	switch request.Type {
@@ -151,22 +143,15 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionLinkRequest) (*pb.C
 		if err != nil {
 			return nil, err
 		}
-		// debug
-		fmt.Println("GetAllLabs: fetching links for group labs, got ", len(enrols))
 		enrolLinks = append(enrolLinks, enrols...)
-
 	case pb.SubmissionLinkRequest_INDIVIDUAL:
 		enrolLinks = append(enrolLinks, makeResults(course, assignments)...)
-		// debug
-		fmt.Println("GetAllLabs: fetching individual links: ", len(enrolLinks))
 	default:
 		grpLinks, err := makeGroupResults(course, assignments)
 		if err != nil {
 			return nil, err
 		}
 		enrolLinks = append(makeResults(course, assignments), grpLinks...)
-		// debug
-		fmt.Println("GetAllLabs: fetching all labs, got ", len(enrolLinks))
 	}
 	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
 }
@@ -174,28 +159,21 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionLinkRequest) (*pb.C
 // makeResults generates enrollment to assignment to submissions links
 // for all course students and all individual assignments
 func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
-
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
-	for i, enrol := range course.Enrollments {
-		// debug
-		fmt.Println("GetAllLabs: checking enrollment ", i, " with user ID ", enrol.UserID)
+	for _, enrol := range course.Enrollments {
 		newLink := &pb.EnrollmentLink{Enrollment: enrol}
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
-			// debug
-			fmt.Println("GetAllLabs: assignment ", a.ID, " has submissions ", len(a.Submissions))
 			subLink := &pb.SubmissionLink{
 				Assignment: a,
 			}
 			for _, sb := range a.Submissions {
-				// debug
-				fmt.Println("GetAllLabs: checking submission with userID ", sb.UserID)
 				if sb.UserID > 0 && sb.UserID == enrol.UserID {
 					subLink.Submission = sb
 				}
-				allSubmissions = append(allSubmissions, subLink)
 			}
+			allSubmissions = append(allSubmissions, subLink)
 		}
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
@@ -229,8 +207,8 @@ func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) ([]*pb.En
 				if sb.GroupID > 0 && sb.GroupID == grp.ID {
 					subLink.Submission = sb
 				}
-				allSubmissions = append(allSubmissions, subLink)
 			}
+			allSubmissions = append(allSubmissions, subLink)
 		}
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
