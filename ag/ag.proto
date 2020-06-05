@@ -142,7 +142,7 @@ message Assignment {
     uint32 order = 7;
     bool isGroupLab = 8;
     uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
-    Submission submission = 10; 
+    repeated Submissions submissions = 10; 
 }
 
 message Assignments {
@@ -165,14 +165,19 @@ message Submissions {
     repeated Submission submissions = 1;
 }
 
-message LabResultLink {    
-    string authorName = 1;
-    Enrollment enrollment = 2;
-    repeated Submission submissions = 3;
+message SubmissionLink {
+    Assignment assignment = 1;
+    Submission submission = 2;
 }
 
-message LabResultLinks {
-    repeated LabResultLink labs = 1;
+message AssignmentLink {
+    Enrollment enrollment = 2; // must have course and user/group preloaded
+    repeated SubmissionLink submissions = 3;
+}
+
+message CourseSubmissions {
+    Course course = 1; // preloaded assignments
+    repeated AssignmentLink links = 2;
 }
 
 ////    REQUESTS AND RESPONSES      \\\\
@@ -259,11 +264,20 @@ message Status {
     string Error = 2;
 }
 
-message LabRequest {
+message SubmissionLinkRequest {
+    enum Type {
+        ALL = 0;
+        INDIVIDUAL = 1;
+        GROUP = 2;
+    }
+    uint64 courseID = 1;
+    Type type = 2;
+}
+
+message RebuildRequest {
     uint64 courseID = 1;
     uint64 submissionID = 2;
     uint64 assignmentID = 3;
-    bool groupLabs = 4;
 }
 
 // Void contains no fields. A server response with a Void still contains a gRPC status code,
@@ -316,9 +330,9 @@ service AutograderService {
     // Get latest submissions for all course assignmets for a user or a group.
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
     // Get lab submissions for every course user or every course group
-    rpc GetSubmissionsByCourse(LabRequest) returns (LabResultLinks) {}
+    rpc GetSubmissionsByCourse(SubmissionLinkRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
-    rpc RebuildSubmission(LabRequest) returns (Submission) {}
+    rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
    
     // misc //
     

@@ -8,6 +8,7 @@ func SetAccessToken(courseID uint64, accessToken string) {
 	accessTokens[courseID] = accessToken
 }
 
+// GetAccessToken retrieves access token of the course
 func (course *Course) GetAccessToken() string {
 	return accessTokens[course.GetID()]
 }

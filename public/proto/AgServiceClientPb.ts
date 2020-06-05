@@ -15,6 +15,7 @@ import {
   AuthorizationResponse,
   Course,
   CourseRequest,
+  CourseSubmissions,
   Courses,
   Enrollment,
   EnrollmentRequest,
@@ -24,14 +25,14 @@ import {
   Group,
   GroupRequest,
   Groups,
-  LabRequest,
-  LabResultLinks,
   OrgRequest,
   Organization,
   Providers,
+  RebuildRequest,
   Repositories,
   RepositoryRequest,
   Submission,
+  SubmissionLinkRequest,
   SubmissionRequest,
   Submissions,
   URLRequest,
@@ -588,18 +589,18 @@ export class AutograderServiceClient {
   }
 
   methodInfoGetSubmissionsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
-    LabResultLinks,
-    (request: LabRequest) => {
+    CourseSubmissions,
+    (request: SubmissionLinkRequest) => {
       return request.serializeBinary();
     },
-    LabResultLinks.deserializeBinary
+    CourseSubmissions.deserializeBinary
   );
 
   getSubmissionsByCourse(
-    request: LabRequest,
+    request: SubmissionLinkRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
-               response: LabResultLinks) => void) {
+               response: CourseSubmissions) => void) {
     return this.client_.rpcCall(
       this.hostname_ +
         '/AutograderService/GetSubmissionsByCourse',
@@ -633,14 +634,14 @@ export class AutograderServiceClient {
 
   methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Submission,
-    (request: LabRequest) => {
+    (request: RebuildRequest) => {
       return request.serializeBinary();
     },
     Submission.deserializeBinary
   );
 
   rebuildSubmission(
-    request: LabRequest,
+    request: RebuildRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: Submission) => void) {
