@@ -4,25 +4,28 @@ import {
     AuthorizationResponse,
     Course,
     CourseRequest,
+    CourseSubmissions,
     Courses,
     EnrollmentStatusRequest,
     Enrollment,
+    EnrollmentLink,
     EnrollmentRequest,
     Enrollments,
     GetGroupRequest,
     Group,
     GroupRequest,
     Groups,
-    LabRequest,
-    LabResultLinks,
     Organization,
     OrgRequest,
     Providers,
+    RebuildRequest,
     Repositories,
     Repository,
     RepositoryRequest,
     Status,
     SubmissionRequest,
+    SubmissionLink,
+    SubmissionLinkRequest,
     Submission,
     Submissions,
     UpdateSubmissionRequest,
@@ -221,15 +224,15 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
-    public getSubmissionsByCourse(courseID: number, groupLabs: boolean): Promise<IGrpcResponse<LabResultLinks>> {
-        const request = new LabRequest();
+    public getSubmissionsByCourse(courseID: number, type: SubmissionLinkRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
+        const request = new SubmissionLinkRequest();
         request.setCourseid(courseID);
-        request.setGrouplabs(groupLabs);
-        return this.grpcSend<LabResultLinks>(this.agService.getSubmissionsByCourse, request);
+        request.setType(type);
+        return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request);
     }
 
     public rebuildSubmission(assignmentID: number, submissionID: number): Promise<IGrpcResponse<Submission>> {
-        const request = new LabRequest();
+        const request = new RebuildRequest();
         request.setAssignmentid(assignmentID);
         request.setSubmissionid(submissionID);
         return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
