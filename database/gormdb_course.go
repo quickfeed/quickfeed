@@ -56,7 +56,7 @@ func (db *GormDB) GetCourse(courseID uint64, withInfo bool) (*pb.Course, error) 
 		}
 		// and only group submissions from approved groups
 		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: courseID}
-		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Groups", modelGroup).First(&course, courseID).Error; err != nil {
+		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Enrollments.Group").Preload("Groups", modelGroup).First(&course, courseID).Error; err != nil {
 			return nil, err
 		}
 	} else {

@@ -1,8 +1,6 @@
 package database
 
 import (
-	"fmt"
-
 	pb "github.com/autograde/aguis/ag"
 	"github.com/jinzhu/gorm"
 )
@@ -87,8 +85,6 @@ func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissio
 	wantGroupLabs := submissionType == pb.SubmissionLinkRequest_GROUP
 	filteredAssignments := make([]*pb.Assignment, 0)
 	for _, a := range assignments {
-		// debug
-		fmt.Println("Got assignment ", a.GetName(), " from db, has submissions: ", len(a.GetSubmissions()))
 		if a.IsGroupLab == wantGroupLabs {
 			filteredAssignments = append(filteredAssignments, a)
 		}
