@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	pb "github.com/autograde/aguis/ag"
 	"github.com/jinzhu/gorm"
 )
@@ -67,4 +69,29 @@ func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 		}
 	}
 	return nil
+}
+
+// GetCourseAssignmentsWithSubmissions returns all course assignments
+// of requested type with preloaded submissions.
+func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissionType pb.SubmissionLinkRequest_Type) ([]*pb.Assignment, error) {
+	var assignments []*pb.Assignment
+
+	if err := db.conn.Preload("Submissions").Where(&pb.Assignment{CourseID: courseID}).Find(&assignments).Error; err != nil {
+		return nil, err
+	}
+
+	if submissionType == pb.SubmissionLinkRequest_ALL {
+		return assignments, nil
+	}
+
+	wantGroupLabs := submissionType == pb.SubmissionLinkRequest_GROUP
+	filteredAssignments := make([]*pb.Assignment, 0)
+	for _, a := range assignments {
+		// debug
+		fmt.Println("Got assignment ", a.GetName(), " from db, has submissions: ", len(a.GetSubmissions()))
+		if a.IsGroupLab == wantGroupLabs {
+			filteredAssignments = append(filteredAssignments, a)
+		}
+	}
+	return filteredAssignments, nil
 }
