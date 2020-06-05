@@ -6,7 +6,7 @@ import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
 
-import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository, SubmissionLinkRequest } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
@@ -117,7 +117,7 @@ export class TeacherPage extends ViewPage {
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
-            const results = await this.courseMan.getLabsForCourse(course.getId(), false);
+            const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionLinkRequest.Type.INDIVIDUAL);
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
             return <Results
                 course={course}
@@ -141,7 +141,7 @@ export class TeacherPage extends ViewPage {
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const results = await this.courseMan.getLabsForCourse(course.getId(), true);
+            const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionLinkRequest.Type.GROUP);
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
 
