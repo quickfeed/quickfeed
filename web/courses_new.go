@@ -111,10 +111,20 @@ func (s *AutograderService) createCourse(ctx context.Context, sc scm.SCM, reques
 		return nil, err
 	}
 
-	// create student repo for course creator
-	// do not return if failed, just log
-	if _, err := createStudentRepo(ctx, sc, org, pb.StudentRepoName(courseCreator.GetLogin()), courseCreator.GetLogin()); err != nil {
-		s.logger.Debugf("createCourse: failed to create student repo for course creator: %s: %v", courseCreator.GetLogin(), err)
+	// add student repo for the course creator
+	scmRepo, err := createStudentRepo(ctx, sc, org, pb.StudentRepoName(courseCreator.GetLogin()), courseCreator.GetLogin())
+	if err != nil {
+		return nil, err
+	}
+	repoQuery := &pb.Repository{
+		OrganizationID: org.GetID(),
+		RepositoryID:   scmRepo.ID,
+		UserID:         courseCreator.ID,
+		HTMLURL:        scmRepo.WebURL,
+		RepoType:       pb.Repository_USER,
+	}
+	if err := s.db.CreateRepository(repoQuery); err != nil {
+		return nil, err
 	}
 
 	request.OrganizationPath = org.GetPath()
