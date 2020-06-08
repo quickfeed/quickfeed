@@ -66,7 +66,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                             </div>
                         </div>
                     <div className="row spacefix">
-                    {this.courseByName()}
+                    {this.props.courseData ? null : this.courseByName()}
                     </div>
                     <div className="row spacefix">
                     {this.renderFormController("Name:",
