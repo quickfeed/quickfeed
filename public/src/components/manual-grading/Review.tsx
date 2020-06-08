@@ -336,11 +336,16 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
             if (!assignmentBM) {
                 oldList.splice(oldList.indexOf(bm), 1);
             } else {
+                // update description in case there were some changes
+                bm.setHeading(assignmentBM.getHeading());
                 // remove deleted criteria
                 const oldCriteriaList = bm.getCriteriaList();
                 oldCriteriaList.forEach(c => {
-                    if (!assignmentBM.getCriteriaList().find(item => item.getId() === c.getId())) {
+                    const assignmentCriterium = assignmentBM.getCriteriaList().find(item => item.getId() === c.getId());
+                    if (!assignmentCriterium) {
                         oldCriteriaList.splice(oldCriteriaList.indexOf(c), 1);
+                    } else {
+                        c.setDescription(assignmentCriterium.getDescription());
                     }
                 });
                 // add new criteria
