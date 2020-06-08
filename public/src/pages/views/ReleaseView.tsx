@@ -106,7 +106,13 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                     <button className="btn btn-default"
                         onClick={() => {
                             if (this.state.selectedAssignment) {
-                                this.props.updateAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, false, true);
+                                if (confirm(
+                                    `Warning! Are you sure you
+                                    want to release reviews for all
+                                    submissions with score above ${this.state.scoreLimit}?`,
+                                    )) {
+                                        this.props.updateAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, false, true);
+                                }
                             }
                             this.setState({
                                 alert: this.alertWhenMassReleasing(),
@@ -118,7 +124,13 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                 <button className="btn btn-default"
                         onClick={() => {
                             if (this.state.selectedAssignment) {
-                                this.props.updateAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, true, false);
+                                if (confirm(
+                                    `Warning! Are you sure you
+                                    want to approve all
+                                    submissions with score above ${this.state.scoreLimit}?`,
+                                    )) {
+                                        this.props.updateAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, true, false);
+                                }
                             }
                             this.setState({
                                 alert: this.alertWhenMassReleasing(),
