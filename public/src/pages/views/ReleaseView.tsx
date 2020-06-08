@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, Course, Group, User, Submission } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
 import { Search } from "../../components";
-import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForLabs } from '../../componentHelper';
+import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForLabs, searchForUsers, searchForGroups } from '../../componentHelper';
 import { Release } from "../../components/manual-grading/Release";
 
 interface ReleaseViewProps {
@@ -20,6 +20,8 @@ interface ReleaseViewProps {
 interface ReleaseViewState {
     allStudents: User[]; // immutable, only set once in constructor
     allGroups: Group[]; // immutable, only set once in constructor
+    showStudents: User[];
+    showGroups: Group[];
     selectedAssignment: Assignment | undefined;
     selectedStudent: User | undefined;
     selectedGroup: Group | undefined;
@@ -38,6 +40,8 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
             selectedGroup: undefined,
             allStudents: selectFromSubmissionLinks(props.students, false) as User[],
             allGroups: selectFromSubmissionLinks(props.groups, true) as Group[],
+            showStudents: selectFromSubmissionLinks(props.students, false) as User[],
+            showGroups: selectFromSubmissionLinks(props.groups, true) as Group[],
             selectedAssignment: a,
             alert: "",
             submissionsForAssignment: mapAllSubmissions(props.students, false, a) as Map<User, ISubmissionLink>,
@@ -139,7 +143,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
             return <div className="alert alert-dark col-md-12">Please select an assignment.</div>;
         }
         if (a.getIsgrouplab()) {
-            const sortedCourseGroups = sortStudentsForRelease<Group>(this.state.submissionsForGroupAssignment, a.getReviewers());
+            const sortedCourseGroups = sortStudentsForRelease<Group>(this.state.showGroups, this.state.submissionsForGroupAssignment, a.getReviewers());
             return <div className="col-md-12">
                 <ul className="list-group">{
                     sortedCourseGroups.map((grp, i) =>
@@ -179,7 +183,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
             </div>
 
         }
-        const sortedCourseStudents = sortStudentsForRelease<User>(this.state.submissionsForAssignment, a.getReviewers());
+        const sortedCourseStudents = sortStudentsForRelease<User>(this.state.showStudents, this.state.submissionsForAssignment, a.getReviewers());
         return <div className="col-md-12">
             <ul className="list-group">
                 {
@@ -235,11 +239,11 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
     }
 
     private handleSearch(query: string) {
-        const foundUsers = searchForLabs(this.props.students, query);
-        const foundGroups = searchForLabs(this.props.groups, query);
+        const foundUsers = searchForUsers(sortStudentsForRelease<User>(this.state.allStudents, this.state.submissionsForAssignment, this.state.selectedAssignment?.getReviewers() ?? 0), query);
+        const foundGroups = searchForGroups(sortStudentsForRelease<Group>(this.state.allGroups, this.state.submissionsForGroupAssignment, this.state.selectedAssignment?.getReviewers() ?? 0), query);
         this.setState((state) => ({
-            submissionsForAssignment: mapAllSubmissions(foundUsers, false, state.selectedAssignment) as Map<User, ISubmissionLink>,
-            submissionsForGroupAssignment: mapAllSubmissions(foundGroups, true, state.selectedAssignment) as Map<Group, ISubmissionLink>,
+            showStudents: foundUsers,
+            showGroups: foundGroups,
         }));
     }
 

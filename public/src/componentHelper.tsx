@@ -28,23 +28,20 @@ export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: bo
     return sorted;
 }
 
-export function sortStudentsForRelease<T>(allSubmissions: Map<T, ISubmissionLink>, reviewers: number): T[] {
-    console.log("Sorting labs for release, got entries" + Array.from(allSubmissions.keys()).length);
+export function sortStudentsForRelease<T>(fullList: T[], allSubmissions: Map<T, ISubmissionLink>, reviewers: number): T[] {
     const withReviews: T[] = [];
     const withSubmission: T[] = [];
     const noSubmissions: T[] = [];
-    allSubmissions.forEach((s, u) => {
-        if (s.submission && hasAllReviews(s.submission, reviewers)) {
-            withReviews.push(u);
-        } else if (s.submission) {
-            withSubmission.push(u);
+    fullList.forEach(item => {
+        const v = allSubmissions.get(item);
+        if (v && v.submission && hasAllReviews(v.submission, reviewers)) {
+            withReviews.push(item);
+        } else if (v && v.submission) {
+            withSubmission.push(item);
         } else {
-            noSubmissions.push(u);
+            noSubmissions.push(item);
         }
     });
-    console.log("with all reviews: " + withReviews.length);
-    console.log("with submission: " + withSubmission.length);
-    console.log("no submissions: " + noSubmissions.length);
     return withReviews.concat(withSubmission, noSubmissions);
 }
 

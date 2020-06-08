@@ -3,7 +3,7 @@ import { Assignment, Course, Group, Review, User, Submission } from "../../../pr
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { searchForLabs,  selectFromSubmissionLinks, mapAllSubmissions } from '../../componentHelper';
+import { searchForLabs, selectFromSubmissionLinks, mapAllSubmissions, searchForUsers, searchForGroups } from '../../componentHelper';
 
 interface FeedbackViewProps {
     course: Course;
@@ -19,6 +19,8 @@ interface FeedbackViewProps {
 interface FeedbackViewState {
     allStudents: User[]; // immutable, only set once in constructor
     allGroups: Group[]; // immutable, only set once in constructor
+    showStudents: User[];
+    showGroups: Group[];
     selectedAssignment: Assignment;
     selectedStudent: User | undefined;
     selectedGroup: Group | undefined;
@@ -37,6 +39,8 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
             selectedGroup: undefined,
             allStudents: selectFromSubmissionLinks(props.students, false) as User[],
             allGroups: selectFromSubmissionLinks(props.groups, true) as Group[],
+            showStudents: selectFromSubmissionLinks(props.students, false) as User[],
+            showGroups: selectFromSubmissionLinks(props.groups, true) as Group[],
             selectedAssignment: a,
             alert: "",
             submissionsForAssignment: mapAllSubmissions(props.students, false, a) as Map<User, ISubmissionLink>,
@@ -79,9 +83,8 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
             return <div className="alert alert-info col-md-12">Please select an assignment..</div>;
         }
         if (a.getIsgrouplab()) {
-            const groupList = Array.from(this.state.submissionsForGroupAssignment.keys());
             return <div className="col-md-12">
-                <ul className="list-group">{groupList.map((grp, i) =>
+                <ul className="list-group">{this.state.showGroups.map((grp, i) =>
                 <li key={i} onClick={() => this.setState({selectedGroup: grp})} className="list-group-item li-review"><ReviewPage
                     key={"rgrp" + i}
                     assignment={this.state.selectedAssignment}
@@ -115,9 +118,8 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
             </div>;
         }
 
-        const studentList = Array.from(this.state.submissionsForAssignment.keys());
         return <div className="col-md-12">
-                <ul className="list-group">{studentList.map((s, i) =>
+                <ul className="list-group">{this.state.showStudents.map((s, i) =>
                 <li key={i} onClick={() => this.setState({selectedStudent: s})} className="list-group-item li-review"><ReviewPage
                     key={"r" + i}
                     assignment={this.state.selectedAssignment}
@@ -170,11 +172,11 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
     }
 
     private handleSearch(query: string) {
-        const foundUsers = searchForLabs(this.props.students, query);
-        const foundGroups = searchForLabs(this.props.groups, query);
+        const foundUsers = searchForUsers(selectFromSubmissionLinks(this.props.students, false) as User[], query);
+        const foundGroups = searchForGroups(selectFromSubmissionLinks(this.props.groups, true) as Group[], query);
         this.setState((state) => ({
-            submissionsForAssignment: mapAllSubmissions(foundUsers, false, state.selectedAssignment) as Map<User, ISubmissionLink>,
-            submissionsForGroupAssignment: mapAllSubmissions(foundGroups, true, state.selectedAssignment) as Map<Group, ISubmissionLink>,
+            showStudents: foundUsers,
+            showGroups: foundGroups,
         }));
     }
 
