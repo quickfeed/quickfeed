@@ -226,9 +226,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     public async getLabsForCourse(courseID: number, type: SubmissionLinkRequest.Type): Promise<IStudentLabsForCourse[]> {
-        console.log("Fetching lab results " + (type === SubmissionLinkRequest.Type.GROUP ? "for groups" : "for students"));
-        
-        
         const result = await this.grpcHelper.getSubmissionsByCourse(courseID, type);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
