@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from '../../../proto/ag_pb';
-import { totalScore, userSubmissionLink, submissionStatusToString, setDivider, submissionStatusSelector } from '../../componentHelper';
+import { totalScore, userSubmissionLink, submissionStatusToString, setDivider, submissionStatusSelector, getDaysAfterDeadline } from '../../componentHelper';
 import { ISubmission } from "../../models";
 import { formatDate } from '../../helper';
 import ReactTooltip from "react-tooltip";
@@ -82,6 +82,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private infoTable(): JSX.Element {
+        const afterDeadline = this.props.submission ? getDaysAfterDeadline(new Date(this.props.assignment.getDeadline()), this.props.submission.buildDate) : -1;
         return <div className="row">
             <div className="col-md-6 release-info">
                 <ul className="list-group">
@@ -90,7 +91,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                             {formatDate(this.props.assignment.getDeadline())}</li>
                     <li key="li1" className="list-group-item r-li">
                         <span className="r-table">Delivered: </span>
-                            {this.props.submission ? formatDate(this.props.submission?.buildDate) : "Not delivered"}</li>
+                            {this.props.submission ? formatDate(this.props.submission?.buildDate) + (afterDeadline > 0 ? " (" + afterDeadline + " days after deadline)" : "") : "Not delivered"}</li>
                     <li key="li3" className="list-group-item r-li">
                         <span className="r-table">Repository: </span>
                         {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>

@@ -364,3 +364,8 @@ export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], f
     return studentMap;
 }
 
+export function getDaysAfterDeadline(deadline: Date, delivered: Date): number {
+    const msInADay = 1000 * 60 * 60 * 24;
+    const after =  Math.floor((delivered.valueOf() - deadline.valueOf()) / msInADay);
+    return after > 0 ? after : 0;
+}

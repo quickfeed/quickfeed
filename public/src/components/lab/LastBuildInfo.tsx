@@ -3,7 +3,7 @@ import { Assignment, Submission } from "../../../proto/ag_pb";
 import { Row } from "../../components";
 import { formatDate } from "../../helper";
 import { ISubmission } from "../../models";
-import { submissionStatusToString } from "../../componentHelper";
+import { submissionStatusToString, getDaysAfterDeadline } from '../../componentHelper';
 
 interface ILastBuildInfoProps {
     submission: ISubmission;
@@ -55,7 +55,8 @@ export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBui
         if (delivered >= deadline) {
             classString = "past-deadline";
         }
-        return <div className={classString}>{formatDate(delivered)}</div>;
+        const afterDeadline = getDaysAfterDeadline(deadline, delivered);
+        return <div className={classString}>{formatDate(delivered) + (afterDeadline > 0 ? afterDeadline + "(" + afterDeadline + " days after deadline)" : "")}</div>;
     }
 
     private formatTime(executionTime: number): number {
