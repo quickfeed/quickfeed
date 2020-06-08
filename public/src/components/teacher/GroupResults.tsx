@@ -16,7 +16,7 @@ interface IResultsProps {
 }
 
 interface IResultsState {
-    assignment?: IStudentLab;
+    submissionLink?: IStudentLab;
     groups: IStudentLabsForCourse[];
 }
 
@@ -26,15 +26,16 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         super(props);
 
         const currentGroup = this.props.groups.length > 0 ? this.props.groups[0] : null;
-        if (currentGroup && currentGroup.labs.length > 0) {
+        const allAssignments = currentGroup ? currentGroup.course.getAssignmentsList() : null;
+        if (currentGroup && allAssignments && allAssignments.length > 0) {
             this.state = {
                 // Only using the first group to fetch assignments.
-                assignment: currentGroup.labs[0],
+                submissionLink: currentGroup.labs[0],
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         } else {
             this.state = {
-                assignment: undefined,
+                submissionLink: undefined,
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         }
@@ -42,19 +43,19 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
 
     public render() {
         let groupLab: JSX.Element | null = null;
-        const currentGroup = this.props.groups.length > 0 ? this.props.groups : null;
-        if (currentGroup
-            && this.state.assignment
-            && this.state.assignment.assignment.getIsgrouplab()) {
+        const currentGroups = this.props.groups.length > 0 ? this.props.groups : null;
+        if (currentGroups
+            && this.state.submissionLink
+            && this.state.submissionLink.assignment.getIsgrouplab()) {
             groupLab = <StudentLab
-                assignment={this.state.assignment}
+                assignment={this.state.submissionLink}
                 showApprove={true}
                 onRebuildClick={
                     async () => {
-                        if (this.state.assignment && this.state.assignment.submission) {
-                            const ans = await this.props.onRebuildClick(this.state.assignment.assignment.getId(), this.state.assignment.submission.id);
+                        if (this.state.submissionLink && this.state.submissionLink.submission) {
+                            const ans = await this.props.onRebuildClick(this.state.submissionLink.assignment.getId(), this.state.submissionLink.submission.id);
                             if (ans) {
-                                this.state.assignment.submission = ans;
+                                this.state.submissionLink.submission = ans;
                                 return true;
                             }
                         }
@@ -62,10 +63,10 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                     }
                 }
                 onApproveClick={(approve: boolean) => {
-                    if (this.state.assignment && this.state.assignment.submission) {
-                        const ans = this.props.onApproveClick(this.state.assignment.submission.id, approve);
+                    if (this.state.submissionLink && this.state.submissionLink.submission) {
+                        const ans = this.props.onApproveClick(this.state.submissionLink.submission.id, approve);
                         if (ans) {
-                            this.state.assignment.submission.approved = approve;
+                            this.state.submissionLink.submission.approved = approve;
                         }
                     }
                 }}
@@ -124,7 +125,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
 
     private handleOnclick(item: IStudentLab): void {
         this.setState({
-            assignment: item,
+            submissionLink: item,
         });
     }
 
