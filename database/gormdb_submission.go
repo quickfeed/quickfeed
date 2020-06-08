@@ -114,6 +114,19 @@ func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
 		Update("released", query.Released).Error
 }
 
+// UpdateSubmissions approves and/or releases all submissions that have score
+// equal or above the provided score for the given assignment ID
+func (db *GormDB) UpdateSubmissions(courseID uint64, query *pb.Submission) error {
+	return db.conn.
+		Model(query).
+		Where(&pb.Submission{AssignmentID: query.AssignmentID}).
+		Where("score >= ?", query.Score).
+		Updates(&pb.Submission{
+			Status:   query.Status,
+			Released: query.Released,
+		}).Error
+}
+
 // CreateReview creates a new submission review
 func (db *GormDB) CreateReview(query *pb.Review) error {
 	return db.conn.Create(query).Error

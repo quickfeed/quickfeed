@@ -248,14 +248,6 @@ message ReviewRequest {
     Review review = 2;
 }
 
-message ReleaseRequest {
-    uint64 courseID = 1;
-    uint64 assignmentID = 2;
-    uint32 scoreLimit = 3;
-    bool release = 4;
-    bool approve = 5;
-}
-
 message CourseRequest {
     uint64 courseID = 1;
 }
@@ -319,6 +311,14 @@ message UpdateSubmissionRequest {
     uint64 courseID = 2;
     bool released = 3;
     Submission.Status status = 4;
+}
+
+message UpdateSubmissionsRequest {
+    uint64 courseID = 1;
+    uint64 assignmentID = 2;
+    uint32 scoreLimit = 3;
+    bool release = 4;
+    bool approve = 5;
 }
 
 message SubmissionReviewersRequest {
@@ -423,8 +423,9 @@ service AutograderService {
     // Get lab submissions for every course user or every course group
     rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
+    rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
-    
+
     // manual grading //
     rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
     rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
@@ -437,7 +438,6 @@ service AutograderService {
     rpc CreateReview(ReviewRequest) returns (Review) {}
     rpc UpdateReview(ReviewRequest) returns (Void) {}
     rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
-    rpc ReleaseAll(ReleaseRequest) returns (Void) {}
 
     // misc //
     

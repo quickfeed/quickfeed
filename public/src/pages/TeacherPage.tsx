@@ -210,8 +210,8 @@ export class TeacherPage extends ViewPage {
                     getReviewers={(submissionID: number) => {
                         return this.courseMan.getReviewers(submissionID, course.getId());
                     }}
-                    releaseAll={async (assignmentID: number, score: number, release: boolean, approve: boolean) => {
-                        return this.courseMan.releaseAll(assignmentID, course.getId(), score, release, approve);
+                    updateAll={async (assignmentID: number, score: number, release: boolean, approve: boolean) => {
+                        return this.courseMan.updateSubmissions(assignmentID, course.getId(), score, release, approve);
                     }}
                 />;
             }

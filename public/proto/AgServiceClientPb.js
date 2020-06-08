@@ -89,6 +89,9 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoUpdateSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Void.deserializeBinary);
+        this.methodInfoUpdateSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
+            return request.serializeBinary();
+        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Submission, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Submission.deserializeBinary);
@@ -119,9 +122,6 @@ var AutograderServiceClient = /** @class */ (function () {
         this.methodInfoGetReviewers = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Reviewers, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Reviewers.deserializeBinary);
-        this.methodInfoReleaseAll = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Void, function (request) {
-            return request.serializeBinary();
-        }, ag_pb_1.Void.deserializeBinary);
         this.methodInfoGetProviders = new grpcWeb.AbstractClientBase.MethodInfo(ag_pb_1.Providers, function (request) {
             return request.serializeBinary();
         }, ag_pb_1.Providers.deserializeBinary);
@@ -248,6 +248,10 @@ var AutograderServiceClient = /** @class */ (function () {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/UpdateSubmission', request, metadata || {}, this.methodInfoUpdateSubmission, callback);
     };
+    AutograderServiceClient.prototype.updateSubmissions = function (request, metadata, callback) {
+        return this.client_.rpcCall(this.hostname_ +
+            '/AutograderService/UpdateSubmissions', request, metadata || {}, this.methodInfoUpdateSubmissions, callback);
+    };
     AutograderServiceClient.prototype.rebuildSubmission = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/RebuildSubmission', request, metadata || {}, this.methodInfoRebuildSubmission, callback);
@@ -287,10 +291,6 @@ var AutograderServiceClient = /** @class */ (function () {
     AutograderServiceClient.prototype.getReviewers = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +
             '/AutograderService/GetReviewers', request, metadata || {}, this.methodInfoGetReviewers, callback);
-    };
-    AutograderServiceClient.prototype.releaseAll = function (request, metadata, callback) {
-        return this.client_.rpcCall(this.hostname_ +
-            '/AutograderService/ReleaseAll', request, metadata || {}, this.methodInfoReleaseAll, callback);
     };
     AutograderServiceClient.prototype.getProviders = function (request, metadata, callback) {
         return this.client_.rpcCall(this.hostname_ +

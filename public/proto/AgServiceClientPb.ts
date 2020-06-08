@@ -31,7 +31,6 @@ import {
   Organization,
   Providers,
   RebuildRequest,
-  ReleaseRequest,
   Repositories,
   RepositoryRequest,
   Review,
@@ -44,6 +43,7 @@ import {
   SubmissionsForCourseRequest,
   URLRequest,
   UpdateSubmissionRequest,
+  UpdateSubmissionsRequest,
   User,
   Users,
   Void} from './ag_pb';
@@ -639,6 +639,28 @@ export class AutograderServiceClient {
       callback);
   }
 
+  methodInfoUpdateSubmissions = new grpcWeb.AbstractClientBase.MethodInfo(
+    Void,
+    (request: UpdateSubmissionsRequest) => {
+      return request.serializeBinary();
+    },
+    Void.deserializeBinary
+  );
+
+  updateSubmissions(
+    request: UpdateSubmissionsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: Void) => void) {
+    return this.client_.rpcCall(
+      this.hostname_ +
+        '/AutograderService/UpdateSubmissions',
+      request,
+      metadata || {},
+      this.methodInfoUpdateSubmissions,
+      callback);
+  }
+
   methodInfoRebuildSubmission = new grpcWeb.AbstractClientBase.MethodInfo(
     Submission,
     (request: RebuildRequest) => {
@@ -856,28 +878,6 @@ export class AutograderServiceClient {
       request,
       metadata || {},
       this.methodInfoGetReviewers,
-      callback);
-  }
-
-  methodInfoReleaseAll = new grpcWeb.AbstractClientBase.MethodInfo(
-    Void,
-    (request: ReleaseRequest) => {
-      return request.serializeBinary();
-    },
-    Void.deserializeBinary
-  );
-
-  releaseAll(
-    request: ReleaseRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: Void) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/AutograderService/ReleaseAll',
-      request,
-      metadata || {},
-      this.methodInfoReleaseAll,
       callback);
   }
 

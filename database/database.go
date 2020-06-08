@@ -105,6 +105,8 @@ type Database interface {
 	GetCourseAssignmentsWithSubmissions(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
 	UpdateSubmission(*pb.Submission) error
+	// UpdateSubmissions releases and/or approves all submissions with a certain score
+	UpdateSubmissions(uint64, *pb.Submission) error
 	// CreateReview adds a new submission review.
 	CreateReview(*pb.Review) error
 	// UpdateReview updates the given review.

@@ -128,7 +128,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+    public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
         return true;
     }
 

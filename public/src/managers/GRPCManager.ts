@@ -20,10 +20,13 @@ import {
     OrgRequest,
     Providers,
 <<<<<<< HEAD
+<<<<<<< HEAD
     RebuildRequest,
 =======
     ReleaseRequest,
 >>>>>>> approving or releasing all submissions above a set threshold
+=======
+>>>>>>> new methods for approving or releasing all submissions with a certain score
     Repositories,
     Repository,
     RepositoryRequest,
@@ -36,6 +39,7 @@ import {
     Submissions,
     SubmissionReviewersRequest,
     UpdateSubmissionRequest,
+    UpdateSubmissionsRequest,
     URLRequest,
     User,
     Users,
@@ -256,6 +260,16 @@ export class GrpcManager {
         return this.grpcSend<Void>(this.agService.updateSubmission, request);
     }
 
+    public updatesubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
+        const request = new UpdateSubmissionsRequest();
+        request.setAssignmentid(assignmentID);
+        request.setCourseid(courseID);
+        request.setScorelimit(score);
+        request.setRelease(release);
+        request.setApprove(approve);
+        return this.grpcSend<Void>(this.agService.updateSubmissions, request);
+    }
+
     // /* MANUAL GRADING */ //
 
     public createBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<GradingBenchmark>> {
@@ -301,16 +315,6 @@ export class GrpcManager {
         request.setSubmissionid(submissionID);
         request.setCourseid(courseID);
         return this.grpcSend<Reviewers>(this.agService.getReviewers, request);
-    }
-
-    public releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
-        const request = new ReleaseRequest();
-        request.setAssignmentid(assignmentID);
-        request.setCourseid(courseID);
-        request.setScorelimit(score);
-        request.setRelease(release);
-        request.setApprove(approve);
-        return this.grpcSend<Void>(this.agService.releaseAll, request);
     }
 
     // /* REPOSITORY */ //

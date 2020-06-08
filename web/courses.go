@@ -229,6 +229,31 @@ func (s *AutograderService) updateSubmission(submissionID uint64, status pb.Subm
 	return s.db.UpdateSubmission(submission)
 }
 
+// updateSubmissions updates status and release state of multiple submissions for the
+// given course and assignment ID for all submissions with score equal or above the provided score
+func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
+	if _, err := s.db.GetCourse(request.CourseID, false); err != nil {
+		return err
+	}
+	if _, err := s.db.GetAssignment(&pb.Assignment{
+		CourseID: request.CourseID,
+		ID:       request.AssignmentID,
+	}); err != nil {
+		return err
+	}
+
+	query := &pb.Submission{
+		AssignmentID: request.AssignmentID,
+		Score:        request.ScoreLimit,
+		Released:     request.Release,
+	}
+	if request.Approve {
+		query.Status = pb.Submission_APPROVED
+	}
+
+	return s.db.UpdateSubmissions(request.CourseID, query)
+}
+
 func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error) {
 	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
 	if err != nil {

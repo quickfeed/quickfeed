@@ -14,7 +14,7 @@ interface ReleaseViewProps {
     curUser: User;
     onUpdate: (submission: ISubmission) => Promise<boolean>;
     getReviewers: (submissionID: number) => Promise<User[]>;
-    releaseAll: (assignmentID: number, score: number, release: boolean, approve: boolean) => Promise<boolean>;
+    updateAll: (assignmentID: number, score: number, release: boolean, approve: boolean) => Promise<boolean>;
 }
 
 interface ReleaseViewState {
@@ -106,7 +106,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                     <button className="btn btn-default"
                         onClick={() => {
                             if (this.state.selectedAssignment) {
-                                this.props.releaseAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, false, true);
+                                this.props.updateAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, false, true);
                             }
                             this.setState({
                                 alert: this.alertWhenMassReleasing(),
@@ -118,7 +118,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                 <button className="btn btn-default"
                         onClick={() => {
                             if (this.state.selectedAssignment) {
-                                this.props.releaseAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, true, false);
+                                this.props.updateAll(this.state.selectedAssignment.getId(), this.state.scoreLimit, true, false);
                             }
                             this.setState({
                                 alert: this.alertWhenMassReleasing(),

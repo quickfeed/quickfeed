@@ -40,6 +40,7 @@ export interface ICourseProvider {
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
     updateSubmission(courseID: number, submission: ISubmission): Promise<boolean>;
+    updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean>;
     rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null>;
     getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
     isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
@@ -52,7 +53,6 @@ export interface ICourseProvider {
     addReview(r: Review, courseID: number): Promise<Review | null>;
     editReview(r: Review, courseID: number): Promise<boolean>;
     getReviewers(submissionID: number, courseID: number): Promise<User[]>
-    releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean>;
 }
 
 export class CourseManager {
@@ -314,8 +314,8 @@ export class CourseManager {
         return this.courseProvider.getReviewers(submissionID, courseID);
     }
 
-    public async releaseAll(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
-        return this.courseProvider.releaseAll(assignmentID, courseID, score, release, approve);
+    public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        return this.courseProvider.updateSubmissions(assignmentID, courseID, score, release, approve);
     }
 
     /**

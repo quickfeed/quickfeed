@@ -885,40 +885,6 @@ export namespace ReviewRequest {
   }
 }
 
-export class ReleaseRequest extends jspb.Message {
-  getCourseid(): number;
-  setCourseid(value: number): void;
-
-  getAssignmentid(): number;
-  setAssignmentid(value: number): void;
-
-  getScorelimit(): number;
-  setScorelimit(value: number): void;
-
-  getRelease(): boolean;
-  setRelease(value: boolean): void;
-
-  getApprove(): boolean;
-  setApprove(value: boolean): void;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): ReleaseRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: ReleaseRequest): ReleaseRequest.AsObject;
-  static serializeBinaryToWriter(message: ReleaseRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): ReleaseRequest;
-  static deserializeBinaryFromReader(message: ReleaseRequest, reader: jspb.BinaryReader): ReleaseRequest;
-}
-
-export namespace ReleaseRequest {
-  export type AsObject = {
-    courseid: number,
-    assignmentid: number,
-    scorelimit: number,
-    release: boolean,
-    approve: boolean,
-  }
-}
-
 export class CourseRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
@@ -1190,6 +1156,40 @@ export namespace UpdateSubmissionRequest {
     courseid: number,
     released: boolean,
     status: Submission.Status,
+  }
+}
+
+export class UpdateSubmissionsRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getAssignmentid(): number;
+  setAssignmentid(value: number): void;
+
+  getScorelimit(): number;
+  setScorelimit(value: number): void;
+
+  getRelease(): boolean;
+  setRelease(value: boolean): void;
+
+  getApprove(): boolean;
+  setApprove(value: boolean): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpdateSubmissionsRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: UpdateSubmissionsRequest): UpdateSubmissionsRequest.AsObject;
+  static serializeBinaryToWriter(message: UpdateSubmissionsRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpdateSubmissionsRequest;
+  static deserializeBinaryFromReader(message: UpdateSubmissionsRequest, reader: jspb.BinaryReader): UpdateSubmissionsRequest;
+}
+
+export namespace UpdateSubmissionsRequest {
+  export type AsObject = {
+    courseid: number,
+    assignmentid: number,
+    scorelimit: number,
+    release: boolean,
+    approve: boolean,
   }
 }
 
