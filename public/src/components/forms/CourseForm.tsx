@@ -230,7 +230,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             });
             // if error message has code 9, it is supposed to be shown to user
             if (result.getCode() === 9) {
-                this.setState({userMessage: <span>{result.getError()}</span>});
+            this.setState({userMessage: <span><span>{result.getError()}</span><div className="row">Enable third-party access for your organization {accessLink}</div></span> });
             } else {
                 this.setState({
                     userMessage: <span>not found, enable third party access {accessLink}</span>,
