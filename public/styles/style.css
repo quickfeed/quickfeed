@@ -367,6 +367,47 @@ body {
     margin-right: 1%;
 }
 
+.bm-add-btn {
+    border: none;
+    margin-left: 0.5%;
+    margin-right: 2%;
+    margin-top: 0.5%;
+    margin-bottom: 0.5%;
+    padding-bottom: 0.5%;
+}
+
+.bm-add-row {
+    border-top: solid dimgray 0.5px;
+    color: dimgray;
+}
+
+.c-add-row {
+    color: dimgray;
+}
+
+.c-add-span {
+    font-size: 0.9em;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.c-add-btn {
+    margin-left: 1%;
+    margin-right: 2%;
+    margin-top: 0.5%;
+    margin-bottom: 0;
+    padding-bottom: 0.3%;
+    border: none;
+}
+
+.c-add {
+    color: dimgray;
+}
+
+.bm-add {
+    color: dimgray;
+}
+
 .c-element {
     margin: auto;
     padding: 0.5%;
