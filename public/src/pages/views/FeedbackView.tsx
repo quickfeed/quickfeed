@@ -1,9 +1,9 @@
 import * as React from "react";
-import { Assignment, Course, Group, Review, User, Submission } from "../../../proto/ag_pb";
-import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
+import { Assignment, Course, Group, Review, User } from "../../../proto/ag_pb";
+import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { searchForLabs, selectFromSubmissionLinks, mapAllSubmissions, searchForUsers, searchForGroups } from '../../componentHelper';
+import { selectFromSubmissionLinks, mapAllSubmissions, searchForUsers, searchForGroups } from "../../componentHelper";
 
 interface FeedbackViewProps {
     course: Course;

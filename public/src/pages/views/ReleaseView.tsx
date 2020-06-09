@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Assignment, Course, Group, User, Submission } from "../../../proto/ag_pb";
-import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from '../../models';
+import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from "../../models";
 import { Search } from "../../components";
-import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForLabs, searchForUsers, searchForGroups } from '../../componentHelper';
+import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForUsers, searchForGroups } from "../../componentHelper";
 import { Release } from "../../components/manual-grading/Release";
 
 interface ReleaseViewProps {

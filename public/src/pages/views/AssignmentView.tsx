@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
 import { EditBenchmark } from "../../components/manual-grading/EditBenchmark";
+import ReactTooltip from "react-tooltip";
 
 interface AssignmentViewProps {
     assignment: Assignment;
@@ -32,9 +33,9 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     }
 
     public render() {
-        const headerDiv = <h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3>;
+        const headerDiv = <div className="row"><h3 className="a-header" onClick={() => this.toggleOpen()}>{this.props.assignment.getName()}</h3></div>;
         const noReviewersDiv = <div className="alert alert-info">This assignment is not for manual grading</div>;
-        const reviewersDiv = <p>Reviewers: {this.props.assignment.getReviewers()}</p>;
+        const reviewersDiv = <div className="row"><p>Reviewers: {this.props.assignment.getReviewers()}</p></div>;
         if (this.props.assignment.getReviewers() < 1) {
             return <div className="a-element">
                 {headerDiv}
@@ -44,7 +45,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         return <div className="a-element">
             {headerDiv}
             {this.state.open ? reviewersDiv : null}
-            {this.state.open ? (<div>{this.renderBenchmarks()}</div>) : null}
+            {this.state.open ? (<div className="row">{this.renderBenchmarks()}</div>) : null}
             {this.state.open ? this.renderAddNew() : null}
         </div>
     }
@@ -85,9 +86,13 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     }
 
     private renderAddNew(): JSX.Element {
-        const addRow = <div className="add-b" onClick={() => this.toggleAdding()}>
-            Add a new grading criteria group.
-        </div>;
+        const addRow =  <div className="row bm-add-row" onClick={() => this.toggleAdd()}><button
+                className="btn btn-default bm-add-btn"
+            ><span className="glyphicon glyphicon-plus bm-add">
+            </span></button><span className="c-add-span"> Add a new grading criteria group.</span></div>
+        // <div className="add-b" onClick={() => this.toggleAdding()}>
+        //    Add a new grading criteria group.
+        // </div>;
         const addingRow = <div className="input-group col-md-12"><input
         className="form-control m-input"
         autoFocus={true}
@@ -98,7 +103,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
             if (e.key === 'Enter') {
                 this.addNewBenchmark();
             } else if (e.key === 'Escape') {
-                this.toggleAdding();
+                this.toggleAdd();
             }
         }}
         />
@@ -111,7 +116,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         return this.props.updateBenchmark(bm);
     }
 
-    private toggleAdding() {
+    private toggleAdd() {
         this.setState({
             adding: !this.state.adding,
         })
