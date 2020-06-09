@@ -267,6 +267,7 @@ body {
 }
 
 .approve-btn {
+    width: 15%;
     float: left;
 }
 

@@ -278,8 +278,8 @@ export function hasAllReviews(submission: ISubmission, reviews: number): boolean
     return submission.reviews.length === reviews;
 }
 
-export function submissionStatusSelector(initialStatus: Submission.Status, updateFunc: (status: string) => void): JSX.Element {
-    return <div className="input-group r-grade">
+export function submissionStatusSelector(initialStatus: Submission.Status, updateFunc: (status: string) => void, classString?: string): JSX.Element {
+    return <div className={"input-group " + classString ?? ""}>
             <span className="input-group-addon">Status: </span>
             <select className="form-control" defaultValue={initialStatus} onChange={(e) => updateFunc(e.target.value)}>
                 <option key="st0" value={Submission.Status.NONE} >Set status</option>

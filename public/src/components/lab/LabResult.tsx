@@ -35,7 +35,7 @@ export class LabResult extends React.Component<ILabResult, ILabResultState> {
         let approveButton = <div></div>;
         let rebuildButton = <div></div>;
         if (this.props.teacherView) {
-            approveButton = submissionStatusSelector(this.props.status, (action: string) => this.approve(action))
+            approveButton = submissionStatusSelector(this.props.status, (action: string) => this.approve(action), "approve-btn")
             rebuildButton = <div className="btn lab-btn rebuild-btn">
             <button type="button" id="rebuild" className={this.setButtonColor("rebuild")}
                 onClick={
