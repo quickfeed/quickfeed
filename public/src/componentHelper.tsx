@@ -222,35 +222,6 @@ export function slugify(str: string): string {
     return str.replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
 }
 
-export function editableListElement(
-    text: string,
-    defaultText: string,
-    toggleFunc: () => void,
-    changeFunc: (s: string) => void,
-    updateFunc: () => void,
-    statebool: boolean
-    ): JSX.Element {
-    const addDiv = <div className="add-b" onClick={toggleFunc}>{text}</div>;
-    const addingDiv = <div className="input-group"><input
-        className="form-control m-input"
-        type="text"
-        defaultValue={defaultText}
-        onChange={(e) => changeFunc(e.target.value)}
-        onKeyDown={(e) => {
-            if (e.key === "Enter") {updateFunc()}
-        }}
-    />
-    <div className="btn-group">
-    <button
-        className="btn btn-primary btn-xs"
-        onClick={updateFunc}>OK</button>
-    <button
-        className="btn btn-danger btn-xs"
-        onClick={toggleFunc}>X</button></div>
-    </div>;
-    return statebool ? addingDiv : addDiv;
-}
-
 export function totalScore(reviews: Review[]): number {
     if (reviews.length < 1) return 0;
     let sum = 0;
