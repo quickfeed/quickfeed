@@ -105,6 +105,7 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
                 type="text"
                 defaultValue={this.state.comment}
                 onChange={(e) => this.setComment(e.target.value)}
+                onBlur={() => this.toggleEdit()}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                         this.updateComment();

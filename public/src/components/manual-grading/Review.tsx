@@ -120,7 +120,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
         type="text"
         defaultValue={this.state.review?.getFeedback() ?? this.state.feedback}
         onChange={(e) => this.setFeedback(e.target.value)}
-        onBlurCapture={() => this.toggleEdit()}
+        onBlur={() => this.toggleEdit()}
         onKeyDown={(e) => {
             if (e.key === "Enter") {
                 this.updateReview();

@@ -99,6 +99,7 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         type="text"
         defaultValue=""
         onChange={(e) => this.setNewHeader(e.target.value)}
+        onBlur={() => this.toggleAdd()}
         onKeyDown={(e) => {
             if (e.key === 'Enter') {
                 this.addNewBenchmark();
