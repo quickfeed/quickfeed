@@ -2,6 +2,9 @@ syntax = "proto3";
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+//  [(gogoproto.moretags) = "sql:\"-\""] tag marks fields that will be ignored by the database
+// unique_index tags set SQL UNIQUE constraint for the database
+
 // USERS AND USERGROUPS //
 
 message User {
@@ -164,6 +167,8 @@ message Submission {
 message Submissions {
     repeated Submission submissions = 1;
 }
+
+//   UI structures, never saved in the database   //
 
 message SubmissionLink {
     Assignment assignment = 1;
