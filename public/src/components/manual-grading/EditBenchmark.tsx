@@ -52,11 +52,9 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     }
 
     private renderAddRow(): JSX.Element {
-        const addDiv = <div className="row c-add-row" onClick={() => this.toggleAdd()}><button
-        className="btn btn-default c-add-btn"
-    ><span className="glyphicon glyphicon-plus c-add">
-    </span></button><span className="c-add-span">Add a new criterion.</span></div>
-        // <div className="add-b" onClick={() => this.toggleAdd()}>Add a new grading criterion.</div>;
+        const addDiv = <div className="row c-add-row" onClick={() => this.toggleAdd()}>
+    <span className="glyphicon glyphicon-plus c-add"></span>
+    <span className="c-add-span">Add a new criterion.</span></div>
         const addingDiv = <div className="input-group col-md-12"><input
             className="form-control m-input"
             autoFocus={true}

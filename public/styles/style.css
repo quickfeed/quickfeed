@@ -368,19 +368,11 @@ body {
     margin-right: 1%;
 }
 
-.bm-add-btn {
-    border: none;
-    margin-left: 0.5%;
-    margin-right: 2%;
-    margin-top: 0.5%;
-    margin-bottom: 0.5%;
-    padding-bottom: 0.5%;
-    box-shadow: none;
-}
-
 .bm-add-row {
     border-top: solid dimgray 0.5px;
     color: dimgray;
+    height: 10%;
+    margin-bottom: 1%;
 }
 
 .c-add-row {
@@ -393,22 +385,16 @@ body {
     padding-bottom: 0;
 }
 
-.c-add-btn {
-    margin-left: 1%;
-    margin-right: 2%;
-    margin-top: 0.5%;
-    margin-bottom: 0;
-    padding-bottom: 0.3%;
-    border: none;
-    box-shadow: none;
-}
-
 .c-add {
     color: dimgray;
+    margin-right: 2%;
+    margin-left: 2%;
 }
 
 .bm-add {
     color: dimgray;
+    margin-left: 1%;
+    margin-right: 2%;
 }
 
 .c-element {

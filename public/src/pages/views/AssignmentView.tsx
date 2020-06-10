@@ -86,13 +86,9 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
     }
 
     private renderAddNew(): JSX.Element {
-        const addRow =  <div className="row bm-add-row" onClick={() => this.toggleAdd()}><button
-                className="btn btn-default bm-add-btn"
-            ><span className="glyphicon glyphicon-plus bm-add">
-            </span></button><span className="c-add-span"> Add a new grading criteria group.</span></div>
-        // <div className="add-b" onClick={() => this.toggleAdding()}>
-        //    Add a new grading criteria group.
-        // </div>;
+        const addRow =  <div className="row bm-add-row" onClick={() => this.toggleAdd()}>
+            <span className="glyphicon glyphicon-plus bm-add"></span>
+            <span className="c-add-span"> Add a new grading criteria group.</span></div>
         const addingRow = <div className="input-group col-md-12"><input
         className="form-control m-input"
         autoFocus={true}
