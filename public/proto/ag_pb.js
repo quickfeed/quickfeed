@@ -9480,8 +9480,9 @@ proto.UpdateSubmissionRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     submissionid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     courseid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    released: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
-    status: jspb.Message.getFieldWithDefault(msg, 4, 0)
+    score: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    released: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
+    status: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -9527,10 +9528,14 @@ proto.UpdateSubmissionRequest.deserializeBinaryFromReader = function(msg, reader
       msg.setCourseid(value);
       break;
     case 3:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setScore(value);
+      break;
+    case 4:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setReleased(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {!proto.Submission.Status} */ (reader.readEnum());
       msg.setStatus(value);
       break;
@@ -9577,17 +9582,24 @@ proto.UpdateSubmissionRequest.serializeBinaryToWriter = function(message, writer
       f
     );
   }
+  f = message.getScore();
+  if (f !== 0) {
+    writer.writeUint32(
+      3,
+      f
+    );
+  }
   f = message.getReleased();
   if (f) {
     writer.writeBool(
-      3,
+      4,
       f
     );
   }
   f = message.getStatus();
   if (f !== 0.0) {
     writer.writeEnum(
-      4,
+      5,
       f
     );
   }
@@ -9631,11 +9643,29 @@ proto.UpdateSubmissionRequest.prototype.setCourseid = function(value) {
 
 
 /**
- * optional bool released = 3;
+ * optional uint32 score = 3;
+ * @return {number}
+ */
+proto.UpdateSubmissionRequest.prototype.getScore = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.UpdateSubmissionRequest} returns this
+ */
+proto.UpdateSubmissionRequest.prototype.setScore = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional bool released = 4;
  * @return {boolean}
  */
 proto.UpdateSubmissionRequest.prototype.getReleased = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
 };
 
 
@@ -9644,16 +9674,16 @@ proto.UpdateSubmissionRequest.prototype.getReleased = function() {
  * @return {!proto.UpdateSubmissionRequest} returns this
  */
 proto.UpdateSubmissionRequest.prototype.setReleased = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 3, value);
+  return jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 
 /**
- * optional Submission.Status status = 4;
+ * optional Submission.Status status = 5;
  * @return {!proto.Submission.Status}
  */
 proto.UpdateSubmissionRequest.prototype.getStatus = function() {
-  return /** @type {!proto.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+  return /** @type {!proto.Submission.Status} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
@@ -9662,7 +9692,7 @@ proto.UpdateSubmissionRequest.prototype.getStatus = function() {
  * @return {!proto.UpdateSubmissionRequest} returns this
  */
 proto.UpdateSubmissionRequest.prototype.setStatus = function(value) {
-  return jspb.Message.setProto3EnumField(this, 4, value);
+  return jspb.Message.setProto3EnumField(this, 5, value);
 };
 
 

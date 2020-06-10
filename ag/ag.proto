@@ -309,8 +309,9 @@ message SubmissionRequest {
 message UpdateSubmissionRequest {
     uint64 submissionID = 1;
     uint64 courseID = 2;
-    bool released = 3;
-    Submission.Status status = 4;
+    uint32 score = 3;
+    bool released = 4;
+    Submission.Status status = 5;
 }
 
 message UpdateSubmissionsRequest {

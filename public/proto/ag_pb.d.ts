@@ -1136,6 +1136,9 @@ export class UpdateSubmissionRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
+  getScore(): number;
+  setScore(value: number): void;
+
   getReleased(): boolean;
   setReleased(value: boolean): void;
 
@@ -1154,6 +1157,7 @@ export namespace UpdateSubmissionRequest {
   export type AsObject = {
     submissionid: number,
     courseid: number,
+    score: number,
     released: boolean,
     status: Submission.Status,
   }

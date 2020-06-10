@@ -77,7 +77,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
             return <div className="row">
             </div>
         }
-        return <div className="row"><Release
+        return <Release
             submission={submission}
             assignment={this.props.submissionLink.assignment}
             authorName={this.props.student.getName()}
@@ -89,6 +89,6 @@ export class LabResultView extends React.Component<ILabInfoProps> {
             setGrade={async () => { return false }}
             release={() => { return }}
             getReviewers={async () => {return this.reviewersForStudentPage(submission)}}
-        /></div>
+        />
     }
 }

@@ -111,7 +111,8 @@ func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
 		Model(query).
 		Where(&pb.Submission{ID: query.ID}).
 		Update("status", query.Status).
-		Update("released", query.Released).Error
+		Update("released", query.Released).
+		Update("score", query.Score).Error
 }
 
 // UpdateSubmissions approves and/or releases all submissions that have score
