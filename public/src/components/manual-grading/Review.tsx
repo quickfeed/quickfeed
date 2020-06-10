@@ -284,6 +284,7 @@ export class ReviewPage extends React.Component<ReviewPageProps, ReviewPageState
                 graded: 0,
                 ready: false,
             });
+            return;
         }
         const rw = this.selectReview(this.props.submission);
         if (rw) {

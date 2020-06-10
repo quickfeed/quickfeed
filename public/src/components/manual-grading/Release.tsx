@@ -300,11 +300,11 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                 reviews: [],
                 reviewers: new Map<User, Review>(),
                 open: false,
-            })
+            });
+            return;
         }
 
         const ready = this.selectReadyReviews();
-        await this.mapReviewers();
         if (ready.length > 0) {
             this.setState({
                 open: this.props.isSelected ? !this.state.open : true,
