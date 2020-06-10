@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from '../../../proto/ag_pb';
-import { totalScore, userSubmissionLink, submissionStatusToString, setDivider, submissionStatusSelector, getDaysAfterDeadline } from '../../componentHelper';
+import { totalScore, userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline } from '../../componentHelper';
 import { ISubmission } from "../../models";
 import { formatDate } from '../../helper';
 import ReactTooltip from "react-tooltip";
@@ -81,6 +81,10 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         </div>;
     }
 
+    public componentDidMount() {
+        this.mapReviewers();
+    }
+
     private infoTable(): JSX.Element {
         const afterDeadline = this.props.submission ? getDaysAfterDeadline(new Date(this.props.assignment.getDeadline()), this.props.submission.buildDate) : -1;
         return <div className="row">
@@ -95,7 +99,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                     <li key="li3" className="list-group-item r-li">
                         <span className="r-table">Repository: </span>
                         {userSubmissionLink(this.props.authorLogin, this.props.assignment.getName(), this.props.courseURL, "btn btn-default")}</li>
-                    <li key="li4" className="list-group-item r-li">{ submissionStatusSelector(this.props.submission?.status ?? 0, (status: string) => this.updateStatus(status))}</li>
+                    <li key="li4" className="list-group-item r-li">{ submissionStatusSelector(this.props.submission?.status ?? 0, (status: string) => this.updateStatus(status), "r-grade")}</li>
                 </ul>
             </div>
             <div className="col-md-6">
@@ -219,7 +223,9 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         if (r) {
             r.getBenchmarksList().forEach(bm => {
                 const rc = bm.getCriteriaList().find(item => item.getId() === c.getId());
-                if (rc) c = rc;
+                if (rc) {
+                    c = rc;
+                }
             });
         }
         return c;
@@ -268,7 +274,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         }
     }
 
-    private async mapReviewers(): Promise<Map<User, Review>> {
+    private async mapReviewers() {
         const reviews = this.selectReadyReviews();
         const updatedMap = new Map<User, Review>();
         if (this.props.submission && reviews.length > 0) {
@@ -278,7 +284,9 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                 if (selectedReview) updatedMap.set(r, selectedReview);
             });
         }
-        return updatedMap;
+        this.setState({
+            reviewers: updatedMap,
+        });
     }
 
     private selectReviewByReviewer(user: User, reviews: Review[]): Review | undefined {
@@ -296,10 +304,10 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         }
 
         const ready = this.selectReadyReviews();
+        await this.mapReviewers();
         if (ready.length > 0) {
             this.setState({
                 open: this.props.isSelected ? !this.state.open : true,
-                reviewers: await this.mapReviewers(),
                 reviews: ready,
                 score: totalScore(ready),
                 status: this.props.submission?.status ?? Submission.Status.NONE,

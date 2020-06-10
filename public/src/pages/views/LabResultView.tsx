@@ -60,7 +60,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
     }
 
 
-    private reviewersForStudentPage(submission: ISubmission) {
+    private reviewersForStudentPage(submission: ISubmission): User[] {
         const reviewers: User[] = [];
         submission.reviews.forEach(r => {
             if (r.getReady()) {

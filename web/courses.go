@@ -127,6 +127,9 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	if err != nil {
 		return nil, err
 	}
+	for _, sbm := range submissions {
+		sbm.MakeSubmissionReviews()
+	}
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
