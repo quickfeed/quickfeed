@@ -310,7 +310,6 @@ export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], f
                 }
             });
             if (!hasSubmission) {
-                console.log("Got group with no submission, adding an empty one");
                 groupMap.set(group, {assignment: a, authorName: group.getName()});
             }
         });
@@ -327,7 +326,6 @@ export function mapAllSubmissions(submissions: IAllSubmissionsForEnrollment[], f
                 hasSubmission = true;
             }
             if (!hasSubmission) {
-                console.log("Got user with no submission, adding an empty one");
                 studentMap.set(user, {assignment: a, authorName: user.getName()});
             }
         });

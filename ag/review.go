@@ -1,7 +1,6 @@
 package ag
 
 import (
-	fmt "fmt"
 	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -20,7 +19,6 @@ func (r *Review) MakeReviewString() error {
 		str = append(str, s)
 
 	}
-	fmt.Println("Reviews marshalled successfully: ", strings.Join(str, ";"))
 	r.Review = strings.Join(str, "; ")
 	return nil
 }
@@ -33,8 +31,7 @@ func (r *Review) FromReviewString() error {
 	for _, s := range rs {
 		bm := GradingBenchmark{}
 		if err := jsonpb.UnmarshalString(s, &bm); err != nil {
-			fmt.Println("Failed to unmarshall ", s, ": ", err.Error())
-			// return err
+			return err
 		}
 		bms = append(bms, &bm)
 	}

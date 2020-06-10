@@ -120,7 +120,7 @@ func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
 func (db *GormDB) UpdateSubmissions(courseID uint64, query *pb.Submission) error {
 	return db.conn.
 		Model(query).
-		Where(&pb.Submission{AssignmentID: query.AssignmentID}).
+		Where("assignment_id = ?", query.AssignmentID).
 		Where("score >= ?", query.Score).
 		Updates(&pb.Submission{
 			Status:   query.Status,

@@ -98,7 +98,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                     value={this.state.scoreLimit}
                     onChange={(e) => {
                         this.setState({
-                            scoreLimit: parseInt(e.target.value, 10),
+                            scoreLimit: e.target.value !== "" ? parseInt(e.target.value, 10) : 0,
                         });
                     }}
                 />
@@ -143,7 +143,6 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
     }
 
     private alertWhenMassReleasing(): string {
-        if (this.state.scoreLimit < 1) return "Minimal score for approving is not set";
         if (this.state.scoreLimit > 100) return "Score cannot be above 100";
         if (!this.state.selectedAssignment) return "No assignment is selected";
         return "";
