@@ -67,16 +67,25 @@ export class CourseManager {
         return this.courseProvider.getCourses();
     }
 
-    public async getCoursesWithUserStatus(user: User): Promise<IStudentLabsForCourse[]> {
-        const userCourses = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
+    public async getAllCoursesForEnrollmentPage(user: User): Promise<IStudentLabsForCourse[]> {
+        const userEnrollments = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
+        const allCourses = await this.courseProvider.getCourses();
         const newMap: IStudentLabsForCourse[] = [];
-        userCourses.forEach((ele) => {
-            const crs = ele.getCourse();
+        allCourses.forEach((crs) => {
+            let enrol = userEnrollments.find(item => item.getCourseid() === crs.getId());
+            if (!enrol) {
+                enrol = new Enrollment();
+                enrol.setCourseid(crs.getId());
+                enrol.setUserid(user.getId());
+                enrol.setUser(user);
+                enrol.setCourse(crs);
+                enrol.setStatus(Enrollment.UserStatus.NONE);
+            }
             if (crs) {
                 newMap.push({
                     labs: [],
                     course: crs,
-                    enrollment: ele,
+                    enrollment: enrol,
                 });
             }
         });
