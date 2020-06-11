@@ -139,20 +139,11 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) 
 
 	switch request.Type {
 	case pb.SubmissionsForCourseRequest_GROUP:
-
-		enrols, err := s.makeGroupResults(course, assignments)
-		if err != nil {
-			return nil, err
-		}
-		enrolLinks = append(enrolLinks, enrols...)
+		enrolLinks = append(enrolLinks, s.makeGroupResults(course, assignments)...)
 	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
 		enrolLinks = append(enrolLinks, makeResults(course, assignments)...)
 	default:
-		grpLinks, err := s.makeGroupResults(course, assignments)
-		if err != nil {
-			return nil, err
-		}
-		enrolLinks = append(makeResults(course, assignments), grpLinks...)
+		enrolLinks = append(makeResults(course, assignments), s.makeGroupResults(course, assignments)...)
 	}
 	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
 }
@@ -187,7 +178,7 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 
 // makeGroupResults generates enrollment to assignment to submissions links
 // for all course groups and all group assignments
-func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*pb.Assignment) ([]*pb.EnrollmentLink, error) {
+func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 	for _, grp := range course.Groups {
 
@@ -217,7 +208,7 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
-	return enrolLinks, nil
+	return enrolLinks
 }
 
 // updateSubmission approves the given submission or undoes a previous approval.
