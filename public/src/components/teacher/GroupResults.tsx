@@ -16,7 +16,7 @@ interface IResultsProps {
 }
 
 interface IResultsState {
-    assignment?: ISubmissionLink;
+    submissionLink?: ISubmissionLink;
     groups: IAllSubmissionsForEnrollment[];
 }
 
@@ -68,14 +68,14 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                     }
                 }
                 onApproveClick={async (status: Submission.Status, approve: boolean) => {
-                    const selected = this.state.assignment;
+                    const selected = this.state.submissionLink;
                     const latest = selected?.submission;
                     if (latest) {
                         latest.status = Submission.Status.APPROVED;
                         const ans = await this.props.onApproveClick(latest);
                         if (ans) {
                             this.setState({
-                                assignment: selected,
+                                submissionLink: selected,
                             });
                         }
                         return ans;
@@ -137,7 +137,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
 
     private async handleOnclick(item: ISubmissionLink) {
         this.setState({
-            assignment: item,
+            submissionLink: item,
         });
     }
 

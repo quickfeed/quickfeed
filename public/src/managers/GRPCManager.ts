@@ -19,14 +19,7 @@ import {
     Organization,
     OrgRequest,
     Providers,
-<<<<<<< HEAD
-<<<<<<< HEAD
     RebuildRequest,
-=======
-    ReleaseRequest,
->>>>>>> approving or releasing all submissions above a set threshold
-=======
->>>>>>> new methods for approving or releasing all submissions with a certain score
     Repositories,
     Repository,
     RepositoryRequest,

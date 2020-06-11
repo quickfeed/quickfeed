@@ -517,16 +517,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     // temporary fix, will be removed with manual grading update
-    private toUILinks(sbLinks: CourseSubmissions): IStudentLabsForCourse[] {
+    private toUILinks(sbLinks: CourseSubmissions): IAllSubmissionsForEnrollment[] {
         const crs = sbLinks.getCourse();
         if (!crs) {
             return [];
         }
-        const uilinks: IStudentLabsForCourse[] = [];
+        const uilinks: IAllSubmissionsForEnrollment[] = [];
         sbLinks.getLinksList().forEach(l => {
             const enr = l.getEnrollment();
             if (enr) {
-                const allLabs: IStudentLab[] = [];
+                const allLabs: ISubmissionLink[] = [];
                 l.getSubmissionsList().forEach(s => {
                     const a = s.getAssignment();
                     const sb = s.getSubmission();

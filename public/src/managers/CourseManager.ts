@@ -4,7 +4,7 @@ import {
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, Submission, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from '../../proto/ag_pb';
 import { ILogger } from "./LogManager";
 import { sortAssignmentsByOrder } from '../componentHelper';
 
@@ -34,7 +34,7 @@ export interface ICourseProvider {
 
     getLabsForStudent(courseID: number, userID: number): Promise<ISubmission[]>;
     getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]>;
+    getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]>;
     getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
@@ -77,22 +77,28 @@ export class CourseManager {
         return this.courseProvider.getCourses();
     }
 
-    public async getCoursesWithUserStatus(user: User): Promise<IAllSubmissionsForEnrollment[]> {
-        const userCourses = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
+    public async getAllCoursesForEnrollmentPage(user: User): Promise<IAllSubmissionsForEnrollment[]> {
+        const userCourses = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);	        const userEnrollments = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
+        const allCourses = await this.courseProvider.getCourses();
         const newMap: IAllSubmissionsForEnrollment[] = [];
-        userCourses.forEach((ele) => {
-            const crs = ele.getCourse();
-            if (crs) {
-                newMap.push({
-                    labs: [],
-                    course: crs,
-                    enrollment: enrol,
-                });
+        allCourses.forEach((crs) => {
+            let enrol = userEnrollments.find(item => item.getCourseid() === crs.getId());
+            if (!enrol) {
+                enrol = new Enrollment();
+                enrol.setCourseid(crs.getId());
+                enrol.setUserid(user.getId());
+                enrol.setUser(user);
+                enrol.setCourse(crs);
+                enrol.setStatus(Enrollment.UserStatus.NONE);
             }
+            newMap.push({
+                labs: [],
+                course: crs,
+                enrollment: enrol,
+            });
         });
         return newMap;
     }
-
     /**
      * Get all courses where user is enrolled into
      */
