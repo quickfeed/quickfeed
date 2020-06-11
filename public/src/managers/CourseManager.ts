@@ -4,7 +4,7 @@ import {
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Void, Enrollments, SubmissionLinkRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, SubmissionsForCourseRequest } from '../../proto/ag_pb';
 import { ILogger } from "./LogManager";
 
 export interface ICourseProvider {
@@ -33,7 +33,7 @@ export interface ICourseProvider {
 
     getLabsForStudent(courseID: number, userID: number): Promise<ISubmission[]>;
     getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getLabsForCourse(courseID: number, type: SubmissionLinkRequest.Type): Promise<IStudentLabsForCourse[]>;
+    getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]>;
     getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
@@ -133,7 +133,7 @@ export class CourseManager {
      * Retrives all course enrollments with the latest
      * lab submissions for all individual course assignments
      */
-    public async getLabsForCourse(courseID: number, type: SubmissionLinkRequest.Type): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]> {
         return this.courseProvider.getLabsForCourse(courseID, type);
     }
 
