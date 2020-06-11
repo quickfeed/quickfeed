@@ -8,7 +8,6 @@ import {
     Courses,
     EnrollmentStatusRequest,
     Enrollment,
-    EnrollmentLink,
     EnrollmentRequest,
     Enrollments,
     GetGroupRequest,
@@ -24,8 +23,7 @@ import {
     RepositoryRequest,
     Status,
     SubmissionRequest,
-    SubmissionLink,
-    SubmissionLinkRequest,
+    SubmissionsForCourseRequest,
     Submission,
     Submissions,
     UpdateSubmissionRequest,
@@ -224,8 +222,8 @@ export class GrpcManager {
         return this.grpcSend<Submissions>(this.agService.getSubmissions, request);
     }
 
-    public getSubmissionsByCourse(courseID: number, type: SubmissionLinkRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
-        const request = new SubmissionLinkRequest();
+    public getSubmissionsByCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IGrpcResponse<CourseSubmissions>> {
+        const request = new SubmissionsForCourseRequest();
         request.setCourseid(courseID);
         request.setType(type);
         return this.grpcSend<CourseSubmissions>(this.agService.getSubmissionsByCourse, request);

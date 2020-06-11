@@ -8,7 +8,7 @@ import {
     Repository,
     Status,
     Submission,
-    SubmissionLinkRequest,
+    SubmissionsForCourseRequest,
     User,
 } from "../../proto/ag_pb";
 import {
@@ -225,7 +225,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getLabsForCourse(courseID: number, type: SubmissionLinkRequest.Type): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]> {
         const result = await this.grpcHelper.getSubmissionsByCourse(courseID, type);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
