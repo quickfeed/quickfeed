@@ -178,7 +178,7 @@ func (req Provider) IsValid() bool {
 }
 
 // IsValid ensures that course ID is provided
-func (req SubmissionLinkRequest) IsValid() bool {
+func (req SubmissionsForCourseRequest) IsValid() bool {
 	return req.GetCourseID() != 0
 }
 
