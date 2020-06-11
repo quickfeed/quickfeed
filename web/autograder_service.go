@@ -514,7 +514,7 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 // GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
-func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.SubmissionLinkRequest) (*pb.CourseSubmissions, error) {
+func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %w", err)

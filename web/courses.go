@@ -124,7 +124,7 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 }
 
 // getAllLabs returns all individual lab submissions by students enrolled in the specified course.
-func (s *AutograderService) getAllLabs(request *pb.SubmissionLinkRequest) (*pb.CourseSubmissions, error) {
+func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	assignments, err := s.db.GetCourseAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
 	if err != nil {
 		return nil, err
@@ -137,14 +137,14 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionLinkRequest) (*pb.C
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	switch request.Type {
-	case pb.SubmissionLinkRequest_GROUP:
+	case pb.SubmissionsForCourseRequest_GROUP:
 
 		enrols, err := makeGroupResults(course, assignments)
 		if err != nil {
 			return nil, err
 		}
 		enrolLinks = append(enrolLinks, enrols...)
-	case pb.SubmissionLinkRequest_INDIVIDUAL:
+	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
 		enrolLinks = append(enrolLinks, makeResults(course, assignments)...)
 	default:
 		grpLinks, err := makeGroupResults(course, assignments)

@@ -32,9 +32,9 @@ import {
   Repositories,
   RepositoryRequest,
   Submission,
-  SubmissionLinkRequest,
   SubmissionRequest,
   Submissions,
+  SubmissionsForCourseRequest,
   URLRequest,
   UpdateSubmissionRequest,
   User,
@@ -590,14 +590,14 @@ export class AutograderServiceClient {
 
   methodInfoGetSubmissionsByCourse = new grpcWeb.AbstractClientBase.MethodInfo(
     CourseSubmissions,
-    (request: SubmissionLinkRequest) => {
+    (request: SubmissionsForCourseRequest) => {
       return request.serializeBinary();
     },
     CourseSubmissions.deserializeBinary
   );
 
   getSubmissionsByCourse(
-    request: SubmissionLinkRequest,
+    request: SubmissionsForCourseRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: CourseSubmissions) => void) {

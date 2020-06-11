@@ -71,18 +71,18 @@ func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 
 // GetCourseAssignmentsWithSubmissions returns all course assignments
 // of requested type with preloaded submissions.
-func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissionType pb.SubmissionLinkRequest_Type) ([]*pb.Assignment, error) {
+func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error) {
 	var assignments []*pb.Assignment
 
 	if err := db.conn.Preload("Submissions").Where(&pb.Assignment{CourseID: courseID}).Find(&assignments).Error; err != nil {
 		return nil, err
 	}
 
-	if submissionType == pb.SubmissionLinkRequest_ALL {
+	if submissionType == pb.SubmissionsForCourseRequest_ALL {
 		return assignments, nil
 	}
 
-	wantGroupLabs := submissionType == pb.SubmissionLinkRequest_GROUP
+	wantGroupLabs := submissionType == pb.SubmissionsForCourseRequest_GROUP
 	filteredAssignments := make([]*pb.Assignment, 0)
 	for _, a := range assignments {
 		if a.IsGroupLab == wantGroupLabs {

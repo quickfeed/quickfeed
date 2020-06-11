@@ -5,6 +5,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 //  [(gogoproto.moretags) = "sql:\"-\""] tag marks fields that will be ignored by the database
 // unique_index tags set SQL UNIQUE constraint for the database
 
+
 // USERS AND USERGROUPS //
 
 message User {
@@ -93,17 +94,6 @@ message Repository {
     Type repoType = 7 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
 }
 
-message Organization {
-    uint64 ID = 1;
-    string path = 2;
-    string avatar = 3;
-    string paymentPlan = 4;
-}
-
-message Organizations {
-    repeated Organization organizations = 1;
-}
-
 message Enrollment {
     enum UserStatus {
         NONE = 0;
@@ -131,6 +121,23 @@ message Enrollment {
 
 message Enrollments {
     repeated Enrollment enrollments = 1;
+}
+
+//   UI structures, never saved in the database   //
+
+message SubmissionLink {
+    Assignment assignment = 1;
+    Submission submission = 2;
+}
+
+message EnrollmentLink {
+    Enrollment enrollment = 2; // must have course and user/group preloaded
+    repeated SubmissionLink submissions = 3;
+}
+
+message CourseSubmissions {
+    Course course = 1; // preloaded assignments
+    repeated EnrollmentLink links = 2;
 }
 
 //   LABS    //
@@ -168,24 +175,8 @@ message Submissions {
     repeated Submission submissions = 1;
 }
 
-//   UI structures, never saved in the database   //
 
-message SubmissionLink {
-    Assignment assignment = 1;
-    Submission submission = 2;
-}
-
-message EnrollmentLink {
-    Enrollment enrollment = 2; // must have course and user/group preloaded
-    repeated SubmissionLink submissions = 3;
-}
-
-message CourseSubmissions {
-    Course course = 1; // preloaded assignments
-    repeated EnrollmentLink links = 2;
-}
-
-////    REQUESTS AND RESPONSES      \\\\
+////    API REQUESTS AND RESPONSES      \\\\
 
 message CourseRequest {
     uint64 courseID = 1;
@@ -211,6 +202,17 @@ message Provider {
 
 message OrgRequest {
     string orgName = 1;
+}
+
+message Organization {
+    uint64 ID = 1;
+    string path = 2;
+    string avatar = 3;
+    string paymentPlan = 4;
+}
+
+message Organizations {
+    repeated Organization organizations = 1;
 }
 
 // EnrollmentRequest is a request for enrolled users of a given course,
@@ -269,7 +271,7 @@ message Status {
     string Error = 2;
 }
 
-message SubmissionLinkRequest {
+message SubmissionsForCourseRequest {
     enum Type {
         ALL = 0;
         INDIVIDUAL = 1;
@@ -335,7 +337,7 @@ service AutograderService {
     // Get latest submissions for all course assignmets for a user or a group.
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
     // Get lab submissions for every course user or every course group
-    rpc GetSubmissionsByCourse(SubmissionLinkRequest) returns (CourseSubmissions) {}
+    rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
     rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
    
