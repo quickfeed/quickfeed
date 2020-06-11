@@ -57,8 +57,8 @@ grpcweb:
 npmtools:
 	@echo "Install webpack and typescript compiler (requires sudo access)"
 	@npm install -g --save typescript
-	@npm install -g webpack
-	@npm install -g webpack-cli
+	@npm install -g --force webpack
+	@npm install -g --force webpack-cli
 	@npm install -g tslint
 	@npm install -g serve
 
