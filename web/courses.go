@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	pb "github.com/autograde/aguis/ag"
 	"github.com/autograde/aguis/scm"
@@ -139,7 +140,7 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) 
 	switch request.Type {
 	case pb.SubmissionsForCourseRequest_GROUP:
 
-		enrols, err := makeGroupResults(course, assignments)
+		enrols, err := s.makeGroupResults(course, assignments)
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +148,7 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) 
 	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
 		enrolLinks = append(enrolLinks, makeResults(course, assignments)...)
 	default:
-		grpLinks, err := makeGroupResults(course, assignments)
+		grpLinks, err := s.makeGroupResults(course, assignments)
 		if err != nil {
 			return nil, err
 		}
@@ -175,6 +176,8 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
+
+		sortSubmissionsByAssignmentID(allSubmissions)
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
@@ -184,7 +187,7 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 
 // makeGroupResults generates enrollment to assignment to submissions links
 // for all course groups and all group assignments
-func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) ([]*pb.EnrollmentLink, error) {
+func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*pb.Assignment) ([]*pb.EnrollmentLink, error) {
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 	for _, grp := range course.Groups {
 
@@ -195,7 +198,7 @@ func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) ([]*pb.En
 			}
 		}
 		if newLink.Enrollment == nil {
-			return nil, fmt.Errorf("Got empty enrollment for group %+v", grp)
+			s.logger.Debugf("Got empty enrollment for group %+v", grp)
 		}
 
 		allSubmissions := make([]*pb.SubmissionLink, 0)
@@ -210,6 +213,7 @@ func makeGroupResults(course *pb.Course, assignments []*pb.Assignment) ([]*pb.En
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
+		sortSubmissionsByAssignmentID(allSubmissions)
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
@@ -392,4 +396,13 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 		CourseID: course.ID,
 		Status:   pb.Enrollment_TEACHER,
 	})
+}
+
+func sortSubmissionsByAssignmentID(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
+
+	sort.Slice(unsorted, func(i, j int) bool {
+		return unsorted[i].Assignment.GetID() < unsorted[j].Assignment.GetID()
+	})
+
+	return unsorted
 }
