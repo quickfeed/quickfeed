@@ -222,7 +222,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
 
     private async getOrgByName(orgName: string) {
         const accessLinkString = "https://github.com/organizations/" + orgName + "/settings/oauth_application_policy";
-        const accessLink = <a href={accessLinkString}>here</a>;
+        const accessLink = <a href={accessLinkString}>third-party access</a>;
         const result = await this.props.courseMan.getOrganization(orgName);
         if (result instanceof Status) {
             this.setState({
@@ -230,11 +230,11 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
             });
             // if error message has code 9, it is supposed to be shown to user
             if (result.getCode() === 9) {
-            this.setState({userMessage: <span><span>{result.getError()}</span><div className="row">Enable third-party access for your organization {accessLink}</div></span> });
+                this.setState({userMessage: <span>{result.getError()}</span> });
             } else {
                 this.setState({
-                    userMessage: <span>not found, enable third party access {accessLink}</span>,
-                });
+                userMessage: <span>course organization must remove restrictions for {accessLink}</span>
+                })
             }
 
         } else {

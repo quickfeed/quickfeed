@@ -640,7 +640,10 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
-		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotMember || err == scms.ErrNotOwner {
+		if err == scms.ErrNotMember {
+			return nil, status.Errorf(codes.NotFound, "organization membership not confirmed, please enable third-party access")
+		}
+		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotOwner {
 			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 		}
 		if ok, parsedErr := parseSCMError(err); ok {
