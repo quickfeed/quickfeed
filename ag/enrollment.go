@@ -36,7 +36,7 @@ func (m *Enrollment) updateSlipDays(assignmentID uint64, slipDays uint32) {
 		}
 	}
 	// not found; add new entry to the slice
-	m.UsedSlipDays = append(m.UsedSlipDays, &SlipDays{AssignmentID: assignmentID, UsedSlipDays: slipDays})
+	m.UsedSlipDays = append(m.UsedSlipDays, &UsedSlipDays{AssignmentID: assignmentID, UsedSlipDays: slipDays})
 }
 
 // totalSlipDays returns the total number of slipdays used for this enrollment.

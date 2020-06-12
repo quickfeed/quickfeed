@@ -79,7 +79,7 @@ func TestSlipDays(t *testing.T) {
 		enrol := &pb.Enrollment{
 			Course:       course,
 			CourseID:     course.ID,
-			UsedSlipDays: make([]*pb.SlipDays, 0),
+			UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 		}
 
 		for i := range sd.labs {
@@ -118,7 +118,7 @@ func TestBadDeadlineFormat(t *testing.T) {
 	enrol := &pb.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
-		UsedSlipDays: make([]*pb.SlipDays, 0),
+		UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 	}
 	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
@@ -137,7 +137,7 @@ func TestMismatchingAssignmentID(t *testing.T) {
 	enrol := &pb.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
-		UsedSlipDays: make([]*pb.SlipDays, 0),
+		UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 	}
 	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
@@ -156,7 +156,7 @@ func TestMismatchingCourseID(t *testing.T) {
 	enrol := &pb.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
-		UsedSlipDays: make([]*pb.SlipDays, 0),
+		UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 	}
 	// lab1's deadline is incorrectly formatted
 	lab1 := &pb.Assignment{
@@ -175,7 +175,7 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	enrol := &pb.Enrollment{
 		Course:       course,
 		CourseID:     course.ID,
-		UsedSlipDays: make([]*pb.SlipDays, 0),
+		UsedSlipDays: make([]*pb.UsedSlipDays, 0),
 	}
 	// lab1's deadline passed two days ago
 	lab1 := a(-2)

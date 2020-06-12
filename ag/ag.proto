@@ -120,12 +120,14 @@ message Enrollment {
     Group group = 8;
     UserStatus status = 9;
     DisplayState state = 10;
-    repeated SlipDays usedSlipDays = 11;
+    repeated UsedSlipDays usedSlipDays = 11;
 }
 
-message SlipDays {
-    uint64 assignmentID = 1;
-    uint32 usedSlipDays = 2;
+message UsedSlipDays {
+    uint64 ID = 1;
+    uint64 enrollmentID = 2;
+    uint64 assignmentID = 3;
+    uint32 usedSlipDays = 4;
 }
 
 message Enrollments {

@@ -56,6 +56,7 @@ func NewGormDB(driver, path string, logger GormLogger) (*GormDB, error) {
 		&pb.Submission{},
 		&pb.Group{},
 		&pb.Repository{},
+		&pb.UsedSlipDays{},
 	).Error; err != nil {
 		return nil, err
 	}

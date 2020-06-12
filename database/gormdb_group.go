@@ -171,6 +171,7 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...pb.Group_GroupS
 	var groups []*pb.Group
 	if err := db.conn.
 		Preload("Enrollments").
+		Preload("Enrollments.UsedSlipDays").
 		Where(&pb.Group{CourseID: courseID}).
 		Where("status in (?)", statuses).
 		Find(&groups).Error; err != nil {

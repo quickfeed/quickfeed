@@ -365,10 +365,10 @@ export class Enrollment extends jspb.Message {
   getState(): Enrollment.DisplayState;
   setState(value: Enrollment.DisplayState): void;
 
-  getUsedslipdaysList(): Array<SlipDays>;
-  setUsedslipdaysList(value: Array<SlipDays>): void;
+  getUsedslipdaysList(): Array<UsedSlipDays>;
+  setUsedslipdaysList(value: Array<UsedSlipDays>): void;
   clearUsedslipdaysList(): void;
-  addUsedslipdays(value?: SlipDays, index?: number): SlipDays;
+  addUsedslipdays(value?: UsedSlipDays, index?: number): UsedSlipDays;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Enrollment.AsObject;
@@ -390,7 +390,7 @@ export namespace Enrollment {
     group?: Group.AsObject,
     status: Enrollment.UserStatus,
     state: Enrollment.DisplayState,
-    usedslipdaysList: Array<SlipDays.AsObject>,
+    usedslipdaysList: Array<UsedSlipDays.AsObject>,
   }
 
   export enum UserStatus { 
@@ -408,7 +408,13 @@ export namespace Enrollment {
   }
 }
 
-export class SlipDays extends jspb.Message {
+export class UsedSlipDays extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getEnrollmentid(): number;
+  setEnrollmentid(value: number): void;
+
   getAssignmentid(): number;
   setAssignmentid(value: number): void;
 
@@ -416,15 +422,17 @@ export class SlipDays extends jspb.Message {
   setUsedslipdays(value: number): void;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): SlipDays.AsObject;
-  static toObject(includeInstance: boolean, msg: SlipDays): SlipDays.AsObject;
-  static serializeBinaryToWriter(message: SlipDays, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): SlipDays;
-  static deserializeBinaryFromReader(message: SlipDays, reader: jspb.BinaryReader): SlipDays;
+  toObject(includeInstance?: boolean): UsedSlipDays.AsObject;
+  static toObject(includeInstance: boolean, msg: UsedSlipDays): UsedSlipDays.AsObject;
+  static serializeBinaryToWriter(message: UsedSlipDays, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UsedSlipDays;
+  static deserializeBinaryFromReader(message: UsedSlipDays, reader: jspb.BinaryReader): UsedSlipDays;
 }
 
-export namespace SlipDays {
+export namespace UsedSlipDays {
   export type AsObject = {
+    id: number,
+    enrollmentid: number,
     assignmentid: number,
     usedslipdays: number,
   }
