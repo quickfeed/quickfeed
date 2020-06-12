@@ -267,11 +267,13 @@ body {
 }
 
 .approve-btn {
+    margin-top: 1.5%;
     width: 45%;
     float: left;
 }
 
 .rebuild-btn {
+    display: block;
     float: right;
 }
 

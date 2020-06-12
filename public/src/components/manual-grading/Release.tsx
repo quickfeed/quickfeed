@@ -170,7 +170,7 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const reviewersList = Array.from(this.state.reviewers.keys());
         this.props.assignment.getGradingbenchmarksList().forEach((bm, i) => {
             rows.push(<tr key={"rt" + i} className="b-header"><td key={"rth" + i}>{bm.getHeading()}</td>{reviewersList.map(u =>
-                <td key={"csp" + i}>{this.commentSpan(this.selectBenchmark(u, bm).getComment(), "bm" + bm.getId())}</td>)}</tr>);
+                <td key={"csp" + u.getId()}>{this.commentSpan(this.selectBenchmark(u, bm).getComment(), "bm" + bm.getId())}</td>)}</tr>);
             bm.getCriteriaList().forEach((c, j) => {
                 rows.push(<tr key={"rrt" + j + i}><td>{c.getDescription()}</td>
                 {reviewersList.map(u => <td key={"rmp" + u.getId()} className={this.setCellColor(u, c)}>
