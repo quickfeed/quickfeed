@@ -145,6 +145,13 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) 
 		return nil, err
 	}
 	course.SetSlipDays()
+
+	for _, a := range assignments {
+		for _, sbm := range a.Submissions {
+			sbm.MakeSubmissionReviews()
+		}
+	}
+
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	switch request.Type {
