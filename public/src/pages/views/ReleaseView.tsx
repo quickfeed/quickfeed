@@ -245,6 +245,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                 selectedAssignment: current,
                 submissionsForAssignment: mapAllSubmissions(this.props.students, false, current) as Map<User, ISubmissionLink>,
                 submissionsForGroupAssignment: mapAllSubmissions(this.props.groups, true, current) as Map<Group, ISubmissionLink>,
+                scoreLimit: current.getScorelimit(),
             });
         }
     }

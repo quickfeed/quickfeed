@@ -169,22 +169,22 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         const rows: JSX.Element[] = [];
         const reviewersList = Array.from(this.state.reviewers.keys());
         this.props.assignment.getGradingbenchmarksList().forEach((bm, i) => {
-            rows.push(<tr key={"rt" + i} className="b-header"><td>{bm.getHeading()}</td>{reviewersList.map(u =>
-                <td>{this.commentSpan(this.selectBenchmark(u, bm).getComment(), "bm" + bm.getId())}</td>)}</tr>);
+            rows.push(<tr key={"rt" + i} className="b-header"><td key={"rth" + i}>{bm.getHeading()}</td>{reviewersList.map(u =>
+                <td key={"csp" + i}>{this.commentSpan(this.selectBenchmark(u, bm).getComment(), "bm" + bm.getId())}</td>)}</tr>);
             bm.getCriteriaList().forEach((c, j) => {
                 rows.push(<tr key={"rrt" + j + i}><td>{c.getDescription()}</td>
-                {reviewersList.map(u => <td className={this.setCellColor(u, c)}>
+                {reviewersList.map(u => <td key={"rmp" + u.getId()} className={this.setCellColor(u, c)}>
                     <span className={this.setCellIcon(u, c)}></span>
                     {this.commentSpan(this.selectCriterion(u, c).getComment(), "cr" + c.getId())}
                 </td>)}
                 </tr>);
             });
         });
-        rows.push(<tr key="rtf"><td>Feedbacks:</td>
-            {reviewersList.map((u, i) => <td>{this.commentSpan(this.state.reviewers.get(u)?.getFeedback() ?? "No feedback", "fb" + i)}</td>)}
+        rows.push(<tr key="rtf"><td key="fbrow">Feedbacks:</td>
+            {reviewersList.map((u, i) => <td key={"fbrow" + i}>{this.commentSpan(this.state.reviewers.get(u)?.getFeedback() ?? "No feedback", "fb" + i)}</td>)}
         </tr>);
-        rows.push(<tr key="tscore"><td>Score: {this.props.submission?.score ?? 0}</td>
-            {reviewersList.map(u => <td>{this.state.reviewers.get(u)?.getScore() ?? 0}</td>)}
+        rows.push(<tr key="tscore"><td key="scrow">Score: {this.props.submission?.score ?? 0}</td>
+            {reviewersList.map(u => <td key={"scrow" + u.getId()}>{this.state.reviewers.get(u)?.getScore() ?? 0}</td>)}
         </tr>);
         return rows;
     }
