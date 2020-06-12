@@ -105,13 +105,13 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             <div className="col-md-6">
                 <table className="table">
                     <thead><tr key="it">
-                            <td>Reviewers:</td>
-                            <td>Score:</td>
+                            <td key="itd1" >Reviewers:</td>
+                            <td key="itd2">Score:</td>
                         </tr></thead>
                         <tbody>
                         {Array.from(this.state.reviewers.keys()).map((r, i) => <tr key={"it" + i}>
-                            <td>{r.getName()}</td>
-                            <td>{this.state.reviewers.get(r)?.getScore() ?? 0}</td>
+                            <td key={"itm " + i}>{r.getName()}</td>
+                            <td key={"itr " + i}>{this.state.reviewers.get(r)?.getScore() ?? 0}</td>
                         </tr>)}</tbody>
                 </table>
             </div>
@@ -298,13 +298,14 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
         if (this.state.open) {
             this.setState({
                 reviews: [],
-                reviewers: new Map<User, Review>(),
+                // reviewers: new Map<User, Review>(),
                 open: false,
             });
             return;
         }
 
         const ready = this.selectReadyReviews();
+        this.mapReviewers();
         if (ready.length > 0) {
             this.setState({
                 open: this.props.isSelected ? !this.state.open : true,
