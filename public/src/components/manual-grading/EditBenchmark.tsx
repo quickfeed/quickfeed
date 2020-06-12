@@ -36,7 +36,7 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
     public render() {
         return <div className="b-element">
             <h3 className="b-header" onClick={() => this.toggleEdit()}>
-                {this.state.editing ? this.renderHeader() : this.state.heading}{this.removeButton()}
+                {this.state.editing ? this.renderEditView() : this.renderTextView()}
             </h3>
 
         {this.renderCriteriaList()}
@@ -44,6 +44,8 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
         {this.renderAddRow() }
         </div>
     }
+
+
 
     private removeButton(): JSX.Element {
         return <button className="btn btn-danger btn-xs bm-btn" onClick={
@@ -138,7 +140,13 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
         })
     }
 
-    private renderHeader(): JSX.Element {
+    private renderTextView(): JSX.Element {
+        return <div
+            onClick={() => this.toggleEdit()}
+    >{this.props.benchmark.getHeading()}{this.removeButton()}</div>
+    }
+
+    private renderEditView(): JSX.Element {
         return <div className="input-group col-md-12">
             <input
                 className="form-control m-input"
