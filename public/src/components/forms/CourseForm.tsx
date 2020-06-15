@@ -6,6 +6,7 @@ import { CourseManager } from "../../managers/CourseManager";
 import { NavigationManager } from "../../managers/NavigationManager";
 
 import { Course, Status, User, Void } from "../../../proto/ag_pb";
+import { parse } from "path";
 
 interface ICourseFormProps {
     className?: string;
@@ -22,6 +23,7 @@ interface ICourseFormState {
     code: string;
     tag: string;
     year: string;
+    slipdays: string;
     provider: string;
     orgid: number;
     orgname: string;
@@ -36,10 +38,11 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
     constructor(props: any) {
         super(props);
         this.state = {
-            name: this.props.courseData ? this.props.courseData.getName() : "",
-            code: this.props.courseData ? this.props.courseData.getCode() : "",
-            tag: this.props.courseData ? this.props.courseData.getTag() : "",
-            year: this.props.courseData ? this.props.courseData.getYear().toString() : "",
+            name: this.props.courseData?.getName() ?? "",
+            code: this.props.courseData?.getCode() ?? "",
+            tag: this.props.courseData?.getTag() ?? "",
+            year: this.props.courseData?.getYear().toString() ?? "",
+            slipdays: this.props.courseData?.getSlipdays().toString() ?? "",
             orgname: "",
             provider: "github",
             orgid: this.props.courseData ? this.props.courseData.getOrganizationid() : 0,
@@ -90,6 +93,13 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
                         "Enter semester",
                         "tag",
                         this.state.tag,
+                        (e) => this.handleInputChange(e))}
+                    </div>
+                    <div className="row spacefix">
+                    {this.renderFormController("Slip days:",
+                        "Slip days",
+                        "slipdays",
+                        this.state.slipdays,
                         (e) => this.handleInputChange(e))}
                     </div>
                     <div className="row spacefix">
@@ -194,6 +204,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         newCourse.setYear(parseInt(this.state.year, 10));
         newCourse.setProvider(this.state.provider);
         newCourse.setOrganizationid(this.state.orgid);
+        newCourse.setSlipdays(parseInt(this.state.slipdays, 10));
 
         return this.props.courseMan.updateCourse(newCourse);
     }
@@ -206,6 +217,7 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         courseData.setYear(parseInt(this.state.year, 10));
         courseData.setProvider(this.state.provider);
         courseData.setOrganizationid(this.state.orgid);
+        courseData.setSlipdays(parseInt(this.state.slipdays, 10));
 
         return this.props.courseMan.createNewCourse(courseData);
     }
@@ -281,6 +293,13 @@ export class CourseForm<T> extends React.Component<ICourseFormProps, ICourseForm
         if (this.state.provider === "") {
             errors.push("Unknown provider.");
         }
+        const slipdays = parseInt(this.state.slipdays, 10);
+        if (this.state.slipdays === "") {
+            errors.push("Slip days not set");
+        } else if (Number.isNaN(slipdays)) {
+            errors.push("Slip days must be a number");
+        }
+
         if (this.state.orgid === 0) {
             errors.push("Select organization for your course.");
         }
