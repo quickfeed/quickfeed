@@ -129,6 +129,7 @@ export class StudentPage extends ViewPage {
                 return <StudentLab
                     assignment={this.selectedAssignment}
                     showApprove={false}
+                    slipdays={this.selectedUserCourse.enrollment.getSlipdaysremaining()}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
@@ -152,6 +153,7 @@ export class StudentPage extends ViewPage {
                 return <StudentLab
                     assignment={this.selectedAssignment}
                     showApprove={false}
+                    slipdays={this.selectedUserGroupCourse.enrollment.getSlipdaysremaining()}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();

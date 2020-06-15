@@ -7,6 +7,7 @@ import { ISubmission } from "../../models";
 interface ILastBuildInfo {
     submission: ISubmission;
     assignment: Assignment;
+    slipdays: number;
 }
 
 interface ILastBuildInfoState {
@@ -36,7 +37,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                                 <tr><td key="2">Deadline</td><td key="desc2">{formatDate(this.props.assignment.getDeadline())}</td></tr>
                                 <tr><td key="3">Tests passed</td><td key="desc3"><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
                                 <tr><td key="4">Execution time</td><td key="desc4">{this.formatTime(this.props.submission.executionTime)} seconds </td></tr>
-                                <tr><td key="5">Slip days</td><td key="desc5">5</td></tr>
+                                <tr><td key="5">Slip days</td><td key="desc5">{this.props.slipdays}</td></tr>
                             </tbody>
                         </table>
                     </div>

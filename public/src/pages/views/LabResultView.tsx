@@ -5,6 +5,7 @@ import { IStudentLab } from "../../models";
 interface ILabInfoProps {
     assignment: IStudentLab;
     showApprove: boolean;
+    slipdays: number;
     onApproveClick: (approve: boolean) => void;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
@@ -33,6 +34,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                             <LastBuildInfo
                                 submission={latest}
                                 assignment={this.props.assignment.assignment}
+                                slipdays={this.props.slipdays}
                             />
                             <LastBuild
                                 test_cases={latest.testCases}
