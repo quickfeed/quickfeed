@@ -20,7 +20,12 @@ var (
 
 // getGroup returns the group for the given group ID.
 func (s *AutograderService) getGroup(request *pb.GetGroupRequest) (*pb.Group, error) {
-	return s.db.GetGroup(request.GetGroupID())
+	group, err := s.db.GetGroup(request.GetGroupID())
+	if err != nil {
+		return nil, err
+	}
+	group.SetSlipDays()
+	return group, nil
 }
 
 // getGroups returns all groups for the given course ID.
@@ -28,6 +33,9 @@ func (s *AutograderService) getGroups(request *pb.CourseRequest) (*pb.Groups, er
 	groups, err := s.db.GetGroupsByCourse(request.GetCourseID())
 	if err != nil {
 		return nil, err
+	}
+	for _, group := range groups {
+		group.SetSlipDays()
 	}
 	return &pb.Groups{Groups: groups}, nil
 }
@@ -42,6 +50,7 @@ func (s *AutograderService) getGroupByUserAndCourse(request *pb.GroupRequest) (*
 	if err != nil && err == gorm.ErrRecordNotFound {
 		err = ErrUserNotInGroup
 	}
+	grp.SetSlipDays()
 	return grp, err
 }
 

@@ -34,6 +34,9 @@ func (s *AutograderService) getEnrollmentsByUser(request *pb.EnrollmentStatusReq
 	if err != nil {
 		return nil, err
 	}
+	for _, enrollment := range enrollments {
+		enrollment.SetSlipDays()
+	}
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
@@ -53,6 +56,9 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 			}
 		}
 		enrollments = enrollmentsWithoutGroups
+	}
+	for _, enrollment := range enrollments {
+		enrollment.SetSlipDays()
 	}
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
@@ -135,6 +141,7 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) 
 	if err != nil {
 		return nil, err
 	}
+	course.SetSlipDays()
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	switch request.Type {

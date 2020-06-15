@@ -120,7 +120,8 @@ message Enrollment {
     Group group = 8;
     UserStatus status = 9;
     DisplayState state = 10;
-    repeated UsedSlipDays usedSlipDays = 11;
+    uint32 slipDaysRemaining = 11 [(gogoproto.moretags) = "sql:\"-\""];
+    repeated UsedSlipDays usedSlipDays = 12;
 }
 
 message UsedSlipDays {

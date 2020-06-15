@@ -54,3 +54,12 @@ func (m Enrollment) totalSlipDays() uint32 {
 func (m Enrollment) RemainingSlipDays() int32 {
 	return int32(m.Course.GetSlipDays() - m.totalSlipDays())
 }
+
+// SetSlipDays updates SlipDaysRemaining field of an enrollment.
+func (m Enrollment) SetSlipDays() {
+	if m.RemainingSlipDays() < 0 {
+		m.SlipDaysRemaining = 0
+	} else {
+		m.SlipDaysRemaining = uint32(m.RemainingSlipDays())
+	}
+}

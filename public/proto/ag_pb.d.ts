@@ -365,6 +365,9 @@ export class Enrollment extends jspb.Message {
   getState(): Enrollment.DisplayState;
   setState(value: Enrollment.DisplayState): void;
 
+  getSlipdaysremaining(): number;
+  setSlipdaysremaining(value: number): void;
+
   getUsedslipdaysList(): Array<UsedSlipDays>;
   setUsedslipdaysList(value: Array<UsedSlipDays>): void;
   clearUsedslipdaysList(): void;
@@ -390,6 +393,7 @@ export namespace Enrollment {
     group?: Group.AsObject,
     status: Enrollment.UserStatus,
     state: Enrollment.DisplayState,
+    slipdaysremaining: number,
     usedslipdaysList: Array<UsedSlipDays.AsObject>,
   }
 
