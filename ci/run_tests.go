@@ -16,6 +16,7 @@ import (
 
 const (
 	scriptPath = "ci/scripts"
+	layout     = "2006-01-02T15:04:05"
 )
 
 // RunData holds information needed for running tests.
@@ -111,7 +112,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 
 	score := result.TotalScore()
 	approved := rData.Assignment.IsApproved(newest, score)
-	err = db.CreateSubmission(&pb.Submission{
+	newSubmission := &pb.Submission{
 		AssignmentID: rData.Assignment.ID,
 		BuildInfo:    buildInfo,
 		CommitHash:   rData.CommitID,
@@ -120,12 +121,16 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		UserID:       rData.Repo.UserID,
 		GroupID:      rData.Repo.GroupID,
 		Approved:     approved,
-	})
+	}
+	err = db.CreateSubmission(newSubmission)
 	if err != nil {
 		logger.Errorf("Failed to add submission to database: %w", err)
 		return
 	}
 	logger.Debugf("Created submission for assignment %d in database with approve=%t", rData.Assignment.GetID(), approved)
+
+	updateSlipDays(logger, db, rData.Repo, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
+
 }
 
 func randomSecret() string {
@@ -135,4 +140,42 @@ func randomSecret() string {
 		panic("couldn't generate randomness")
 	}
 	return fmt.Sprintf("%x", sha1.Sum(randomness))
+}
+
+func updateSlipDays(logger *zap.SugaredLogger, db database.Database, repo *pb.Repository, assignment *pb.Assignment, submission *pb.Submission, buildDate string) {
+	buildTime, err := time.Parse(layout, buildDate)
+	if err != nil {
+		logger.Errorf("Failed to parse time from string (%s)", buildDate)
+	}
+
+	enrollments := make([]*pb.Enrollment, 0)
+
+	if repo.GroupID > 0 {
+		group, err := db.GetGroup(repo.GroupID)
+		if err != nil {
+			logger.Errorf("Failed to get group %d: %w", repo.GroupID, err)
+			return
+		}
+		for _, enrol := range group.Enrollments {
+			enrollments = append(enrollments, enrol)
+		}
+	} else {
+		enrol, err := db.GetEnrollmentByCourseAndUser(assignment.CourseID, repo.UserID)
+		if err != nil {
+			logger.Errorf("Failed to get enrollment for user %d: %w", repo.UserID, err)
+			return
+		}
+		enrollments = append(enrollments, enrol)
+	}
+
+	for _, enrol := range enrollments {
+		if err := enrol.UpdateSlipDays(buildTime, assignment, submission); err != nil {
+			logger.Errorf("Failed updating slip days for submission (%+v): %w", submission, err)
+			return
+		}
+		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {
+			logger.Errorf("Failed to update slip days (%v): %w", enrol, err)
+			return
+		}
+	}
 }

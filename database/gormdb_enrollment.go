@@ -90,3 +90,27 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 	}
 	return enrollments, nil
 }
+
+// UpdateSlipDays updates used slip days for the given course enrollment
+func (db *GormDB) UpdateSlipDays(usedSlipDays []*pb.UsedSlipDays) error {
+	for _, slipDaysForAssignment := range usedSlipDays {
+		if err := db.updateSlipDays(slipDaysForAssignment); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// updateSlipdays updates or creates UsedSlipDays record
+func (db *GormDB) updateSlipDays(query *pb.UsedSlipDays) error {
+	var err error
+	if err = db.conn.Where(&pb.UsedSlipDays{
+		EnrollmentID: query.EnrollmentID,
+		AssignmentID: query.AssignmentID}).
+		Update(&pb.UsedSlipDays{UsedSlipDays: query.UsedSlipDays}).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = db.conn.Create(query).Error
+		}
+	}
+	return err
+}
