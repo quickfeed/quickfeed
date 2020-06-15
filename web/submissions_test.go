@@ -455,7 +455,7 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that all submissions were saved for the correct labs
-	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID})
+	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, Type: pb.SubmissionsForCourseRequest_ALL})
 	if err != nil {
 		t.Fatal(err)
 	}

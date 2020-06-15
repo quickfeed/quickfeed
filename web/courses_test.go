@@ -203,13 +203,14 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantEnrollment := &pb.Enrollment{
-		ID:       pendingEnrollment.ID,
-		CourseID: course.ID,
-		UserID:   stud1.ID,
-		Status:   pb.Enrollment_PENDING,
-		State:    pb.Enrollment_VISIBLE,
-		Course:   course,
-		User:     stud1,
+		ID:           pendingEnrollment.ID,
+		CourseID:     course.ID,
+		UserID:       stud1.ID,
+		Status:       pb.Enrollment_PENDING,
+		State:        pb.Enrollment_VISIBLE,
+		Course:       course,
+		User:         stud1,
+		UsedSlipDays: []*pb.UsedSlipDays{},
 	}
 	// can't use: wantEnrollment.User.RemoveRemoteID()
 	wantEnrollment.User.RemoteIdentities = nil
