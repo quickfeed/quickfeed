@@ -46,9 +46,6 @@ func (s *AutograderService) getUsers() (*pb.Users, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, usr := range users {
-		usr.SetSlipDays()
-	}
 	return &pb.Users{Users: users}, nil
 }
 

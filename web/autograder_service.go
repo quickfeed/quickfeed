@@ -49,7 +49,6 @@ func (s *AutograderService) GetUser(ctx context.Context, in *pb.Void) (*pb.User,
 	if err != nil {
 		s.logger.Errorf("GetUser failed to get user with enrollments: %w ", err)
 	}
-	dbUsr.SetSlipDays()
 	return dbUsr, nil
 
 }

@@ -35,7 +35,7 @@ func (s *AutograderService) getEnrollmentsByUser(request *pb.EnrollmentStatusReq
 		return nil, err
 	}
 	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays()
+		enrollment.SetSlipDays(enrollment.Course)
 	}
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
@@ -58,7 +58,7 @@ func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest
 		enrollments = enrollmentsWithoutGroups
 	}
 	for _, enrollment := range enrollments {
-		enrollment.SetSlipDays()
+		enrollment.SetSlipDays(enrollment.Course)
 	}
 	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
@@ -161,6 +161,7 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	for _, enrol := range course.Enrollments {
+		enrol.SetSlipDays(course)
 		newLink := &pb.EnrollmentLink{Enrollment: enrol}
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
@@ -175,7 +176,7 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 			allSubmissions = append(allSubmissions, subLink)
 		}
 
-		sortSubmissionsByAssignmentID(allSubmissions)
+		sortSubmissionsByAssignmentOrder(allSubmissions)
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
@@ -192,6 +193,7 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 		newLink := &pb.EnrollmentLink{}
 		for _, enrol := range course.Enrollments {
 			if enrol.GroupID > 0 && enrol.GroupID == grp.ID {
+				enrol.SetSlipDays(course)
 				newLink.Enrollment = enrol
 			}
 		}
@@ -211,7 +213,7 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 			}
 			allSubmissions = append(allSubmissions, subLink)
 		}
-		sortSubmissionsByAssignmentID(allSubmissions)
+		sortSubmissionsByAssignmentOrder(allSubmissions)
 		newLink.Submissions = allSubmissions
 		enrolLinks = append(enrolLinks, newLink)
 	}
@@ -396,10 +398,10 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 	})
 }
 
-func sortSubmissionsByAssignmentID(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
+func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
 
 	sort.Slice(unsorted, func(i, j int) bool {
-		return unsorted[i].Assignment.GetID() < unsorted[j].Assignment.GetID()
+		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
 	})
 
 	return unsorted
