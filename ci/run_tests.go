@@ -170,11 +170,12 @@ func updateSlipDays(logger *zap.SugaredLogger, db database.Database, repo *pb.Re
 
 	for _, enrol := range enrollments {
 		if err := enrol.UpdateSlipDays(buildTime, assignment, submission); err != nil {
-			logger.Errorf("Failed updating slip days for submission (%+v): %w", submission, err)
+			logger.Errorf("Failed updating slip days for submission ID (%d): %w", submission.ID, err)
 			return
 		}
+		logger.Infof("Updated slipdays for enrollment %d locally: %+v", enrol.ID, enrol.UsedSlipDays)
 		if err := db.UpdateSlipDays(enrol.UsedSlipDays); err != nil {
-			logger.Errorf("Failed to update slip days (%v): %w", enrol, err)
+			logger.Errorf("Failed to update slip days (enrollment ID %d): %w", enrol.GetID(), err)
 			return
 		}
 	}
