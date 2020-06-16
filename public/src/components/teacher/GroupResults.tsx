@@ -49,7 +49,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             && this.state.submissionLink.assignment.getIsgrouplab()) {
             groupLab = <StudentLab
                 assignment={this.state.submissionLink}
-                slipdays={this.state.submissionLink.submission ? getSlipDays(this.props.groups, this.state.submissionLink.submission, true) : 0}
+                slipdays={this.props.course.getSlipdays()}
                 showApprove={true}
                 onRebuildClick={
                     async () => {
