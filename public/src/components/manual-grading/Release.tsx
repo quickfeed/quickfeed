@@ -152,11 +152,12 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private renderReleaseTable(): JSX.Element {
-        const reviewersList = Array.from(this.state.reviewers.keys());
+        const allReviewers = this.props.teacherView ? this.state.reviewers : this.mapReviewersForStudentView();
+        const reviewersList = Array.from(allReviewers.keys());
         return <div className="row">
             <table className="table table-condensed table-bordered">
             <thead><tr key="rthead"><th key="th0">Reviews:</th>{reviewersList.map((u, i) => <th key={"th" + (i + 1)} className="release-cell">
-                {(this.state.reviewers.get(u)?.getScore() ?? 0) + "%"}
+                {(allReviewers.get(u)?.getScore() ?? 0) + "%"}
             </th>)}</tr></thead>
             <tbody>
                 {this.renderTableRows()}
@@ -167,7 +168,8 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
 
     private renderTableRows(): JSX.Element[] {
         const rows: JSX.Element[] = [];
-        const reviewersList = Array.from(this.state.reviewers.keys());
+        const allReviewers = this.props.teacherView ? this.state.reviewers : this.mapReviewersForStudentView();
+        const reviewersList = Array.from(allReviewers.keys());
         this.props.assignment.getGradingbenchmarksList().forEach((bm, i) => {
             rows.push(<tr key={"rt" + i} className="b-header"><td key={"rth" + i}>{bm.getHeading()}</td>{reviewersList.map(u =>
                 <td key={"csp" + u.getId()}>{this.commentSpan(this.selectBenchmark(u, bm).getComment(), "bm" + bm.getId())}</td>)}</tr>);
@@ -181,10 +183,10 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
             });
         });
         rows.push(<tr key="rtf"><td key="fbrow">Feedbacks:</td>
-            {reviewersList.map((u, i) => <td key={"fbrow" + i}>{this.commentSpan(this.state.reviewers.get(u)?.getFeedback() ?? "No feedback", "fb" + i)}</td>)}
+            {reviewersList.map((u, i) => <td key={"fbrow" + i}>{this.commentSpan(allReviewers.get(u)?.getFeedback() ?? "No feedback", "fb" + i)}</td>)}
         </tr>);
         rows.push(<tr key="tscore"><td key="scrow">Score: {this.props.submission?.score ?? 0}</td>
-            {reviewersList.map(u => <td key={"scrow" + u.getId()}>{this.state.reviewers.get(u)?.getScore() ?? 0}</td>)}
+            {reviewersList.map(u => <td key={"scrow" + u.getId()}>{allReviewers.get(u)?.getScore() ?? 0}</td>)}
         </tr>);
         return rows;
     }
@@ -210,7 +212,10 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private selectBenchmark(u: User, bm: GradingBenchmark): GradingBenchmark {
-        const r = this.state.reviewers.get(u);
+        const allReviewers = this.state.reviewers;
+        const allReviews = Array.from(allReviewers.values());
+
+        const r = this.props.teacherView ? allReviewers.get(u) : allReviews.find(item => item.getReviewerid() === u.getId());
         if (r) {
             const rbm = r.getBenchmarksList().find(item => item.getId() === bm.getId())
             if (rbm) bm = rbm;
@@ -219,7 +224,9 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
     }
 
     private selectCriterion(u: User, c: GradingCriterion): GradingCriterion {
-        const r = this.state.reviewers.get(u);
+        const allReviewers = this.props.teacherView ? this.state.reviewers : this.mapReviewersForStudentView();
+        const allReviews = Array.from(allReviewers.values());
+        const r = this.props.teacherView ? allReviewers.get(u) : allReviews.find(item => item.getReviewerid() === u.getId());
         if (r) {
             r.getBenchmarksList().forEach(bm => {
                 const rc = bm.getCriteriaList().find(item => item.getId() === c.getId());
@@ -272,6 +279,19 @@ export class Release extends React.Component<ReleaseProps, ReleaseState>{
                 });
             }
         }
+    }
+
+    private mapReviewersForStudentView(): Map<User, Review> {
+        const reviews = this.selectReadyReviews();
+        const newMap = new Map<User, Review>();
+        if (this.props.submission) {
+            reviews.forEach(rw => {
+                const usr = new User();
+                usr.setId(rw.getReviewerid());
+                newMap.set(usr, rw);
+            });
+        }
+        return newMap;
     }
 
     private async mapReviewers() {
