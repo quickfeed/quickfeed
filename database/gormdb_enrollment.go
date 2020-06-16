@@ -103,14 +103,5 @@ func (db *GormDB) UpdateSlipDays(usedSlipDays []*pb.UsedSlipDays) error {
 
 // updateSlipdays updates or creates UsedSlipDays record
 func (db *GormDB) updateSlipDays(query *pb.UsedSlipDays) error {
-	var err error
-	if err = db.conn.Where(&pb.UsedSlipDays{
-		EnrollmentID: query.EnrollmentID,
-		AssignmentID: query.AssignmentID}).
-		Update(&pb.UsedSlipDays{UsedSlipDays: query.UsedSlipDays}).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			err = db.conn.Create(query).Error
-		}
-	}
-	return err
+	return db.conn.Save(query).Error
 }
