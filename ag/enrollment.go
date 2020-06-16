@@ -59,7 +59,7 @@ func (m Enrollment) RemainingSlipDays(c *Course) int32 {
 }
 
 // SetSlipDays updates SlipDaysRemaining field of an enrollment.
-func (m Enrollment) SetSlipDays(c *Course) {
+func (m *Enrollment) SetSlipDays(c *Course) {
 	if m.RemainingSlipDays(c) < 0 {
 		m.SlipDaysRemaining = 0
 	} else {

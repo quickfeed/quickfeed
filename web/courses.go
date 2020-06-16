@@ -161,7 +161,6 @@ func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.Enrollme
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	for _, enrol := range course.Enrollments {
-		enrol.SetSlipDays(course)
 		newLink := &pb.EnrollmentLink{Enrollment: enrol}
 		allSubmissions := make([]*pb.SubmissionLink, 0)
 		for _, a := range assignments {
@@ -193,7 +192,6 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 		newLink := &pb.EnrollmentLink{}
 		for _, enrol := range course.Enrollments {
 			if enrol.GroupID > 0 && enrol.GroupID == grp.ID {
-				enrol.SetSlipDays(course)
 				newLink.Enrollment = enrol
 			}
 		}

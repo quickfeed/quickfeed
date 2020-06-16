@@ -60,12 +60,15 @@ export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {
 }
 
 export function getSlipDays(allLabs: IStudentLabsForCourse[], selected: ISubmission, forGroups: boolean): number {
+    let days = 0;
+    const wantID = forGroups ? selected.groupid : selected.userid;
     allLabs.forEach(item => {
-        const wantID = forGroups ? selected.groupid : selected.userid;
         const haveID = forGroups ? item.enrollment.getGroupid() : item.enrollment.getUserid();
-        if (haveID === wantID) return item.enrollment.getSlipdaysremaining();
+        if (haveID === wantID) {
+            days = item.enrollment.getSlipdaysremaining();
+        }
     });
-    return 0;
+    return days;
 }
 
 export function searchForStudents(enrols: Enrollment[], query: string): Enrollment[] {
