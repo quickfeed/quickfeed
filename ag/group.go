@@ -27,8 +27,8 @@ func (g *Group) ContainsAll(group *Group) bool {
 }
 
 // SetSlipDays sets number of remaining slip days for each enrollment
-func (g Group) SetSlipDays() {
+func (g Group) SetSlipDays(c *Course) {
 	for _, e := range g.Enrollments {
-		e.SetSlipDays()
+		e.SetSlipDays(c)
 	}
 }

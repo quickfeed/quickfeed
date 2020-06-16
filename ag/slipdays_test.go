@@ -104,7 +104,7 @@ func TestSlipDays(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					remaining := enrol.RemainingSlipDays()
+					remaining := enrol.RemainingSlipDays(course)
 					if remaining != sd.remaining[i][j] {
 						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(layout), sd.labs[i], subm, enrol, remaining, sd.remaining[i][j])
 					}

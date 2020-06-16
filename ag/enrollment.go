@@ -36,7 +36,7 @@ func (m *Enrollment) updateSlipDays(assignmentID uint64, slipDays uint32) {
 		}
 	}
 	// not found; add new entry to the slice
-	m.UsedSlipDays = append(m.UsedSlipDays, &UsedSlipDays{AssignmentID: assignmentID, UsedSlipDays: slipDays})
+	m.UsedSlipDays = append(m.UsedSlipDays, &UsedSlipDays{AssignmentID: assignmentID, EnrollmentID: m.ID, UsedSlipDays: slipDays})
 }
 
 // totalSlipDays returns the total number of slipdays used for this enrollment.
@@ -51,15 +51,18 @@ func (m Enrollment) totalSlipDays() uint32 {
 // RemainingSlipDays returns the remaining number of slip days for this
 // user/course enrollment. Note that if the returned amount is negative,
 // the user has used up all slip days.
-func (m Enrollment) RemainingSlipDays() int32 {
-	return int32(m.Course.GetSlipDays() - m.totalSlipDays())
+func (m Enrollment) RemainingSlipDays(c *Course) int32 {
+	if m.GetCourseID() != c.GetID() {
+		return 0
+	}
+	return int32(c.GetSlipDays() - m.totalSlipDays())
 }
 
 // SetSlipDays updates SlipDaysRemaining field of an enrollment.
-func (m Enrollment) SetSlipDays() {
-	if m.RemainingSlipDays() < 0 {
+func (m Enrollment) SetSlipDays(c *Course) {
+	if m.RemainingSlipDays(c) < 0 {
 		m.SlipDaysRemaining = 0
 	} else {
-		m.SlipDaysRemaining = uint32(m.RemainingSlipDays())
+		m.SlipDaysRemaining = uint32(m.RemainingSlipDays(c))
 	}
 }
