@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Course, Enrollment, Group, User } from "../proto/ag_pb";
+import { Course, Enrollment, Group, User, Assignment } from '../proto/ag_pb';
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from './models';
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
@@ -49,6 +49,10 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Course[] {
     });
     favorite = favorite.concat(active);
     return favorite;
+}
+
+export function sortAssignmentsByOrder(assignments: Assignment[]): Assignment[] {
+    return assignments.sort((a, b) => a.getOrder() - b.getOrder());
 }
 
 export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {

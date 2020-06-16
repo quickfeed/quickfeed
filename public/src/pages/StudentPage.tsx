@@ -12,7 +12,7 @@ import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
 import { showLoader } from "../loader";
 import { CourseListView } from "./views/CourseListView";
-import { sortEnrollmentsByVisibility } from "../componentHelper";
+import { sortEnrollmentsByVisibility, sortAssignmentsByOrder } from '../componentHelper';
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -288,14 +288,14 @@ export class StudentPage extends ViewPage {
                         enrollment: enrol,
                         labs: []
                     }
-                    await this.courseMan.fillLinks(newCourseLink, curUser, undefined, crs.getAssignmentsList())
+                    await this.courseMan.fillLinks(newCourseLink, curUser, undefined, sortAssignmentsByOrder(crs.getAssignmentsList()))
                     this.userCourses.push(newCourseLink);
                     if (enrol.getStatus() === Enrollment.UserStatus.STUDENT || enrol.getStatus() === Enrollment.UserStatus.TEACHER) {
                         this.activeUserCourses.push(newCourseLink);
                     }
                     const grp = enrol.getGroup()
                     if (grp) {
-                        await this.courseMan.fillLinks(newCourseLink, undefined, grp, crs.getAssignmentsList())
+                        await this.courseMan.fillLinks(newCourseLink, undefined, grp, sortAssignmentsByOrder(crs.getAssignmentsList()))
                         this.GroupUserCourses.push(newCourseLink);
                     }
                 }
