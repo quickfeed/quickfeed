@@ -117,12 +117,14 @@ autoapprove: false
 scorelimit: 80
 isgrouplab: false
 reviewers: 2
+containertimeout: 10
 ```
 
 `autoapprove` indicates whether or not Autograder will automatically approve the assignment when a sufficient score has been reached.
 `reviewers` indicate the number of reviews to be created for a student submission to this assignment.
 `scorelimit` defines the minimal percentage score on a student submission for the corresponding lab to be auto approved.
 If `scorelimit` is not set, only submissions with 80% or higher will be approved automatically.
+`containertimeout` sets a timeout (in minutes) for CI containers building and testing the code submitted by students. After the timeout for a container has been reached, the container will be stopped and removed, and a message about the timeout reached returned to user. This field is optional, the default timeout is 10 minutes.
 
 
 ## Reviewing student submissions
