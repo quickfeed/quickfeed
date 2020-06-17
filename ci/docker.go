@@ -3,6 +3,7 @@ package ci
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -20,7 +21,10 @@ type Docker struct {
 	Version  string
 }
 
-var containerTimeout = time.Duration(10 * time.Minute)
+var (
+	containerTimeout = time.Duration(10 * time.Minute)
+	stopTimeout      = time.Duration(5 * time.Second)
+)
 
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
@@ -52,7 +56,12 @@ func (d *Docker) Run(ctx context.Context, job *Job, user string) (string, error)
 
 	select {
 	case wErr := <-errc:
+		fmt.Println("wErr: ", wErr.Error())
 		return "", wErr
+		// if the container still running after predefined time interval, force kill it
+	case <-time.After(containerTimeout):
+		fmt.Println("Timeout done, stopping container: ", user)
+		return "Container timed out after 10 minutes", nil
 	case <-waitc:
 	}
 
@@ -67,7 +76,6 @@ func (d *Docker) Run(ctx context.Context, job *Job, user string) (string, error)
 	if _, err := stdcopy.StdCopy(&stdout, ioutil.Discard, r); err != nil {
 		return "", err
 	}
-
 	return stdout.String(), nil
 }
 
