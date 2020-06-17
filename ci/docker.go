@@ -21,10 +21,7 @@ type Docker struct {
 	Version  string
 }
 
-var (
-	containerTimeout = time.Duration(10 * time.Minute)
-	stopTimeout      = time.Duration(5 * time.Second)
-)
+var containerTimeout = time.Duration(10 * time.Minute)
 
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
