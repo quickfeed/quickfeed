@@ -50,7 +50,7 @@ func RunTests(logger *zap.SugaredLogger, db database.Database, runner Runner, rD
 	jobName := rData.String(info.RandomSecret[:6])
 	logger.Debugf("Running tests for %s", jobName)
 	start := time.Now()
-	out, err := runner.Run(context.Background(), job, jobName)
+	out, err := runner.Run(context.Background(), job, jobName, time.Duration(rData.Assignment.ContainerTimeout))
 	if err != nil {
 		logger.Errorf("Test execution failed: %w", err)
 		return

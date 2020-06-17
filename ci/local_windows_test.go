@@ -24,7 +24,7 @@ func runCmd(t *testing.T, cmds []string) string {
 	local := ci.Local{}
 	out, err := local.Run(context.Background(), &ci.Job{
 		Commands: cmds,
-	}, "")
+	}, "", 0)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -28,8 +28,7 @@ var (
 
 // Run implements the CI interface. This method blocks until the job has been
 // completed or an error occurs, e.g., the context times out.
-func (d *Docker) Run(ctx context.Context, job *Job, user string) (string, error) {
-	// cli, err := client.NewClient(d.Endpoint, d.Version, nil, nil)
+func (d *Docker) Run(ctx context.Context, job *Job, user string, timeout time.Duration) (string, error) {
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		return "", err
@@ -54,14 +53,19 @@ func (d *Docker) Run(ctx context.Context, job *Job, user string) (string, error)
 	// will wait until the container stops
 	waitc, errc := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 
+	if timeout < 1 {
+		timeout = containerTimeout
+	}
+
 	select {
 	case wErr := <-errc:
 		fmt.Println("wErr: ", wErr.Error())
 		return "", wErr
 		// if the container still running after predefined time interval, force kill it
-	case <-time.After(containerTimeout):
+	case <-time.After(timeout):
 		fmt.Println("Timeout done, stopping container: ", user)
-		return "Container timed out after 10 minutes", nil
+		cli.ContainerKill(ctx, resp.ID, "SIGTERM")
+		return fmt.Sprintf("Container timed out after %d minutes", timeout), nil
 	case <-waitc:
 	}
 

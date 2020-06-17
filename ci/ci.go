@@ -1,6 +1,9 @@
 package ci
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // Job describes how to execute a CI job.
 type Job struct {
@@ -11,5 +14,5 @@ type Job struct {
 // Runner contains methods for running user provided code in isolation.
 type Runner interface {
 	// Run should synchronously execute the described job and return the output.
-	Run(context.Context, *Job, string) (string, error)
+	Run(context.Context, *Job, string, time.Duration) (string, error)
 }

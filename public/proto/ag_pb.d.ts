@@ -584,6 +584,9 @@ export class Assignment extends jspb.Message {
   clearGradingbenchmarksList(): void;
   addGradingbenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
 
+  getContainertimeout(): number;
+  setContainertimeout(value: number): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
   static toObject(includeInstance: boolean, msg: Assignment): Assignment.AsObject;
@@ -607,6 +610,7 @@ export namespace Assignment {
     runtests: boolean,
     submissionsList: Array<Submission.AsObject>,
     gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
+    containertimeout: number,
   }
 }
 
