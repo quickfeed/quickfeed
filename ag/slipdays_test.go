@@ -92,7 +92,7 @@ func TestSlipDays(t *testing.T) {
 					if len(sd.submissions[i]) != len(sd.remaining[i]) {
 						t.Fatalf("faulty test case: len(sd.submissions[%d])=%d != len(sd.remaining[%d])=%d", i, len(sd.submissions[i]), i, len(sd.remaining[i]))
 					}
-					subm := &pb.Submission{
+					submission := &pb.Submission{
 						AssignmentID: sd.labs[i].ID,
 						Approved:     false,
 					}
@@ -100,13 +100,13 @@ func TestSlipDays(t *testing.T) {
 					testNow = testNow.Add(time.Duration(sd.submissions[i][j]) * days)
 
 					// functions to test
-					err := enrol.UpdateSlipDays(testNow, sd.labs[i], subm)
+					err := enrol.UpdateSlipDays(testNow, sd.labs[i], submission)
 					if err != nil {
 						t.Fatal(err)
 					}
 					remaining := enrol.RemainingSlipDays(course)
 					if remaining != sd.remaining[i][j] {
-						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(layout), sd.labs[i], subm, enrol, remaining, sd.remaining[i][j])
+						t.Errorf("UpdateSlipdays(%q, %q, %q, %q) == %d, want %d", testNow.Format(layout), sd.labs[i], submission, enrol, remaining, sd.remaining[i][j])
 					}
 				}
 			})
@@ -126,8 +126,8 @@ func TestBadDeadlineFormat(t *testing.T) {
 		Deadline: "14-Sep-2020",
 	}
 	lab1.ID = 1
-	subm := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
-	err := enrol.UpdateSlipDays(testNow, lab1, subm)
+	submission := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
+	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected parsing error due to incorrect deadline date format")
 	}
@@ -145,8 +145,8 @@ func TestMismatchingAssignmentID(t *testing.T) {
 		Deadline: testNow.Add(time.Duration(2) * days).Format(layout),
 	}
 	lab1.ID = 1
-	subm := &pb.Submission{Approved: false, AssignmentID: lab1.ID + 1}
-	err := enrol.UpdateSlipDays(testNow, lab1, subm)
+	submission := &pb.Submission{Approved: false, AssignmentID: lab1.ID + 1}
+	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (assignment.ID != submission.AssignmentID)")
 	}
@@ -164,8 +164,8 @@ func TestMismatchingCourseID(t *testing.T) {
 		Deadline: testNow.Add(time.Duration(2) * days).Format(layout),
 	}
 	lab1.ID = 1
-	subm := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
-	err := enrol.UpdateSlipDays(testNow, lab1, subm)
+	submission := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
+	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (enrollment.CourseID != assignment.CourseID)")
 	}
@@ -180,9 +180,9 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	// lab1's deadline passed two days ago
 	lab1 := a(-2)
 	lab1.ID = 1
-	subm := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
+	submission := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
 	fmt.Println(enrol.GetUsedSlipDays())
-	err := enrol.UpdateSlipDays(testNow, lab1, subm)
+	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err != nil {
 		fmt.Println(err)
 	}

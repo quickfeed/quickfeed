@@ -1,0 +1,17 @@
+{
+    "protoc": {
+        "path": "/usr/local/bin/protoc",
+        "options": [
+            "--proto_path=${workspaceRoot}/ag",
+        ],
+    },
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--fast"
+    ],
+    "cSpell.words": [
+        "Gorm",
+        "aguis",
+        "opsys"
+    ]
+}
