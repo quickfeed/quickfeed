@@ -1,11 +1,16 @@
 syntax = "proto3";
 
-//TODO(meling) workaround for Go module system
 import "gogoproto/gogo.proto";
-//import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-//  [(gogoproto.moretags) = "sql:\"-\""] tag marks fields that will be ignored by the database
-// unique_index tags set SQL UNIQUE constraint for the database
+// Note on use of gogo's moretags to translate to a database schama via GORM
+//
+// To define fields that should be ignored by the database, use this tag:
+//   [(gogoproto.moretags) = "sql:\"-\""]
+//
+// To define multiple database attributes (fields) that combine to form a unique identifier,
+// use the following tag, replacing the <id_name> with the specific unique database identifier;
+// this will set the SQL UNIQUE constraint for the database:
+//   [(gogoproto.moretags) = "gorm:\"unique_index:<id_name>\""];
 
 
 // USERS AND USERGROUPS //

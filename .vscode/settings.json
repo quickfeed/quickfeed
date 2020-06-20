@@ -3,6 +3,7 @@
         "path": "/usr/local/bin/protoc",
         "options": [
             "--proto_path=${workspaceRoot}/ag",
+            "--proto_path=${env.HOME}/go/pkg/mod/github.com/gogo/protobuf@v1.3.1",
         ],
     },
     "go.lintTool": "golangci-lint",
