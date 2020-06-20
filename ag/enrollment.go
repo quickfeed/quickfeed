@@ -5,9 +5,6 @@ import (
 	"time"
 )
 
-// TODO(meling) must also handle groups; if group assignment is late; withdraw slip days per group member.
-// TODO(meling) also need to propogate slip day information to frontend to show to user
-
 // UpdateSlipDays updates the number of slipdays for the given assignment/submission.
 func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, submission *Submission) error {
 	if m.GetCourseID() != assignment.GetCourseID() {
@@ -36,7 +33,11 @@ func (m *Enrollment) updateSlipDays(assignmentID uint64, slipDays uint32) {
 		}
 	}
 	// not found; add new entry to the slice
-	m.UsedSlipDays = append(m.UsedSlipDays, &UsedSlipDays{AssignmentID: assignmentID, EnrollmentID: m.ID, UsedSlipDays: slipDays})
+	m.UsedSlipDays = append(m.UsedSlipDays, &UsedSlipDays{
+		AssignmentID: assignmentID,
+		EnrollmentID: m.ID,
+		UsedSlipDays: slipDays,
+	})
 }
 
 // totalSlipDays returns the total number of slipdays used for this enrollment.

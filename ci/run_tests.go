@@ -127,10 +127,9 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		logger.Errorf("Failed to add submission to database: %w", err)
 		return
 	}
+
 	logger.Debugf("Created submission for assignment %d in database with approve=%t", rData.Assignment.GetID(), approved)
-
 	updateSlipDays(logger, db, rData.Repo, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
-
 }
 
 func randomSecret() string {
@@ -149,16 +148,13 @@ func updateSlipDays(logger *zap.SugaredLogger, db database.Database, repo *pb.Re
 	}
 
 	enrollments := make([]*pb.Enrollment, 0)
-
 	if repo.GroupID > 0 {
 		group, err := db.GetGroup(repo.GroupID)
 		if err != nil {
 			logger.Errorf("Failed to get group %d: %w", repo.GroupID, err)
 			return
 		}
-		for _, enrol := range group.Enrollments {
-			enrollments = append(enrollments, enrol)
-		}
+		enrollments = append(enrollments, group.Enrollments...)
 	} else {
 		enrol, err := db.GetEnrollmentByCourseAndUser(assignment.CourseID, repo.UserID)
 		if err != nil {
