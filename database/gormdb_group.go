@@ -135,7 +135,7 @@ func (db *GormDB) DeleteGroup(groupID uint64) error {
 // GetGroup returns the group with the specified group id.
 func (db *GormDB) GetGroup(groupID uint64) (*pb.Group, error) {
 	var group pb.Group
-	if err := db.conn.Preload("Enrollments").First(&group, groupID).Error; err != nil {
+	if err := db.conn.Preload("Enrollments").Preload("Enrollments.UsedSlipDays").First(&group, groupID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err
 		}
@@ -171,6 +171,7 @@ func (db *GormDB) GetGroupsByCourse(courseID uint64, statuses ...pb.Group_GroupS
 	var groups []*pb.Group
 	if err := db.conn.
 		Preload("Enrollments").
+		Preload("Enrollments.UsedSlipDays").
 		Where(&pb.Group{CourseID: courseID}).
 		Where("status in (?)", statuses).
 		Find(&groups).Error; err != nil {

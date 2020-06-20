@@ -28,3 +28,10 @@ func (u User) GetAccessToken(provider string) (string, error) {
 	}
 	return remoteID.GetAccessToken(), nil
 }
+
+// SetSlipDays sets number of remaining slip days for each enrollment
+func (u User) SetSlipDays(c *Course) {
+	for _, e := range u.Enrollments {
+		e.SetSlipDays(c)
+	}
+}

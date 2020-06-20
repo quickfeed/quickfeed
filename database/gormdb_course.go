@@ -60,6 +60,7 @@ func (db *GormDB) GetCourse(courseID uint64, withInfo bool) (*pb.Course, error) 
 			Preload("Enrollments", "status in (?)", userStates).
 			Preload("Enrollments.User").
 			Preload("Enrollments.Group").
+			Preload("Enrollments.UsedSlipDays").
 			Preload("Groups", modelGroup).
 			First(&course, courseID).Error; err != nil {
 			return nil, err

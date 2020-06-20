@@ -4,7 +4,7 @@ import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { searchForLabs, userRepoLink } from "../../componentHelper";
+import { searchForLabs, userRepoLink, getSlipDays } from '../../componentHelper';
 
 interface IResultsProp {
     course: Course;
@@ -51,6 +51,7 @@ export class Results extends React.Component<IResultsProp, IResultsState> {
             studentLab = <StudentLab
                 assignment={this.state.submissionLink}
                 showApprove={true}
+                slipdays={this.state.submissionLink.submission ? getSlipDays(this.props.students, this.state.submissionLink.submission, false) : 0}
                 onRebuildClick={
                     async () => {
                         if (this.state.submissionLink && this.state.submissionLink.submission) {

@@ -11,7 +11,7 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
-import { sortCoursesByVisibility } from "../componentHelper";
+import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHelper';
 
 export class TeacherPage extends ViewPage {
 
@@ -122,7 +122,7 @@ export class TeacherPage extends ViewPage {
             return <Results
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
-                labs={labs}
+                labs={sortAssignmentsByOrder(labs)}
                 students={labResults}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
@@ -148,7 +148,7 @@ export class TeacherPage extends ViewPage {
             return <GroupResults
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
-                labs={labs}
+                labs={sortAssignmentsByOrder(labs)}
                 groups={labResults}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);

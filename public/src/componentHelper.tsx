@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Course, Enrollment, Group, User } from "../proto/ag_pb";
-import { IStudentLabsForCourse } from "./models";
+import { Course, Enrollment, Group, User, Assignment } from '../proto/ag_pb';
+import { IStudentLabsForCourse, IStudentLab, ISubmission } from './models';
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
     let sorted: Enrollment[] = [];
@@ -51,8 +51,24 @@ export function sortCoursesByVisibility(enrols: Enrollment[]): Course[] {
     return favorite;
 }
 
+export function sortAssignmentsByOrder(assignments: Assignment[]): Assignment[] {
+    return assignments.sort((a, b) => a.getOrder() - b.getOrder());
+}
+
 export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {
     return users.sort((x, y) => ((x.getUser()?.getIsadmin() ?? false) < (y.getUser()?.getIsadmin() ?? false) ? 1 : -1));
+}
+
+export function getSlipDays(allLabs: IStudentLabsForCourse[], selected: ISubmission, forGroups: boolean): number {
+    let days = 0;
+    const wantID = forGroups ? selected.groupid : selected.userid;
+    allLabs.forEach(item => {
+        const haveID = forGroups ? item.enrollment.getGroupid() : item.enrollment.getUserid();
+        if (haveID === wantID) {
+            days = item.enrollment.getSlipdaysremaining();
+        }
+    });
+    return days;
 }
 
 export function searchForStudents(enrols: Enrollment[], query: string): Enrollment[] {

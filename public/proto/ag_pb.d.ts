@@ -208,6 +208,9 @@ export class Course extends jspb.Message {
   getOrganizationpath(): string;
   setOrganizationpath(value: string): void;
 
+  getSlipdays(): number;
+  setSlipdays(value: number): void;
+
   getEnrolled(): Enrollment.UserStatus;
   setEnrolled(value: Enrollment.UserStatus): void;
 
@@ -245,6 +248,7 @@ export namespace Course {
     provider: string,
     organizationid: number,
     organizationpath: string,
+    slipdays: number,
     enrolled: Enrollment.UserStatus,
     enrollmentsList: Array<Enrollment.AsObject>,
     assignmentsList: Array<Assignment.AsObject>,
@@ -361,6 +365,14 @@ export class Enrollment extends jspb.Message {
   getState(): Enrollment.DisplayState;
   setState(value: Enrollment.DisplayState): void;
 
+  getSlipdaysremaining(): number;
+  setSlipdaysremaining(value: number): void;
+
+  getUsedslipdaysList(): Array<UsedSlipDays>;
+  setUsedslipdaysList(value: Array<UsedSlipDays>): void;
+  clearUsedslipdaysList(): void;
+  addUsedslipdays(value?: UsedSlipDays, index?: number): UsedSlipDays;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Enrollment.AsObject;
   static toObject(includeInstance: boolean, msg: Enrollment): Enrollment.AsObject;
@@ -381,6 +393,8 @@ export namespace Enrollment {
     group?: Group.AsObject,
     status: Enrollment.UserStatus,
     state: Enrollment.DisplayState,
+    slipdaysremaining: number,
+    usedslipdaysList: Array<UsedSlipDays.AsObject>,
   }
 
   export enum UserStatus { 
@@ -395,6 +409,36 @@ export namespace Enrollment {
     HIDDEN = 1,
     VISIBLE = 2,
     FAVORITE = 3,
+  }
+}
+
+export class UsedSlipDays extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getEnrollmentid(): number;
+  setEnrollmentid(value: number): void;
+
+  getAssignmentid(): number;
+  setAssignmentid(value: number): void;
+
+  getUsedslipdays(): number;
+  setUsedslipdays(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UsedSlipDays.AsObject;
+  static toObject(includeInstance: boolean, msg: UsedSlipDays): UsedSlipDays.AsObject;
+  static serializeBinaryToWriter(message: UsedSlipDays, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UsedSlipDays;
+  static deserializeBinaryFromReader(message: UsedSlipDays, reader: jspb.BinaryReader): UsedSlipDays;
+}
+
+export namespace UsedSlipDays {
+  export type AsObject = {
+    id: number,
+    enrollmentid: number,
+    assignmentid: number,
+    usedslipdays: number,
   }
 }
 

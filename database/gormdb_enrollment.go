@@ -46,7 +46,7 @@ func (db *GormDB) UpdateEnrollment(enrol *pb.Enrollment) error {
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 func (db *GormDB) GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error) {
 	var enrollment pb.Enrollment
-	m := db.conn.Preload("Course").Preload("User")
+	m := db.conn.Preload("Course").Preload("User").Preload("UsedSlipDays")
 	if err := m.
 		Where(&pb.Enrollment{
 			CourseID: courseID,
@@ -78,11 +78,30 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 		}
 	}
 	var enrollments []*pb.Enrollment
-	if err := db.conn.Preload("User").Preload("Course").Preload("Group").Model(model).
+	if err := db.conn.Preload("User").
+		Preload("Course").
+		Preload("Group").
+		Preload("UsedSlipDays").
+		Model(model).
 		Where("status in (?)", statuses).
 		Association("Enrollments").
 		Find(&enrollments).Error; err != nil {
 		return nil, err
 	}
 	return enrollments, nil
+}
+
+// UpdateSlipDays updates used slip days for the given course enrollment
+func (db *GormDB) UpdateSlipDays(usedSlipDays []*pb.UsedSlipDays) error {
+	for _, slipDaysForAssignment := range usedSlipDays {
+		if err := db.updateSlipDays(slipDaysForAssignment); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// updateSlipdays updates or creates UsedSlipDays record
+func (db *GormDB) updateSlipDays(query *pb.UsedSlipDays) error {
+	return db.conn.Save(query).Error
 }

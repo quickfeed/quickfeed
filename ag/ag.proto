@@ -1,9 +1,16 @@
 syntax = "proto3";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
-//  [(gogoproto.moretags) = "sql:\"-\""] tag marks fields that will be ignored by the database
-// unique_index tags set SQL UNIQUE constraint for the database
+// Note on use of gogo's moretags to translate to a database schama via GORM
+//
+// To define fields that should be ignored by the database, use this tag:
+//   [(gogoproto.moretags) = "sql:\"-\""]
+//
+// To define multiple database attributes (fields) that combine to form a unique identifier,
+// use the following tag, replacing the <id_name> with the specific unique database identifier;
+// this will set the SQL UNIQUE constraint for the database:
+//   [(gogoproto.moretags) = "gorm:\"unique_index:<id_name>\""];
 
 
 // USERS AND USERGROUPS //
@@ -64,11 +71,12 @@ message Course {
     string provider = 7;
     uint64 organizationID = 8;
     string organizationPath = 9; // The organization's SCM name, e.g. uis-dat520-2020.
-    Enrollment.UserStatus enrolled = 10 [(gogoproto.moretags) = "sql:\"-\""];
+    uint32 slipDays = 10;
+    Enrollment.UserStatus enrolled = 11 [(gogoproto.moretags) = "sql:\"-\""];
 
-    repeated Enrollment enrollments = 11;
-    repeated Assignment assignments = 12;
-    repeated Group groups = 13;
+    repeated Enrollment enrollments = 12;
+    repeated Assignment assignments = 13;
+    repeated Group groups = 14;
 }
 
 message Courses {
@@ -117,6 +125,15 @@ message Enrollment {
     Group group = 8;
     UserStatus status = 9;
     DisplayState state = 10;
+    uint32 slipDaysRemaining = 11 [(gogoproto.moretags) = "sql:\"-\""];
+    repeated UsedSlipDays usedSlipDays = 12;
+}
+
+message UsedSlipDays {
+    uint64 ID = 1;
+    uint64 enrollmentID = 2;
+    uint64 assignmentID = 3;
+    uint32 usedSlipDays = 4;
 }
 
 message Enrollments {
@@ -334,7 +351,7 @@ service AutograderService {
 
     // submissions //
 
-    // Get latest submissions for all course assignmets for a user or a group.
+    // Get latest submissions for all course assignments for a user or a group.
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
     // Get lab submissions for every course user or every course group
     rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}

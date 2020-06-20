@@ -6,6 +6,7 @@ import {
 
 import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, SubmissionsForCourseRequest } from '../../proto/ag_pb';
 import { ILogger } from "./LogManager";
+import { sortAssignmentsByOrder } from '../componentHelper';
 
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
@@ -340,6 +341,7 @@ export class CourseManager {
                 return;
             }
         }
+        assignments = sortAssignmentsByOrder(assignments);
         let submissions : ISubmission[] = [];
         let labAuthorName = "";
         let wantGroupLinks = false;

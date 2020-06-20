@@ -900,6 +900,11 @@ func TestGetGroups(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantGroups := &pb.Groups{Groups: []*pb.Group{group1, group2}}
+	for _, grp := range wantGroups.Groups {
+		for _, grpEnrol := range grp.Enrollments {
+			grpEnrol.UsedSlipDays = []*pb.UsedSlipDays{}
+		}
+	}
 
 	// check that request on non-existent course returns error
 	_, err = ags.GetGroupsByCourse(ctx, &pb.CourseRequest{CourseID: 15})

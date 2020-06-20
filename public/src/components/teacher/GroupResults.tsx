@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Assignment, Course } from "../../../proto/ag_pb";
+import { Assignment, Course, Enrollment } from '../../../proto/ag_pb';
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
 import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
 import { ICellElement } from "../data/DynamicTable";
 import { generateCellClass, sortByScore } from "./labHelper";
-import { groupRepoLink, searchForLabs } from "../../componentHelper";
+import { getSlipDays, groupRepoLink, searchForLabs } from "../../componentHelper";
 
 interface IResultsProps {
     course: Course;
@@ -49,6 +49,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
             && this.state.submissionLink.assignment.getIsgrouplab()) {
             groupLab = <StudentLab
                 assignment={this.state.submissionLink}
+                slipdays={this.props.course.getSlipdays()}
                 showApprove={true}
                 onRebuildClick={
                     async () => {

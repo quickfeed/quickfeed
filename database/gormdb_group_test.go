@@ -218,6 +218,7 @@ func TestGormDBCreateAndGetGroup(t *testing.T) {
 			for _, enrollment := range enrollments {
 				enrollment.Course = nil
 				enrollment.Group = nil
+				enrollment.UsedSlipDays = nil
 				sorted[enrollment.UserID] = enrollment
 			}
 			for _, user := range group.Users {

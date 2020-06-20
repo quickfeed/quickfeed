@@ -45,7 +45,7 @@ func (db *GormDB) GetUserByRemoteIdentity(remote *pb.RemoteIdentity) (*pb.User, 
 // GetUserWithEnrollments returns user with the given ID with all enrollments.
 func (db *GormDB) GetUserWithEnrollments(userID uint64) (*pb.User, error) {
 	var user pb.User
-	if err := db.conn.Preload("Enrollments").First(&user, userID).Error; err != nil {
+	if err := db.conn.Preload("Enrollments").Preload("Enrollments.UsedSlipDays").First(&user, userID).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil

@@ -149,5 +149,5 @@ type ErrFailedSCM struct {
 // Error message includes name of the failed method and the original error message
 // from GitHub, to make it suitable for informative back-end logging
 func (e ErrFailedSCM) Error() string {
-	return "github method " + e.Method + "failed: " + e.GitError.Error()
+	return "github method " + e.Method + " failed: " + e.GitError.Error() + "\n" + e.Message
 }

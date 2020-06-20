@@ -419,7 +419,6 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     private toUILinks(sbLinks: CourseSubmissions): IStudentLabsForCourse[] {
         const crs = sbLinks.getCourse();
         if (!crs) {
-            console.log("Failed to generate lab results: no course in response");
             return [];
         }
         const uilinks: IStudentLabsForCourse[] = [];

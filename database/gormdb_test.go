@@ -94,20 +94,22 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	// user entries from the database will have to be enrolled as
 	// teacher ans student respectively
 	teacher.Enrollments = append(teacher.Enrollments, &pb.Enrollment{
-		ID:       1,
-		CourseID: course.ID,
-		UserID:   teacher.ID,
-		Status:   pb.Enrollment_TEACHER,
-		State:    pb.Enrollment_VISIBLE,
+		ID:           1,
+		CourseID:     course.ID,
+		UserID:       teacher.ID,
+		Status:       pb.Enrollment_TEACHER,
+		State:        pb.Enrollment_VISIBLE,
+		UsedSlipDays: []*pb.UsedSlipDays{},
 	})
 	teacher.RemoteIdentities = nil
 
 	student.Enrollments = append(student.Enrollments, &pb.Enrollment{
-		ID:       2,
-		CourseID: course.ID,
-		UserID:   student.ID,
-		Status:   pb.Enrollment_STUDENT,
-		State:    pb.Enrollment_VISIBLE,
+		ID:           2,
+		CourseID:     course.ID,
+		UserID:       student.ID,
+		Status:       pb.Enrollment_STUDENT,
+		State:        pb.Enrollment_VISIBLE,
+		UsedSlipDays: []*pb.UsedSlipDays{},
 	})
 	student.RemoteIdentities = nil
 
