@@ -13,6 +13,7 @@ import { EnrollmentView } from "./views/EnrollmentView";
 import { showLoader } from "../loader";
 import { CourseListView } from "./views/CourseListView";
 import { sortEnrollmentsByVisibility } from "../componentHelper";
+import { TeacherPage } from './TeacherPage';
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -132,7 +133,7 @@ export class StudentPage extends ViewPage {
             if (this.selectedAssignment) {
                 return <StudentLab
                     studentSubmission={this.selectedAssignment}
-                    showApprove={false}
+                    teacherPageView={false}
                     slipdays={this.selectedUserCourse.enrollment.getSlipdaysremaining()}
                     student={curUser}
                     courseURL={""}
@@ -163,10 +164,8 @@ export class StudentPage extends ViewPage {
             if (this.selectedAssignment) {
                 return <StudentLab
                     studentSubmission={this.selectedAssignment}
-                    showApprove={false}
-                    slipdays={this.selectedUserGroupCourse.enrollment.getSlipdaysremaining()}
                     teacherPageView={false}
-                    courseCreatorView={false}
+                    slipdays={this.selectedUserGroupCourse.enrollment.getSlipdaysremaining()}
                     courseURL={""}
                     student={curUser}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {

@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from '../../../proto/ag_pb';
-import { totalScore, userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline } from '../../componentHelper';
+import { Assignment, GradingBenchmark, GradingCriterion, Review, Submission, User } from "../../../proto/ag_pb";
+import { totalScore, userSubmissionLink, setDivider, submissionStatusSelector, getDaysAfterDeadline } from "../../componentHelper";
 import { ISubmission } from "../../models";
-import { formatDate } from '../../helper';
+import { formatDate } from "../../helper";
 import ReactTooltip from "react-tooltip";
 
 interface ReleaseProps {

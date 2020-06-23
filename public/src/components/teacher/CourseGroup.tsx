@@ -4,7 +4,7 @@ import { BootstrapButton, DynamicTable, Search } from "../../components";
 import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
-import { groupRepoLink, searchForGroups, userRepoLink } from '../../componentHelper';
+import { groupRepoLink, searchForGroups, userRepoLink } from "../../componentHelper";
 
 interface ICourseGroupProps {
     approvedGroups: Group[];

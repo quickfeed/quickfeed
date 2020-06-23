@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
+import { GradingBenchmark, GradingCriterion } from "../../../proto/ag_pb";
 import { GradeCriterion } from "./GradeCriterion";
 import ReactTooltip from "react-tooltip";
 
@@ -74,9 +74,9 @@ export class GradeBenchmark extends React.Component<GradeBenchmarkProps, GradeBe
                 onChange={(e) => this.setComment(e.target.value)}
                 onBlur={() => this.toggleEdit()}
                 onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                         this.updateComment();
-                    } else if (e.key === 'Escape') {
+                    } else if (e.key === "Escape") {
                         this.toggleEdit();
                     }
                 }}

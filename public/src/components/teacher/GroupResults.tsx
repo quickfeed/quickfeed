@@ -53,8 +53,6 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 courseURL={this.props.courseURL}
                 teacherPageView={false}
                 slipdays={this.props.course.getSlipdays()}
-                courseCreatorView={this.props.courseCreatorView}
-                showApprove={true}
                 onRebuildClick={
                     async () => {
                         if (this.state.submissionLink && this.state.submissionLink.submission) {

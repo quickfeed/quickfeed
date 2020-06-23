@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { BootstrapButton, CourseGroup, GroupForm, Results } from "../components";
+import { CourseGroup, GroupForm, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
 import { View, ViewPage } from "./ViewPage";
 
@@ -10,11 +10,11 @@ import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu"
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
-import { sortCoursesByVisibility, sortAssignmentsByOrder } from '../componentHelper';
+import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString } from "../componentHelper";
 import { AssigmnentView } from "./views/AssignmentView";
-import { GradingView } from "./views/GradingView";
-import { ISubmission } from '../models';
-import { FeedbackView } from './views/FeedbackView';
+import { ISubmission } from "../models";
+import { FeedbackView } from "./views/FeedbackView";
+import { ReleaseView } from "./views/ReleaseView";
 
 export class TeacherPage extends ViewPage {
 

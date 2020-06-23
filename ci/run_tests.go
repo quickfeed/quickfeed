@@ -126,7 +126,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		UserID:       rData.Repo.UserID,
 		GroupID:      rData.Repo.GroupID,
 		Status:       approvedStatus,
-	})
+	}
 	if err != nil {
 		logger.Errorf("Failed to add submission to database: %w", err)
 		return

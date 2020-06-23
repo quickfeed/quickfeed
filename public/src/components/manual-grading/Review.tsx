@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Assignment, GradingBenchmark, GradingCriterion, Review } from "../../../proto/ag_pb";
 import { ISubmission } from "../../models";
-import { GradeBenchmark } from './GradeBenchmark';
-import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider } from '../../componentHelper';
+import { GradeBenchmark } from "./GradeBenchmark";
+import { deepCopy, userSubmissionLink, submissionStatusToString, setDivider } from "../../componentHelper";
 
 interface ReviewPageProps {
     assignment: Assignment;

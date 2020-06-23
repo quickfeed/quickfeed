@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Assignment, Course, Enrollment, Group, Review, User, Submission, GradingBenchmark, GradingCriterion } from '../proto/ag_pb';
-import { IAllSubmissionsForEnrollment, ISubmissionLink, IStudentLabsForCourse, ISubmission } from './models';
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from './models';
 
 export function sortEnrollmentsByVisibility(enrols: Enrollment[], withHidden: boolean): Enrollment[] {
     let sorted: Enrollment[] = [];
@@ -90,7 +90,7 @@ export function sortUsersByAdminStatus(users: Enrollment[]): Enrollment[] {
     return users.sort((x, y) => ((x.getUser()?.getIsadmin() ?? false) < (y.getUser()?.getIsadmin() ?? false) ? 1 : -1));
 }
 
-export function getSlipDays(allLabs: IStudentLabsForCourse[], selected: ISubmission, forGroups: boolean): number {
+export function getSlipDays(allLabs: IAllSubmissionsForEnrollment[], selected: ISubmission, forGroups: boolean): number {
     let days = 0;
     const wantID = forGroups ? selected.groupid : selected.userid;
     allLabs.forEach(item => {

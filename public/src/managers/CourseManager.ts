@@ -4,9 +4,9 @@ import {
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from "../../proto/ag_pb";
 import { ILogger } from "./LogManager";
-import { sortAssignmentsByOrder } from '../componentHelper';
+import { sortAssignmentsByOrder } from "../componentHelper";
 
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
@@ -248,7 +248,7 @@ export class CourseManager {
     /**
      * updateAssignments updates the assignments on the backend database
      * for the given course. The assignment data is collected from the
-     * assignment.yml files found in the course's tests repository; there
+     * assignment.yml files found in the course"s tests repository; there
      * should be one assignment.yml file per lab assignment.
      */
     public async updateAssignments(courseID: number): Promise<boolean> {

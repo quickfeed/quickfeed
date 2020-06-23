@@ -7,12 +7,8 @@ interface IStudentLabProps {
     studentSubmission: ISubmissionLink;
     student: User;
     courseURL: string;
-    showApprove: boolean;
     slipdays: number;
     teacherPageView: boolean;
-    courseCreatorView: boolean;
-    reviewers: string[];
-    teacherView: boolean;
     onApproveClick: (status: Submission.Status, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
@@ -26,7 +22,7 @@ export class StudentLab extends React.Component<IStudentLabProps> {
             courseURL={this.props.courseURL}
             onApproveClick={this.props.onApproveClick}
             onRebuildClick={this.props.onRebuildClick}
-            teacherView={this.props.teacherView}
+            teacherPageView={this.props.teacherPageView}
             >
         </LabResultView>;
     }

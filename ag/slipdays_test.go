@@ -94,7 +94,7 @@ func TestSlipDays(t *testing.T) {
 					}
 					submission := &pb.Submission{
 						AssignmentID: sd.labs[i].ID,
-						Approved:     false,
+						Status:       pb.Submission_NONE,
 					}
 					// emulate advancing time for this submission
 					testNow = testNow.Add(time.Duration(sd.submissions[i][j]) * days)
@@ -126,7 +126,7 @@ func TestBadDeadlineFormat(t *testing.T) {
 		Deadline: "14-Sep-2020",
 	}
 	lab1.ID = 1
-	submission := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
+	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected parsing error due to incorrect deadline date format")
@@ -145,7 +145,7 @@ func TestMismatchingAssignmentID(t *testing.T) {
 		Deadline: testNow.Add(time.Duration(2) * days).Format(layout),
 	}
 	lab1.ID = 1
-	submission := &pb.Submission{Approved: false, AssignmentID: lab1.ID + 1}
+	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID + 1}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (assignment.ID != submission.AssignmentID)")
@@ -164,7 +164,7 @@ func TestMismatchingCourseID(t *testing.T) {
 		Deadline: testNow.Add(time.Duration(2) * days).Format(layout),
 	}
 	lab1.ID = 1
-	submission := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
+	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err == nil {
 		t.Errorf("expected invariant violation since (enrollment.CourseID != assignment.CourseID)")
@@ -180,7 +180,7 @@ func ExampleEnrollment_GetUsedSlipDays() {
 	// lab1's deadline passed two days ago
 	lab1 := a(-2)
 	lab1.ID = 1
-	submission := &pb.Submission{Approved: false, AssignmentID: lab1.ID}
+	submission := &pb.Submission{Status: pb.Submission_NONE, AssignmentID: lab1.ID}
 	fmt.Println(enrol.GetUsedSlipDays())
 	err := enrol.UpdateSlipDays(testNow, lab1, submission)
 	if err != nil {

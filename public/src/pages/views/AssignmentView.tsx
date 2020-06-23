@@ -1,7 +1,6 @@
 import * as React from "react";
-import { Assignment, GradingBenchmark, GradingCriterion } from '../../../proto/ag_pb';
+import { Assignment, GradingBenchmark, GradingCriterion } from "../../../proto/ag_pb";
 import { EditBenchmark } from "../../components/manual-grading/EditBenchmark";
-import ReactTooltip from "react-tooltip";
 
 interface AssignmentViewProps {
     assignment: Assignment;
@@ -97,9 +96,9 @@ export class AssigmnentView extends React.Component<AssignmentViewProps, Assignm
         onChange={(e) => this.setNewHeader(e.target.value)}
         onBlur={() => this.toggleAdd()}
         onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
                 this.addNewBenchmark();
-            } else if (e.key === 'Escape') {
+            } else if (e.key === "Escape") {
                 this.toggleAdd();
             }
         }}

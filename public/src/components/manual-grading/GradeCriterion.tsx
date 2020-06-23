@@ -1,5 +1,5 @@
 import * as React from "react";
-import { GradingCriterion } from '../../../proto/ag_pb';
+import { GradingCriterion } from "../../../proto/ag_pb";
 import ReactTooltip from "react-tooltip";
 
 interface GradeCriterionProps {
@@ -107,9 +107,9 @@ export class GradeCriterion extends React.Component<GradeCriterionProps, GradeCr
                 onChange={(e) => this.setComment(e.target.value)}
                 onBlur={() => this.toggleEdit()}
                 onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                         this.updateComment();
-                    } else if (e.key === 'Escape') {
+                    } else if (e.key === "Escape") {
                         this.toggleEdit();
                     }
                 }

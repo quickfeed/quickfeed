@@ -6,7 +6,7 @@ if [ $# -ne 1 ] && [ $# -ne 3 ]; then
 fi
 
 username=$1
-rhost="ag2.ux.uis.no"
+rhost="ag3.ux.uis.no"
 lport="8081"
 
 if [[ $# -eq 3 ]]; then
@@ -38,5 +38,3 @@ case $username in
 esac
 
 ssh -v -R $rport:localhost:$lport -N $username@$rhost
-
-# ssh -v -R 9090:localhost:9090 -N veray@ag2.ux.uis.no

@@ -56,34 +56,8 @@ export class Results extends React.Component<IResultsProps, IResultsState> {
                 studentSubmission={this.state.selectedSubmission}
                 courseURL={this.props.courseURL}
                 student={this.state.selectedStudent.enrollment.getUser() ?? new User()}
-                showApprove={true}
+                teacherPageView={true}
                 slipdays={this.state.selectedSubmission.submission ? getSlipDays(this.props.allCourseSubmissions, this.state.selectedSubmission.submission, false) : 0}
-                getReviewers={this.props.getReviewers}
-                setApproved={async (submissionID: number, status: Submission.Status) => {
-                    if (currentLab && currentSubmission && currentSubmission.id === submissionID) {
-                        currentSubmission.status = status;
-                        const ans = await this.props.setApproved(currentSubmission);
-                        if (ans) {
-                            currentSubmission.status = status;
-                            this.setState({
-                                selectedSubmission: currentLab,
-                            });
-                            // TODO: make sure the state is getting properly updated here
-                        }
-                    }
-                }}
-                setReady={async (submissionID: number, ready: boolean) => {
-                    if (currentLab && currentSubmission && currentSubmission.id === submissionID) {
-                        currentSubmission.released = ready;
-                        const ans = await this.props.setReady(currentSubmission);
-                        if (ans) {
-                            currentSubmission.released = ready;
-                            this.setState({
-                                selectedSubmission: currentLab,
-                            });
-                        }
-                    }
-                }}
                 onRebuildClick={
                     async () => {
                         if (this.state.selectedSubmission && this.state.selectedSubmission.submission) {

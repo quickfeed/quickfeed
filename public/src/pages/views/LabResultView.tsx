@@ -1,18 +1,15 @@
 import * as React from "react";
 import { LabResult, LastBuild, LastBuildInfo, Row } from "../../components";
-import { ISubmissionLink, ISubmission } from '../../models';
-import { User, Submission } from '../../../proto/ag_pb';
-import { Release } from '../../components/manual-grading/Release';
-import { submissionStatusToString } from '../../componentHelper';
+import { ISubmissionLink, ISubmission } from "../../models";
+import { User, Submission } from "../../../proto/ag_pb";
+import { Release } from "../../components/manual-grading/Release";
 interface ILabInfoProps {
     submissionLink: ISubmissionLink;
     student: User;
     courseURL: string;
-    showApprove: boolean;
     slipdays: number;
     teacherPageView: boolean;
-    courseCreatorView: boolean;
-    onApproveClick: (approve: boolean) => void;
+    onApproveClick: (status: Submission.Status, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
@@ -29,7 +26,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
                             <LabResult
                                 assignment_id={this.props.submissionLink.assignment.getId()}
                                 submission_id={latest.id}
-                                teacherPageView={this.props.teacherPageView}
+                                teacherView={this.props.teacherPageView}
                                 lab={this.props.submissionLink.assignment.getName()}
                                 progress={latest.score}
                                 status={latest.status}
@@ -73,7 +70,7 @@ export class LabResultView extends React.Component<ILabInfoProps> {
     }
 
     private renderReviewInfo(submission: ISubmission): JSX.Element {
-        if (this.props.teacherView) {
+        if (this.props.teacherPageView) {
             return <div className="row">
             </div>
         }
