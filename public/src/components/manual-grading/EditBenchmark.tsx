@@ -49,7 +49,12 @@ export class EditBenchmark extends React.Component<EditBenchmarkProps, EditBench
 
     private removeButton(): JSX.Element {
         return <button className="btn btn-danger btn-xs bm-btn" onClick={
-            () => this.props.onDelete()
+            () => {
+                this.setState({
+                    editing: false,
+                })
+                this.props.onDelete();
+            }
         }>X</button>
     }
 
