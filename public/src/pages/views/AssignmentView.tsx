@@ -19,7 +19,7 @@ interface AssignmentViewState {
     benchmarks: GradingBenchmark[];
 }
 
-export class AssigmnentView extends React.Component<AssignmentViewProps, AssignmentViewState> {
+export class AssignmentView extends React.Component<AssignmentViewProps, AssignmentViewState> {
 
     constructor(props: AssignmentViewProps) {
         super(props);

@@ -5,13 +5,13 @@ import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager }
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
-import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, Submission, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
 import { showLoader } from "../loader";
-import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString } from "../componentHelper";
-import { AssigmnentView } from "./views/AssignmentView";
+import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString } from '../componentHelper';
+import { AssignmentView } from "./views/AssignmentView";
 import { ISubmission } from "../models";
 import { FeedbackView } from "./views/FeedbackView";
 import { ReleaseView } from "./views/ReleaseView";
@@ -431,10 +431,6 @@ export class TeacherPage extends ViewPage {
         return showLoader();
     }
 
-    private setConfirmString(approve: boolean): string {
-        return approve ? "approve" : "undo approval for";
-    }
-
     private async fetchCourseRepos(courseID: number): Promise<Map<Repository.Type, string>> {
         return this.courseMan.getRepositories(courseID,
                 [Repository.Type.COURSEINFO,
@@ -456,7 +452,7 @@ export class TeacherPage extends ViewPage {
         const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
 
         return <div className="row">{
-            assignments.map((a, i) => <AssigmnentView
+            sortAssignmentsByOrder(assignments).map((a, i) => <AssignmentView
                 key={i}
                 assignment={a}
                 updateBenchmark={(bm: GradingBenchmark) => {
@@ -477,7 +473,7 @@ export class TeacherPage extends ViewPage {
                 removeCriterion={(c: GradingCriterion) => {
                     return this.courseMan.deleteCriterion(c)
                 }}
-            ></AssigmnentView>)
+            ></AssignmentView>)
             }</div>
     }
 }
