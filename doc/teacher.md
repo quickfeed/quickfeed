@@ -4,12 +4,15 @@
 
 The system has three **user** roles.
 
-- **Administrators** can create new courses and promote other users to become administrator. It is common that all teachers that are responsible for one or more courses be an administrator. The administrator role is system-wide.
+- **Administrator** role is system-wide. Only administrators can create new courses and promote or demote other administrators.
 
-- **Teachers** are associated with one or more courses. A teacher can view results for all students in his course(s). A course can have many teachers. A teacher is anyone associated with the course that are not students, such as professors and teaching assistants.
+- **Teachers** are associated with one or more courses. An administrator who creates a new course becomes **Course creator** teacher for that course. The teacher status of a course creator can never be revoked. A course creator teacher can promote other users to teachers and demote them back to students.
+
+Teachers can view and edit all the course related data: student enrollments, student groups, lab assignment submissions. 
 
 - **Students** are associated with one or more courses. A student can view his own results and progress on individual and group assignments.
 
+[//] #(This is copied directly from the old MD and has to be updated, or even removed? )
 The following concepts are important to understand.
 
 - **Assignments** are organized into folders in a git repository.
@@ -54,7 +57,7 @@ Autograder uses the following repository structure. These will be created automa
 
 *In Autograder, Teacher means any teaching staff, including teaching assistants and professors alike.*
 
-The `assignments` folder has a separate folder for each assignment. The short name for each assignment can be provided in the folder name, for example `single-paxos` or `state-machine-replication`. Typically, the deadline gleaned from the `assignment.yml` file will determine the ordering of the assignments as they appear in lists on Autograder. Some courses may simply use short names, such as `lab1`, `lab2`, and so on. These will be sorted by the frontend as expected.
+The `assignments` folder has a separate folder for each assignment. The short name for each assignment can be provided in the folder name, for example `single-paxos` or `state-machine-replication`. Typically, the assignment id gleaned from the `assignment.yml` file will determine the ordering of the assignments as they appear in lists on Autograder. Some courses may simply use short names, such as `lab1`, `lab2`, and so on. These will be sorted by the frontend as expected.
 
 The `username` is actually the github user name. This repository will initially be empty, and the student will need to set up a remote label called `assignments` pointing to the `assignments` repository, and pull from it to get any template code provided by the teaching staff.
 
@@ -108,9 +111,8 @@ To allow the automated build and testing of student solutions, you have to provi
 The `tests` repository must contain one `assignment.yaml` file for each lab assignment, stored in the corresponding assignment's folder, e.g. for `lab1/assignment.yaml` we may have something like this:
 ```
 assignmentid: 1
-name: "lab1"
 language: "go"
-deadline: "2019-09-23 12:00:00"
+deadline: "2019-10-25T23:00:00"
 autoapprove: false
 scorelimit: 80
 isgrouplab: false
@@ -136,5 +138,3 @@ Comments can be left to every criterion checkpoint or to the whole group of grad
 **Release** page gives access to the overview of the results of manual reviews for all course students and assignments. There the user can see submission score for each review, the mean score for all ready reviews, set a final grade/status for a student submission (**Apptoved/Rejected/Revision**), look at all available reviews for each submission, and *release* the results to reveal them to students or student groups.
 
 It is also possible to mass approve submissions or mass release reviews for an assignment by chosing a minimal score and then pressing `Approve all` or `Release all` correspondingly. Every submission with a score equal or above the set minimal score will be approved or reviews to such submissions will be released.
-
-

@@ -66,7 +66,6 @@ sudo service docker restart
     ```
     ``` 
     go get github.com/autograde/aguis
-    go get github.com/autograde/kit (????) 
     cd $GOPATH/src/autograde/aguis/public
     npm install
     ```

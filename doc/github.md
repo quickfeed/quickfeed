@@ -16,6 +16,4 @@
 
     4. Skip Invite members; Autograder handles this.
     5. Skip Organization details.
-    6. Go to the organization's Settings menu, click Webhooks and then Add webhook.
-        1. Enter the Payload URL for Autograder to receive events, e.g. `https://ag2.ux.uis.no/hook/github/events`.
-        2. TODO add more details about Secret and what events to send etc.
+    6. There is no need to set up a webhook for organizations anymore, it will be added automatically on course creation.

@@ -95,3 +95,18 @@ To add, edit or remove a cron job in the user specific cron table, run `crontab 
 **Important:** Cron will send the job outpus an email to every email address provided for the user. To disable emails, discard job output by adding `>/dev/null 2>&1` at the end of the job description.
 
 
+## Server metrics
+
+Statistics about connections and requests is supplied automatically by the Envoy proxy on `localhost:9901`. It is possible to access the data directly with curl by running `curl 127.0.0.1:9901/stats` in command line. The output can be formatted by adding a `format` option, e.g. `curl 127.0.0.1:9901/stats?format=json' or `curl 127.0.0.1:9901/stats?format=prometheus` or, alternatively, `curl 127.0.0.1:9901/stats/prometheus'.
+Statistics about specific gRPC methods is provided by the server on `localhost:9097`.
+
+### Prometheus
+[Documentation](https://prometheus.io/docs/introduction/overview/)
+Prometheus runs on port `:9095`, it scrapes metrics from the Envoy proxy and the gRPC server every 5 seconds.
+To start Prometheus with all the required options run `sudo prometheus --web.listen-address="localhost:9095" --config.file=prometheus.yml --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &`, or `make prometheus'.
+
+
+### Grafana
+[Documentation](https://grafana.com/docs/grafana/latest/)
+Grafana imports the data collected by Prometheus and offers multiple visualization options. Most importantly, it can plot data from several metrics on the same graph, and also allows using predefined queries in Prometheus' query language `PromQL`. Grafana runs on the internal port `:3000` behind the NGINX proxy. It is currently available by `junaid.itest.run/grafana`. To be able to login contact a member of the Autograder team.
+Configuration file to use is `etc/grafafa/grafana.ini'. Grafana will ignore any changes to the configuration file unless restarted. To restart run `sudo service grafana-server restart`.
