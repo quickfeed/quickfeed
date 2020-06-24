@@ -3,7 +3,7 @@ import { Assignment, Course, Group, Review, User } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 import { ReviewPage } from "../../components/manual-grading/Review";
 import { Search } from "../../components";
-import { selectFromSubmissionLinks, mapAllSubmissions, searchForUsers, searchForGroups } from "../../componentHelper";
+import { selectFromSubmissionLinks, mapAllSubmissions, searchForUsers, searchForGroups, sortAssignmentsByOrder } from '../../componentHelper';
 
 interface FeedbackViewProps {
     course: Course;
@@ -61,7 +61,7 @@ export class FeedbackView extends React.Component<FeedbackViewProps, FeedbackVie
                     /></div>
                     <div className="form-group col-md-4">
                         <select className="form-control" onChange={(e) => this.toggleAssignment(e.target.value)}>
-                        {this.props.assignments.map((a, i) => <option
+                        {sortAssignmentsByOrder(this.props.assignments).map((a, i) => <option
                                 key={i}
                                 value={a.getId()}
                         >{a.getName()}</option>)}Select assignment</select>

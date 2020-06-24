@@ -2,7 +2,7 @@ import * as React from "react";
 import { Assignment, Course, Group, User, Submission } from "../../../proto/ag_pb";
 import { IAllSubmissionsForEnrollment, ISubmission, ISubmissionLink } from "../../models";
 import { Search } from "../../components";
-import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForUsers, searchForGroups } from "../../componentHelper";
+import { mapAllSubmissions, sortStudentsForRelease, totalScore, selectFromSubmissionLinks, searchForUsers, searchForGroups, sortAssignmentsByOrder } from '../../componentHelper';
 import { Release } from "../../components/manual-grading/Release";
 
 interface ReleaseViewProps {
@@ -63,7 +63,7 @@ export class ReleaseView extends React.Component<ReleaseViewProps, ReleaseViewSt
                 /></div>
                  <div className="form-group col-md-4">
                  <select className="form-control" onChange={(e) => this.toggleAssignment(e.target.value)}>
-                 {this.props.assignments.map((a, i) => <option
+                 {sortAssignmentsByOrder(this.props.assignments).map((a, i) => <option
                             key={i}
                             value={a.getId()}
                        >{a.getName()}</option>)}Select assignment
