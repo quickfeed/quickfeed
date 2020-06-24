@@ -1,20 +1,22 @@
 import * as React from "react";
-import { Assignment } from "../../../proto/ag_pb";
+import { Assignment, Submission } from "../../../proto/ag_pb";
 import { Row } from "../../components";
 import { formatDate } from "../../helper";
 import { ISubmission } from "../../models";
+import { submissionStatusToString, getDaysAfterDeadline } from '../../componentHelper';
 
-interface ILastBuildInfo {
+interface ILastBuildInfoProps {
     submission: ISubmission;
     assignment: Assignment;
+    slipdays: number;
 }
 
 interface ILastBuildInfoState {
     rebuilding: boolean;
 }
 
-export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInfoState> {
-    constructor(props: ILastBuildInfo) {
+export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBuildInfoState> {
+    constructor(props: ILastBuildInfoProps) {
         super(props);
         this.state = {
             rebuilding: false,
@@ -24,6 +26,7 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
     public render() {
         const alltests = this.props.submission.testCases ? this.props.submission.testCases.length : 0;
         const passedAllTests = this.props.submission.passedTests === alltests ? "passing" : "";
+        const slipDaysRow = <tr><td key="5">Slip days</td><td key="desc5">{this.props.slipdays}</td></tr>;
         return (
             <div>
                 <Row>
@@ -36,8 +39,8 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
                                 <tr><td key="2">Deadline</td><td key="desc2">{formatDate(this.props.assignment.getDeadline())}</td></tr>
                                 <tr><td key="3">Tests passed</td><td key="desc3"><div className={passedAllTests}>{this.props.submission.passedTests} / {alltests}</div></td></tr>
                                 <tr><td key="4">Execution time</td><td key="desc4">{this.formatTime(this.props.submission.executionTime)} seconds </td></tr>
-                                <tr><td key="5">Slip days</td><td key="desc5">5</td></tr>
-                            </tbody>
+                                {this.props.assignment.getIsgrouplab() ? null : slipDaysRow}
+                                </tbody>
                         </table>
                     </div>
                 </Row>
@@ -52,7 +55,8 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
         if (delivered >= deadline) {
             classString = "past-deadline";
         }
-        return <div className={classString}>{formatDate(delivered)}</div>;
+        const afterDeadline = getDaysAfterDeadline(deadline, delivered);
+        return <div className={classString}>{formatDate(delivered) + (afterDeadline > 0 ? afterDeadline + "  (" + afterDeadline + " days after deadline)" : "")}</div>;
     }
 
     private formatTime(executionTime: number): number {
@@ -60,7 +64,11 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
     }
 
     private setStatusString(): JSX.Element {
-        return this.props.submission.approved ? <div className="greentext">Approved</div> : <div>Not approved</div>;
+        const className = this.props.submission.status === Submission.Status.APPROVED ? "greentext" : "";
+        if (this.props.assignment.getReviewers() > 0) {
+            return this.props.submission.status === Submission.Status.APPROVED ? <div className="greentext">Approved</div> : <div>{submissionStatusToString(this.props.submission.status)}</div>
+        }
+        return <div className={className}>{submissionStatusToString(this.props.submission.status)}</div>;
     }
 
 }

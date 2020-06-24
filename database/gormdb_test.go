@@ -82,25 +82,34 @@ func TestGormDBGetUserWithEnrollments(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(student.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	query := &pb.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
 	// user entries from the database will have to be enrolled as
 	// teacher ans student respectively
 	teacher.Enrollments = append(teacher.Enrollments, &pb.Enrollment{
-		ID:       1,
-		CourseID: course.ID,
-		UserID:   teacher.ID,
-		Status:   pb.Enrollment_TEACHER,
+		ID:           1,
+		CourseID:     course.ID,
+		UserID:       teacher.ID,
+		Status:       pb.Enrollment_TEACHER,
+		State:        pb.Enrollment_VISIBLE,
+		UsedSlipDays: []*pb.UsedSlipDays{},
 	})
 	teacher.RemoteIdentities = nil
 
 	student.Enrollments = append(student.Enrollments, &pb.Enrollment{
-		ID:       2,
-		CourseID: course.ID,
-		UserID:   student.ID,
-		Status:   pb.Enrollment_STUDENT,
+		ID:           2,
+		CourseID:     course.ID,
+		UserID:       student.ID,
+		Status:       pb.Enrollment_STUDENT,
+		State:        pb.Enrollment_VISIBLE,
+		UsedSlipDays: []*pb.UsedSlipDays{},
 	})
 	student.RemoteIdentities = nil
 
@@ -261,7 +270,7 @@ func TestGormDBGetAssignment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.GetAssignmentsByCourse(10); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetAssignmentsByCourse(10, false); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 
@@ -303,7 +312,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assignments, err := db.GetAssignmentsByCourse(1)
+	assignments, err := db.GetAssignmentsByCourse(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -393,7 +402,12 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 	}
 
 	// Accept enrollment.
-	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
@@ -412,14 +426,16 @@ func TestGormDBAcceptRejectEnrollment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Get course's rejected enrollments.
-	rejectedEnrollments, err := db.GetEnrollmentsByCourse(course.ID, pb.Enrollment_REJECTED)
+	// Get all enrollments.
+	allEnrollments, err := db.GetEnrollmentsByCourse(course.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(rejectedEnrollments) > 0 {
-		t.Fatalf("have %v want 0 rejected enrollment, REJECTED status has been deprecated", len(rejectedEnrollments))
+	for _, enrol := range allEnrollments {
+		if enrol.UserID == user.ID && enrol.CourseID == course.ID {
+			t.Fatalf("Enrollment %+v must have been deleted on rejection, but still found in the database", enrol)
+		}
 	}
 }
 
@@ -470,7 +486,12 @@ func TestGormDBGetCoursesByUser(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, c2.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(user.ID, c3.ID, pb.Enrollment_STUDENT); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: c3.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
@@ -862,7 +883,12 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
@@ -886,17 +912,19 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		ID:           submissions[0].ID,
 		AssignmentID: assigment.ID,
 		UserID:       user.ID,
-		Approved:     false,
+		Status:       pb.Submission_NONE,
+		Reviews:      []*pb.Review{},
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
 	}
 
-	if submissions[0].GetApproved() == true {
+	if submissions[0].GetStatus() != pb.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
 
-	err = db.UpdateSubmission(submissions[0].GetID(), false)
+	// approved must stay false
+	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -904,11 +932,11 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetApproved() == true {
+	if submissions[0].GetStatus() != pb.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-
-	err = db.UpdateSubmission(submissions[0].GetID(), true)
+	submissions[0].Status = pb.Submission_APPROVED
+	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -916,7 +944,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetApproved() != true {
+	if submissions[0].GetStatus() != pb.Submission_APPROVED {
 		t.Errorf("expected submission to be 'approved' but got 'not-approved'")
 	}
 }
@@ -970,7 +998,12 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
@@ -994,6 +1027,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		ID:           submissions[0].ID,
 		AssignmentID: assigment.ID,
 		UserID:       user.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
@@ -1025,7 +1059,12 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(user.ID, c1.GetID(), pb.Enrollment_STUDENT); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: c1.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1058,6 +1097,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	submission1 := pb.Submission{
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
@@ -1066,6 +1106,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		ID:           1,
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
@@ -1074,6 +1115,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		ID:           2,
 		UserID:       user.ID,
 		AssignmentID: assignment2.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
@@ -1235,7 +1277,12 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
 		case pb.Enrollment_STUDENT:
-			err = db.UpdateEnrollmentStatus(users[i].ID, course.ID, pb.Enrollment_STUDENT)
+			query := &pb.Enrollment{
+				UserID:   users[i].ID,
+				CourseID: course.ID,
+				Status:   pb.Enrollment_STUDENT,
+			}
+			err = db.UpdateEnrollment(query)
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -1282,6 +1329,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	submission1 := pb.Submission{
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
@@ -1290,6 +1338,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		ID:           1,
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
@@ -1298,6 +1347,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		ID:           2,
 		GroupID:      group.ID,
 		AssignmentID: assignment2.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
@@ -1306,6 +1356,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		ID:           3,
 		UserID:       users[0].ID,
 		AssignmentID: assignment3.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission4); err != nil {
 		t.Fatal(err)
@@ -1395,7 +1446,7 @@ func TestGetRepositoriesByOrganization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []*pb.Repository{&repoCourseInfo, &repoSolution, &repoAssignment}
+	want := []*pb.Repository{&repoCourseInfo, &repoAssignment, &repoSolution}
 
 	gotRepo, err := db.GetRepositories(&pb.Repository{OrganizationID: 120})
 	if err != nil {
@@ -1444,7 +1495,12 @@ func TestDeleteGroup(t *testing.T) {
 		err := errors.New("enrollment status not implemented")
 		switch enrollments[i] {
 		case pb.Enrollment_STUDENT:
-			err = db.UpdateEnrollmentStatus(users[i].ID, course.ID, pb.Enrollment_STUDENT)
+			query := &pb.Enrollment{
+				UserID:   users[i].ID,
+				CourseID: course.ID,
+				Status:   pb.Enrollment_STUDENT,
+			}
+			err = db.UpdateEnrollment(query)
 		}
 		if err != nil {
 			t.Fatal(err)

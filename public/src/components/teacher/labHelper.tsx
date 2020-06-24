@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Assignment } from "../../../proto/ag_pb";
-import { IStudentLabsForCourse, IStudentLab } from "../../models";
+import { Assignment, Submission } from "../../../proto/ag_pb";
+import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../../models";
 
-export function sortByScore(students: IStudentLabsForCourse[], labs: Assignment[], isGroupLab: boolean): IStudentLabsForCourse[] {
+export function sortByScore(students: IAllSubmissionsForEnrollment[], labs: Assignment[], isGroupLab: boolean): IAllSubmissionsForEnrollment[] {
     // if no assignments yet, disregard
     if (labs.length < 1) {
         return students;
@@ -26,8 +26,8 @@ export function sortByScore(students: IStudentLabsForCourse[], labs: Assignment[
         assignmentID = latestLab.getId();
         assignmentIndex = labs.indexOf(latestLab);
     }
-    const withSubmission: IStudentLabsForCourse[] = [];
-    const withoutSubmission: IStudentLabsForCourse[] = [];
+    const withSubmission: IAllSubmissionsForEnrollment[] = [];
+    const withoutSubmission: IAllSubmissionsForEnrollment[] = [];
     // split all students into two arrays: with and without submission to the last lab
     students.forEach((ele) => {
         let hasSubmission = false;
@@ -63,29 +63,8 @@ export function sortByScore(students: IStudentLabsForCourse[], labs: Assignment[
     return fullList;
 }
 
-export function slugify(str: string): string {
-
-    str = str.replace(/^\s+|\s+$/g, "").toLowerCase();
-
-    // Remove accents, swap ñ for n, etc
-    const from = "ÁÄÂÀÃÅČÇĆĎÉĚËÈÊẼĔȆÍÌÎÏŇÑÓÖÒÔÕØŘŔŠŤÚŮÜÙÛÝŸŽáäâàãåčçćďéěëèêẽĕȇíìîïňñóöòôõøðřŕšťúůüùûýÿžþÞĐđßÆa·/_,:;";
-    const to   = "AAAAAACCCDEEEEEEEEIIIINNOOOOOORRSTUUUUUYYZaaaaaacccdeeeeeeeeiiiinnooooooorrstuuuuuyyzbBDdBAa------";
-    for (let i = 0 ; i < from.length ; i++) {
-        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
-    }
-
-    // Remove invalid chars, replace whitespace by dashes, collapse dashes
-    str = str.replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-");
-
-    return str;
-}
-
-export function generateGroupRepoLink(groupName: string, courseURL: string): JSX.Element {
-    return <a href={courseURL + slugify(groupName)} target="_blank">{ groupName }</a>;
-}
-
-export function generateCellClass(lab: IStudentLab): string {
-    if (lab.submission && lab.submission.approved) {
+export function generateCellClass(lab: ISubmissionLink): string {
+    if (lab.submission && lab.submission.status === Submission.Status.APPROVED) {
         return "approved-cell";
     }
     const passing = ((lab.assignment.getScorelimit() > 0)

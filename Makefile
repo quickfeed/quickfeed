@@ -9,10 +9,9 @@ grpcweb-url			:= https://github.com/grpc/grpc-web/releases/download/$(grpcweb-ve
 grpcweb-path		:= /usr/local/bin/$(protoc-grpcweb)
 sedi				:= $(shell sed --version >/dev/null 2>&1 && echo "sed -i --" || echo "sed -i ''")
 testorg				:= ag-test-course
-endpoint 			:= junaid.itest.run
-ag2endpoint			:= test.itest.run
+endpoint 			:= test.itest.run
 agport				:= 8081
-ag2port				:= 3006
+pbpath				:= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
 
 # necessary when target is not tied to a file
 .PHONY: download install-tools install ui proto devtools grpcweb envoy-build envoy-run scm
@@ -35,7 +34,7 @@ ui:
 
 proto:
 	@echo Compiling Autograders proto definitions
-	@cd ag; protoc -I=. -I=$(GOPATH)/src -I=$(GOPATH)/src/github.com/gogo/protobuf/protobuf --gogofast_out=plugins=grpc,\
+	@cd ag; protoc -I=. -I=$(pbpath) --gogofast_out=plugins=grpc,\
 	Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,\
 	Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types,\
@@ -59,8 +58,8 @@ grpcweb:
 npmtools:
 	@echo "Install webpack and typescript compiler (requires sudo access)"
 	@npm install -g --save typescript
-	@npm install -g webpack
-	@npm install -g webpack-cli
+	@npm install -g --force webpack
+	@npm install -g --force webpack-cli
 	@npm install -g tslint
 	@npm install -g serve
 
@@ -69,7 +68,7 @@ brew:
 	@echo "Install homebrew packages needed for development"
 	@brew update
 	@brew cleanup
-	@brew install go protobuf npm webpack docker
+	@brew install go protobuf npm docker
 
 envoy-build:
 	@echo "Building Autograder Envoy proxy"
@@ -110,14 +109,6 @@ purge: scm
 run:
 	@aguis -service.url $(endpoint) -http.addr :$(agport) -http.public ./public
 
-# to run server on itest.run, ag2port variable must correspond to endpoint
-# endpoint is used for github callbacks, and port is used to proxy client calls
-# (TODO): this has to be moved to dev/testing documentation
-
-# will run the server as a background job, will still log to stdout
-itestrun:
-	@aguis -service.url $(ag2endpoint) -database.file ./temp.db -http.addr :$(ag2port) -http.public ./public &
-
 # test nginx configuration syntax
 nginx-test:
 	@sudo nginx -t
@@ -137,4 +128,4 @@ remote:
 	@cd ./public/src/managers/; sed -i 's/"http:\/\/localhost:8080"/"https:\/\/" + window.location.hostname/g' GRPCManager.ts
 
 prometheus:
-	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &
+	sudo prometheus --web.listen-address="localhost:9095" --config.file=metrics/prometheus.yml --storage.tsdb.path=/var/lib/prometheus/data --storage.tsdb.retention.size=1024MB --web.external-url=http://localhost:9095/stats --web.route-prefix="/" &

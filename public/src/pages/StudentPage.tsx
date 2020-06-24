@@ -6,11 +6,14 @@ import { ILinkCollection } from "../managers";
 import { CourseManager } from "../managers/CourseManager";
 import { ILink, NavigationManager } from "../managers/NavigationManager";
 import { UserManager } from "../managers/UserManager";
-import { IStudentLabsForCourse, IStudentLab } from "../models";
+import { IAllSubmissionsForEnrollment, ISubmissionLink } from "../models";
 import { INavInfo } from "../NavigationHelper";
 import { View, ViewPage } from "./ViewPage";
 import { EnrollmentView } from "./views/EnrollmentView";
-import { showLoader } from '../loader';
+import { showLoader } from "../loader";
+import { CourseListView } from "./views/CourseListView";
+import { sortEnrollmentsByVisibility } from "../componentHelper";
+import { TeacherPage } from './TeacherPage';
 
 export class StudentPage extends ViewPage {
     private navMan: NavigationManager;
@@ -18,15 +21,15 @@ export class StudentPage extends ViewPage {
     private courseMan: CourseManager;
 
     // Single user
-    private userCourses: IStudentLabsForCourse[] = [];
-    private activeUserCourses: IStudentLabsForCourse[] = [];
-    private selectedUserCourse: IStudentLabsForCourse | undefined;
+    private userCourses: IAllSubmissionsForEnrollment[] = [];
+    private activeUserCourses: IAllSubmissionsForEnrollment[] = [];
+    private selectedUserCourse: IAllSubmissionsForEnrollment | undefined;
 
     // Group user
-    private GroupUserCourses: IStudentLabsForCourse[] = [];
-    private selectedUserGroupCourse: IStudentLabsForCourse | undefined;
+    private GroupUserCourses: IAllSubmissionsForEnrollment[] = [];
+    private selectedUserGroupCourse: IAllSubmissionsForEnrollment | undefined;
 
-    private selectedAssignment: IStudentLab | undefined;
+    private selectedAssignment: ISubmissionLink | undefined;
 
     constructor(users: UserManager, navMan: NavigationManager, courseMan: CourseManager) {
         super();
@@ -46,6 +49,7 @@ export class StudentPage extends ViewPage {
         this.navHelper.registerFunction<any>("courses/{courseid:number}/members", this.members);
         this.navHelper.registerFunction<any>("courses/{courseid:number}/{page}", this.courseMissing);
         this.navHelper.registerFunction<any>("enroll", this.enroll);
+        this.navHelper.registerFunction<any>("courses/list", this.courseList);
     }
 
     public checkAuthentication(): boolean {
@@ -60,8 +64,8 @@ export class StudentPage extends ViewPage {
         await this.setupData();
         if (this.activeUserCourses) {
             return (<CoursesOverview
-                courseOverview={this.activeUserCourses as IStudentLabsForCourse[]}
-                groupCourseOverview={this.GroupUserCourses as IStudentLabsForCourse[]}
+                courseOverview={this.activeUserCourses as IAllSubmissionsForEnrollment[]}
+                groupCourseOverview={this.GroupUserCourses as IAllSubmissionsForEnrollment[]}
                 navMan={this.navMan}
             />);
         }
@@ -77,7 +81,7 @@ export class StudentPage extends ViewPage {
         return <div>
             <h1>Enrollment page</h1>
             <EnrollmentView
-                courses={await this.courseMan.getCoursesWithUserStatus(curUser)}
+                courses={await this.courseMan.getAllCoursesForEnrollmentPage(curUser)}
                 onEnrollmentClick={(course: Course) => {
                     this.courseMan.addUserToCourse(course, curUser);
                     this.navMan.refresh();
@@ -86,14 +90,31 @@ export class StudentPage extends ViewPage {
         </div >;
     }
 
+    public async courseList(navInfo: INavInfo<any>): View {
+        await this.setupData();
+        const curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
+            return showLoader();
+        }
+        return <div>
+            <h1>Course list</h1>
+            <CourseListView
+                enrollments={await this.courseMan.getEnrollmentsForUser(curUser.getId())}
+                onChangeClick={(enrol: Enrollment) => {
+                    return this.courseMan.updateCourseVisibility(enrol);
+                }}
+            ></CourseListView>
+        </div>
+    }
+
     public async course(navInfo: INavInfo<{ courseid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserCourse) {
             return (<SingleCourseOverview
-                courseAndLabs={this.selectedUserCourse as IStudentLabsForCourse}
-                groupAndLabs={this.selectedUserGroupCourse as IStudentLabsForCourse}
+                courseAndLabs={this.selectedUserCourse as IAllSubmissionsForEnrollment}
+                groupAndLabs={this.selectedUserGroupCourse as IAllSubmissionsForEnrollment}
                 onLabClick={(courseId: number, labId: number) => this.handleLabClick(courseId, labId)}
                 onGroupLabClick={(courseId: number, labId: number) => this.handleGroupLabClick(courseId, labId)} />);
         }
@@ -103,20 +124,28 @@ export class StudentPage extends ViewPage {
     public async courseWithLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
         this.selectCourse(navInfo.params.courseid);
+        const curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
+            return showLoader();
+        }
         if (this.selectedUserCourse) {
             this.selectAssignment(navInfo.params.labid, false);
             if (this.selectedAssignment) {
                 return <StudentLab
-                    assignment={this.selectedAssignment}
-                    showApprove={false}
+                    studentSubmission={this.selectedAssignment}
+                    teacherPageView={false}
+                    slipdays={this.selectedUserCourse.enrollment.getSlipdaysremaining()}
+                    student={curUser}
+                    courseURL={""}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={() => {
-                        return;
-                    }}>
+                    onApproveClick={async () => {
+                        return false;
+                    }}
+                    >
                 </StudentLab>;
             }
         }
@@ -125,21 +154,29 @@ export class StudentPage extends ViewPage {
 
     public async courseWithGroupLab(navInfo: INavInfo<{ courseid: number, labid: number }>): View {
         await this.setupData();
+        const curUser = this.userMan.getCurrentUser();
+        if (!curUser) {
+            return showLoader();
+        }
         this.selectGroupCourse(navInfo.params.courseid);
         if (this.selectedUserGroupCourse) {
             this.selectAssignment(navInfo.params.labid, true);
             if (this.selectedAssignment) {
                 return <StudentLab
-                    assignment={this.selectedAssignment}
-                    showApprove={false}
+                    studentSubmission={this.selectedAssignment}
+                    teacherPageView={false}
+                    slipdays={this.selectedUserGroupCourse.enrollment.getSlipdaysremaining()}
+                    courseURL={""}
+                    student={curUser}
                     onRebuildClick={async (assignmentID: number, submissionID: number) => {
                         const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                         this.navMan.refresh();
                         return ans ? true : false;
                     }}
-                    onApproveClick={() => {
-                        return;
-                    }}>
+                    onApproveClick={async () => {
+                        return false;
+                    }}
+                  >
                 </StudentLab>;
             }
         }
@@ -184,58 +221,31 @@ export class StudentPage extends ViewPage {
         if (key === 0) {
             const coursesLinks: ILinkCollection[] = [];
             for (const course of this.activeUserCourses) {
-                const courseID = course.course.getId();
-                const allLinks: ILink[] = [];
-                allLinks.push({ name: "Labs" });
-                const labs = course.labs;
-                const gLabs: ILink[] = [];
-                labs.forEach((lab) => {
-                    if (lab.assignment.getIsgrouplab()) {
-                        gLabs.push({
-                            name: lab.assignment.getName(),
-                            uri: this.pagePath + "/courses/" + courseID + "/grouplab/" + lab.assignment.getId(),
-                        });
-                    } else {
-                        allLinks.push({
-                            name: lab.assignment.getName(),
-                            uri: this.pagePath + "/courses/" + courseID + "/lab/" + lab.assignment.getId(),
-                        });
-                    }
-                });
-                allLinks.push({ name: "Group Labs" });
-                allLinks.push(...gLabs);
-                allLinks.push({ name: "Repositories" });
-
-                const repos = await this.courseMan.getRepositories(
-                    courseID,
-                    [Repository.Type.USER,
-                    Repository.Type.GROUP,
-                    Repository.Type.COURSEINFO,
-                    Repository.Type.ASSIGNMENTS],
-                    );
-
-                allLinks.push({
-                    name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
-                });
-
-                allLinks.push({
-                    name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
-                });
-
-                allLinks.push({
-                    name: "Course Info", uri: repos.get(Repository.Type.COURSEINFO), absolute: true,
-                });
-                allLinks.push({
-                    name: "Assignments", uri: repos.get(Repository.Type.ASSIGNMENTS), absolute: true,
-                });
-
-                allLinks.push({
-                    name: "New Group", uri: this.pagePath + "/courses/" + courseID + "/members",
-                });
-                coursesLinks.push({
-                    item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + courseID },
-                    children: allLinks,
-                });
+                if (course.enrollment.getState() !== Enrollment.DisplayState.HIDDEN) {
+                    const courseID = course.course.getId();
+                    const studentLinks: ILink[] = [];
+                    const labLinks: ILink[] = [];
+                    studentLinks.push({ name: "Labs" });
+                    const labs = course.labs;
+                    labs.forEach((lab) => {
+                        if (lab.assignment.getIsgrouplab()) {
+                            labLinks.push({
+                                name: lab.assignment.getName(),
+                                uri: this.pagePath + "/courses/" + courseID + "/grouplab/" + lab.assignment.getId(),
+                            });
+                        } else {
+                            studentLinks.push({
+                                name: lab.assignment.getName(),
+                                uri: this.pagePath + "/courses/" + courseID + "/lab/" + lab.assignment.getId(),
+                            });
+                        }
+                    });
+                    studentLinks.push({ name: "Group Labs" }, ...labLinks, ...await this.generateRepoLinks(courseID))
+                    coursesLinks.push({
+                        item: { name: course.course.getCode(), uri: this.pagePath + "/courses/" + courseID },
+                        children: studentLinks,
+                    });
+                }
             }
 
             this.navMan.checkLinkCollection(coursesLinks, this);
@@ -249,11 +259,38 @@ export class StudentPage extends ViewPage {
         return [];
     }
 
+    private async generateRepoLinks(courseID: number): Promise<ILink[]> {
+        const links: ILink[] = [];
+        links.push({ name: "Repositories" });
+
+        const repos =  await this.courseMan.getRepositories(
+            courseID,
+            [Repository.Type.USER,
+            Repository.Type.GROUP,
+            Repository.Type.COURSEINFO,
+            Repository.Type.ASSIGNMENTS],
+            );
+
+        links.push({
+            name: "User Repository", uri: repos.get(Repository.Type.USER), absolute: true,
+        }, {
+            name: "Group Repository", uri: repos.get(Repository.Type.GROUP), absolute: true,
+        }, {
+            name: "Course Info", uri: repos.get(Repository.Type.COURSEINFO), absolute: true,
+        }, {
+            name: "Assignments", uri: repos.get(Repository.Type.ASSIGNMENTS), absolute: true,
+        }, {
+            name: "New Group", uri: this.pagePath + "/courses/" + courseID + "/members",
+        });
+        return links;
+    }
+
+
     // Loads and cache information when user enters a page.
     private async setupData() {
         const curUser = this.userMan.getCurrentUser();
         if (curUser) {
-            const userEnrolls = await this.courseMan.getAllUserEnrollments(curUser.getId());
+            const userEnrolls = sortEnrollmentsByVisibility(await this.courseMan.getEnrollmentsForUser(curUser.getId()), false);
             this.userCourses = [];
             this.activeUserCourses = [];
             this.GroupUserCourses = [];
@@ -261,7 +298,7 @@ export class StudentPage extends ViewPage {
             for (const enrol of userEnrolls) {
                 const crs = enrol.getCourse()
                 if (crs) {
-                    const newCourseLink: IStudentLabsForCourse = {
+                    const newCourseLink: IAllSubmissionsForEnrollment = {
                         course: crs,
                         enrollment: enrol,
                         labs: []

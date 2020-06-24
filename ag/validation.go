@@ -107,7 +107,7 @@ func (req CourseRequest) IsValid() bool {
 }
 
 // IsValid ensures that user ID is set
-func (req CoursesListRequest) IsValid() bool {
+func (req EnrollmentStatusRequest) IsValid() bool {
 	return req.GetUserID() > 0
 }
 
@@ -177,10 +177,15 @@ func (req Provider) IsValid() bool {
 		provider == "fake"
 }
 
-// IsValid ensures that either course ID or submission ID is set
-func (req LabRequest) IsValid() bool {
+// IsValid ensures that course ID is provided
+func (req SubmissionsForCourseRequest) IsValid() bool {
+	return req.GetCourseID() != 0
+}
+
+// IsValid ensures that both course and submission IDs are set
+func (req RebuildRequest) IsValid() bool {
 	cid, sid := req.GetCourseID(), req.GetSubmissionID()
-	return cid > 0 || sid > 0
+	return cid > 0 && sid > 0
 }
 
 // IsValid checks that either ID or path field is set
@@ -198,4 +203,31 @@ func (l Providers) IsValidProvider(provider string) bool {
 		}
 	}
 	return isValid
+}
+
+// IsValid ensures that course ID and submission ID are present.
+func (req SubmissionReviewersRequest) IsValid() bool {
+	return req.CourseID > 0 && req.SubmissionID > 0
+}
+
+// IsValid ensures that a review always has a reviewer and a submission IDs.
+func (r Review) IsValid() bool {
+	return r.ReviewerID > 0 && r.SubmissionID > 0
+}
+
+// IsValid ensures that course ID is provided and the review is valid.
+func (r ReviewRequest) IsValid() bool {
+	return r.CourseID > 0 && r.Review.IsValid()
+}
+
+// IsValid ensures that a grading benchmark always belongs to an assignment
+// and is not empty.
+func (bm GradingBenchmark) IsValid() bool {
+	return bm.AssignmentID > 0 && bm.Heading != ""
+}
+
+// IsValid ensures that a criterion always belongs to a grading benchmark
+// and is not empty.
+func (c GradingCriterion) IsValid() bool {
+	return c.BenchmarkID > 0 && c.Description != ""
 }

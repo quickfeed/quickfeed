@@ -1,4 +1,4 @@
-import { Assignment, Course, Enrollment, User } from "../proto/ag_pb";
+import { Assignment, Course, Enrollment, Review, Submission } from '../proto/ag_pb';
 
 export interface IUser {
     id: number;
@@ -13,24 +13,18 @@ export interface IUser {
 
 // Contains a course, a student/group enrollment, and a list
 // of all assignments and the last submission for each assignment
-export interface IStudentLabsForCourse {
+export interface IAllSubmissionsForEnrollment {
     course: Course;
     enrollment: Enrollment;
-    labs: IStudentLab[];
+    labs: ISubmissionLink[];
 }
 
 // Contains an assignment, a latest submission,
 // and a name of the submitter (user or group)
-export interface IStudentLab {
+export interface ISubmissionLink {
     assignment: Assignment;
     submission?: ISubmission;
     authorName: string;
-}
-
-// Contains a user and the relation to a single course.
-export interface IUserRelation {
-    user: User;
-    enrollment: Enrollment;
 }
 
 // Browser only objects END
@@ -65,5 +59,7 @@ export interface ISubmission {
     executionTime: number;
     buildLog: string;
     testCases: ITestCases[];
-    approved: boolean;
+    reviews: Review[];
+    released: boolean;
+    status: Submission.Status;
 }

@@ -49,13 +49,13 @@ type Database interface {
 	// RejectEnrollment removes the user enrollment from the database
 	RejectEnrollment(userID, courseID uint64) error
 	// UpdateEnrollmentStatus changes status of the course enrollment for the given user and course.
-	UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enrollment_UserStatus) error
+	UpdateEnrollment(*pb.Enrollment) error
 	// GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 	GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error)
 	// GetEnrollmentsByCourse fetches all course enrollments with given statuses.
 	GetEnrollmentsByCourse(courseID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
 	// GetEnrollmentsByUser fetches all enrollments for the given user
-	GetEnrollmentsByUser(userID uint64) ([]*pb.Enrollment, error)
+	GetEnrollmentsByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error)
 
 	// CreateGroup creates a new group and assign users to newly created group.
 	CreateGroup(*pb.Group) error
@@ -75,9 +75,21 @@ type Database interface {
 	// GetAssignment returns assignment mathing the given query.
 	GetAssignment(query *pb.Assignment) (*pb.Assignment, error)
 	// GetAssignmentsByCourse returns a list of all assignments for the given course ID.
-	GetAssignmentsByCourse(uint64) ([]*pb.Assignment, error)
+	GetAssignmentsByCourse(uint64, bool) ([]*pb.Assignment, error)
 	// UpdateAssignments updates the specified list of assignments.
 	UpdateAssignments([]*pb.Assignment) error
+	// CreateBenchmark creates a new grading benchmark.
+	CreateBenchmark(*pb.GradingBenchmark) error
+	// UpdateBenchmark updates the given benchmark.
+	UpdateBenchmark(*pb.GradingBenchmark) error
+	// DeleteBenchmark deletes the given benchmark.
+	DeleteBenchmark(*pb.GradingBenchmark) error
+	// CreateCriterion creates a new grading criterion.
+	CreateCriterion(*pb.GradingCriterion) error
+	// UpdateCriterion updates the given criterion.
+	UpdateCriterion(*pb.GradingCriterion) error
+	// DeleteCriterion deletes the given criterion.
+	DeleteCriterion(*pb.GradingCriterion) error
 
 	// CreateSubmission creates a new submission record or updates the most
 	// recent submission, as defined by the provided submissionQuery.
@@ -90,9 +102,15 @@ type Database interface {
 	GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.Submission, error)
 	// GetCourseSubmissions returns a list of all the latest submissions
 	// for every active course assignment for the given course ID
-	GetCourseSubmissions(uint64, bool) ([]pb.Submission, error)
+	GetCourseAssignmentsWithSubmissions(uint64, pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error)
 	// UpdateSubmission updates the specified submission with approved or not approved.
-	UpdateSubmission(submissionID uint64, approved bool) error
+	UpdateSubmission(*pb.Submission) error
+	// UpdateSubmissions releases and/or approves all submissions with a certain score
+	UpdateSubmissions(uint64, *pb.Submission) error
+	// CreateReview adds a new submission review.
+	CreateReview(*pb.Review) error
+	// UpdateReview updates the given review.
+	UpdateReview(*pb.Review) error
 
 	// CreateRepository creates a new repository.
 	CreateRepository(repo *pb.Repository) error
@@ -102,4 +120,7 @@ type Database interface {
 	GetRepositories(query *pb.Repository) ([]*pb.Repository, error)
 	// DeleteRepository deletes repository by the given provider's ID
 	DeleteRepositoryByRemoteID(uint64) error
+
+	// UpdateSlipDays updates used slipdays for the given course enrollment
+	UpdateSlipDays([]*pb.UsedSlipDays) error
 }

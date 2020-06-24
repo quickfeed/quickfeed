@@ -1,22 +1,22 @@
 import * as React from "react";
-import { Course, Enrollment, Status, Users } from '../../../proto/ag_pb';
+import { Course, Enrollment, Status } from "../../../proto/ag_pb";
 import { Search } from "../../components";
+import { searchForStudents } from '../../componentHelper';
 import { CourseManager, ILink, NavigationManager } from "../../managers";
-import { IUserRelation } from "../../models";
 import { ActionType, UserView } from "./UserView";
 
 interface IUserViewerProps {
     navMan: NavigationManager;
     courseMan: CourseManager;
-    acceptedUsers: IUserRelation[];
-    pendingUsers: IUserRelation[];
+    acceptedUsers: Enrollment[];
+    pendingUsers: Enrollment[];
     course: Course;
     courseURL: string;
 }
 
 interface IUserViewerState {
-    acceptedUsers: IUserRelation[];
-    pendingUsers: IUserRelation[];
+    acceptedUsers: Enrollment[];
+    pendingUsers: Enrollment[];
     approveAllClicked: boolean;
     editing: boolean;
     pendingUsersView?: JSX.Element;
@@ -64,8 +64,8 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.state.acceptedUsers,
                 [],
                 ActionType.InRow,
-                (user: IUserRelation) => {
-                    return this.generateUserButtons(user.enrollment);
+                (user: Enrollment) => {
+                    return this.generateUserButtons(user);
                 });
         }
     }
@@ -78,22 +78,22 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 this.state.pendingUsers,
                 [],
                 ActionType.InRow,
-                (user: IUserRelation) => {
-                    return this.generateUserButtons(user.enrollment);
+                (enrollment: Enrollment) => {
+                    return this.generateUserButtons(enrollment);
                 });
         }
     }
 
     public renderUsers(
         title: string | JSX.Element,
-        users: IUserRelation[],
+        enrollments: Enrollment[],
         actions?: ILink[],
         linkType?: ActionType,
-        optionalActions?: ((user: IUserRelation) => ILink[])) {
+        optionalActions?: ((enrollment: Enrollment) => ILink[])) {
         return <div>
             <h3>{title}</h3>
             <UserView
-                users={users}
+                users={enrollments}
                 actions={actions}
                 isCourseList={true}
                 courseURL={this.props.courseURL}
@@ -105,45 +105,43 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         </div>;
     }
 
-    public async handleAction(userRel: IUserRelation, link: ILink) {
+    public async handleAction(enrol: Enrollment, link: ILink) {
         switch (link.uri) {
             case "accept":
-                await this.handleAccept(userRel);
+                await this.handleAccept(enrol);
                 break;
             case "reject":
-                await this.handleReject(userRel);
+                await this.handleReject(enrol);
                 break;
             case "teacher":
-                await this.handlePromote(userRel);
+                await this.handlePromote(enrol);
                 break;
             case "demote":
-                await this.handleDemote(userRel);
+                await this.handleDemote(enrol);
                 break;
         }
-        this.toggleEditState();
-        this.props.navMan.refresh();
-        this.toggleEditState();
+        this.rerender();
     }
 
-    private async handleAccept(userRel: IUserRelation) {
-        const result = await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.STUDENT);
+    private async handleAccept(enrol: Enrollment) {
+        const result = await this.props.courseMan.changeUserStatus(enrol, Enrollment.UserStatus.STUDENT);
         this.checkForErrors(result, () => {
-            userRel.enrollment.setStatus(Enrollment.UserStatus.STUDENT);
-            const i = this.state.pendingUsers.indexOf(userRel);
+            enrol.setStatus(Enrollment.UserStatus.STUDENT);
+            const i = this.state.pendingUsers.indexOf(enrol);
             if (i >= 0) {
                 this.state.pendingUsers.splice(i, 1);
-                this.state.acceptedUsers.push(userRel);
+                this.state.acceptedUsers.push(enrol);
             }
         })
     }
 
-    private async handleReject(userRel: IUserRelation) {
+    private async handleReject(enrol: Enrollment) {
         if (confirm(
             `Warning! This action is irreversible!
             Do you want to reject the student?`,
         )) {
             let readyToDelete =
-             await this.props.courseMan.isEmptyRepo(this.props.course.getId(), userRel.user.getId(), 0);
+             await this.props.courseMan.isEmptyRepo(this.props.course.getId(), enrol.getUserid(), 0);
             if (!readyToDelete) {
                 readyToDelete = confirm(
                     `Warning! User repository is not empty.
@@ -153,13 +151,13 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
             if (readyToDelete) {
                 const result =
-            await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.NONE);
+            await this.props.courseMan.changeUserStatus(enrol, Enrollment.UserStatus.NONE);
                 this.checkForErrors(result, () => {
-                    const i = this.state.pendingUsers.indexOf(userRel);
+                    const i = this.state.pendingUsers.indexOf(enrol);
                     if (i >= 0) {
                         this.state.pendingUsers.splice(i, 1);
                     }
-                    const j = this.state.acceptedUsers.indexOf(userRel);
+                    const j = this.state.acceptedUsers.indexOf(enrol);
                     if (j >= 0) {
                         this.state.acceptedUsers.splice(j, 1);
                     }
@@ -168,63 +166,31 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
        }
     }
 
-    private async handlePromote(userRel: IUserRelation) {
+    private async handlePromote(enrol: Enrollment) {
         if (confirm(
             `Are you sure you want to promote
-            ${userRel.user.getName()} to teacher status?`,
+            ${enrol.getUser()?.getName()} to teacher status?`,
         )) {
-            const result = await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.TEACHER);
+            const result = await this.props.courseMan.changeUserStatus(enrol, Enrollment.UserStatus.TEACHER);
             this.checkForErrors(result);
         }
     }
 
-    private async handleDemote(userRel: IUserRelation) {
+    private async handleDemote(enrol: Enrollment) {
         if (confirm(
-            `Warning! ${userRel.user.getName()} is a teacher.
-            Do you want to demote ${userRel.user.getName()} to student?`,
+            `Warning! ${enrol.getUser()?.getName()} is a teacher.
+            Do you want to demote ${enrol.getUser()?.getName()} to student?`,
         )) {
-            const result = await this.props.courseMan.changeUserStatus(userRel.enrollment, Enrollment.UserStatus.STUDENT);
+            const result = await this.props.courseMan.changeUserStatus(enrol, Enrollment.UserStatus.STUDENT);
             this.checkForErrors(result);
         }
     }
 
-    private handleSearch(query: string): void {
-        query = query.toLowerCase();
-        const filteredAccepted: IUserRelation[] = [];
-        const filteredPending: IUserRelation[] = [];
-
-        // we filter out every student group separately to ensure that student status is easily visible to teacher
-        // filter accepted students
-        this.props.acceptedUsers.forEach((user) => {
-            if (this.found(query, user)) {
-                filteredAccepted.push(user);
-            }
-        });
-
+    private handleSearch(query: string) {
         this.setState({
-            acceptedUsers: filteredAccepted,
-        });
-
-        // filter pending students
-        this.props.pendingUsers.forEach((user) => {
-            if (this.found(query, user)) {
-                filteredPending.push(user);
-            }
-        });
-
-        this.setState({
-            pendingUsers: filteredPending,
-        });
-    }
-
-    private found(query: string, user: IUserRelation): boolean {
-        if (user.user.getName().toLowerCase().indexOf(query) !== -1
-                || user.user.getStudentid().toLowerCase().indexOf(query) !== -1
-                || user.user.getLogin().toLowerCase().indexOf(query) !== -1
-            ) {
-                return true;
-            }
-        return false;
+            acceptedUsers: searchForStudents(this.props.acceptedUsers, query),
+            pendingUsers: searchForStudents(this.props.pendingUsers, query),
+        }, () => this.rerender());
     }
 
     private approveButton() {
@@ -233,7 +199,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 className="btn btn-success member-btn"
                 // only activate the approve function if is not already approving
                 onClick={this.state.approveAllClicked ?
-                    () => {} : async () => {
+                    () => {return; } : async () => {
                         await this.handleApproveClick().then(() => {
                             this.setState({approveAllClicked: false});
                         });
@@ -264,10 +230,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         this.setState({
             editing: !this.state.editing,
 
-        }, () => this.setState({
-            pendingUsersView: this.renderPendingView(),
-            acceptedUsersView: this.renderUserView(),
-        }));
+        }, () => this.rerender());
     }
 
     private editButtonString(): string {
@@ -324,7 +287,6 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
 
     private checkForErrors(status: Status, action?: () => void) {
         if (status.getCode() !== 0) {
-            console.log("Setting a new error message");
             this.generateErrorMessage(status);
             return;
         } else if (action) {
@@ -344,6 +306,12 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
         this.setState({
             errMsg: <div></div>,
         });
-        console.log("Clearing error message");
+    }
+
+    private rerender() {
+        this.setState({
+            pendingUsersView: this.renderPendingView(),
+            acceptedUsersView: this.renderUserView(),
+        });
     }
 }

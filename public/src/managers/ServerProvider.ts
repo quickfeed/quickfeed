@@ -1,19 +1,23 @@
 import {
     Assignment,
     Course,
+    CourseSubmissions,
     Enrollment,
+    GradingBenchmark,
+    GradingCriterion,
     Group,
     Organization,
     Repository,
+    Review,
     Status,
     Submission,
+    SubmissionsForCourseRequest,
     User,
-    Void,
 } from "../../proto/ag_pb";
 import {
-    IStudentLabsForCourse,
+    IAllSubmissionsForEnrollment,
     IBuildInfo,
-    IStudentLab,
+    ISubmissionLink,
     ISubmission,
     ITestCases,
     IUser,
@@ -21,14 +25,12 @@ import {
 
 import { HttpHelper } from "../HttpHelper";
 import { ICourseProvider } from "./CourseManager";
-import { GrpcManager, IGrpcResponse } from './GRPCManager';
+import { GrpcManager, IGrpcResponse } from "./GRPCManager";
 
 import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
-import { Results } from "../components/teacher/Results";
-
 interface IEndpoints {
     user: string;
     auth: string;
@@ -61,25 +63,15 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data.getCoursesList();
     }
 
-    public async getCoursesFor(user: User, status: Enrollment.UserStatus[]): Promise<Enrollment[]> {
-        const result = await this.grpcHelper.getCoursesWithEnrollment(user.getId(), status);
+    public async getCoursesForUser(user: User, statuses: Enrollment.UserStatus[]): Promise<Course[]> {
+        const result = await this.grpcHelper.getCoursesByUser(user.getId(), statuses);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
-        const arr: Enrollment[] = [];
-        result.data.getCoursesList().forEach((ele) => {
-            const enr: Enrollment = new Enrollment();
-            enr.setCourse(ele);
-            enr.setCourseid(ele.getId());
-            enr.setUser(user);
-            enr.setUserid(user.getId());
-            enr.setStatus(ele.getEnrolled());
-            arr.push(enr);
-        });
-        return arr;
+        return result.data.getCoursesList();
     }
 
-    public async getAllUserEnrollments(userID: number): Promise<Enrollment[]> {
+    public async getEnrollmentsForUser(userID: number, statuses: Enrollment.UserStatus[]): Promise<Enrollment[]> {
         const result = await this.grpcHelper.getEnrollmentsByUser(userID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
@@ -151,12 +143,14 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async updateCourse(course: Course): Promise<Void | Status> {
+    public async updateCourse(course: Course): Promise<Status> {
         const result = await this.grpcHelper.updateCourse(course);
-        if (!this.responseCodeSuccess(result) || !result.data) {
-            return result.status;
-        }
-        return new Void();
+        return result.status;
+    }
+
+    public async updateCourseVisibility(enrol: Enrollment): Promise<boolean> {
+        const result = await this.grpcHelper.updateCourseVisibility(enrol);
+        return this.responseCodeSuccess(result);
     }
 
     public async createGroup(courseID: number, groupName: string, users: number[]): Promise<Group | Status> {
@@ -167,8 +161,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async getCourseGroups(courseID: number): Promise<Group[]> {
-        const result = await this.grpcHelper.getGroups(courseID);
+    public async getGroupsForCourse(courseID: number): Promise<Group[]> {
+        const result = await this.grpcHelper.getGroupsByCourse(courseID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
@@ -206,7 +200,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.status;
     }
 
-    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]> {
+    public async getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]> {
         const result = await this.grpcHelper.getGroupSubmissions(courseID, groupID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
@@ -220,7 +214,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getAllLabInfos(courseID: number, userID: number): Promise<ISubmission[]> {
+    public async getLabsForStudent(courseID: number, userID: number): Promise<ISubmission[]> {
         const result = await this.grpcHelper.getSubmissions(courseID, userID);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
@@ -233,8 +227,18 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getCourseLabs(courseID: number, groupLabs: boolean): Promise<IStudentLabsForCourse[]> {
-        const result = await this.grpcHelper.getCourseLabSubmissions(courseID, groupLabs);
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
+        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, type);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return [];
+        }
+        return this.toUILinks(result.data);
+
+    }
+
+    /*
+    public async getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IAllSubmissionsForEnrollment[]> {
+        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, groupLabs);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
@@ -242,16 +246,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         const results = result.data.getLabsList();
         const labCourse = new Course();
         labCourse.setId(courseID);
-        const labs: IStudentLabsForCourse[] = [];
+        const labs: IAllSubmissionsForEnrollment[] = [];
         for (const studentLabs of results) {
-            const subs: IStudentLab[] = [];
+            const subs: ISubmissionLink[] = [];
             const allSubs = studentLabs.getSubmissionsList();
             if (allSubs) {
                 for (const lab of allSubs) {
                     // populate student submissions
                     const labAssignment = new Assignment();
                     labAssignment.setId(lab.getAssignmentid());
-                    const ILab: IStudentLab = {
+                    const ILab: ISubmissionLink = {
                         assignment:  labAssignment,
                         submission: this.toISubmission(lab),
                         authorName: studentLabs.getAuthorname(),
@@ -264,7 +268,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             if (!enrol) {
                 enrol = new Enrollment();
             }
-            const labLink: IStudentLabsForCourse = {
+            const labLink: IAllSubmissionsForEnrollment = {
                 course: labCourse,
                 enrollment: enrol,
                 labs: subs,
@@ -272,7 +276,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             labs.push(labLink);
         }
         return labs;
-    }
+    }*/
 
     public async tryLogin(username: string, password: string): Promise<User | null> {
         throw new Error("tryLogin This could be removed since there is no normal login.");
@@ -291,7 +295,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return result.data;
     }
 
-    public async getAllUser(): Promise<User[]> {
+    public async getUsers(): Promise<User[]> {
         const result = await this.grpcHelper.getUsers();
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
@@ -372,8 +376,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return tsMap;
     }
 
-    public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
-        const result = await this.grpcHelper.updateSubmission(courseID, submissionID, approve);
+    public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
+        const result = await this.grpcHelper.updateSubmission(courseID, submission);
         return this.responseCodeSuccess(result);
     }
 
@@ -390,24 +394,77 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
-    private toISubmission(sbm: Submission): ISubmission {
-        let buildInfoAsString = "";
-        let scoreInfoAsString = "";
-        if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {
-            buildInfoAsString = sbm.getBuildinfo();
+    public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {
+        const result = await this.grpcHelper.createBenchmark(bm);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
         }
-        if (sbm.getScoreobjects() && (sbm.getScoreobjects().trim().length > 2)) {
-            scoreInfoAsString = sbm.getScoreobjects();
-        }
+        return result.data;
+    }
 
+    public async addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null> {
+        const result = await this.grpcHelper.createCriterion(c);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return result.data;
+    }
+
+    public async updateBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        const result = await this.grpcHelper.updateBenchmark(bm);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async updateCriterion(c: GradingCriterion): Promise<boolean> {
+        const result = await this.grpcHelper.updateCriterion(c);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        const result = await this.grpcHelper.deleteBenchmark(bm);
+        return this.responseCodeSuccess(result);
+    }
+    public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
+        const result = await this.grpcHelper.deleteCriterion(c);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async addReview(ir: Review, courseID: number): Promise<Review | null> {
+        const result = await this.grpcHelper.createReview(ir, courseID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return result.data;
+    }
+
+    public async editReview(ir: Review, courseID: number): Promise<boolean> {
+        const result = await this.grpcHelper.updateReview(ir, courseID);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
+        const result = await this.grpcHelper.getReviewers(submissionID, courseID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return [];
+        }
+        return result.data.getReviewersList();
+    }
+
+    public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        const result = await this.grpcHelper.updatesubmissions(assignmentID, courseID, score, release, approve);
+        return this.responseCodeSuccess(result);
+    }
+
+    private toISubmission(sbm: Submission): ISubmission {
+        const buildInfoAsString = sbm.getBuildinfo();
+        const scoreInfoAsString = sbm.getScoreobjects();
         let buildInfo: IBuildInfo;
         let scoreObj: ITestCases[];
-
         // IMPORTANT: Field names of the Score struct found in the kit/score/score.go,
-        // the ITestCases struct found in the public/src/models.ts,
-        // and names in the string passed to JSON.parse() metod must match.
-        // If experiencing an uncaught error in the browser which results in blank page
-        // when addressing lab information for a student/group, it is likely to originate from here
+        // of the ITestCases struct found in the public/src/models.ts,
+        // and names in the string passed to JSON.parse() method must match.
+        // If experiencing an uncaught error in the browser which results in a blank page
+        // when addressing lab information for a student/group, it is likely originates from here.
         try {
             buildInfo = JSON.parse(buildInfoAsString);
         } catch (e) {
@@ -422,6 +479,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 "[{\"TestName\": \"Test 1\", \"Score\": 3, \"MaxScore\": 4, \"Weight\": 100}]",
             );
         }
+
         let failed = 0;
         let passed = 0;
         if (scoreObj) {
@@ -447,12 +505,47 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             executionTime: buildInfo.execTime,
             buildLog: buildInfo.buildlog,
             testCases: scoreObj,
-            approved: sbm.getApproved(),
+            reviews: sbm.getReviewsList(),
+            released: sbm.getReleased(),
+            status: sbm.getStatus(),
         };
         return isbm;
     }
 
     private responseCodeSuccess(response: IGrpcResponse<any>): boolean {
         return response.status.getCode() === 0;
+    }
+
+    // temporary fix, will be removed with manual grading update
+    private toUILinks(sbLinks: CourseSubmissions): IAllSubmissionsForEnrollment[] {
+        const crs = sbLinks.getCourse();
+        if (!crs) {
+            return [];
+        }
+        const uilinks: IAllSubmissionsForEnrollment[] = [];
+        sbLinks.getLinksList().forEach(l => {
+            const enr = l.getEnrollment();
+            if (enr) {
+                const allLabs: ISubmissionLink[] = [];
+                l.getSubmissionsList().forEach(s => {
+                    const a = s.getAssignment();
+                    const sb = s.getSubmission();
+                    if (a) {
+                        const name = a.getIsgrouplab() ? enr.getUser()?.getName() : enr.getGroup()?.getName();
+                        allLabs.push({
+                            assignment: a,
+                            submission: sb ? this.toISubmission(sb) : undefined,
+                            authorName: name ?? "Name not found",
+                        });
+                    }
+                });
+                uilinks.push({
+                    course: crs,
+                    enrollment: enr,
+                    labs: allLabs,
+                });
+             }
+        });
+        return uilinks;
     }
 }

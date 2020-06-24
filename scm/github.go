@@ -67,7 +67,6 @@ func (s *GithubSCM) GetOrganization(ctx context.Context, opt *GetOrgOptions) (*p
 		// if no ID provided, get by name
 	} else {
 		gitOrg, _, err = s.client.Organizations.Get(ctx, slug.Make(opt.Name))
-
 	}
 	if err != nil || gitOrg == nil {
 		return nil, ErrFailedSCM{

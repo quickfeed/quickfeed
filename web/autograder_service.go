@@ -78,7 +78,7 @@ func (s *AutograderService) GetUsers(ctx context.Context, in *pb.Void) (*pb.User
 // This function can also promote a user to admin or demote a user.
 // Access policy: Admin can update other users's information and promote to Admin;
 // Current User if Owner can update its own information.
-func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.User, error) {
+func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Void, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("UpdateUser failed: authentication error: %w", err)
@@ -86,14 +86,13 @@ func (s *AutograderService) UpdateUser(ctx context.Context, in *pb.User) (*pb.Us
 	}
 	if !(usr.IsAdmin || usr.IsOwner(in.GetID())) {
 		s.logger.Errorf("UpdateUser failed to update user %d: user is not admin or course creator", in.GetID())
-		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user")
+		return nil, status.Errorf(codes.PermissionDenied, "only admin can update another user's information")
 	}
-	usr, err = s.updateUser(usr, in)
-	if err != nil {
+	if _, err = s.updateUser(usr, in); err != nil {
 		s.logger.Errorf("UpdateUser failed to update user %d: %w", in.GetID(), err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to update current user")
+		err = status.Errorf(codes.InvalidArgument, "failed to update user")
 	}
-	return usr, nil
+	return &pb.Void{}, err
 }
 
 // IsAuthorizedTeacher checks whether current user has teacher scopes.
@@ -194,15 +193,35 @@ func (s *AutograderService) GetCourses(ctx context.Context, in *pb.Void) (*pb.Co
 	return courses, nil
 }
 
+// UpdateCourseVisibility allows to edit what courses are visible in the sidebar.
+// Access policy: Any User.
+func (s *AutograderService) UpdateCourseVisibility(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("ChangeCourseVisibility failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !usr.IsOwner(in.GetUserID()) {
+		s.logger.Errorf("ChangeCourseVisibility failed: user %d attempts to update enrollment for user %s", usr.GetID(), in.GetUserID())
+		return nil, status.Errorf(codes.PermissionDenied, "users cannot set course visibility for another users")
+	}
+	err = s.changeCourseVisibility(in)
+	if err != nil {
+		s.logger.Errorf("ChangeCourseVisibility failed: %w", err)
+		err = status.Errorf(codes.InvalidArgument, "failed to update course visibility")
+	}
+	return &pb.Void{}, err
+}
+
 // CreateEnrollment enrolls a new student for the course specified in the request.
 // Access policy: Any User.
 func (s *AutograderService) CreateEnrollment(ctx context.Context, in *pb.Enrollment) (*pb.Void, error) {
 	err := s.createEnrollment(in)
 	if err != nil {
 		s.logger.Errorf("CreateEnrollment failed: %w", err)
-		return nil, status.Error(codes.InvalidArgument, "failed to create enrollment")
+		err = status.Error(codes.InvalidArgument, "failed to create enrollment")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // UpdateEnrollment updates the enrollment status of a student as specified in the request.
@@ -261,10 +280,10 @@ func (s *AutograderService) UpdateEnrollments(ctx context.Context, in *pb.Course
 	return &pb.Void{}, err
 }
 
-// GetCoursesWithEnrollment returns all courses with enrollments of the type specified in the request.
+// GetCoursesByUser returns all courses the given user is enrolled into with the given status.
 // Access policy: Any User.
-func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb.CoursesListRequest) (*pb.Courses, error) {
-	courses, err := s.getCoursesWithEnrollment(in)
+func (s *AutograderService) GetCoursesByUser(ctx context.Context, in *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
+	courses, err := s.getCoursesByUser(in)
 	if err != nil {
 		s.logger.Errorf("GetCoursesWithEnrollment failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no courses with enrollment found")
@@ -272,9 +291,9 @@ func (s *AutograderService) GetCoursesWithEnrollment(ctx context.Context, in *pb
 	return courses, nil
 }
 
-// GetEnrollmentsByUser returns all enrollments for the given user with preloaded courses and groups.
+// GetEnrollmentsByUser returns all enrollments for the given user and enrollment status with preloaded courses and groups.
 // Access policy: user with userID or admin
-func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.UserRequest) (*pb.Enrollments, error) {
+func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetEnrollmentsByUser failed: authentication error: %w", err)
@@ -286,7 +305,7 @@ func (s *AutograderService) GetEnrollmentsByUser(ctx context.Context, in *pb.Use
 	}
 
 	// get all enrollments from the db (no scm)
-	enrols, err := s.getEnrollmentsByUser(in.GetUserID())
+	enrols, err := s.getEnrollmentsByUser(in)
 	if err != nil {
 		s.logger.Errorf("Get enrollments for user %d failed: %s", in.GetUserID(), err)
 	}
@@ -334,9 +353,9 @@ func (s *AutograderService) GetGroup(ctx context.Context, in *pb.GetGroupRequest
 	return group, nil
 }
 
-// GetGroups returns a list of groups created for the course id in the record request.
+// GetGroupsByCourse returns a list of groups created for the course id in the record request.
 // Access policy: Teacher of CourseID.
-func (s *AutograderService) GetGroups(ctx context.Context, in *pb.CourseRequest) (*pb.Groups, error) {
+func (s *AutograderService) GetGroupsByCourse(ctx context.Context, in *pb.CourseRequest) (*pb.Groups, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetGroups failed: authentication error: %w", err)
@@ -492,10 +511,10 @@ func (s *AutograderService) GetSubmissions(ctx context.Context, in *pb.Submissio
 	return submissions, nil
 }
 
-// GetCourseLabSubmissions returns all the latest submissions
+// GetSubmissionsByCourse returns all the latest submissions
 // for every individual or group course assignment for all course students/groups.
 // Access policy: Admin enrolled in CourseID, Teacher of CourseID.
-func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.LabRequest) (*pb.LabResultLinks, error) {
+func (s *AutograderService) GetSubmissionsByCourse(ctx context.Context, in *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
 	usr, err := s.getCurrentUser(ctx)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: authentication error: %w", err)
@@ -507,12 +526,12 @@ func (s *AutograderService) GetCourseLabSubmissions(ctx context.Context, in *pb.
 	}
 	s.logger.Debugf("GetCourseLabSubmissions: %v", in)
 
-	labs, err := s.getAllLabs(in)
+	courseLinks, err := s.getAllLabs(in)
 	if err != nil {
 		s.logger.Errorf("GetCourseLabSubmissions failed: %w", err)
 		return nil, status.Errorf(codes.NotFound, "no submissions found")
 	}
-	return &pb.LabResultLinks{Labs: labs}, nil
+	return courseLinks, nil
 }
 
 // UpdateSubmission is called to approve the given submission or to undo approval.
@@ -531,16 +550,16 @@ func (s *AutograderService) UpdateSubmission(ctx context.Context, in *pb.UpdateS
 		s.logger.Error("ApproveSubmision failed: user is not teacher")
 		return nil, status.Errorf(codes.PermissionDenied, "only teachers can approve submissions")
 	}
-	err = s.updateSubmission(in.GetSubmissionID(), in.GetApprove())
+	err = s.updateSubmission(in.GetSubmissionID(), in.GetStatus(), in.GetReleased(), in.GetScore())
 	if err != nil {
 		s.logger.Errorf("ApproveSubmission failed: %w", err)
-		return nil, status.Errorf(codes.InvalidArgument, "failed to approve submission")
+		err = status.Errorf(codes.InvalidArgument, "failed to approve submission")
 	}
-	return &pb.Void{}, nil
+	return &pb.Void{}, err
 }
 
 // RebuildSubmission rebuilds the submission with the given ID
-func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabRequest) (*pb.Submission, error) {
+func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.RebuildRequest) (*pb.Submission, error) {
 	if !s.isValidSubmission(in.GetSubmissionID()) {
 		s.logger.Errorf("ApproveSubmission failed: submitter has no access to the course")
 		return nil, status.Errorf(codes.PermissionDenied, "submitter has no course access")
@@ -550,6 +569,165 @@ func (s *AutograderService) RebuildSubmission(ctx context.Context, in *pb.LabReq
 		return nil, err
 	}
 	return submission, nil
+}
+
+// CreateBenchmark adds a new grading benchmark for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) CreateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
+	bm, err := s.createBenchmark(in)
+	if err != nil {
+		s.logger.Errorf("CreateBenchmark failed for %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to add benchmark")
+	}
+	return bm, nil
+}
+
+// UpdateBenchmark edits a grading benchmark for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) UpdateBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
+	err := s.updateBenchmark(in)
+	if err != nil {
+		s.logger.Errorf("UpdateBenchmark failed for %+v: %s", in, err)
+		err = status.Errorf(codes.InvalidArgument, "failed to update benchmark")
+	}
+	return &pb.Void{}, err
+}
+
+// DeleteBenchmark removes a grading benchmark
+// Access policy: Teacher of CourseID
+func (s *AutograderService) DeleteBenchmark(ctx context.Context, in *pb.GradingBenchmark) (*pb.Void, error) {
+	err := s.deleteBenchmark(in)
+	if err != nil {
+		s.logger.Errorf("DeleteBenchmark failed for %+v: %s", in, err)
+		err = status.Errorf(codes.InvalidArgument, "failed to delete benchmark")
+	}
+	return &pb.Void{}, err
+}
+
+// CreateCriterion adds a new grading criterion for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) CreateCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.GradingCriterion, error) {
+	c, err := s.createCriterion(in)
+	if err != nil {
+		s.logger.Errorf("CreateCriterion failed for %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to add criterion")
+	}
+	return c, nil
+}
+
+// UpdateCriterion edits a grading criterion for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) UpdateCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
+	err := s.updateCriterion(in)
+	if err != nil {
+		s.logger.Errorf("UpdateCriterion failed for %+v: %s", in, err)
+		err = status.Errorf(codes.InvalidArgument, "failed to update criterion")
+	}
+	return &pb.Void{}, err
+}
+
+// DeleteCriterion removes a grading criterion for an assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) DeleteCriterion(ctx context.Context, in *pb.GradingCriterion) (*pb.Void, error) {
+	err := s.deleteCriterion(in)
+	if err != nil {
+		s.logger.Errorf("DeleteCriterion failed for %+v: %s", in, err)
+		err = status.Errorf(codes.InvalidArgument, "failed to delete criterion")
+	}
+	return &pb.Void{}, err
+}
+
+// CreateReview adds a new submission review
+// Access policy: Teacher of CourseID
+func (s *AutograderService) CreateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Review, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("CreateReview failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("CreateReview failed: user is not teacher")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can add reviews")
+	}
+	if !usr.IsOwner(in.Review.GetReviewerID()) {
+		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
+		return nil, status.Errorf(codes.PermissionDenied, "failed to create review: reviewers' IDs don't match")
+	}
+	if err := in.Review.MakeReviewString(); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
+	}
+	review, err := s.createReview(in.Review)
+	if err != nil {
+		s.logger.Errorf("CreateReview failed for review %+v: %s", in, err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create review")
+	}
+	return review, nil
+}
+
+// UpdateReview updates a submission review
+// Access policy: Teacher of CourseID, Author of the given Review
+func (s *AutograderService) UpdateReview(ctx context.Context, in *pb.ReviewRequest) (*pb.Void, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("UpdateReview failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("UpdateReview failed: user is not teacher")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update reviews")
+	}
+	if !usr.IsOwner(in.Review.GetReviewerID()) {
+		s.logger.Errorf("UpdateReview failed: current user's ID: %d, when the original reviewer's ID is %d ", usr.ID, in.Review.ReviewerID)
+		return nil, status.Errorf(codes.PermissionDenied, "reviews can only be updated by original authors")
+	}
+	if err := in.Review.MakeReviewString(); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create review: parsing error")
+	}
+	if err = s.updateReview(in.Review); err != nil {
+		s.logger.Errorf("UpdateReview failed for review %+v: %s", in, err)
+		err = status.Errorf(codes.InvalidArgument, "failed to update review")
+	}
+	return &pb.Void{}, err
+}
+
+// UpdateSubmissions approves and/or releases manual reviews for student submission for the given assignment
+// Access policy: Teacher of CourseID
+func (s *AutograderService) UpdateSubmissions(ctx context.Context, in *pb.UpdateSubmissionsRequest) (*pb.Void, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("ReleaseAll failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.ID, in.GetCourseID()) {
+		s.logger.Error("ReleaseAll failed: user is not teacher")
+		return nil, status.Errorf(codes.PermissionDenied, "only teachers can update reviews")
+	}
+
+	if err = s.updateSubmissions(in); err != nil {
+		s.logger.Errorf("UpdateSubmissions failed for request %+v", in)
+		err = status.Errorf(codes.InvalidArgument, "failed to update submissions")
+	}
+	return &pb.Void{}, err
+}
+
+// GetReviewers returns names of all active reviewers for a student submission
+// Access policy: Teacher of CourseID
+func (s *AutograderService) GetReviewers(ctx context.Context, in *pb.SubmissionReviewersRequest) (*pb.Reviewers, error) {
+	usr, err := s.getCurrentUser(ctx)
+	if err != nil {
+		s.logger.Errorf("GetReviewers failed: authentication error: %w", err)
+		return nil, ErrInvalidUserInfo
+	}
+	if !s.isTeacher(usr.GetID(), in.GetCourseID()) {
+		s.logger.Error("GetReviewers failed: user is not course creator")
+		return nil, status.Errorf(codes.PermissionDenied, "only course creator teacher can request information about reviewers")
+	}
+	reviewers, err := s.getReviewers(in.SubmissionID)
+	if err != nil {
+		s.logger.Errorf("GetReviewers failed: error fetching from database: %s", err.Error)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to get reviewers")
+	}
+	return &pb.Reviewers{Reviewers: reviewers}, err
 }
 
 // GetAssignments returns a list of all assignments for the given course.
@@ -621,7 +799,10 @@ func (s *AutograderService) GetOrganization(ctx context.Context, in *pb.OrgReque
 		if contextCanceled(ctx) {
 			return nil, status.Error(codes.FailedPrecondition, ErrContextCanceled)
 		}
-		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotMember || err == scms.ErrNotOwner {
+		if err == scms.ErrNotMember {
+			return nil, status.Errorf(codes.NotFound, "organization membership not confirmed, please enable third-party access")
+		}
+		if err == ErrFreePlan || err == ErrAlreadyExists || err == scms.ErrNotOwner {
 			return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 		}
 		if ok, parsedErr := parseSCMError(err); ok {

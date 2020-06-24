@@ -2,22 +2,21 @@ import * as React from "react";
 import { Enrollment } from "../../../proto/ag_pb";
 import { BootstrapButton, BootstrapClass, DynamicTable, Search } from "../../components";
 import { ILink, NavigationManager, UserManager } from "../../managers";
-import { IUserRelation } from "../../models";
 
 import { LiDropDownMenu } from "../../components/navigation/LiDropDownMenu";
-import { generateLabRepoLink } from '../../helper';
+import { searchForStudents, userRepoLink } from "../../componentHelper";
 
 interface IUserViewerProps {
-    users: IUserRelation[];
+    users: Enrollment[];
     isCourseList: boolean;
     userMan?: UserManager;
     navMan?: NavigationManager;
     courseURL: string;
     searchable?: boolean;
     actions?: ILink[];
-    optionalActions?: (user: IUserRelation) => ILink[];
+    optionalActions?: (enrol: Enrollment) => ILink[];
     linkType?: ActionType;
-    actionClick?: (user: IUserRelation, link: ILink) => void;
+    actionClick?: (enrollment: Enrollment, link: ILink) => void;
 }
 
 export enum ActionType {
@@ -27,7 +26,7 @@ export enum ActionType {
 }
 
 interface IUserViewerState {
-    users: IUserRelation[];
+    enrollments: Enrollment[];
 }
 
 export class UserView extends React.Component<IUserViewerProps, IUserViewerState> {
@@ -35,13 +34,13 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
     public constructor(props: IUserViewerProps) {
         super(props);
         this.state = {
-            users: props.users,
+            enrollments: props.users,
         };
     }
 
     public componentWillReceiveProps(nextProps: Readonly<IUserViewerProps>, nextContext: any): void {
         this.setState({
-            users: nextProps.users,
+            enrollments: nextProps.users,
         });
     }
 
@@ -50,9 +49,9 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
             {this.renderSearch()}
             <DynamicTable
                 header={this.getTableHeading()}
-                data={this.state.users}
+                data={this.state.enrollments}
                 classType={"table-grp"}
-                selector={(item: IUserRelation) => this.renderRow(item)}
+                selector={(item: Enrollment) => this.renderRow(item)}
             />
         </div>;
     }
@@ -61,7 +60,7 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         if (this.props.searchable) {
             return <Search className="input-group"
                 placeholder="Search for students"
-                onChange={(query) => this.handleOnchange(query)}
+                onChange={(query) => this.handleSearch(query)}
             />;
         }
         return null;
@@ -75,22 +74,24 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         return heading;
     }
 
-    private renderRow(user: IUserRelation): (string | JSX.Element)[] {
+    private renderRow(enr: Enrollment): (string | JSX.Element)[] {
         const selector: (string | JSX.Element)[] = [];
-        if (user.enrollment.getStatus() === Enrollment.UserStatus.TEACHER) {
+        const user = enr.getUser();
+        if (!user) {
+            return selector;
+        }
+        if (enr.getStatus() === Enrollment.UserStatus.TEACHER) {
             selector.push(
-                <span className="text-muted">
-                    <a href={this.gitLink(user.user.getLogin())} target="_blank">{user.user.getName()}</a>
+                <span className="text-muted">{userRepoLink(user.getLogin(), user.getName())}
                 </span>);
         } else {
-            selector.push(
-                <a href={this.repoLink(user.user.getLogin())} target="_blank">{user.user.getName()}</a>);
+            selector.push(userRepoLink(user.getLogin(), user.getName()));
         }
         selector.push(
-            <a href={"mailto:" + user.user.getEmail()}>{user.user.getEmail()}</a>,
-            user.user.getStudentid().toString(),
+            <a href={"mailto:" + enr.getUser()?.getEmail()}>{user?.getEmail()}</a>,
+            enr.getUser()?.getStudentid() ?? "",
         );
-        const temp = this.renderActions(user);
+        const temp = this.renderActions(enr);
         if (Array.isArray(temp) && temp.length > 0) {
             selector.push(<div className="btn-group action-btn">{temp}</div>);
         } else if (!Array.isArray(temp)) {
@@ -99,49 +100,48 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
         return selector;
     }
 
-    private renderActions(user: IUserRelation): JSX.Element[] | JSX.Element {
+    private renderActions(enrol: Enrollment): JSX.Element[] | JSX.Element {
         const actionButtons: JSX.Element[] = [];
-        const tempActions = this.getAllLinks(user);
+        const tempActions = this.getAllLinks(enrol);
         if (tempActions.length > 0) {
             switch (this.props.linkType) {
                 case ActionType.Menu:
-                    return this.renderDropdownMenu(user, tempActions);
+                    return this.renderDropdownMenu(enrol, tempActions);
                 case ActionType.InRow:
-                    actionButtons.push(...this.renderActionRow(user, tempActions));
+                    actionButtons.push(...this.renderActionRow(enrol, tempActions));
                     break;
             }
         }
         return actionButtons;
     }
 
-    private getAllLinks(user: IUserRelation) {
+    private getAllLinks(enrol: Enrollment) {
         const tempActions: ILink[] = [];
         if (this.props.actions) {
             tempActions.push(...this.props.actions);
         }
         if (this.props.optionalActions) {
-            tempActions.push(...this.props.optionalActions(user));
+            tempActions.push(...this.props.optionalActions(enrol));
         }
         return tempActions;
     }
 
-    private renderDropdownMenu(user: IUserRelation, tempActions: ILink[]) {
+    private renderDropdownMenu(enrol: Enrollment, tempActions: ILink[]) {
         return <ul className="nav nav-pills">
             <LiDropDownMenu
                 links={tempActions}
-                onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, link); } }}>
+                onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(enrol, link); } }}>
                 <span className="glyphicon glyphicon-option-vertical" />
             </LiDropDownMenu>
         </ul>;
     }
 
-    private renderActionRow(user: IUserRelation, tempActions: ILink[]) {
+    private renderActionRow(enrol: Enrollment, tempActions: ILink[]) {
         return tempActions.map((v, i) => {
             let hoverText = "";
             if (v.uri === "teacher") {
                 hoverText = "Promote to teacher";
-            }
-            if (v.uri === "demote") {
+            } else if (v.uri === "demote") {
                 hoverText = "Demote teacher";
             }
 
@@ -150,36 +150,15 @@ export class UserView extends React.Component<IUserViewerProps, IUserViewerState
                 classType={v.extra ? v.extra as BootstrapClass : "default"}
                 tooltip={hoverText}
                 type={v.description}
-                onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(user, v); } }}
+                onClick={(link) => { if (this.props.actionClick) { this.props.actionClick(enrol, v); } }}
             >{v.name}
             </BootstrapButton>;
         });
     }
 
-    private handleOnchange(query: string): void {
-        query = query.toLowerCase();
-        const filteredData: IUserRelation[] = [];
-        this.props.users.forEach((user) => {
-            if (user.user.getName().toLowerCase().indexOf(query) !== -1
-                || user.user.getEmail().toLowerCase().indexOf(query) !== -1
-                || user.user.getStudentid().toString().indexOf(query) !== -1
-                || user.user.getLogin().toLowerCase().indexOf(query) !== -1
-            ) {
-                filteredData.push(user);
-            }
-        });
-
+    private handleSearch(query: string): void {
         this.setState({
-            users: filteredData,
+            enrollments: searchForStudents(this.props.users, query),
         });
-    }
-
-    private gitLink(user: string): string {
-        return "https://github.com/" + user;
-    }
-
-    // return link to github account if there is no course information, otherwise return link to the student labs repo
-    private repoLink(user: string): string {
-        return this.props.isCourseList ? generateLabRepoLink(this.props.courseURL, user) : this.gitLink(user);
     }
 }

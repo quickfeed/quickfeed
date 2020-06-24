@@ -203,12 +203,14 @@ func TestEnrollmentProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantEnrollment := &pb.Enrollment{
-		ID:       pendingEnrollment.ID,
-		CourseID: course.ID,
-		UserID:   stud1.ID,
-		Status:   pb.Enrollment_PENDING,
-		Course:   course,
-		User:     stud1,
+		ID:           pendingEnrollment.ID,
+		CourseID:     course.ID,
+		UserID:       stud1.ID,
+		Status:       pb.Enrollment_PENDING,
+		State:        pb.Enrollment_VISIBLE,
+		Course:       course,
+		User:         stud1,
+		UsedSlipDays: []*pb.UsedSlipDays{},
 	}
 	// can't use: wantEnrollment.User.RemoveRemoteID()
 	wantEnrollment.User.RemoteIdentities = nil
@@ -314,12 +316,17 @@ func TestListCoursesWithEnrollment(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(user.ID, testCourses[2].ID, pb.Enrollment_STUDENT); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: testCourses[2].ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
-	courses_request := &pb.CoursesListRequest{UserID: user.ID}
-	courses, err := ags.GetCoursesWithEnrollment(context.Background(), courses_request)
+	courses_request := &pb.EnrollmentStatusRequest{UserID: user.ID}
+	courses, err := ags.GetCoursesByUser(context.Background(), courses_request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -382,14 +389,19 @@ func TestListCoursesWithEnrollmentStatuses(t *testing.T) {
 	if err := db.RejectEnrollment(user.ID, testCourses[1].ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(user.ID, testCourses[2].ID, pb.Enrollment_STUDENT); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: testCourses[2].ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 
 	stats := make([]pb.Enrollment_UserStatus, 0)
 	stats = append(stats, pb.Enrollment_STUDENT)
-	course_req := &pb.CoursesListRequest{UserID: user.ID, States: stats}
-	courses, err := ags.GetCoursesWithEnrollment(context.Background(), course_req)
+	course_req := &pb.EnrollmentStatusRequest{UserID: user.ID, Statuses: stats}
+	courses, err := ags.GetCoursesByUser(context.Background(), course_req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -463,16 +475,25 @@ func TestPromoteDemoteRejectTeacher(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(teacher.ID, course.ID, pb.Enrollment_TEACHER); err != nil {
+	query := &pb.Enrollment{
+		UserID:   teacher.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(student1.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	query.UserID = student1.ID
+	query.Status = pb.Enrollment_STUDENT
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(student2.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	query.UserID = student2.ID
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(ta.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	query.UserID = ta.ID
+	if err := db.UpdateEnrollment(query); err != nil {
 		t.Fatal(err)
 	}
 

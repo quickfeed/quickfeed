@@ -1,21 +1,29 @@
 import * as React from "react";
-import { IStudentLab } from "../../models";
+import { ISubmissionLink } from "../../models";
 import { LabResultView } from "../../pages/views/LabResultView";
+import { User, Submission } from "../../../proto/ag_pb";
 
 interface IStudentLabProps {
-    assignment: IStudentLab;
-    showApprove: boolean;
-    onApproveClick: (approve: boolean) => void;
+    studentSubmission: ISubmissionLink;
+    student: User;
+    courseURL: string;
+    slipdays: number;
+    teacherPageView: boolean;
+    onApproveClick: (status: Submission.Status, approve: boolean) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<boolean>;
 }
 
 export class StudentLab extends React.Component<IStudentLabProps> {
     public render() {
         return <LabResultView
-            assignment={this.props.assignment}
+            slipdays={this.props.slipdays}
+            submissionLink={this.props.studentSubmission}
+            student={this.props.student}
+            courseURL={this.props.courseURL}
             onApproveClick={this.props.onApproveClick}
             onRebuildClick={this.props.onRebuildClick}
-            showApprove={this.props.showApprove}>
+            teacherPageView={this.props.teacherPageView}
+            >
         </LabResultView>;
     }
 }

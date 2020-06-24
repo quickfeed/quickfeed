@@ -25,3 +25,10 @@ func (g *Group) Contains(user *User) bool {
 func (g *Group) ContainsAll(group *Group) bool {
 	return reflect.DeepEqual(g.Users, group.Users)
 }
+
+// SetSlipDays sets number of remaining slip days for each enrollment
+func (g Group) SetSlipDays(c *Course) {
+	for _, e := range g.Enrollments {
+		e.SetSlipDays(c)
+	}
+}

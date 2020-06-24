@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Course, Group, User, Status } from '../../../proto/ag_pb';
+import { Course, Group, User, Status } from "../../../proto/ag_pb";
 import { BootstrapButton, DynamicTable, Search } from "../../components";
-import { bindFunc, RProp, generateLabRepoLink } from '../../helper';
+import { bindFunc, RProp } from "../../helper";
 import { CourseManager, ILink, NavigationManager } from "../../managers";
 import { BootstrapClass } from "../bootstrap/BootstrapButton";
-import { generateGroupRepoLink } from "./labHelper";
+import { groupRepoLink, searchForGroups, userRepoLink } from "../../componentHelper";
 
 interface ICourseGroupProps {
     approvedGroups: Group[];
@@ -103,7 +103,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
     private renderRow(group: Group, withLink: boolean): (string | JSX.Element)[] {
         const selector: (string | JSX.Element)[] = [];
-        const groupName = withLink ? generateGroupRepoLink(group.getName(), this.props.courseURL) : group.getName();
+        const groupName = withLink ? groupRepoLink(group.getName(), this.props.courseURL) : group.getName();
         selector.push(groupName, this.getMembers(group.getUsersList()));
         const actionButtonLinks = this.generateGroupButtons(group);
         const actionButtons = this.renderActionRow(group, actionButtonLinks);
@@ -117,7 +117,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 key={i}
                 classType={v.extra ? v.extra as BootstrapClass : "default"}
                 type={v.description}
-                onClick={(link) => { this.handleActionOnClick(group, v)}}
+                onClick={(link) => { this.handleActionOnClick(group, v) }}
             >{v.name}
             </BootstrapButton>;
         });
@@ -137,9 +137,9 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
 
     private editButton() {
         return <button type="button"
-                id="edit"
-                className="btn btn-success member-btn"
-                onClick={() => this.toggleEditState()}
+            id="edit"
+            className="btn btn-success member-btn"
+            onClick={() => this.toggleEditState()}
         >{this.editButtonString()}</button>;
     }
 
@@ -151,10 +151,10 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
                 separator = " ";
             }
 
-            const nameLink = <span key={"s" + i} ><a href={ generateLabRepoLink(this.props.courseURL, user.getLogin())}
-             target="_blank">{ user.getName() }</a>{separator}</span>;
+            const nameLink = <span key={"s" + i}>
+                {userRepoLink(user.getLogin(), user.getName(), this.props.courseURL)}{separator}</span>;
             names.push(nameLink);
-            });
+        });
         return <div>{names}</div>;
     }
 
@@ -212,30 +212,9 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     }
 
     private handleSearch(query: string): void {
-        query = query.toLowerCase();
-        const filteredApproved: Group[] = [];
-        const filteredPending: Group[] = [];
-
-        this.props.approvedGroups.forEach((grp) => {
-            if (grp.getName().toLowerCase().indexOf(query) !== -1
-            ) {
-                filteredApproved.push(grp);
-            }
-        });
-
         this.setState({
-            approvedGroups: filteredApproved,
-        });
-
-        this.props.pendingGroups.forEach((grp) => {
-            if (grp.getName().toLowerCase().indexOf(query) !== -1
-            ) {
-                filteredPending.push(grp);
-            }
-        });
-
-        this.setState({
-            pendingGroups: filteredPending,
+            approvedGroups: searchForGroups(this.props.approvedGroups, query),
+            pendingGroups: searchForGroups(this.props.pendingGroups, query),
         });
     }
 
@@ -290,7 +269,7 @@ export class CourseGroup extends React.Component<ICourseGroupProps, ICourseGroup
     private generateErrorMessage(status: Status) {
         const err = <div className="alert alert-danger">{status.getError()}</div>;
         this.setState({
-                errorMsg: err,
+            errorMsg: err,
         });
     }
 

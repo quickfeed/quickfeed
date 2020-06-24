@@ -1,5 +1,5 @@
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User } from "../../proto/ag_pb";
-import { IStudentLabsForCourse, ISubmission } from "../models";
+import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Organization, Repository, Status, User, Review, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { IAllSubmissionsForEnrollment, ISubmission } from '../models';
 
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
@@ -36,11 +36,11 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalCourseGroups();
     }
 
-    public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
+    public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 
-    public async getAllUser(): Promise<User[]> {
+    public async getUsers(): Promise<User[]> {
         const users: User[] = [];
         const dummyUsers = MapHelper.toArray(this.localUsers);
         dummyUsers.forEach((ele) => {
@@ -77,7 +77,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async tryLogin(username: string, password: string): Promise<User | null> {
         const user = MapHelper.find(this.localUsers, (u) =>
             u.user.getEmail().toLocaleLowerCase() === username.toLocaleLowerCase());
-        if (user && user.password === password) {
+        if (user?.password === password) {
             this.currentLoggedIn = user.user;
             return user.user;
         }
@@ -128,6 +128,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        return true;
+    }
+
     /**
      * Get all userlinks for a single course
      * @param course The course userlinks should be retrived from
@@ -146,7 +150,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async getUsersAsMap(IDs: number[]): Promise<IMap<User>> {
         const returnUsers: IMap<User> = {};
-        const allUsers = await this.getAllUser();
+        const allUsers = await this.getUsers();
         IDs.forEach((ele) => {
             const temp = allUsers[ele];
             if (temp) {
@@ -187,6 +191,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         throw new Error("Method not implemented");
     }
 
+    public async updateCourseVisibility(enrol: Enrollment): Promise<boolean> {
+        return true;
+    }
+
     public async changeUserStatus(link: Enrollment, status: Enrollment.UserStatus): Promise<Status> {
         link.setStatus(status);
         const stat = new Status();
@@ -199,7 +207,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
-    public async getAllLabInfos(courseID: number): Promise<ISubmission[]> {
+    public async getLabsForStudent(courseID: number): Promise<ISubmission[]> {
         const temp: ISubmission[] = [];
         const assignments = await this.getAssignments(courseID);
         MapHelper.forEach(this.localLabInfo, (ele) => {
@@ -210,11 +218,15 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
-    public async getAllUserEnrollments(userID: number): Promise<Enrollment[]> {
+    public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
         return [];
     }
 
-    public async getCourseLabs(courseID: number, groupLab: boolean): Promise<IStudentLabsForCourse[]> {
+    public async getEnrollmentsForUser(userID: number): Promise<Enrollment[]> {
+        return [];
+    }
+
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
         return [];
     }
 
@@ -226,7 +238,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return this.currentLoggedIn;
     }
 
-    public async getCoursesFor(user: User, status: Enrollment.UserStatus[]): Promise<Enrollment[]> {
+    public async getCoursesForUser(user: User, status: Enrollment.UserStatus[]): Promise<Course[]> {
         const cLinks: Enrollment[] = [];
         const temp = await this.getCoursesStudent();
         for (const c of temp) {
@@ -236,19 +248,12 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
             }
         }
         const courses: Enrollment[] = [];
-        const tempCourses = await this.getCourses();
-        for (const link of cLinks) {
-            const c = tempCourses[link.getCourseid()];
-            if (c) {
-                courses.push(link);
-            }
-        }
-        return courses;
+        return this.getCourses();
     }
     public async createGroup(courseID: number, name: string, users: number[]): Promise<Group | Status> {
         throw new Error("Method not implemented");
     }
-    public async getCourseGroups(courseID: number): Promise<Group[]> {
+    public async getGroupsForCourse(courseID: number): Promise<Group[]> {
         return this.localCourseGroups;
     }
 
@@ -273,12 +278,43 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
     public async updateGroup(group: Group): Promise<Status> {
         throw new Error("Method not implemented");
     }
-    public async getAllGroupLabInfos(courseID: number, groupID: number): Promise<ISubmission[]> {
+    public async getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]> {
         throw new Error("Method not implemented.");
     }
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         throw new Error("Method not implemented.");
+    }
+
+    public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {
+        return bm;
+    }
+
+    public async addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null> {
+        return c;
+    }
+
+    public async updateBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return true;
+    }
+
+    public async updateCriterion(c: GradingCriterion): Promise<boolean> {
+        return true;
+    }
+
+    public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return true;
+    }
+    public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
+        return true;
+    }
+
+    public async addReview(r: Review): Promise<Review | null> {
+        return r;
+    }
+
+    public async editReview(r: Review): Promise<boolean> {
+        return true;
     }
 
     public async updateAssignments(courseID: number): Promise<any> {

@@ -10,7 +10,7 @@ import (
 
 // getAssignments lists the assignments for the provided course.
 func (s *AutograderService) getAssignments(courseID uint64) (*pb.Assignments, error) {
-	allAssignments, err := s.db.GetAssignmentsByCourse(courseID)
+	allAssignments, err := s.db.GetAssignmentsByCourse(courseID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -37,4 +37,53 @@ func (s *AutograderService) updateAssignments(ctx context.Context, sc scm.SCM, c
 		return err
 	}
 	return nil
+}
+
+func (s *AutograderService) createBenchmark(query *pb.GradingBenchmark) (*pb.GradingBenchmark, error) {
+	if _, err := s.db.GetAssignment(&pb.Assignment{
+		ID: query.AssignmentID,
+	}); err != nil {
+		return nil, err
+	}
+	if err := s.db.CreateBenchmark(query); err != nil {
+		return nil, err
+	}
+	return query, nil
+}
+
+func (s *AutograderService) updateBenchmark(query *pb.GradingBenchmark) error {
+	return s.db.UpdateBenchmark(query)
+}
+
+func (s *AutograderService) deleteBenchmark(query *pb.GradingBenchmark) error {
+	return s.db.DeleteBenchmark(query)
+}
+
+func (s *AutograderService) createCriterion(query *pb.GradingCriterion) (*pb.GradingCriterion, error) {
+	if err := s.db.CreateCriterion(query); err != nil {
+		return nil, err
+	}
+	return query, nil
+}
+
+func (s *AutograderService) updateCriterion(query *pb.GradingCriterion) error {
+	return s.db.UpdateCriterion(query)
+}
+
+func (s *AutograderService) deleteCriterion(query *pb.GradingCriterion) error {
+	return s.db.DeleteCriterion(query)
+}
+
+func (s *AutograderService) createReview(query *pb.Review) (*pb.Review, error) {
+	if _, err := s.db.GetSubmission(&pb.Submission{ID: query.SubmissionID}); err != nil {
+		return nil, err
+	}
+	if err := s.db.CreateReview(query); err != nil {
+		return nil, err
+	}
+	return query, nil
+}
+
+func (s *AutograderService) updateReview(query *pb.Review) error {
+	return s.db.UpdateReview(query)
 }

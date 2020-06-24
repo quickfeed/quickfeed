@@ -34,7 +34,11 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student1.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(student1.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	if err := db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   student1.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -42,7 +46,11 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student2.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(student2.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	if err := db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   student2.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -169,7 +177,11 @@ func TestSubmissionsAccess(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: admin.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(admin.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	if err := db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   admin.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -252,7 +264,11 @@ func TestApproveSubmission(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(student.ID, course.ID, pb.Enrollment_STUDENT); err != nil {
+	if err := db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   student.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -286,31 +302,31 @@ func TestApproveSubmission(t *testing.T) {
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
-		Approve:      true,
+		Status:       pb.Submission_APPROVED,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	updatedSubmission, err := db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
-	wantSubmission.Approved = true
+	wantSubmission.Status = pb.Submission_APPROVED
 
-	if !reflect.DeepEqual(wantSubmission.GetApproved(), updatedSubmission.GetApproved()) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetApproved(), updatedSubmission.GetApproved())
+	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
+		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetStatus().String(), updatedSubmission.GetStatus().String())
 	}
 
 	if _, err = ags.UpdateSubmission(ctx, &pb.UpdateSubmissionRequest{
 		SubmissionID: wantSubmission.ID,
 		CourseID:     course.ID,
-		Approve:      false,
+		Status:       pb.Submission_REJECTED,
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	updatedSubmission, err = db.GetSubmission(&pb.Submission{ID: wantSubmission.ID})
-	wantSubmission.Approved = false
+	wantSubmission.Status = pb.Submission_REJECTED
 
-	if !reflect.DeepEqual(wantSubmission.GetApproved(), updatedSubmission.GetApproved()) {
-		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetApproved(), updatedSubmission.GetApproved())
+	if !reflect.DeepEqual(wantSubmission.GetStatus(), updatedSubmission.GetStatus()) {
+		t.Errorf("Expected submission approval to be %+v, got: %+v", wantSubmission.GetStatus().String(), updatedSubmission.GetStatus().String())
 	}
 }
 
@@ -336,42 +352,54 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: student.ID, CourseID: course2.ID}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(student.ID, course1.ID, pb.Enrollment_STUDENT); err != nil {
+	if err := db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   student.ID,
+		CourseID: course1.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateEnrollmentStatus(student.ID, course2.ID, pb.Enrollment_STUDENT); err != nil {
+	if err := db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   student.ID,
+		CourseID: course2.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}); err != nil {
 		t.Fatal(err)
 	}
 
 	// make labs with similar lab names for both courses
 	lab1c1 := &pb.Assignment{
-		CourseID: course1.ID,
-		Name:     "lab 1",
-		Language: "go",
-		Deadline: "2020-02-23T18:00:00",
-		Order:    1,
+		CourseID:          course1.ID,
+		Name:              "lab 1",
+		Language:          "go",
+		Deadline:          "2020-02-23T18:00:00",
+		Order:             1,
+		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
 
 	lab2c1 := &pb.Assignment{
-		CourseID: course1.ID,
-		Name:     "lab 2",
-		Language: "go",
-		Deadline: "2020-03-23T18:00:00",
-		Order:    2,
+		CourseID:          course1.ID,
+		Name:              "lab 2",
+		Language:          "go",
+		Deadline:          "2020-03-23T18:00:00",
+		Order:             2,
+		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
 	lab1c2 := &pb.Assignment{
-		CourseID: course2.ID,
-		Name:     "lab 1",
-		Language: "go",
-		Deadline: "2020-04-23T18:00:00",
-		Order:    1,
+		CourseID:          course2.ID,
+		Name:              "lab 1",
+		Language:          "go",
+		Deadline:          "2020-04-23T18:00:00",
+		Order:             1,
+		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
 	lab2c2 := &pb.Assignment{
-		CourseID: course2.ID,
-		Name:     "lab 2",
-		Language: "go",
-		Deadline: "2020-05-23T18:00:00",
-		Order:    2,
+		CourseID:          course2.ID,
+		Name:              "lab 2",
+		Language:          "go",
+		Deadline:          "2020-05-23T18:00:00",
+		Order:             2,
+		GradingBenchmarks: []*pb.GradingBenchmark{},
 	}
 	if err := db.CreateAssignment(lab1c1); err != nil {
 		t.Fatal(err)
@@ -390,11 +418,13 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 		UserID:       student.ID,
 		AssignmentID: lab1c1.ID,
 		Score:        44,
+		Reviews:      []*pb.Review{},
 	}
 	sub2 := &pb.Submission{
 		UserID:       student.ID,
 		AssignmentID: lab2c2.ID,
 		Score:        66,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(sub1); err != nil {
 		t.Fatal(err)
@@ -431,50 +461,50 @@ func TestGetCourseLabSubmissions(t *testing.T) {
 	}
 
 	// check that all submissions were saved for the correct labs
-	labsForCourse1, err := ags.GetCourseLabSubmissions(ctx, &pb.LabRequest{CourseID: course1.ID})
+	labsForCourse1, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course1.ID, Type: pb.SubmissionsForCourseRequest_ALL})
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, labLink := range labsForCourse1.GetLabs() {
-		if labLink.GetEnrollment().GetUserID() == student.ID {
-			labs := labLink.GetSubmissions()
-			if len(labs) != 1 {
-				t.Errorf("Expected 1 submission for course 1, got %d", len(labs))
+	for _, enrolLink := range labsForCourse1.GetLinks() {
+		if enrolLink.GetEnrollment().GetUserID() == student.ID {
+			labs := enrolLink.GetSubmissions()
+			if len(labs) != 2 {
+				t.Fatalf("Expected 2 submission links for course 1, got %d", len(labs))
 			}
-			if !reflect.DeepEqual(sub1, labs[0]) {
-				t.Errorf("Want submission %+v, got %+v", sub1, labs[0])
+			if !reflect.DeepEqual(sub1, labs[0].Submission) {
+				t.Errorf("Want submission %+v, got %+v", sub1, labs[0].Submission)
 			}
 		}
 	}
 
-	labsForCourse2, err := ags.GetCourseLabSubmissions(ctx, &pb.LabRequest{CourseID: course2.ID})
+	labsForCourse2, err := ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: course2.ID})
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, labLink := range labsForCourse2.GetLabs() {
+	for _, labLink := range labsForCourse2.GetLinks() {
 		if labLink.GetEnrollment().GetUserID() == student.ID {
 			labs := labLink.GetSubmissions()
-			if len(labs) != 1 {
-				t.Errorf("Expected 1 submission for course 1, got %d", len(labs))
+			if len(labs) != 2 {
+				t.Fatalf("Expected 2 submission for course 1, got %d", len(labs))
 			}
-			if !reflect.DeepEqual(sub2, labs[0]) {
-				t.Errorf("Want submission %+v, got %+v", sub1, labs[0])
+			if !reflect.DeepEqual(sub2, labs[1].Submission) {
+				t.Errorf("Want submission %+v, got %+v", sub1, labs[1].Submission)
 			}
 		}
 	}
 	// check that no submissions will be returned for a wrong course ID
-	if _, err = ags.GetCourseLabSubmissions(ctx, &pb.LabRequest{CourseID: 234}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(ctx, &pb.SubmissionsForCourseRequest{CourseID: 234}); err == nil {
 		t.Error("Expected 'no submissions found'")
 	}
 
 	// check that method fails with empty context
-	if _, err = ags.GetCourseLabSubmissions(context.Background(), &pb.LabRequest{CourseID: course1.ID}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'authorization failed. please try to logout and sign in again'")
 	}
 
 	// check that method fails for non-teacher user
 	ctx = withUserContext(ctx, student)
-	if _, err = ags.GetCourseLabSubmissions(context.Background(), &pb.LabRequest{CourseID: course1.ID}); err == nil {
+	if _, err = ags.GetSubmissionsByCourse(context.Background(), &pb.SubmissionsForCourseRequest{CourseID: course1.ID}); err == nil {
 		t.Error("Expected 'only teachers can get all lab submissions'")
 	}
 

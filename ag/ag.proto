@@ -1,6 +1,17 @@
 syntax = "proto3";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
+
+// Note on use of gogo's moretags to translate to a database schama via GORM
+//
+// To define fields that should be ignored by the database, use this tag:
+//   [(gogoproto.moretags) = "sql:\"-\""]
+//
+// To define multiple database attributes (fields) that combine to form a unique identifier,
+// use the following tag, replacing the <id_name> with the specific unique database identifier;
+// this will set the SQL UNIQUE constraint for the database:
+//   [(gogoproto.moretags) = "gorm:\"unique_index:<id_name>\""];
+
 
 // USERS AND USERGROUPS //
 
@@ -32,8 +43,7 @@ message RemoteIdentity {
 message Group {
     enum GroupStatus {
         PENDING = 0;
-        REJECTED = 1; // deprecated, do not use
-        APPROVED = 2;
+        APPROVED = 1;
     }
     uint64 ID = 1;
     string name = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_group_name\""];
@@ -60,12 +70,13 @@ message Course {
     string tag = 6;
     string provider = 7;
     uint64 organizationID = 8;
-    Enrollment.UserStatus enrolled = 9 [(gogoproto.moretags) = "sql:\"-\""];
+    string organizationPath = 9; // The organization's SCM name, e.g. uis-dat520-2020.
+    uint32 slipDays = 10;
+    Enrollment.UserStatus enrolled = 11 [(gogoproto.moretags) = "sql:\"-\""];
 
-    repeated Enrollment enrollments = 10;
-    repeated Assignment assignments = 12;
-    repeated Group groups = 13;
-    string organizationPath = 14; // The organization's SCM name, e.g. uis-dat520-2020.
+    repeated Enrollment enrollments = 12;
+    repeated Assignment assignments = 13;
+    repeated Group groups = 14;
 }
 
 message Courses {
@@ -83,45 +94,67 @@ message Repository {
         GROUP = 6;
     }
     uint64 ID = 1;
-    uint64 organizationID = 2;
+    uint64 organizationID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
     uint64 repositoryID = 3; // ID of a github repository
-    uint64 userID = 4;
-    uint64 groupID = 5;
+    uint64 userID = 4 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
+    uint64 groupID = 5 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
     string HTMLURL = 6;
-    Type repoType = 7;
-}
-
-message Organization {
-    uint64 ID = 1;
-    string path = 2;
-    string avatar = 3;
-    string paymentPlan = 4;
-}
-
-message Organizations {
-    repeated Organization organizations = 1;
+    Type repoType = 7 [(gogoproto.moretags) = "gorm:\"unique_index:uid_gid_org_type\""];
 }
 
 message Enrollment {
     enum UserStatus {
         NONE = 0;
         PENDING = 1;
-        REJECTED = 2; // deprecated, do not use
-        STUDENT = 3;
-        TEACHER = 4;
+        STUDENT = 2;
+        TEACHER = 3;
+    }
+    enum DisplayState {
+        UNSET = 0;
+        HIDDEN = 1;
+        VISIBLE = 2;
+        FAVORITE = 3;
     }
     uint64 ID = 1;
     uint64 courseID = 2 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""];
     uint64 userID = 3 [(gogoproto.moretags) = "gorm:\"unique_index:idx_unique_enrollment\""]; 
     uint64 groupID = 4;
-    User user = 5;
-    Course course = 6;
-    Group group = 7;
-    UserStatus status = 8;
+    bool hasTeacherScopes = 5;
+    User user = 6;
+    Course course = 7;
+    Group group = 8;
+    UserStatus status = 9;
+    DisplayState state = 10;
+    uint32 slipDaysRemaining = 11 [(gogoproto.moretags) = "sql:\"-\""];
+    repeated UsedSlipDays usedSlipDays = 12;
+}
+
+message UsedSlipDays {
+    uint64 ID = 1;
+    uint64 enrollmentID = 2;
+    uint64 assignmentID = 3;
+    uint32 usedSlipDays = 4;
 }
 
 message Enrollments {
     repeated Enrollment enrollments = 1;
+} 
+
+//   UI structures, never saved in the database   //
+
+message SubmissionLink {
+    Assignment assignment = 1;
+    Submission submission = 2;
+}
+
+message EnrollmentLink {
+    Enrollment enrollment = 2; // must have course and user/group preloaded
+    repeated SubmissionLink submissions = 3;
+}
+
+message CourseSubmissions {
+    Course course = 1; // preloaded assignments
+    repeated EnrollmentLink links = 2;
 }
 
 //   LABS    //
@@ -135,8 +168,11 @@ message Assignment {
     bool autoApprove = 6;
     uint32 order = 7;
     bool isGroupLab = 8;
-    Submission submission = 9; 
-    uint32 scoreLimit = 10;  // defines minimal score limit for auto approval
+    uint32 scoreLimit = 9;  // defines minimal score limit for auto approval
+    uint32 reviewers = 10; // number of TA's to review submissions for this assignment 
+    bool runTests = 11;
+    repeated Submission submissions = 12; 
+    repeated GradingBenchmark gradingBenchmarks = 13;    
 }
 
 message Assignments {
@@ -144,6 +180,12 @@ message Assignments {
 }
 
 message Submission {
+    enum Status {
+        NONE = 0;
+        APPROVED = 1;
+        REJECTED = 2;
+        REVISION = 3;
+    }
     uint64 ID = 1;
     uint64 assignmentID = 2;
     uint64 userID = 3;
@@ -152,25 +194,59 @@ message Submission {
     string scoreObjects = 6;
     string buildInfo = 7;
     string commitHash = 8;
-    bool approved = 9;
+    bool released = 9; // defines whether the feedback is visible for the student or group members
+    Status status = 10;
+    repeated Review reviews = 11;
 }
 
 message Submissions {
     repeated Submission submissions = 1;
 }
 
-message LabResultLink {    
-    string authorName = 1;
-    Enrollment enrollment = 2;
-    repeated Submission submissions = 3;
+//   MANUAL GRADING   //
+
+message GradingBenchmark {
+    uint64 ID = 1;
+    uint64 assignmentID = 2;
+    string heading = 3;
+    string comment = 4;
+    repeated GradingCriterion criteria = 5;
 }
 
-message LabResultLinks {
-    repeated LabResultLink labs = 1;
+message GradingCriterion {
+    enum Grade {
+        NONE = 0;
+        FAILED = 1;
+        PASSED = 2;
+    }
+    uint64 ID = 1;
+    uint64 benchmarkID = 2;
+    string description = 3;
+    Grade grade = 4;
+    string comment = 5;
 }
 
+message Review {
+    uint64 ID = 1;
+    uint64 submissionID = 2;
+    uint64 reviewerID = 3;
+    string review = 4; // JSON encoded grading criteria
+    string feedback = 5;
+    bool ready = 6;
+    uint64 score = 7;
+    repeated GradingBenchmark benchmarks = 8 [(gogoproto.moretags) = "sql:\"-\""];
+}
+
+message Reviewers {
+    repeated User reviewers = 1;
+}
 
 ////    REQUESTS AND RESPONSES      \\\\
+
+message ReviewRequest {
+    uint64 courseID = 1;
+    Review review = 2;
+}
 
 message CourseRequest {
     uint64 courseID = 1;
@@ -178,11 +254,6 @@ message CourseRequest {
 
 message UserRequest {
     uint64 userID = 1;
-}
-
-message CoursesListRequest {
-    uint64 userID = 1;
-    repeated Enrollment.UserStatus states = 2;
 }
 
 message GetGroupRequest {
@@ -203,12 +274,30 @@ message OrgRequest {
     string orgName = 1;
 }
 
-// depending on situation frontend will have all enrolled users or only those that are not members of any group
-// set filterOutGroupMembers go get list of students not belonging to any group for given course
+message Organization {
+    uint64 ID = 1;
+    string path = 2;
+    string avatar = 3;
+    string paymentPlan = 4;
+}
+
+message Organizations {
+    repeated Organization organizations = 1;
+}
+
+// EnrollmentRequest is a request for enrolled users of a given course,
+// whose enrollment status match those provided in the request. To ignore group members 
+// that otherwise match the enrollment request, set ignoreGroupMembers to true.
 message EnrollmentRequest {
     uint64 courseID = 1;
-    bool filterOutGroupMembers = 2;
-    repeated Enrollment.UserStatus states = 3;
+    bool ignoreGroupMembers = 2;
+    repeated Enrollment.UserStatus statuses = 3;
+}
+
+// EnrollmentStatusRequest is a request for a given user, with a specific enrollment status.
+message EnrollmentStatusRequest {
+    uint64 userID = 1;
+    repeated Enrollment.UserStatus statuses = 2;
 }
 
 message SubmissionRequest {
@@ -220,7 +309,22 @@ message SubmissionRequest {
 message UpdateSubmissionRequest {
     uint64 submissionID = 1;
     uint64 courseID = 2;
-    bool approve = 3;
+    uint32 score = 3;
+    bool released = 4;
+    Submission.Status status = 5;
+}
+
+message UpdateSubmissionsRequest {
+    uint64 courseID = 1;
+    uint64 assignmentID = 2;
+    uint32 scoreLimit = 3;
+    bool release = 4;
+    bool approve = 5;
+}
+
+message SubmissionReviewersRequest {
+    uint64 submissionID = 1;
+    uint64 courseID = 2;
 }
 
 message Providers {
@@ -252,16 +356,25 @@ message Status {
     string Error = 2;
 }
 
-message LabRequest {
+message SubmissionsForCourseRequest {
+    enum Type {
+        ALL = 0;
+        INDIVIDUAL = 1;
+        GROUP = 2;
+    }
+    uint64 courseID = 1;
+    Type type = 2;
+}
+
+message RebuildRequest {
     uint64 courseID = 1;
     uint64 submissionID = 2;
     uint64 assignmentID = 3;
-    bool groupLabs = 4;
 }
 
-// messages of type Void used when we want a boolean answer from the server
-// GRPC status code 0 indicates that the requested action was a success
-// any other status will include a message explaining what went wrong
+// Void contains no fields. A server response with a Void still contains a gRPC status code,
+// which can be checked for success or failure. Status code 0 indicates that the requested action was successful,
+// whereas any other status code indicates some failure. As such, the status code can be used as a boolean result from the server.
 message Void {}
 
 service AutograderService {
@@ -270,14 +383,14 @@ service AutograderService {
 
     rpc GetUser(Void) returns (User) {}
     rpc GetUsers(Void) returns (Users) {}
-    rpc UpdateUser(User) returns (User) {}
+    rpc UpdateUser(User) returns (Void) {}
     rpc IsAuthorizedTeacher(Void) returns (AuthorizationResponse) {}  
 
     // groups //
 
     rpc GetGroup(GetGroupRequest) returns (Group) {}
     rpc GetGroupByUserAndCourse(GroupRequest) returns (Group) {} 
-    rpc GetGroups(CourseRequest) returns (Groups) {} 
+    rpc GetGroupsByCourse(CourseRequest) returns (Groups) {} 
     rpc CreateGroup(Group) returns (Group) {} 
     rpc UpdateGroup(Group) returns (Void) {}
     rpc DeleteGroup(GroupRequest) returns (Void) {}
@@ -286,18 +399,19 @@ service AutograderService {
 
     rpc GetCourse(CourseRequest) returns (Course) {} 
     rpc GetCourses(Void) returns (Courses) {} 
-    rpc GetCoursesWithEnrollment(CoursesListRequest) returns (Courses) {}
+    rpc GetCoursesByUser(EnrollmentStatusRequest) returns (Courses) {}
     rpc CreateCourse(Course) returns (Course) {}
     rpc UpdateCourse(Course) returns (Void) {}
+    rpc UpdateCourseVisibility(Enrollment) returns (Void) {}
  
     // assignments //
-
+    
     rpc GetAssignments(CourseRequest) returns (Assignments) {}
     rpc UpdateAssignments(CourseRequest) returns (Void) {}
 
     // enrollments //
 
-    rpc GetEnrollmentsByUser(UserRequest) returns (Enrollments) {}
+    rpc GetEnrollmentsByUser(EnrollmentStatusRequest) returns (Enrollments) {}
     rpc GetEnrollmentsByCourse(EnrollmentRequest) returns (Enrollments) {}
     rpc CreateEnrollment(Enrollment) returns (Void) {} 
     rpc UpdateEnrollment(Enrollment) returns (Void) {} 
@@ -305,11 +419,27 @@ service AutograderService {
 
     // submissions //
 
+    // Get latest submissions for all course assignments for a user or a group.
     rpc GetSubmissions(SubmissionRequest) returns (Submissions) {}
+    // Get lab submissions for every course user or every course group
+    rpc GetSubmissionsByCourse(SubmissionsForCourseRequest) returns (CourseSubmissions) {}
     rpc UpdateSubmission(UpdateSubmissionRequest) returns (Void) {}
-    rpc RebuildSubmission(LabRequest) returns (Submission) {}
-    rpc GetCourseLabSubmissions(LabRequest) returns (LabResultLinks) {}
-   
+    rpc UpdateSubmissions(UpdateSubmissionsRequest) returns (Void) {}
+    rpc RebuildSubmission(RebuildRequest) returns (Submission) {}
+
+    // manual grading //
+    rpc CreateBenchmark(GradingBenchmark) returns (GradingBenchmark) {}
+    rpc UpdateBenchmark(GradingBenchmark) returns (Void) {}
+    rpc DeleteBenchmark(GradingBenchmark) returns (Void) {}
+
+    rpc CreateCriterion(GradingCriterion) returns (GradingCriterion) {}
+    rpc UpdateCriterion(GradingCriterion) returns (Void) {}
+    rpc DeleteCriterion(GradingCriterion) returns (Void) {}
+
+    rpc CreateReview(ReviewRequest) returns (Review) {}
+    rpc UpdateReview(ReviewRequest) returns (Void) {}
+    rpc GetReviewers(SubmissionReviewersRequest) returns (Reviewers) {}
+
     // misc //
     
     rpc GetProviders(Void) returns (Providers) {}

@@ -1,18 +1,20 @@
 import * as React from "react";
 
-import { BootstrapButton, CourseGroup, GroupForm, Results } from "../components";
+import { CourseGroup, GroupForm, Results } from "../components";
 import { CourseManager, ILink, ILinkCollection, NavigationManager, UserManager } from "../managers";
-
 import { View, ViewPage } from "./ViewPage";
 
 import { INavInfo } from "../NavigationHelper";
-
-import { Assignment, Course, Enrollment, Group, Repository } from "../../proto/ag_pb";
+import { Assignment, Course, Enrollment, Group, Repository, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest, Review } from "../../proto/ag_pb";
 import { CollapsableNavMenu } from "../components/navigation/CollapsableNavMenu";
-import { IUserRelation } from "../models";
 import { GroupResults } from "../components/teacher/GroupResults";
 import { MemberView } from "./views/MemberView";
-import { showLoader } from '../loader';
+import { showLoader } from "../loader";
+import { sortCoursesByVisibility, sortAssignmentsByOrder, submissionStatusToString } from '../componentHelper';
+import { AssignmentView } from "./views/AssignmentView";
+import { ISubmission } from "../models";
+import { FeedbackView } from "./views/FeedbackView";
+import { ReleaseView } from "./views/ReleaseView";
 
 export class TeacherPage extends ViewPage {
 
@@ -20,7 +22,7 @@ export class TeacherPage extends ViewPage {
     private userMan: UserManager;
     private courseMan: CourseManager;
     private courses: Course[] = [];
-    private repositories: Map<Repository.Type, string>;
+    private repositories: Map<number, Map<Repository.Type, string>>;
 
     private refreshState = 0;
 
@@ -37,14 +39,17 @@ export class TeacherPage extends ViewPage {
         this.navHelper.registerFunction("courses/{course}/members", this.courseUsers);
         this.navHelper.registerFunction("courses/{course}/results", this.results);
         this.navHelper.registerFunction("courses/{course}/groupresults", this.groupresults);
+        this.navHelper.registerFunction("courses/{course}/review", this.manualReview);
+        this.navHelper.registerFunction("courses/{course}/release", this.releaseReview);
         this.navHelper.registerFunction("courses/{course}/groups", this.groups);
         this.navHelper.registerFunction("courses/{cid}/new_group", this.newGroup);
         this.navHelper.registerFunction("courses/{cid}/groups/{gid}/edit", this.editGroup);
+
     }
 
     public checkAuthentication(): boolean {
         const curUser = this.userMan.getCurrentUser();
-        if (curUser && (curUser.getIsadmin() || this.userMan.isTeacher())) {
+        if (curUser?.getIsadmin() || this.userMan.isTeacher()) {
             this.userMan.isAuthorizedTeacher().then((answer) => {
                 if (!answer) {
                     window.location.href = "https://" + window.location.hostname + "/auth/github-teacher";
@@ -56,8 +61,9 @@ export class TeacherPage extends ViewPage {
     }
 
     public async init(): Promise<void> {
-        this.courses = await this.getCourses();
-        this.navHelper.defaultPage = "courses/" + (this.courses.length > 0 ? this.courses[0].getId().toString() : "");
+        this.courses = await this.getCourses([]);
+        this.repositories = this.setupRepos();
+        this.navHelper.defaultPage = "courses/";
     }
 
     public async course(info: INavInfo<{ course: string, page?: string }>): View {
@@ -68,8 +74,8 @@ export class TeacherPage extends ViewPage {
             let button;
             switch (this.refreshState) {
                 case 0:
-                    button = <BootstrapButton
-                        classType="primary"
+                    button = <div
+                        className="btn btn-primary a-button"
                         onClick={(e) => {
                             this.refreshState = 1;
                             this.courseMan.updateAssignments(course.getId())
@@ -80,19 +86,17 @@ export class TeacherPage extends ViewPage {
                             this.navMan.refresh();
                         }}>
                         Update Course Assignments
-                    </BootstrapButton>;
+                    </div>;
                     break;
                 case 1:
-                    button = <BootstrapButton
-                        classType="default"
-                        disabled={true}>
+                    button = <div
+                        className="btn btn-default a-button disabled">
                         Updating Course Assignments
-                    </BootstrapButton>;
+                    </div>;
                     break;
                 case 2:
-                    button = <BootstrapButton
-                        classType="success"
-                        disabled={false}
+                    button = <div
+                        className="btn btn-success a-button"
                         onClick={(e) => {
                             this.refreshState = 1;
                             this.courseMan.updateAssignments(course.getId())
@@ -103,69 +107,121 @@ export class TeacherPage extends ViewPage {
                             this.navMan.refresh();
                         }}>
                         Course Assignments Updated
-                    </BootstrapButton>;
+                    </div>;
                     break;
             }
-            return <div key="head">
-                <h1>Overview for {course.getName()}</h1>
-                {button}
+            return <div key="head" className="col-md-12">
+                <div className="row"><h1>Assignments for {course.getName()}{button}</h1></div>
+                {await this.generateAssignmentList(course)}
             </div>;
         });
     }
 
-    // TODO(meling) consolidate these two result functions?
     public async results(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const labs: Assignment[] = await this.courseMan.getAssignments(course.getId());
-            const results = await this.courseMan.getCourseLabs(course.getId(), false);
+            const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
+            const curUser = this.userMan.getCurrentUser();
             return <Results
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
-                labs={labs}
-                students={labResults}
+                assignments={sortAssignmentsByOrder(labs)}
+                allCourseSubmissions={labResults}
+                courseCreatorView={course.getCoursecreatorid() === curUser?.getId()}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
-                    // update refreshed submission in the labResults
-                    // make a separate method for this that could be used for group and non-group labs
                     this.navMan.refresh();
                     return ans;
                 }}
-                    onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
-                    return this.approveFunc(submissionID, course.getId(), approve);
-                }}
-            >
+                onApproveClick={async (submission: ISubmission): Promise<boolean> => {
+                    return this.approveFunc(submission, course.getId());
+                }}>
             </Results>;
         });
     }
 
     public async groupresults(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const results = await this.courseMan.getCourseLabs(course.getId(), true);
+            const results = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
             const labs = await this.courseMan.getAssignments(course.getId());
             const labResults = await this.courseMan.fillLabLinks(course, results, labs);
-
+            const curUser = this.userMan.getCurrentUser();
             return <GroupResults
                 course={course}
                 courseURL={await this.getCourseURL(course.getId())}
-                labs={labs}
+                labs={sortAssignmentsByOrder(labs)}
                 groups={labResults}
                 onRebuildClick={async (assignmentID: number, submissionID: number) => {
                     const ans = await this.courseMan.rebuildSubmission(assignmentID, submissionID);
                     this.navMan.refresh();
                     return ans;
                 }}
-                onApproveClick={async (submissionID: number, approve: boolean): Promise<boolean> => {
-                    return this.approveFunc(submissionID, course.getId(), approve);
-                }}
-            >
+                onApproveClick={async (submission: ISubmission): Promise<boolean> => {
+                    return this.approveFunc(submission, course.getId());
+                }}>
             </GroupResults>;
         });
     }
 
+    public async manualReview(info: INavInfo<{ course: string }>): View {
+        return this.courseFunc(info.params.course, async (course) => {
+            const assignments = await this.courseMan.getAssignments(course.getId());
+            const students = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
+            const groups = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
+            const curUser = this.userMan.getCurrentUser();
+            if (curUser) {
+                return <FeedbackView
+                course={course}
+                courseURL={await this.getCourseURL(course.getId())}
+                assignments={assignments}
+                students={students}
+                groups={groups}
+                curUser={curUser}
+                addReview={(r: Review) => {
+                    return this.courseMan.addReview(r, course.getId());
+                }}
+                updateReview={async (r: Review) => {
+                    return this.courseMan.editReview(r, course.getId());
+                }}
+            />;
+            }
+            return <div>Please log in.</div>;
+        })
+    }
+
+    public async releaseReview(info: INavInfo<{ course: string}>): View {
+        return this.courseFunc(info.params.course, async (course) => {
+            const assignments = await this.courseMan.getAssignments(course.getId());
+            const students = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.INDIVIDUAL);
+            const groups = await this.courseMan.getLabsForCourse(course.getId(), SubmissionsForCourseRequest.Type.GROUP);
+            const curUser = this.userMan.getCurrentUser();
+            if (curUser) {
+                return <ReleaseView
+                    course={course}
+                    courseURL={await this.getCourseURL(course.getId())}
+                    assignments={assignments}
+                    students={students}
+                    groups={groups}
+                    curUser={curUser}
+                    onUpdate={(submission: ISubmission) => {
+                        return this.courseMan.updateSubmission(course.getId(), submission);
+                    }}
+                    getReviewers={(submissionID: number) => {
+                        return this.courseMan.getReviewers(submissionID, course.getId());
+                    }}
+                    updateAll={async (assignmentID: number, score: number, release: boolean, approve: boolean) => {
+                        return this.courseMan.updateSubmissions(assignmentID, course.getId(), score, release, approve);
+                    }}
+                />;
+            }
+            return <div>Please log in.</div>;
+        })
+    }
+
     public async groups(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
-            const groups = await this.courseMan.getCourseGroups(course.getId());
+            const groups = await this.courseMan.getGroupsForCourse(course.getId());
             const approvedGroups: Group[] = [];
             const pendingGroups: Group[] = [];
             for (const grp of groups) {
@@ -250,11 +306,11 @@ export class TeacherPage extends ViewPage {
     public async courseUsers(info: INavInfo<{ course: string }>): View {
         return this.courseFunc(info.params.course, async (course) => {
             const all = await this.courseMan.getUsersForCourse(course);
-            const acceptedUsers: IUserRelation[] = [];
-            const pendingUsers: IUserRelation[] = [];
+            const acceptedUsers: Enrollment[] = [];
+            const pendingUsers: Enrollment[] = [];
             // TODO: Maybe move this to the Members view
             all.forEach((user) => {
-                switch (user.enrollment.getStatus()) {
+                switch (user.getStatus()) {
                     case Enrollment.UserStatus.TEACHER:
                     case Enrollment.UserStatus.STUDENT:
                         acceptedUsers.push(user);
@@ -266,7 +322,7 @@ export class TeacherPage extends ViewPage {
             });
 
             // sorting accepted user so that teachers show first
-            acceptedUsers.sort((x, y) => (x.enrollment.getStatus() < y.enrollment.getStatus()) ? 1 : -1);
+            acceptedUsers.sort((x, y) => (x.getStatus() < y.getStatus()) ? 1 : -1);
 
             return <MemberView
                 course={course}
@@ -280,29 +336,32 @@ export class TeacherPage extends ViewPage {
         });
     }
 
-    public generateCollectionFor(link: ILink): ILinkCollection {
+    public generateCollectionFor(link: ILink, courseID: number): ILinkCollection {
+        const repoMap = this.repositories.get(courseID);
         return {
             item: link,
             children: [
                 { name: "Results", uri: link.uri + "/results" },
                 { name: "Group Results", uri: link.uri + "/groupresults" },
+                { name: "Review", uri: link.uri + "/review"},
+                { name: "Release", uri: link.uri + "/release"},
                 { name: "Groups", uri: link.uri + "/groups" },
                 { name: "Members", uri: link.uri + "/members" },
                 { name: "New Group", uri: link.uri + "/new_group"},
                 { name: "Repositories" },
-                { name: "Course Info", uri: this.repositories.get(Repository.Type.COURSEINFO), absolute: true },
-                { name: "Assignments", uri: this.repositories.get(Repository.Type.ASSIGNMENTS), absolute: true },
-                { name: "Tests", uri: this.repositories.get(Repository.Type.TESTS), absolute: true },
-                { name: "Solutions", uri: this.repositories.get(Repository.Type.SOLUTIONS), absolute: true },
+                { name: "Course Info", uri: repoMap?.get(Repository.Type.COURSEINFO) ?? "", absolute: true },
+                { name: "Assignments", uri: repoMap?.get(Repository.Type.ASSIGNMENTS) ?? "", absolute: true },
+                { name: "Tests", uri: repoMap?.get(Repository.Type.TESTS) ?? "", absolute: true },
+                { name: "Solutions", uri: repoMap?.get(Repository.Type.SOLUTIONS) ?? "", absolute: true },
             ],
         };
     }
 
-    public async approveFunc(submissionID: number, courseID: number, approve: boolean): Promise<boolean> {
+    public async approveFunc(submission: ISubmission, courseID: number): Promise<boolean> {
         if (confirm(
-            `Do you want to ${this.setConfirmString(approve)} this lab?`,
+            `Do you want to set ${submissionStatusToString(submission.status)} status for this lab?`,
         )) {
-            const ans = await this.courseMan.updateSubmission(courseID, submissionID, approve);
+            const ans = await this.courseMan.updateSubmission(courseID, submission);
             this.navMan.refresh();
             return ans;
         }
@@ -319,14 +378,14 @@ export class TeacherPage extends ViewPage {
                     status.push(Enrollment.UserStatus.PENDING);
                     status.push(Enrollment.UserStatus.STUDENT);
                 }
-                const courses = await this.courseMan.getCoursesFor(curUser, status);
-
+                const courses = await this.getCourses(status);
                 const labLinks: ILinkCollection[] = [];
                 courses.forEach((e) => {
+                    this.fetchCourseRepos(e.getId());
                     labLinks.push(this.generateCollectionFor({
                         name: e.getCode(),
                         uri: this.pagePath + "/courses/" + e.getId(),
-                    }));
+                    }, e.getId()));
                 });
 
                 this.navMan.checkLinkCollection(labLinks, this);
@@ -349,39 +408,72 @@ export class TeacherPage extends ViewPage {
         }
     }
 
-    private async getCourses(): Promise<Course[]> {
+    private async getCourses(statuses: Enrollment.UserStatus[]): Promise<Course[]> {
         const curUsr = this.userMan.getCurrentUser();
         if (curUsr) {
-            return this.courseMan.getCoursesFor(curUsr, []);
+            const enrols = await this.courseMan.getEnrollmentsForUser(curUsr.getId(), statuses);
+            return sortCoursesByVisibility(enrols);
         }
         return [];
     }
 
     private async getCourseURL(courseID: number): Promise<string> {
-        const repoMap = await this.courseMan.getRepositories(
-            courseID,
-            [Repository.Type.COURSEINFO],
-            );
-        const fullRepoName = repoMap.get(Repository.Type.COURSEINFO);
-        return fullRepoName ? fullRepoName.split("course-info")[0] : "";
+        const repoMap = this.repositories.get(courseID);
+        return repoMap?.get(Repository.Type.COURSEINFO)?.split("course-info")[0] ?? "";
     }
 
     private async courseFunc(courseParam: string, fn: (course: Course) => View): View {
-        const courseId = parseInt(courseParam, 10);
-        const course = await this.courseMan.getCourse(courseId);
+        const courseID = parseInt(courseParam, 10);
+        const course = this.courses.find(c => c.getId() === courseID) ?? await this.courseMan.getCourse(courseID);
         if (course) {
-            this.repositories = await this.courseMan.getRepositories(courseId,
-                [Repository.Type.COURSEINFO,
-                Repository.Type.ASSIGNMENTS,
-                Repository.Type.TESTS,
-                Repository.Type.SOLUTIONS]);
             return fn(course);
         }
         return showLoader();
     }
 
-    private setConfirmString(approve: boolean): string {
-        return approve ? "approve" : "undo approval for";
+    private async fetchCourseRepos(courseID: number): Promise<Map<Repository.Type, string>> {
+        return this.courseMan.getRepositories(courseID,
+                [Repository.Type.COURSEINFO,
+                Repository.Type.ASSIGNMENTS,
+                Repository.Type.TESTS,
+                Repository.Type.SOLUTIONS]);
     }
 
+    private setupRepos(): Map<number, Map<Repository.Type, string>> {
+        const allRepoMap = new Map<number, Map<Repository.Type, string>>();
+        this.courses.forEach(async (crs) => {
+            const repoMap = await this.fetchCourseRepos(crs.getId());
+            allRepoMap.set(crs.getId(), repoMap);
+        });
+        return allRepoMap;
+    }
+
+    private async generateAssignmentList(course: Course): Promise<JSX.Element> {
+        const assignments: Assignment[] = await this.courseMan.getAssignments(course.getId());
+
+        return <div className="row">{
+            sortAssignmentsByOrder(assignments).map((a, i) => <AssignmentView
+                key={i}
+                assignment={a}
+                updateBenchmark={(bm: GradingBenchmark) => {
+                    return this.courseMan.updateBenchmark(bm);
+                }}
+                addBenchmark={(bm: GradingBenchmark) => {
+                    return this.courseMan.addNewBenchmark(bm);
+                }}
+                removeBenchmark={(bm: GradingBenchmark) => {
+                    return this.courseMan.deleteBenchmark(bm);
+                }}
+                updateCriterion={(c: GradingCriterion) => {
+                    return this.courseMan.updateCriterion(c);
+                }}
+                addCriterion={(c: GradingCriterion) => {
+                    return this.courseMan.addNewCriterion(c);
+                }}
+                removeCriterion={(c: GradingCriterion) => {
+                    return this.courseMan.deleteCriterion(c)
+                }}
+            ></AssignmentView>)
+            }</div>
+    }
 }

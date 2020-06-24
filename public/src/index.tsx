@@ -28,7 +28,7 @@ import { UserPage } from "./pages/UserPage";
 
 import { AddMenu } from "./components/navigation/AddMenu";
 import { GrpcManager } from "./managers/GRPCManager";
-import { showLoader } from './loader';
+import { showLoader } from "./loader";
 
 interface IAutoGraderState {
     activePage?: ViewPage;
@@ -170,9 +170,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
     }
 
     private async renderActiveMenu(page: ViewPage, menu: number): Promise<JSX.Element[] | string> {
-        if (this.currentMenuContent[menu]) {
-            return this.currentMenuContent[menu];
-        } else if (page) {
+        if (page) {
             this.currentMenuContent[menu] = await page.renderMenu(menu);
             return this.currentMenuContent[menu];
         }
@@ -198,14 +196,9 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         let content: JSX.Element;
         let leftMenu: JSX.Element[] | null | string = null;
         let topArea: JSX.Element[] | null | string = null;
-        /*if (!this.checkloggedInUser()) {
-            name = "frontpage";
-            content = <UserProfile userMan={this.userMan} onEditStop={() => { this.navMan.refresh(); }} />;
-        } else {*/
         content = await this.renderActivePage(page, this.subPage);
         leftMenu = await this.renderActiveMenu(page, 0);
         topArea = await this.renderActiveMenu(page, 1);
-        // }
 
         const loginLink: ILink[] = [
             { name: "Github", uri: "app/login/login/github" },
@@ -213,6 +206,7 @@ class AutoGrader extends React.Component<IAutoGraderProps, IAutoGraderState> {
         ];
         const dropDownMenuLinks: ILink[] = [
             { name: "Join Course", uri: "app/student/enroll" },
+            { name: "Course List", uri: "app/student/courses/list"},
         ];
         if (this.state.curUser && this.state.curUser.getIsadmin()) {
             dropDownMenuLinks.push({ name: "New Course", uri: "app/admin/courses/new" });

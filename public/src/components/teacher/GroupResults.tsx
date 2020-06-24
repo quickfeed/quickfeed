@@ -1,22 +1,23 @@
 import * as React from "react";
-import { Assignment, Course } from "../../../proto/ag_pb";
+import { Assignment, Course, Submission, User } from '../../../proto/ag_pb';
 import { DynamicTable, Row, Search, StudentLab } from "../../components";
-import { IStudentLabsForCourse, IStudentLab, ISubmission } from "../../models";
+import { IAllSubmissionsForEnrollment, ISubmissionLink, ISubmission } from '../../models';
 import { ICellElement } from "../data/DynamicTable";
-import { generateCellClass, generateGroupRepoLink, sortByScore } from "./labHelper";
+import { generateCellClass, sortByScore } from "./labHelper";
+import { getSlipDays, groupRepoLink, searchForLabs } from "../../componentHelper";
 
 interface IResultsProps {
     course: Course;
     courseURL: string;
-    groups: IStudentLabsForCourse[];
+    groups: IAllSubmissionsForEnrollment[];
     labs: Assignment[];
-    onApproveClick: (submissionID: number, approved: boolean) => Promise<boolean>;
+    onApproveClick: (submission: ISubmission) => Promise<boolean>;
     onRebuildClick: (assignmentID: number, submissionID: number) => Promise<ISubmission | null>;
 }
 
 interface IResultsState {
-    assignment?: IStudentLab;
-    groups: IStudentLabsForCourse[];
+    submissionLink?: ISubmissionLink;
+    groups: IAllSubmissionsForEnrollment[];
 }
 
 export class GroupResults extends React.Component<IResultsProps, IResultsState> {
@@ -25,15 +26,16 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         super(props);
 
         const currentGroup = this.props.groups.length > 0 ? this.props.groups[0] : null;
-        if (currentGroup && currentGroup.labs.length > 0) {
+        const allAssignments = currentGroup ? currentGroup.course.getAssignmentsList() : null;
+        if (currentGroup && allAssignments && allAssignments.length > 0) {
             this.state = {
                 // Only using the first group to fetch assignments.
-                assignment: currentGroup.labs[0],
+                submissionLink: currentGroup.labs[0],
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         } else {
             this.state = {
-                assignment: undefined,
+                submissionLink: undefined,
                 groups: sortByScore(this.props.groups, this.props.labs, true),
             };
         }
@@ -41,32 +43,42 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
 
     public render() {
         let groupLab: JSX.Element | null = null;
-        const currentGroup = this.props.groups.length > 0 ? this.props.groups : null;
-        if (currentGroup
-            && this.state.assignment
-            && this.state.assignment.assignment.getIsgrouplab()) {
+        const currentGroups = this.props.groups.length > 0 ? this.props.groups : null;
+        if (currentGroups
+            && this.state.submissionLink
+            && this.state.submissionLink.assignment.getIsgrouplab()) {
             groupLab = <StudentLab
-                assignment={this.state.assignment}
-                showApprove={true}
+                studentSubmission={this.state.submissionLink}
+                student={new User()}
+                courseURL={this.props.courseURL}
+                teacherPageView={false}
+                slipdays={this.props.course.getSlipdays()}
                 onRebuildClick={
                     async () => {
-                        if (this.state.assignment && this.state.assignment.submission) {
-                            const ans = await this.props.onRebuildClick(this.state.assignment.assignment.getId(), this.state.assignment.submission.id);
+                        if (this.state.submissionLink && this.state.submissionLink.submission) {
+                            const ans = await this.props.onRebuildClick(this.state.submissionLink.assignment.getId(), this.state.submissionLink.submission.id);
                             if (ans) {
-                                this.state.assignment.submission = ans;
+                                this.state.submissionLink.submission = ans;
                                 return true;
                             }
                         }
                         return false;
                     }
                 }
-                onApproveClick={(approve: boolean) => {
-                    if (this.state.assignment && this.state.assignment.submission) {
-                        const ans = this.props.onApproveClick(this.state.assignment.submission.id, approve);
+                onApproveClick={async (status: Submission.Status, approve: boolean) => {
+                    const selected = this.state.submissionLink;
+                    const latest = selected?.submission;
+                    if (latest) {
+                        latest.status = Submission.Status.APPROVED;
+                        const ans = await this.props.onApproveClick(latest);
                         if (ans) {
-                            this.state.assignment.submission.approved = approve;
+                            this.setState({
+                                submissionLink: selected,
+                            });
                         }
+                        return ans;
                     }
+                    return false;
                 }}
             />;
         }
@@ -78,11 +90,11 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                     <div key="resulthead" className="col-lg6 col-md-6 col-sm-12">
                         <Search className="input-group"
                             placeholder="Search for groups"
-                            onChange={(query) => this.handleOnchange(query)}
+                            onChange={(query) => this.handleSearch(query)}
                         />
                         <DynamicTable header={this.getResultHeader()}
                             data={this.state.groups}
-                            selector={(item: IStudentLabsForCourse) => this.getGroupResultSelector(item)}
+                            selector={(item: IAllSubmissionsForEnrollment) => this.getGroupResultSelector(item)}
                         />
                     </div>
                     <div key="resultbody" className="col-lg-6 col-md-6 col-sm-12">
@@ -99,9 +111,9 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return headers;
     }
 
-    private getGroupResultSelector(group: IStudentLabsForCourse): (string | JSX.Element | ICellElement)[] {
+    private getGroupResultSelector(group: IAllSubmissionsForEnrollment): (string | JSX.Element | ICellElement)[] {
         const grp = group.enrollment.getGroup();
-        const name = grp ? generateGroupRepoLink(grp.getName(), this.props.courseURL) : "";
+        const name = grp ? groupRepoLink(grp.getName(), this.props.courseURL) : "";
         let selector: (string | JSX.Element | ICellElement)[] = [name];
         selector = selector.concat(group.labs.filter((e, i) => e.assignment.getIsgrouplab()).map(
             (e, i) => {
@@ -121,24 +133,15 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
         return selector;
     }
 
-    private handleOnclick(item: IStudentLab): void {
+    private async handleOnclick(item: ISubmissionLink) {
         this.setState({
-            assignment: item,
+            submissionLink: item,
         });
     }
 
-    private handleOnchange(query: string): void {
-        query = query.toLowerCase();
-        const filteredData: IStudentLabsForCourse[] = [];
-        this.props.groups.forEach((std) => {
-            const grp = std.enrollment.getGroup();
-            const name = grp ? grp.getName() : "";
-            if (name.toLowerCase().indexOf(query) !== -1) {
-                filteredData.push(std);
-            }
-        });
+    private handleSearch(query: string): void {
         this.setState({
-            groups: filteredData,
+            groups: searchForLabs(this.props.groups, query),
         });
     }
 }

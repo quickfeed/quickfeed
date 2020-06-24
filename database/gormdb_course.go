@@ -31,7 +31,12 @@ func (db *GormDB) CreateCourse(userID uint64, course *pb.Course) error {
 	if err := db.CreateEnrollment(&pb.Enrollment{UserID: userID, CourseID: course.ID}); err != nil {
 		return err
 	}
-	if err := db.UpdateEnrollmentStatus(userID, course.ID, pb.Enrollment_TEACHER); err != nil {
+	query := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	}
+	if err := db.UpdateEnrollment(query); err != nil {
 		return err
 	}
 	return nil
@@ -51,7 +56,13 @@ func (db *GormDB) GetCourse(courseID uint64, withInfo bool) (*pb.Course, error) 
 		}
 		// and only group submissions from approved groups
 		modelGroup := &pb.Group{Status: pb.Group_APPROVED, CourseID: courseID}
-		if err := m.Preload("Assignments").Preload("Enrollments", "status in (?)", userStates).Preload("Enrollments.User").Preload("Groups", modelGroup).First(&course, courseID).Error; err != nil {
+		if err := m.Preload("Assignments").
+			Preload("Enrollments", "status in (?)", userStates).
+			Preload("Enrollments.User").
+			Preload("Enrollments.Group").
+			Preload("Enrollments.UsedSlipDays").
+			Preload("Groups", modelGroup).
+			First(&course, courseID).Error; err != nil {
 			return nil, err
 		}
 	} else {

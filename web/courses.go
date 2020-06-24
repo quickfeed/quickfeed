@@ -19,12 +19,48 @@ func (s *AutograderService) getCourses() (*pb.Courses, error) {
 }
 
 // getCoursesWithEnrollment returns all courses that match the provided enrollment status.
-func (s *AutograderService) getCoursesWithEnrollment(request *pb.CoursesListRequest) (*pb.Courses, error) {
-	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.States...)
+func (s *AutograderService) getCoursesByUser(request *pb.EnrollmentStatusRequest) (*pb.Courses, error) {
+	courses, err := s.db.GetCoursesByUser(request.GetUserID(), request.Statuses...)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.Courses{Courses: courses}, nil
+}
+
+// getEnrollmentsByUser returns all enrollments for the given user with preloaded
+// courses and groups
+func (s *AutograderService) getEnrollmentsByUser(request *pb.EnrollmentStatusRequest) (*pb.Enrollments, error) {
+	enrollments, err := s.db.GetEnrollmentsByUser(request.UserID, request.Statuses...)
+	if err != nil {
+		return nil, err
+	}
+	for _, enrollment := range enrollments {
+		enrollment.SetSlipDays(enrollment.Course)
+	}
+	return &pb.Enrollments{Enrollments: enrollments}, nil
+}
+
+// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
+func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
+	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.Statuses...)
+	if err != nil {
+		return nil, err
+	}
+
+	// to populate response only with users who are not member of any group, we must filter the result
+	if request.IgnoreGroupMembers {
+		enrollmentsWithoutGroups := make([]*pb.Enrollment, 0)
+		for _, enrollment := range enrollments {
+			if enrollment.GroupID == 0 {
+				enrollmentsWithoutGroups = append(enrollmentsWithoutGroups, enrollment)
+			}
+		}
+		enrollments = enrollmentsWithoutGroups
+	}
+	for _, enrollment := range enrollments {
+		enrollment.SetSlipDays(enrollment.Course)
+	}
+	return &pb.Enrollments{Enrollments: enrollments}, nil
 }
 
 // createEnrollment creates a pending enrollment for the given user and course.
@@ -91,47 +127,159 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	if err != nil {
 		return nil, err
 	}
+	for _, sbm := range submissions {
+		sbm.MakeSubmissionReviews()
+	}
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
 // getAllLabs returns all individual lab submissions by students enrolled in the specified course.
-func (s *AutograderService) getAllLabs(request *pb.LabRequest) ([]*pb.LabResultLink, error) {
-	allLabs, err := s.db.GetCourseSubmissions(request.GetCourseID(), request.GetGroupLabs())
+func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) (*pb.CourseSubmissions, error) {
+	assignments, err := s.db.GetCourseAssignmentsWithSubmissions(request.GetCourseID(), request.Type)
 	if err != nil {
 		return nil, err
 	}
-
-	//TODO(meling): Not sure this cache is effective, since the map is created on every call! Consider options!
-
-	// make a local map to store database values to avoid querying the database multiple times
-	// format: [studentID][assignmentID]{latest submission}
-	labCache := make(map[uint64]map[uint64]pb.Submission)
-
-	// populate cache map with student labs, filtering the latest submissions for every assignment
-	for _, lab := range allLabs {
-		labID := lab.GetUserID()
-		if request.GroupLabs {
-			labID = lab.GetGroupID()
-		}
-		_, ok := labCache[labID]
-		if !ok {
-			labCache[labID] = make(map[uint64]pb.Submission)
-		}
-		labCache[labID][lab.GetAssignmentID()] = lab
-	}
-
 	// fetch course record with all assignments and active enrollments
 	course, err := s.db.GetCourse(request.GetCourseID(), true)
 	if err != nil {
 		return nil, err
 	}
+	course.SetSlipDays()
 
-	return makeLabResults(course, labCache, request.GetGroupLabs()), nil
+	for _, a := range assignments {
+		for _, sbm := range a.Submissions {
+			sbm.MakeSubmissionReviews()
+		}
+	}
+
+	enrolLinks := make([]*pb.EnrollmentLink, 0)
+
+	switch request.Type {
+	case pb.SubmissionsForCourseRequest_GROUP:
+		enrolLinks = append(enrolLinks, s.makeGroupResults(course, assignments)...)
+	case pb.SubmissionsForCourseRequest_INDIVIDUAL:
+		enrolLinks = append(enrolLinks, makeResults(course, assignments)...)
+	default:
+		enrolLinks = append(makeResults(course, assignments), s.makeGroupResults(course, assignments)...)
+	}
+	return &pb.CourseSubmissions{Course: course, Links: enrolLinks}, nil
+}
+
+// makeResults generates enrollment to assignment to submissions links
+// for all course students and all individual assignments
+func makeResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
+	enrolLinks := make([]*pb.EnrollmentLink, 0)
+
+	for _, enrol := range course.Enrollments {
+		newLink := &pb.EnrollmentLink{Enrollment: enrol}
+		allSubmissions := make([]*pb.SubmissionLink, 0)
+		for _, a := range assignments {
+			subLink := &pb.SubmissionLink{
+				Assignment: a,
+			}
+			for _, sb := range a.Submissions {
+				if sb.UserID > 0 && sb.UserID == enrol.UserID {
+					subLink.Submission = sb
+				}
+			}
+			allSubmissions = append(allSubmissions, subLink)
+		}
+
+		sortSubmissionsByAssignmentOrder(allSubmissions)
+		newLink.Submissions = allSubmissions
+		enrolLinks = append(enrolLinks, newLink)
+	}
+
+	return enrolLinks
+}
+
+// makeGroupResults generates enrollment to assignment to submissions links
+// for all course groups and all group assignments
+func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*pb.Assignment) []*pb.EnrollmentLink {
+	enrolLinks := make([]*pb.EnrollmentLink, 0)
+	for _, grp := range course.Groups {
+
+		newLink := &pb.EnrollmentLink{}
+		for _, enrol := range course.Enrollments {
+			if enrol.GroupID > 0 && enrol.GroupID == grp.ID {
+				newLink.Enrollment = enrol
+			}
+		}
+		if newLink.Enrollment == nil {
+			s.logger.Debugf("Got empty enrollment for group %+v", grp)
+		}
+
+		allSubmissions := make([]*pb.SubmissionLink, 0)
+		for _, a := range assignments {
+			subLink := &pb.SubmissionLink{
+				Assignment: a,
+			}
+			for _, sb := range a.Submissions {
+				if sb.GroupID > 0 && sb.GroupID == grp.ID {
+					subLink.Submission = sb
+				}
+			}
+			allSubmissions = append(allSubmissions, subLink)
+		}
+		sortSubmissionsByAssignmentOrder(allSubmissions)
+		newLink.Submissions = allSubmissions
+		enrolLinks = append(enrolLinks, newLink)
+	}
+	return enrolLinks
 }
 
 // updateSubmission approves the given submission or undoes a previous approval.
-func (s *AutograderService) updateSubmission(submissionID uint64, approve bool) error {
-	return s.db.UpdateSubmission(submissionID, approve)
+func (s *AutograderService) updateSubmission(submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
+	if err != nil {
+		return err
+	}
+	submission.Status = status
+	submission.Released = released
+	if score > 0 {
+		submission.Score = score
+	}
+	return s.db.UpdateSubmission(submission)
+}
+
+// updateSubmissions updates status and release state of multiple submissions for the
+// given course and assignment ID for all submissions with score equal or above the provided score
+func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
+	if _, err := s.db.GetCourse(request.CourseID, false); err != nil {
+		return err
+	}
+	if _, err := s.db.GetAssignment(&pb.Assignment{
+		CourseID: request.CourseID,
+		ID:       request.AssignmentID,
+	}); err != nil {
+		return err
+	}
+
+	query := &pb.Submission{
+		AssignmentID: request.AssignmentID,
+		Score:        request.ScoreLimit,
+		Released:     request.Release,
+	}
+	if request.Approve {
+		query.Status = pb.Submission_APPROVED
+	}
+
+	return s.db.UpdateSubmissions(request.CourseID, query)
+}
+
+func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error) {
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
+	if err != nil {
+		return nil, err
+	}
+	names := make([]*pb.User, 0)
+	// TODO: make sure to preload reviews here
+	for _, review := range submission.Reviews {
+		// ignore possible error, will just add an empty string
+		u, _ := s.db.GetUser(review.ReviewerID)
+		names = append(names, u)
+	}
+	return names, nil
 }
 
 // updateCourse updates an existing course.
@@ -150,34 +298,8 @@ func (s *AutograderService) updateCourse(ctx context.Context, sc scm.SCM, reques
 	return s.db.UpdateCourse(request)
 }
 
-// getEnrollmentsByUser returns all enrollments for the given user with preloaded
-// courses and groups
-func (s *AutograderService) getEnrollmentsByUser(userID uint64) (*pb.Enrollments, error) {
-	enrollments, err := s.db.GetEnrollmentsByUser(userID)
-	if err != nil {
-		return nil, err
-	}
-	return &pb.Enrollments{Enrollments: enrollments}, nil
-}
-
-// getEnrollmentsByCourse returns all enrollments for a course that match the given enrollment request.
-func (s *AutograderService) getEnrollmentsByCourse(request *pb.EnrollmentRequest) (*pb.Enrollments, error) {
-	enrollments, err := s.db.GetEnrollmentsByCourse(request.CourseID, request.States...)
-	if err != nil {
-		return nil, err
-	}
-
-	// to populate response only with users who are not member of any group, we must filter the result
-	if request.FilterOutGroupMembers {
-		enrollmentsWithoutGroups := make([]*pb.Enrollment, 0)
-		for _, enrollment := range enrollments {
-			if enrollment.GroupID == 0 {
-				enrollmentsWithoutGroups = append(enrollmentsWithoutGroups, enrollment)
-			}
-		}
-		enrollments = enrollmentsWithoutGroups
-	}
-	return &pb.Enrollments{Enrollments: enrollments}, nil
+func (s *AutograderService) changeCourseVisibility(enrollment *pb.Enrollment) error {
+	return s.db.UpdateEnrollment(enrollment)
 }
 
 // getRepositoryURL returns URL of a course repository of the given type.
@@ -269,6 +391,11 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		UserID:         user.GetID(),
 		RepoType:       pb.Repository_USER,
 	}
+	userEnrolQuery := &pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_STUDENT,
+	}
 	repos, err := s.db.GetRepositories(userRepoQuery)
 	if err != nil {
 		return err
@@ -284,7 +411,7 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 		s.logger.Debug("Enrolling student: ", user.GetLogin(), " have database repos: ", len(repos))
 		if len(repos) > 0 {
 			// repo already exist, update enrollment in database
-			return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
+			return s.db.UpdateEnrollment(userEnrolQuery)
 		}
 		// create user repo, user team, and add user to students team
 		repo, err := updateReposAndTeams(ctx, sc, course, user.GetLogin(), pb.Enrollment_STUDENT)
@@ -303,17 +430,12 @@ func (s *AutograderService) enrollStudent(ctx context.Context, sc scm.SCM, enrol
 			RepoType:       pb.Repository_USER,
 		}
 
-		// only create database record if there are no user repos
-		// TODO(vera): this can be set as a unique constraint in go tag in proto
-		// but will it be compatible with the database created without this constraint?
-		if dbRepo, _ := s.db.GetRepositories(&userRepo); len(dbRepo) < 1 {
-			if err := s.db.CreateRepository(&userRepo); err != nil {
-				return err
-			}
+		if err := s.db.CreateRepository(&userRepo); err != nil {
+			return err
 		}
 	}
 
-	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_STUDENT)
+	return s.db.UpdateEnrollment(userEnrolQuery)
 }
 
 // enrollTeacher promotes the given user to teacher of the given course
@@ -326,58 +448,17 @@ func (s *AutograderService) enrollTeacher(ctx context.Context, sc scm.SCM, enrol
 		s.logger.Errorf("failed to update team membership for teacher %s: %s", user.Login, err.Error())
 		return err
 	}
-	return s.db.UpdateEnrollmentStatus(user.ID, course.ID, pb.Enrollment_TEACHER)
+	return s.db.UpdateEnrollment(&pb.Enrollment{
+		UserID:   user.ID,
+		CourseID: course.ID,
+		Status:   pb.Enrollment_TEACHER,
+	})
 }
 
-func makeLabResults(course *pb.Course, labCache map[uint64]map[uint64]pb.Submission, groupLab bool) []*pb.LabResultLink {
-	allCourseLabs := make([]*pb.LabResultLink, 0)
+func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.SubmissionLink {
 
-	if groupLab {
-		for _, grp := range course.Groups {
-			groupSubmissions := make([]*pb.Submission, 0)
-			for _, v := range labCache[grp.GetID()] {
-				tmp := v
-				groupSubmissions = append(groupSubmissions, &tmp)
-			}
-
-			// sort latest submissions by lab ID
-			sort.Slice(groupSubmissions, func(i, j int) bool {
-				return groupSubmissions[i].GetAssignmentID() < groupSubmissions[j].GetAssignmentID()
-			})
-
-			labResult := &pb.LabResultLink{
-				AuthorName: grp.GetName(),
-				Enrollment: &pb.Enrollment{
-					CourseID: course.ID,
-					GroupID:  grp.GetID(),
-					Group:    grp,
-				},
-				Submissions: groupSubmissions,
-			}
-			allCourseLabs = append(allCourseLabs, labResult)
-		}
-	} else {
-		for _, usr := range course.Enrollments {
-			// collect all submission values for the user
-			userSubmissions := make([]*pb.Submission, 0)
-			for _, v := range labCache[usr.GetUserID()] {
-				tmp := v
-				userSubmissions = append(userSubmissions, &tmp)
-			}
-
-			// sort latest submissions by lab ID
-			sort.Slice(userSubmissions, func(i, j int) bool {
-				return userSubmissions[i].GetAssignmentID() < userSubmissions[j].GetAssignmentID()
-			})
-
-			labResult := &pb.LabResultLink{
-				AuthorName:  usr.GetUser().GetName(),
-				Enrollment:  usr,
-				Submissions: userSubmissions,
-			}
-			allCourseLabs = append(allCourseLabs, labResult)
-		}
-	}
-
-	return allCourseLabs
+	sort.Slice(unsorted, func(i, j int) bool {
+		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
+	})
+	return unsorted
 }

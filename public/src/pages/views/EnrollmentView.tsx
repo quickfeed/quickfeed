@@ -1,10 +1,10 @@
 import * as React from "react";
 import { Course, Enrollment } from "../../../proto/ag_pb";
 import { DynamicTable } from "../../components";
-import { IStudentLabsForCourse } from "../../models";
+import { IAllSubmissionsForEnrollment } from "../../models";
 
 export interface IEnrollmentViewProps {
-    courses: IStudentLabsForCourse[];
+    courses: IAllSubmissionsForEnrollment[];
     onEnrollmentClick: (course: Course) => void;
 }
 
@@ -12,19 +12,19 @@ export class EnrollmentView extends React.Component<IEnrollmentViewProps, {}> {
     public render() {
         return <DynamicTable
             data={this.props.courses}
-            header={["Course code", "Course Name", "Action"]}
-            selector={(course: IStudentLabsForCourse) => this.createEnrollmentRow(course)}>
+            header={["Course code", "Course Name", "Status"]}
+            selector={(course: IAllSubmissionsForEnrollment) => this.createEnrollmentRow(course)}>
         </DynamicTable>;
 
     }
 
-    public createEnrollmentRow(course: IStudentLabsForCourse):
+    public createEnrollmentRow(course: IAllSubmissionsForEnrollment):
         (string | JSX.Element)[] {
         const base: (string | JSX.Element)[] = [course.course.getCode(), course.course.getName()];
         if (course.enrollment) {
             if (course.enrollment.getStatus() === Enrollment.UserStatus.STUDENT
                  || course.enrollment.getStatus() === Enrollment.UserStatus.TEACHER) {
-                base.push("");
+                base.push("Enrolled");
             } else if (course.enrollment.getStatus() === Enrollment.UserStatus.PENDING) {
                 base.push("Pending");
             } else if (course.enrollment.getStatus() === Enrollment.UserStatus.NONE) {

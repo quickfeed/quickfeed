@@ -1,19 +1,21 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "0.1.0",
+    "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "Build Webpack",
-            "isBuildCommand": true,
+            "label": "Build Webpack",
+            "type": "shell",
+            "group": "build",
             "command": "webpack",
-            "isShellCommand": true,
             "isBackground": true,
             "args": [
                 "--watch",
                 "--hide-modules"
             ],
-            "showOutput": "silent",
+            "presentation": {
+                "reveal": "silent",
+            },
             "problemMatcher": {
                 "owner": "typescript",
                 "severity": "error",
@@ -39,14 +41,16 @@
             }
         },
         {
-            "taskName": "linter",
+            "label": "linter",
+            "type": "shell",
             "command": "tslint",
             "args": [
                 "-p",
                 "."
             ],
-            "isShellCommand": true,
-            "showOutput": "silent",
+            "presentation": {
+                "reveal": "silent",
+            },
             "problemMatcher": "$tslint5"
         }
     ]

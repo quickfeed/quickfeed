@@ -27,7 +27,3 @@ export function formatDate(str: string | Date): string {
     const date = str instanceof Date ? str : new Date(str);
     return date.toLocaleString("no-NO", dateOptions);
 }
-
-export function generateLabRepoLink(course: string, login: string): string {
-    return course + login + "-labs";
-}

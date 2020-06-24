@@ -24,6 +24,30 @@ const (
 // They do not cover processing push events on a server.
 // See web/hooks package for tests involving processing push events.
 
+func TestGetOrganization(t *testing.T) {
+	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
+	if len(accessToken) < 1 {
+		t.Skip("This test requires a 'GITHUB_ACCESS_TOKEN' and access to the 'autograder-test' GitHub organization")
+	}
+
+	var s scm.SCM
+	s, err := scm.NewSCMClient(zap.NewNop().Sugar(), "github", accessToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	orgOpts := &scm.GetOrgOptions{
+		ID:       0,
+		Name:     "dat320-2020",
+		Username: "meling",
+	}
+	org, err := s.GetOrganization(ctx, orgOpts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("org: %v", org)
+}
+
 func TestListHooks(t *testing.T) {
 	accessToken := os.Getenv("GITHUB_ACCESS_TOKEN")
 	if len(accessToken) < 1 {

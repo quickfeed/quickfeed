@@ -1,11 +1,12 @@
 import * as React from "react";
 import { CoursePanel, Row } from "../../components";
 import { NavigationManager } from "../../managers/NavigationManager";
-import { IStudentLabsForCourse } from "../../models";
+import { IAllSubmissionsForEnrollment } from "../../models";
+import { Enrollment } from "../../../proto/ag_pb";
 
 interface ICourseOverviewProps {
-    courseOverview: IStudentLabsForCourse[];
-    groupCourseOverview: IStudentLabsForCourse[];
+    courseOverview: IAllSubmissionsForEnrollment[];
+    groupCourseOverview: IAllSubmissionsForEnrollment[];
     navMan: NavigationManager;
 }
 
@@ -13,7 +14,8 @@ export class CoursesOverview extends React.Component<ICourseOverviewProps> {
 
     public render() {
         const groupCourses = this.props.groupCourseOverview;
-        const courses = this.props.courseOverview.map((val, key) => {
+        const activeCourses = this.props.courseOverview.filter(e => e.enrollment.getState() !== Enrollment.DisplayState.HIDDEN);
+        const courses = activeCourses.map((val, key) => {
             if (groupCourses && groupCourses[key] && groupCourses[key].course.getId() === val.course.getId()) {
                 for (let iter = 0; iter < val.labs.length; iter++) {
                     if (val.labs[iter].assignment.getIsgrouplab()) {

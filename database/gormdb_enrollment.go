@@ -23,6 +23,7 @@ func (db *GormDB) CreateEnrollment(enrollment *pb.Enrollment) error {
 	}
 
 	enrollment.Status = pb.Enrollment_PENDING
+	enrollment.State = pb.Enrollment_VISIBLE
 	return db.conn.Create(&enrollment).Error
 }
 
@@ -35,16 +36,17 @@ func (db *GormDB) RejectEnrollment(userID, courseID uint64) error {
 	return db.conn.Delete(enrol).Error
 }
 
-// UpdateEnrollmentStatus changes status of an enrollment of the given user ID in the given course ID.
-func (db *GormDB) UpdateEnrollmentStatus(userID, courseID uint64, status pb.Enrollment_UserStatus) error {
-	return db.setEnrollment(userID, courseID, status)
-
+// UpdateEnrollment changes status and display state of the given enrollment.
+func (db *GormDB) UpdateEnrollment(enrol *pb.Enrollment) error {
+	return db.conn.Model(&pb.Enrollment{}).
+		Where(&pb.Enrollment{CourseID: enrol.CourseID, UserID: enrol.UserID}).
+		Update(&pb.Enrollment{State: enrol.State, Status: enrol.Status}).Error
 }
 
 // GetEnrollmentByCourseAndUser returns a user enrollment for the given course ID.
 func (db *GormDB) GetEnrollmentByCourseAndUser(courseID uint64, userID uint64) (*pb.Enrollment, error) {
 	var enrollment pb.Enrollment
-	m := db.conn.Preload("Course").Preload("User")
+	m := db.conn.Preload("Course").Preload("User").Preload("UsedSlipDays")
 	if err := m.
 		Where(&pb.Enrollment{
 			CourseID: courseID,
@@ -62,8 +64,8 @@ func (db *GormDB) GetEnrollmentsByCourse(courseID uint64, statuses ...pb.Enrollm
 }
 
 // GetEnrollmentsByUser returns all existing enrollments for the given user
-func (db *GormDB) GetEnrollmentsByUser(userID uint64) ([]*pb.Enrollment, error) {
-	return db.getEnrollments(&pb.User{ID: userID})
+func (db *GormDB) GetEnrollmentsByUser(userID uint64, statuses ...pb.Enrollment_UserStatus) ([]*pb.Enrollment, error) {
+	return db.getEnrollments(&pb.User{ID: userID}, statuses...)
 }
 
 // getEnrollments is generic helper function that return enrollments for either course and user.
@@ -76,7 +78,11 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 		}
 	}
 	var enrollments []*pb.Enrollment
-	if err := db.conn.Preload("User").Preload("Course").Preload("Group").Model(model).
+	if err := db.conn.Preload("User").
+		Preload("Course").
+		Preload("Group").
+		Preload("UsedSlipDays").
+		Model(model).
 		Where("status in (?)", statuses).
 		Association("Enrollments").
 		Find(&enrollments).Error; err != nil {
@@ -85,10 +91,17 @@ func (db *GormDB) getEnrollments(model interface{}, statuses ...pb.Enrollment_Us
 	return enrollments, nil
 }
 
-// setEnrollment updates enrollment status.
-func (db *GormDB) setEnrollment(userID, courseID uint64, status pb.Enrollment_UserStatus) error {
-	return db.conn.
-		Model(&pb.Enrollment{}).
-		Where(&pb.Enrollment{CourseID: courseID, UserID: userID}).
-		Update(&pb.Enrollment{Status: status}).Error
+// UpdateSlipDays updates used slip days for the given course enrollment
+func (db *GormDB) UpdateSlipDays(usedSlipDays []*pb.UsedSlipDays) error {
+	for _, slipDaysForAssignment := range usedSlipDays {
+		if err := db.updateSlipDays(slipDaysForAssignment); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// updateSlipdays updates or creates UsedSlipDays record
+func (db *GormDB) updateSlipDays(query *pb.UsedSlipDays) error {
+	return db.conn.Save(query).Error
 }

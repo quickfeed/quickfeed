@@ -74,7 +74,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 // GetSubmission fetches a submission record.
 func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	var submission pb.Submission
-	if err := db.conn.Where(query).Last(&submission).Error; err != nil {
+	if err := db.conn.Preload("Reviews").Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
 	return &submission, nil
@@ -105,39 +105,44 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 	return latestSubs, nil
 }
 
-// GetCourseSubmissions returns all individual lab submissions or group submissions for the course ID
-// depending on the provided groupLabs boolean.
-func (db *GormDB) GetCourseSubmissions(courseID uint64, groupLabs bool) ([]pb.Submission, error) {
-	m := db.conn
-
-	// fetch the course entry with all associated assignments and active enrollments
-	course, err := db.GetCourse(courseID, true)
-	if err != nil {
-		return nil, err
-	}
-
-	// get IDs of all individual labs or group labs for the course
-	courseAssignmentIDs := make([]uint64, 0)
-	for _, a := range course.Assignments {
-		if a.IsGroupLab == groupLabs {
-			// collect either group labs or non-group labs
-			// but not both in the same collection.
-			courseAssignmentIDs = append(courseAssignmentIDs, a.GetID())
-		}
-	}
-
-	var allLabs []pb.Submission
-	if err := m.Where("assignment_id IN (?)", courseAssignmentIDs).Find(&allLabs).Error; err != nil {
-		return nil, err
-	}
-
-	return allLabs, nil
+// UpdateSubmission updates submission with the given approved status.
+func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
+	return db.conn.
+		Model(query).
+		Where(&pb.Submission{ID: query.ID}).
+		Update("status", query.Status).
+		Update("released", query.Released).
+		Update("score", query.Score).Error
 }
 
-// UpdateSubmission updates submission with the given approved status.
-func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
+// UpdateSubmissions approves and/or releases all submissions that have score
+// equal or above the provided score for the given assignment ID
+func (db *GormDB) UpdateSubmissions(courseID uint64, query *pb.Submission) error {
 	return db.conn.
-		Model(&pb.Submission{}).
-		Where(&pb.Submission{ID: sid}).
-		Update("approved", approved).Error
+		Model(query).
+		Where("assignment_id = ?", query.AssignmentID).
+		Where("score >= ?", query.Score).
+		Updates(&pb.Submission{
+			Status:   query.Status,
+			Released: query.Released,
+		}).Error
+}
+
+// CreateReview creates a new submission review
+func (db *GormDB) CreateReview(query *pb.Review) error {
+	return db.conn.Create(query).Error
+}
+
+// UpdateReview updates feedback text, review and ready status
+func (db *GormDB) UpdateReview(query *pb.Review) error {
+	return db.conn.Model(query).Where(&pb.Review{
+		ID:           query.ID,
+		SubmissionID: query.SubmissionID,
+		ReviewerID:   query.ReviewerID,
+	}).Update(&pb.Review{
+		Feedback: query.Feedback,
+		Review:   query.Review,
+		Ready:    query.Ready,
+		Score:    query.Score,
+	}).Error
 }
