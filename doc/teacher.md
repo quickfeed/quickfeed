@@ -114,12 +114,27 @@ deadline: "2019-09-23 12:00:00"
 autoapprove: false
 scorelimit: 80
 isgrouplab: false
+reviewers: 2
 ```
 
-`autoapprove` indicates whether or not Autograder will automatically approve the assignment when a sufficient score has been reached..
+`autoapprove` indicates whether or not Autograder will automatically approve the assignment when a sufficient score has been reached.
+`reviewers` indicate the number of reviews to be created for a student submission to this assignment.
 `scorelimit` defines the minimal percentage score on a student submission for the corresponding lab to be auto approved.
 If `scorelimit` is not set, only submissions with 80% or higher will be approved automatically.
 
-## Student labs
 
-Student solutions to a new assignment will not be built and tested if the previous assignment for that student is not approved.
+## Reviewing student submissions
+
+Assignment can be reviewed manually if the number of reviewers in the assignemnt's yaml file is above zero. Grading criteria can be added in groups for a selected assignment on the course's main page. Criteria descriptions and group headers can be edited at any time by simply clicking on the criterion one wishes to edit.
+
+**Review** page gives access to creation of a manual review and feedback to a student solutions submitted for the course assignments. Only teaching staff can create reviews, and only one review per teaching staff member can be added for the same student submission for the same assignment.
+
+Initially, a new review has *in progress* status. *Ready* status can be only set after all the grading criteria checkpoints are marked as either passed or failed. Reviews will not be shown on the **Release** page unless it is *ready*.
+
+Comments can be left to every criterion checkpoint or to the whole group of grading criteria. A feedback to the whole submission can be added as well. Both comments and feedbacks can be edited by the reviewer.
+
+**Release** page gives access to the overview of the results of manual reviews for all course students and assignments. There the user can see submission score for each review, the mean score for all ready reviews, set a final grade/status for a student submission (**Apptoved/Rejected/Revision**), look at all available reviews for each submission, and *release* the results to reveal them to students or student groups.
+
+It is also possible to mass approve submissions or mass release reviews for an assignment by chosing a minimal score and then pressing `Approve all` or `Release all` correspondingly. Every submission with a score equal or above the set minimal score will be approved or reviews to such submissions will be released.
+
+

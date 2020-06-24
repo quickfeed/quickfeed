@@ -267,10 +267,13 @@ body {
 }
 
 .approve-btn {
+    margin-top: 1.5%;
+    width: 45%;
     float: left;
 }
 
 .rebuild-btn {
+    display: block;
     float: right;
 }
 
@@ -298,7 +301,6 @@ body {
     left: 0;
     right: 0;
     margin: auto;
-
 }
 
 .info {
@@ -309,6 +311,265 @@ body {
     left: 0;
     right: 20%;
     margin: auto;
+}
+
+/* manual grading */
+.a-element {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.a-button {
+    display: block;
+    float: right;
+    margin-right: 5%;
+}
+
+.a-header {
+    margin: 0;
+    padding: 1%;
+    padding-left: 3%;
+    border: none;
+    background-color: rgb(227, 226, 229);
+    border-top: dimgray solid 0.2px;
+}
+
+.b-list {
+    margin: 0;
+}
+
+.b-element {
+    margin: auto;
+    padding: 1%;
+    border-top: dimgray solid 0.5px;
+}
+
+.b-header {
+    margin: auto;
+    padding: 1%;
+    border: none;
+    background-color: rgb(219, 218, 218);
+    border-bottom: dimgray solid 1px;
+
+}
+
+.add-b {
+    margin: auto;
+    margin-bottom: 1%;
+    padding: 1%;
+    display: block;
+    border: none;
+    border-top: dimgray solid 0.5px;
+    background-color: rgb(229, 229, 231);
+}
+
+.bm-btn {
+    display: block;
+    float: right;
+    margin-right: 1%;
+}
+
+.bm-add-row {
+    border-top: solid dimgray 0.5px;
+    color: dimgray;
+    height: 10%;
+    margin-bottom: 1%;
+}
+
+.c-add-row {
+    color: dimgray;
+}
+
+.c-add-span {
+    font-size: 0.9em;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.c-add {
+    color: dimgray;
+    margin-right: 2%;
+    margin-left: 2%;
+}
+
+.bm-add {
+    color: dimgray;
+    margin-left: 1%;
+    margin-right: 2%;
+}
+
+.c-element {
+    margin: auto;
+    padding: 0.5%;
+    border: none;
+    border-bottom: dimgray solid 0.5px;
+}
+
+.comment {
+    display: block;
+    float: right;
+    margin-right: 1%;
+}
+
+.r-info {
+    width: 10%;
+    display: block;
+    float: right;
+    margin-right: 5%;
+    color: dimgray;
+    font-size: 0.7em;
+}
+
+.r-btn {
+    margin-top: 5%;
+    margin-bottom: 10%;
+} 
+
+.r-number {
+    display: block;
+    float: left;
+    width: 5%;
+    font-size: 0.7em;
+    margin-left: 3%;
+}
+
+.r-header {
+    display: block;
+    float: left;
+    font-size: 0.7em;
+    margin-left: 10%;
+    margin-top: 0;
+    padding: 0;
+}
+
+.r-grade {
+    width: 100%;
+}
+
+.r-score {
+    width: 10%;
+    font-size: 0.7em;
+    color: dimgray;
+    display: block;
+    float: right;
+    margin-right: 5%;
+}
+
+.r-table {
+    width: 10%;
+}
+
+.r-cell {
+    display: block;
+    float: left;
+    margin-left: 2%;
+}
+
+.release-cell {
+    width: 5%;
+}
+
+.release-btn {
+    width: 10%;
+    display: block;
+    float: right;
+    margin-right: 10%;
+    background-color: rgb(231, 231, 235);
+}
+
+.release-info {
+    margin-top: 1%;
+}
+
+.release-comment {
+    display: block;
+    float: right;
+    margin: 0;
+}
+
+.r-li {
+    border: none;
+    margin: 0;
+    padding: 1%;
+    height: 3%;
+}
+
+.r-table {
+    width: 20%;
+    margin-right: 5%;
+    display: block;
+    float: left;
+}
+
+.s-info {
+    display: block;
+    float: right;
+    border: none;
+    border-bottom: dimgray solid 0.5px;
+}
+
+.grading-view {
+    margin: auto;
+    width: 100%;
+}
+
+.student-div {
+    width: 15%;
+    height: 100%;
+    border: none;
+    float: left;
+    overflow-y: auto;    
+}
+
+.students-nav {
+    margin: 0;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.student-nav>li {
+    width: 98%;
+}
+
+.f-view {
+    margin: auto;
+    padding: 0;
+    width: 80%;
+    display: block;
+    float: right;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.f-row {
+    padding: 1% 1% 1% 2%;
+    width: 100%;
+}
+
+.r-row {
+    display: flexbox;
+}
+
+.m-input {
+    width: 80%;
+    margin: auto;
+    border: none;
+    background-color: white;
+}
+
+.list-divider {
+    border-top: solid rgb(190, 184, 184) 0.5px;
+}
+
+.switch-toggle {
+    display: block;
+    float: right;
+    margin-right: 1%;
+}
+  
+.switch-toggle label:not(.disabled) {
+    cursor: pointer;
 }
 
 /* loader shown while waiting for data being fetched from the server */

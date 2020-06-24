@@ -199,7 +199,7 @@ export class MemberView extends React.Component<IUserViewerProps, IUserViewerSta
                 className="btn btn-success member-btn"
                 // only activate the approve function if is not already approving
                 onClick={this.state.approveAllClicked ?
-                    () => {} : async () => {
+                    () => {return; } : async () => {
                         await this.handleApproveClick().then(() => {
                             this.setState({approveAllClicked: false});
                         });

@@ -270,7 +270,7 @@ func TestGormDBGetAssignment(t *testing.T) {
 	db, cleanup := setup(t)
 	defer cleanup()
 
-	if _, err := db.GetAssignmentsByCourse(10); err != gorm.ErrRecordNotFound {
+	if _, err := db.GetAssignmentsByCourse(10, false); err != gorm.ErrRecordNotFound {
 		t.Errorf("have error '%v' wanted '%v'", err, gorm.ErrRecordNotFound)
 	}
 
@@ -312,7 +312,7 @@ func TestGormDBCreateAssignment(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assignments, err := db.GetAssignmentsByCourse(1)
+	assignments, err := db.GetAssignmentsByCourse(1, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -912,17 +912,19 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 		ID:           submissions[0].ID,
 		AssignmentID: assigment.ID,
 		UserID:       user.ID,
-		Approved:     false,
+		Status:       pb.Submission_NONE,
+		Reviews:      []*pb.Review{},
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
 	}
 
-	if submissions[0].GetApproved() == true {
+	if submissions[0].GetStatus() != pb.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
 
-	err = db.UpdateSubmission(submissions[0].GetID(), false)
+	// approved must stay false
+	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -930,11 +932,11 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetApproved() == true {
+	if submissions[0].GetStatus() != pb.Submission_NONE {
 		t.Errorf("expected submission to be 'not-approved' but got 'approved'")
 	}
-
-	err = db.UpdateSubmission(submissions[0].GetID(), true)
+	submissions[0].Status = pb.Submission_APPROVED
+	err = db.UpdateSubmission(submissions[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -942,7 +944,7 @@ func TestGormDBUpdateSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if submissions[0].GetApproved() != true {
+	if submissions[0].GetStatus() != pb.Submission_APPROVED {
 		t.Errorf("expected submission to be 'approved' but got 'not-approved'")
 	}
 }
@@ -1025,6 +1027,7 @@ func TestGormDBInsertSubmissions(t *testing.T) {
 		ID:           submissions[0].ID,
 		AssignmentID: assigment.ID,
 		UserID:       user.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if !reflect.DeepEqual(submissions[0], want) {
 		t.Errorf("have %#v want %#v", submissions[0], want)
@@ -1094,6 +1097,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 	submission1 := pb.Submission{
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
@@ -1102,6 +1106,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		ID:           1,
 		UserID:       user.ID,
 		AssignmentID: assignment1.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
@@ -1110,6 +1115,7 @@ func TestGormDBGetInsertSubmissions(t *testing.T) {
 		ID:           2,
 		UserID:       user.ID,
 		AssignmentID: assignment2.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
@@ -1323,6 +1329,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 	submission1 := pb.Submission{
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission1); err != nil {
 		t.Fatal(err)
@@ -1331,6 +1338,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		ID:           1,
 		GroupID:      group.ID,
 		AssignmentID: assignment1.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission2); err != nil {
 		t.Fatal(err)
@@ -1339,6 +1347,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		ID:           2,
 		GroupID:      group.ID,
 		AssignmentID: assignment2.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission3); err != nil {
 		t.Fatal(err)
@@ -1347,6 +1356,7 @@ func TestGormDBGetInsertGroupSubmissions(t *testing.T) {
 		ID:           3,
 		UserID:       users[0].ID,
 		AssignmentID: assignment3.ID,
+		Reviews:      []*pb.Review{},
 	}
 	if err := db.CreateSubmission(&submission4); err != nil {
 		t.Fatal(err)

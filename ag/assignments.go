@@ -27,7 +27,7 @@ func (m Assignment) SinceDeadline(now time.Time) (time.Duration, error) {
 // to autoapprove the assignment.
 func (m Assignment) IsApproved(latest *Submission, score uint32) bool {
 	// keep approved status if already approved
-	approved := latest.GetApproved()
+	approved := latest.GetStatus() == Submission_APPROVED
 	if m.GetAutoApprove() && score >= m.GetScoreLimit() {
 		approved = true
 	}

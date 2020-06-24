@@ -127,6 +127,9 @@ func (s *AutograderService) getSubmissions(request *pb.SubmissionRequest) (*pb.S
 	if err != nil {
 		return nil, err
 	}
+	for _, sbm := range submissions {
+		sbm.MakeSubmissionReviews()
+	}
 	return &pb.Submissions{Submissions: submissions}, nil
 }
 
@@ -142,6 +145,13 @@ func (s *AutograderService) getAllLabs(request *pb.SubmissionsForCourseRequest) 
 		return nil, err
 	}
 	course.SetSlipDays()
+
+	for _, a := range assignments {
+		for _, sbm := range a.Submissions {
+			sbm.MakeSubmissionReviews()
+		}
+	}
+
 	enrolLinks := make([]*pb.EnrollmentLink, 0)
 
 	switch request.Type {
@@ -219,8 +229,57 @@ func (s *AutograderService) makeGroupResults(course *pb.Course, assignments []*p
 }
 
 // updateSubmission approves the given submission or undoes a previous approval.
-func (s *AutograderService) updateSubmission(submissionID uint64, approve bool) error {
-	return s.db.UpdateSubmission(submissionID, approve)
+func (s *AutograderService) updateSubmission(submissionID uint64, status pb.Submission_Status, released bool, score uint32) error {
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
+	if err != nil {
+		return err
+	}
+	submission.Status = status
+	submission.Released = released
+	if score > 0 {
+		submission.Score = score
+	}
+	return s.db.UpdateSubmission(submission)
+}
+
+// updateSubmissions updates status and release state of multiple submissions for the
+// given course and assignment ID for all submissions with score equal or above the provided score
+func (s *AutograderService) updateSubmissions(request *pb.UpdateSubmissionsRequest) error {
+	if _, err := s.db.GetCourse(request.CourseID, false); err != nil {
+		return err
+	}
+	if _, err := s.db.GetAssignment(&pb.Assignment{
+		CourseID: request.CourseID,
+		ID:       request.AssignmentID,
+	}); err != nil {
+		return err
+	}
+
+	query := &pb.Submission{
+		AssignmentID: request.AssignmentID,
+		Score:        request.ScoreLimit,
+		Released:     request.Release,
+	}
+	if request.Approve {
+		query.Status = pb.Submission_APPROVED
+	}
+
+	return s.db.UpdateSubmissions(request.CourseID, query)
+}
+
+func (s *AutograderService) getReviewers(submissionID uint64) ([]*pb.User, error) {
+	submission, err := s.db.GetSubmission(&pb.Submission{ID: submissionID})
+	if err != nil {
+		return nil, err
+	}
+	names := make([]*pb.User, 0)
+	// TODO: make sure to preload reviews here
+	for _, review := range submission.Reviews {
+		// ignore possible error, will just add an empty string
+		u, _ := s.db.GetUser(review.ReviewerID)
+		names = append(names, u)
+	}
+	return names, nil
 }
 
 // updateCourse updates an existing course.
@@ -401,6 +460,5 @@ func sortSubmissionsByAssignmentOrder(unsorted []*pb.SubmissionLink) []*pb.Submi
 	sort.Slice(unsorted, func(i, j int) bool {
 		return unsorted[i].Assignment.Order < unsorted[j].Assignment.Order
 	})
-
 	return unsorted
 }

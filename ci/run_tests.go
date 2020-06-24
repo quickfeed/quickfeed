@@ -19,7 +19,7 @@ const (
 	layout     = "2006-01-02T15:04:05"
 )
 
-// RunData holds information needed for running tests.
+// RunData stores CI data
 type RunData struct {
 	Course     *pb.Course
 	Assignment *pb.Assignment
@@ -109,9 +109,13 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		logger.Errorf("Failed to get submission data from database: %w", err)
 		return
 	}
+	// keep approved status if already approved
+	approvedStatus := newest.GetStatus()
+	if rData.Assignment.AutoApprove && result.TotalScore() >= rData.Assignment.GetScoreLimit() {
+		approvedStatus = pb.Submission_APPROVED
+	}
 
 	score := result.TotalScore()
-	approved := rData.Assignment.IsApproved(newest, score)
 	newSubmission := &pb.Submission{
 		AssignmentID: rData.Assignment.ID,
 		BuildInfo:    buildInfo,
@@ -120,7 +124,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		ScoreObjects: scores,
 		UserID:       rData.Repo.UserID,
 		GroupID:      rData.Repo.GroupID,
-		Approved:     approved,
+		Status:       approvedStatus,
 	}
 	err = db.CreateSubmission(newSubmission)
 	if err != nil {
@@ -128,7 +132,7 @@ func recordResults(logger *zap.SugaredLogger, db database.Database, rData *RunDa
 		return
 	}
 
-	logger.Debugf("Created submission for assignment %d in database with approve=%t", rData.Assignment.GetID(), approved)
+	logger.Debugf("Created submission for assignment %d in database with status=%t", rData.Assignment.GetID(), approvedStatus)
 	updateSlipDays(logger, db, rData.Repo, rData.Assignment, newSubmission, result.BuildInfo.BuildDate)
 }
 

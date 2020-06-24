@@ -3,18 +3,21 @@ import {
     Course,
     CourseSubmissions,
     Enrollment,
+    GradingBenchmark,
+    GradingCriterion,
     Group,
     Organization,
     Repository,
+    Review,
     Status,
     Submission,
     SubmissionsForCourseRequest,
     User,
 } from "../../proto/ag_pb";
 import {
-    IStudentLabsForCourse,
+    IAllSubmissionsForEnrollment,
     IBuildInfo,
-    IStudentLab,
+    ISubmissionLink,
     ISubmission,
     ITestCases,
     IUser,
@@ -28,7 +31,6 @@ import {
     IUserProvider,
 } from "../managers";
 import { ILogger } from "./LogManager";
-
 interface IEndpoints {
     user: string;
     auth: string;
@@ -225,13 +227,56 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return isubmissions;
     }
 
-    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
         const result = await this.grpcHelper.getSubmissionsByCourse(courseID, type);
         if (!this.responseCodeSuccess(result) || !result.data) {
             return [];
         }
         return this.toUILinks(result.data);
+
     }
+
+    /*
+    public async getLabsForCourse(courseID: number, groupLabs: boolean): Promise<IAllSubmissionsForEnrollment[]> {
+        const result = await this.grpcHelper.getSubmissionsByCourse(courseID, groupLabs);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return [];
+        }
+
+        const results = result.data.getLabsList();
+        const labCourse = new Course();
+        labCourse.setId(courseID);
+        const labs: IAllSubmissionsForEnrollment[] = [];
+        for (const studentLabs of results) {
+            const subs: ISubmissionLink[] = [];
+            const allSubs = studentLabs.getSubmissionsList();
+            if (allSubs) {
+                for (const lab of allSubs) {
+                    // populate student submissions
+                    const labAssignment = new Assignment();
+                    labAssignment.setId(lab.getAssignmentid());
+                    const ILab: ISubmissionLink = {
+                        assignment:  labAssignment,
+                        submission: this.toISubmission(lab),
+                        authorName: studentLabs.getAuthorname(),
+                    };
+                    subs.push(ILab);
+                }
+            }
+            // populate assignment links
+            let enrol = studentLabs.getEnrollment();
+            if (!enrol) {
+                enrol = new Enrollment();
+            }
+            const labLink: IAllSubmissionsForEnrollment = {
+                course: labCourse,
+                enrollment: enrol,
+                labs: subs,
+            };
+            labs.push(labLink);
+        }
+        return labs;
+    }*/
 
     public async tryLogin(username: string, password: string): Promise<User | null> {
         throw new Error("tryLogin This could be removed since there is no normal login.");
@@ -331,8 +376,8 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return tsMap;
     }
 
-    public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
-        const result = await this.grpcHelper.updateSubmission(courseID, submissionID, approve);
+    public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
+        const result = await this.grpcHelper.updateSubmission(courseID, submission);
         return this.responseCodeSuccess(result);
     }
 
@@ -349,19 +394,72 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
         return this.responseCodeSuccess(result);
     }
 
-    private toISubmission(sbm: Submission): ISubmission {
-        let buildInfoAsString = "";
-        let scoreInfoAsString = "";
-        if (sbm.getBuildinfo() && (sbm.getBuildinfo().trim().length > 2)) {
-            buildInfoAsString = sbm.getBuildinfo();
+    public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {
+        const result = await this.grpcHelper.createBenchmark(bm);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
         }
-        if (sbm.getScoreobjects() && (sbm.getScoreobjects().trim().length > 2)) {
-            scoreInfoAsString = sbm.getScoreobjects();
-        }
+        return result.data;
+    }
 
+    public async addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null> {
+        const result = await this.grpcHelper.createCriterion(c);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return result.data;
+    }
+
+    public async updateBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        const result = await this.grpcHelper.updateBenchmark(bm);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async updateCriterion(c: GradingCriterion): Promise<boolean> {
+        const result = await this.grpcHelper.updateCriterion(c);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        const result = await this.grpcHelper.deleteBenchmark(bm);
+        return this.responseCodeSuccess(result);
+    }
+    public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
+        const result = await this.grpcHelper.deleteCriterion(c);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async addReview(ir: Review, courseID: number): Promise<Review | null> {
+        const result = await this.grpcHelper.createReview(ir, courseID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return null;
+        }
+        return result.data;
+    }
+
+    public async editReview(ir: Review, courseID: number): Promise<boolean> {
+        const result = await this.grpcHelper.updateReview(ir, courseID);
+        return this.responseCodeSuccess(result);
+    }
+
+    public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
+        const result = await this.grpcHelper.getReviewers(submissionID, courseID);
+        if (!this.responseCodeSuccess(result) || !result.data) {
+            return [];
+        }
+        return result.data.getReviewersList();
+    }
+
+    public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        const result = await this.grpcHelper.updatesubmissions(assignmentID, courseID, score, release, approve);
+        return this.responseCodeSuccess(result);
+    }
+
+    private toISubmission(sbm: Submission): ISubmission {
+        const buildInfoAsString = sbm.getBuildinfo();
+        const scoreInfoAsString = sbm.getScoreobjects();
         let buildInfo: IBuildInfo;
         let scoreObj: ITestCases[];
-
         // IMPORTANT: Field names of the Score struct found in the kit/score/score.go,
         // of the ITestCases struct found in the public/src/models.ts,
         // and names in the string passed to JSON.parse() method must match.
@@ -381,6 +479,7 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
                 "[{\"TestName\": \"Test 1\", \"Score\": 3, \"MaxScore\": 4, \"Weight\": 100}]",
             );
         }
+
         let failed = 0;
         let passed = 0;
         if (scoreObj) {
@@ -406,7 +505,9 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
             executionTime: buildInfo.execTime,
             buildLog: buildInfo.buildlog,
             testCases: scoreObj,
-            approved: sbm.getApproved(),
+            reviews: sbm.getReviewsList(),
+            released: sbm.getReleased(),
+            status: sbm.getStatus(),
         };
         return isbm;
     }
@@ -416,16 +517,16 @@ export class ServerProvider implements IUserProvider, ICourseProvider {
     }
 
     // temporary fix, will be removed with manual grading update
-    private toUILinks(sbLinks: CourseSubmissions): IStudentLabsForCourse[] {
+    private toUILinks(sbLinks: CourseSubmissions): IAllSubmissionsForEnrollment[] {
         const crs = sbLinks.getCourse();
         if (!crs) {
             return [];
         }
-        const uilinks: IStudentLabsForCourse[] = [];
+        const uilinks: IAllSubmissionsForEnrollment[] = [];
         sbLinks.getLinksList().forEach(l => {
             const enr = l.getEnrollment();
             if (enr) {
-                const allLabs: IStudentLab[] = [];
+                const allLabs: ISubmissionLink[] = [];
                 l.getSubmissionsList().forEach(s => {
                     const a = s.getAssignment();
                     const sb = s.getSubmission();

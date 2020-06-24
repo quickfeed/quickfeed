@@ -17,7 +17,7 @@ func (m *Enrollment) UpdateSlipDays(start time.Time, assignment *Assignment, sub
 	if err != nil {
 		return err
 	}
-	if !submission.GetApproved() && sinceDeadline > 0 {
+	if !(submission.Status == Submission_APPROVED) && sinceDeadline > 0 {
 		// deadline exceeded; calculate used slipdays for this assignment
 		m.updateSlipDays(assignment.GetID(), uint32(sinceDeadline/days))
 	}

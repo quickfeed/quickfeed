@@ -1,5 +1,5 @@
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, SubmissionsForCourseRequest } from '../../proto/ag_pb';
-import { IStudentLabsForCourse, ISubmission } from "../models";
+import { Assignment, Course, Enrollment, GradingBenchmark, GradingCriterion, Group, Organization, Repository, Status, User, Review, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { IAllSubmissionsForEnrollment, ISubmission } from '../models';
 
 import { ICourseProvider } from "./CourseManager";
 import { IUserProvider } from "./UserManager";
@@ -36,7 +36,7 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         this.addLocalCourseGroups();
     }
 
-    public async updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean> {
+    public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 
@@ -128,6 +128,10 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return true;
     }
 
+    public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        return true;
+    }
+
     /**
      * Get all userlinks for a single course
      * @param course The course userlinks should be retrived from
@@ -214,11 +218,15 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
         return temp;
     }
 
+    public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
+        return [];
+    }
+
     public async getEnrollmentsForUser(userID: number): Promise<Enrollment[]> {
         return [];
     }
 
-    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
         return [];
     }
 
@@ -276,6 +284,37 @@ export class TempDataProvider implements IUserProvider, ICourseProvider {
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         throw new Error("Method not implemented.");
+    }
+
+    public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {
+        return bm;
+    }
+
+    public async addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null> {
+        return c;
+    }
+
+    public async updateBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return true;
+    }
+
+    public async updateCriterion(c: GradingCriterion): Promise<boolean> {
+        return true;
+    }
+
+    public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return true;
+    }
+    public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
+        return true;
+    }
+
+    public async addReview(r: Review): Promise<Review | null> {
+        return r;
+    }
+
+    public async editReview(r: Review): Promise<boolean> {
+        return true;
     }
 
     public async updateAssignments(courseID: number): Promise<any> {

@@ -1,12 +1,12 @@
 import * as React from "react";
 import { Course, Group } from "../../../proto/ag_pb";
 
-interface IGroupPro {
+interface IGroupProps {
     group: Group;
     course: Course;
 }
 
-export class GroupInfo extends React.Component<IGroupPro> {
+export class GroupInfo extends React.Component<IGroupProps> {
 
     public render() {
         const groupMembers: JSX.Element[] = [];

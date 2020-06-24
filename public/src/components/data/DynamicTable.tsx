@@ -1,8 +1,8 @@
 import * as React from "react";
 
 interface IDynamicTableProps<T> {
-    header: string[];
-    footer?: string[] | ICellElement[];
+    header: (string | JSX.Element)[];
+    footer?: string[] | ICellElement[] | JSX.Element[];
     data: T[];
     classType?: string;
     selector: (item: T) => (string | JSX.Element | ICellElement)[];
@@ -26,7 +26,7 @@ export class DynamicTable<T> extends React.Component<IDynamicTableProps<T>> {
             return this.renderRow(v, i);
         });
         const tableFooter = footer ? <tfoot><tr>{this.renderCells(footer)}</tr></tfoot> : null;
-        const classString = this.props.onRowClick ? "table table-hover table-striped" : "table table-striped" + " " + this.props.classType;
+        const classString = this.props.onRowClick ? "table table-hover table-striped" : "table table-striped " + this.props.classType;
         return (
             <table className={classString}>
                 <thead>

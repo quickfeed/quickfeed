@@ -1,12 +1,12 @@
 import {
-    IStudentLabsForCourse,
-    IStudentLab,
+    IAllSubmissionsForEnrollment,
+    ISubmissionLink,
     ISubmission,
 } from "../models";
 
-import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, SubmissionsForCourseRequest } from '../../proto/ag_pb';
+import { Assignment, Course, Enrollment, Group, Organization, Repository, Status, User, Review, GradingBenchmark, GradingCriterion, SubmissionsForCourseRequest } from "../../proto/ag_pb";
 import { ILogger } from "./LogManager";
-import { sortAssignmentsByOrder } from '../componentHelper';
+import { sortAssignmentsByOrder } from "../componentHelper";
 
 export interface ICourseProvider {
     getCourses(): Promise<Course[]>;
@@ -34,16 +34,25 @@ export interface ICourseProvider {
 
     getLabsForStudent(courseID: number, userID: number): Promise<ISubmission[]>;
     getLabsForGroup(courseID: number, groupID: number): Promise<ISubmission[]>;
-    getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]>;
+    getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]>;
     getEnrollmentsForUser(userID: number, statuses?: Enrollment.UserStatus[]): Promise<Enrollment[]>;
     getOrganization(orgName: string): Promise<Organization | Status >;
     getProviders(): Promise<string[]>;
     updateAssignments(courseID: number): Promise<boolean>;
-    updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<boolean>;
+    updateSubmission(courseID: number, submission: ISubmission): Promise<boolean>;
+    updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean>;
     rebuildSubmission(assignmentID: number, submissionID: number): Promise<ISubmission | null>;
     getRepositories(courseID: number, types: Repository.Type[]): Promise<Map<Repository.Type, string>>;
-
     isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean>;
+    addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null>;
+    addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null>;
+    updateBenchmark(bm: GradingBenchmark): Promise<boolean>;
+    updateCriterion(c: GradingCriterion): Promise<boolean>;
+    deleteBenchmark(bm: GradingBenchmark): Promise<boolean>;
+    deleteCriterion(c: GradingCriterion): Promise<boolean>;
+    addReview(r: Review, courseID: number): Promise<Review | null>;
+    editReview(r: Review, courseID: number): Promise<boolean>;
+    getReviewers(submissionID: number, courseID: number): Promise<User[]>
 }
 
 export class CourseManager {
@@ -68,10 +77,10 @@ export class CourseManager {
         return this.courseProvider.getCourses();
     }
 
-    public async getAllCoursesForEnrollmentPage(user: User): Promise<IStudentLabsForCourse[]> {
-        const userEnrollments = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
+    public async getAllCoursesForEnrollmentPage(user: User): Promise<IAllSubmissionsForEnrollment[]> {
+        const userCourses = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);	        const userEnrollments = await this.courseProvider.getEnrollmentsForUser(user.getId(), []);
         const allCourses = await this.courseProvider.getCourses();
-        const newMap: IStudentLabsForCourse[] = [];
+        const newMap: IAllSubmissionsForEnrollment[] = [];
         allCourses.forEach((crs) => {
             let enrol = userEnrollments.find(item => item.getCourseid() === crs.getId());
             if (!enrol) {
@@ -82,17 +91,14 @@ export class CourseManager {
                 enrol.setCourse(crs);
                 enrol.setStatus(Enrollment.UserStatus.NONE);
             }
-            if (crs) {
-                newMap.push({
-                    labs: [],
-                    course: crs,
-                    enrollment: enrol,
-                });
-            }
+            newMap.push({
+                labs: [],
+                course: crs,
+                enrollment: enrol,
+            });
         });
         return newMap;
     }
-
     /**
      * Get all courses where user is enrolled into
      */
@@ -143,7 +149,7 @@ export class CourseManager {
      * Retrives all course enrollments with the latest
      * lab submissions for all individual course assignments
      */
-    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IStudentLabsForCourse[]> {
+    public async getLabsForCourse(courseID: number, type: SubmissionsForCourseRequest.Type): Promise<IAllSubmissionsForEnrollment[]> {
         return this.courseProvider.getLabsForCourse(courseID, type);
     }
 
@@ -151,8 +157,8 @@ export class CourseManager {
      * Retrives all course relations, and courses related to a
      * a single student
      */
-    public async getStudentCourses(student: User, status: Enrollment.UserStatus[]): Promise<IStudentLabsForCourse[]> {
-        const links: IStudentLabsForCourse[] = [];
+    public async getStudentCourses(student: User, status: Enrollment.UserStatus[]): Promise<IAllSubmissionsForEnrollment[]> {
+        const links: IAllSubmissionsForEnrollment[] = [];
         const enrollments = await this.courseProvider.getEnrollmentsForUser(student.getId(), status);
         for (const enrol of enrollments) {
             const crs = enrol.getCourse();
@@ -205,14 +211,14 @@ export class CourseManager {
     /**
      * Load an IAssignmentLink object for a single group and a single course
      */
-    public async getGroupCourse(group: Group, course: Course): Promise<IStudentLabsForCourse | null> {
+    public async getGroupCourse(group: Group, course: Course): Promise<IAllSubmissionsForEnrollment | null> {
         // Fetching group enrollment status
         if (group.getCourseid() === course.getId()) {
             const enrol = new Enrollment();
             enrol.setGroupid(group.getId());
             enrol.setCourseid(course.getId());
             enrol.setGroup(group);
-            const groupCourse: IStudentLabsForCourse = {
+            const groupCourse: IAllSubmissionsForEnrollment = {
                 enrollment: enrol,
                 labs: [],
                 course,
@@ -242,7 +248,7 @@ export class CourseManager {
     /**
      * updateAssignments updates the assignments on the backend database
      * for the given course. The assignment data is collected from the
-     * assignment.yml files found in the course's tests repository; there
+     * assignment.yml files found in the course"s tests repository; there
      * should be one assignment.yml file per lab assignment.
      */
     public async updateAssignments(courseID: number): Promise<boolean> {
@@ -271,12 +277,51 @@ export class CourseManager {
         return this.courseProvider.rebuildSubmission(assignmentID, submissionID);
     }
 
-    public async updateSubmission(courseID: number, submissionID: number, approved: boolean): Promise<boolean> {
-        return this.courseProvider.updateSubmission(courseID, submissionID, approved);
+    public async updateSubmission(courseID: number, submission: ISubmission): Promise<boolean> {
+        return this.courseProvider.updateSubmission(courseID, submission);
     }
 
     public async isEmptyRepo(courseID: number, userID: number, groupID: number): Promise<boolean> {
         return this.courseProvider.isEmptyRepo(courseID, userID, groupID);
+    };
+
+    public async addNewBenchmark(bm: GradingBenchmark): Promise<GradingBenchmark | null> {
+        return this.courseProvider.addNewBenchmark(bm);
+    }
+
+    public async addNewCriterion(c: GradingCriterion): Promise<GradingCriterion | null> {
+        return this.courseProvider.addNewCriterion(c);
+    }
+
+    public async updateBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return this.courseProvider.updateBenchmark(bm);
+    }
+
+    public async updateCriterion(c: GradingCriterion): Promise<boolean> {
+        return this.courseProvider.updateCriterion(c);
+    }
+
+    public async deleteBenchmark(bm: GradingBenchmark): Promise<boolean> {
+        return this.courseProvider.deleteBenchmark(bm);
+    }
+    public async deleteCriterion(c: GradingCriterion): Promise<boolean> {
+        return this.courseProvider.deleteCriterion(c);
+    }
+
+    public async addReview(r: Review, courseID: number): Promise<Review | null> {
+        return this.courseProvider.addReview(r, courseID);
+    }
+
+    public async editReview(r: Review, courseID: number): Promise<boolean> {
+        return this.courseProvider.editReview(r, courseID);
+    }
+
+    public async getReviewers(submissionID: number, courseID: number): Promise<User[]> {
+        return this.courseProvider.getReviewers(submissionID, courseID);
+    }
+
+    public async updateSubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean): Promise<boolean> {
+        return this.courseProvider.updateSubmissions(assignmentID, courseID, score, release, approve);
     }
 
     /**
@@ -287,9 +332,9 @@ export class CourseManager {
      */
     public async fillLabLinks(
         course: Course,
-        labLinks: IStudentLabsForCourse[],
+        labLinks: IAllSubmissionsForEnrollment[],
         assignments?: Assignment[],
-        ): Promise<IStudentLabsForCourse[]> {
+        ): Promise<IAllSubmissionsForEnrollment[]> {
 
         if (!assignments) {
             assignments = await this.getAssignments(course.getId());
@@ -314,7 +359,7 @@ export class CourseManager {
             for (const asm of assignments) {
                 const exists = studentLabs.labs.find((ele) => asm.getId() === ele.assignment.getId());
                 if (!exists) {
-                    const voidSubmission: IStudentLab = {
+                    const voidSubmission: ISubmissionLink = {
                         assignment: asm,
                         authorName: studentName,
                     };
@@ -330,7 +375,7 @@ export class CourseManager {
      * to the given student or group enrollment.
      * Used on StudentPage.
      */
-    public async fillLinks(courseLabLink: IStudentLabsForCourse, student?: User, group?: Group,  assignments?: Assignment[]): Promise<void> {
+    public async fillLinks(courseLabLink: IAllSubmissionsForEnrollment, student?: User, group?: Group,  assignments?: Assignment[]): Promise<void> {
         if (!(student || group)) {
             return;
         }

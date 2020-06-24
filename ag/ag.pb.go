@@ -154,6 +154,65 @@ func (Enrollment_DisplayState) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_7a984e8f57169aa1, []int{8, 1}
 }
 
+type Submission_Status int32
+
+const (
+	Submission_NONE     Submission_Status = 0
+	Submission_APPROVED Submission_Status = 1
+	Submission_REJECTED Submission_Status = 2
+	Submission_REVISION Submission_Status = 3
+)
+
+var Submission_Status_name = map[int32]string{
+	0: "NONE",
+	1: "APPROVED",
+	2: "REJECTED",
+	3: "REVISION",
+}
+
+var Submission_Status_value = map[string]int32{
+	"NONE":     0,
+	"APPROVED": 1,
+	"REJECTED": 2,
+	"REVISION": 3,
+}
+
+func (x Submission_Status) String() string {
+	return proto.EnumName(Submission_Status_name, int32(x))
+}
+
+func (Submission_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{16, 0}
+}
+
+type GradingCriterion_Grade int32
+
+const (
+	GradingCriterion_NONE   GradingCriterion_Grade = 0
+	GradingCriterion_FAILED GradingCriterion_Grade = 1
+	GradingCriterion_PASSED GradingCriterion_Grade = 2
+)
+
+var GradingCriterion_Grade_name = map[int32]string{
+	0: "NONE",
+	1: "FAILED",
+	2: "PASSED",
+}
+
+var GradingCriterion_Grade_value = map[string]int32{
+	"NONE":   0,
+	"FAILED": 1,
+	"PASSED": 2,
+}
+
+func (x GradingCriterion_Grade) String() string {
+	return proto.EnumName(GradingCriterion_Grade_name, int32(x))
+}
+
+func (GradingCriterion_Grade) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{19, 0}
+}
+
 type SubmissionsForCourseRequest_Type int32
 
 const (
@@ -179,7 +238,7 @@ func (x SubmissionsForCourseRequest_Type) String() string {
 }
 
 func (SubmissionsForCourseRequest_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{36, 0}
+	return fileDescriptor_7a984e8f57169aa1, []int{43, 0}
 }
 
 type User struct {
@@ -1273,19 +1332,22 @@ func (m *CourseSubmissions) GetLinks() []*EnrollmentLink {
 }
 
 type Assignment struct {
-	ID                   uint64        `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	CourseID             uint64        `protobuf:"varint,2,opt,name=courseID,proto3" json:"courseID,omitempty"`
-	Name                 string        `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Language             string        `protobuf:"bytes,4,opt,name=language,proto3" json:"language,omitempty"`
-	Deadline             string        `protobuf:"bytes,5,opt,name=deadline,proto3" json:"deadline,omitempty"`
-	AutoApprove          bool          `protobuf:"varint,6,opt,name=autoApprove,proto3" json:"autoApprove,omitempty"`
-	Order                uint32        `protobuf:"varint,7,opt,name=order,proto3" json:"order,omitempty"`
-	IsGroupLab           bool          `protobuf:"varint,8,opt,name=isGroupLab,proto3" json:"isGroupLab,omitempty"`
-	ScoreLimit           uint32        `protobuf:"varint,9,opt,name=scoreLimit,proto3" json:"scoreLimit,omitempty"`
-	Submissions          []*Submission `protobuf:"bytes,10,rep,name=submissions,proto3" json:"submissions,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
-	XXX_unrecognized     []byte        `json:"-"`
-	XXX_sizecache        int32         `json:"-"`
+	ID                   uint64              `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	CourseID             uint64              `protobuf:"varint,2,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	Name                 string              `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Language             string              `protobuf:"bytes,4,opt,name=language,proto3" json:"language,omitempty"`
+	Deadline             string              `protobuf:"bytes,5,opt,name=deadline,proto3" json:"deadline,omitempty"`
+	AutoApprove          bool                `protobuf:"varint,6,opt,name=autoApprove,proto3" json:"autoApprove,omitempty"`
+	Order                uint32              `protobuf:"varint,7,opt,name=order,proto3" json:"order,omitempty"`
+	IsGroupLab           bool                `protobuf:"varint,8,opt,name=isGroupLab,proto3" json:"isGroupLab,omitempty"`
+	ScoreLimit           uint32              `protobuf:"varint,9,opt,name=scoreLimit,proto3" json:"scoreLimit,omitempty"`
+	Reviewers            uint32              `protobuf:"varint,10,opt,name=reviewers,proto3" json:"reviewers,omitempty"`
+	RunTests             bool                `protobuf:"varint,11,opt,name=runTests,proto3" json:"runTests,omitempty"`
+	Submissions          []*Submission       `protobuf:"bytes,12,rep,name=submissions,proto3" json:"submissions,omitempty"`
+	GradingBenchmarks    []*GradingBenchmark `protobuf:"bytes,13,rep,name=gradingBenchmarks,proto3" json:"gradingBenchmarks,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
 }
 
 func (m *Assignment) Reset()         { *m = Assignment{} }
@@ -1384,9 +1446,30 @@ func (m *Assignment) GetScoreLimit() uint32 {
 	return 0
 }
 
+func (m *Assignment) GetReviewers() uint32 {
+	if m != nil {
+		return m.Reviewers
+	}
+	return 0
+}
+
+func (m *Assignment) GetRunTests() bool {
+	if m != nil {
+		return m.RunTests
+	}
+	return false
+}
+
 func (m *Assignment) GetSubmissions() []*Submission {
 	if m != nil {
 		return m.Submissions
+	}
+	return nil
+}
+
+func (m *Assignment) GetGradingBenchmarks() []*GradingBenchmark {
+	if m != nil {
+		return m.GradingBenchmarks
 	}
 	return nil
 }
@@ -1439,18 +1522,20 @@ func (m *Assignments) GetAssignments() []*Assignment {
 }
 
 type Submission struct {
-	ID                   uint64   `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	AssignmentID         uint64   `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
-	UserID               uint64   `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty"`
-	GroupID              uint64   `protobuf:"varint,4,opt,name=groupID,proto3" json:"groupID,omitempty"`
-	Score                uint32   `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
-	ScoreObjects         string   `protobuf:"bytes,6,opt,name=scoreObjects,proto3" json:"scoreObjects,omitempty"`
-	BuildInfo            string   `protobuf:"bytes,7,opt,name=buildInfo,proto3" json:"buildInfo,omitempty"`
-	CommitHash           string   `protobuf:"bytes,8,opt,name=commitHash,proto3" json:"commitHash,omitempty"`
-	Approved             bool     `protobuf:"varint,9,opt,name=approved,proto3" json:"approved,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ID                   uint64            `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	AssignmentID         uint64            `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
+	UserID               uint64            `protobuf:"varint,3,opt,name=userID,proto3" json:"userID,omitempty"`
+	GroupID              uint64            `protobuf:"varint,4,opt,name=groupID,proto3" json:"groupID,omitempty"`
+	Score                uint32            `protobuf:"varint,5,opt,name=score,proto3" json:"score,omitempty"`
+	ScoreObjects         string            `protobuf:"bytes,6,opt,name=scoreObjects,proto3" json:"scoreObjects,omitempty"`
+	BuildInfo            string            `protobuf:"bytes,7,opt,name=buildInfo,proto3" json:"buildInfo,omitempty"`
+	CommitHash           string            `protobuf:"bytes,8,opt,name=commitHash,proto3" json:"commitHash,omitempty"`
+	Released             bool              `protobuf:"varint,9,opt,name=released,proto3" json:"released,omitempty"`
+	Status               Submission_Status `protobuf:"varint,10,opt,name=status,proto3,enum=Submission_Status" json:"status,omitempty"`
+	Reviews              []*Review         `protobuf:"bytes,11,rep,name=reviews,proto3" json:"reviews,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
 func (m *Submission) Reset()         { *m = Submission{} }
@@ -1542,11 +1627,25 @@ func (m *Submission) GetCommitHash() string {
 	return ""
 }
 
-func (m *Submission) GetApproved() bool {
+func (m *Submission) GetReleased() bool {
 	if m != nil {
-		return m.Approved
+		return m.Released
 	}
 	return false
+}
+
+func (m *Submission) GetStatus() Submission_Status {
+	if m != nil {
+		return m.Status
+	}
+	return Submission_NONE
+}
+
+func (m *Submission) GetReviews() []*Review {
+	if m != nil {
+		return m.Reviews
+	}
+	return nil
 }
 
 type Submissions struct {
@@ -1596,6 +1695,369 @@ func (m *Submissions) GetSubmissions() []*Submission {
 	return nil
 }
 
+type GradingBenchmark struct {
+	ID                   uint64              `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	AssignmentID         uint64              `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
+	Heading              string              `protobuf:"bytes,3,opt,name=heading,proto3" json:"heading,omitempty"`
+	Comment              string              `protobuf:"bytes,4,opt,name=comment,proto3" json:"comment,omitempty"`
+	Criteria             []*GradingCriterion `protobuf:"bytes,5,rep,name=criteria,proto3" json:"criteria,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *GradingBenchmark) Reset()         { *m = GradingBenchmark{} }
+func (m *GradingBenchmark) String() string { return proto.CompactTextString(m) }
+func (*GradingBenchmark) ProtoMessage()    {}
+func (*GradingBenchmark) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{18}
+}
+func (m *GradingBenchmark) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GradingBenchmark) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GradingBenchmark.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GradingBenchmark) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GradingBenchmark.Merge(m, src)
+}
+func (m *GradingBenchmark) XXX_Size() int {
+	return m.Size()
+}
+func (m *GradingBenchmark) XXX_DiscardUnknown() {
+	xxx_messageInfo_GradingBenchmark.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GradingBenchmark proto.InternalMessageInfo
+
+func (m *GradingBenchmark) GetID() uint64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *GradingBenchmark) GetAssignmentID() uint64 {
+	if m != nil {
+		return m.AssignmentID
+	}
+	return 0
+}
+
+func (m *GradingBenchmark) GetHeading() string {
+	if m != nil {
+		return m.Heading
+	}
+	return ""
+}
+
+func (m *GradingBenchmark) GetComment() string {
+	if m != nil {
+		return m.Comment
+	}
+	return ""
+}
+
+func (m *GradingBenchmark) GetCriteria() []*GradingCriterion {
+	if m != nil {
+		return m.Criteria
+	}
+	return nil
+}
+
+type GradingCriterion struct {
+	ID                   uint64                 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	BenchmarkID          uint64                 `protobuf:"varint,2,opt,name=benchmarkID,proto3" json:"benchmarkID,omitempty"`
+	Description          string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Grade                GradingCriterion_Grade `protobuf:"varint,4,opt,name=grade,proto3,enum=GradingCriterion_Grade" json:"grade,omitempty"`
+	Comment              string                 `protobuf:"bytes,5,opt,name=comment,proto3" json:"comment,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
+	XXX_unrecognized     []byte                 `json:"-"`
+	XXX_sizecache        int32                  `json:"-"`
+}
+
+func (m *GradingCriterion) Reset()         { *m = GradingCriterion{} }
+func (m *GradingCriterion) String() string { return proto.CompactTextString(m) }
+func (*GradingCriterion) ProtoMessage()    {}
+func (*GradingCriterion) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{19}
+}
+func (m *GradingCriterion) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GradingCriterion) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GradingCriterion.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GradingCriterion) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GradingCriterion.Merge(m, src)
+}
+func (m *GradingCriterion) XXX_Size() int {
+	return m.Size()
+}
+func (m *GradingCriterion) XXX_DiscardUnknown() {
+	xxx_messageInfo_GradingCriterion.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GradingCriterion proto.InternalMessageInfo
+
+func (m *GradingCriterion) GetID() uint64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *GradingCriterion) GetBenchmarkID() uint64 {
+	if m != nil {
+		return m.BenchmarkID
+	}
+	return 0
+}
+
+func (m *GradingCriterion) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *GradingCriterion) GetGrade() GradingCriterion_Grade {
+	if m != nil {
+		return m.Grade
+	}
+	return GradingCriterion_NONE
+}
+
+func (m *GradingCriterion) GetComment() string {
+	if m != nil {
+		return m.Comment
+	}
+	return ""
+}
+
+type Review struct {
+	ID                   uint64              `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	SubmissionID         uint64              `protobuf:"varint,2,opt,name=submissionID,proto3" json:"submissionID,omitempty"`
+	ReviewerID           uint64              `protobuf:"varint,3,opt,name=reviewerID,proto3" json:"reviewerID,omitempty"`
+	Review               string              `protobuf:"bytes,4,opt,name=review,proto3" json:"review,omitempty"`
+	Feedback             string              `protobuf:"bytes,5,opt,name=feedback,proto3" json:"feedback,omitempty"`
+	Ready                bool                `protobuf:"varint,6,opt,name=ready,proto3" json:"ready,omitempty"`
+	Score                uint64              `protobuf:"varint,7,opt,name=score,proto3" json:"score,omitempty"`
+	Benchmarks           []*GradingBenchmark `protobuf:"bytes,8,rep,name=benchmarks,proto3" json:"benchmarks,omitempty" sql:"-"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *Review) Reset()         { *m = Review{} }
+func (m *Review) String() string { return proto.CompactTextString(m) }
+func (*Review) ProtoMessage()    {}
+func (*Review) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{20}
+}
+func (m *Review) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Review) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Review.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Review) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Review.Merge(m, src)
+}
+func (m *Review) XXX_Size() int {
+	return m.Size()
+}
+func (m *Review) XXX_DiscardUnknown() {
+	xxx_messageInfo_Review.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Review proto.InternalMessageInfo
+
+func (m *Review) GetID() uint64 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *Review) GetSubmissionID() uint64 {
+	if m != nil {
+		return m.SubmissionID
+	}
+	return 0
+}
+
+func (m *Review) GetReviewerID() uint64 {
+	if m != nil {
+		return m.ReviewerID
+	}
+	return 0
+}
+
+func (m *Review) GetReview() string {
+	if m != nil {
+		return m.Review
+	}
+	return ""
+}
+
+func (m *Review) GetFeedback() string {
+	if m != nil {
+		return m.Feedback
+	}
+	return ""
+}
+
+func (m *Review) GetReady() bool {
+	if m != nil {
+		return m.Ready
+	}
+	return false
+}
+
+func (m *Review) GetScore() uint64 {
+	if m != nil {
+		return m.Score
+	}
+	return 0
+}
+
+func (m *Review) GetBenchmarks() []*GradingBenchmark {
+	if m != nil {
+		return m.Benchmarks
+	}
+	return nil
+}
+
+type Reviewers struct {
+	Reviewers            []*User  `protobuf:"bytes,1,rep,name=reviewers,proto3" json:"reviewers,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Reviewers) Reset()         { *m = Reviewers{} }
+func (m *Reviewers) String() string { return proto.CompactTextString(m) }
+func (*Reviewers) ProtoMessage()    {}
+func (*Reviewers) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{21}
+}
+func (m *Reviewers) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Reviewers) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Reviewers.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Reviewers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Reviewers.Merge(m, src)
+}
+func (m *Reviewers) XXX_Size() int {
+	return m.Size()
+}
+func (m *Reviewers) XXX_DiscardUnknown() {
+	xxx_messageInfo_Reviewers.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Reviewers proto.InternalMessageInfo
+
+func (m *Reviewers) GetReviewers() []*User {
+	if m != nil {
+		return m.Reviewers
+	}
+	return nil
+}
+
+type ReviewRequest struct {
+	CourseID             uint64   `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	Review               *Review  `protobuf:"bytes,2,opt,name=review,proto3" json:"review,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ReviewRequest) Reset()         { *m = ReviewRequest{} }
+func (m *ReviewRequest) String() string { return proto.CompactTextString(m) }
+func (*ReviewRequest) ProtoMessage()    {}
+func (*ReviewRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{22}
+}
+func (m *ReviewRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ReviewRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ReviewRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ReviewRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReviewRequest.Merge(m, src)
+}
+func (m *ReviewRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ReviewRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ReviewRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ReviewRequest proto.InternalMessageInfo
+
+func (m *ReviewRequest) GetCourseID() uint64 {
+	if m != nil {
+		return m.CourseID
+	}
+	return 0
+}
+
+func (m *ReviewRequest) GetReview() *Review {
+	if m != nil {
+		return m.Review
+	}
+	return nil
+}
+
 type CourseRequest struct {
 	CourseID             uint64   `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1607,7 +2069,7 @@ func (m *CourseRequest) Reset()         { *m = CourseRequest{} }
 func (m *CourseRequest) String() string { return proto.CompactTextString(m) }
 func (*CourseRequest) ProtoMessage()    {}
 func (*CourseRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{18}
+	return fileDescriptor_7a984e8f57169aa1, []int{23}
 }
 func (m *CourseRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1654,7 +2116,7 @@ func (m *UserRequest) Reset()         { *m = UserRequest{} }
 func (m *UserRequest) String() string { return proto.CompactTextString(m) }
 func (*UserRequest) ProtoMessage()    {}
 func (*UserRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{19}
+	return fileDescriptor_7a984e8f57169aa1, []int{24}
 }
 func (m *UserRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1701,7 +2163,7 @@ func (m *GetGroupRequest) Reset()         { *m = GetGroupRequest{} }
 func (m *GetGroupRequest) String() string { return proto.CompactTextString(m) }
 func (*GetGroupRequest) ProtoMessage()    {}
 func (*GetGroupRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{20}
+	return fileDescriptor_7a984e8f57169aa1, []int{25}
 }
 func (m *GetGroupRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1750,7 +2212,7 @@ func (m *GroupRequest) Reset()         { *m = GroupRequest{} }
 func (m *GroupRequest) String() string { return proto.CompactTextString(m) }
 func (*GroupRequest) ProtoMessage()    {}
 func (*GroupRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{21}
+	return fileDescriptor_7a984e8f57169aa1, []int{26}
 }
 func (m *GroupRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1811,7 +2273,7 @@ func (m *Provider) Reset()         { *m = Provider{} }
 func (m *Provider) String() string { return proto.CompactTextString(m) }
 func (*Provider) ProtoMessage()    {}
 func (*Provider) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{22}
+	return fileDescriptor_7a984e8f57169aa1, []int{27}
 }
 func (m *Provider) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1858,7 +2320,7 @@ func (m *OrgRequest) Reset()         { *m = OrgRequest{} }
 func (m *OrgRequest) String() string { return proto.CompactTextString(m) }
 func (*OrgRequest) ProtoMessage()    {}
 func (*OrgRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{23}
+	return fileDescriptor_7a984e8f57169aa1, []int{28}
 }
 func (m *OrgRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1908,7 +2370,7 @@ func (m *Organization) Reset()         { *m = Organization{} }
 func (m *Organization) String() string { return proto.CompactTextString(m) }
 func (*Organization) ProtoMessage()    {}
 func (*Organization) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{24}
+	return fileDescriptor_7a984e8f57169aa1, []int{29}
 }
 func (m *Organization) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1976,7 +2438,7 @@ func (m *Organizations) Reset()         { *m = Organizations{} }
 func (m *Organizations) String() string { return proto.CompactTextString(m) }
 func (*Organizations) ProtoMessage()    {}
 func (*Organizations) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{25}
+	return fileDescriptor_7a984e8f57169aa1, []int{30}
 }
 func (m *Organizations) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2028,7 +2490,7 @@ func (m *EnrollmentRequest) Reset()         { *m = EnrollmentRequest{} }
 func (m *EnrollmentRequest) String() string { return proto.CompactTextString(m) }
 func (*EnrollmentRequest) ProtoMessage()    {}
 func (*EnrollmentRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{26}
+	return fileDescriptor_7a984e8f57169aa1, []int{31}
 }
 func (m *EnrollmentRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2091,7 +2553,7 @@ func (m *EnrollmentStatusRequest) Reset()         { *m = EnrollmentStatusRequest
 func (m *EnrollmentStatusRequest) String() string { return proto.CompactTextString(m) }
 func (*EnrollmentStatusRequest) ProtoMessage()    {}
 func (*EnrollmentStatusRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{27}
+	return fileDescriptor_7a984e8f57169aa1, []int{32}
 }
 func (m *EnrollmentStatusRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2147,7 +2609,7 @@ func (m *SubmissionRequest) Reset()         { *m = SubmissionRequest{} }
 func (m *SubmissionRequest) String() string { return proto.CompactTextString(m) }
 func (*SubmissionRequest) ProtoMessage()    {}
 func (*SubmissionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{28}
+	return fileDescriptor_7a984e8f57169aa1, []int{33}
 }
 func (m *SubmissionRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2198,19 +2660,21 @@ func (m *SubmissionRequest) GetCourseID() uint64 {
 }
 
 type UpdateSubmissionRequest struct {
-	SubmissionID         uint64   `protobuf:"varint,1,opt,name=submissionID,proto3" json:"submissionID,omitempty"`
-	CourseID             uint64   `protobuf:"varint,2,opt,name=courseID,proto3" json:"courseID,omitempty"`
-	Approve              bool     `protobuf:"varint,3,opt,name=approve,proto3" json:"approve,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	SubmissionID         uint64            `protobuf:"varint,1,opt,name=submissionID,proto3" json:"submissionID,omitempty"`
+	CourseID             uint64            `protobuf:"varint,2,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	Score                uint32            `protobuf:"varint,3,opt,name=score,proto3" json:"score,omitempty"`
+	Released             bool              `protobuf:"varint,4,opt,name=released,proto3" json:"released,omitempty"`
+	Status               Submission_Status `protobuf:"varint,5,opt,name=status,proto3,enum=Submission_Status" json:"status,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
 func (m *UpdateSubmissionRequest) Reset()         { *m = UpdateSubmissionRequest{} }
 func (m *UpdateSubmissionRequest) String() string { return proto.CompactTextString(m) }
 func (*UpdateSubmissionRequest) ProtoMessage()    {}
 func (*UpdateSubmissionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{29}
+	return fileDescriptor_7a984e8f57169aa1, []int{34}
 }
 func (m *UpdateSubmissionRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2253,11 +2717,159 @@ func (m *UpdateSubmissionRequest) GetCourseID() uint64 {
 	return 0
 }
 
-func (m *UpdateSubmissionRequest) GetApprove() bool {
+func (m *UpdateSubmissionRequest) GetScore() uint32 {
+	if m != nil {
+		return m.Score
+	}
+	return 0
+}
+
+func (m *UpdateSubmissionRequest) GetReleased() bool {
+	if m != nil {
+		return m.Released
+	}
+	return false
+}
+
+func (m *UpdateSubmissionRequest) GetStatus() Submission_Status {
+	if m != nil {
+		return m.Status
+	}
+	return Submission_NONE
+}
+
+type UpdateSubmissionsRequest struct {
+	CourseID             uint64   `protobuf:"varint,1,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	AssignmentID         uint64   `protobuf:"varint,2,opt,name=assignmentID,proto3" json:"assignmentID,omitempty"`
+	ScoreLimit           uint32   `protobuf:"varint,3,opt,name=scoreLimit,proto3" json:"scoreLimit,omitempty"`
+	Release              bool     `protobuf:"varint,4,opt,name=release,proto3" json:"release,omitempty"`
+	Approve              bool     `protobuf:"varint,5,opt,name=approve,proto3" json:"approve,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *UpdateSubmissionsRequest) Reset()         { *m = UpdateSubmissionsRequest{} }
+func (m *UpdateSubmissionsRequest) String() string { return proto.CompactTextString(m) }
+func (*UpdateSubmissionsRequest) ProtoMessage()    {}
+func (*UpdateSubmissionsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{35}
+}
+func (m *UpdateSubmissionsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpdateSubmissionsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpdateSubmissionsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpdateSubmissionsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateSubmissionsRequest.Merge(m, src)
+}
+func (m *UpdateSubmissionsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpdateSubmissionsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateSubmissionsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateSubmissionsRequest proto.InternalMessageInfo
+
+func (m *UpdateSubmissionsRequest) GetCourseID() uint64 {
+	if m != nil {
+		return m.CourseID
+	}
+	return 0
+}
+
+func (m *UpdateSubmissionsRequest) GetAssignmentID() uint64 {
+	if m != nil {
+		return m.AssignmentID
+	}
+	return 0
+}
+
+func (m *UpdateSubmissionsRequest) GetScoreLimit() uint32 {
+	if m != nil {
+		return m.ScoreLimit
+	}
+	return 0
+}
+
+func (m *UpdateSubmissionsRequest) GetRelease() bool {
+	if m != nil {
+		return m.Release
+	}
+	return false
+}
+
+func (m *UpdateSubmissionsRequest) GetApprove() bool {
 	if m != nil {
 		return m.Approve
 	}
 	return false
+}
+
+type SubmissionReviewersRequest struct {
+	SubmissionID         uint64   `protobuf:"varint,1,opt,name=submissionID,proto3" json:"submissionID,omitempty"`
+	CourseID             uint64   `protobuf:"varint,2,opt,name=courseID,proto3" json:"courseID,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SubmissionReviewersRequest) Reset()         { *m = SubmissionReviewersRequest{} }
+func (m *SubmissionReviewersRequest) String() string { return proto.CompactTextString(m) }
+func (*SubmissionReviewersRequest) ProtoMessage()    {}
+func (*SubmissionReviewersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7a984e8f57169aa1, []int{36}
+}
+func (m *SubmissionReviewersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SubmissionReviewersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SubmissionReviewersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SubmissionReviewersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubmissionReviewersRequest.Merge(m, src)
+}
+func (m *SubmissionReviewersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *SubmissionReviewersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubmissionReviewersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SubmissionReviewersRequest proto.InternalMessageInfo
+
+func (m *SubmissionReviewersRequest) GetSubmissionID() uint64 {
+	if m != nil {
+		return m.SubmissionID
+	}
+	return 0
+}
+
+func (m *SubmissionReviewersRequest) GetCourseID() uint64 {
+	if m != nil {
+		return m.CourseID
+	}
+	return 0
 }
 
 type Providers struct {
@@ -2271,7 +2883,7 @@ func (m *Providers) Reset()         { *m = Providers{} }
 func (m *Providers) String() string { return proto.CompactTextString(m) }
 func (*Providers) ProtoMessage()    {}
 func (*Providers) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{30}
+	return fileDescriptor_7a984e8f57169aa1, []int{37}
 }
 func (m *Providers) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2319,7 +2931,7 @@ func (m *URLRequest) Reset()         { *m = URLRequest{} }
 func (m *URLRequest) String() string { return proto.CompactTextString(m) }
 func (*URLRequest) ProtoMessage()    {}
 func (*URLRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{31}
+	return fileDescriptor_7a984e8f57169aa1, []int{38}
 }
 func (m *URLRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2376,7 +2988,7 @@ func (m *RepositoryRequest) Reset()         { *m = RepositoryRequest{} }
 func (m *RepositoryRequest) String() string { return proto.CompactTextString(m) }
 func (*RepositoryRequest) ProtoMessage()    {}
 func (*RepositoryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{32}
+	return fileDescriptor_7a984e8f57169aa1, []int{39}
 }
 func (m *RepositoryRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2437,7 +3049,7 @@ func (m *Repositories) Reset()         { *m = Repositories{} }
 func (m *Repositories) String() string { return proto.CompactTextString(m) }
 func (*Repositories) ProtoMessage()    {}
 func (*Repositories) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{33}
+	return fileDescriptor_7a984e8f57169aa1, []int{40}
 }
 func (m *Repositories) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2484,7 +3096,7 @@ func (m *AuthorizationResponse) Reset()         { *m = AuthorizationResponse{} }
 func (m *AuthorizationResponse) String() string { return proto.CompactTextString(m) }
 func (*AuthorizationResponse) ProtoMessage()    {}
 func (*AuthorizationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{34}
+	return fileDescriptor_7a984e8f57169aa1, []int{41}
 }
 func (m *AuthorizationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2532,7 +3144,7 @@ func (m *Status) Reset()         { *m = Status{} }
 func (m *Status) String() string { return proto.CompactTextString(m) }
 func (*Status) ProtoMessage()    {}
 func (*Status) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{35}
+	return fileDescriptor_7a984e8f57169aa1, []int{42}
 }
 func (m *Status) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2587,7 +3199,7 @@ func (m *SubmissionsForCourseRequest) Reset()         { *m = SubmissionsForCours
 func (m *SubmissionsForCourseRequest) String() string { return proto.CompactTextString(m) }
 func (*SubmissionsForCourseRequest) ProtoMessage()    {}
 func (*SubmissionsForCourseRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{36}
+	return fileDescriptor_7a984e8f57169aa1, []int{43}
 }
 func (m *SubmissionsForCourseRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2643,7 +3255,7 @@ func (m *RebuildRequest) Reset()         { *m = RebuildRequest{} }
 func (m *RebuildRequest) String() string { return proto.CompactTextString(m) }
 func (*RebuildRequest) ProtoMessage()    {}
 func (*RebuildRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{37}
+	return fileDescriptor_7a984e8f57169aa1, []int{44}
 }
 func (m *RebuildRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2706,7 +3318,7 @@ func (m *Void) Reset()         { *m = Void{} }
 func (m *Void) String() string { return proto.CompactTextString(m) }
 func (*Void) ProtoMessage()    {}
 func (*Void) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7a984e8f57169aa1, []int{38}
+	return fileDescriptor_7a984e8f57169aa1, []int{45}
 }
 func (m *Void) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2740,6 +3352,8 @@ func init() {
 	proto.RegisterEnum("Repository_Type", Repository_Type_name, Repository_Type_value)
 	proto.RegisterEnum("Enrollment_UserStatus", Enrollment_UserStatus_name, Enrollment_UserStatus_value)
 	proto.RegisterEnum("Enrollment_DisplayState", Enrollment_DisplayState_name, Enrollment_DisplayState_value)
+	proto.RegisterEnum("Submission_Status", Submission_Status_name, Submission_Status_value)
+	proto.RegisterEnum("GradingCriterion_Grade", GradingCriterion_Grade_name, GradingCriterion_Grade_value)
 	proto.RegisterEnum("SubmissionsForCourseRequest_Type", SubmissionsForCourseRequest_Type_name, SubmissionsForCourseRequest_Type_value)
 	proto.RegisterType((*User)(nil), "User")
 	proto.RegisterType((*Users)(nil), "Users")
@@ -2759,6 +3373,11 @@ func init() {
 	proto.RegisterType((*Assignments)(nil), "Assignments")
 	proto.RegisterType((*Submission)(nil), "Submission")
 	proto.RegisterType((*Submissions)(nil), "Submissions")
+	proto.RegisterType((*GradingBenchmark)(nil), "GradingBenchmark")
+	proto.RegisterType((*GradingCriterion)(nil), "GradingCriterion")
+	proto.RegisterType((*Review)(nil), "Review")
+	proto.RegisterType((*Reviewers)(nil), "Reviewers")
+	proto.RegisterType((*ReviewRequest)(nil), "ReviewRequest")
 	proto.RegisterType((*CourseRequest)(nil), "CourseRequest")
 	proto.RegisterType((*UserRequest)(nil), "UserRequest")
 	proto.RegisterType((*GetGroupRequest)(nil), "GetGroupRequest")
@@ -2771,6 +3390,8 @@ func init() {
 	proto.RegisterType((*EnrollmentStatusRequest)(nil), "EnrollmentStatusRequest")
 	proto.RegisterType((*SubmissionRequest)(nil), "SubmissionRequest")
 	proto.RegisterType((*UpdateSubmissionRequest)(nil), "UpdateSubmissionRequest")
+	proto.RegisterType((*UpdateSubmissionsRequest)(nil), "UpdateSubmissionsRequest")
+	proto.RegisterType((*SubmissionReviewersRequest)(nil), "SubmissionReviewersRequest")
 	proto.RegisterType((*Providers)(nil), "Providers")
 	proto.RegisterType((*URLRequest)(nil), "URLRequest")
 	proto.RegisterType((*RepositoryRequest)(nil), "RepositoryRequest")
@@ -2786,157 +3407,188 @@ func init() {
 func init() { proto.RegisterFile("ag.proto", fileDescriptor_7a984e8f57169aa1) }
 
 var fileDescriptor_7a984e8f57169aa1 = []byte{
-	// 2394 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x19, 0x4b, 0x6f, 0x1b, 0xc7,
-	0x99, 0x4b, 0xf1, 0xf9, 0xf1, 0xe1, 0xd5, 0xd4, 0x95, 0x19, 0xda, 0x90, 0x94, 0x69, 0x6c, 0x28,
-	0x72, 0xbc, 0x69, 0xe4, 0xa6, 0x4d, 0x1d, 0x17, 0x35, 0x65, 0xd2, 0x32, 0x0b, 0x9a, 0x12, 0x86,
-	0xa4, 0x50, 0xa0, 0x05, 0xd4, 0x95, 0x38, 0xa5, 0x37, 0x26, 0x77, 0xe9, 0x9d, 0xa5, 0x11, 0xf6,
-	0x07, 0xf4, 0xd0, 0x6b, 0x2e, 0x3d, 0xb4, 0xbf, 0xa0, 0x7f, 0xa4, 0xc7, 0xde, 0x0b, 0xb8, 0x85,
-	0xcf, 0x3d, 0xf9, 0x17, 0x14, 0xf3, 0xd8, 0xdd, 0x59, 0xae, 0x5e, 0x0e, 0x90, 0x8b, 0x38, 0xf3,
-	0xbd, 0x5f, 0xf3, 0xcd, 0x37, 0x2b, 0x28, 0xd9, 0x13, 0x6b, 0xee, 0x7b, 0x81, 0xd7, 0xbc, 0x39,
-	0xf1, 0x26, 0x9e, 0x58, 0x7e, 0xce, 0x57, 0x12, 0x8a, 0xff, 0x9a, 0x85, 0xdc, 0x88, 0x51, 0x1f,
-	0xd5, 0x21, 0xdb, 0x6d, 0x37, 0x8c, 0x6d, 0x63, 0x27, 0x47, 0xb2, 0xdd, 0x36, 0x6a, 0x40, 0xd1,
-	0x61, 0xad, 0xf1, 0xcc, 0x71, 0x1b, 0xd9, 0x6d, 0x63, 0xa7, 0x44, 0xc2, 0x2d, 0x42, 0x90, 0x73,
-	0xed, 0x19, 0x6d, 0xac, 0x6d, 0x1b, 0x3b, 0x65, 0x22, 0xd6, 0xe8, 0x0e, 0x94, 0x59, 0xb0, 0x18,
-	0x53, 0x37, 0xe8, 0xb6, 0x1b, 0x39, 0x81, 0x88, 0x01, 0xe8, 0x26, 0xe4, 0xe9, 0xcc, 0x76, 0xa6,
-	0x8d, 0xbc, 0xc0, 0xc8, 0x0d, 0xe7, 0xb1, 0xdf, 0xd8, 0x81, 0xed, 0x8f, 0x48, 0xaf, 0x51, 0x90,
-	0x3c, 0x11, 0x80, 0xf3, 0x4c, 0xbd, 0x89, 0xe3, 0x36, 0x8a, 0x92, 0x47, 0x6c, 0xd0, 0xd7, 0x60,
-	0xfa, 0x74, 0xe6, 0x05, 0xb4, 0xcb, 0x45, 0x3b, 0x81, 0x43, 0x59, 0xa3, 0xb4, 0xbd, 0xb6, 0x53,
-	0xd9, 0xbb, 0x61, 0x11, 0x1d, 0xb1, 0x24, 0x29, 0x42, 0xf4, 0x00, 0x2a, 0xd4, 0xf5, 0xbd, 0xe9,
-	0x74, 0x46, 0xdd, 0x80, 0x35, 0xca, 0x82, 0xaf, 0x62, 0x75, 0x22, 0x18, 0xd1, 0xf1, 0xf8, 0x13,
-	0xc8, 0xf3, 0xc8, 0x30, 0x74, 0x1b, 0xf2, 0x0b, 0xbe, 0x68, 0x18, 0x82, 0x23, 0x6f, 0x71, 0x30,
-	0x91, 0x30, 0xfc, 0xde, 0x80, 0x7a, 0x52, 0x73, 0x2a, 0x94, 0xbf, 0x81, 0xd2, 0xdc, 0xf7, 0xde,
-	0x38, 0x63, 0xea, 0x8b, 0x58, 0x96, 0xf7, 0xad, 0xf7, 0x6f, 0xb7, 0x76, 0x27, 0x9e, 0x3f, 0x7b,
-	0x84, 0x17, 0xae, 0xf3, 0x7a, 0x41, 0x4f, 0x1c, 0x77, 0x4c, 0xbf, 0x7d, 0xb4, 0x70, 0xc6, 0x27,
-	0x21, 0xe9, 0x89, 0xb4, 0xff, 0xc4, 0x19, 0x63, 0x12, 0xf1, 0x73, 0x59, 0xca, 0xaf, 0xb6, 0x48,
-	0x40, 0xee, 0xc3, 0x65, 0x85, 0xfc, 0x68, 0x1b, 0x2a, 0xf6, 0xd9, 0x19, 0x65, 0x6c, 0xe8, 0xbd,
-	0xa2, 0xae, 0x4a, 0x9b, 0x0e, 0x42, 0x1b, 0x50, 0xe0, 0x5e, 0x76, 0xdb, 0x22, 0x73, 0x39, 0xa2,
-	0x76, 0xf8, 0x3f, 0x59, 0xc8, 0x1f, 0xf8, 0xde, 0x62, 0x9e, 0xf2, 0xb5, 0xa5, 0x8a, 0x43, 0xfa,
-	0xf9, 0xe0, 0xfd, 0xdb, 0xad, 0x4f, 0xcf, 0xb1, 0xcd, 0x19, 0x7f, 0x7b, 0xa2, 0x00, 0x13, 0x2e,
-	0xe6, 0x84, 0xf3, 0x60, 0x55, 0x4b, 0x5d, 0x28, 0x9d, 0x79, 0x0b, 0x9f, 0xc5, 0x2e, 0x7e, 0xa0,
-	0x98, 0x88, 0x9d, 0xdb, 0x1f, 0x50, 0x7b, 0xa6, 0x6a, 0x32, 0x47, 0xd4, 0x0e, 0xed, 0x42, 0x81,
-	0x05, 0x76, 0xb0, 0x60, 0xc2, 0xaf, 0xfa, 0x1e, 0xb2, 0x84, 0x37, 0xf2, 0xef, 0x40, 0x60, 0x88,
-	0xa2, 0x88, 0xb3, 0x5f, 0x48, 0x67, 0x7f, 0xb5, 0xa4, 0x8a, 0x57, 0x94, 0xd4, 0x0e, 0x54, 0x34,
-	0x15, 0xa8, 0x02, 0xc5, 0xa3, 0x4e, 0xbf, 0xdd, 0xed, 0x1f, 0x98, 0x19, 0x54, 0x85, 0x52, 0xeb,
-	0xe8, 0x88, 0x1c, 0x1e, 0x77, 0xda, 0xa6, 0x81, 0x77, 0xa0, 0x20, 0x28, 0x19, 0xda, 0x84, 0x82,
-	0x70, 0x2e, 0x2c, 0xbf, 0x82, 0xb4, 0x92, 0x28, 0x28, 0xfe, 0xf7, 0x1a, 0x14, 0x9e, 0x0a, 0x87,
-	0x53, 0xc9, 0xd8, 0x81, 0x1b, 0x32, 0x14, 0x4f, 0x7d, 0x6a, 0x07, 0x1e, 0xcf, 0x63, 0x56, 0x20,
-	0x57, 0xc1, 0xe7, 0x9e, 0x69, 0x04, 0xb9, 0x33, 0x6f, 0x4c, 0x55, 0x5d, 0x88, 0x35, 0x87, 0x2d,
-	0xa9, 0xed, 0x8b, 0xb0, 0xd5, 0x88, 0x58, 0x23, 0x13, 0xd6, 0x02, 0x7b, 0xa2, 0x4e, 0x30, 0x5f,
-	0xa2, 0xa6, 0x56, 0xf0, 0xf2, 0xf8, 0xc6, 0x05, 0x7c, 0x0f, 0xea, 0x9e, 0x3f, 0xb1, 0x5d, 0xe7,
-	0x4f, 0x76, 0xe0, 0x78, 0x6e, 0xb7, 0xdd, 0x28, 0x09, 0x93, 0x56, 0xa0, 0x68, 0x17, 0x4c, 0x1d,
-	0x72, 0x64, 0x07, 0x2f, 0x1b, 0x65, 0x21, 0x2b, 0x05, 0xe7, 0xfa, 0xd8, 0xd4, 0x99, 0xb7, 0xed,
-	0x25, 0x6b, 0x80, 0xb0, 0x2c, 0xda, 0xa3, 0x5f, 0x43, 0x49, 0x66, 0x80, 0x8e, 0x1b, 0x15, 0x91,
-	0xec, 0x0d, 0x2d, 0x3d, 0x22, 0x99, 0x32, 0x1b, 0xfb, 0x95, 0xf7, 0x6f, 0xb7, 0x8a, 0xec, 0xf5,
-	0xf4, 0x11, 0x7e, 0x80, 0x49, 0xc4, 0xb4, 0x9a, 0xe2, 0xea, 0xe5, 0x29, 0xe6, 0xe4, 0x36, 0x63,
-	0xce, 0xc4, 0x95, 0xe4, 0x35, 0x45, 0xde, 0x8a, 0x60, 0x44, 0xc7, 0x6b, 0xd9, 0xad, 0x9f, 0x9b,
-	0xdd, 0xcf, 0xa0, 0x28, 0x93, 0xcb, 0xd0, 0xc7, 0x50, 0x94, 0x69, 0x0b, 0x2b, 0xa1, 0x68, 0x49,
-	0x14, 0x09, 0xe1, 0xf8, 0x7f, 0x6b, 0x00, 0x84, 0xce, 0x3d, 0xe6, 0x04, 0x9e, 0x9f, 0x6e, 0x44,
-	0x47, 0xa9, 0xd8, 0x8b, 0x72, 0xd8, 0xdf, 0x79, 0xff, 0x76, 0xeb, 0x93, 0x0b, 0x5a, 0xc8, 0xc4,
-	0x19, 0x9f, 0x78, 0xfe, 0xe4, 0x24, 0x58, 0xce, 0x29, 0x4e, 0x65, 0x09, 0x43, 0xd5, 0x8f, 0xf4,
-	0x85, 0xe7, 0x95, 0x24, 0x60, 0xe8, 0x49, 0xd4, 0x44, 0x72, 0x1f, 0xa8, 0x4d, 0xf1, 0xa1, 0x7d,
-	0x28, 0x8a, 0x70, 0x84, 0x7d, 0xe8, 0x03, 0x44, 0x84, 0x8c, 0xfc, 0x3e, 0x7b, 0x3e, 0x7c, 0xd1,
-	0x8b, 0xef, 0x9a, 0x70, 0x8b, 0x8e, 0x79, 0x4b, 0x9d, 0x7b, 0xc3, 0xe5, 0x9c, 0x8a, 0x6a, 0xad,
-	0xef, 0x99, 0x56, 0x1c, 0x44, 0x8b, 0xc3, 0x3f, 0x40, 0x61, 0x24, 0x0b, 0xff, 0x01, 0x72, 0xfc,
-	0x17, 0x95, 0x20, 0xd7, 0x3f, 0xec, 0x77, 0xcc, 0x0c, 0xaa, 0x03, 0x3c, 0x3d, 0x1c, 0x91, 0x41,
-	0xa7, 0xdb, 0x7f, 0x76, 0x68, 0x1a, 0xe8, 0x06, 0x54, 0x5a, 0x83, 0x41, 0xf7, 0xa0, 0xff, 0xa2,
-	0xd3, 0x1f, 0x0e, 0xcc, 0x2c, 0x2a, 0x43, 0x7e, 0xd8, 0x19, 0x0c, 0x07, 0xe6, 0x1a, 0xaa, 0x41,
-	0x79, 0x70, 0xd8, 0x1b, 0x0d, 0xbb, 0x87, 0xfd, 0x81, 0x99, 0xe3, 0x42, 0x46, 0x83, 0x0e, 0x31,
-	0xf3, 0x9c, 0xe6, 0x80, 0x1c, 0x8e, 0x8e, 0xcc, 0x02, 0xfe, 0x7b, 0x1e, 0x20, 0xae, 0xc3, 0x54,
-	0xba, 0xf5, 0x46, 0x9a, 0xbd, 0x6e, 0x23, 0x8d, 0x6b, 0x59, 0x6f, 0xa4, 0x9d, 0x28, 0x87, 0x6b,
-	0xdf, 0x47, 0x50, 0x98, 0xc8, 0x46, 0x9c, 0x48, 0xd9, 0x90, 0xa3, 0xf4, 0xec, 0x82, 0xf9, 0xd2,
-	0x66, 0x43, 0x6a, 0x9f, 0xbd, 0xa4, 0xfe, 0xe0, 0xcc, 0x9b, 0x53, 0xd9, 0x9b, 0x4b, 0x24, 0x05,
-	0x47, 0x1f, 0x41, 0x8e, 0xcb, 0x13, 0x79, 0x8c, 0x1a, 0xb2, 0x00, 0xa1, 0x2d, 0x28, 0x48, 0x9b,
-	0x45, 0x26, 0xb5, 0x23, 0xa2, 0xc0, 0xe8, 0x0e, 0xe4, 0x85, 0x4a, 0xd1, 0x75, 0xe2, 0xe3, 0x26,
-	0x81, 0xc8, 0x8a, 0xee, 0x85, 0xf2, 0x65, 0xad, 0x22, 0xba, 0x1b, 0x2c, 0xc8, 0xf3, 0x15, 0x15,
-	0x5d, 0xa7, 0xbe, 0xd7, 0xd0, 0xc9, 0xdb, 0x0e, 0x9b, 0x4f, 0xed, 0x25, 0xe7, 0xa0, 0x44, 0x92,
-	0xa1, 0x5f, 0xc2, 0x7a, 0xd8, 0x98, 0x08, 0x1f, 0x82, 0x5c, 0xc7, 0x9d, 0x88, 0xae, 0x54, 0x4b,
-	0x76, 0x9f, 0x34, 0x15, 0xfa, 0x02, 0xaa, 0x0b, 0x46, 0xc7, 0x83, 0xb0, 0xcf, 0xc9, 0x3e, 0x54,
-	0xe3, 0x56, 0x45, 0x40, 0x92, 0x20, 0xc1, 0xbf, 0x02, 0x88, 0x6d, 0xd6, 0xca, 0x50, 0xbb, 0x76,
-	0x0c, 0xbe, 0x19, 0x0c, 0x47, 0xed, 0x4e, 0x7f, 0x68, 0x66, 0xf9, 0x66, 0xd8, 0x69, 0x3d, 0x7d,
-	0xde, 0x21, 0xe6, 0x1a, 0x7e, 0x02, 0x55, 0xdd, 0x07, 0x5e, 0x78, 0xa3, 0xfe, 0xa0, 0x33, 0x34,
-	0x33, 0x08, 0xa0, 0xf0, 0xbc, 0xdb, 0x6e, 0x77, 0xfa, 0x52, 0xc0, 0x71, 0x77, 0xd0, 0xdd, 0xef,
-	0x75, 0xcc, 0x2c, 0xbf, 0xc4, 0x9e, 0xb5, 0x8e, 0x0f, 0x49, 0x77, 0xd8, 0x31, 0xd7, 0xf0, 0x5f,
-	0x0c, 0xa8, 0xea, 0xf6, 0xa5, 0x2a, 0x14, 0x43, 0x35, 0x2e, 0x93, 0xe8, 0x76, 0x4a, 0xc0, 0x38,
-	0x4d, 0xdc, 0x30, 0xe3, 0x16, 0xa3, 0xc3, 0x38, 0x4d, 0x22, 0x38, 0x39, 0x71, 0x09, 0x24, 0xa3,
-	0xf1, 0x18, 0x2a, 0x9d, 0x64, 0x9f, 0xd6, 0xdb, 0xba, 0x71, 0xc5, 0xcd, 0xfd, 0x0d, 0xd4, 0x07,
-	0x8b, 0xd3, 0x99, 0xc3, 0x98, 0xe3, 0xb9, 0x3d, 0xc7, 0x7d, 0x85, 0xee, 0x03, 0xc4, 0x36, 0x08,
-	0x9f, 0x56, 0xfa, 0xbc, 0x86, 0xe6, 0xc4, 0x2c, 0x62, 0x17, 0x6e, 0x72, 0xe2, 0x58, 0x22, 0xd1,
-	0xd0, 0x78, 0x0e, 0xf5, 0xd8, 0x8c, 0x50, 0x57, 0x6c, 0x4c, 0xc4, 0xae, 0xd9, 0xaa, 0xa1, 0xd1,
-	0x17, 0x50, 0x89, 0x85, 0xb1, 0xc6, 0x9a, 0x1a, 0x8f, 0x93, 0xe6, 0x13, 0x9d, 0x06, 0xff, 0x0e,
-	0xd6, 0xe5, 0x39, 0x89, 0x89, 0x98, 0x76, 0x96, 0x8c, 0xf3, 0xcf, 0xd2, 0x5d, 0xc8, 0x4f, 0x1d,
-	0xf7, 0x15, 0x6b, 0x64, 0x95, 0x8a, 0xa4, 0xd5, 0x44, 0x62, 0xf1, 0x3f, 0xb2, 0x00, 0x71, 0x58,
-	0x52, 0x35, 0xd0, 0x5c, 0xed, 0x52, 0x5a, 0xdb, 0x39, 0x6f, 0x2c, 0x69, 0x42, 0x69, 0x6a, 0xbb,
-	0x93, 0x85, 0x3d, 0x09, 0x47, 0x93, 0x68, 0xcf, 0x71, 0x63, 0x6a, 0x8f, 0xa7, 0x8e, 0x4b, 0xd5,
-	0x5b, 0x23, 0xda, 0x8b, 0x69, 0x77, 0x11, 0x78, 0xad, 0x39, 0x1f, 0x45, 0xa8, 0x68, 0x1e, 0x25,
-	0xa2, 0x83, 0xf8, 0x93, 0xc3, 0xf3, 0xc3, 0x99, 0xa5, 0x46, 0xe4, 0x06, 0x6d, 0x02, 0x38, 0x4c,
-	0x74, 0x89, 0x9e, 0x7d, 0x2a, 0xda, 0x46, 0x89, 0x68, 0x10, 0x8e, 0x67, 0x67, 0x9e, 0x4f, 0x7b,
-	0xce, 0xcc, 0x09, 0x44, 0xdf, 0xa8, 0x11, 0x0d, 0xc2, 0x0b, 0x4d, 0x4f, 0x07, 0xa8, 0x42, 0xd3,
-	0x72, 0x9f, 0x48, 0xc5, 0x63, 0xa8, 0xb4, 0xb4, 0xf9, 0x60, 0x65, 0x9c, 0x30, 0x2e, 0x1f, 0x27,
-	0xf0, 0x9f, 0xb3, 0x00, 0xb1, 0xe4, 0xf3, 0xce, 0x5b, 0xe2, 0x2c, 0x65, 0xcf, 0x39, 0x4b, 0x1b,
-	0xc9, 0x56, 0x7f, 0x8d, 0xde, 0x7d, 0x13, 0xf2, 0xc2, 0x5f, 0x35, 0x15, 0xca, 0x0d, 0xd7, 0x25,
-	0x16, 0x87, 0xa7, 0xdf, 0xd0, 0xb3, 0x80, 0xa9, 0x5b, 0x37, 0x01, 0xe3, 0x4f, 0xc0, 0xd3, 0x85,
-	0x33, 0x1d, 0x77, 0xdd, 0x3f, 0x7a, 0x6a, 0x52, 0x8c, 0x01, 0x3c, 0xb2, 0x67, 0xde, 0x6c, 0xe6,
-	0x04, 0xcf, 0x6d, 0xf6, 0x52, 0x44, 0xbe, 0x4c, 0x34, 0x08, 0xcf, 0xb6, 0x2d, 0x53, 0x37, 0x16,
-	0x71, 0x2f, 0x91, 0x68, 0xcf, 0xc3, 0xa8, 0xd7, 0xf2, 0x4a, 0x12, 0x8c, 0x2b, 0x92, 0x70, 0x1f,
-	0x6a, 0xaa, 0xd6, 0xe9, 0xeb, 0x05, 0x65, 0x41, 0xa2, 0x48, 0x8d, 0x64, 0x91, 0xe2, 0xbb, 0x50,
-	0x11, 0x37, 0x90, 0x22, 0x8d, 0xe3, 0x67, 0x24, 0xde, 0x4c, 0xf7, 0xe1, 0xc6, 0x01, 0x0d, 0xe4,
-	0x75, 0xa3, 0x48, 0xb5, 0x90, 0x1a, 0x89, 0x90, 0xe2, 0xdf, 0x43, 0x35, 0x41, 0x79, 0x81, 0x50,
-	0x5d, 0x42, 0x36, 0x99, 0x94, 0xe6, 0xea, 0x2b, 0x4a, 0xb3, 0xf8, 0x1e, 0x94, 0x8e, 0xc2, 0x79,
-	0x5c, 0x9f, 0xd5, 0x8d, 0xe4, 0xac, 0x8e, 0xef, 0x01, 0x1c, 0xfa, 0x13, 0xcd, 0x5a, 0xcf, 0x9f,
-	0xf4, 0xf9, 0x79, 0x94, 0x84, 0xe1, 0x16, 0x4f, 0xa1, 0x7a, 0xa8, 0xcd, 0x85, 0xa9, 0xb2, 0x43,
-	0x90, 0x9b, 0xf3, 0xf9, 0x3d, 0x2b, 0x8f, 0x31, 0x5f, 0x73, 0x8f, 0xe4, 0x63, 0x5f, 0x1d, 0x6e,
-	0xb5, 0xe3, 0xc7, 0x74, 0x6e, 0x2f, 0x79, 0x2d, 0x1e, 0x4d, 0xed, 0xe8, 0x51, 0xaa, 0x81, 0x70,
-	0x1b, 0x6a, 0xba, 0x36, 0x86, 0x1e, 0x42, 0x4d, 0x1f, 0x4b, 0xc3, 0xf4, 0xd6, 0x2c, 0x9d, 0x8c,
-	0x24, 0x69, 0xf0, 0x77, 0x06, 0xac, 0x6b, 0x0d, 0xf4, 0xea, 0x3c, 0x23, 0x0b, 0x90, 0x33, 0x71,
-	0x3d, 0x9f, 0x8a, 0xcc, 0xbc, 0xa0, 0xb3, 0x53, 0xfe, 0x2a, 0x94, 0x1f, 0x47, 0xce, 0xc1, 0xa0,
-	0x3d, 0x28, 0xc9, 0x31, 0x81, 0xca, 0x26, 0x7c, 0xf1, 0x38, 0x11, 0xd1, 0x61, 0x0a, 0xb7, 0x62,
-	0x12, 0x85, 0xbd, 0xa2, 0x04, 0x74, 0x35, 0xd9, 0x6b, 0xaa, 0xb1, 0x61, 0x5d, 0x2b, 0xfd, 0x1f,
-	0xa4, 0xc6, 0x18, 0xdc, 0x1a, 0xcd, 0xc7, 0x76, 0x40, 0xd3, 0x8a, 0x78, 0x67, 0x88, 0x80, 0x91,
-	0xba, 0x04, 0xec, 0xd2, 0x5b, 0xa1, 0x01, 0x45, 0x75, 0xce, 0x85, 0xd6, 0x12, 0x09, 0xb7, 0xf8,
-	0x53, 0x28, 0x87, 0x85, 0x2d, 0x9a, 0x4b, 0x58, 0xc9, 0xb2, 0x24, 0xca, 0x24, 0x06, 0xe0, 0xdf,
-	0x02, 0x8c, 0x48, 0xef, 0x7a, 0x79, 0x2f, 0x87, 0x33, 0x7d, 0x18, 0xe1, 0xd4, 0x03, 0x81, 0xc4,
-	0x24, 0x3c, 0xb8, 0x31, 0xf6, 0x87, 0x09, 0x6e, 0x00, 0xd5, 0x48, 0x85, 0x43, 0x19, 0xba, 0x0f,
-	0xb9, 0x11, 0xe9, 0x85, 0x85, 0x7f, 0xcb, 0xd2, 0x91, 0x16, 0xc7, 0x74, 0xdc, 0xc0, 0x5f, 0x12,
-	0x41, 0xd4, 0xfc, 0x05, 0x94, 0x23, 0x10, 0x7f, 0xbc, 0xbf, 0xa2, 0x4b, 0x75, 0xa0, 0xf9, 0x92,
-	0x77, 0xf3, 0x37, 0xf6, 0x74, 0xa1, 0x3e, 0xe1, 0x10, 0xb9, 0x79, 0x94, 0xfd, 0xca, 0xc0, 0x5f,
-	0xc3, 0x8f, 0x5b, 0x8b, 0xe0, 0xa5, 0xe7, 0x87, 0x47, 0x8a, 0xb2, 0xb9, 0xe7, 0x32, 0xd1, 0xea,
-	0xbb, 0x2c, 0x44, 0xd1, 0xb1, 0x90, 0x56, 0x22, 0x09, 0x18, 0xde, 0x83, 0x82, 0x1a, 0x44, 0x11,
-	0xe4, 0x9e, 0x7a, 0x63, 0xaa, 0x02, 0x21, 0xd6, 0x5c, 0x69, 0xc7, 0xf7, 0x3d, 0x3f, 0x54, 0x2a,
-	0x36, 0xf8, 0x6f, 0x06, 0xdc, 0xd6, 0xba, 0xf8, 0x33, 0xcf, 0xbf, 0x76, 0x57, 0x46, 0x5f, 0x42,
-	0x8e, 0x3f, 0xc8, 0x84, 0xc0, 0xfa, 0xde, 0xc7, 0xd6, 0x25, 0x72, 0x64, 0x06, 0x05, 0x39, 0xde,
-	0x55, 0x8f, 0xb6, 0x22, 0xac, 0xb5, 0x7a, 0x3d, 0xf9, 0x66, 0xeb, 0xf6, 0xdb, 0xdd, 0xe3, 0x6e,
-	0x7b, 0xd4, 0xea, 0x99, 0x46, 0xfc, 0xfc, 0xca, 0xe2, 0x00, 0xea, 0x84, 0x8a, 0xeb, 0xea, 0x3a,
-	0x06, 0xad, 0x56, 0x7d, 0xf6, 0x9c, 0xaa, 0xbf, 0xc6, 0xac, 0x8b, 0x0b, 0x90, 0x3b, 0xf6, 0x9c,
-	0xf1, 0xde, 0x77, 0x15, 0x58, 0x6f, 0x2d, 0x02, 0x6f, 0xe2, 0xdb, 0x63, 0xea, 0x0f, 0xa8, 0xff,
-	0xc6, 0x39, 0xa3, 0xe8, 0x23, 0x28, 0x1e, 0xd0, 0x40, 0x7c, 0xd1, 0xcd, 0x5b, 0x9c, 0xae, 0x29,
-	0xdf, 0x47, 0x38, 0x83, 0x6e, 0x43, 0x49, 0xa1, 0x58, 0x88, 0x2b, 0x08, 0x1c, 0xc3, 0x19, 0x74,
-	0x07, 0x40, 0x1e, 0x57, 0xc5, 0xca, 0x7f, 0x9a, 0x92, 0x0a, 0x67, 0xd0, 0xcf, 0xe1, 0x47, 0x7a,
-	0x32, 0xd5, 0x73, 0x2c, 0x94, 0xb2, 0x61, 0x9d, 0x5b, 0x16, 0x38, 0x83, 0xee, 0x09, 0x95, 0xf2,
-	0x4b, 0xa1, 0x69, 0xad, 0x5c, 0x7f, 0x4d, 0xf5, 0xf8, 0xc2, 0x19, 0xb4, 0x07, 0xb7, 0x42, 0xe4,
-	0xfe, 0x92, 0xab, 0x6e, 0xb9, 0x63, 0xf5, 0x4d, 0xab, 0x66, 0x5d, 0xc0, 0x63, 0xc1, 0x7a, 0xc8,
-	0xc3, 0xf6, 0x97, 0xe1, 0x17, 0x30, 0x2b, 0x91, 0xd9, 0x66, 0x51, 0x92, 0x73, 0x0f, 0xb7, 0xa0,
-	0x22, 0xbe, 0x77, 0xc9, 0x26, 0x8d, 0x94, 0x20, 0x4d, 0xe0, 0x26, 0x54, 0x64, 0x08, 0x92, 0x04,
-	0x51, 0x10, 0xee, 0x42, 0xa5, 0x4d, 0xa7, 0x34, 0xc4, 0xaf, 0x18, 0x16, 0x91, 0xdd, 0x83, 0xf2,
-	0x01, 0x0d, 0x2e, 0xb4, 0x47, 0xee, 0x85, 0x3d, 0x10, 0xd1, 0x45, 0x09, 0x29, 0x29, 0x3c, 0x37,
-	0xf8, 0x2b, 0x30, 0x63, 0x02, 0x19, 0x16, 0xa4, 0xbf, 0x30, 0x13, 0xd7, 0x43, 0x82, 0x13, 0x43,
-	0x55, 0xba, 0xaa, 0xac, 0x08, 0xb5, 0xea, 0xea, 0xb7, 0xa1, 0x2a, 0xbd, 0x5d, 0xa5, 0x89, 0x1c,
-	0xb1, 0x60, 0x43, 0xa7, 0x38, 0x76, 0x98, 0x73, 0xea, 0x4c, 0x9d, 0x60, 0x89, 0xf4, 0xa7, 0x47,
-	0x4c, 0xff, 0x53, 0xa8, 0x1f, 0xd0, 0x40, 0x1f, 0x5e, 0x57, 0xbd, 0xaf, 0x6a, 0x73, 0x2b, 0xb7,
-	0xf3, 0x33, 0x58, 0x97, 0x1a, 0x2e, 0x63, 0x8a, 0xe4, 0x3f, 0x81, 0x9b, 0x07, 0x34, 0xd0, 0xde,
-	0x70, 0x57, 0xc6, 0xa4, 0xaa, 0x61, 0xb8, 0xbe, 0xc7, 0xb0, 0xb1, 0x2a, 0x41, 0x79, 0x8f, 0xac,
-	0xd4, 0x2c, 0x90, 0xe2, 0xde, 0x01, 0x53, 0x46, 0x55, 0xfb, 0xe4, 0x72, 0x7e, 0x24, 0x76, 0xc0,
-	0x94, 0x7e, 0x5d, 0x49, 0x19, 0x45, 0x40, 0x7f, 0x9a, 0x5e, 0x18, 0x81, 0x9f, 0x89, 0x08, 0xeb,
-	0x73, 0x2d, 0xb2, 0x52, 0xd7, 0x6b, 0xb3, 0xaa, 0xf7, 0x3a, 0x9c, 0x41, 0x3d, 0xe1, 0xb5, 0x06,
-	0x8b, 0xbc, 0xbe, 0x73, 0x59, 0x57, 0x6c, 0x22, 0x2b, 0xf5, 0x26, 0xc4, 0x19, 0xf4, 0x65, 0xe8,
-	0x9b, 0xf6, 0xcc, 0x68, 0x58, 0x17, 0x5c, 0xf5, 0xb1, 0xe9, 0x0f, 0xf9, 0xa5, 0x28, 0x7a, 0xa5,
-	0xc6, 0x77, 0xc3, 0x4a, 0xf6, 0xcf, 0xa6, 0x3e, 0x91, 0xe3, 0x0c, 0xfa, 0x09, 0x54, 0x0f, 0x68,
-	0x10, 0xdf, 0xe8, 0xea, 0x90, 0x80, 0x15, 0x81, 0x70, 0x06, 0x7d, 0x2e, 0xe6, 0xea, 0xc4, 0xfc,
-	0x59, 0xb1, 0xe2, 0xb1, 0xb5, 0x99, 0x1c, 0x03, 0x23, 0x86, 0xc4, 0xfd, 0x59, 0xb1, 0xe2, 0x59,
-	0xa0, 0x59, 0x4b, 0x5c, 0x9f, 0x38, 0x83, 0x76, 0xa1, 0xd2, 0x65, 0x9d, 0xd9, 0x3c, 0x58, 0x72,
-	0x04, 0x42, 0x56, 0xea, 0x7a, 0x8f, 0xfc, 0xdc, 0xaf, 0xfe, 0xf3, 0xdd, 0xa6, 0xf1, 0xaf, 0x77,
-	0x9b, 0xc6, 0x7f, 0xdf, 0x6d, 0x1a, 0xa7, 0x05, 0xf1, 0x4f, 0xb6, 0x87, 0xff, 0x0f, 0x00, 0x00,
-	0xff, 0xff, 0x6b, 0xef, 0x39, 0x96, 0x86, 0x1b, 0x00, 0x00,
+	// 2896 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x5a, 0x4b, 0x73, 0x1b, 0xc7,
+	0xf1, 0xc7, 0xe2, 0x8d, 0xc6, 0x83, 0xe0, 0xfc, 0xf5, 0x97, 0x60, 0x48, 0x25, 0xd2, 0x63, 0x5b,
+	0xa1, 0x24, 0x73, 0x6d, 0xd3, 0x71, 0x6c, 0xcb, 0x4e, 0x6c, 0x90, 0x80, 0x28, 0xb8, 0x60, 0x90,
+	0x35, 0x00, 0x59, 0xa9, 0x8a, 0xab, 0x98, 0x25, 0x30, 0x06, 0xd7, 0x02, 0x76, 0xe1, 0xdd, 0x85,
+	0x62, 0xe4, 0x23, 0xa4, 0x2a, 0x27, 0x5f, 0x72, 0x48, 0xae, 0xa9, 0xca, 0x25, 0xd7, 0x7c, 0x85,
+	0x1c, 0x73, 0x4e, 0xaa, 0x94, 0x94, 0xcf, 0x39, 0xe9, 0x9c, 0x43, 0x6a, 0x5e, 0xbb, 0xb3, 0x58,
+	0xbe, 0xe4, 0x8a, 0x2f, 0xe2, 0xf6, 0x6b, 0xa6, 0x7b, 0xba, 0xe7, 0x37, 0x3d, 0x03, 0x41, 0xd1,
+	0x9a, 0x98, 0x73, 0xcf, 0x0d, 0xdc, 0xe6, 0x8d, 0x89, 0x3b, 0x71, 0xf9, 0xe7, 0x5b, 0xec, 0x4b,
+	0x70, 0xf1, 0xef, 0xd2, 0x90, 0x3d, 0xf2, 0xa9, 0x87, 0x6a, 0x90, 0xee, 0xb6, 0x1b, 0xc6, 0xa6,
+	0xb1, 0x95, 0x25, 0xe9, 0x6e, 0x1b, 0x35, 0xa0, 0x60, 0xfb, 0xad, 0xf1, 0xcc, 0x76, 0x1a, 0xe9,
+	0x4d, 0x63, 0xab, 0x48, 0x14, 0x89, 0x10, 0x64, 0x1d, 0x6b, 0x46, 0x1b, 0x99, 0x4d, 0x63, 0xab,
+	0x44, 0xf8, 0x37, 0xba, 0x03, 0x25, 0x3f, 0x58, 0x8c, 0xa9, 0x13, 0x74, 0xdb, 0x8d, 0x2c, 0x17,
+	0x44, 0x0c, 0x74, 0x03, 0x72, 0x74, 0x66, 0xd9, 0xd3, 0x46, 0x8e, 0x4b, 0x04, 0xc1, 0x6c, 0xac,
+	0x67, 0x56, 0x60, 0x79, 0x47, 0xa4, 0xd7, 0xc8, 0x0b, 0x9b, 0x90, 0xc1, 0x6c, 0xa6, 0xee, 0xc4,
+	0x76, 0x1a, 0x05, 0x61, 0xc3, 0x09, 0xf4, 0x11, 0xd4, 0x3d, 0x3a, 0x73, 0x03, 0xda, 0x65, 0x43,
+	0xdb, 0x81, 0x4d, 0xfd, 0x46, 0x71, 0x33, 0xb3, 0x55, 0xde, 0x59, 0x33, 0x89, 0x2e, 0x58, 0x92,
+	0x84, 0x22, 0xda, 0x86, 0x32, 0x75, 0x3c, 0x77, 0x3a, 0x9d, 0x51, 0x27, 0xf0, 0x1b, 0x25, 0x6e,
+	0x57, 0x36, 0x3b, 0x21, 0x8f, 0xe8, 0x72, 0xfc, 0x3a, 0xe4, 0xd8, 0xca, 0xf8, 0xe8, 0x36, 0xe4,
+	0x16, 0xec, 0xa3, 0x61, 0x70, 0x8b, 0x9c, 0xc9, 0xd8, 0x44, 0xf0, 0xf0, 0x0b, 0x03, 0x6a, 0xf1,
+	0x99, 0x13, 0x4b, 0xf9, 0x19, 0x14, 0xe7, 0x9e, 0xfb, 0xcc, 0x1e, 0x53, 0x8f, 0xaf, 0x65, 0x69,
+	0xd7, 0x7c, 0xf1, 0x7c, 0xe3, 0xc1, 0xc4, 0xf5, 0x66, 0x8f, 0xf0, 0xc2, 0xb1, 0xbf, 0x5e, 0xd0,
+	0x13, 0xdb, 0x19, 0xd3, 0x6f, 0x1e, 0x2d, 0xec, 0xf1, 0x89, 0x52, 0x3d, 0x11, 0xfe, 0x9f, 0xd8,
+	0x63, 0x4c, 0x42, 0x7b, 0x36, 0x96, 0x8c, 0xab, 0xcd, 0x13, 0x90, 0x7d, 0xf9, 0xb1, 0x94, 0x3d,
+	0xda, 0x84, 0xb2, 0x35, 0x1a, 0x51, 0xdf, 0x1f, 0xba, 0x4f, 0xa9, 0x23, 0xd3, 0xa6, 0xb3, 0xd0,
+	0x4d, 0xc8, 0xb3, 0x28, 0xbb, 0x6d, 0x9e, 0xb9, 0x2c, 0x91, 0x14, 0xfe, 0x67, 0x1a, 0x72, 0xfb,
+	0x9e, 0xbb, 0x98, 0x27, 0x62, 0x6d, 0xc9, 0xe2, 0x10, 0x71, 0x6e, 0xbf, 0x78, 0xbe, 0x71, 0xff,
+	0x1c, 0xdf, 0xec, 0xf1, 0x37, 0x27, 0x92, 0x31, 0x61, 0xc3, 0x9c, 0x30, 0x1b, 0x2c, 0x6b, 0xa9,
+	0x0b, 0xc5, 0x91, 0xbb, 0xf0, 0xfc, 0x28, 0xc4, 0x97, 0x1c, 0x26, 0x34, 0x67, 0xfe, 0x07, 0xd4,
+	0x9a, 0xc9, 0x9a, 0xcc, 0x12, 0x49, 0xa1, 0x07, 0x90, 0xf7, 0x03, 0x2b, 0x58, 0xf8, 0x3c, 0xae,
+	0xda, 0x0e, 0x32, 0x79, 0x34, 0xe2, 0xdf, 0x01, 0x97, 0x10, 0xa9, 0x11, 0x65, 0x3f, 0x9f, 0xcc,
+	0xfe, 0x6a, 0x49, 0x15, 0xae, 0x28, 0xa9, 0x2d, 0x28, 0x6b, 0x53, 0xa0, 0x32, 0x14, 0x0e, 0x3b,
+	0xfd, 0x76, 0xb7, 0xbf, 0x5f, 0x4f, 0xa1, 0x0a, 0x14, 0x5b, 0x87, 0x87, 0xe4, 0xe0, 0xb8, 0xd3,
+	0xae, 0x1b, 0x78, 0x0b, 0xf2, 0x5c, 0xd3, 0x47, 0x77, 0x21, 0xcf, 0x83, 0x53, 0xe5, 0x97, 0x17,
+	0x5e, 0x12, 0xc9, 0xc5, 0xff, 0xc8, 0x40, 0x7e, 0x8f, 0x07, 0x9c, 0x48, 0xc6, 0x16, 0xac, 0x89,
+	0xa5, 0xd8, 0xf3, 0xa8, 0x15, 0xb8, 0x2c, 0x8f, 0x69, 0x2e, 0x5c, 0x65, 0x9f, 0xbb, 0xa7, 0x11,
+	0x64, 0x47, 0xee, 0x98, 0xca, 0xba, 0xe0, 0xdf, 0x8c, 0xb7, 0xa4, 0x96, 0xc7, 0x97, 0xad, 0x4a,
+	0xf8, 0x37, 0xaa, 0x43, 0x26, 0xb0, 0x26, 0x72, 0x07, 0xb3, 0x4f, 0xd4, 0xd4, 0x0a, 0x5e, 0x6c,
+	0xdf, 0xa8, 0x80, 0xef, 0x41, 0xcd, 0xf5, 0x26, 0x96, 0x63, 0xff, 0xda, 0x0a, 0x6c, 0xd7, 0xe9,
+	0xb6, 0x1b, 0x45, 0xee, 0xd2, 0x0a, 0x17, 0x3d, 0x80, 0xba, 0xce, 0x39, 0xb4, 0x82, 0xb3, 0x46,
+	0x89, 0x8f, 0x95, 0xe0, 0xb3, 0xf9, 0xfc, 0xa9, 0x3d, 0x6f, 0x5b, 0x4b, 0xbf, 0x01, 0xdc, 0xb3,
+	0x90, 0x46, 0x9f, 0x40, 0x51, 0x64, 0x80, 0x8e, 0x1b, 0x65, 0x9e, 0xec, 0x9b, 0x5a, 0x7a, 0x78,
+	0x32, 0x45, 0x36, 0x76, 0xcb, 0x2f, 0x9e, 0x6f, 0x14, 0xfc, 0xaf, 0xa7, 0x8f, 0xf0, 0x36, 0x26,
+	0xa1, 0xd1, 0x6a, 0x8a, 0x2b, 0x97, 0xa7, 0x98, 0xa9, 0x5b, 0xbe, 0x6f, 0x4f, 0x1c, 0xa1, 0x5e,
+	0x95, 0xea, 0xad, 0x90, 0x47, 0x74, 0xb9, 0x96, 0xdd, 0xda, 0xb9, 0xd9, 0x7d, 0x13, 0x0a, 0x22,
+	0xb9, 0x3e, 0x7a, 0x15, 0x0a, 0x22, 0x6d, 0xaa, 0x12, 0x0a, 0xa6, 0x10, 0x11, 0xc5, 0xc7, 0xff,
+	0xce, 0x00, 0x10, 0x3a, 0x77, 0x7d, 0x3b, 0x70, 0xbd, 0x24, 0x10, 0x1d, 0x26, 0xd6, 0x9e, 0x97,
+	0xc3, 0xee, 0xd6, 0x8b, 0xe7, 0x1b, 0xaf, 0x5f, 0x00, 0x21, 0x13, 0x7b, 0x7c, 0xe2, 0x7a, 0x93,
+	0x93, 0x60, 0x39, 0xa7, 0x38, 0x91, 0x25, 0x0c, 0x15, 0x2f, 0x9c, 0x4f, 0xed, 0x57, 0x12, 0xe3,
+	0xa1, 0x4f, 0x43, 0x10, 0xc9, 0xbe, 0xe4, 0x6c, 0xd2, 0x0e, 0xed, 0x42, 0x81, 0x2f, 0x87, 0xc2,
+	0xa1, 0x97, 0x18, 0x42, 0x19, 0xb2, 0xf3, 0xec, 0xc9, 0xf0, 0xf3, 0x5e, 0x74, 0xd6, 0x28, 0x12,
+	0x1d, 0x33, 0x48, 0x9d, 0xbb, 0xc3, 0xe5, 0x9c, 0xf2, 0x6a, 0xad, 0xed, 0xd4, 0xcd, 0x68, 0x11,
+	0x4d, 0xc6, 0x7f, 0x89, 0x09, 0xc3, 0xb1, 0xf0, 0x2f, 0x21, 0xcb, 0xfe, 0xa2, 0x22, 0x64, 0xfb,
+	0x07, 0xfd, 0x4e, 0x3d, 0x85, 0x6a, 0x00, 0x7b, 0x07, 0x47, 0x64, 0xd0, 0xe9, 0xf6, 0x1f, 0x1f,
+	0xd4, 0x0d, 0xb4, 0x06, 0xe5, 0xd6, 0x60, 0xd0, 0xdd, 0xef, 0x7f, 0xde, 0xe9, 0x0f, 0x07, 0xf5,
+	0x34, 0x2a, 0x41, 0x6e, 0xd8, 0x19, 0x0c, 0x07, 0xf5, 0x0c, 0xaa, 0x42, 0x69, 0x70, 0xd0, 0x3b,
+	0x1a, 0x76, 0x0f, 0xfa, 0x83, 0x7a, 0x96, 0x0d, 0x72, 0x34, 0xe8, 0x90, 0x7a, 0x8e, 0xe9, 0xec,
+	0x93, 0x83, 0xa3, 0xc3, 0x7a, 0x1e, 0xff, 0x21, 0x07, 0x10, 0xd5, 0x61, 0x22, 0xdd, 0x3a, 0x90,
+	0xa6, 0xaf, 0x0b, 0xa4, 0x51, 0x2d, 0xeb, 0x40, 0xda, 0x09, 0x73, 0x98, 0xf9, 0x3e, 0x03, 0xa9,
+	0x44, 0x36, 0xa2, 0x44, 0x0a, 0x40, 0x0e, 0xd3, 0xf3, 0x00, 0xea, 0x67, 0x96, 0x3f, 0xa4, 0xd6,
+	0xe8, 0x8c, 0x7a, 0x83, 0x91, 0x3b, 0xa7, 0x02, 0x9b, 0x8b, 0x24, 0xc1, 0x47, 0xaf, 0x40, 0x96,
+	0x8d, 0xc7, 0xf3, 0x18, 0x02, 0x32, 0x67, 0xa1, 0x0d, 0xc8, 0x0b, 0x9f, 0x79, 0x26, 0xb5, 0x2d,
+	0x22, 0xd9, 0xe8, 0x0e, 0xe4, 0xf8, 0x94, 0x1c, 0x75, 0xa2, 0xed, 0x26, 0x98, 0xc8, 0x0c, 0xcf,
+	0x85, 0xd2, 0x65, 0x50, 0x11, 0x9e, 0x0d, 0x26, 0xe4, 0xd8, 0x17, 0xe5, 0xa8, 0x53, 0xdb, 0x69,
+	0xe8, 0xea, 0x6d, 0xdb, 0x9f, 0x4f, 0xad, 0x25, 0xb3, 0xa0, 0x44, 0xa8, 0xa1, 0x0f, 0x61, 0x5d,
+	0x01, 0x13, 0x61, 0x4d, 0x90, 0x63, 0x3b, 0x13, 0x8e, 0x4a, 0xd5, 0x38, 0xfa, 0x24, 0xb5, 0xd0,
+	0x3b, 0x50, 0x59, 0xf8, 0x74, 0x3c, 0x50, 0x38, 0x27, 0x70, 0xa8, 0xca, 0xbc, 0x0a, 0x99, 0x24,
+	0xa6, 0x82, 0x7f, 0x0a, 0x10, 0xf9, 0xac, 0x95, 0xa1, 0x76, 0xec, 0x18, 0x8c, 0x18, 0x0c, 0x8f,
+	0xda, 0x9d, 0xfe, 0xb0, 0x9e, 0x66, 0xc4, 0xb0, 0xd3, 0xda, 0x7b, 0xd2, 0x21, 0xf5, 0x0c, 0xfe,
+	0x14, 0x2a, 0x7a, 0x0c, 0xac, 0xf0, 0x8e, 0xfa, 0x83, 0xce, 0xb0, 0x9e, 0x42, 0x00, 0xf9, 0x27,
+	0xdd, 0x76, 0xbb, 0xd3, 0x17, 0x03, 0x1c, 0x77, 0x07, 0xdd, 0xdd, 0x5e, 0xa7, 0x9e, 0x66, 0x87,
+	0xd8, 0xe3, 0xd6, 0xf1, 0x01, 0xe9, 0x0e, 0x3b, 0xf5, 0x0c, 0xfe, 0x8d, 0x01, 0x15, 0xdd, 0xbf,
+	0x44, 0x85, 0x62, 0xa8, 0x44, 0x65, 0x12, 0x9e, 0x4e, 0x31, 0x1e, 0xd3, 0x89, 0x00, 0x33, 0x82,
+	0x18, 0x9d, 0xc7, 0x74, 0x62, 0x8b, 0x93, 0xe5, 0x87, 0x40, 0x7c, 0x35, 0x3e, 0x86, 0x72, 0x27,
+	0x8e, 0xd3, 0x3a, 0xac, 0x1b, 0x57, 0x9c, 0xdc, 0x5f, 0x41, 0x6d, 0xb0, 0x38, 0x9d, 0xd9, 0xbe,
+	0x6f, 0xbb, 0x4e, 0xcf, 0x76, 0x9e, 0xa2, 0x87, 0x00, 0x91, 0x0f, 0x3c, 0xa6, 0x15, 0x9c, 0xd7,
+	0xc4, 0x4c, 0xd9, 0x0f, 0xcd, 0x79, 0x98, 0x4c, 0x39, 0x1a, 0x91, 0x68, 0x62, 0x3c, 0x87, 0x5a,
+	0xe4, 0x86, 0x9a, 0x2b, 0x72, 0x26, 0x34, 0xd7, 0x7c, 0xd5, 0xc4, 0xe8, 0x1d, 0x28, 0x47, 0x83,
+	0xf9, 0x8d, 0x8c, 0x6c, 0x8f, 0xe3, 0xee, 0x13, 0x5d, 0x07, 0xff, 0x02, 0xd6, 0xc5, 0x3e, 0x89,
+	0x94, 0x7c, 0x6d, 0x2f, 0x19, 0xe7, 0xef, 0xa5, 0x37, 0x20, 0x37, 0xb5, 0x9d, 0xa7, 0x7e, 0x23,
+	0x2d, 0xa7, 0x88, 0x7b, 0x4d, 0x84, 0x14, 0xff, 0x31, 0x03, 0x10, 0x2d, 0x4b, 0xa2, 0x06, 0x9a,
+	0xab, 0x28, 0xa5, 0xc1, 0xce, 0x79, 0x6d, 0x49, 0x13, 0x8a, 0x53, 0xcb, 0x99, 0x2c, 0xac, 0x89,
+	0x6a, 0x4d, 0x42, 0x9a, 0xc9, 0xc6, 0xd4, 0x1a, 0x4f, 0x6d, 0x87, 0xca, 0xbb, 0x46, 0x48, 0xf3,
+	0x6e, 0x77, 0x11, 0xb8, 0xad, 0x39, 0x6b, 0x45, 0x28, 0x07, 0x8f, 0x22, 0xd1, 0x59, 0xec, 0xca,
+	0xe1, 0x7a, 0xaa, 0x67, 0xa9, 0x12, 0x41, 0xa0, 0xbb, 0x00, 0xb6, 0xcf, 0x51, 0xa2, 0x67, 0x9d,
+	0x72, 0xd8, 0x28, 0x12, 0x8d, 0xc3, 0xe4, 0xfe, 0xc8, 0xf5, 0x68, 0xcf, 0x9e, 0xd9, 0x01, 0xc7,
+	0x8d, 0x2a, 0xd1, 0x38, 0xec, 0x9a, 0xe3, 0xd1, 0x67, 0x36, 0xfd, 0x15, 0xeb, 0x21, 0x45, 0x77,
+	0x12, 0x31, 0x98, 0xc7, 0xde, 0xc2, 0x19, 0x52, 0x3f, 0xf0, 0x39, 0x10, 0x14, 0x49, 0x48, 0xb3,
+	0x12, 0xd5, 0x13, 0xa9, 0x3a, 0x0f, 0xad, 0x6a, 0x74, 0x39, 0xfa, 0x04, 0xd6, 0x27, 0x9e, 0x35,
+	0xb6, 0x9d, 0xc9, 0x2e, 0x75, 0x46, 0x67, 0x33, 0xcb, 0x7b, 0xaa, 0xfa, 0x8f, 0x75, 0x73, 0x7f,
+	0x45, 0x42, 0x92, 0xba, 0x6c, 0x87, 0xb4, 0xb4, 0xd6, 0x64, 0xa5, 0x93, 0x31, 0x2e, 0xef, 0x64,
+	0xf0, 0xb7, 0x19, 0x80, 0xc8, 0xb5, 0xf3, 0xb6, 0x7a, 0x6c, 0x1b, 0xa7, 0xcf, 0xd9, 0xc6, 0x37,
+	0xe3, 0xa7, 0xcc, 0x35, 0x8e, 0x8d, 0x1b, 0x90, 0xe3, 0x4b, 0x2d, 0x1b, 0x52, 0x41, 0xb0, 0xb9,
+	0xf8, 0xc7, 0xc1, 0xe9, 0x57, 0x74, 0x14, 0xf8, 0xf2, 0xc0, 0x8f, 0xf1, 0x58, 0x5a, 0x4e, 0x17,
+	0xf6, 0x74, 0xdc, 0x75, 0xbe, 0x74, 0x65, 0x93, 0x1a, 0x31, 0x58, 0x52, 0x47, 0xee, 0x6c, 0x66,
+	0x07, 0x4f, 0x2c, 0xff, 0x8c, 0x27, 0xbd, 0x44, 0x34, 0x0e, 0x4f, 0x1b, 0x9d, 0x52, 0xcb, 0xa7,
+	0x63, 0x9e, 0x72, 0x96, 0x36, 0x49, 0x6b, 0x97, 0x0b, 0x90, 0x97, 0x8b, 0x68, 0x59, 0xcc, 0x95,
+	0x03, 0xe4, 0x55, 0x28, 0x88, 0x5a, 0x60, 0xd9, 0x17, 0x3d, 0x1d, 0xe1, 0x34, 0x51, 0x7c, 0xfc,
+	0x31, 0xe4, 0x13, 0x08, 0x1e, 0xbb, 0x2b, 0x30, 0x8a, 0x74, 0x3e, 0xeb, 0xec, 0x0d, 0x3b, 0x6d,
+	0x01, 0xc1, 0xa4, 0xc3, 0x10, 0xf9, 0xa0, 0x5f, 0xcf, 0xb0, 0x9c, 0xea, 0x7b, 0x7a, 0xa5, 0xa4,
+	0x8c, 0xcb, 0x4b, 0x0a, 0xff, 0xc9, 0x80, 0xfa, 0x6a, 0xe5, 0x7c, 0xaf, 0xcc, 0x36, 0xa0, 0x70,
+	0x46, 0xf9, 0x38, 0x72, 0x2f, 0x2b, 0x92, 0x49, 0xd8, 0xba, 0x32, 0x5c, 0x13, 0xbb, 0x59, 0x91,
+	0x68, 0x1b, 0x8a, 0x23, 0xcf, 0x0e, 0xa8, 0x67, 0x5b, 0x8d, 0x5c, 0xbc, 0x8c, 0xf7, 0x04, 0xdf,
+	0x75, 0x48, 0xa8, 0x82, 0xff, 0x1e, 0xf9, 0x1a, 0x8a, 0x13, 0xbe, 0x6e, 0x42, 0xf9, 0x54, 0x05,
+	0x12, 0xba, 0xaa, 0xb3, 0x98, 0xc6, 0x98, 0xfa, 0x23, 0xcf, 0x9e, 0xb3, 0x16, 0x57, 0x7a, 0xab,
+	0xb3, 0xd0, 0x36, 0x6b, 0x21, 0x2c, 0x79, 0x31, 0xaa, 0xed, 0xdc, 0x4a, 0x38, 0xc5, 0x19, 0x94,
+	0x08, 0x2d, 0x3d, 0xc0, 0x5c, 0x2c, 0x40, 0x7c, 0x9f, 0x5d, 0xa2, 0x99, 0x4a, 0x94, 0x58, 0x80,
+	0xfc, 0xe3, 0x56, 0xb7, 0xc7, 0xd3, 0x0a, 0x90, 0x3f, 0x6c, 0x0d, 0x06, 0x2c, 0xa9, 0xf8, 0x3f,
+	0x06, 0xe4, 0x45, 0x61, 0x9c, 0xb7, 0xfc, 0x51, 0xca, 0xa2, 0xe5, 0xd7, 0x79, 0xac, 0x9c, 0x15,
+	0xe4, 0x84, 0x9b, 0x4b, 0xe3, 0xb0, 0x8d, 0x27, 0x28, 0x99, 0x03, 0x49, 0xb1, 0x32, 0xff, 0x92,
+	0xd2, 0xf1, 0xa9, 0x35, 0x7a, 0xaa, 0xf0, 0x54, 0xd1, 0x6c, 0xeb, 0x79, 0xd4, 0x1a, 0x2f, 0x25,
+	0x92, 0x0a, 0x22, 0xda, 0x90, 0x05, 0x3e, 0x89, 0xdc, 0x90, 0x3f, 0x03, 0x38, 0x8d, 0x30, 0xa9,
+	0x78, 0x01, 0x26, 0xc5, 0x7b, 0x20, 0xcd, 0x02, 0xbf, 0x0d, 0x25, 0x12, 0x42, 0xe6, 0x6b, 0x3a,
+	0xa0, 0xc6, 0x9e, 0x64, 0x22, 0x3e, 0xee, 0x41, 0x55, 0x6e, 0x24, 0xfa, 0xf5, 0x82, 0xfa, 0x41,
+	0xec, 0x98, 0x31, 0x56, 0x8e, 0x99, 0x8d, 0x30, 0xfc, 0xb4, 0x3c, 0xe9, 0xa4, 0xad, 0x64, 0xe3,
+	0x87, 0x50, 0x95, 0x67, 0xdf, 0xd5, 0xa3, 0xe1, 0x37, 0xa0, 0xcc, 0xbd, 0x91, 0xaa, 0x11, 0xa8,
+	0x19, 0xb1, 0x37, 0x94, 0x87, 0xb0, 0xb6, 0x4f, 0x03, 0xd1, 0x7e, 0x4a, 0x55, 0x0d, 0xe7, 0x8c,
+	0x18, 0xce, 0xe1, 0x2f, 0xa0, 0x12, 0xd3, 0xbc, 0x60, 0x50, 0x7d, 0x84, 0x74, 0x1c, 0x29, 0x9b,
+	0xab, 0xaf, 0x2a, 0x9a, 0xc7, 0xf7, 0xa0, 0x78, 0xa8, 0xee, 0xe7, 0xfa, 0xdd, 0xdd, 0x88, 0xdf,
+	0xdd, 0xf1, 0x3d, 0x80, 0x03, 0x6f, 0xa2, 0x79, 0xeb, 0x7a, 0x93, 0x3e, 0x3b, 0x9f, 0x85, 0xa2,
+	0x22, 0xf1, 0x14, 0x2a, 0x07, 0xda, 0x3d, 0x31, 0x51, 0xb2, 0x08, 0xb2, 0x73, 0x76, 0x9f, 0x4f,
+	0x8b, 0x63, 0x9d, 0x7d, 0xb3, 0x88, 0xc4, 0xe3, 0x9f, 0xdc, 0x72, 0x92, 0x62, 0xfb, 0x71, 0x6e,
+	0x2d, 0xd9, 0x7e, 0x39, 0x9c, 0x5a, 0xe1, 0x23, 0x95, 0xc6, 0xc2, 0x6d, 0xa8, 0xea, 0xb3, 0xf9,
+	0xe8, 0x5d, 0xa8, 0xea, 0xd7, 0x54, 0x55, 0x24, 0x55, 0x53, 0x57, 0x23, 0x71, 0x1d, 0xfc, 0xad,
+	0x01, 0xeb, 0x5a, 0x43, 0x75, 0x8d, 0xaa, 0x31, 0x01, 0xd9, 0x13, 0xc7, 0xf5, 0x28, 0xcf, 0xcc,
+	0xe7, 0x74, 0x76, 0xca, 0x0a, 0x52, 0x3c, 0x96, 0x9e, 0x23, 0x41, 0x3b, 0x50, 0x14, 0xa8, 0x4f,
+	0x45, 0x53, 0x76, 0xf1, 0xf5, 0x22, 0xd4, 0xc3, 0x14, 0x6e, 0x45, 0x2a, 0x52, 0x7a, 0x45, 0x09,
+	0xe8, 0xd3, 0xa4, 0xaf, 0x39, 0x8d, 0x05, 0xeb, 0xda, 0x11, 0xf0, 0x83, 0xd4, 0xd8, 0x5f, 0x0c,
+	0xb8, 0x75, 0x34, 0x1f, 0x5b, 0x01, 0x4d, 0xce, 0xb4, 0x0a, 0x61, 0xc6, 0x39, 0x10, 0x76, 0x59,
+	0x9b, 0x18, 0x82, 0x4e, 0x46, 0xef, 0x02, 0xf4, 0x33, 0x3a, 0x7b, 0xe1, 0x19, 0x9d, 0xbb, 0xea,
+	0x8c, 0xc6, 0x7f, 0x36, 0xa0, 0xb1, 0xea, 0xb9, 0x7f, 0x9d, 0x02, 0xb9, 0xce, 0xc1, 0x18, 0xef,
+	0x1e, 0x33, 0x89, 0xee, 0xb1, 0xc1, 0x1a, 0x04, 0xee, 0xb4, 0x8c, 0x41, 0x91, 0x4c, 0x62, 0xc9,
+	0x5e, 0x56, 0x5c, 0x94, 0x15, 0x89, 0xbf, 0x80, 0xa6, 0xbe, 0xc6, 0x12, 0x12, 0xff, 0x47, 0x8b,
+	0x8d, 0xef, 0x43, 0x49, 0x81, 0x05, 0xef, 0xa2, 0x14, 0x3a, 0x88, 0x6d, 0x56, 0x22, 0x11, 0x03,
+	0xff, 0x1c, 0xe0, 0x88, 0xf4, 0xae, 0xb7, 0x97, 0x4a, 0xea, 0xdd, 0x44, 0x55, 0x6d, 0xe2, 0x11,
+	0x86, 0x44, 0x2a, 0xac, 0x60, 0x23, 0xe9, 0x0f, 0x53, 0xb0, 0x01, 0x54, 0xc2, 0x29, 0x6c, 0xea,
+	0xa3, 0x87, 0x90, 0x3d, 0x22, 0x3d, 0x05, 0x26, 0xb7, 0x4c, 0x5d, 0x68, 0x32, 0x49, 0xc7, 0x09,
+	0xbc, 0x25, 0xe1, 0x4a, 0xcd, 0xf7, 0xa1, 0x14, 0xb2, 0x50, 0x1d, 0x32, 0x4f, 0xe9, 0x52, 0x82,
+	0x24, 0xfb, 0x64, 0x05, 0xfb, 0xcc, 0x9a, 0x2e, 0xe4, 0x33, 0x39, 0x11, 0xc4, 0xa3, 0xf4, 0x07,
+	0x06, 0xfe, 0x08, 0xfe, 0xbf, 0xb5, 0x08, 0xce, 0x5c, 0x4f, 0xc1, 0x14, 0xf5, 0xe7, 0xae, 0xe3,
+	0xf3, 0x9e, 0xb6, 0xeb, 0x2b, 0x11, 0x1d, 0xf3, 0xd1, 0x8a, 0x24, 0xc6, 0xc3, 0x3b, 0x61, 0xab,
+	0x88, 0x20, 0xbb, 0xe7, 0x8e, 0xa9, 0x5c, 0x08, 0xfe, 0xcd, 0x26, 0xed, 0x78, 0x9e, 0xeb, 0xa9,
+	0x49, 0x39, 0x81, 0x7f, 0x6f, 0xc0, 0x6d, 0xad, 0xae, 0x1f, 0xbb, 0xde, 0xb5, 0x4f, 0x3a, 0xf4,
+	0x1e, 0x64, 0x83, 0xe5, 0x5c, 0x44, 0x51, 0xdb, 0x79, 0xd5, 0xbc, 0x64, 0x1c, 0x91, 0x41, 0xae,
+	0x8e, 0x1f, 0xc8, 0x87, 0xb1, 0x02, 0x64, 0x5a, 0xbd, 0x9e, 0x78, 0x17, 0xeb, 0xf6, 0xdb, 0xdd,
+	0xe3, 0x6e, 0xfb, 0xa8, 0xd5, 0xab, 0x1b, 0xd1, 0x13, 0x57, 0x1a, 0x07, 0x50, 0x23, 0x94, 0xf7,
+	0xe5, 0xd7, 0xdc, 0x71, 0x57, 0xf6, 0x42, 0xd7, 0x78, 0x4f, 0xc0, 0x79, 0xc8, 0x1e, 0xbb, 0xf6,
+	0x78, 0xe7, 0xb7, 0x6b, 0xb0, 0xde, 0x5a, 0x04, 0x2e, 0xef, 0xe4, 0xbc, 0x01, 0xf5, 0x9e, 0xd9,
+	0x23, 0x8a, 0x5e, 0x81, 0xc2, 0x3e, 0x0d, 0xf8, 0xaf, 0x66, 0x39, 0x93, 0xe9, 0x35, 0x45, 0xff,
+	0x81, 0x53, 0xe8, 0x36, 0x14, 0xa5, 0xc8, 0x57, 0xb2, 0x3c, 0x97, 0xf9, 0x38, 0x85, 0xee, 0x00,
+	0x08, 0x1c, 0x91, 0xa6, 0xec, 0x4f, 0x53, 0x68, 0xe1, 0x14, 0xfa, 0x09, 0xfc, 0x9f, 0x9e, 0x4c,
+	0xf9, 0xe4, 0xa5, 0x46, 0xb9, 0x69, 0x9e, 0x5b, 0x16, 0x38, 0x85, 0xee, 0xf1, 0x29, 0xc5, 0xaf,
+	0x31, 0x75, 0x73, 0xa5, 0xa5, 0x68, 0xca, 0x07, 0x2e, 0x9c, 0x42, 0x3b, 0x70, 0x4b, 0x09, 0x77,
+	0x97, 0x6c, 0xea, 0x96, 0x33, 0x96, 0xbf, 0x1b, 0x54, 0xcd, 0x0b, 0x6c, 0x4c, 0x58, 0x57, 0x36,
+	0xfe, 0xee, 0x52, 0xfd, 0xca, 0x60, 0xc6, 0x32, 0xdb, 0x2c, 0x08, 0x75, 0x16, 0xe1, 0x06, 0x94,
+	0xf9, 0x6f, 0x0a, 0xe2, 0xe0, 0x43, 0x72, 0x20, 0x6d, 0xc0, 0xbb, 0x50, 0x16, 0x4b, 0x10, 0x57,
+	0x08, 0x17, 0xe1, 0x0d, 0x28, 0xb7, 0xe9, 0x94, 0x2a, 0xf9, 0x8a, 0x63, 0xa1, 0xda, 0x3d, 0x28,
+	0xed, 0xd3, 0xe0, 0x42, 0x7f, 0x04, 0xcd, 0xfd, 0x81, 0x50, 0x2f, 0x4c, 0x48, 0x51, 0xca, 0x99,
+	0xc3, 0x1f, 0x40, 0x3d, 0x52, 0x10, 0xcb, 0x82, 0xf4, 0x57, 0xbc, 0xd8, 0x91, 0x1b, 0xb3, 0xc4,
+	0x50, 0x11, 0xa1, 0x4a, 0x2f, 0xd4, 0xac, 0xfa, 0xf4, 0x9b, 0x50, 0x11, 0xd1, 0xae, 0xea, 0x84,
+	0x81, 0x98, 0x70, 0x53, 0xd7, 0x38, 0xb6, 0x7d, 0xfb, 0xd4, 0x9e, 0xda, 0xc1, 0x12, 0xe9, 0xcf,
+	0x3b, 0x91, 0xfe, 0xdb, 0x50, 0xdb, 0xa7, 0x81, 0x7e, 0x4b, 0x5f, 0x8d, 0xbe, 0xa2, 0x5d, 0xd0,
+	0x99, 0x9f, 0x6f, 0xc2, 0xba, 0x98, 0xe1, 0x32, 0xa3, 0x70, 0xfc, 0x4f, 0xe1, 0xc6, 0x3e, 0x0d,
+	0xb4, 0x77, 0xb2, 0x2b, 0xd7, 0xa4, 0xa2, 0x49, 0xd8, 0x7c, 0x1f, 0xc3, 0xcd, 0xd5, 0x11, 0x64,
+	0xf4, 0xc8, 0x4c, 0xf4, 0x57, 0x09, 0xeb, 0x2d, 0xa8, 0x8b, 0x55, 0xd5, 0x9e, 0xb5, 0xcf, 0x5f,
+	0x89, 0x2d, 0xa8, 0x8b, 0xb8, 0xae, 0xd4, 0x0c, 0x57, 0x40, 0x7f, 0xfe, 0xbb, 0x70, 0x05, 0x7e,
+	0xcc, 0x57, 0x58, 0xbf, 0x33, 0xeb, 0xbd, 0x41, 0xe4, 0xb7, 0xa6, 0x81, 0x53, 0xa8, 0xc7, 0xa3,
+	0xd6, 0x78, 0x61, 0xd4, 0x77, 0x2e, 0x43, 0xc5, 0x26, 0x32, 0x13, 0xef, 0x6e, 0x38, 0x85, 0xde,
+	0x53, 0xb1, 0x69, 0xef, 0x29, 0x0d, 0xf3, 0x82, 0xee, 0x29, 0x72, 0xfd, 0x7d, 0x15, 0xa8, 0xee,
+	0xfd, 0x2b, 0xe6, 0x45, 0xbd, 0x4b, 0x64, 0xf8, 0x2e, 0x3b, 0x4d, 0x39, 0xc8, 0x6a, 0x13, 0xae,
+	0x99, 0x71, 0xe0, 0x6d, 0xea, 0xcf, 0x04, 0x38, 0x85, 0x3e, 0x84, 0x35, 0x91, 0xaa, 0xe8, 0x65,
+	0x20, 0x79, 0xa5, 0x6b, 0x26, 0x59, 0x38, 0x85, 0xb6, 0x61, 0x4d, 0x38, 0x75, 0xa9, 0x69, 0xe8,
+	0xde, 0x36, 0xac, 0x09, 0x50, 0xb8, 0x9e, 0x7a, 0xe8, 0x58, 0xf4, 0x0c, 0x90, 0x7c, 0x38, 0x68,
+	0x26, 0x59, 0xba, 0x63, 0x97, 0x9a, 0x26, 0x1d, 0xbb, 0x9e, 0xfa, 0x7d, 0x05, 0x19, 0xea, 0x26,
+	0x6f, 0xc6, 0xae, 0xa8, 0x4d, 0x75, 0xed, 0xc4, 0x29, 0xf4, 0x23, 0x85, 0x1c, 0x17, 0xa8, 0x6a,
+	0xc1, 0x56, 0xf6, 0x69, 0x10, 0x5d, 0x8e, 0x6f, 0x9b, 0x17, 0xb7, 0x7e, 0x4d, 0x30, 0x43, 0x16,
+	0x4e, 0xa1, 0xd7, 0xb8, 0x69, 0xd4, 0xcb, 0x49, 0x78, 0x04, 0x33, 0x64, 0xe1, 0x14, 0x7a, 0x8b,
+	0xdf, 0x52, 0x63, 0xb7, 0xb9, 0xb2, 0x19, 0x5d, 0x02, 0x9b, 0xf1, 0x4b, 0x55, 0x68, 0x10, 0xeb,
+	0x9c, 0xca, 0x66, 0xd4, 0x05, 0x36, 0xab, 0xb1, 0xc6, 0x09, 0xa7, 0xd0, 0x03, 0x28, 0x77, 0xfd,
+	0xce, 0x6c, 0x1e, 0x2c, 0x99, 0x00, 0x21, 0x33, 0xd1, 0xd8, 0x85, 0xd1, 0xee, 0x56, 0xfe, 0xfa,
+	0xdd, 0x5d, 0xe3, 0x6f, 0xdf, 0xdd, 0x35, 0xfe, 0xf5, 0xdd, 0x5d, 0xe3, 0x34, 0xcf, 0xff, 0x0b,
+	0xcb, 0xbb, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0xb4, 0x69, 0x48, 0x41, 0xe4, 0x22, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2974,12 +3626,23 @@ type AutograderServiceClient interface {
 	CreateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
 	UpdateEnrollment(ctx context.Context, in *Enrollment, opts ...grpc.CallOption) (*Void, error)
 	UpdateEnrollments(ctx context.Context, in *CourseRequest, opts ...grpc.CallOption) (*Void, error)
-	// Get latest submissions for all course assignmets for a user or a group.
+	// Get latest submissions for all course assignments for a user or a group.
 	GetSubmissions(ctx context.Context, in *SubmissionRequest, opts ...grpc.CallOption) (*Submissions, error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(ctx context.Context, in *SubmissionsForCourseRequest, opts ...grpc.CallOption) (*CourseSubmissions, error)
 	UpdateSubmission(ctx context.Context, in *UpdateSubmissionRequest, opts ...grpc.CallOption) (*Void, error)
+	UpdateSubmissions(ctx context.Context, in *UpdateSubmissionsRequest, opts ...grpc.CallOption) (*Void, error)
 	RebuildSubmission(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Submission, error)
+	// manual grading //
+	CreateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*GradingBenchmark, error)
+	UpdateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
+	DeleteBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error)
+	CreateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*GradingCriterion, error)
+	UpdateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error)
+	DeleteCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error)
+	CreateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error)
+	UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Void, error)
+	GetReviewers(ctx context.Context, in *SubmissionReviewersRequest, opts ...grpc.CallOption) (*Reviewers, error)
 	GetProviders(ctx context.Context, in *Void, opts ...grpc.CallOption) (*Providers, error)
 	GetOrganization(ctx context.Context, in *OrgRequest, opts ...grpc.CallOption) (*Organization, error)
 	GetRepositories(ctx context.Context, in *URLRequest, opts ...grpc.CallOption) (*Repositories, error)
@@ -3228,9 +3891,99 @@ func (c *autograderServiceClient) UpdateSubmission(ctx context.Context, in *Upda
 	return out, nil
 }
 
+func (c *autograderServiceClient) UpdateSubmissions(ctx context.Context, in *UpdateSubmissionsRequest, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateSubmissions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *autograderServiceClient) RebuildSubmission(ctx context.Context, in *RebuildRequest, opts ...grpc.CallOption) (*Submission, error) {
 	out := new(Submission)
 	err := c.cc.Invoke(ctx, "/AutograderService/RebuildSubmission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) CreateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*GradingBenchmark, error) {
+	out := new(GradingBenchmark)
+	err := c.cc.Invoke(ctx, "/AutograderService/CreateBenchmark", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateBenchmark", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) DeleteBenchmark(ctx context.Context, in *GradingBenchmark, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/DeleteBenchmark", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) CreateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*GradingCriterion, error) {
+	out := new(GradingCriterion)
+	err := c.cc.Invoke(ctx, "/AutograderService/CreateCriterion", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateCriterion", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) DeleteCriterion(ctx context.Context, in *GradingCriterion, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/DeleteCriterion", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) CreateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Review, error) {
+	out := new(Review)
+	err := c.cc.Invoke(ctx, "/AutograderService/CreateReview", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) UpdateReview(ctx context.Context, in *ReviewRequest, opts ...grpc.CallOption) (*Void, error) {
+	out := new(Void)
+	err := c.cc.Invoke(ctx, "/AutograderService/UpdateReview", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *autograderServiceClient) GetReviewers(ctx context.Context, in *SubmissionReviewersRequest, opts ...grpc.CallOption) (*Reviewers, error) {
+	out := new(Reviewers)
+	err := c.cc.Invoke(ctx, "/AutograderService/GetReviewers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3298,12 +4051,23 @@ type AutograderServiceServer interface {
 	CreateEnrollment(context.Context, *Enrollment) (*Void, error)
 	UpdateEnrollment(context.Context, *Enrollment) (*Void, error)
 	UpdateEnrollments(context.Context, *CourseRequest) (*Void, error)
-	// Get latest submissions for all course assignmets for a user or a group.
+	// Get latest submissions for all course assignments for a user or a group.
 	GetSubmissions(context.Context, *SubmissionRequest) (*Submissions, error)
 	// Get lab submissions for every course user or every course group
 	GetSubmissionsByCourse(context.Context, *SubmissionsForCourseRequest) (*CourseSubmissions, error)
 	UpdateSubmission(context.Context, *UpdateSubmissionRequest) (*Void, error)
+	UpdateSubmissions(context.Context, *UpdateSubmissionsRequest) (*Void, error)
 	RebuildSubmission(context.Context, *RebuildRequest) (*Submission, error)
+	// manual grading //
+	CreateBenchmark(context.Context, *GradingBenchmark) (*GradingBenchmark, error)
+	UpdateBenchmark(context.Context, *GradingBenchmark) (*Void, error)
+	DeleteBenchmark(context.Context, *GradingBenchmark) (*Void, error)
+	CreateCriterion(context.Context, *GradingCriterion) (*GradingCriterion, error)
+	UpdateCriterion(context.Context, *GradingCriterion) (*Void, error)
+	DeleteCriterion(context.Context, *GradingCriterion) (*Void, error)
+	CreateReview(context.Context, *ReviewRequest) (*Review, error)
+	UpdateReview(context.Context, *ReviewRequest) (*Void, error)
+	GetReviewers(context.Context, *SubmissionReviewersRequest) (*Reviewers, error)
 	GetProviders(context.Context, *Void) (*Providers, error)
 	GetOrganization(context.Context, *OrgRequest) (*Organization, error)
 	GetRepositories(context.Context, *URLRequest) (*Repositories, error)
@@ -3392,8 +4156,38 @@ func (*UnimplementedAutograderServiceServer) GetSubmissionsByCourse(ctx context.
 func (*UnimplementedAutograderServiceServer) UpdateSubmission(ctx context.Context, req *UpdateSubmissionRequest) (*Void, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubmission not implemented")
 }
+func (*UnimplementedAutograderServiceServer) UpdateSubmissions(ctx context.Context, req *UpdateSubmissionsRequest) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubmissions not implemented")
+}
 func (*UnimplementedAutograderServiceServer) RebuildSubmission(ctx context.Context, req *RebuildRequest) (*Submission, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildSubmission not implemented")
+}
+func (*UnimplementedAutograderServiceServer) CreateBenchmark(ctx context.Context, req *GradingBenchmark) (*GradingBenchmark, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateBenchmark not implemented")
+}
+func (*UnimplementedAutograderServiceServer) UpdateBenchmark(ctx context.Context, req *GradingBenchmark) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateBenchmark not implemented")
+}
+func (*UnimplementedAutograderServiceServer) DeleteBenchmark(ctx context.Context, req *GradingBenchmark) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteBenchmark not implemented")
+}
+func (*UnimplementedAutograderServiceServer) CreateCriterion(ctx context.Context, req *GradingCriterion) (*GradingCriterion, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCriterion not implemented")
+}
+func (*UnimplementedAutograderServiceServer) UpdateCriterion(ctx context.Context, req *GradingCriterion) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCriterion not implemented")
+}
+func (*UnimplementedAutograderServiceServer) DeleteCriterion(ctx context.Context, req *GradingCriterion) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCriterion not implemented")
+}
+func (*UnimplementedAutograderServiceServer) CreateReview(ctx context.Context, req *ReviewRequest) (*Review, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateReview not implemented")
+}
+func (*UnimplementedAutograderServiceServer) UpdateReview(ctx context.Context, req *ReviewRequest) (*Void, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateReview not implemented")
+}
+func (*UnimplementedAutograderServiceServer) GetReviewers(ctx context.Context, req *SubmissionReviewersRequest) (*Reviewers, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReviewers not implemented")
 }
 func (*UnimplementedAutograderServiceServer) GetProviders(ctx context.Context, req *Void) (*Providers, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProviders not implemented")
@@ -3880,6 +4674,24 @@ func _AutograderService_UpdateSubmission_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AutograderService_UpdateSubmissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateSubmissionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateSubmissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateSubmissions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateSubmissions(ctx, req.(*UpdateSubmissionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AutograderService_RebuildSubmission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RebuildRequest)
 	if err := dec(in); err != nil {
@@ -3894,6 +4706,168 @@ func _AutograderService_RebuildSubmission_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AutograderServiceServer).RebuildSubmission(ctx, req.(*RebuildRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_CreateBenchmark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GradingBenchmark)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).CreateBenchmark(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/CreateBenchmark",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).CreateBenchmark(ctx, req.(*GradingBenchmark))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateBenchmark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GradingBenchmark)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateBenchmark(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateBenchmark",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateBenchmark(ctx, req.(*GradingBenchmark))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_DeleteBenchmark_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GradingBenchmark)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).DeleteBenchmark(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/DeleteBenchmark",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).DeleteBenchmark(ctx, req.(*GradingBenchmark))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_CreateCriterion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GradingCriterion)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).CreateCriterion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/CreateCriterion",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).CreateCriterion(ctx, req.(*GradingCriterion))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateCriterion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GradingCriterion)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateCriterion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateCriterion",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateCriterion(ctx, req.(*GradingCriterion))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_DeleteCriterion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GradingCriterion)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).DeleteCriterion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/DeleteCriterion",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).DeleteCriterion(ctx, req.(*GradingCriterion))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_CreateReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).CreateReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/CreateReview",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).CreateReview(ctx, req.(*ReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_UpdateReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).UpdateReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/UpdateReview",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).UpdateReview(ctx, req.(*ReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AutograderService_GetReviewers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmissionReviewersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AutograderServiceServer).GetReviewers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AutograderService/GetReviewers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AutograderServiceServer).GetReviewers(ctx, req.(*SubmissionReviewersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4079,8 +5053,48 @@ var _AutograderService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _AutograderService_UpdateSubmission_Handler,
 		},
 		{
+			MethodName: "UpdateSubmissions",
+			Handler:    _AutograderService_UpdateSubmissions_Handler,
+		},
+		{
 			MethodName: "RebuildSubmission",
 			Handler:    _AutograderService_RebuildSubmission_Handler,
+		},
+		{
+			MethodName: "CreateBenchmark",
+			Handler:    _AutograderService_CreateBenchmark_Handler,
+		},
+		{
+			MethodName: "UpdateBenchmark",
+			Handler:    _AutograderService_UpdateBenchmark_Handler,
+		},
+		{
+			MethodName: "DeleteBenchmark",
+			Handler:    _AutograderService_DeleteBenchmark_Handler,
+		},
+		{
+			MethodName: "CreateCriterion",
+			Handler:    _AutograderService_CreateCriterion_Handler,
+		},
+		{
+			MethodName: "UpdateCriterion",
+			Handler:    _AutograderService_UpdateCriterion_Handler,
+		},
+		{
+			MethodName: "DeleteCriterion",
+			Handler:    _AutograderService_DeleteCriterion_Handler,
+		},
+		{
+			MethodName: "CreateReview",
+			Handler:    _AutograderService_CreateReview_Handler,
+		},
+		{
+			MethodName: "UpdateReview",
+			Handler:    _AutograderService_UpdateReview_Handler,
+		},
+		{
+			MethodName: "GetReviewers",
+			Handler:    _AutograderService_GetReviewers_Handler,
 		},
 		{
 			MethodName: "GetProviders",
@@ -5058,6 +6072,20 @@ func (m *Assignment) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if len(m.GradingBenchmarks) > 0 {
+		for iNdEx := len(m.GradingBenchmarks) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.GradingBenchmarks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAg(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x6a
+		}
+	}
 	if len(m.Submissions) > 0 {
 		for iNdEx := len(m.Submissions) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -5069,8 +6097,23 @@ func (m *Assignment) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintAg(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x52
+			dAtA[i] = 0x62
 		}
+	}
+	if m.RunTests {
+		i--
+		if m.RunTests {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x58
+	}
+	if m.Reviewers != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.Reviewers))
+		i--
+		dAtA[i] = 0x50
 	}
 	if m.ScoreLimit != 0 {
 		i = encodeVarintAg(dAtA, i, uint64(m.ScoreLimit))
@@ -5201,9 +6244,28 @@ func (m *Submission) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	if m.Approved {
+	if len(m.Reviews) > 0 {
+		for iNdEx := len(m.Reviews) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Reviews[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAg(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x5a
+		}
+	}
+	if m.Status != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.Status))
 		i--
-		if m.Approved {
+		dAtA[i] = 0x50
+	}
+	if m.Released {
+		i--
+		if m.Released {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -5297,6 +6359,297 @@ func (m *Submissions) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GradingBenchmark) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GradingBenchmark) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GradingBenchmark) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Criteria) > 0 {
+		for iNdEx := len(m.Criteria) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Criteria[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAg(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.Comment) > 0 {
+		i -= len(m.Comment)
+		copy(dAtA[i:], m.Comment)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.Comment)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Heading) > 0 {
+		i -= len(m.Heading)
+		copy(dAtA[i:], m.Heading)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.Heading)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.AssignmentID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.AssignmentID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.ID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GradingCriterion) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GradingCriterion) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GradingCriterion) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Comment) > 0 {
+		i -= len(m.Comment)
+		copy(dAtA[i:], m.Comment)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.Comment)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.Grade != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.Grade))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.BenchmarkID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.BenchmarkID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.ID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Review) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Review) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Review) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Benchmarks) > 0 {
+		for iNdEx := len(m.Benchmarks) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Benchmarks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAg(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if m.Score != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.Score))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.Ready {
+		i--
+		if m.Ready {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.Feedback) > 0 {
+		i -= len(m.Feedback)
+		copy(dAtA[i:], m.Feedback)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.Feedback)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Review) > 0 {
+		i -= len(m.Review)
+		copy(dAtA[i:], m.Review)
+		i = encodeVarintAg(dAtA, i, uint64(len(m.Review)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.ReviewerID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.ReviewerID))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.SubmissionID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.SubmissionID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.ID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Reviewers) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Reviewers) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Reviewers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Reviewers) > 0 {
+		for iNdEx := len(m.Reviewers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Reviewers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAg(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ReviewRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ReviewRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ReviewRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Review != nil {
+		{
+			size, err := m.Review.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAg(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.CourseID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.CourseID))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -5626,20 +6979,20 @@ func (m *EnrollmentRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	if len(m.Statuses) > 0 {
-		dAtA9 := make([]byte, len(m.Statuses)*10)
-		var j8 int
+		dAtA10 := make([]byte, len(m.Statuses)*10)
+		var j9 int
 		for _, num := range m.Statuses {
 			for num >= 1<<7 {
-				dAtA9[j8] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA10[j9] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j8++
+				j9++
 			}
-			dAtA9[j8] = uint8(num)
-			j8++
+			dAtA10[j9] = uint8(num)
+			j9++
 		}
-		i -= j8
-		copy(dAtA[i:], dAtA9[:j8])
-		i = encodeVarintAg(dAtA, i, uint64(j8))
+		i -= j9
+		copy(dAtA[i:], dAtA10[:j9])
+		i = encodeVarintAg(dAtA, i, uint64(j9))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -5686,20 +7039,20 @@ func (m *EnrollmentStatusRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	if len(m.Statuses) > 0 {
-		dAtA11 := make([]byte, len(m.Statuses)*10)
-		var j10 int
+		dAtA12 := make([]byte, len(m.Statuses)*10)
+		var j11 int
 		for _, num := range m.Statuses {
 			for num >= 1<<7 {
-				dAtA11[j10] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA12[j11] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j10++
+				j11++
 			}
-			dAtA11[j10] = uint8(num)
-			j10++
+			dAtA12[j11] = uint8(num)
+			j11++
 		}
-		i -= j10
-		copy(dAtA[i:], dAtA11[:j10])
-		i = encodeVarintAg(dAtA, i, uint64(j10))
+		i -= j11
+		copy(dAtA[i:], dAtA12[:j11])
+		i = encodeVarintAg(dAtA, i, uint64(j11))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -5777,6 +7130,63 @@ func (m *UpdateSubmissionRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if m.Status != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.Status))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.Released {
+		i--
+		if m.Released {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Score != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.Score))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.CourseID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.CourseID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.SubmissionID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.SubmissionID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *UpdateSubmissionsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpdateSubmissionsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpdateSubmissionsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Approve {
 		i--
 		if m.Approve {
@@ -5785,7 +7195,59 @@ func (m *UpdateSubmissionRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			dAtA[i] = 0
 		}
 		i--
+		dAtA[i] = 0x28
+	}
+	if m.Release {
+		i--
+		if m.Release {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.ScoreLimit != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.ScoreLimit))
+		i--
 		dAtA[i] = 0x18
+	}
+	if m.AssignmentID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.AssignmentID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.CourseID != 0 {
+		i = encodeVarintAg(dAtA, i, uint64(m.CourseID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SubmissionReviewersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SubmissionReviewersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SubmissionReviewersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	if m.CourseID != 0 {
 		i = encodeVarintAg(dAtA, i, uint64(m.CourseID))
@@ -5861,20 +7323,20 @@ func (m *URLRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	if len(m.RepoTypes) > 0 {
-		dAtA13 := make([]byte, len(m.RepoTypes)*10)
-		var j12 int
+		dAtA14 := make([]byte, len(m.RepoTypes)*10)
+		var j13 int
 		for _, num := range m.RepoTypes {
 			for num >= 1<<7 {
-				dAtA13[j12] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA14[j13] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j12++
+				j13++
 			}
-			dAtA13[j12] = uint8(num)
-			j12++
+			dAtA14[j13] = uint8(num)
+			j13++
 		}
-		i -= j12
-		copy(dAtA[i:], dAtA13[:j12])
-		i = encodeVarintAg(dAtA, i, uint64(j12))
+		i -= j13
+		copy(dAtA[i:], dAtA14[:j13])
+		i = encodeVarintAg(dAtA, i, uint64(j13))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -6638,8 +8100,20 @@ func (m *Assignment) Size() (n int) {
 	if m.ScoreLimit != 0 {
 		n += 1 + sovAg(uint64(m.ScoreLimit))
 	}
+	if m.Reviewers != 0 {
+		n += 1 + sovAg(uint64(m.Reviewers))
+	}
+	if m.RunTests {
+		n += 2
+	}
 	if len(m.Submissions) > 0 {
 		for _, e := range m.Submissions {
+			l = e.Size()
+			n += 1 + l + sovAg(uint64(l))
+		}
+	}
+	if len(m.GradingBenchmarks) > 0 {
+		for _, e := range m.GradingBenchmarks {
 			l = e.Size()
 			n += 1 + l + sovAg(uint64(l))
 		}
@@ -6701,8 +8175,17 @@ func (m *Submission) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAg(uint64(l))
 	}
-	if m.Approved {
+	if m.Released {
 		n += 2
+	}
+	if m.Status != 0 {
+		n += 1 + sovAg(uint64(m.Status))
+	}
+	if len(m.Reviews) > 0 {
+		for _, e := range m.Reviews {
+			l = e.Size()
+			n += 1 + l + sovAg(uint64(l))
+		}
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -6721,6 +8204,145 @@ func (m *Submissions) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovAg(uint64(l))
 		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GradingBenchmark) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
+	}
+	if m.AssignmentID != 0 {
+		n += 1 + sovAg(uint64(m.AssignmentID))
+	}
+	l = len(m.Heading)
+	if l > 0 {
+		n += 1 + l + sovAg(uint64(l))
+	}
+	l = len(m.Comment)
+	if l > 0 {
+		n += 1 + l + sovAg(uint64(l))
+	}
+	if len(m.Criteria) > 0 {
+		for _, e := range m.Criteria {
+			l = e.Size()
+			n += 1 + l + sovAg(uint64(l))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GradingCriterion) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
+	}
+	if m.BenchmarkID != 0 {
+		n += 1 + sovAg(uint64(m.BenchmarkID))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovAg(uint64(l))
+	}
+	if m.Grade != 0 {
+		n += 1 + sovAg(uint64(m.Grade))
+	}
+	l = len(m.Comment)
+	if l > 0 {
+		n += 1 + l + sovAg(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Review) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ID != 0 {
+		n += 1 + sovAg(uint64(m.ID))
+	}
+	if m.SubmissionID != 0 {
+		n += 1 + sovAg(uint64(m.SubmissionID))
+	}
+	if m.ReviewerID != 0 {
+		n += 1 + sovAg(uint64(m.ReviewerID))
+	}
+	l = len(m.Review)
+	if l > 0 {
+		n += 1 + l + sovAg(uint64(l))
+	}
+	l = len(m.Feedback)
+	if l > 0 {
+		n += 1 + l + sovAg(uint64(l))
+	}
+	if m.Ready {
+		n += 2
+	}
+	if m.Score != 0 {
+		n += 1 + sovAg(uint64(m.Score))
+	}
+	if len(m.Benchmarks) > 0 {
+		for _, e := range m.Benchmarks {
+			l = e.Size()
+			n += 1 + l + sovAg(uint64(l))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Reviewers) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Reviewers) > 0 {
+		for _, e := range m.Reviewers {
+			l = e.Size()
+			n += 1 + l + sovAg(uint64(l))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *ReviewRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CourseID != 0 {
+		n += 1 + sovAg(uint64(m.CourseID))
+	}
+	if m.Review != nil {
+		l = m.Review.Size()
+		n += 1 + l + sovAg(uint64(l))
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -6951,8 +8573,59 @@ func (m *UpdateSubmissionRequest) Size() (n int) {
 	if m.CourseID != 0 {
 		n += 1 + sovAg(uint64(m.CourseID))
 	}
+	if m.Score != 0 {
+		n += 1 + sovAg(uint64(m.Score))
+	}
+	if m.Released {
+		n += 2
+	}
+	if m.Status != 0 {
+		n += 1 + sovAg(uint64(m.Status))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *UpdateSubmissionsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CourseID != 0 {
+		n += 1 + sovAg(uint64(m.CourseID))
+	}
+	if m.AssignmentID != 0 {
+		n += 1 + sovAg(uint64(m.AssignmentID))
+	}
+	if m.ScoreLimit != 0 {
+		n += 1 + sovAg(uint64(m.ScoreLimit))
+	}
+	if m.Release {
+		n += 2
+	}
 	if m.Approve {
 		n += 2
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *SubmissionReviewersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.SubmissionID != 0 {
+		n += 1 + sovAg(uint64(m.SubmissionID))
+	}
+	if m.CourseID != 0 {
+		n += 1 + sovAg(uint64(m.CourseID))
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -9935,6 +11608,45 @@ func (m *Assignment) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reviewers", wireType)
+			}
+			m.Reviewers = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Reviewers |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RunTests", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RunTests = bool(v != 0)
+		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Submissions", wireType)
 			}
@@ -9965,6 +11677,40 @@ func (m *Assignment) Unmarshal(dAtA []byte) error {
 			}
 			m.Submissions = append(m.Submissions, &Submission{})
 			if err := m.Submissions[len(m.Submissions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GradingBenchmarks", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.GradingBenchmarks = append(m.GradingBenchmarks, &GradingBenchmark{})
+			if err := m.GradingBenchmarks[len(m.GradingBenchmarks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -10303,7 +12049,7 @@ func (m *Submission) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 9:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Approved", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Released", wireType)
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
@@ -10320,7 +12066,60 @@ func (m *Submission) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.Approved = bool(v != 0)
+			m.Released = bool(v != 0)
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= Submission_Status(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reviews", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reviews = append(m.Reviews, &Review{})
+			if err := m.Reviews[len(m.Reviews)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAg(dAtA[iNdEx:])
@@ -10406,6 +12205,816 @@ func (m *Submissions) Unmarshal(dAtA []byte) error {
 			}
 			m.Submissions = append(m.Submissions, &Submission{})
 			if err := m.Submissions[len(m.Submissions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAg(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GradingBenchmark) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAg
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GradingBenchmark: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GradingBenchmark: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssignmentID", wireType)
+			}
+			m.AssignmentID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AssignmentID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Heading", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Heading = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Comment", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Comment = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Criteria", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Criteria = append(m.Criteria, &GradingCriterion{})
+			if err := m.Criteria[len(m.Criteria)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAg(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GradingCriterion) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAg
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GradingCriterion: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GradingCriterion: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BenchmarkID", wireType)
+			}
+			m.BenchmarkID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BenchmarkID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Grade", wireType)
+			}
+			m.Grade = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Grade |= GradingCriterion_Grade(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Comment", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Comment = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAg(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Review) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAg
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Review: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Review: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubmissionID", wireType)
+			}
+			m.SubmissionID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SubmissionID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReviewerID", wireType)
+			}
+			m.ReviewerID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ReviewerID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Review", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Review = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Feedback", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Feedback = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ready", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Ready = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Score", wireType)
+			}
+			m.Score = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Score |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Benchmarks", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Benchmarks = append(m.Benchmarks, &GradingBenchmark{})
+			if err := m.Benchmarks[len(m.Benchmarks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAg(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Reviewers) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAg
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Reviewers: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Reviewers: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reviewers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reviewers = append(m.Reviewers, &User{})
+			if err := m.Reviewers[len(m.Reviewers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAg(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ReviewRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAg
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ReviewRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ReviewRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CourseID", wireType)
+			}
+			m.CourseID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CourseID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Review", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAg
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAg
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Review == nil {
+				m.Review = &Review{}
+			}
+			if err := m.Review.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -11677,6 +14286,195 @@ func (m *UpdateSubmissionRequest) Unmarshal(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Score", wireType)
+			}
+			m.Score = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Score |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Released", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Released = bool(v != 0)
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= Submission_Status(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAg(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UpdateSubmissionsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAg
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpdateSubmissionsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpdateSubmissionsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CourseID", wireType)
+			}
+			m.CourseID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CourseID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssignmentID", wireType)
+			}
+			m.AssignmentID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AssignmentID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScoreLimit", wireType)
+			}
+			m.ScoreLimit = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ScoreLimit |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Release", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Release = bool(v != 0)
+		case 5:
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Approve", wireType)
 			}
 			var v int
@@ -11695,6 +14493,98 @@ func (m *UpdateSubmissionRequest) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Approve = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAg(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAg
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SubmissionReviewersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAg
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SubmissionReviewersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SubmissionReviewersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubmissionID", wireType)
+			}
+			m.SubmissionID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SubmissionID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CourseID", wireType)
+			}
+			m.CourseID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAg
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CourseID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAg(dAtA[iNdEx:])

@@ -74,7 +74,7 @@ func (db *GormDB) CreateSubmission(submission *pb.Submission) error {
 // GetSubmission fetches a submission record.
 func (db *GormDB) GetSubmission(query *pb.Submission) (*pb.Submission, error) {
 	var submission pb.Submission
-	if err := db.conn.Where(query).Last(&submission).Error; err != nil {
+	if err := db.conn.Preload("Reviews").Where(query).Last(&submission).Error; err != nil {
 		return nil, err
 	}
 	return &submission, nil
@@ -106,9 +106,43 @@ func (db *GormDB) GetSubmissions(courseID uint64, query *pb.Submission) ([]*pb.S
 }
 
 // UpdateSubmission updates submission with the given approved status.
-func (db *GormDB) UpdateSubmission(sid uint64, approved bool) error {
+func (db *GormDB) UpdateSubmission(query *pb.Submission) error {
 	return db.conn.
-		Model(&pb.Submission{}).
-		Where(&pb.Submission{ID: sid}).
-		Update("approved", approved).Error
+		Model(query).
+		Where(&pb.Submission{ID: query.ID}).
+		Update("status", query.Status).
+		Update("released", query.Released).
+		Update("score", query.Score).Error
+}
+
+// UpdateSubmissions approves and/or releases all submissions that have score
+// equal or above the provided score for the given assignment ID
+func (db *GormDB) UpdateSubmissions(courseID uint64, query *pb.Submission) error {
+	return db.conn.
+		Model(query).
+		Where("assignment_id = ?", query.AssignmentID).
+		Where("score >= ?", query.Score).
+		Updates(&pb.Submission{
+			Status:   query.Status,
+			Released: query.Released,
+		}).Error
+}
+
+// CreateReview creates a new submission review
+func (db *GormDB) CreateReview(query *pb.Review) error {
+	return db.conn.Create(query).Error
+}
+
+// UpdateReview updates feedback text, review and ready status
+func (db *GormDB) UpdateReview(query *pb.Review) error {
+	return db.conn.Model(query).Where(&pb.Review{
+		ID:           query.ID,
+		SubmissionID: query.SubmissionID,
+		ReviewerID:   query.ReviewerID,
+	}).Update(&pb.Review{
+		Feedback: query.Feedback,
+		Review:   query.Review,
+		Ready:    query.Ready,
+		Score:    query.Score,
+	}).Error
 }

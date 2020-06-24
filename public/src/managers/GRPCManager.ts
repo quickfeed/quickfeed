@@ -11,6 +11,8 @@ import {
     EnrollmentRequest,
     Enrollments,
     GetGroupRequest,
+    GradingBenchmark,
+    GradingCriterion,
     Group,
     GroupRequest,
     Groups,
@@ -21,19 +23,25 @@ import {
     Repositories,
     Repository,
     RepositoryRequest,
+    Review,
+    ReviewRequest,
     Status,
     SubmissionRequest,
     SubmissionsForCourseRequest,
     Submission,
     Submissions,
+    SubmissionReviewersRequest,
     UpdateSubmissionRequest,
+    UpdateSubmissionsRequest,
     URLRequest,
     User,
     Users,
     Void,
+    Reviewers,
 } from "../../proto/ag_pb";
 import { AutograderServiceClient } from "../../proto/AgServiceClientPb";
 import { UserManager } from "./UserManager";
+import { ISubmission } from "../models";
 
 export interface IGrpcResponse<T> {
     status: Status;
@@ -236,12 +244,71 @@ export class GrpcManager {
         return this.grpcSend<Submission>(this.agService.rebuildSubmission, request);
     }
 
-    public updateSubmission(courseID: number, submissionID: number, approve: boolean): Promise<IGrpcResponse<Void>> {
+    public updateSubmission(courseID: number, s: ISubmission): Promise<IGrpcResponse<Void>> {
         const request = new UpdateSubmissionRequest();
+        request.setSubmissionid(s.id);
+        request.setCourseid(courseID);
+        request.setStatus(s.status);
+        request.setReleased(s.released);
+        request.setScore(s.score);
+        return this.grpcSend<Void>(this.agService.updateSubmission, request);
+    }
+
+    public updatesubmissions(assignmentID: number, courseID: number, score: number, release: boolean, approve: boolean) {
+        const request = new UpdateSubmissionsRequest();
+        request.setAssignmentid(assignmentID);
+        request.setCourseid(courseID);
+        request.setScorelimit(score);
+        request.setRelease(release);
+        request.setApprove(approve);
+        return this.grpcSend<Void>(this.agService.updateSubmissions, request);
+    }
+
+    // /* MANUAL GRADING */ //
+
+    public createBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<GradingBenchmark>> {
+        return this.grpcSend<GradingBenchmark>(this.agService.createBenchmark, bm);
+    }
+
+    public createCriterion(c: GradingCriterion): Promise<IGrpcResponse<GradingCriterion>> {
+        return this.grpcSend<GradingCriterion>(this.agService.createCriterion, c);
+    }
+
+    public updateBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateBenchmark, bm);
+    }
+
+    public updateCriterion(c: GradingCriterion): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.updateCriterion, c);
+    }
+
+    public deleteBenchmark(bm: GradingBenchmark): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.deleteBenchmark, bm);
+    }
+
+    public deleteCriterion(c: GradingCriterion): Promise<IGrpcResponse<Void>> {
+        return this.grpcSend<Void>(this.agService.deleteCriterion, c);
+    }
+
+    public createReview(r: Review, courseID: number): Promise<IGrpcResponse<Review>> {
+        const request = new ReviewRequest();
+        request.setReview(r);
+        request.setCourseid(courseID);
+        return this.grpcSend<Review>(this.agService.createReview, request);
+    }
+
+    public updateReview(r: Review, courseID: number): Promise<IGrpcResponse<Void>> {
+        const request = new ReviewRequest();
+        request.setReview(r);
+        request.setCourseid(courseID);
+        return this.grpcSend<Void>(this.agService.updateReview, request);
+    }
+
+    public getReviewers(submissionID: number, courseID: number): Promise<IGrpcResponse<Reviewers>> {
+        const request = new SubmissionReviewersRequest();
         request.setSubmissionid(submissionID);
         request.setCourseid(courseID);
-        request.setApprove(approve);
-        return this.grpcSend<Void>(this.agService.updateSubmission, request);
+        return this.grpcSend<Reviewers>(this.agService.getReviewers, request);
     }
 
     // /* REPOSITORY */ //

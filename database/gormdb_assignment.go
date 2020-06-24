@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	pb "github.com/autograde/aguis/ag"
 	"github.com/jinzhu/gorm"
 )
@@ -49,12 +51,29 @@ func (db *GormDB) GetAssignment(query *pb.Assignment) (*pb.Assignment, error) {
 }
 
 // GetAssignmentsByCourse fetches all assignments for the given course ID.
-func (db *GormDB) GetAssignmentsByCourse(courseID uint64) ([]*pb.Assignment, error) {
+func (db *GormDB) GetAssignmentsByCourse(courseID uint64, withGrading bool) ([]*pb.Assignment, error) {
 	var course pb.Course
 	if err := db.conn.Preload("Assignments").First(&course, courseID).Error; err != nil {
 		return nil, err
 	}
-	return course.Assignments, nil
+	assignments := course.Assignments
+	if withGrading {
+		for _, a := range assignments {
+			var benchmarks []*pb.GradingBenchmark
+			if err := db.conn.Where("assignment_id = ?", a.ID).Find(&benchmarks).Error; err != nil {
+				return nil, err
+			}
+			a.GradingBenchmarks = benchmarks
+			for _, b := range a.GradingBenchmarks {
+				var criteria []*pb.GradingCriterion
+				if err := db.conn.Where("benchmark_id = ?", b.ID).Find(&criteria).Error; err != nil {
+					return nil, err
+				}
+				b.Criteria = criteria
+			}
+		}
+	}
+	return assignments, nil
 }
 
 // UpdateAssignments updates assignment information.
@@ -74,7 +93,8 @@ func (db *GormDB) UpdateAssignments(assignments []*pb.Assignment) error {
 func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissionType pb.SubmissionsForCourseRequest_Type) ([]*pb.Assignment, error) {
 	var assignments []*pb.Assignment
 
-	if err := db.conn.Preload("Submissions").Where(&pb.Assignment{CourseID: courseID}).Find(&assignments).Error; err != nil {
+	if err := db.conn.Preload("Submissions").Preload("Submissions.Reviews").Where(&pb.Assignment{CourseID: courseID}).Find(&assignments).Error; err != nil {
+		fmt.Println(err.Error())
 		return nil, err
 	}
 
@@ -90,4 +110,39 @@ func (db *GormDB) GetCourseAssignmentsWithSubmissions(courseID uint64, submissio
 		}
 	}
 	return filteredAssignments, nil
+}
+
+// CreateBenchmark creates a new grading benchmark
+func (db *GormDB) CreateBenchmark(query *pb.GradingBenchmark) error {
+	return db.conn.Create(query).Error
+}
+
+// UpdateBenchmark updates the given benchmark
+func (db *GormDB) UpdateBenchmark(query *pb.GradingBenchmark) error {
+	return db.conn.Model(query).
+		Where(&pb.GradingBenchmark{ID: query.ID, AssignmentID: query.AssignmentID}).
+		Update(&pb.GradingBenchmark{Heading: query.Heading, Comment: query.Comment}).Error
+}
+
+// DeleteBenchmark removes the given benchmark
+func (db *GormDB) DeleteBenchmark(query *pb.GradingBenchmark) error {
+	db.conn.Where("benchmark_id = ?", query.GetID()).Delete(&pb.GradingCriterion{})
+	return db.conn.Delete(query).Error
+}
+
+// CreateCriterion creates a new grading criterion
+func (db *GormDB) CreateCriterion(query *pb.GradingCriterion) error {
+	return db.conn.Create(query).Error
+}
+
+// UpdateCriterion updates the given criterion
+func (db *GormDB) UpdateCriterion(query *pb.GradingCriterion) error {
+	return db.conn.Model(query).
+		Where(&pb.GradingCriterion{ID: query.ID, BenchmarkID: query.BenchmarkID}).
+		Update(&pb.GradingCriterion{Description: query.Description, Comment: query.Comment, Grade: query.Grade}).Error
+}
+
+// DeleteCriterion removes the given criterion
+func (db *GormDB) DeleteCriterion(query *pb.GradingCriterion) error {
+	return db.conn.Delete(query).Error
 }

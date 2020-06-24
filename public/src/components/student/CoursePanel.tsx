@@ -3,11 +3,11 @@ import { Assignment, Course } from "../../../proto/ag_pb";
 import { DynamicTable } from "../../components";
 import { formatDate } from "../../helper";
 import { NavigationManager } from "../../managers/NavigationManager";
-import { IStudentLab } from "../../models";
+import { ISubmissionLink } from "../../models";
 
 interface IPanelProps {
     course: Course;
-    labs: IStudentLab[];
+    labs: ISubmissionLink[];
     navMan: NavigationManager;
 }
 
@@ -26,7 +26,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                         <DynamicTable
                             header={["Labs", "Score", "Deadline"]}
                             data={this.props.labs}
-                            selector={(item: IStudentLab) => {
+                            selector={(item: ISubmissionLink) => {
                                 const score = item.submission ? (item.submission.score.toString() + "%") : "N/A";
                                 return [
                                     item.assignment.getName(),
@@ -34,7 +34,7 @@ export class CoursePanel extends React.Component<IPanelProps> {
                                     formatDate(item.assignment.getDeadline()),
                                 ];
                             }}
-                            onRowClick={(lab: IStudentLab) => {
+                            onRowClick={(lab: ISubmissionLink) => {
                                 const path = !lab.assignment.getIsgrouplab() ? labPath : glabPath;
                                 this.handleRowClick(path, lab.assignment);
                             }}

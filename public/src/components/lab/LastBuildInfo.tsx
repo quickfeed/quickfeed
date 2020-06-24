@@ -1,10 +1,11 @@
 import * as React from "react";
-import { Assignment } from "../../../proto/ag_pb";
+import { Assignment, Submission } from "../../../proto/ag_pb";
 import { Row } from "../../components";
 import { formatDate } from "../../helper";
 import { ISubmission } from "../../models";
+import { submissionStatusToString, getDaysAfterDeadline } from '../../componentHelper';
 
-interface ILastBuildInfo {
+interface ILastBuildInfoProps {
     submission: ISubmission;
     assignment: Assignment;
     slipdays: number;
@@ -14,8 +15,8 @@ interface ILastBuildInfoState {
     rebuilding: boolean;
 }
 
-export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInfoState> {
-    constructor(props: ILastBuildInfo) {
+export class LastBuildInfo extends React.Component<ILastBuildInfoProps, ILastBuildInfoState> {
+    constructor(props: ILastBuildInfoProps) {
         super(props);
         this.state = {
             rebuilding: false,
@@ -54,7 +55,8 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
         if (delivered >= deadline) {
             classString = "past-deadline";
         }
-        return <div className={classString}>{formatDate(delivered)}</div>;
+        const afterDeadline = getDaysAfterDeadline(deadline, delivered);
+        return <div className={classString}>{formatDate(delivered) + (afterDeadline > 0 ? afterDeadline + "  (" + afterDeadline + " days after deadline)" : "")}</div>;
     }
 
     private formatTime(executionTime: number): number {
@@ -62,7 +64,11 @@ export class LastBuildInfo extends React.Component<ILastBuildInfo, ILastBuildInf
     }
 
     private setStatusString(): JSX.Element {
-        return this.props.submission.approved ? <div className="greentext">Approved</div> : <div>Not approved</div>;
+        const className = this.props.submission.status === Submission.Status.APPROVED ? "greentext" : "";
+        if (this.props.assignment.getReviewers() > 0) {
+            return this.props.submission.status === Submission.Status.APPROVED ? <div className="greentext">Approved</div> : <div>{submissionStatusToString(this.props.submission.status)}</div>
+        }
+        return <div className={className}>{submissionStatusToString(this.props.submission.status)}</div>;
     }
 
 }

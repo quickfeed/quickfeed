@@ -568,10 +568,21 @@ export class Assignment extends jspb.Message {
   getScorelimit(): number;
   setScorelimit(value: number): void;
 
+  getReviewers(): number;
+  setReviewers(value: number): void;
+
+  getRuntests(): boolean;
+  setRuntests(value: boolean): void;
+
   getSubmissionsList(): Array<Submission>;
   setSubmissionsList(value: Array<Submission>): void;
   clearSubmissionsList(): void;
   addSubmissions(value?: Submission, index?: number): Submission;
+
+  getGradingbenchmarksList(): Array<GradingBenchmark>;
+  setGradingbenchmarksList(value: Array<GradingBenchmark>): void;
+  clearGradingbenchmarksList(): void;
+  addGradingbenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Assignment.AsObject;
@@ -592,7 +603,10 @@ export namespace Assignment {
     order: number,
     isgrouplab: boolean,
     scorelimit: number,
+    reviewers: number,
+    runtests: boolean,
     submissionsList: Array<Submission.AsObject>,
+    gradingbenchmarksList: Array<GradingBenchmark.AsObject>,
   }
 }
 
@@ -641,8 +655,16 @@ export class Submission extends jspb.Message {
   getCommithash(): string;
   setCommithash(value: string): void;
 
-  getApproved(): boolean;
-  setApproved(value: boolean): void;
+  getReleased(): boolean;
+  setReleased(value: boolean): void;
+
+  getStatus(): Submission.Status;
+  setStatus(value: Submission.Status): void;
+
+  getReviewsList(): Array<Review>;
+  setReviewsList(value: Array<Review>): void;
+  clearReviewsList(): void;
+  addReviews(value?: Review, index?: number): Review;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Submission.AsObject;
@@ -662,7 +684,16 @@ export namespace Submission {
     scoreobjects: string,
     buildinfo: string,
     commithash: string,
-    approved: boolean,
+    released: boolean,
+    status: Submission.Status,
+    reviewsList: Array<Review.AsObject>,
+  }
+
+  export enum Status { 
+    NONE = 0,
+    APPROVED = 1,
+    REJECTED = 2,
+    REVISION = 3,
   }
 }
 
@@ -683,6 +714,174 @@ export class Submissions extends jspb.Message {
 export namespace Submissions {
   export type AsObject = {
     submissionsList: Array<Submission.AsObject>,
+  }
+}
+
+export class GradingBenchmark extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getAssignmentid(): number;
+  setAssignmentid(value: number): void;
+
+  getHeading(): string;
+  setHeading(value: string): void;
+
+  getComment(): string;
+  setComment(value: string): void;
+
+  getCriteriaList(): Array<GradingCriterion>;
+  setCriteriaList(value: Array<GradingCriterion>): void;
+  clearCriteriaList(): void;
+  addCriteria(value?: GradingCriterion, index?: number): GradingCriterion;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GradingBenchmark.AsObject;
+  static toObject(includeInstance: boolean, msg: GradingBenchmark): GradingBenchmark.AsObject;
+  static serializeBinaryToWriter(message: GradingBenchmark, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GradingBenchmark;
+  static deserializeBinaryFromReader(message: GradingBenchmark, reader: jspb.BinaryReader): GradingBenchmark;
+}
+
+export namespace GradingBenchmark {
+  export type AsObject = {
+    id: number,
+    assignmentid: number,
+    heading: string,
+    comment: string,
+    criteriaList: Array<GradingCriterion.AsObject>,
+  }
+}
+
+export class GradingCriterion extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getBenchmarkid(): number;
+  setBenchmarkid(value: number): void;
+
+  getDescription(): string;
+  setDescription(value: string): void;
+
+  getGrade(): GradingCriterion.Grade;
+  setGrade(value: GradingCriterion.Grade): void;
+
+  getComment(): string;
+  setComment(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GradingCriterion.AsObject;
+  static toObject(includeInstance: boolean, msg: GradingCriterion): GradingCriterion.AsObject;
+  static serializeBinaryToWriter(message: GradingCriterion, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GradingCriterion;
+  static deserializeBinaryFromReader(message: GradingCriterion, reader: jspb.BinaryReader): GradingCriterion;
+}
+
+export namespace GradingCriterion {
+  export type AsObject = {
+    id: number,
+    benchmarkid: number,
+    description: string,
+    grade: GradingCriterion.Grade,
+    comment: string,
+  }
+
+  export enum Grade { 
+    NONE = 0,
+    FAILED = 1,
+    PASSED = 2,
+  }
+}
+
+export class Review extends jspb.Message {
+  getId(): number;
+  setId(value: number): void;
+
+  getSubmissionid(): number;
+  setSubmissionid(value: number): void;
+
+  getReviewerid(): number;
+  setReviewerid(value: number): void;
+
+  getReview(): string;
+  setReview(value: string): void;
+
+  getFeedback(): string;
+  setFeedback(value: string): void;
+
+  getReady(): boolean;
+  setReady(value: boolean): void;
+
+  getScore(): number;
+  setScore(value: number): void;
+
+  getBenchmarksList(): Array<GradingBenchmark>;
+  setBenchmarksList(value: Array<GradingBenchmark>): void;
+  clearBenchmarksList(): void;
+  addBenchmarks(value?: GradingBenchmark, index?: number): GradingBenchmark;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Review.AsObject;
+  static toObject(includeInstance: boolean, msg: Review): Review.AsObject;
+  static serializeBinaryToWriter(message: Review, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Review;
+  static deserializeBinaryFromReader(message: Review, reader: jspb.BinaryReader): Review;
+}
+
+export namespace Review {
+  export type AsObject = {
+    id: number,
+    submissionid: number,
+    reviewerid: number,
+    review: string,
+    feedback: string,
+    ready: boolean,
+    score: number,
+    benchmarksList: Array<GradingBenchmark.AsObject>,
+  }
+}
+
+export class Reviewers extends jspb.Message {
+  getReviewersList(): Array<User>;
+  setReviewersList(value: Array<User>): void;
+  clearReviewersList(): void;
+  addReviewers(value?: User, index?: number): User;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Reviewers.AsObject;
+  static toObject(includeInstance: boolean, msg: Reviewers): Reviewers.AsObject;
+  static serializeBinaryToWriter(message: Reviewers, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Reviewers;
+  static deserializeBinaryFromReader(message: Reviewers, reader: jspb.BinaryReader): Reviewers;
+}
+
+export namespace Reviewers {
+  export type AsObject = {
+    reviewersList: Array<User.AsObject>,
+  }
+}
+
+export class ReviewRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getReview(): Review | undefined;
+  setReview(value?: Review): void;
+  hasReview(): boolean;
+  clearReview(): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ReviewRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ReviewRequest): ReviewRequest.AsObject;
+  static serializeBinaryToWriter(message: ReviewRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ReviewRequest;
+  static deserializeBinaryFromReader(message: ReviewRequest, reader: jspb.BinaryReader): ReviewRequest;
+}
+
+export namespace ReviewRequest {
+  export type AsObject = {
+    courseid: number,
+    review?: Review.AsObject,
   }
 }
 
@@ -937,8 +1136,14 @@ export class UpdateSubmissionRequest extends jspb.Message {
   getCourseid(): number;
   setCourseid(value: number): void;
 
-  getApprove(): boolean;
-  setApprove(value: boolean): void;
+  getScore(): number;
+  setScore(value: number): void;
+
+  getReleased(): boolean;
+  setReleased(value: boolean): void;
+
+  getStatus(): Submission.Status;
+  setStatus(value: Submission.Status): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UpdateSubmissionRequest.AsObject;
@@ -952,7 +1157,65 @@ export namespace UpdateSubmissionRequest {
   export type AsObject = {
     submissionid: number,
     courseid: number,
+    score: number,
+    released: boolean,
+    status: Submission.Status,
+  }
+}
+
+export class UpdateSubmissionsRequest extends jspb.Message {
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  getAssignmentid(): number;
+  setAssignmentid(value: number): void;
+
+  getScorelimit(): number;
+  setScorelimit(value: number): void;
+
+  getRelease(): boolean;
+  setRelease(value: boolean): void;
+
+  getApprove(): boolean;
+  setApprove(value: boolean): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpdateSubmissionsRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: UpdateSubmissionsRequest): UpdateSubmissionsRequest.AsObject;
+  static serializeBinaryToWriter(message: UpdateSubmissionsRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpdateSubmissionsRequest;
+  static deserializeBinaryFromReader(message: UpdateSubmissionsRequest, reader: jspb.BinaryReader): UpdateSubmissionsRequest;
+}
+
+export namespace UpdateSubmissionsRequest {
+  export type AsObject = {
+    courseid: number,
+    assignmentid: number,
+    scorelimit: number,
+    release: boolean,
     approve: boolean,
+  }
+}
+
+export class SubmissionReviewersRequest extends jspb.Message {
+  getSubmissionid(): number;
+  setSubmissionid(value: number): void;
+
+  getCourseid(): number;
+  setCourseid(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SubmissionReviewersRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: SubmissionReviewersRequest): SubmissionReviewersRequest.AsObject;
+  static serializeBinaryToWriter(message: SubmissionReviewersRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SubmissionReviewersRequest;
+  static deserializeBinaryFromReader(message: SubmissionReviewersRequest, reader: jspb.BinaryReader): SubmissionReviewersRequest;
+}
+
+export namespace SubmissionReviewersRequest {
+  export type AsObject = {
+    submissionid: number,
+    courseid: number,
   }
 }
 
