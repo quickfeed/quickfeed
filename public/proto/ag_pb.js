@@ -5104,7 +5104,8 @@ proto.Assignment.toObject = function(includeInstance, msg) {
     submissionsList: jspb.Message.toObjectList(msg.getSubmissionsList(),
     proto.Submission.toObject, includeInstance),
     gradingbenchmarksList: jspb.Message.toObjectList(msg.getGradingbenchmarksList(),
-    proto.GradingBenchmark.toObject, includeInstance)
+    proto.GradingBenchmark.toObject, includeInstance),
+    containertimeout: jspb.Message.getFieldWithDefault(msg, 14, 0)
   };
 
   if (includeInstance) {
@@ -5194,6 +5195,10 @@ proto.Assignment.deserializeBinaryFromReader = function(msg, reader) {
       var value = new proto.GradingBenchmark;
       reader.readMessage(value,proto.GradingBenchmark.deserializeBinaryFromReader);
       msg.addGradingbenchmarks(value);
+      break;
+    case 14:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setContainertimeout(value);
       break;
     default:
       reader.skipField();
@@ -5315,6 +5320,13 @@ proto.Assignment.serializeBinaryToWriter = function(message, writer) {
       13,
       f,
       proto.GradingBenchmark.serializeBinaryToWriter
+    );
+  }
+  f = message.getContainertimeout();
+  if (f !== 0) {
+    writer.writeUint32(
+      14,
+      f
     );
   }
 };
@@ -5591,6 +5603,24 @@ proto.Assignment.prototype.addGradingbenchmarks = function(opt_value, opt_index)
  */
 proto.Assignment.prototype.clearGradingbenchmarksList = function() {
   return this.setGradingbenchmarksList([]);
+};
+
+
+/**
+ * optional uint32 containerTimeout = 14;
+ * @return {number}
+ */
+proto.Assignment.prototype.getContainertimeout = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 14, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.Assignment} returns this
+ */
+proto.Assignment.prototype.setContainertimeout = function(value) {
+  return jspb.Message.setProto3IntField(this, 14, value);
 };
 
 

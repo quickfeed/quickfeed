@@ -173,6 +173,7 @@ message Assignment {
     bool runTests = 11;
     repeated Submission submissions = 12; 
     repeated GradingBenchmark gradingBenchmarks = 13;    
+    uint32 containerTimeout = 14;
 }
 
 message Assignments {

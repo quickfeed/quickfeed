@@ -24,13 +24,14 @@ const (
 // Note that the struct can be private, but the fields must be
 // public to allow parsing.
 type assignmentData struct {
-	AssignmentID uint   `yaml:"assignmentid"`
-	Language     string `yaml:"language"`
-	Deadline     string `yaml:"deadline"`
-	AutoApprove  bool   `yaml:"autoapprove"`
-	ScoreLimit   uint   `yaml:"scorelimit"`
-	IsGroupLab   bool   `yaml:"isgrouplab"`
-	Reviewers    uint   `yaml:"reviewers"`
+	AssignmentID     uint   `yaml:"assignmentid"`
+	Language         string `yaml:"language"`
+	Deadline         string `yaml:"deadline"`
+	AutoApprove      bool   `yaml:"autoapprove"`
+	ScoreLimit       uint   `yaml:"scorelimit"`
+	IsGroupLab       bool   `yaml:"isgrouplab"`
+	Reviewers        uint   `yaml:"reviewers"`
+	ContainerTimeout uint   `yaml:"containertimeout"`
 }
 
 // ParseAssignments recursively walks the given directory and parses
@@ -64,15 +65,16 @@ func parseAssignments(dir string, courseID uint64) ([]*pb.Assignment, error) {
 				// or it will cause a database constraint violation (IDs must be unique)
 				// The Name field below is the folder name of the assignment.
 				assignment := &pb.Assignment{
-					CourseID:    courseID,
-					Deadline:    FixDeadline(newAssignment.Deadline),
-					Language:    strings.ToLower(newAssignment.Language),
-					Name:        filepath.Base(filepath.Dir(path)),
-					Order:       uint32(newAssignment.AssignmentID),
-					AutoApprove: newAssignment.AutoApprove,
-					ScoreLimit:  uint32(newAssignment.ScoreLimit),
-					IsGroupLab:  newAssignment.IsGroupLab,
-					Reviewers:   uint32(newAssignment.Reviewers),
+					CourseID:         courseID,
+					Deadline:         FixDeadline(newAssignment.Deadline),
+					Language:         strings.ToLower(newAssignment.Language),
+					Name:             filepath.Base(filepath.Dir(path)),
+					Order:            uint32(newAssignment.AssignmentID),
+					AutoApprove:      newAssignment.AutoApprove,
+					ScoreLimit:       uint32(newAssignment.ScoreLimit),
+					IsGroupLab:       newAssignment.IsGroupLab,
+					Reviewers:        uint32(newAssignment.Reviewers),
+					ContainerTimeout: uint32(newAssignment.ContainerTimeout),
 				}
 				assignments = append(assignments, assignment)
 			}
