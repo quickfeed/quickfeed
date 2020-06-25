@@ -61,7 +61,7 @@ func (d *Docker) Run(ctx context.Context, job *Job, user string, timeout time.Du
 		// if the container still running after predefined time interval, force kill it
 	case <-time.After(timeout):
 		cli.ContainerKill(ctx, resp.ID, "SIGTERM")
-		return fmt.Sprintf("Container timed out after %v minutes", timeout), nil
+		return fmt.Sprintf("Container timed out after %v", timeout), nil
 	case <-waitc:
 	}
 
