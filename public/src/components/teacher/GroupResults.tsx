@@ -51,7 +51,7 @@ export class GroupResults extends React.Component<IResultsProps, IResultsState> 
                 studentSubmission={this.state.submissionLink}
                 student={new User()}
                 courseURL={this.props.courseURL}
-                teacherPageView={false}
+                teacherPageView={true}
                 slipdays={this.props.course.getSlipdays()}
                 onRebuildClick={
                     async () => {
